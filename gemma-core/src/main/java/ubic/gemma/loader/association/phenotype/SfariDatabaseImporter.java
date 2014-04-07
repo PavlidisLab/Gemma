@@ -1,3 +1,17 @@
+/*
+ * The gemma-core project
+ * 
+ * Copyright (c) 2014 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.loader.association.phenotype;
 
 import java.io.BufferedReader;
@@ -7,11 +21,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 
+/**
+ * TODO Document Me
+ * 
+ * @author nicolas
+ * @version $Id$
+ */
 public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
@@ -28,9 +49,9 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
     public static String DESCRIPTION_SCORE_HEADER = "Evidence";
 
     // gene Id ---> score
-    private HashMap<String, ScoreValueObject> gene2Score = new HashMap<String, ScoreValueObject>();
+    private Map<String, ScoreValueObject> gene2Score = new HashMap<>();
     // gene Id ---> description
-    private HashMap<String, String> gene2Description = new HashMap<String, String>();
+    private Map<String, String> gene2Description = new HashMap<>();
     // ****************************************************************************************
     // the gene file
     // DEFNIFE COLUMNS NAMES AS THEY APPEAR IN FILE
@@ -141,86 +162,88 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
         initFinalOutputFile( true, true );
 
-        BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) );
+        try (BufferedReader brAutismGeneDataset = new BufferedReader( new FileReader( autismGeneDataset ) );) {
 
-        String header = StringUtil.cvs2tsv( brAutismGeneDataset.readLine() );
+            String header = StringUtil.cvs2tsv( brAutismGeneDataset.readLine() );
 
-        String[] headersTokens = header.split( "\t" );
+            String[] headersTokens = header.split( "\t" );
 
-        ArrayList<String> headersSet = new ArrayList<String>();
+            ArrayList<String> headersSet = new ArrayList<String>();
 
-        for ( String token : headersTokens ) {
-            headersSet.add( token );
-        }
-
-        if ( !headersSet.contains( GENE_SYMBOL_HEADER ) || !headersSet.contains( ENTREZ_GENE_ID_HEADER )
-                || !headersSet.contains( SUPPORT_FOR_AUTISM_HEADER )
-                || !headersSet.contains( EVIDENCE_OF_SUPPORT_HEADER )
-                || !headersSet.contains( POSITIVE_REFERENCE_HEADER )
-                || !headersSet.contains( NEGATIVE_REFERENCE_HEADER ) || !headersSet.contains( PRIMARY_REFERENCE_HEADER )
-                || !headersSet.contains( MOST_CITED_HEADER ) || !headersSet.contains( MOST_RECENT_HEADER )
-                || !headersSet.contains( SUPPORTING_HEADER ) ) {
-            throw new Exception( "Some headers not find in the autism gene dataset" );
-        }
-
-        Integer geneSymbolIndex = headersSet.indexOf( GENE_SYMBOL_HEADER );
-        Integer entrezGeneIDIndex = headersSet.indexOf( ENTREZ_GENE_ID_HEADER );
-        Integer supportForAutismIndex = headersSet.indexOf( SUPPORT_FOR_AUTISM_HEADER );
-        Integer evidenceOfSupportIndex = headersSet.indexOf( EVIDENCE_OF_SUPPORT_HEADER );
-        Integer positiveReferenceIndex = headersSet.indexOf( POSITIVE_REFERENCE_HEADER );
-        Integer negativeReferenceIndex = headersSet.indexOf( NEGATIVE_REFERENCE_HEADER );
-        Integer primaryReferenceIndex = headersSet.indexOf( PRIMARY_REFERENCE_HEADER );
-        @SuppressWarnings("unused")
-        Integer mostCitedIndex = headersSet.indexOf( MOST_CITED_HEADER );
-        @SuppressWarnings("unused")
-        Integer mostRecentIndex = headersSet.indexOf( MOST_RECENT_HEADER );
-        Integer supportingIndex = headersSet.indexOf( SUPPORTING_HEADER );
-
-        String line = "";
-
-        while ( ( line = brAutismGeneDataset.readLine() ) != null ) {
-
-            line = StringUtil.cvs2tsv( line ) + "\t end";
-
-            String[] lineTokens = line.split( "\t" );
-            String geneSymbol = lineTokens[geneSymbolIndex];
-            String nbciID = lineTokens[entrezGeneIDIndex];
-            String description = lineTokens[supportForAutismIndex] + " ; " + lineTokens[evidenceOfSupportIndex];
-            Set<String> literaturePubMed = new HashSet<String>();
-            Set<String> literaturePubMedNegative = new HashSet<String>();
-
-            addAllPubmed( lineTokens[positiveReferenceIndex], literaturePubMed );
-            addAllPubmed( lineTokens[primaryReferenceIndex], literaturePubMed );
-            // addAllPubmed( lineTokens[mostCitedIndex], this.literaturePubMed );
-            // addAllPubmed( lineTokens[mostRecentIndex], this.literaturePubMed );
-            addAllPubmed( lineTokens[supportingIndex], literaturePubMed );
-
-            addAllPubmed( lineTokens[negativeReferenceIndex], literaturePubMedNegative );
-
-            nbciID = treatSpecialCases( geneSymbol, nbciID );
-
-            ScoreValueObject scoreVO = gene2Score.get( geneSymbol );
-
-            String descriptionInScore = gene2Description.get( geneSymbol );
-
-            if ( descriptionInScore == null ) {
-                descriptionInScore = "";
-            } else {
-                descriptionInScore = " " + descriptionInScore;
+            for ( String token : headersTokens ) {
+                headersSet.add( token );
             }
 
-            if ( !literaturePubMed.isEmpty() ) {
-                writeFinalSfari( literaturePubMed, geneSymbol, nbciID, description, descriptionInScore, scoreVO, false );
+            if ( !headersSet.contains( GENE_SYMBOL_HEADER ) || !headersSet.contains( ENTREZ_GENE_ID_HEADER )
+                    || !headersSet.contains( SUPPORT_FOR_AUTISM_HEADER )
+                    || !headersSet.contains( EVIDENCE_OF_SUPPORT_HEADER )
+                    || !headersSet.contains( POSITIVE_REFERENCE_HEADER )
+                    || !headersSet.contains( NEGATIVE_REFERENCE_HEADER )
+                    || !headersSet.contains( PRIMARY_REFERENCE_HEADER ) || !headersSet.contains( MOST_CITED_HEADER )
+                    || !headersSet.contains( MOST_RECENT_HEADER ) || !headersSet.contains( SUPPORTING_HEADER ) ) {
+                throw new Exception( "Some headers not find in the autism gene dataset" );
             }
 
-            if ( !literaturePubMedNegative.isEmpty() ) {
-                writeFinalSfari( literaturePubMedNegative, geneSymbol, nbciID, description, descriptionInScore,
-                        scoreVO, true );
+            Integer geneSymbolIndex = headersSet.indexOf( GENE_SYMBOL_HEADER );
+            Integer entrezGeneIDIndex = headersSet.indexOf( ENTREZ_GENE_ID_HEADER );
+            Integer supportForAutismIndex = headersSet.indexOf( SUPPORT_FOR_AUTISM_HEADER );
+            Integer evidenceOfSupportIndex = headersSet.indexOf( EVIDENCE_OF_SUPPORT_HEADER );
+            Integer positiveReferenceIndex = headersSet.indexOf( POSITIVE_REFERENCE_HEADER );
+            Integer negativeReferenceIndex = headersSet.indexOf( NEGATIVE_REFERENCE_HEADER );
+            Integer primaryReferenceIndex = headersSet.indexOf( PRIMARY_REFERENCE_HEADER );
+            @SuppressWarnings("unused")
+            Integer mostCitedIndex = headersSet.indexOf( MOST_CITED_HEADER );
+            @SuppressWarnings("unused")
+            Integer mostRecentIndex = headersSet.indexOf( MOST_RECENT_HEADER );
+            Integer supportingIndex = headersSet.indexOf( SUPPORTING_HEADER );
+
+            String line = "";
+
+            while ( ( line = brAutismGeneDataset.readLine() ) != null ) {
+
+                line = StringUtil.cvs2tsv( line ) + "\t end";
+
+                String[] lineTokens = line.split( "\t" );
+                String geneSymbol = lineTokens[geneSymbolIndex];
+                String nbciID = lineTokens[entrezGeneIDIndex];
+                String description = lineTokens[supportForAutismIndex] + " ; " + lineTokens[evidenceOfSupportIndex];
+                Set<String> literaturePubMed = new HashSet<String>();
+                Set<String> literaturePubMedNegative = new HashSet<String>();
+
+                addAllPubmed( lineTokens[positiveReferenceIndex], literaturePubMed );
+                addAllPubmed( lineTokens[primaryReferenceIndex], literaturePubMed );
+                // addAllPubmed( lineTokens[mostCitedIndex], this.literaturePubMed );
+                // addAllPubmed( lineTokens[mostRecentIndex], this.literaturePubMed );
+                addAllPubmed( lineTokens[supportingIndex], literaturePubMed );
+
+                addAllPubmed( lineTokens[negativeReferenceIndex], literaturePubMedNegative );
+
+                nbciID = treatSpecialCases( geneSymbol, nbciID );
+
+                ScoreValueObject scoreVO = gene2Score.get( geneSymbol );
+
+                String descriptionInScore = gene2Description.get( geneSymbol );
+
+                if ( descriptionInScore == null ) {
+                    descriptionInScore = "";
+                } else {
+                    descriptionInScore = " " + descriptionInScore;
+                }
+
+                if ( !literaturePubMed.isEmpty() ) {
+                    writeFinalSfari( literaturePubMed, geneSymbol, nbciID, description, descriptionInScore, scoreVO,
+                            false );
+                }
+
+                if ( !literaturePubMedNegative.isEmpty() ) {
+                    writeFinalSfari( literaturePubMedNegative, geneSymbol, nbciID, description, descriptionInScore,
+                            scoreVO, true );
+                }
             }
+
+            brAutismGeneDataset.close();
+            outFinalResults.close();
         }
-
-        brAutismGeneDataset.close();
-        outFinalResults.close();
     }
 
     private void writeFinalSfari( Set<String> literaturePubMed, String geneSymbol, String nbciID, String description,

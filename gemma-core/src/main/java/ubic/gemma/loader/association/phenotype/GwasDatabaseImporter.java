@@ -73,48 +73,50 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     // process the gwas file, line by line
     private void processGwasFile( String gwasFile ) throws Exception {
 
-        BufferedReader br = new BufferedReader( new FileReader( gwasFile ) );
+        try (BufferedReader br = new BufferedReader( new FileReader( gwasFile ) );) {
 
-        // check if we have correct headers and organ
-        verifyHeaders( br.readLine().split( "\t" ) );
+            // check if we have correct headers and organ
+            verifyHeaders( br.readLine().split( "\t" ) );
 
-        String line = "";
+            String line = "";
 
-        // parse the morbid OMIM file
-        while ( ( line = br.readLine() ) != null && !line.trim().equalsIgnoreCase( "" ) ) {
+            // parse the morbid OMIM file
+            while ( ( line = br.readLine() ) != null && !line.trim().equalsIgnoreCase( "" ) ) {
 
-            String[] tokens = line.split( "\t" );
+                String[] tokens = line.split( "\t" );
 
-            // the geneSymbol found in the file
-            String geneSymbol = findGeneSymbol( tokens[REPORTED_GENES_INDEX].trim(), tokens[MAPPED_GENE_INDEX].trim() );
+                // the geneSymbol found in the file
+                String geneSymbol = findGeneSymbol( tokens[REPORTED_GENES_INDEX].trim(),
+                        tokens[MAPPED_GENE_INDEX].trim() );
 
-            if ( geneSymbol == null ) {
-                continue;
+                if ( geneSymbol == null ) {
+                    continue;
+                }
+
+                // case 1: can we map the description with the static file
+                String description = tokens[DISEASE_TRAIT_INDEX].trim();
+
+                String comment = DISEASE_TRAIT + ": " + tokens[DISEASE_TRAIT_INDEX] + "; " + INITIAL_SAMPLE_SIZE + ": "
+                        + tokens[INITIAL_SAMPLE_SIZE_INDEX] + "; " + REPLICATION_SAMPLE_SIZE + ": "
+                        + tokens[REPLICATION_SAMPLE_SIZE_INDEX] + "; " + STRONGEST_SNP + ": "
+                        + tokens[STRONGEST_SNP_INDEX] + "; " + SNPS + ": " + tokens[SNPS_INDEX] + "; " + CONTEXT + ": "
+                        + tokens[CONTEXT_INDEX] + "; " + RISK_ALLELE_FREQUENCY + ": "
+                        + tokens[RISK_ALLELE_FREQUENCY_INDEX] + "; " + P_VALUE + ": " + tokens[P_VALUE_INDEX] + "; "
+                        + OR_OR_BETA + ": " + tokens[OR_OR_BETA_INDEX] + "; " + PLATFORM + ": "
+                        + tokens[PLATFORM_INDEX];
+
+                String pubmed = tokens[PUBMED_ID_INDEX];
+
+                Gene gene = findGeneUsingSymbolandTaxon( geneSymbol, "human" );
+
+                if ( gene != null ) {
+                    findMapping( null, gene, pubmed, "TAS", comment, description, GWAS, "?gene=" + geneSymbol );
+                }
             }
 
-            // case 1: can we map the description with the static file
-            String description = tokens[DISEASE_TRAIT_INDEX].trim();
-
-            String comment = DISEASE_TRAIT + ": " + tokens[DISEASE_TRAIT_INDEX] + "; " + INITIAL_SAMPLE_SIZE + ": "
-                    + tokens[INITIAL_SAMPLE_SIZE_INDEX] + "; " + REPLICATION_SAMPLE_SIZE + ": "
-                    + tokens[REPLICATION_SAMPLE_SIZE_INDEX] + "; " + STRONGEST_SNP + ": " + tokens[STRONGEST_SNP_INDEX]
-                    + "; " + SNPS + ": " + tokens[SNPS_INDEX] + "; " + CONTEXT + ": " + tokens[CONTEXT_INDEX] + "; "
-                    + RISK_ALLELE_FREQUENCY + ": " + tokens[RISK_ALLELE_FREQUENCY_INDEX] + "; " + P_VALUE + ": "
-                    + tokens[P_VALUE_INDEX] + "; " + OR_OR_BETA + ": " + tokens[OR_OR_BETA_INDEX] + "; " + PLATFORM
-                    + ": " + tokens[PLATFORM_INDEX];
-
-            String pubmed = tokens[PUBMED_ID_INDEX];
-
-            Gene gene = findGeneUsingSymbolandTaxon( geneSymbol, "human" );
-
-            if ( gene != null ) {
-                findMapping( null, gene, pubmed, "TAS", comment, description, GWAS, "?gene=" + geneSymbol );
-            }
+            br.close();
+            writeBuffersAndCloseFiles();
         }
-
-        br.close();
-        writeBuffersAndCloseFiles();
-
     }
 
     // the rules to choose the gene symbol

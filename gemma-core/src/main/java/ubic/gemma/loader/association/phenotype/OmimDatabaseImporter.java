@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -33,6 +35,12 @@ import ubic.basecode.ontology.ncbo.OmimAnnotatorClient;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.Gene;
 
+/**
+ * TODO Document Me
+ * 
+ * @author nicolas
+ * @version $Id$
+ */
 public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
@@ -64,7 +72,7 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         importEvidence.findOmimAndMeshMappingUsingOntologyFile();
 
         // return common publications between a OMIM gene and OMIM phenotype
-        HashMap<Long, Collection<Long>> omimIdToPubmeds = importEvidence.findCommonPubmed( morbidmap );
+        Map<Long, Collection<Long>> omimIdToPubmeds = importEvidence.findCommonPubmed( morbidmap );
 
         // process the omim files to create the final output
         importEvidence.processOmimFiles( morbidmap, mim2gene, omimIdToPubmeds );
@@ -76,71 +84,72 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     }
 
     // process all OMIM files to get the data out and manipulates it
-    private void processOmimFiles( String morbidmap, String mim2gene, HashMap<Long, Collection<Long>> omimIdToPubmeds )
+    private void processOmimFiles( String morbidmap, String mim2gene, Map<Long, Collection<Long>> omimIdToPubmeds )
             throws Exception {
 
         // mapping find using mim2gene file, Omim id ---> Gene NCBI
-        HashMap<String, String> omimIdToGeneNCBI = parseFileOmimIdToGeneNCBI( mim2gene );
+        Map<String, String> omimIdToGeneNCBI = parseFileOmimIdToGeneNCBI( mim2gene );
 
         String line = null;
 
-        BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );
+        try (BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );) {
 
-        // parse the morbid OMIM file
-        while ( ( line = br.readLine() ) != null ) {
+            // parse the morbid OMIM file
+            while ( ( line = br.readLine() ) != null ) {
 
-            String[] tokens = line.split( "\\|" );
+                String[] tokens = line.split( "\\|" );
 
-            int pos = tokens[0].lastIndexOf( "," );
+                int pos = tokens[0].lastIndexOf( "," );
 
-            String pubmedIds = "";
+                String pubmedIds = "";
 
-            // if there is a database link
-            if ( pos != -1 ) {
+                // if there is a database link
+                if ( pos != -1 ) {
 
-                // OMIM description find in file, the annotator use description
-                String description = tokens[0].substring( 0, pos ).trim();
+                    // OMIM description find in file, the annotator use description
+                    String description = tokens[0].substring( 0, pos ).trim();
 
-                // evidence code we will use
-                String evidenceCode = "TAS";
-                // the OMIM id, (also is the database link)
-                String omimPhenotypeId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
-                String omimId = "OMIM:" + omimPhenotypeId;
-                // OMOM gene id
-                String omimGeneId = tokens[2].trim();
-                // omimGeneid ---> ncbi id
-                String ncbiGeneId = omimIdToGeneNCBI.get( omimGeneId );
+                    // evidence code we will use
+                    String evidenceCode = "TAS";
+                    // the OMIM id, (also is the database link)
+                    String omimPhenotypeId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
+                    String omimId = "OMIM:" + omimPhenotypeId;
+                    // OMOM gene id
+                    String omimGeneId = tokens[2].trim();
+                    // omimGeneid ---> ncbi id
+                    String ncbiGeneId = omimIdToGeneNCBI.get( omimGeneId );
 
-                // is the omimGeneId found in the other file
-                if ( ncbiGeneId != null ) {
+                    // is the omimGeneId found in the other file
+                    if ( ncbiGeneId != null ) {
 
-                    // if there is no omim id given we cannot do anything with this line (happens often)
-                    if ( !isInteger( omimPhenotypeId ) || Integer.parseInt( omimPhenotypeId ) < 100 ) {
-                        continue;
-                    }
-
-                    Gene gene = this.geneService.findByNCBIId( new Integer( ncbiGeneId ) );
-
-                    if ( gene != null ) {
-
-                        Collection<Long> commonsPubmeds = findCommonPubmed( new Long( omimGeneId ), new Long(
-                                omimPhenotypeId ), omimIdToPubmeds );
-
-                        if ( !commonsPubmeds.isEmpty() ) {
-                            pubmedIds = StringUtils.join( commonsPubmeds, ";" );
+                        // if there is no omim id given we cannot do anything with this line (happens often)
+                        if ( !isInteger( omimPhenotypeId ) || Integer.parseInt( omimPhenotypeId ) < 100 ) {
+                            continue;
                         }
 
-                        findMapping( omimId, gene, pubmedIds, evidenceCode, description, description, OMIM,
-                                omimPhenotypeId );
+                        Gene gene = this.geneService.findByNCBIId( new Integer( ncbiGeneId ) );
 
+                        if ( gene != null ) {
+
+                            Collection<Long> commonsPubmeds = findCommonPubmed( new Long( omimGeneId ), new Long(
+                                    omimPhenotypeId ), omimIdToPubmeds );
+
+                            if ( !commonsPubmeds.isEmpty() ) {
+                                pubmedIds = StringUtils.join( commonsPubmeds, ";" );
+                            }
+
+                            findMapping( omimId, gene, pubmedIds, evidenceCode, description, description, OMIM,
+                                    omimPhenotypeId );
+
+                        }
                     }
                 }
             }
+
+            br.close();
+
+            writeBuffersAndCloseFiles();
         }
-
-        br.close();
-
-        writeBuffersAndCloseFiles();
 
         // special thing to do with OMIM, for the same ncbiGeneId + omimPhenotypeId, combine the phenotype
         combinePhenotypes();
@@ -153,61 +162,62 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         BufferedReader br = new BufferedReader( new InputStreamReader(
                 FileTools.getInputStreamFromPlainOrCompressedFile( writeFolder + "/finalResults.tsv" ) ) );
 
-        BufferedWriter bw = new BufferedWriter( new FileWriter( writeFolder + "/finalResultsOmimCombine.tsv" ) );
+        try (BufferedWriter bw = new BufferedWriter( new FileWriter( writeFolder + "/finalResultsOmimCombine.tsv" ) );) {
 
-        String line = br.readLine();
+            String line = br.readLine();
 
-        // headers
-        bw.write( line + "\n" );
+            // headers
+            bw.write( line + "\n" );
 
-        HashMap<String, String> lineCombine = new HashMap<String, String>();
+            HashMap<String, String> lineCombine = new HashMap<String, String>();
 
-        while ( ( line = br.readLine() ) != null ) {
+            while ( ( line = br.readLine() ) != null ) {
 
-            String[] tokens = line.split( "\t" );
+                String[] tokens = line.split( "\t" );
 
-            String ncbiGeneId = tokens[1];
-            String omimPhenotypeId = tokens[6];
+                String ncbiGeneId = tokens[1];
+                String omimPhenotypeId = tokens[6];
 
-            String key = ncbiGeneId + omimPhenotypeId;
+                String key = ncbiGeneId + omimPhenotypeId;
 
-            if ( lineCombine.get( key ) == null ) {
-                lineCombine.put( key, line );
-            } else {
+                if ( lineCombine.get( key ) == null ) {
+                    lineCombine.put( key, line );
+                } else {
 
-                String commonLine = lineCombine.get( key );
+                    String commonLine = lineCombine.get( key );
 
-                String valueUri = tokens[9];
-                String valueUri2 = commonLine.split( "\t" )[9];
+                    String valueUri = tokens[9];
+                    String valueUri2 = commonLine.split( "\t" )[9];
 
-                log.info( "combine: " + valueUri );
+                    log.info( "combine: " + valueUri );
 
-                String valueUriCombine = combineUri( valueUri, valueUri2 );
+                    String valueUriCombine = combineUri( valueUri, valueUri2 );
 
-                tokens[9] = valueUriCombine;
+                    tokens[9] = valueUriCombine;
 
-                commonLine = StringUtils.join( tokens, "\t" );
+                    commonLine = StringUtils.join( tokens, "\t" );
 
-                lineCombine.put( key, commonLine );
+                    lineCombine.put( key, commonLine );
+                }
+
             }
 
+            for ( String lineF : lineCombine.values() ) {
+
+                bw.write( lineF + "\n" );
+            }
+
+            bw.close();
+
+            File f = new File( writeFolder + "/finalResults.tsv" );
+            File fCombine = new File( writeFolder + "/finalResultsOmimCombine.tsv" );
+            fCombine.renameTo( f );
         }
-
-        for ( String lineF : lineCombine.values() ) {
-
-            bw.write( lineF + "\n" );
-        }
-
-        bw.close();
-
-        File f = new File( writeFolder + "/finalResults.tsv" );
-        File fCombine = new File( writeFolder + "/finalResultsOmimCombine.tsv" );
-        fCombine.renameTo( f );
     }
 
     private String combineUri( String valueUri, String valueUri2 ) {
 
-        HashSet<String> combineValue = new HashSet<String>();
+        HashSet<String> combineValue = new HashSet<>();
 
         for ( String value : valueUri.split( ";" ) ) {
 
@@ -227,45 +237,45 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     }
 
     // process all OMIM files to get the data out and manipulates it
-    private HashMap<Long, Collection<Long>> findCommonPubmed( String morbidmap ) throws NumberFormatException,
-            IOException, InterruptedException {
+    private Map<Long, Collection<Long>> findCommonPubmed( String morbidmap ) throws NumberFormatException, IOException,
+            InterruptedException {
 
         // all omimID (gene or phenotype)
-        HashSet<Long> allOmimId = new HashSet<Long>();
+        Set<Long> allOmimId = new HashSet<>();
 
-        BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );
-        String line = "";
+        try (BufferedReader br = new BufferedReader( new FileReader( morbidmap ) );) {
+            String line = "";
 
-        // parse the morbid OMIM file
-        while ( ( line = br.readLine() ) != null ) {
+            // parse the morbid OMIM file
+            while ( ( line = br.readLine() ) != null ) {
 
-            String[] tokens = line.split( "\\|" );
+                String[] tokens = line.split( "\\|" );
 
-            int pos = tokens[0].lastIndexOf( "," );
+                int pos = tokens[0].lastIndexOf( "," );
 
-            // if there is a database link
-            if ( pos != -1 ) {
+                // if there is a database link
+                if ( pos != -1 ) {
 
-                String omimPhenotypeId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
-                // OMOM gene id
-                String omimGeneId = tokens[2].trim();
+                    String omimPhenotypeId = tokens[0].substring( pos + 1, tokens[0].length() ).trim().split( " " )[0];
+                    // OMOM gene id
+                    String omimGeneId = tokens[2].trim();
 
-                if ( !isInteger( omimPhenotypeId ) || Integer.parseInt( omimPhenotypeId ) < 100 ) {
-                    continue;
+                    if ( !isInteger( omimPhenotypeId ) || Integer.parseInt( omimPhenotypeId ) < 100 ) {
+                        continue;
+                    }
+
+                    allOmimId.add( new Long( omimGeneId ) );
+                    allOmimId.add( new Long( omimPhenotypeId ) );
                 }
-
-                allOmimId.add( new Long( omimGeneId ) );
-                allOmimId.add( new Long( omimPhenotypeId ) );
             }
+            br.close();
         }
-        br.close();
 
         return populateOmimIdsToPubmeds( allOmimId );
     }
 
     // this gets all publication for a omimID (gene or phenotype)
-    private HashMap<Long, Collection<Long>> populateOmimIdsToPubmeds( HashSet<Long> allOmimId )
-            throws InterruptedException {
+    private Map<Long, Collection<Long>> populateOmimIdsToPubmeds( Set<Long> allOmimId ) throws InterruptedException {
 
         // omimID --> all list of publications
         HashMap<Long, Collection<Long>> omimIdToPubmeds = new HashMap<Long, Collection<Long>>();
@@ -297,35 +307,36 @@ public class OmimDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         return omimIdToPubmeds;
     }
 
-    private HashMap<String, String> parseFileOmimIdToGeneNCBI( String mim2gene ) throws IOException {
+    private Map<String, String> parseFileOmimIdToGeneNCBI( String mim2gene ) throws IOException {
 
         String line = null;
-        HashMap<String, String> omimIdToGeneNCBI = new HashMap<String, String>();
+        Map<String, String> omimIdToGeneNCBI = new HashMap<String, String>();
 
-        BufferedReader br = new BufferedReader( new FileReader( mim2gene ) );
+        try (BufferedReader br = new BufferedReader( new FileReader( mim2gene ) );) {
 
-        while ( ( line = br.readLine() ) != null ) {
+            while ( ( line = br.readLine() ) != null ) {
 
-            String[] tokens = line.split( "\t" );
+                String[] tokens = line.split( "\t" );
 
-            if ( !tokens[2].trim().equals( "-" ) && !tokens[3].trim().equals( "-" ) && !tokens[2].trim().equals( "" )
-                    && !tokens[3].trim().equals( "" ) ) {
-                omimIdToGeneNCBI.put( tokens[0], tokens[2] );
+                if ( !tokens[2].trim().equals( "-" ) && !tokens[3].trim().equals( "-" )
+                        && !tokens[2].trim().equals( "" ) && !tokens[3].trim().equals( "" ) ) {
+                    omimIdToGeneNCBI.put( tokens[0], tokens[2] );
+                }
             }
+            br.close();
         }
-        br.close();
         return omimIdToGeneNCBI;
     }
 
     // return all common pubmed between an omimGeneId and a omimPhenotypeId
     private Collection<Long> findCommonPubmed( Long omimGeneId, Long omimPhenotypeId,
-            HashMap<Long, Collection<Long>> omimIdToPubmeds ) {
+            Map<Long, Collection<Long>> omimIdToPubmeds ) {
 
         Collection<Long> pudmedFromGeneId = omimIdToPubmeds.get( omimGeneId );
         Collection<Long> pudmedFromPhenotypeId = omimIdToPubmeds.get( omimPhenotypeId );
 
         if ( pudmedFromGeneId != null && pudmedFromPhenotypeId != null ) {
-            Collection<Long> commonElements = new HashSet<Long>( pudmedFromGeneId );
+            Collection<Long> commonElements = new HashSet<>( pudmedFromGeneId );
             commonElements.retainAll( pudmedFromPhenotypeId );
 
             return commonElements;

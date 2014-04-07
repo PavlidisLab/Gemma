@@ -43,38 +43,39 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     // example: same pubed, same gene 1-leukemia 2-myeloid leukemia 3-acute myeloid leukemia, keep only 3-
     private void findTermsWithParents() throws NumberFormatException, IOException, Exception {
 
-        BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );
-        String line = "";
+        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );) {
+            String line = "";
 
-        while ( ( line = dgaReader.readLine() ) != null ) {
+            while ( ( line = dgaReader.readLine() ) != null ) {
 
-            // found a term
-            if ( line.indexOf( "DOID" ) != -1 ) {
-                // this being of the url could change make sure its still correct if something doesn't work
-                String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
+                // found a term
+                if ( line.indexOf( "DOID" ) != -1 ) {
+                    // this being of the url could change make sure its still correct if something doesn't work
+                    String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
 
-                String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
-                String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
-                String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
+                    String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
+                    String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
+                    String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
 
-                OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
+                    OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
 
-                if ( o != null ) {
+                    if ( o != null ) {
 
-                    String key = geneId + pubMedID + geneRIF;
-                    HashSet<OntologyTerm> valuesUri = new HashSet<OntologyTerm>();
+                        String key = geneId + pubMedID + geneRIF;
+                        HashSet<OntologyTerm> valuesUri = new HashSet<OntologyTerm>();
 
-                    if ( commonLines.get( key ) != null ) {
-                        valuesUri = commonLines.get( key );
+                        if ( commonLines.get( key ) != null ) {
+                            valuesUri = commonLines.get( key );
+                        }
+
+                        valuesUri.add( o );
+
+                        commonLines.put( key, valuesUri );
                     }
-
-                    valuesUri.add( o );
-
-                    commonLines.put( key, valuesUri );
                 }
             }
+            dgaReader.close();
         }
-        dgaReader.close();
 
         for ( String key : commonLines.keySet() ) {
 
@@ -127,78 +128,80 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
         initFinalOutputFile( false, true );
 
-        BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );
-        String line = "";
+        try (BufferedReader dgaReader = new BufferedReader( new FileReader( dgaFile ) );) {
+            String line = "";
 
-        while ( ( line = dgaReader.readLine() ) != null ) {
+            while ( ( line = dgaReader.readLine() ) != null ) {
 
-            // found a term
-            if ( line.indexOf( "DOID" ) != -1 ) {
-                // this being of the url could change make sure its still correct if something doesn't work
-                String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
+                // found a term
+                if ( line.indexOf( "DOID" ) != -1 ) {
+                    // this being of the url could change make sure its still correct if something doesn't work
+                    String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
 
-                String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
-                String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
-                String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
+                    String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
+                    String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
+                    String geneRIF = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneRIF" );
 
-                OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
+                    OntologyTerm o = findOntologyTermExistAndNotObsolote( valueUri );
 
-                if ( o != null ) {
+                    if ( o != null ) {
 
-                    String geneSymbol = geneToSymbol( new Integer( geneId ) );
-                    // gene do exist
-                    if ( geneSymbol != null ) {
+                        String geneSymbol = geneToSymbol( new Integer( geneId ) );
+                        // gene do exist
+                        if ( geneSymbol != null ) {
 
-                        String key = geneId + pubMedID + geneRIF + o.getUri();
+                            String key = geneId + pubMedID + geneRIF + o.getUri();
 
-                        // if deep >3 always keep
-                        int howDeepIdTerm = findHowManyParents( o, 0 );
+                            // if deep >3 always keep
+                            int howDeepIdTerm = findHowManyParents( o, 0 );
 
-                        // keep leaf or deep enough or uri=DOID_162(cancer)
-                        if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 ) || o.getUri().indexOf(
-                                "DOID_162" ) != -1 ) ) {
+                            // keep leaf or deep enough or uri=DOID_162(cancer)
+                            if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 ) || o.getUri().indexOf(
+                                    "DOID_162" ) != -1 ) ) {
 
-                            // negative
-                            if ( ( geneRIF.indexOf( " is not " ) != -1 || geneRIF.indexOf( " not associated " ) != -1
-                                    || geneRIF.indexOf( " no significant " ) != -1
-                                    || geneRIF.indexOf( " no association " ) != -1
-                                    || geneRIF.indexOf( " not significant " ) != -1 || geneRIF
-                                    .indexOf( " not expressed " ) != -1 )
-                                    && geneRIF.indexOf( "is associated" ) == -1
-                                    && geneRIF.indexOf( "is significant" ) == -1
-                                    && geneRIF.indexOf( "is not only" ) == -1
-                                    && geneRIF.indexOf( "is expressed" ) == -1 ) {
+                                // negative
+                                if ( ( geneRIF.indexOf( " is not " ) != -1
+                                        || geneRIF.indexOf( " not associated " ) != -1
+                                        || geneRIF.indexOf( " no significant " ) != -1
+                                        || geneRIF.indexOf( " no association " ) != -1
+                                        || geneRIF.indexOf( " not significant " ) != -1 || geneRIF
+                                        .indexOf( " not expressed " ) != -1 )
+                                        && geneRIF.indexOf( "is associated" ) == -1
+                                        && geneRIF.indexOf( "is significant" ) == -1
+                                        && geneRIF.indexOf( "is not only" ) == -1
+                                        && geneRIF.indexOf( "is expressed" ) == -1 ) {
 
-                                if ( !lineToExclude( key ) ) {
-                                    outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
-                                            + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t"
-                                            + "" + "\t" + o.getUri() + "\t" + "1" + "\n" );
+                                    if ( !lineToExclude( key ) ) {
+                                        outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t"
+                                                + "IEA" + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t"
+                                                + "" + "\t" + "" + "\t" + o.getUri() + "\t" + "1" + "\n" );
+                                    }
+
+                                }
+                                // positive
+                                else {
+                                    if ( !lineToExclude( key ) ) {
+                                        outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t"
+                                                + "IEA" + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t"
+                                                + "" + "\t" + "" + "\t" + o.getUri() + "\t" + "" + "\n" );
+                                    }
                                 }
 
+                                outFinalResults.flush();
                             }
-                            // positive
-                            else {
-                                if ( !lineToExclude( key ) ) {
-                                    outFinalResults.write( geneSymbol + "\t" + geneId + "\t" + pubMedID + "\t" + "IEA"
-                                            + "\t" + "GeneRIF: " + geneRIF + "\t" + DGA + "\t" + "" + "\t" + "" + "\t"
-                                            + "" + "\t" + o.getUri() + "\t" + "" + "\n" );
-                                }
-                            }
-
-                            outFinalResults.flush();
+                        } else {
+                            log.info( "gene NCBI no found in Gemma discard this eidence: ncbi: " + geneId );
                         }
-                    } else {
-                        log.info( "gene NCBI no found in Gemma discard this eidence: ncbi: " + geneId );
-                    }
 
-                } else {
-                    log.info( "Ontology term not found in Ontology or obsolete : " + valueUri
-                            + " (normal that this happen sometimes)" );
+                    } else {
+                        log.info( "Ontology term not found in Ontology or obsolete : " + valueUri
+                                + " (normal that this happen sometimes)" );
+                    }
                 }
             }
+            dgaReader.close();
+            outFinalResults.close();
         }
-        dgaReader.close();
-        outFinalResults.close();
     }
 
     // find string between first > and <
