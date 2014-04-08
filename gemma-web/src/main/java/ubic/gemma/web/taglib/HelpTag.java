@@ -73,35 +73,37 @@ public class HelpTag extends TagSupport {
 
         StringBuilder buf = new StringBuilder();
 
-        try {
-            InputStream io = this.getClass().getResourceAsStream( "/ubic/gemma/doc/" + helpFile );
+        try (InputStream io = this.getClass().getResourceAsStream( "/ubic/gemma/doc/" + helpFile );) {
             if ( io == null ) {
                 buf.append( "[Help is not available for this item, possibly due to a configuration error]" );
             }
 
-            BufferedReader br = new BufferedReader( new InputStreamReader( new BufferedInputStream( io ) ) );
-            String line = "";
+            try (BufferedReader br = new BufferedReader( new InputStreamReader( new BufferedInputStream( io ) ) );) {
+                String line = "";
 
-            // we assume the entire thing is embedded in a pair of single quotes.
-            while ( ( line = br.readLine() ) != null ) {
-                line = line.replaceAll( "\"", "&quot;" );
-                line = line.replaceAll( "'", "&#039;" );
-                line = line.replaceAll( "\t+", "&nbsp;'+'" );
-                // line = line.replaceAll( "\\(", "[" );
-                // line = line.replaceAll( "\\)", "]" );
-                buf.append( line );
-                buf.append( "'+'" );
+                // we assume the entire thing is embedded in a pair of single quotes.
+                while ( ( line = br.readLine() ) != null ) {
+                    line = line.replaceAll( "\"", "&quot;" );
+                    line = line.replaceAll( "'", "&#039;" );
+                    line = line.replaceAll( "\t+", "&nbsp;'+'" );
+                    // line = line.replaceAll( "\\(", "[" );
+                    // line = line.replaceAll( "\\)", "]" );
+                    buf.append( line );
+                    buf.append( "'+'" );
+                }
+                br.close();
+            } catch ( IOException e ) {
+                buf.append( "[Help is not available for this item, possibly due to a configuration error]" );
+                log.error( e, e );
             }
-            br.close();
-        } catch ( IOException e ) {
-            buf.append( "[Help is not available for this item, possibly due to a configuration error]" );
-            log.error( e, e );
-        }
 
-        try {
-            pageContext.getOut().print( buf.toString() );
-        } catch ( Exception ex ) {
-            throw new JspException( "helpTag: " + ex.getMessage() );
+            try {
+                pageContext.getOut().print( buf.toString() );
+            } catch ( Exception ex ) {
+                throw new JspException( "helpTag: " + ex.getMessage() );
+            }
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
         }
         return SKIP_BODY;
     }

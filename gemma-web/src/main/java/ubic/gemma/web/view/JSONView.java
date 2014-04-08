@@ -68,17 +68,16 @@ public class JSONView implements View {
 
         JSONObject jso = JSONObject.fromObject( map );
         response.setContentType( this.docType );
-        Writer writer = response.getWriter();
+        try (Writer writer = response.getWriter();) {
 
-        // Need to wrap json in html tags or the proxy server will wrap in <p></p> tags.
-        // will work in test enviroment (with or without wrapping json)
-        // only problematic on production (no proxy in test enviroment)
-        // This is specifically for extjs and uploading a file.
-        // Other frameworks might not like this.
+            // Need to wrap json in html tags or the proxy server will wrap in <p></p> tags.
+            // will work in test enviroment (with or without wrapping json)
+            // only problematic on production (no proxy in test enviroment)
+            // This is specifically for extjs and uploading a file.
+            // Other frameworks might not like this.
 
-        writer.write( "<html><body>" + jso.toString() + "</body></html>" );
-        writer.close();
-
+            writer.write( "<html><body>" + jso.toString() + "</body></html>" );
+        }
     }
 
 }

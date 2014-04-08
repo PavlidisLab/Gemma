@@ -71,12 +71,11 @@ public class ExpressionDataFileUploadController {
 
         @Override
         public TaskResult execute() {
-            try {
-                File file = getFile( taskCommand );
+            File file = getFile( taskCommand );
+
+            try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
 
                 populateCommandObject( taskCommand );
-
-                InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
 
                 if ( stream == null ) {
                     throw new IllegalStateException( "Could not read from file " + file );

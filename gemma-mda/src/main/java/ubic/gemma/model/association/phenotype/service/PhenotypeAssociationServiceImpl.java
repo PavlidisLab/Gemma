@@ -47,19 +47,19 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationService {
 
     @Autowired
-    private PhenotypeAssociationDao phenotypeAssociationDao;
-
-    @Autowired
     private ExperimentalEvidenceDao experimentalEvidenceDao;
 
     @Autowired
     private GenericEvidenceDao genericEvidenceDao;
 
     @Autowired
+    private GenericExperimentDao genericExperimentDao;
+
+    @Autowired
     private LiteratureEvidenceDao literatureEvidenceDao;
 
     @Autowired
-    private GenericExperimentDao genericExperimentDao;
+    private PhenotypeAssociationDao phenotypeAssociationDao;
 
     /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
     @Override
@@ -223,6 +223,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return ( Collection<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
     }
 
+    @Override
+    public Collection<String> loadAllDescription() {
+        return this.phenotypeAssociationDao.loadAllDescription();
+    }
+
     /** find all phenotypes in Neurocarta */
     @Override
     @Transactional(readOnly = true)
@@ -301,21 +306,17 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         this.phenotypeAssociationDao.remove( pa );
     }
 
-    /** update an evidence */
-    @Override
-    @Transactional
-    public void update( PhenotypeAssociation evidence ) {
-        this.phenotypeAssociationDao.update( evidence );
-    }
-
     @Override
     @Transactional
     public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
         this.phenotypeAssociationDao.removePhenotypePublication( phenotypeAssociationPublicationId );
     }
 
-    public Collection<String> loadAllDescription() {
-        return this.phenotypeAssociationDao.loadAllDescription();
+    /** update an evidence */
+    @Override
+    @Transactional
+    public void update( PhenotypeAssociation evidence ) {
+        this.phenotypeAssociationDao.update( evidence );
     }
 
 }
