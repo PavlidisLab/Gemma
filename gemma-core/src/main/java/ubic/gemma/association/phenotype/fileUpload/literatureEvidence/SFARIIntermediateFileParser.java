@@ -9,36 +9,36 @@ public class SFARIIntermediateFileParser {
 
     public static void main( String[] args ) throws Exception {
 
-        BufferedWriter outputSFARI = new BufferedWriter(
+        try (BufferedWriter outputSFARI = new BufferedWriter(
                 new FileWriter(
-                        "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/outputSFARI.tsv" ) );
+                        "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/outputSFARI.tsv" ) );) {
 
-        BufferedReader br = new BufferedReader(
-                new FileReader(
-                        "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/autism-gene-dataset.csv" ) );
+            try (BufferedReader br = new BufferedReader(
+                    new FileReader(
+                            "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/autism-gene-dataset.csv" ) );) {
 
-        String headers = cvs2tsv( br.readLine() );
+                String headers = cvs2tsv( br.readLine() );
 
-        // define index of header
-        SFARILineInfo.setIndex( headers );
-        SFARILineInfo.writeFinalHeader( outputSFARI );
+                // define index of header
+                SFARILineInfo.setIndex( headers );
+                SFARILineInfo.writeFinalHeader( outputSFARI );
 
-        String line = "";
-        int lineNumer = 1;
+                String line = "";
+                int lineNumer = 1;
 
-        while ( ( line = br.readLine() ) != null ) {
+                while ( ( line = br.readLine() ) != null ) {
 
-            System.out.println( "Line: " + lineNumer++ );
+                    System.out.println( "Line: " + lineNumer++ );
 
-            String finalLine = cvs2tsv( line ) + "\t end";
+                    String finalLine = cvs2tsv( line ) + "\t end";
 
-            SFARILineInfo sfariLineInfo = new SFARILineInfo( finalLine );
-            sfariLineInfo.writeFinalLine( outputSFARI );
+                    SFARILineInfo sfariLineInfo = new SFARILineInfo( finalLine );
+                    sfariLineInfo.writeFinalLine( outputSFARI );
 
+                }
+
+            }
         }
-
-        outputSFARI.close();
-
     }
 
     public static String cvs2tsv( String line ) {

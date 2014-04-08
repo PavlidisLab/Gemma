@@ -116,9 +116,9 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-        parse( stream );
-        stream.close();
+        try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
+            parse( stream );
+        }
     }
 
     /*

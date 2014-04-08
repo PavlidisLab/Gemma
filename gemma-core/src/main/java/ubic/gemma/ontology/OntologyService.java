@@ -15,7 +15,6 @@
 package ubic.gemma.ontology;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.springframework.beans.factory.InitializingBean;
 
@@ -55,8 +54,8 @@ public interface OntologyService extends InitializingBean {
      * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant.
      * @return
      */
-    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, String categoryUri,
-            Taxon taxon );
+    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString,
+            String categoryUri, Taxon taxon );
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list

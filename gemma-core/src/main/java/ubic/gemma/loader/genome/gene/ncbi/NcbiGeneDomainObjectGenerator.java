@@ -200,10 +200,10 @@ public class NcbiGeneDomainObjectGenerator {
 
             //
             log.debug( "Parsing GeneInfo =" + geneInfoFile.asFile().getAbsolutePath() );
-            InputStream is = FileTools
-                    .getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile().getAbsolutePath() );
-            infoParser.parse( is );
-            is.close();
+            try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( geneInfoFile.asFile()
+                    .getAbsolutePath() );) {
+                infoParser.parse( is );
+            }
         } catch ( IOException e ) {
             // infoProducerDone.set( true );
             throw new RuntimeException( e );

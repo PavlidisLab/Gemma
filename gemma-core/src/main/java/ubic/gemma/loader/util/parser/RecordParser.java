@@ -37,9 +37,9 @@ public abstract class RecordParser<T> implements Parser<T> {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        FileInputStream stream = new FileInputStream( file );
-        parse( stream );
-        stream.close();
+        try (FileInputStream stream = new FileInputStream( file );) {
+            parse( stream );
+        }
     }
 
     /*

@@ -177,9 +177,9 @@ public class GeoFamilyParser implements Parser<Object> {
      */
     @Override
     public void parse( File f ) throws IOException {
-        InputStream a = new FileInputStream( f );
-        this.parse( a );
-        a.close();
+        try (InputStream a = new FileInputStream( f );) {
+            this.parse( a );
+        }
     }
 
     /*
@@ -197,58 +197,62 @@ public class GeoFamilyParser implements Parser<Object> {
             throw new IOException( "No bytes to read from the input stream." );
         }
 
-        final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );
+        try (final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
 
-        log.debug( "Parsing...." );
+            log.debug( "Parsing...." );
 
-        final ExecutorService executor = Executors.newSingleThreadExecutor();
+            final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-        FutureTask<Exception> future = new FutureTask<Exception>( new Callable<Exception>() {
-            @Override
-            public Exception call() {
-                try {
-                    return doParse( dis );
-                } catch ( Exception e ) {
-                    log.error( e, e );
-                    return e;
+            FutureTask<Exception> future = new FutureTask<Exception>( new Callable<Exception>() {
+                @Override
+                public Exception call() {
+                    try {
+                        Exception ex = doParse( dis );
+                        dis.close();
+                        return ex;
+                    } catch ( Exception e ) {
+                        log.error( e, e );
+                        return e;
+                    }
+
                 }
+            } );
 
+            executor.execute( future );
+            executor.shutdown();
+
+            while ( !future.isDone() && !future.isCancelled() ) {
+                try {
+                    TimeUnit.SECONDS.sleep( 5L );
+                } catch ( InterruptedException e ) {
+                    // probably cancelled.
+                    dis.close();
+                    return;
+                }
+                log.info( parsedLines + " lines parsed." );
             }
-        } );
 
-        executor.execute( future );
-        executor.shutdown();
-
-        while ( !future.isDone() && !future.isCancelled() ) {
             try {
-                TimeUnit.SECONDS.sleep( 5L );
+                Exception e = future.get();
+                if ( e != null ) {
+                    log.error( e.getMessage() );
+                    throw new RuntimeException( e.getCause() );
+                }
+            } catch ( ExecutionException e ) {
+                throw new RuntimeException( "Parse failed", e.getCause() );
+            } catch ( java.util.concurrent.CancellationException e ) {
+                throw new RuntimeException( "Parse was cancelled", e.getCause() );
             } catch ( InterruptedException e ) {
-                // probably cancelled.
-                return;
+                throw new RuntimeException( "Parse was interrupted", e.getCause() );
             }
-            log.info( parsedLines + " lines parsed." );
+
+            executor.shutdownNow();
+
+            assert future.isDone();
+            // assert executor.isTerminated();
+
+            log.info( "Done parsing." );
         }
-
-        try {
-            Exception e = future.get();
-            if ( e != null ) {
-                log.error( e.getMessage() );
-                throw new RuntimeException( e.getCause() );
-            }
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Parse failed", e.getCause() );
-        } catch ( java.util.concurrent.CancellationException e ) {
-            throw new RuntimeException( "Parse was cancelled", e.getCause() );
-        } catch ( InterruptedException e ) {
-            throw new RuntimeException( "Parse was interrupted", e.getCause() );
-        }
-
-        executor.shutdownNow();
-
-        assert future.isDone();
-        // assert executor.isTerminated();
-
-        log.info( "Done parsing." );
     }
 
     /*
@@ -258,9 +262,9 @@ public class GeoFamilyParser implements Parser<Object> {
      */
     @Override
     public void parse( String fileName ) throws IOException {
-        InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );
-        parse( is );
-        is.close();
+        try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( fileName );) {
+            parse( is );
+        }
     }
 
     /**

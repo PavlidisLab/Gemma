@@ -31,7 +31,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated class under test is deprecated
  */
+@Deprecated
 public class GoldenPathBioSequenceLoaderTest extends BaseSpringContextTest {
 
     @Autowired

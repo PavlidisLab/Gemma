@@ -87,12 +87,10 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
         for ( BioAssaySet ee : expressionExperiments ) {
 
             if ( ee instanceof ExpressionExperiment ) {
+                ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
 
-                try {
-                    ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-
-                    PrintWriter writer = new PrintWriter( outFileName + "_"
-                            + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() ) + ".txt" );
+                try (PrintWriter writer = new PrintWriter( outFileName + "_"
+                        + FileTools.cleanForFileName( ( ( ExpressionExperiment ) ee ).getShortName() ) + ".txt" );) {
 
                     edWriter.write( writer, ( ExpressionExperiment ) ee, true, true );
                     writer.flush();

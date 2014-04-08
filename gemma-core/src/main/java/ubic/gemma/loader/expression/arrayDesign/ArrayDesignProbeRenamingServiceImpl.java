@@ -40,7 +40,10 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated this should probably not be used. Instead we should add new designs with the required probe naming
+ *             scheme.
  */
+@Deprecated
 @Component
 public class ArrayDesignProbeRenamingServiceImpl implements ArrayDesignProbeRenamingService {
 
@@ -107,37 +110,37 @@ public class ArrayDesignProbeRenamingServiceImpl implements ArrayDesignProbeRena
      * @throws IOException
      */
     private Map<String, String> parseIdFile( InputStream newIdFile ) throws IOException {
-        BufferedReader br = new BufferedReader( new InputStreamReader( newIdFile ) );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( newIdFile ) );) {
 
-        String line = null;
+            String line = null;
 
-        Map<String, String> old2new = new HashMap<String, String>();
-        while ( ( line = br.readLine() ) != null ) {
-            String[] fields = line.split( "\t" );
-            if ( fields.length < 2 ) continue;
-            String originalProbeName = fields[0];
-            String newProbeName = fields[1];
+            Map<String, String> old2new = new HashMap<String, String>();
+            while ( ( line = br.readLine() ) != null ) {
+                String[] fields = line.split( "\t" );
+                if ( fields.length < 2 ) continue;
+                String originalProbeName = fields[0];
+                String newProbeName = fields[1];
 
-            if ( old2new.containsKey( newProbeName ) ) {
-                log.warn( newProbeName + " is a duplicate, will mangle to make unique" );
-                String candidateNewProbeName = newProbeName;
-                int i = 1;
-                while ( old2new.containsKey( newProbeName ) ) {
-                    newProbeName = candidateNewProbeName + DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR + "Dup" + i;
-                    i++;
-                    // just in case...
-                    if ( i > 100 ) {
-                        log.warn( "Was unable to create unique probe name for " + originalProbeName );
-                        continue;
+                if ( old2new.containsKey( newProbeName ) ) {
+                    log.warn( newProbeName + " is a duplicate, will mangle to make unique" );
+                    String candidateNewProbeName = newProbeName;
+                    int i = 1;
+                    while ( old2new.containsKey( newProbeName ) ) {
+                        newProbeName = candidateNewProbeName + DUPLICATE_PROBE_NAME_MUNGE_SEPARATOR + "Dup" + i;
+                        i++;
+                        // just in case...
+                        if ( i > 100 ) {
+                            log.warn( "Was unable to create unique probe name for " + originalProbeName );
+                            continue;
+                        }
                     }
                 }
+
+                old2new.put( originalProbeName, newProbeName );
             }
 
-            old2new.put( originalProbeName, newProbeName );
+            return old2new;
         }
-        br.close();
-
-        return old2new;
     }
 
 }

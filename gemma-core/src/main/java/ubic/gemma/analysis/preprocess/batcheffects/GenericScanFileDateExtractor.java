@@ -55,7 +55,6 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
                 if ( date == null ) date = parseLongFormat( line );
 
                 if ( date != null || ++count > MAX_HEADER_LINES ) {
-                    reader.close();
 
                     if ( date != null && date.after( new Date() ) ) {
                         throw new RuntimeException( "Did not get a valid date (Line was:" + line

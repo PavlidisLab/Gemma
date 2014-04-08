@@ -1212,8 +1212,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         assert tax != null;
 
         // FIXME TESTME
-        Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService
-                .getCoexpression( ee, true );
+        Collection<CoexpressionValueObject> geneLinks = gene2geneCoexpressionService.getCoexpression( ee, true );
 
         Date timestamp = new Date( System.currentTimeMillis() );
         StringBuffer buf = new StringBuffer();
@@ -1353,18 +1352,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     private void writeMatrix( File file, Map<CompositeSequence, String[]> geneAnnotations,
             ExpressionDataMatrix<?> expressionDataMatrix, boolean gzipped ) throws IOException, FileNotFoundException {
-
-        OutputStream fout = new FileOutputStream( file );
+        MatrixWriter matrixWriter = new MatrixWriter();
 
         if ( gzipped ) {
-            fout = new GZIPOutputStream( fout );
+            try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
+                matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
+            }
+        } else {
+            try (Writer writer = new OutputStreamWriter( new FileOutputStream( file ) );) {
+                matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
+            }
         }
 
-        Writer writer = new OutputStreamWriter( fout );
-        MatrixWriter matrixWriter = new MatrixWriter();
-        matrixWriter.writeWithStringifiedGeneAnnotations( writer, expressionDataMatrix, geneAnnotations, true );
-        writer.flush();
-        writer.close();
     }
 
     /**

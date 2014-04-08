@@ -31,6 +31,7 @@ import javax.jms.ObjectMessage;
 
 /**
  * This is part of the worker Spring context-configured beans, listens for messages on task control queue.
+ * 
  * @author anton
  */
 @Component("taskControlListener")
@@ -63,6 +64,9 @@ public class TaskControlListener implements MessageListener {
                 case ADD_EMAIL_NOTIFICATION:
                     log.info( "Received ADD_EMAIL_NOTIFICATION control message for task: " + taskControl.getTaskId() );
                     submittedTask.addEmailAlertNotificationAfterCompletion();
+                    break;
+                default:
+                    log.info( "Unknown request: " + taskControl.getRequest() + ", no action taken" );
                     break;
             }
 

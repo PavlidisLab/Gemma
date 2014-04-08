@@ -47,7 +47,9 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class GoldenPathBioSequenceLoader {
 
     private static final int QUEUE_SIZE = 30000;
@@ -80,9 +82,9 @@ public class GoldenPathBioSequenceLoader {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        FileInputStream stream = new FileInputStream( file );
-        load( stream );
-        stream.close();
+        try (FileInputStream stream = new FileInputStream( file );) {
+            load( stream );
+        }
     }
 
     /**

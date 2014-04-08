@@ -119,16 +119,17 @@ public class HttpFetcher extends AbstractFetcher {
                 URL urlPattern = new URL( seekFile );
 
                 InputStream inputStream = new BufferedInputStream( urlPattern.openStream() );
-                OutputStream outputStream = new FileOutputStream( new File( outputFileName ) );
+                try (OutputStream outputStream = new FileOutputStream( new File( outputFileName ) );) {
 
-                final byte[] buffer = new byte[65536];
-                int read = -1;
+                    final byte[] buffer = new byte[65536];
+                    int read = -1;
 
-                while ( ( read = inputStream.read( buffer ) ) > -1 ) {
-                    outputStream.write( buffer, 0, read );
+                    while ( ( read = inputStream.read( buffer ) ) > -1 ) {
+                        outputStream.write( buffer, 0, read );
+                    }
+                    outputStream.close();
+                    return Boolean.TRUE;
                 }
-                outputStream.close();
-                return Boolean.TRUE;
             }
         } );
         return future;

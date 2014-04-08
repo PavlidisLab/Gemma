@@ -37,7 +37,9 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {

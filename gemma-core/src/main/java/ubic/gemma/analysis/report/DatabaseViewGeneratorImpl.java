@@ -135,65 +135,65 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = getViewFile( DATASET_SUMMARY_VIEW_BASENAME );
         log.info( "Writing to " + file );
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
 
-        /*
-         * Load all the data sets
-         */
-        Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
+            /*
+             * Load all the data sets
+             */
+            Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
 
-        writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
+            writer.write( "GemmaDsId\tSource\tSourceAccession\tShortName\tName\tDescription\ttaxon\tManufacturer\n" );
 
-        /*
-         * Print out their names etc.
-         */
-        int i = 0;
-        for ( ExpressionExperiment vo : vos ) {
-            vo = expressionExperimentService.thawLite( vo );
-            log.info( "Processing: " + vo.getShortName() );
+            /*
+             * Print out their names etc.
+             */
+            int i = 0;
+            for ( ExpressionExperiment vo : vos ) {
+                vo = expressionExperimentService.thawLite( vo );
+                log.info( "Processing: " + vo.getShortName() );
 
-            String acc = "";
-            String source = "";
+                String acc = "";
+                String source = "";
 
-            if ( vo.getAccession() != null && vo.getAccession().getAccession() != null ) {
-                acc = vo.getAccession().getAccession();
-                source = vo.getAccession().getExternalDatabase().getName();
-            }
-
-            Long gemmaId = vo.getId();
-            String shortName = vo.getShortName();
-            String name = vo.getName();
-            String description = vo.getDescription();
-            description = StringUtils.replaceChars( description, '\t', ' ' );
-            description = StringUtils.replaceChars( description, '\n', ' ' );
-            description = StringUtils.replaceChars( description, '\r', ' ' );
-
-            Taxon taxon = expressionExperimentService.getTaxon( vo );
-
-            if ( taxon == null ) continue;
-
-            Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
-            StringBuffer manufacturers = new StringBuffer();
-
-            // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
-            for ( ArrayDesign ad : ads ) {
-                ad = arrayDesignService.thawLite( ad );
-                if ( ad.getDesignProvider() == null ) {
-                    log.debug( "Array Design: " + ad.getShortName()
-                            + " has no design provoider assoicated with it. Skipping" );
-                    continue;
+                if ( vo.getAccession() != null && vo.getAccession().getAccession() != null ) {
+                    acc = vo.getAccession().getAccession();
+                    source = vo.getAccession().getExternalDatabase().getName();
                 }
-                manufacturers.append( ad.getDesignProvider().getName() + "," );
+
+                Long gemmaId = vo.getId();
+                String shortName = vo.getShortName();
+                String name = vo.getName();
+                String description = vo.getDescription();
+                description = StringUtils.replaceChars( description, '\t', ' ' );
+                description = StringUtils.replaceChars( description, '\n', ' ' );
+                description = StringUtils.replaceChars( description, '\r', ' ' );
+
+                Taxon taxon = expressionExperimentService.getTaxon( vo );
+
+                if ( taxon == null ) continue;
+
+                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( vo );
+                StringBuffer manufacturers = new StringBuffer();
+
+                // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
+                for ( ArrayDesign ad : ads ) {
+                    ad = arrayDesignService.thawLite( ad );
+                    if ( ad.getDesignProvider() == null ) {
+                        log.debug( "Array Design: " + ad.getShortName()
+                                + " has no design provoider assoicated with it. Skipping" );
+                        continue;
+                    }
+                    manufacturers.append( ad.getDesignProvider().getName() + "," );
+                }
+
+                writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
+                        description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
+
+                if ( limit > 0 && ++i > limit ) break;
+
             }
-
-            writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
-                    description, taxon.getCommonName(), StringUtils.removeEnd( manufacturers.toString(), "," ) ) );
-
-            if ( limit > 0 && ++i > limit ) break;
 
         }
-
-        writer.close();
     }
 
     /*
@@ -210,55 +210,55 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = getViewFile( DATASET_TISSUE_VIEW_BASENAME );
         log.info( "Writing to " + file );
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
 
-        /*
-         * Load all the data sets
-         */Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
+            /*
+             * Load all the data sets
+             */Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
 
-        /*
-         * For all of their annotations... if it's a tissue, print out a line
-         */
-        writer.write( "GemmaDsId\tTerm\tTermURI\n" );
-        int i = 0;
-        for ( ExpressionExperiment vo : vos ) {
-            vo = expressionExperimentService.thawLite( vo );
+            /*
+             * For all of their annotations... if it's a tissue, print out a line
+             */
+            writer.write( "GemmaDsId\tTerm\tTermURI\n" );
+            int i = 0;
+            for ( ExpressionExperiment vo : vos ) {
+                vo = expressionExperimentService.thawLite( vo );
 
-            log.info( "Processing: " + vo.getShortName() );
+                log.info( "Processing: " + vo.getShortName() );
 
-            Long gemmaId = vo.getId();
+                Long gemmaId = vo.getId();
 
-            for ( Characteristic c : vo.getCharacteristics() ) {
+                for ( Characteristic c : vo.getCharacteristics() ) {
 
-                if ( StringUtils.isBlank( c.getValue() ) ) {
-                    continue;
-                }
-
-                /*
-                 * check if vocab characteristic.
-                 */
-
-                if ( c.getCategory().equals( "OrganismPart" ) ) { // or tissue? check URI
-
-                    String uri = "";
-
-                    if ( c instanceof VocabCharacteristic ) {
-                        VocabCharacteristic vocabCharacteristic = ( VocabCharacteristic ) c;
-                        if ( StringUtils.isNotBlank( vocabCharacteristic.getValueUri() ) )
-                            uri = vocabCharacteristic.getValueUri();
+                    if ( StringUtils.isBlank( c.getValue() ) ) {
+                        continue;
                     }
 
-                    writer.write( String.format( "%d\t%s\t%s\n", gemmaId, c.getValue(), uri ) );
+                    /*
+                     * check if vocab characteristic.
+                     */
+
+                    if ( c.getCategory().equals( "OrganismPart" ) ) { // or tissue? check URI
+
+                        String uri = "";
+
+                        if ( c instanceof VocabCharacteristic ) {
+                            VocabCharacteristic vocabCharacteristic = ( VocabCharacteristic ) c;
+                            if ( StringUtils.isNotBlank( vocabCharacteristic.getValueUri() ) )
+                                uri = vocabCharacteristic.getValueUri();
+                        }
+
+                        writer.write( String.format( "%d\t%s\t%s\n", gemmaId, c.getValue(), uri ) );
+
+                    }
 
                 }
+
+                if ( limit > 0 && ++i > limit ) break;
 
             }
 
-            if ( limit > 0 && ++i > limit ) break;
-
         }
-
-        writer.close();
     }
 
     /*
@@ -275,93 +275,95 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
          */
         File file = getViewFile( DATASET_DIFFEX_VIEW_BASENAME );
         log.info( "Writing to " + file );
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        try (Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );) {
 
-        /*
-         * Load all the data sets
-         */Collection<ExpressionExperiment> experiments = expressionExperimentService.loadAll();
+            /*
+             * Load all the data sets
+             */Collection<ExpressionExperiment> experiments = expressionExperimentService.loadAll();
 
-        /*
-         * For each gene that is differentially expressed, print out a line per contrast
-         */
-        writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
-        int i = 0;
-        for ( ExpressionExperiment ee : experiments ) {
-            ee = expressionExperimentService.thawLite( ee );
+            /*
+             * For each gene that is differentially expressed, print out a line per contrast
+             */
+            writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
+            int i = 0;
+            for ( ExpressionExperiment ee : experiments ) {
+                ee = expressionExperimentService.thawLite( ee );
 
-            Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService.getAnalyses( ee );
-            if ( results == null || results.isEmpty() ) {
-                log.warn( "No differential expression results found for " + ee );
-                continue;
-            }
+                Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService
+                        .getAnalyses( ee );
+                if ( results == null || results.isEmpty() ) {
+                    log.warn( "No differential expression results found for " + ee );
+                    continue;
+                }
 
-            if ( results.size() > 1 ) {
-                /*
-                 * FIXME. Should probably skip for this purpose.
-                 */
-            }
+                if ( results.size() > 1 ) {
+                    /*
+                     * FIXME. Should probably skip for this purpose.
+                     */
+                }
 
-            log.info( "Processing: " + ee.getShortName() );
+                log.info( "Processing: " + ee.getShortName() );
 
-            for ( DifferentialExpressionAnalysis analysis : results ) {
+                for ( DifferentialExpressionAnalysis analysis : results ) {
 
-                for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
+                    for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 
-                    ears = differentialExpressionResultService.thaw( ears );
+                        ears = differentialExpressionResultService.thaw( ears );
 
-                    FactorValue baselineGroup = ears.getBaselineGroup();
+                        FactorValue baselineGroup = ears.getBaselineGroup();
 
-                    if ( baselineGroup == null ) {
-                        // log.warn( "No baseline defined for " + ee ); // interaction
-                        continue;
-                    }
-
-                    if ( ExperimentalDesignUtils.isBatch( baselineGroup.getExperimentalFactor() ) ) {
-                        continue;
-                    }
-
-                    String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
-
-                    // Get the factor category name
-                    String factorName = "";
-                    String factorURI = "";
-
-                    for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-                        factorName += ef.getName() + ",";
-                        if ( ef.getCategory() instanceof VocabCharacteristic ) {
-                            factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
-                        }
-                    }
-                    factorName = StringUtils.removeEnd( factorName, "," );
-                    factorURI = StringUtils.removeEnd( factorURI, "," );
-
-                    if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
-                        log.warn( "No  differential expression analysis results found for " + ee );
-                        continue;
-                    }
-
-                    // Generate probe details
-                    for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
-
-                        if ( dear == null ) {
-                            log.warn( "Missing results for " + ee + " skipping to next. " );
+                        if ( baselineGroup == null ) {
+                            // log.warn( "No baseline defined for " + ee ); // interaction
                             continue;
                         }
 
-                        if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
+                        if ( ExperimentalDesignUtils.isBatch( baselineGroup.getExperimentalFactor() ) ) {
+                            continue;
+                        }
 
-                        String formatted = formatDiffExResult( ee, dear, factorName, factorURI, baselineDescription );
+                        String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
 
-                        if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
+                        // Get the factor category name
+                        String factorName = "";
+                        String factorURI = "";
 
-                    } // dear loop
-                } // ears loop
-            } // analysis loop
+                        for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
+                            factorName += ef.getName() + ",";
+                            if ( ef.getCategory() instanceof VocabCharacteristic ) {
+                                factorURI += ( ( VocabCharacteristic ) ef.getCategory() ).getCategoryUri() + ",";
+                            }
+                        }
+                        factorName = StringUtils.removeEnd( factorName, "," );
+                        factorURI = StringUtils.removeEnd( factorURI, "," );
 
-            if ( limit > 0 && ++i > limit ) break;
+                        if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
+                            log.warn( "No  differential expression analysis results found for " + ee );
+                            continue;
+                        }
 
-        }// EE loop
-        writer.close();
+                        // Generate probe details
+                        for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
+
+                            if ( dear == null ) {
+                                log.warn( "Missing results for " + ee + " skipping to next. " );
+                                continue;
+                            }
+
+                            if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD )
+                                continue;
+
+                            String formatted = formatDiffExResult( ee, dear, factorName, factorURI, baselineDescription );
+
+                            if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
+
+                        } // dear loop
+                    } // ears loop
+                } // analysis loop
+
+                if ( limit > 0 && ++i > limit ) break;
+
+            }// EE loop
+        }
     }
 
     /**

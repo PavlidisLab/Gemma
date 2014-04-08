@@ -71,31 +71,31 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
     @Override
     public void parse( InputStream is ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        StopWatch timer = new StopWatch();
-        timer.start();
-        int nullLines = 0;
-        String line = null;
-        int linesParsed = 0;
-        while ( ( line = br.readLine() ) != null ) {
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+            StopWatch timer = new StopWatch();
+            timer.start();
+            int nullLines = 0;
+            String line = null;
+            int linesParsed = 0;
+            while ( ( line = br.readLine() ) != null ) {
 
-            if ( line.startsWith( COMMENTMARK ) ) {
-                continue;
-            }
-            parseOneLine( line );
+                if ( line.startsWith( COMMENTMARK ) ) {
+                    continue;
+                }
+                parseOneLine( line );
 
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
-                String message = "Parsed " + linesParsed + " lines...  ";
-                log.info( message );
-                timer.reset();
-                timer.start();
+                if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
+                    String message = "Parsed " + linesParsed + " lines...  ";
+                    log.info( message );
+                    timer.reset();
+                    timer.start();
+                }
+
             }
+            log.info( "Parsed " + linesParsed + " lines. "
+                    + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
 
         }
-        log.info( "Parsed " + linesParsed + " lines. "
-                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
-
-        br.close();
     }
 
     /*

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -184,15 +185,13 @@ public class BiomartEnsemblNcbiFetcher {
      */
     private BufferedReader readFile( URL urlToRead, String data ) {
         URLConnection conn = null;
-        OutputStreamWriter writer = null;
         try {
             conn = urlToRead.openConnection();
             conn.setDoOutput( true );
-            writer = new OutputStreamWriter( conn.getOutputStream() );
-            writer.write( data );
-            writer.flush();
-            writer.close();
-            return new BufferedReader( new InputStreamReader( conn.getInputStream() ) );
+            try (Writer writer = new OutputStreamWriter( conn.getOutputStream() );) {
+                writer.write( data );
+                return new BufferedReader( new InputStreamReader( conn.getInputStream() ) );
+            }
         } catch ( IOException e ) {
             log.error( e );
             throw new RuntimeException( e );

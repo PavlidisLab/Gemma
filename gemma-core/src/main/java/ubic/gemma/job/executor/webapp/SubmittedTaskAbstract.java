@@ -25,10 +25,7 @@ import ubic.gemma.job.TaskResult;
 import java.util.Date;
 
 /**
- * Shared code between SubmittedTaskLocal and SubmittedTaskProxy.
- *
- * author: anton
- * date: 08/02/13
+ * Shared code between SubmittedTaskLocal and SubmittedTaskProxy. author: anton date: 08/02/13
  */
 public abstract class SubmittedTaskAbstract<T extends TaskResult> implements SubmittedTask<T> {
 
@@ -75,15 +72,22 @@ public abstract class SubmittedTaskAbstract<T extends TaskResult> implements Sub
 
     protected void setTimeStampAndStatus( Status status, Date timeStamp ) {
         this.status = status;
-        switch (status) {
+        switch ( status ) {
             case RUNNING:
                 startTime = timeStamp;
                 break;
-            case FAILED: case COMPLETED:
+            case FAILED:
+            case COMPLETED:
                 finishTime = timeStamp;
                 break;
             case CANCELLING:
-                //TODO: last cancel request time?
+                // TODO: last cancel request time?
+                break;
+            case QUEUED:
+                break;
+            case UNKNOWN:
+                break;
+            default:
                 break;
         }
     }
