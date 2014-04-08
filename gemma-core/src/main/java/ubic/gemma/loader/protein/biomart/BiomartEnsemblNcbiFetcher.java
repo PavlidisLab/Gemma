@@ -190,6 +190,7 @@ public class BiomartEnsemblNcbiFetcher {
             conn.setDoOutput( true );
             try (Writer writer = new OutputStreamWriter( conn.getOutputStream() );) {
                 writer.write( data );
+                writer.flush();
                 return new BufferedReader( new InputStreamReader( conn.getInputStream() ) );
             }
         } catch ( IOException e ) {
