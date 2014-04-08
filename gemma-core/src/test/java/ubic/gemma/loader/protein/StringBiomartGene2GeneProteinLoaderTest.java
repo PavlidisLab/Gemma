@@ -306,6 +306,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                     null, null, taxaZebraFish );
         } catch ( ConnectException e ) {
             log.warn( "Connection error, skipping test" );
+            return;
         } catch ( IOException e ) {
             if ( e.getMessage().startsWith( "Error from BioMart" ) ) {
                 log.warn( e.getMessage() );
