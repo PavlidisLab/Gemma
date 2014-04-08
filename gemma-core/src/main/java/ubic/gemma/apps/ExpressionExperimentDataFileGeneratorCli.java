@@ -183,7 +183,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
             super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {
-            log.info( "Caught runtime error: " + e );
+            log.error( e, e );
             super.errorObjects.add( "FAILED: for ee: " + ee.getShortName() + " ID= " + ee.getId() + " Error: "
                     + e.getMessage() );
         }
