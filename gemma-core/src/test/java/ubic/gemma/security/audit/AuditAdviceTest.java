@@ -37,7 +37,6 @@ import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
@@ -238,8 +237,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         int sizeAfterFirstUpdate = events.size();
 
         assertEquals( "Should have a 'create' and an 'update'", 2, sizeAfterFirstUpdate );
-		log.info( "events.get( 0 ).getAction() = " + events.get( 0 ).getAction() );
-		log.info( "events.get( 1 ).getAction() = " + events.get( 1 ).getAction() );
+        log.info( "events.get( 0 ).getAction() = " + events.get( 0 ).getAction() );
+        log.info( "events.get( 1 ).getAction() = " + events.get( 1 ).getAction() );
 
         assertEquals( AuditAction.CREATE, events.get( 0 ).getAction() );
         assertEquals( AuditAction.UPDATE, events.get( sizeAfterFirstUpdate - 1 ).getAction() );
