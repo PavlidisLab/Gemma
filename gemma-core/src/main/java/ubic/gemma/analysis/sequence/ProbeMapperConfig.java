@@ -25,6 +25,18 @@ public class ProbeMapperConfig {
 
     public static final boolean DEFAULT_ALLOW_PREDICTED = false;
 
+    public static final int MAX_WARNINGS = 100;
+
+    private int warnings = 0;
+
+    protected int getWarnings() {
+        return warnings;
+    }
+
+    protected void incrementWarnings() {
+        this.warnings++;
+    }
+
     /**
      * Sequence identity below which we throw hits away (expressed as a fraction)
      */
