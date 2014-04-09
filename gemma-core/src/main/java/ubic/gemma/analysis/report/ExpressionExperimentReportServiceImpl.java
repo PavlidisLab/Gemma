@@ -34,6 +34,8 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
@@ -143,7 +145,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             CacheConfiguration config = new CacheConfiguration( EESTATS_CACHE_NAME, maxElements );
             config.setStatistics( false );
             config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.setOverflowToDisk( false );
+            config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
             config.setEternal( eternal );
             config.setTimeToIdleSeconds( 0 );
             config.setTimeToLiveSeconds( secondsToLive );

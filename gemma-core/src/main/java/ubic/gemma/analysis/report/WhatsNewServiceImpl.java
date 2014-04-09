@@ -293,7 +293,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         Element element = this.whatsNewCache.get( object );
         if ( object.type.equalsIgnoreCase( "ArrayDesign" ) ) {
             if ( element != null ) {
-                auditable = ( Auditable ) element.getValue();
+                auditable = ( Auditable ) element.getObjectValue();
             } else {
 
                 try {
@@ -307,7 +307,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
         } else if ( object.type.equalsIgnoreCase( "ExpressionExperiment" ) ) {
             if ( element != null ) {
-                auditable = ( Auditable ) element.getValue();
+                auditable = ( Auditable ) element.getObjectValue();
             } else {
                 // this is slower than loading them all at once but the cache saves even more time.
 

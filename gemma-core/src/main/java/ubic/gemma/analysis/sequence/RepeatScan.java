@@ -237,13 +237,14 @@ public class RepeatScan {
                     + outputSequencePath + " or " + outputSummary );
         }
         InputStream is = new FileInputStream( outputSummary );
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-        String nothingFound = "There were no repetitive sequences detected";
-        String line = br.readLine();
-        if ( line == null || line.startsWith( nothingFound ) ) {
-            log.info( "There were no repeats found" );
-        } else {
-            log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+            String nothingFound = "There were no repetitive sequences detected";
+            String line = br.readLine();
+            if ( line == null || line.startsWith( nothingFound ) ) {
+                log.info( "There were no repeats found" );
+            } else {
+                log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
+            }
         }
 
     }
