@@ -96,18 +96,11 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
 
-            if ( sequence.getName().equals( "ILMN_1791332" ) ) {
-                log.info( "We are here" );
-            }
-
             if ( log.isDebugEnabled() ) {
                 log.debug( blatResultsForSequence.size() + " Blat results for " + sequence );
             }
 
-            if ( blatResultsForSequence.size() == 0 ) { // will this happen at this point? I think not.
-                log.info( "No blat hits for " + sequence );
-                continue;
-            }
+            assert !blatResultsForSequence.isEmpty();
 
             Collection<BlatResult> trimmedBlatResultsForSequence = trimNonCanonicalChromosomeHits(
                     blatResultsForSequence, config );
@@ -118,7 +111,12 @@ public class ProbeMapperImpl implements ProbeMapper {
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
                     && trimmedBlatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
-                log.info( "Skipped " + sequence + " due to repeat content (" + fractionRepeats + ")" );
+                if ( warnings < MAX_WARNINGS ) {
+                    log.info( "Skipped " + sequence + " due to repeat content (" + fractionRepeats + ")" );
+                    if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+
+                    warnings++;
+                }
                 continue;
             }
 
@@ -128,8 +126,13 @@ public class ProbeMapperImpl implements ProbeMapper {
              * is to the site of a known gene.
              */
             if ( trimmedBlatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
-                log.info( "Skipped " + sequence + " due to non-specificity (" + trimmedBlatResultsForSequence.size()
-                        + " hits)" );
+                if ( warnings < MAX_WARNINGS ) {
+                    log.info( "Skipped " + sequence + " due to non-specificity ("
+                            + trimmedBlatResultsForSequence.size() + " hits)" );
+                    if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+
+                    warnings++;
+                }
                 continue;
             }
 
@@ -199,11 +202,13 @@ public class ProbeMapperImpl implements ProbeMapper {
             }
 
             // it might be empty now...
-            if ( blatAssociationsForSequence.isEmpty() && warnings < MAX_WARNINGS ) {
-                log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
-                        + " individual blat results checked; " + skipped
-                        + " had identity or score below threshold, rest had no mapping" );
-                if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+            if ( blatAssociationsForSequence.isEmpty() ) {
+                if ( warnings < MAX_WARNINGS ) {
+                    log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
+                            + " individual blat results checked; " + skipped
+                            + " had identity or score below threshold, rest had no mapping" );
+                    if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                }
                 warnings++;
                 continue;
             } else if ( log.isDebugEnabled() ) {
