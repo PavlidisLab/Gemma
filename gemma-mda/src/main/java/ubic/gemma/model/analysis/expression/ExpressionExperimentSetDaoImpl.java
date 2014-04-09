@@ -39,7 +39,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
@@ -400,7 +399,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
          * This can be sped up by checking if any are master sets.
          */
 
-        Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( eeSets );
+        // Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( eeSets );
 
         // FIXME: do we need this for meta-analysis?
 
