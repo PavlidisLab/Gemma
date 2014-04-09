@@ -26,8 +26,10 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
@@ -104,7 +106,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
                 CacheConfiguration config = new CacheConfiguration( cacheName, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.setOverflowToDisk( false );
+                config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
                 config.setEternal( eternal );
                 config.setTimeToIdleSeconds( timeToIdle );
                 config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -172,7 +174,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Long g ) {
         Element element = cache.get( new CacheKey( ee.getId(), g ) );
         if ( element == null ) return null;
-        Collection<DoubleVectorValueObject> result = ( Collection<DoubleVectorValueObject> ) element.getValue();
+        Collection<DoubleVectorValueObject> result = ( Collection<DoubleVectorValueObject> ) element.getObjectValue();
 
         /*
          * See 2878 - we don't want to keep these values cached, so the vectors can be re-used.

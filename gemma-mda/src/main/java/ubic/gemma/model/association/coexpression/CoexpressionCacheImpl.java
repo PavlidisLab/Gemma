@@ -29,6 +29,8 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
@@ -152,7 +154,9 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
             CacheConfiguration config = new CacheConfiguration( GENE_COEXPRESSION_CACHE_NAME, maxElements );
             config.setStatistics( false );
             config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.setOverflowToDisk( false );
+            // replace with config.addPersistence().
+            config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
+            // config.setOverflowToDisk( false );
             config.setEternal( eternal );
             config.setTimeToIdleSeconds( timeToIdle );
             config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -240,7 +244,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
             if ( element == null ) return null;
             List<CoexpressionValueObject> result = new ArrayList<>();
 
-            for ( CoexpressionCacheValueObject co : ( List<CoexpressionCacheValueObject> ) element.getValue() ) {
+            for ( CoexpressionCacheValueObject co : ( List<CoexpressionCacheValueObject> ) element.getObjectValue() ) {
                 CoexpressionValueObject vo = co.toModifiable();
                 vo.setFromCache( true );
                 assert vo.getNumDatasetsSupporting() > 0;

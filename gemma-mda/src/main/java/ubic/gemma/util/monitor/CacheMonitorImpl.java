@@ -24,6 +24,7 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
 import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaClientConfiguration;
 
 import org.apache.commons.logging.Log;
@@ -105,7 +106,7 @@ public class CacheMonitorImpl implements CacheMonitor {
         buf.append( terracottaConfig != null ? ". The cache server's configuration URL is at ["
                 + terracottaConfig.getUrl() + "]" : "" );
         buf.append( ".<br/>" );
-        
+
         buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
         // FIXME make these sortable.
         buf.append( "<br/>&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
@@ -158,7 +159,9 @@ public class CacheMonitorImpl implements CacheMonitor {
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
             boolean eternal = cacheConfiguration.isEternal();
             buf.append( "<td>" + ( eternal ? "&bull;" : "" ) + "</td>" );
-            buf.append( "<td>" + ( cacheConfiguration.isOverflowToDisk() ? "&bull;" : "" ) + "</td>" );
+            buf.append( "<td>"
+                    + ( cacheConfiguration.getPersistenceConfiguration().getStrategy().equals( Strategy.NONE ) ? ""
+                            : "&bull;" ) + "</td>" );
             buf.append( "<td>" + cacheConfiguration.getMaxEntriesLocalHeap() + "</td>" );
 
             if ( eternal ) {

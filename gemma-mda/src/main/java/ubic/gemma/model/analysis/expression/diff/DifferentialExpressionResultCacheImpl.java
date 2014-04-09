@@ -29,8 +29,10 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
@@ -103,8 +105,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         int timeToLive = Settings.getInt( "gemma.cache.diffex.timetolive", CACHE_DEFAULT_TIME_TO_LIVE );
         int timeToIdle = Settings.getInt( "gemma.cache.diffex.timetoidle", CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean eternal = Settings.getBoolean( "gemma.cache.diffex.eternal", CACHE_DEFAULT_ETERNAL )
-                && timeToLive == 0;
+        boolean eternal = Settings.getBoolean( "gemma.cache.diffex.eternal", CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", true );
         boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.diffex.usedisk", CACHE_DEFAULT_OVERFLOW_TO_DISK );
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
@@ -123,7 +124,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
                 CacheConfiguration config = new CacheConfiguration( CACHE_NAME_BASE, maxElements );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.setOverflowToDisk( false );
+                config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
                 config.setEternal( eternal );
                 config.setTimeToIdleSeconds( timeToIdle );
                 config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -194,7 +195,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         assert cache != null;
         Element element = cache.get( new CacheKey( resultSet, g ) );
         if ( element == null ) return null;
-        return ( DiffExprGeneSearchResult ) element.getValue();
+        return ( DiffExprGeneSearchResult ) element.getObjectValue();
     }
 
     @Override
@@ -204,7 +205,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
         for ( Long g : genes ) {
             Element element = cache.get( new CacheKey( resultSet, g ) );
             if ( element != null ) {
-                results.add( ( DiffExprGeneSearchResult ) element.getValue() );
+                results.add( ( DiffExprGeneSearchResult ) element.getObjectValue() );
             }
         }
         return results;
@@ -253,7 +254,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     public List<DifferentialExpressionAnalysisResult> getTopHits( ExpressionAnalysisResultSet resultSet ) {
         Element element = this.topHitsCache.get( resultSet );
         if ( element == null ) return null;
-        return ( List<DifferentialExpressionAnalysisResult> ) element.getValue();
+        return ( List<DifferentialExpressionAnalysisResult> ) element.getObjectValue();
     }
 
 }

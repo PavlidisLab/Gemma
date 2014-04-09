@@ -51,7 +51,7 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
             Element element = this.gene2goCache.get( gene );
 
             if ( element != null )
-                result.put( gene, ( Collection<VocabCharacteristic> ) element.getValue() );
+                result.put( gene, ( Collection<VocabCharacteristic> ) element.getObjectValue() );
             else
                 needToFind.add( gene );
         }
@@ -98,7 +98,7 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
 
         Element element = this.gene2goCache.get( gene );
 
-        if ( element != null ) return ( Collection<VocabCharacteristic> ) element.getValue();
+        if ( element != null ) return ( Collection<VocabCharacteristic> ) element.getObjectValue();
 
         Collection<VocabCharacteristic> re = this.getGene2GOAssociationDao().findByGene( gene );
 
