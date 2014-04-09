@@ -1113,6 +1113,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         StringBuilder buf = new StringBuilder();
 
         BioAssaySet bas = analysis.getExperimentAnalyzed();
+        this.differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
 
         ExpressionExperiment ee = experimentForBioAssaySet( bas );
 
