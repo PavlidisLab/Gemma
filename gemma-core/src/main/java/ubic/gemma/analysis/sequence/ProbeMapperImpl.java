@@ -149,7 +149,8 @@ public class ProbeMapperImpl implements ProbeMapper {
             for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
 
                 if ( blatResult.getQuerySequence() == null
-                        || StringUtils.isBlank( blatResult.getQuerySequence().getSequence() ) ) {
+                        || ( blatResult.getQuerySequence().getLength() == null && StringUtils.isBlank( blatResult
+                                .getQuerySequence().getSequence() ) ) ) {
                     log.warn( "Blat result had no sequence: " + blatResult );
                     continue;
                 }
