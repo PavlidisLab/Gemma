@@ -91,7 +91,6 @@ public class ProbeMapperImpl implements ProbeMapper {
         assert !biosequenceToBlatResults.isEmpty();
 
         // Do them one sequence at a time.
-        int warnings = 0;
         for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
 
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
@@ -111,11 +110,11 @@ public class ProbeMapperImpl implements ProbeMapper {
             Double fractionRepeats = sequence.getFractionRepeats();
             if ( fractionRepeats != null && fractionRepeats > config.getMaximumRepeatFraction()
                     && trimmedBlatResultsForSequence.size() >= config.getNonSpecificSiteCountThreshold() ) {
-                if ( warnings < MAX_WARNINGS ) {
+                if ( config.getWarnings() < MAX_WARNINGS ) {
                     log.info( "Skipped " + sequence + " due to repeat content (" + fractionRepeats + ")" );
-                    if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                    if ( config.getWarnings() == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
 
-                    warnings++;
+                    config.incrementWarnings();
                 }
                 continue;
             }
@@ -126,12 +125,12 @@ public class ProbeMapperImpl implements ProbeMapper {
              * is to the site of a known gene.
              */
             if ( trimmedBlatResultsForSequence.size() >= config.getNonRepeatNonSpecificSiteCountThreshold() ) {
-                if ( warnings < MAX_WARNINGS ) {
+                if ( config.getWarnings() < MAX_WARNINGS ) {
                     log.info( "Skipped " + sequence + " due to non-specificity ("
                             + trimmedBlatResultsForSequence.size() + " hits)" );
-                    if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                    if ( config.getWarnings() == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
 
-                    warnings++;
+                    config.incrementWarnings();
                 }
                 continue;
             }
@@ -203,13 +202,13 @@ public class ProbeMapperImpl implements ProbeMapper {
 
             // it might be empty now...
             if ( blatAssociationsForSequence.isEmpty() ) {
-                if ( warnings < MAX_WARNINGS ) {
+                if ( config.getWarnings() < MAX_WARNINGS ) {
                     log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
                             + " individual blat results checked; " + skipped
                             + " had identity or score below threshold, rest had no mapping" );
-                    if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                    if ( config.getWarnings() == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
                 }
-                warnings++;
+                config.incrementWarnings();
                 continue;
             } else if ( log.isDebugEnabled() ) {
                 log.debug( blatAssociationsForSequence.size() + " associations for " + sequence );
