@@ -50,6 +50,7 @@ import ubic.gemma.util.ChromosomeUtil;
 @Component
 public class ProbeMapperImpl implements ProbeMapper {
 
+    private static final int MAX_WARNINGS = 100;
     private Log log = LogFactory.getLog( ProbeMapperImpl.class.getName() );
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
@@ -90,6 +91,7 @@ public class ProbeMapperImpl implements ProbeMapper {
         assert !biosequenceToBlatResults.isEmpty();
 
         // Do them one sequence at a time.
+        int warnings = 0;
         for ( BioSequence sequence : biosequenceToBlatResults.keySet() ) {
 
             Collection<BlatResult> blatResultsForSequence = biosequenceToBlatResults.get( sequence );
@@ -143,6 +145,12 @@ public class ProbeMapperImpl implements ProbeMapper {
             int skipped = 0;
             // map each blat result.
             for ( BlatResult blatResult : trimmedBlatResultsForSequence ) {
+
+                if ( blatResult.getQuerySequence() == null ) {
+                    log.warn( "Blat result had no sequence: " + blatResult + ", sequence should have been " + sequence );
+                    blatResult.setQuerySequence( sequence );
+                }
+
                 assert blatResult.score() >= 0 && blatResult.score() <= 1.0 : "Score was " + blatResult.score();
                 assert blatResult.identity() >= 0 && blatResult.identity() <= 1.0 : "Identity was "
                         + blatResult.identity();
@@ -191,10 +199,12 @@ public class ProbeMapperImpl implements ProbeMapper {
             }
 
             // it might be empty now...
-            if ( blatAssociationsForSequence.isEmpty() ) {
+            if ( blatAssociationsForSequence.isEmpty() && warnings < MAX_WARNINGS ) {
                 log.info( "No mappings for " + sequence + "; " + trimmedBlatResultsForSequence.size()
                         + " individual blat results checked; " + skipped
                         + " had identity or score below threshold, rest had no mapping" );
+                if ( warnings == MAX_WARNINGS ) log.info( "Further non-mappings will not be logged" );
+                warnings++;
                 continue;
             } else if ( log.isDebugEnabled() ) {
                 log.debug( blatAssociationsForSequence.size() + " associations for " + sequence );
