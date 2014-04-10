@@ -18,23 +18,29 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisUtil;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.FactorValueVector;
 
 /**
  * @author paul
@@ -302,6 +308,35 @@ public class ExperimentalDesignUtils {
 
     }
 
+    /**
+     * @param expressionExperiment
+     * @param removeBatchFactor if true, any factor(s) that look like "batch information" will be ignored.
+     * @return
+     */
+    public static CountingMap<FactorValueVector> getDesignMatrix(
+            ExpressionExperiment expressionExperiment, boolean removeBatchFactor ) {
+
+        Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
+                .getExperimentalFactors();
+
+        for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
+            ExperimentalFactor experimentalFactor = iterator.next();
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( experimentalFactor ) ) {
+                iterator.remove();
+            }
+        }
+
+        CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
+        for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
+            BioMaterial sample = assay.getSampleUsed();
+            assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
+
+        }
+
+        return assayCount;
+
+    }
+    
     /**
      * @param factors
      * @param samplesUsed
