@@ -304,9 +304,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         }
 
-        // we do this here because now we have IDs for everything.
-        expressionDataFileService.getDiffExpressionAnalysisArchiveFile( expressionExperiment, analysis, resultSets );
-
         for ( ExpressionAnalysisResultSet rs : resultSets ) {
             removeUnwantedResults( config.getQvalueThreshold(), rs.getResults() );
         }
@@ -314,6 +311,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // third transaction - add results.
         log.info( "Saving results" );
         helperService.addResults( persistentAnalysis, resultSets );
+
+        // we do this here because now we have IDs for everything.
+        expressionDataFileService.getDiffExpressionAnalysisArchiveFile( expressionExperiment, analysis, resultSets );
 
         // final transaction: audit.
         try {
