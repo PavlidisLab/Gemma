@@ -459,8 +459,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
         assert analysis.getId() != null;
 
-        analysis = differentialExpressionAnalysisService.thawFully( analysis ); // bug 4023
-
         Collection<ArrayDesign> arrayDesigns = this.expressionExperimentService
                 .getArrayDesignsUsed( experimentAnalyzed );
         Map<Long, String[]> geneAnnotations = this.getGeneAnnotationsAsStrings( arrayDesigns );
@@ -1112,6 +1110,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     private String makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis,
             Collection<ExpressionAnalysisResultSet> resultSets, Map<Long, String[]> geneAnnotations ) {
+
+        differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
+
         StringBuilder buf = new StringBuilder();
 
         BioAssaySet bas = analysis.getExperimentAnalyzed();
