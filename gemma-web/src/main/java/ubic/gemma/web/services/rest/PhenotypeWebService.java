@@ -48,14 +48,41 @@ public class PhenotypeWebService {
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
+    /**
+     * Given a set of phenotypes, return all genes asociated with them. Not sure how useful this is since there is no
+     * information about which phenotypes go with with genes, and apparently the child terms are not included?
+     * 
+     * @param taxonId
+     * @param showOnlyEditable
+     * @param phenotypeValueUris
+     * @return 
+     * @deprecated unless this can be shown to be useful.
+     */
     @GET
     @Path("/find-candidate-genes")
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     public Collection<GeneValueObject> findCandidateGenes( @QueryParam("taxonId") Long taxonId,
             @QueryParam("showOnlyEditable") boolean showOnlyEditable,
             @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
         return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
                 showOnlyEditable ), new HashSet<String>( phenotypeValueUris ) );
+    }
+
+    /**
+     * Given a phenotype, return all genes associated with it, including child terms.
+     * @param taxonId
+     * @param showOnlyEditable
+     * @param phenotypeValueUri
+     * @return
+     */
+    @GET
+    @Path("/find-phenotype-genes")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<GeneValueObject> findPhenotypeGenes( @QueryParam("taxonId") Long taxonId,
+            @QueryParam("showOnlyEditable") boolean showOnlyEditable,
+            @QueryParam("phenotypeValueUri") String phenotypeValueUri ) {
+        return this.phenotypeAssociationManagerService.findCandidateGenes( phenotypeValueUri, taxonId );
     }
 
     @GET

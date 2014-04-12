@@ -63,7 +63,7 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUris, Taxon taxon );
 
     /**
-     * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
+     * Given set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
      * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
@@ -73,11 +73,13 @@ public interface PhenotypeAssociationManagerService {
             Set<String> phenotypesValuesUri );
 
     /**
-     * @param phenotypesValuesUri the roots phenotype of the query
-     * @param taxon
-     * @return collections of the genes found
+     * Given phenotype returns the genes that have all those phenotypes or children phenotypes
+     * 
+     * @param phenotype
+     * @param taxonId
+     * @return
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( String phenotypesValuesUri, Taxon taxon );
+    public Collection<GeneValueObject> findCandidateGenes( String phenotype, Long taxonId );
 
     /**
      * For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds

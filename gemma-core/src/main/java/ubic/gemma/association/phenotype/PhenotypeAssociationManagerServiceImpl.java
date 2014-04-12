@@ -319,13 +319,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * (non-Javadoc)
      * 
      * @see ubic.gemma.association.phenotype.PhenotypeAssociationManagerService#findCandidateGenes(java.lang.String,
-     * ubic.gemma.model.genome.Taxon)
+     * java.lang.Long)
      */
     @Override
-    public Collection<GeneValueObject> findCandidateGenes( String phenotypeValueUri, Taxon taxon ) {
+    public Collection<GeneValueObject> findCandidateGenes( String phenotype, Long taxonId ) {
+
+        Taxon t = this.taxonService.load( taxonId );
         Set<String> uris = new HashSet<>();
-        uris.add( phenotypeValueUri );
-        return this.findCandidateGenes( uris, taxon );
+        uris.add( phenotype );
+        return findCandidateGenes( uris, t );
+
     }
 
     @Override
@@ -1338,6 +1341,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
+    private void addDefaultExcludedDatabases( EvidenceFilter evidenceFilter ) {
+        if ( evidenceFilter != null ) {
+            if ( evidenceFilter.getExternalDatabaseIds() == null
+                    && Settings.getString( "gemma.neurocarta.exluded_database_id" ) != null ) {
+                Collection<Long> externalDatabaseIds = new HashSet<Long>();
+                for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
+                    externalDatabaseIds.add( new Long( token ) );
+                }
+                evidenceFilter.setExternalDatabaseIds( externalDatabaseIds );
+            }
+        }
+    }
+
     /**
      * Convert an collection of evidence entities to their corresponding value objects
      * 
@@ -2265,19 +2281,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
         }
 
-    }
-
-    private void addDefaultExcludedDatabases( EvidenceFilter evidenceFilter ) {
-        if ( evidenceFilter != null ) {
-            if ( evidenceFilter.getExternalDatabaseIds() == null
-                    && Settings.getString( "gemma.neurocarta.exluded_database_id" ) != null ) {
-                Collection<Long> externalDatabaseIds = new HashSet<Long>();
-                for ( String token : Settings.getString( "gemma.neurocarta.exluded_database_id" ).split( "," ) ) {
-                    externalDatabaseIds.add( new Long( token ) );
-                }
-                evidenceFilter.setExternalDatabaseIds( externalDatabaseIds );
-            }
-        }
     }
 
 }
