@@ -55,7 +55,7 @@ public class PhenotypeWebService {
      * @param taxonId
      * @param showOnlyEditable
      * @param phenotypeValueUris
-     * @return 
+     * @return
      * @deprecated unless this can be shown to be useful.
      */
     @GET
@@ -71,8 +71,8 @@ public class PhenotypeWebService {
 
     /**
      * Given a phenotype, return all genes associated with it, including child terms.
+     * 
      * @param taxonId
-     * @param showOnlyEditable
      * @param phenotypeValueUri
      * @return
      */
@@ -80,7 +80,6 @@ public class PhenotypeWebService {
     @Path("/find-phenotype-genes")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<GeneValueObject> findPhenotypeGenes( @QueryParam("taxonId") Long taxonId,
-            @QueryParam("showOnlyEditable") boolean showOnlyEditable,
             @QueryParam("phenotypeValueUri") String phenotypeValueUri ) {
         return this.phenotypeAssociationManagerService.findCandidateGenes( phenotypeValueUri, taxonId );
     }
