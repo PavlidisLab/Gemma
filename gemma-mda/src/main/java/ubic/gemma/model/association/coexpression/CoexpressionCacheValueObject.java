@@ -15,9 +15,6 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Used to cache results; these objects are unmodifiable, and contains the coexpression data for one query gene and one
@@ -30,15 +27,21 @@ public class CoexpressionCacheValueObject implements Serializable {
 
     private static final long serialVersionUID = 184287422449009209L;
 
+    /*
+     * FIXME takes up too much memory? see bug 4034
+     */
+
+    private String coexGeneSymbol; // possibly don't store here?
+    private String queryGeneSymbol; // possibly don't store here?
+
     private final Long queryGene;
-    private String coexGeneSymbol;
     private final Long coexpGene;
     private final int support;
     private final boolean positiveCorrelation;
-    private String queryGeneSymbol;
+
     private Long supportDetailsId;
-    private Set<Long> supportingDatasets = null;
-    private Set<Long> testedInDatasets = null;
+    private Long[] supportingDatasets = null;
+    private CompressedLongSet testedInDatasets = null;
 
     /**
      * @param vo
@@ -53,8 +56,9 @@ public class CoexpressionCacheValueObject implements Serializable {
         this.queryGene = vo.getQueryGeneId();
         this.support = vo.getNumDatasetsSupporting();
         this.supportDetailsId = vo.getSupportDetailsId();
-        this.supportingDatasets = Collections.unmodifiableSet( new HashSet<>( vo.getSupportingDatasets() ) );
-        this.testedInDatasets = Collections.unmodifiableSet( new HashSet<>( vo.getTestedInDatasets() ) );
+        this.supportingDatasets = vo.getSupportingDatasets().toArray( new Long[] {} );
+        this.testedInDatasets = new CompressedLongSet( vo.getTestedInDatasets() );
+
         this.queryGeneSymbol = vo.getQueryGeneSymbol();
         this.coexGeneSymbol = vo.getCoexGeneSymbol();
         this.positiveCorrelation = vo.isPositiveCorrelation();
@@ -62,8 +66,8 @@ public class CoexpressionCacheValueObject implements Serializable {
     }
 
     public CoexpressionValueObject toModifiable() {
-        return new CoexpressionValueObject( coexpGene, coexGeneSymbol, positiveCorrelation, queryGene,
-                queryGeneSymbol, support, supportDetailsId, this.supportingDatasets, this.testedInDatasets );
+        return new CoexpressionValueObject( coexpGene, coexGeneSymbol, positiveCorrelation, queryGene, queryGeneSymbol,
+                support, supportDetailsId, this.supportingDatasets, this.testedInDatasets.getValues() );
     }
 
 }

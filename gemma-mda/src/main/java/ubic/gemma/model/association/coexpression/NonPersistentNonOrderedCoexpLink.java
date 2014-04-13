@@ -31,8 +31,8 @@ import ubic.gemma.model.genome.Gene;
 public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersistentNonOrderedCoexpLink> {
 
     // used internally only; g1 is the one with the lower ID.
-    final private Gene g1;
-    final private Gene g2;
+    final private Long g1;
+    final private Long g2;
 
     final private Gene2GeneCoexpression link;
 
@@ -45,6 +45,18 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
      */
     public NonPersistentNonOrderedCoexpLink( Gene g1, Gene g2, boolean b ) {
         if ( g1.getId() < g2.getId() ) {
+            this.g1 = g1.getId();
+            this.g2 = g2.getId();
+        } else {
+            this.g1 = g2.getId();
+            this.g2 = g1.getId();
+        }
+        this.positive = b;
+        this.link = null;
+    }
+
+    public NonPersistentNonOrderedCoexpLink( Long g1, Long g2, boolean b ) {
+        if ( g1 < g2 ) {
             this.g1 = g1;
             this.g2 = g2;
         } else {
@@ -60,7 +72,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
      */
     public NonPersistentNonOrderedCoexpLink( Gene2GeneCoexpression link ) {
         this.link = link;
-        if ( link.getFirstGene().getId() < link.getSecondGene().getId() ) {
+        if ( link.getFirstGene() < link.getSecondGene() ) {
             this.g1 = link.getFirstGene();
             this.g2 = link.getSecondGene();
         } else {
@@ -77,7 +89,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
      */
     @Override
     public int compareTo( NonPersistentNonOrderedCoexpLink o ) {
-        return getFirstGene().getId().compareTo( o.getFirstGene().getId() );
+        return getFirstGene().compareTo( o.getFirstGene() );
     }
 
     @Override
@@ -102,7 +114,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
      * 
      * @return
      */
-    public Gene getFirstGene() {
+    public Long getFirstGene() {
         if ( link == null ) throw new IllegalStateException();
         return link.getFirstGene();
     }
@@ -122,7 +134,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
      * 
      * @return
      */
-    public Gene getSecondGene() {
+    public Long getSecondGene() {
         if ( link == null ) throw new IllegalStateException();
         return link.getSecondGene();
     }

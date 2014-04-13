@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import org.springframework.jdbc.core.RowCallbackHandler;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.coexpression.CoexpressionCache;
@@ -64,9 +66,18 @@ import ubic.gemma.util.EntityUtils;
  */
 public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
+    @Autowired
+    private BasicDataSource dataSource;
+
     private ExpressionExperiment ee;
 
+    @Autowired
+    private ExpressionExperimentService eeService;
+
     private FilterConfig filterConfig = new FilterConfig();
+
+    @Autowired
+    private CoexpressionCache gene2GeneCoexpressionCache;
 
     @Autowired
     private CoexpressionService geneCoexpressionService;
@@ -77,10 +88,10 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
     @Autowired
-    private LinkAnalysisService linkAnalysisService;
+    private LinkAnalysisPersister linkAnalysisPersisterService;
 
     @Autowired
-    private LinkAnalysisPersister linkAnalysisPersisterService;
+    private LinkAnalysisService linkAnalysisService;
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
@@ -88,11 +99,44 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     @Autowired
     private TableMaintenenceUtil tableMaintenenceUtil;
 
-    @Autowired
-    private CoexpressionCache gene2GeneCoexpressionCache;
+    /**
+     * 
+     */
+    public void checkUnsupportedLinksHaveNoSupport() {
+        JdbcTemplate jt = new JdbcTemplate( dataSource );
 
-    @Autowired
-    private BasicDataSource dataSource;
+        // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
+        // position 12 is important.
+        final Collection<Long> checkme = new HashSet<Long>();
+        // maybe these patterns aren't this reproducible.
+        jt.query(
+                // "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
+                // + " '000006AA00000001000000000000003600000000', '0000000000000001000000000000000000000000',"
+                // + "'0000003E00000001000000000000000200000000','0000003F00000001000000000000000200000000',"
+                // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
+
+                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___00000001000000000000000%'",
+                new RowCallbackHandler() {
+
+                    @Override
+                    public void processRow( ResultSet rs ) throws SQLException {
+                        Long id = rs.getLong( 1 );
+                        checkme.add( id );
+                    }
+                } );
+
+        // we should definitely have some of these
+        assertTrue( checkme.size() > 0 );
+
+        jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK in (?) AND SUPPORT > 0",
+                new Object[] { checkme.toArray() }, new RowCallbackHandler() {
+                    @Override
+                    public void processRow( ResultSet rs ) throws SQLException {
+                        fail( "Should not have had any rows" );
+                    }
+                } );
+
+    }
 
     @Before
     public void setup() {
@@ -161,6 +205,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             v.setData( dataMap.get( v.getDesignElement() ) );
         }
 
+        eeService.update( ee2 );
+
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee2 );
         linkAnalysisService.process( ee2, filterConfig, linkAnalysisConfig );
 
@@ -171,51 +217,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         // expect to get at least one links with support >1
         ees.add( ee2 );
         checkResults( ees, 2 );
-
-    }
-
-    /**
-     * 
-     */
-    public void checkUnsupportedLinksHaveNoSupport() {
-        JdbcTemplate jt = new JdbcTemplate( dataSource );
-
-        // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
-        // position 12 is important.
-        final Collection<Long> checkme = new HashSet<Long>();
-        // maybe these patterns aren't this reproducible.
-        jt.query(
-                // "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
-                // + " '000006AA00000001000000000000003600000000', '0000000000000001000000000000000000000000',"
-                // + "'0000003E00000001000000000000000200000000','0000003F00000001000000000000000200000000',"
-                // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
-
-                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___00000001000000000000000%'",
-                new RowCallbackHandler() {
-
-                    @Override
-                    public void processRow( ResultSet rs ) throws SQLException {
-                        Long id = rs.getLong( 1 );
-                        checkme.add( id );
-                    }
-                } );
-
-        // we should definitely have some of these
-        assertTrue( checkme.size() > 0 );
-
-        jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK in (?) AND SUPPORT > 0",
-                new Object[] { checkme.toArray() }, new RowCallbackHandler() {
-                    @Override
-                    public void processRow( ResultSet rs ) throws SQLException {
-                        fail( "Should not have had any rows" );
-                    }
-                } );
-
-    }
-
-    private void updateNodeDegree() {
-
-        geneCoexpressionService.updateNodeDegrees( this.getTaxon( "mouse" ) );
 
     }
 
@@ -274,6 +275,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         Map<Long, List<CoexpressionValueObject>> allLinks = geneCoexpressionService.findCoexpressionRelationships(
                 mouse, new HashSet<Long>(), EntityUtils.getIds( ees ), ees.size(), 10, false );
         assertTrue( !allLinks.isEmpty() );
+
         for ( Long g : allLinks.keySet() ) {
             for ( CoexpressionValueObject coex : allLinks.get( g ) ) {
                 checkResult( coex );
@@ -363,5 +365,11 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         assertTrue( maxSupport >= expectedMinimumMaxSupport );
 
         return totalLinks;
+    }
+
+    private void updateNodeDegree() {
+
+        geneCoexpressionService.updateNodeDegrees( this.getTaxon( "mouse" ) );
+
     }
 }

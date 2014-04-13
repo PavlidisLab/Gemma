@@ -185,7 +185,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
      * @return entity ready for saving to the database (or updating equivalent existing link)
      */
     private Gene2GeneCoexpression initCoexp( double w, LinkCreator c, Gene v1, Gene v2 ) {
-        Gene2GeneCoexpression ppCoexpression = c.create( w, v1, v2 );
+        Gene2GeneCoexpression ppCoexpression = c.create( w, v1.getId(), v2.getId() );
 
         return ppCoexpression;
     }

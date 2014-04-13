@@ -72,7 +72,7 @@ public class LinkCreator {
         }
 
         try {
-            factorymethod = clazz.getMethod( "newInstance", new Class[] { Double.class, Gene.class, Gene.class } );
+            factorymethod = clazz.getMethod( "newInstance", new Class[] { Double.class, Long.class, Long.class } );
             eeFactoryMethod = ( Constructor<ExperimentCoexpressionLink> ) eeclazz.getConstructor( BioAssaySet.class,
                     Long.class, Long.class, Long.class );
             supportDetailsFactoryMethod = supportclazz.getConstructor( Gene.class, Gene.class, Boolean.class );
@@ -82,7 +82,16 @@ public class LinkCreator {
         }
     }
 
-    public Gene2GeneCoexpression create( double w, Gene firstGene, Gene secondGene ) {
+    // public Gene2GeneCoexpression create( double w, Gene firstGene, Gene secondGene ) {
+    //
+    // try {
+    // return ( Gene2GeneCoexpression ) factorymethod.invoke( clazz, new Object[] { w, firstGene, secondGene } );
+    // } catch ( IllegalAccessException | IllegalArgumentException | InvocationTargetException e ) {
+    // throw new RuntimeException( e );
+    // }
+    // }
+    
+    public Gene2GeneCoexpression create( double w, Long firstGene, Long secondGene ) {
 
         try {
             return ( Gene2GeneCoexpression ) factorymethod.invoke( clazz, new Object[] { w, firstGene, secondGene } );

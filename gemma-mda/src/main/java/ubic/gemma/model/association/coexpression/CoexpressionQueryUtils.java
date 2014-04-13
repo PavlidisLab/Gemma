@@ -128,8 +128,8 @@ public class CoexpressionQueryUtils {
         Map<Long, Set<Long>> tr = new HashMap<>();
 
         for ( NonPersistentNonOrderedCoexpLink li : links ) {
-            Long g1 = li.getFirstGene().getId();
-            Long g2 = li.getSecondGene().getId();
+            Long g1 = li.getFirstGene();
+            Long g2 = li.getSecondGene();
             if ( !tr.containsKey( g1 ) ) tr.put( g1, new HashSet<Long>() );
             if ( !tr.containsKey( g2 ) ) tr.put( g2, new HashSet<Long>() );
             tr.get( g1 ).add( g2 );

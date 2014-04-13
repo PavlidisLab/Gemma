@@ -55,6 +55,7 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedI
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.EntityUtils;
 
@@ -179,7 +180,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         sess.setCacheMode( CacheMode.IGNORE );
 
         // to determine the species
-        Gene gene = links.iterator().next().getFirstGene();
+        Gene gene = ( Gene ) sess.get( GeneImpl.class, links.iterator().next().getFirstGene() );
         String geneLinkClassName = CoexpressionQueryUtils.getGeneLinkClassName( gene );
 
         /*
@@ -196,7 +197,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Map<NonPersistentNonOrderedCoexpLink, Boolean> existingResults = preFetch( links );
 
         Query q = sess.createQuery( "from " + geneLinkClassName
-                + " where firstGene.id=:f and secondGene.id=:s and positiveCorrelation=:pc" );
+                + " where firstGene =:f and secondGene=:s and positiveCorrelation=:pc" );
 
         SQLQuery updateFlippedLinkQuery = sess.createSQLQuery( "UPDATE "
                 + CoexpressionQueryUtils.getGeneLinkTableName( gene.getTaxon() )
@@ -225,8 +226,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         log.info( "Starting link processing" );
         for ( NonPersistentNonOrderedCoexpLink proposedG2G : links ) {
 
-            Gene firstGene = proposedG2G.getFirstGene();
-            Gene secondGene = proposedG2G.getSecondGene();
+            Long firstGene = proposedG2G.getFirstGene();
+            Long secondGene = proposedG2G.getSecondGene();
 
             // There is an index for f+s, but querying one-at-a-time is going to be slow. I attempted to speed it up by
             // fetching all links for a gene when we see it, but this causes problems with data being stale. Prefetching
@@ -237,6 +238,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             // Currently it takes about 1 minute to process 10k links on a relatively small database, much of this is
             // the findLink call.
             Gene2GeneCoexpression existingLink = findLink( q, proposedG2G, existingResults );
+
+            /*
+             * To speed this up?
+             * 
+             * - Fetch all links for a gene in one batch, instead of looping over them one at a time.
+             */
 
             if ( existingLink == null ) {
                 // initialize the supportdetails
@@ -302,8 +309,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
                 int numFlippedUpdated = updateFlippedLinkQuery
                         .setParameter( "s", existingLink.getNumDatasetsSupporting() )
-                        .setParameter( "g2", proposedG2G.getSecondGene().getId() )
-                        .setParameter( "g1", proposedG2G.getFirstGene().getId() )
+                        .setParameter( "g2", proposedG2G.getSecondGene() )
+                        .setParameter( "g1", proposedG2G.getFirstGene() )
                         .setParameter( "po", proposedG2G.isPositiveCorrelation() ? 1 : 0 ).executeUpdate();
                 assert numFlippedUpdated == 1 : "Flipped link missing for " + proposedG2G + " [" + numFlippedUpdated
                         + "]";
@@ -313,8 +320,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
             }
 
-            genesWithUpdatedData.add( firstGene.getId() );
-            genesWithUpdatedData.add( secondGene.getId() );
+            genesWithUpdatedData.add( firstGene );
+            genesWithUpdatedData.add( secondGene );
 
             if ( ++progress % 5000 == 0 ) {
                 log.info( "Processed " + progress + "/" + links.size() + " gene-level links..." + numUpdated
@@ -354,7 +361,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Collections.sort( newFlippedLinks, new Comparator<Gene2GeneCoexpression>() {
             @Override
             public int compare( Gene2GeneCoexpression o1, Gene2GeneCoexpression o2 ) {
-                return o1.getFirstGene().getId().compareTo( o2.getFirstGene().getId() );
+                return o1.getFirstGene().compareTo( o2.getFirstGene() );
             }
         } );
 
@@ -424,8 +431,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
             for ( Gene2GeneCoexpression g2g : links ) {
 
-                genesAffected.add( g2g.getFirstGene().getId() );
-                genesAffected.add( g2g.getSecondGene().getId() );
+                genesAffected.add( g2g.getFirstGene() );
+                genesAffected.add( g2g.getSecondGene() );
 
                 // decrement support; details are shared by both links, just update it once!
                 SupportDetails sd = g2g.getSupportDetails();
@@ -781,8 +788,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             assert geneIdMap.containsKey( fgid.longValue() );
             assert geneIdMap.containsKey( sgid.longValue() );
 
-            Gene2GeneCoexpression g2g = c.create( eff, geneIdMap.get( fgid.longValue() ),
-                    geneIdMap.get( sgid.longValue() ) );
+            Gene2GeneCoexpression g2g = c.create( eff, fgid, sgid );
 
             /*
              * Check if we already have a link like this for the reverse - if so, reuse the supportdetails; the keys of
@@ -1002,7 +1008,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             query = query + " left join fetch g2g.supportDetails ";
         }
 
-        query = query + " where g2g.firstGene.id in (:geneIds) ";
+        query = query + " where g2g.firstGene in (:geneIds) ";
 
         if ( stringency > 1 ) {
             query = query + " and g2g.numDataSetsSupporting >= :stringency ";
@@ -1160,7 +1166,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
             allSeen.add( seen );
 
-            Long queryGeneId = g2g.getFirstGene().getId();
+            Long queryGeneId = g2g.getFirstGene();
             if ( !results.containsKey( queryGeneId ) ) {
                 results.put( queryGeneId, new ArrayList<CoexpressionValueObject>() );
             }
@@ -1215,20 +1221,20 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     private Gene2GeneCoexpression findLink( Query q, NonPersistentNonOrderedCoexpLink g2g,
             Map<NonPersistentNonOrderedCoexpLink, Boolean> existingResults ) {
 
-        Gene firstGene = g2g.getFirstGene();
-        Gene secondGene = g2g.getSecondGene();
+        Long firstGene = g2g.getFirstGene();
+        Long secondGene = g2g.getSecondGene();
 
         if ( existingResults.containsKey( g2g ) && existingResults.get( g2g ) ) {
             try {
                 // FIXME triggers a lot of updates of genes.
-                q.setParameter( "f", firstGene.getId() );
-                q.setParameter( "s", secondGene.getId() );
+                q.setParameter( "f", firstGene );
+                q.setParameter( "s", secondGene );
                 q.setParameter( "pc", g2g.isPositiveCorrelation() );
                 Gene2GeneCoexpression existingLink = ( Gene2GeneCoexpression ) q.uniqueResult();
                 if ( log.isDebugEnabled() && existingLink != null && existingResults.containsKey( g2g )
                         && existingResults.get( g2g ) )
                     log.debug( "fetched existing link: " + existingLink + " (" + g2g + ") " + existingResults.get( g2g ) );
-                return existingLink;
+                return existingLink; // which can be null
             } catch ( HibernateException e ) {
                 log.error( "Error while searching for: " + g2g + ": " + e.getMessage() );
                 throw e;
@@ -1645,7 +1651,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         // we assume the genes are from the same taxon. FIXME check this query uses index.
         String g2gClassName = CoexpressionQueryUtils.getGeneLinkClassName( taxon );
         final String firstQueryString = "select g2g from " + g2gClassName
-                + " as g2g where g2g.firstGene.id = :qgene and g2g.secondGene.id in (:genes) "
+                + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) "
                 + "and g2g.numDataSetsSupporting  >= :stringency ";
 
         /*
@@ -1881,16 +1887,16 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         // compare the links in hand with
         for ( NonPersistentNonOrderedCoexpLink li : links ) {
 
-            Collection<Long> g1h = coexg.get( li.getFirstGene().getId() );
+            Collection<Long> g1h = coexg.get( li.getFirstGene() );
 
-            if ( g1h != null && g1h.contains( li.getSecondGene().getId() ) ) {
+            if ( g1h != null && g1h.contains( li.getSecondGene() ) ) {
                 result.put( li, true );
                 continue;
             }
 
             // this seems redundant.
-            Collection<Long> g2h = coexg.get( li.getSecondGene().getId() );
-            if ( g2h != null && g2h.contains( li.getFirstGene().getId() ) ) {
+            Collection<Long> g2h = coexg.get( li.getSecondGene() );
+            if ( g2h != null && g2h.contains( li.getFirstGene() ) ) {
                 result.put( li, true );
                 continue;
             }
@@ -2042,14 +2048,13 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         List<ExperimentCoexpressionLink> flippedLinks = new ArrayList<>();
         for ( Long linkid : links.keySet() ) {
             NonPersistentNonOrderedCoexpLink link = links.get( linkid );
-            ExperimentCoexpressionLink ecl = c.createEELink( bioAssaySet, linkid, link.getFirstGene().getId(), link
-                    .getSecondGene().getId() );
+            ExperimentCoexpressionLink ecl = c.createEELink( bioAssaySet, linkid, link.getFirstGene(),
+                    link.getSecondGene() );
 
             /*
              * At same time, create flipped versions, but save them later for ordering
              */
-            flippedLinks.add( c.createEELink( bioAssaySet, linkid, link.getSecondGene().getId(), link.getFirstGene()
-                    .getId() ) );
+            flippedLinks.add( c.createEELink( bioAssaySet, linkid, link.getSecondGene(), link.getFirstGene() ) );
 
             sess.save( ecl );
 
@@ -2138,6 +2143,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 if ( results.get( g ).isEmpty() ) {
                     toRemove.add( g );
                 }
+
+                assert g2g.getNumDatasetsSupporting() <= bas.size();// test for bug 4036
 
             }
 

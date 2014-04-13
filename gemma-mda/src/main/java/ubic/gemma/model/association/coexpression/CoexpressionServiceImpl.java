@@ -60,7 +60,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     private ExpressionExperimentDao experimentDao;
 
     @Autowired
-    private CoexpressionDao gene2GeneCoexpressionDao;
+    private CoexpressionDao coexpressionDao;
 
     @Autowired
     private CoexpressionNodeDegreeDao geneCoexpressionNodeDegreeDao;
@@ -71,7 +71,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     @Transactional(readOnly = true)
     public Integer countLinks( BioAssaySet ee, Gene gene ) {
-        return this.gene2GeneCoexpressionDao.countLinks( gene, ee );
+        return this.coexpressionDao.countLinks( gene, ee );
     }
 
     /*
@@ -81,7 +81,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      */
     @Override
     public Map<Gene, Integer> countOldLinks( Collection<Gene> genes ) {
-        return this.gene2GeneCoexpressionDao.countOldLinks( genes );
+        return this.coexpressionDao.countOldLinks( genes );
     }
 
     /*
@@ -97,13 +97,13 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             Set<Gene> genesTested ) {
         assert bioAssaySet != null;
         assert genesTested != null;
-        this.gene2GeneCoexpressionDao.createOrUpdate( bioAssaySet, links, c, genesTested );
+        this.coexpressionDao.createOrUpdate( bioAssaySet, links, c, genesTested );
 
         // remove these from the queue, in case they are there.
         Collection<Long> genes = new HashSet<>();
         for ( NonPersistentNonOrderedCoexpLink link : links ) {
-            genes.add( link.getFirstGene().getId() );
-            genes.add( link.getSecondGene().getId() );
+            genes.add( link.getFirstGene() );
+            genes.add( link.getSecondGene() );
         }
         this.coexpressionQueryQueue.removeFromQueue( genes,
                 CoexpressionQueryUtils.getGeneLinkClassName( genesTested.iterator().next() ) );
@@ -118,7 +118,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      */
     @Override
     public void deleteLinks( BioAssaySet experiment ) {
-        this.gene2GeneCoexpressionDao.deleteLinks( this.experimentDao.getTaxon( experiment ), experiment );
+        this.coexpressionDao.deleteLinks( this.experimentDao.getTaxon( experiment ), experiment );
     }
 
     /*
@@ -132,7 +132,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Transactional(readOnly = true)
     public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas,
             int maxResults, boolean quick ) {
-        List<CoexpressionValueObject> results = this.gene2GeneCoexpressionDao.findCoexpressionRelationships( gene, bas,
+        List<CoexpressionValueObject> results = this.coexpressionDao.findCoexpressionRelationships( gene, bas,
                 maxResults, quick );
 
         if ( quick || maxResults > 0 ) {
@@ -172,8 +172,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
         // FIXME if the number of data sets is small, switch to doing a experiment-oriented query
 
-        Map<Long, List<CoexpressionValueObject>> results = this.gene2GeneCoexpressionDao.findCoexpressionRelationships(
-                t, genes, bas, maxResults, quick );
+        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findCoexpressionRelationships( t,
+                genes, bas, maxResults, quick );
 
         // since we require these links occur in all the given data sets, we assume we should cache (if not there
         // already) - don't bother checking 'quick' and 'maxResults'.
@@ -192,8 +192,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
-        Map<Long, List<CoexpressionValueObject>> results = this.gene2GeneCoexpressionDao.findCoexpressionRelationships(
-                t, genes, bas, stringency, maxResults, quick );
+        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findCoexpressionRelationships( t,
+                genes, bas, stringency, maxResults, quick );
 
         if ( stringency > CoexpressionCache.CACHE_QUERY_STRINGENCY || quick || maxResults > 0 ) {
             possiblyAddToCacheQueue( t, results );
@@ -212,8 +212,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t,
             Collection<Long> genes, Collection<Long> bas, int stringency, boolean quick ) {
-        Map<Long, List<CoexpressionValueObject>> results = this.gene2GeneCoexpressionDao
-                .findInterCoexpressionRelationships( t, genes, bas, stringency, quick );
+        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findInterCoexpressionRelationships( t,
+                genes, bas, stringency, quick );
 
         // these are always candidates for queuing since the constraint on genes is done at the query level.
         possiblyAddToCacheQueue( t, results );
@@ -223,7 +223,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionValueObject> getCoexpression( BioAssaySet experiment, boolean quick ) {
-        return this.gene2GeneCoexpressionDao.getCoexpression( experimentDao.getTaxon( experiment ), experiment, quick );
+        return this.coexpressionDao.getCoexpression( experimentDao.getTaxon( experiment ), experiment, quick );
     }
 
     @Override
@@ -256,7 +256,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Transactional
     public Map<SupportDetails, Gene2GeneCoexpression> initializeLinksFromOldData( Gene g, Map<Long, Gene> idMap,
             Map<NonPersistentNonOrderedCoexpLink, SupportDetails> linksSoFar, Set<Long> skipGenes ) {
-        return this.gene2GeneCoexpressionDao.initializeFromOldData( g, idMap, linksSoFar, skipGenes );
+        return this.coexpressionDao.initializeFromOldData( g, idMap, linksSoFar, skipGenes );
     }
 
     /*
@@ -347,11 +347,11 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     private GeneCoexpressionNodeDegreeValueObject updateNodeDegree( Gene gene ) {
         GeneCoexpressionNodeDegree nd = this.geneCoexpressionNodeDegreeDao.findOrCreate( gene );
-        return this.gene2GeneCoexpressionDao.updateNodeDegree( gene, nd );
+        return this.coexpressionDao.updateNodeDegree( gene, nd );
     }
 
     public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGene ) {
-        this.gene2GeneCoexpressionDao.updateRelativeNodeDegrees( relRanksPerGene );
+        this.coexpressionDao.updateRelativeNodeDegrees( relRanksPerGene );
 
     }
 

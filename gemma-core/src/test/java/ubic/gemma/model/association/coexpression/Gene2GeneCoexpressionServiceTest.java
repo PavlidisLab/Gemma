@@ -74,8 +74,8 @@ public class Gene2GeneCoexpressionServiceTest extends BaseSpringContextTest {
         secondGene = geneS.create( secondGene );
 
         List<NonPersistentNonOrderedCoexpLink> links = new ArrayList<>();
-        links.add( new NonPersistentNonOrderedCoexpLink( MouseGeneCoExpression.Factory.newInstance( 0.9, secondGene,
-                firstGene ) ) );
+        links.add( new NonPersistentNonOrderedCoexpLink( MouseGeneCoExpression.Factory.newInstance( 0.9,
+                secondGene.getId(), firstGene.getId() ) ) );
 
         ee = this.getTestPersistentBasicExpressionExperiment();
 

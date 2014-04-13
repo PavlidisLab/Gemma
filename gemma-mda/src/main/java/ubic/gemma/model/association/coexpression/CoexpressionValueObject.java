@@ -19,13 +19,12 @@
 
 package ubic.gemma.model.association.coexpression;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-
-import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 
 /**
  * Lightweight/convenient object for manipulating coexpression for a pair of genes. Importantly, this does not
@@ -94,8 +93,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @param g2g
      */
     public CoexpressionValueObject( Gene2GeneCoexpression g2g ) {
-        queryGeneId = g2g.getFirstGene().getId();
-        coexGeneId = g2g.getSecondGene().getId();
+        queryGeneId = g2g.getFirstGene();
+        coexGeneId = g2g.getSecondGene();
         positiveCorrelation = g2g.isPositiveCorrelation();
 
         if ( g2g.getSupportDetails() != null ) {
@@ -143,6 +142,21 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.supportDetailsId = supportDetailsId;
         this.supportingDatasets = new HashSet<>( supportingDatasets );
         this.testedInDatasets = new HashSet<>( testedInDatasets );
+    }
+
+    protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
+            Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
+            Long[] supportingDatasets, Long[] testedInDatasets ) {
+        super();
+        this.coexGeneId = coexGeneId;
+        this.coexGeneSymbol = coexGeneSymbol;
+        this.positiveCorrelation = positiveCorrelation;
+        this.queryGeneId = queryGeneId;
+        this.queryGeneSymbol = queryGeneSymbol;
+        this.support = support;
+        this.supportDetailsId = supportDetailsId;
+        this.supportingDatasets = new HashSet<>( Arrays.asList( supportingDatasets ) );
+        this.testedInDatasets = new HashSet<>( Arrays.asList( testedInDatasets ) );
     }
 
     /*

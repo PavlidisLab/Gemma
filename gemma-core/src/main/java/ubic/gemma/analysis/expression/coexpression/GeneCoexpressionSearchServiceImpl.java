@@ -64,7 +64,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    private CoexpressionService gene2GeneCoexpressionService;
+    private CoexpressionService coexpressionService;
 
     @Autowired
     private GeneOntologyService geneOntologyService;
@@ -192,12 +192,12 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             if ( genes.size() < 2 ) {
                 throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
             }
-            allCoexpressions = gene2GeneCoexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds,
-                    stringency, quick );
+            allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds, stringency,
+                    quick );
         } else {
             if ( stringency == 1 ) stringency = chooseStringency( eeIds.size() );
-            allCoexpressions = gene2GeneCoexpressionService.findCoexpressionRelationships( taxon, genes, eeIds,
-                    stringency, maxResults, quick );
+            allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
+                    maxResults, quick );
         }
 
         result.setAppliedStringency( stringency );
@@ -210,6 +210,11 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
             List<CoexpressionValueObjectExt> results = addExtCoexpressionValueObjects( idMap.get( queryGene ),
                     coexpressions, stringency, queryGenesOnly, genes );
+
+            // test for bug 4036
+            for ( CoexpressionValueObjectExt cvo : results ) {
+                assert cvo.getNumTestedIn() <= eevos.size();
+            }
 
             result.getResults().addAll( results );
 
@@ -243,7 +248,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             allUsedGenes.add( coex.getFoundGene().getId() );
         }
 
-        Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = gene2GeneCoexpressionService
+        Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = coexpressionService
                 .getNodeDegrees( allUsedGenes );
         for ( CoexpressionValueObjectExt coex : result.getResults() ) {
 
