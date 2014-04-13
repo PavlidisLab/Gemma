@@ -366,9 +366,9 @@ public class AffyPowerToolsProbesetSummarize {
             QuantitationType quantitationType, DoubleMatrix<String, String> matrix ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
-        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
-        Map<String, CompositeSequence> csMap = new HashMap<String, CompositeSequence>();
+        Map<String, CompositeSequence> csMap = new HashMap<>();
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             csMap.put( cs.getName(), cs );
         }

@@ -175,8 +175,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             Collection<RawExpressionDataVector> newVectors ) {
 
         // ee = this.load( ee.getId() );
-        Collection<BioAssayDimension> bads = new HashSet<BioAssayDimension>();
-        Collection<QuantitationType> qts = new HashSet<QuantitationType>();
+        Collection<BioAssayDimension> bads = new HashSet<>();
+        Collection<QuantitationType> qts = new HashSet<>();
         for ( RawExpressionDataVector vec : newVectors ) {
             bads.add( vec.getBioAssayDimension() );
             qts.add( vec.getQuantitationType() );
