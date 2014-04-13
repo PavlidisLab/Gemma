@@ -134,6 +134,7 @@ public class ExpressionDataDoubleMatrixUtil {
             throw new UnknownLogScaleException( "Cannot figure out scale without data (" + quantitationType + ")" );
         }
 
+        // at this point it's supposedly 'linear', but we need to double-check.
         for ( int i = 0; i < namedMatrix.rows(); i++ ) {
             for ( int j = 0; j < namedMatrix.columns(); j++ ) {
                 double v = namedMatrix.get( i, j );
