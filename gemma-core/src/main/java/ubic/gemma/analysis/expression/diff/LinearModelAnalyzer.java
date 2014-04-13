@@ -766,7 +766,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
-        // calculate library size before log transformation
+        // calculate library size before log transformation (FIXME we compute this twice)
         DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
 
         dmatrix = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( quantitationType, dmatrix );
