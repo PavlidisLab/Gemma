@@ -192,7 +192,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         /*
-         * Fetch results for genes which have lots of links, to save database trips.
+         * Attempt to save database trips
          */
         Map<NonPersistentNonOrderedCoexpLink, Boolean> existingResults = preFetch( links );
 
@@ -242,7 +242,9 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             /*
              * To speed this up?
              * 
-             * - Fetch all links for a gene in one batch, instead of looping over them one at a time.
+             * - Fetch all links for a gene in one batch, instead of looping over them one at a time. The problem is the
+             * flipped links involve other genes that we fetch later in the same transaction, and this all has to be
+             * done in one transaction. I experimented with this alre
              */
 
             if ( existingLink == null ) {
@@ -1226,7 +1228,6 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         if ( existingResults.containsKey( g2g ) && existingResults.get( g2g ) ) {
             try {
-                // FIXME triggers a lot of updates of genes.
                 q.setParameter( "f", firstGene );
                 q.setParameter( "s", secondGene );
                 q.setParameter( "pc", g2g.isPositiveCorrelation() );
@@ -1858,8 +1859,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     }
 
     /**
-     * For genes with lots of links, prefetch their links, so when we go looking for a particular link we can decide
-     * faster. EXPERIMENTAL.
+     * Prefetch information on links, so when we go looking for a particular link we can decide faster. EXPERIMENTAL.
      * 
      * @param links
      * @param sess
@@ -1906,7 +1906,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         if ( !result.isEmpty() )
-            log.info( "Prefetched link data for " + result.size() + " links in " + timer.getTime() + "ms" );
+            log.info( "Prefetched link data for " + result.size() + "/" + links.size() + " links in " + timer.getTime() + "ms" );
 
         return result;
     }
