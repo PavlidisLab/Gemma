@@ -16,14 +16,12 @@
 		<property access="field" name="numDataSetsSupporting" type="java.lang.Integer">
 			<column name="SUPPORT" not-null="false" unique="false" sql-type="INTEGER" />
 		</property>
-		<many-to-one access="field" name="firstGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select"
-			cascade="none">
-			<column name="FIRST_GENE_FK" not-null="true" sql-type="BIGINT" />
-		</many-to-one>
-		<many-to-one access="field" name="secondGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select"
-			cascade="none">
-			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" />
-		</many-to-one>
+		<property access="field" name="firstGene" type="java.lang.Long">
+			<column name="FIRST_GENE_FK" not-null="true" sql-type="BIGINT" unique="false" />
+		</property>
+		<property access="field" name="secondGene" type="java.lang.Long">
+			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" unique="false" />
+		</property>
 		<many-to-one access="field" name="supportDetails"
 			class="ubic.gemma.model.analysis.expression.coexpression.OtherCoexpressionSupportDetailsImpl" lazy="proxy" fetch="join"
 			cascade="none">

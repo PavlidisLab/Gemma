@@ -21,7 +21,7 @@ package ubic.gemma.model.association.coexpression;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
-import ubic.gemma.model.association.Gene2GeneAssociation;
+import ubic.gemma.model.association.Gene2GeneIdAssociation;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * @version $Id$
  * @author Paul
  */
-public abstract class Gene2GeneCoexpression extends Gene2GeneAssociation implements Comparable<Gene2GeneCoexpression> {
+public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation implements Comparable<Gene2GeneCoexpression> {
     public SupportDetails supportDetails;
 
     // we assume 1 in case we don't yet have it populated directly from the db - it has to be at least 1...
@@ -56,11 +56,11 @@ public abstract class Gene2GeneCoexpression extends Gene2GeneAssociation impleme
             return -this.numDataSetsSupporting.compareTo( o.getNumDatasetsSupporting() );
         }
 
-        if ( !this.getFirstGene().getOfficialSymbol().equals( o.getFirstGene().getOfficialSymbol() ) )
-            return this.getFirstGene().getOfficialSymbol().compareTo( o.getFirstGene().getOfficialSymbol() );
+        if ( !this.getFirstGene().equals( o.getFirstGene() ) )
+            return this.getFirstGene().compareTo( o.getFirstGene() );
 
-        if ( !this.getSecondGene().getOfficialSymbol().equals( o.getSecondGene().getOfficialSymbol() ) )
-            return this.getSecondGene().getOfficialSymbol().compareTo( o.getSecondGene().getOfficialSymbol() );
+        if ( !this.getSecondGene().equals( o.getSecondGene() ) )
+            return this.getSecondGene().compareTo( o.getSecondGene() );
 
         return 0;
     }

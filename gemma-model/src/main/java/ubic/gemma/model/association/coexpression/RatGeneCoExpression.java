@@ -20,8 +20,6 @@ package ubic.gemma.model.association.coexpression;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 
-import ubic.gemma.model.genome.Gene;
-
 /**
  * 
  */
@@ -38,7 +36,7 @@ public abstract class RatGeneCoExpression extends Gene2GeneCoexpression {
          * @param secondGene
          * @return
          */
-        public static RatGeneCoExpression newInstance( Double effect, Gene firstGene, Gene secondGene ) {
+        public static RatGeneCoExpression newInstance( Double effect, Long firstGene, Long secondGene ) {
             final RatGeneCoExpression entity = new RatGeneCoExpressionImpl();
             assert effect != null && firstGene != null && secondGene != null;
             try {
