@@ -45,7 +45,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
     private GeneService geneService;
 
-    private GeneCoexpressionSearchService geneCoexpressionService;
+    private GeneCoexpressionSearchService geneCoexpressionSearchService;
 
     private ExpressionExperimentSetService expressionExperimentSetService;
 
@@ -64,8 +64,8 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
         expressionExperimentSetService = service;
     }
 
-    public void setGeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
-        this.geneCoexpressionService = geneCoexpressionService;
+    public void setGeneCoexpressionSearchService( GeneCoexpressionSearchService geneCoexpressionSearchService ) {
+        this.geneCoexpressionSearchService = geneCoexpressionSearchService;
     }
 
     public void setGeneService( GeneService geneService ) {
@@ -127,10 +127,10 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
 
             CoexpressionMetaValueObject metaVO;
             if ( pairQueryGeneId == null ) {
-                metaVO = geneCoexpressionService.coexpressionSearch( inputEeIds, EntityUtils.getIds( queryGenes ),
+                metaVO = geneCoexpressionSearchService.coexpressionSearch( inputEeIds, EntityUtils.getIds( queryGenes ),
                         Integer.valueOf( stringency ), MAX_RESULTS, false );
             } else {
-                metaVO = geneCoexpressionService.coexpressionSearch( inputEeIds, EntityUtils.getIds( queryGenes ),
+                metaVO = geneCoexpressionSearchService.coexpressionSearch( inputEeIds, EntityUtils.getIds( queryGenes ),
                         Integer.valueOf( stringency ), MAX_RESULTS, true );
             }
 

@@ -240,7 +240,7 @@
 		</description>
 		<property name="taxonService" ref="taxonService" />
 		<property name="geneService" ref="geneService" />
-		<property name="geneCoexpressionService" ref="geneCoexpressionService" />
+		<property name="geneCoexpressionSearchService" ref="geneCoexpressionSearchService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
 	</bean>
 
@@ -249,7 +249,7 @@
 			returns gene coexpression 
 		</description>
 		<property name="geneService" ref="geneService" />
-		<property name="geneCoexpressionService" ref="geneCoexpressionService" />
+		<property name="geneCoexpressionSearchService" ref="geneCoexpressionSearchService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
 		<property name="expressionExperimentSetService" ref="expressionExperimentSetService" />		
 	</bean>

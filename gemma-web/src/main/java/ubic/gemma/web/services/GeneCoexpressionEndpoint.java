@@ -59,15 +59,15 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
     private GeneService geneService;
 
-    private GeneCoexpressionSearchService geneCoexpressionService;
+    private GeneCoexpressionSearchService geneCoexpressionSearchService;
 
     /**
      * The local name of the expected request/response.
      */
     public static final String LOCAL_NAME = "geneCoexpression";
 
-    public void setGeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
-        this.geneCoexpressionService = geneCoexpressionService;
+    public void setGeneCoexpressionSearchService( GeneCoexpressionSearchService geneCoexpressionSearchService ) {
+        this.geneCoexpressionSearchService = geneCoexpressionSearchService;
     }
 
     /**
@@ -77,7 +77,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
     public static final int MAX_RESULTS = 100;
 
     public void setgeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
-        this.geneCoexpressionService = geneCoexpressionService;
+        this.geneCoexpressionSearchService = geneCoexpressionService;
     }
 
     public void setGeneService( GeneService geneS ) {
@@ -160,7 +160,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             int stringency = Integer.parseInt( string );
 
             // get Gene2GeneCoexpression objects canned analysis
-            Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionService.coexpressionSearchQuick(
+            Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionSearchService.coexpressionSearchQuick(
                     null, EntityUtils.getIds( geneCol ), stringency, MAX_RESULTS, queryGenesOnly ).getResults();
 
             if ( coexpressedGenes.isEmpty() ) {
