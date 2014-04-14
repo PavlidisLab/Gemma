@@ -225,13 +225,15 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         }
 
         log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
+
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+
         try {
             this.deleteOldFiles( arrayDesign );
         } catch ( IOException e ) {
             log.error( "Failed to delete all old files associated with " + arrayDesign
                     + ", be sure to clean them up manually or regenerate them" );
         }
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
     }
 
