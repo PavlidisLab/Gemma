@@ -539,8 +539,14 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private void deleteOldFiles( ArrayDesign arrayDesign ) throws IOException {
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
         Collection<ExpressionExperiment> ees4platform = arrayDesignService.getExpressionExperiments( arrayDesign );
+        log.info( "Removing invalidated files for up to " + ees4platform.size()
+                + " experiments associated with updated platform " + arrayDesign );
         for ( ExpressionExperiment ee : ees4platform ) {
-            expressionDataFileService.deleteAllFiles( ee );
+            try {
+                expressionDataFileService.deleteAllFiles( ee );
+            } catch ( Exception e ) {
+                log.error( "Error deleting files for " + ee + " " + e.getMessage(), e );
+            }
         }
 
     }
