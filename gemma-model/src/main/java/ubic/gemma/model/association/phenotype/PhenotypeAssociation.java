@@ -19,12 +19,14 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * Represents abstract evidence for the association of a gene with a phenotype.
@@ -43,9 +45,9 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     private Double strength;
 
-    private ubic.gemma.model.genome.Gene gene;
+    private Gene gene;
 
-    private Collection<Characteristic> phenotypes = new java.util.HashSet<Characteristic>();
+    private Collection<Characteristic> phenotypes = new HashSet<>();
 
     private Characteristic associationType;
 
@@ -53,7 +55,7 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     private QuantitationType scoreType;
 
-    private Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new java.util.HashSet<PhenotypeAssociationPublication>();
+    private Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<>();
 
     private PhenotypeMappingType mappingType;
 

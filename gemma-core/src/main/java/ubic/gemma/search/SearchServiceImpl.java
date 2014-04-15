@@ -25,8 +25,10 @@ import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
@@ -85,8 +87,8 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.Settings;
@@ -285,7 +287,7 @@ public class SearchServiceImpl implements SearchService {
                         ONTOLOGY_INFO_CACHE_SIZE );
                 config.setStatistics( false );
                 config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-                config.setOverflowToDisk( false );
+                config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
                 config.setEternal( true );
                 config.setTimeToIdleSeconds( ONTOLOGY_CACHE_TIME_TO_IDLE );
                 config.setMaxElementsOnDisk( maxElementsOnDisk );
@@ -657,7 +659,7 @@ public class SearchServiceImpl implements SearchService {
                         + " caused com.hp.hpl.jena.ontology.ConversionException. " + ce.getMessage() );
             }
         } else {
-            children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
+            children = ( Collection<OntologyTerm> ) cachedChildren.getObjectValue();
         }
 
         return children;
@@ -2031,22 +2033,27 @@ public class SearchServiceImpl implements SearchService {
             for ( CharacteristicValueObject phenotype : phenotypeTermHits ) {
                 Set<String> phenotypeUris = new HashSet<String>();
                 phenotypeUris.add( phenotype.getValueUri() );
-                Collection<GeneValueObject> phenotypeGenes = phenotypeAssociationManagerService.findCandidateGenes(
-                        phenotypeUris, settings.getTaxon() );
+
+                // DATABSE HIT!
+                Collection<GeneEvidenceValueObject> phenotypeGenes = phenotypeAssociationManagerService
+                        .findCandidateGenes( phenotypeUris, settings.getTaxon() );
 
                 if ( !phenotypeGenes.isEmpty() ) {
                     log.info( phenotypeGenes.size() + " genes associated with " + phenotype + " (via query='"
                             + settings.getQuery() + "')" );
 
-                    for ( GeneValueObject gvo : phenotypeGenes ) {
+                    for ( GeneEvidenceValueObject gvo : phenotypeGenes ) {
                         Gene g = Gene.Factory.newInstance();
                         g.setId( gvo.getId() );
                         g.setTaxon( settings.getTaxon() );
                         SearchResult sr = new SearchResult( g );
                         sr.setHighlightedText( phenotype.getValue() + " (" + phenotype.getValueUri() + ")" );
-                        /*
-                         * TODO If we get evidence quality, use that in the score.
-                         */
+
+                        if ( gvo.getScore() != null ) {
+                            /*
+                             * TODO If we get evidence quality, use that in the score.
+                             */
+                        }
                         sr.setScore( 1.0 ); // maybe lower, if we do this search when combinedGeneList is nonempty.
                         combinedGeneList.add( sr );
                     }

@@ -36,11 +36,11 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.security.authentication.UserManager;
@@ -98,7 +98,7 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return
      */
-    public Collection<GeneValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, String[] phenotypes ) {
         return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
                 showOnlyEditable, databaseIds ), new HashSet<String>( Arrays.asList( phenotypes ) ) );

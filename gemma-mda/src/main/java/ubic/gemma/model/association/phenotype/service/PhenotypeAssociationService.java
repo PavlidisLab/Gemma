@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
@@ -28,6 +29,7 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -56,6 +58,16 @@ public interface PhenotypeAssociationService {
     public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
             Collection<Long> externalDatabaseIds );
+
+    /**
+     * @param phenotype
+     * @param taxonId
+     * @param includeIEA
+     * @return map of gene value objects to ontology terms, where the term should be the most specific term relative to
+     *         the phenotype that was queries (that is, it may be a child term).
+     * @author paul
+     */
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm phenotype, Long taxonId, boolean includeIEA );
 
     /**
      * create a GenericExperiment

@@ -22,6 +22,7 @@ import java.util.SortedSet;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -60,7 +61,8 @@ public interface PhenotypeAssociationManagerService {
      * @param taxon the name of the taxon (optinal)
      * @return A map or uris to collections of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypesValuesUris, Taxon taxon );
+    public abstract Collection<GeneEvidenceValueObject> findCandidateGenes( Collection<String> phenotypesValuesUris,
+            Taxon taxon );
 
     /**
      * Given set of phenotypes returns the genes that have all those phenotypes or children phenotypes
@@ -69,17 +71,8 @@ public interface PhenotypeAssociationManagerService {
      * @param evidenceFilter can specify a taxon and to show modifiable evidence (optional)
      * @return A collection of the genes found
      */
-    public abstract Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
+    public abstract Collection<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri );
-
-    /**
-     * Given phenotype returns the genes that have all those phenotypes or children phenotypes
-     * 
-     * @param phenotype
-     * @param taxonId
-     * @return
-     */
-    public Collection<GeneValueObject> findCandidateGenes( String phenotype, Long taxonId );
 
     /**
      * For each phenotypeUri, find the genes that are associated with it. Different from findCandidateGenes which finds
@@ -157,6 +150,15 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<ExternalDatabaseValueObject> the externalDatabases
      */
     public abstract Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence();
+
+    /**
+     * @param phenotype
+     * @param taxonId
+     * @param includeIEA
+     * @return
+     * @author paul
+     */
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( String phenotype, Long taxonId, boolean includeIEA );
 
     /**
      * Does a Gene search (by name or symbol) for a query and return only Genes with evidence

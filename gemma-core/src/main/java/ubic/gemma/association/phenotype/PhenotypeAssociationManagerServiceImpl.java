@@ -234,7 +234,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> findCandidateGenes( Collection<String> phenotypeValueUris, Taxon taxon ) {
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( Collection<String> phenotypeValueUris, Taxon taxon ) {
 
         if ( phenotypeValueUris == null || phenotypeValueUris.isEmpty() ) {
             throw new IllegalArgumentException( "No phenotypes values uri provided" );
@@ -271,7 +271,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( EvidenceFilter evidenceFilter,
             Set<String> phenotypesValuesUri ) {
 
         addDefaultExcludedDatabases( evidenceFilter );
@@ -322,15 +322,21 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * java.lang.Long)
      */
     @Override
-    public Collection<GeneValueObject> findCandidateGenes( String phenotype, Long taxonId ) {
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( String phenotype, Long taxonId, boolean includeIEA ) {
 
-        Taxon t = this.taxonService.load( taxonId );
-        Set<String> uris = new HashSet<>();
-        uris.add( phenotype );
-        return findCandidateGenes( uris, t );
+        OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenotype );
+        if ( ontologyTermFound == null ) throw new IllegalArgumentException( "No term found for URI: " + phenotype );
+
+        return this.associationService.findGenesForPhenotype( ontologyTermFound, taxonId, includeIEA );
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.association.phenotype.PhenotypeAssociationManagerService#findCandidateGenesForEach(java.util.Set,
+     * ubic.gemma.model.genome.Taxon)
+     */
     @Override
     public Map<String, Collection<? extends GeneValueObject>> findCandidateGenesForEach( Set<String> phenotypeUris,
             Taxon taxon ) {
@@ -345,7 +351,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Map<String, Collection<? extends GeneValueObject>> results = new HashMap<>();
 
         String userName = "";
-        Collection<String> groups = new HashSet<String>();
+        Collection<String> groups = new HashSet<>();
         if ( SecurityUtil.isUserLoggedIn() ) {
             userName = this.userManager.getCurrentUsername();
             groups = this.userManager.findAllGroups();
@@ -538,8 +544,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // so manual curation will be put at the end
-        ArrayList<ExternalDatabaseValueObject> exDatabasesAsList = new ArrayList<ExternalDatabaseValueObject>(
-                exDatabases );
+        List<ExternalDatabaseValueObject> exDatabasesAsList = new ArrayList<>( exDatabases );
         // add manual curation type
         ExternalDatabaseValueObject manualEvidence = new ExternalDatabaseValueObject( 1L,
                 PhenotypeAssociationConstants.MANUAL_CURATION, false );
@@ -582,7 +587,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             genes.add( ( Gene ) sr.getResultObject() );
         }
 
-        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = new HashSet<GeneEvidenceValueObject>();
+        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = new HashSet<>();
 
         for ( Gene g : genes ) {
             GeneEvidenceValueObject geneEvidenceValueObject = new GeneEvidenceValueObject( g,
@@ -590,7 +595,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             geneEvidenceValueObjects.add( geneEvidenceValueObject );
         }
 
-        Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<GeneEvidenceValueObject>();
+        Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<>();
 
         for ( GeneEvidenceValueObject gene : geneEvidenceValueObjects ) {
             if ( gene.getEvidence() != null && gene.getEvidence().size() != 0 ) {
@@ -646,7 +651,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         addDefaultExcludedDatabases( evidenceFilter );
 
-        Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<SimpleTreeValueObject>();
+        Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<>();
 
         Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
                 evidenceFilter, SecurityUtil.isUserAdmin(), false ) );
@@ -1627,11 +1632,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param phenotypesWithChildren
      * @return
      */
-    private Collection<GeneValueObject> filterGenesWithPhenotypes(
+    private Collection<GeneEvidenceValueObject> filterGenesWithPhenotypes(
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
             Map<String, Set<String>> phenotypesWithChildren ) {
 
-        Collection<GeneValueObject> genesVO = new HashSet<>();
+        Collection<GeneEvidenceValueObject> genesVO = new HashSet<>();
 
         for ( GeneEvidenceValueObject geneEvidenceValueObject : geneEvidenceValueObjects ) {
 
@@ -1899,7 +1904,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
-        Map<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> parentPheno = new HashMap<>();
 
         // determine all children terms for each other phenotypes
         for ( String phenoRoot : phenotypesValuesUris ) {

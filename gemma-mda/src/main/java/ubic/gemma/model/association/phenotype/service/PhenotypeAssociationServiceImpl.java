@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidenceDao;
@@ -35,6 +36,7 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -317,6 +319,20 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Transactional
     public void update( PhenotypeAssociation evidence ) {
         this.phenotypeAssociationDao.update( evidence );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService#findGenesForPhenotype(java.lang.String
+     * , java.lang.Long, boolean)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm phenotype, Long taxonId,
+            boolean includeIEA ) {
+        return this.phenotypeAssociationDao.findGenesForPhenotype( phenotype, taxonId, includeIEA );
     }
 
 }

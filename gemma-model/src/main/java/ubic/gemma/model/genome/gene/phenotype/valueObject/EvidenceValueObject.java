@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -35,7 +36,9 @@ import ubic.gemma.model.common.description.Characteristic;
  * @version $Id$
  * @author nicolas
  */
-public class EvidenceValueObject implements Comparable<EvidenceValueObject> {
+public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Serializable {
+
+    private static final long serialVersionUID = -2483508971580975L;
 
     private Long id = null;
     private String description = "";

@@ -39,8 +39,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -166,6 +170,65 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.association.phenotype.PhenotypeAssociationDao#findGenesWithPhenotype(ubic.basecode.ontology.
+     * model.OntologyTerm, ubic.gemma.model.genome.Taxon, boolean)
+     */
+    @Override
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon, boolean includeIEA ) {
+
+        Collection<OntologyTerm> children = term.getChildren( false );
+
+        Map<String, OntologyTerm> uris = new HashMap<>();
+        uris.put( term.getUri(), term );
+        for ( OntologyTerm c : children ) {
+            uris.put( c.getUri(), c );
+        }
+
+        Session sess = this.getSessionFactory().getCurrentSession();
+
+        String q = "select distinct ph.gene, p.valueUri, p.evidenceCode from  PhenotypeAssociation ph join ph.phenotypes p where p.valueUri in (:t)";
+
+        Query query = sess.createQuery( q );
+
+        Map<GeneValueObject, OntologyTerm> result = new HashMap<>();
+        query.setParameterList( "t", uris.keySet() );
+        List<?> list = query.list();
+
+        for ( Object o : list ) {
+
+            Object[] oa = ( Object[] ) o;
+            Gene g = ( Gene ) oa[0];
+
+            if ( !taxon.equals( g.getTaxon().getId() ) ) continue;
+
+            String uri = ( String ) oa[1];
+            GOEvidenceCode ev = ( GOEvidenceCode ) oa[2];
+
+            if ( !includeIEA && ev.equals( GOEvidenceCode.IEA ) ) {
+                continue;
+            }
+
+            GeneValueObject gvo = new GeneValueObject( g );
+
+            assert uris.get( uri ) != null;
+
+            /*
+             * only clobber if this term is more specific
+             */
+            if ( result.containsKey( gvo )
+                    && uris.get( result.get( gvo ) ).getParents( false ).contains( uris.get( uri ) ) ) {
+                continue;
+            }
+            result.put( gvo, uris.get( uri ) );
+        }
+
+        return result;
+    }
+
+    /*
      * find Genes link to a phenotype taking into account private and public evidence Here on the case : 1- Admin 2-
      * user not logged in 3- user logged in only showing what he has read acces 4- user logged in only showing what he
      * has write access (non-Javadoc)
@@ -177,7 +240,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
             Collection<Long> externalDatabaseIds ) {
 
-        HashMap<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
+        Map<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
 
         if ( phenotypesValueUri.isEmpty() ) {
             return genesWithPhenotypes.values();
@@ -423,7 +486,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
-        
+
         if ( noElectronicAnnotation ) {
             sqlQuery += addNoIEAEvidenceCodeQuery();
         }
@@ -875,9 +938,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         this.getHibernateTemplate().bulkUpdate( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?",
                 phenotypeAssociationPublicationId );
     }
-    
-    
-    private String addNoIEAEvidenceCodeQuery(){
+
+    private String addNoIEAEvidenceCodeQuery() {
         return " and PHENOTYPE_ASSOCIATION.EVIDENCE_CODE != 'IEA'";
     }
 }

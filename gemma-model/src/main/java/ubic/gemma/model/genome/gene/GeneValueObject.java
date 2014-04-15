@@ -58,13 +58,6 @@ public class GeneValueObject implements java.io.Serializable {
         return converted;
     }
 
-    @Override
-    public String toString() {
-        return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" )
-                + ( officialSymbol != null ? "officialSymbol=" + officialSymbol + ", " : "" )
-                + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
-    }
-
     /**
      * A static method for easily converting GeneSetMembers into GeneValueObjects FIXME does not convert aliases.
      * 
@@ -84,15 +77,35 @@ public class GeneValueObject implements java.io.Serializable {
         return converted;
     }
 
+    private Collection<String> aliases;
+
+    /**
+     * How many experiments "involve" (manipulate, etc.) this gene
+     */
+    private Integer associatedExperimentCount = 0;
+
+    private Integer compositeSequenceCount = 0; // number of probes
+
     private String description;
+
+    private Collection<GeneSetValueObject> geneSets = null;
+
+    private Collection<GeneValueObject> homologues = null;
 
     private Long id;
 
+    private Double multifunctionalityRank = 0.0;
+
     private String name;
 
-    private Collection<String> aliases;
-
     private Integer ncbiId;
+
+    /**
+     * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0)
+     */
+    private int[] nodeDegrees;
+
+    private Integer numGoTerms = 0;
 
     private String officialName;
 
@@ -107,26 +120,6 @@ public class GeneValueObject implements java.io.Serializable {
     private Long taxonId;
 
     private String taxonScientificName;
-
-    private Collection<GeneValueObject> homologues = null;
-
-    private Collection<GeneSetValueObject> geneSets = null;
-
-    private Integer compositeSequenceCount = 0; // number of probes
-
-    private Integer numGoTerms = 0;
-
-    private Double multifunctionalityRank = 0.0;
-
-    /**
-     * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0)
-     */
-    private int[] nodeDegrees;
-
-    /**
-     * How many experiments "involve" (manipulate, etc.) this gene
-     */
-    private Integer associatedExperimentCount = 0;
 
     public GeneValueObject() {
     }
@@ -210,6 +203,31 @@ public class GeneValueObject implements java.io.Serializable {
             this.setScore( otherBean.getScore() );
             this.setAliases( otherBean.getAliases() );
         }
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        GeneValueObject other = ( GeneValueObject ) obj;
+
+        if ( id != null ) {
+            if ( other.id == null ) return false;
+            return ( this.id == other.id );
+        }
+        if ( ncbiId != null ) {
+            if ( other.ncbiId == null ) return false;
+            return this.ncbiId == other.ncbiId;
+        }
+
+        if ( officialSymbol == null ) {
+            if ( other.officialSymbol != null ) return false;
+        } else if ( !officialSymbol.equals( other.officialSymbol ) ) return false;
+        if ( taxonId == null ) {
+            if ( other.taxonId != null ) return false;
+        } else if ( !taxonId.equals( other.taxonId ) ) return false;
+        return true;
     }
 
     public Collection<String> getAliases() {
@@ -309,6 +327,18 @@ public class GeneValueObject implements java.io.Serializable {
         return taxonScientificName;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+
+        if ( id != null ) return id.hashCode();
+        if ( ncbiId != null ) return ncbiId.hashCode();
+        result = prime * result + ( ( officialSymbol == null ) ? 0 : officialSymbol.hashCode() );
+        result = prime * result + ( ( taxonId == null ) ? 0 : taxonId.hashCode() );
+        return result;
+    }
+
     public void setAliases( Collection<String> aliases ) {
         this.aliases = aliases;
     }
@@ -386,6 +416,13 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setTaxonScientificName( String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;
+    }
+
+    @Override
+    public String toString() {
+        return "GeneValueObject [" + ( id != null ? "id=" + id + ", " : "" )
+                + ( officialSymbol != null ? "officialSymbol=" + officialSymbol + ", " : "" )
+                + ( officialName != null ? "officialName=" + officialName : "" ) + "]";
     }
 
 }
