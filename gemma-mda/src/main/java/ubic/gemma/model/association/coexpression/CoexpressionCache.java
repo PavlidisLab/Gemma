@@ -29,10 +29,10 @@ import java.util.Map;
 public interface CoexpressionCache {
 
     /**
-     * The stringency used to query when populating the cache. FIXME Should this be 1 or 2? Probably 2; if someone is
-     * querying for data from a single dataset, they would use experiment-first mode.
+     * The stringency used to query when populatin the cache. This can't be too low or the cache gets gigantic; if
+     * someone is querying for data from a single dataset, they would use experiment-first mode.
      */
-    public static final int CACHE_QUERY_STRINGENCY = 2;
+    public static final int CACHE_QUERY_STRINGENCY = 3;
 
     /**
      * @param geneId

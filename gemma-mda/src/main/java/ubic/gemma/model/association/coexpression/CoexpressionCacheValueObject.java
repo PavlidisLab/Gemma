@@ -28,7 +28,7 @@ public class CoexpressionCacheValueObject implements Serializable {
     private static final long serialVersionUID = 184287422449009209L;
 
     /*
-     * FIXME takes up too much memory? see bug 4034
+     * FIXME takes up too much memory? see bug 4034. Remember we store one of these for every link.
      */
 
     private String coexGeneSymbol; // possibly don't store here?

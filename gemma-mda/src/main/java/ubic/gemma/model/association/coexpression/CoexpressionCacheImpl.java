@@ -194,6 +194,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         for ( CoexpressionValueObject g2g : r ) {
             if ( g2g.isFromCache() ) continue;
             assert g2g.getNumDatasetsSupporting() > 0;
+            if ( g2g.getNumDatasetsSupporting() < CoexpressionCache.CACHE_QUERY_STRINGENCY ) continue;
             forCache.add( new CoexpressionCacheValueObject( g2g ) );
         }
         synchronized ( cache ) {
