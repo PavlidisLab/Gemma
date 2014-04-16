@@ -159,9 +159,12 @@ public class CacheMonitorImpl implements CacheMonitor {
             CacheConfiguration cacheConfiguration = cache.getCacheConfiguration();
             boolean eternal = cacheConfiguration.isEternal();
             buf.append( "<td>" + ( eternal ? "&bull;" : "" ) + "</td>" );
-            buf.append( "<td>"
-                    + ( cacheConfiguration.getPersistenceConfiguration().getStrategy().equals( Strategy.NONE ) ? ""
-                            : "&bull;" ) + "</td>" );
+
+            Strategy strategy = null;
+            strategy = cacheConfiguration.getPersistenceConfiguration() == null ? null : cacheConfiguration
+                    .getPersistenceConfiguration().getStrategy();
+
+            buf.append( "<td>" + ( strategy == null || strategy.equals( Strategy.NONE ) ? "" : "&bull;" ) + "</td>" );
             buf.append( "<td>" + cacheConfiguration.getMaxEntriesLocalHeap() + "</td>" );
 
             if ( eternal ) {
