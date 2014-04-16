@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Cache for coexpression results. Results are only cached for a gene if they are done at the minimum usable stringency
- * (2) for all data sets.
+ * Cache for coexpression results. Useful caching requires that the query be done at a suitably low stringency, defined
+ * by CACHE_QUERY_STRINGENCY, against all data sets.
  * 
  * @author Paul
  * @version $Id$

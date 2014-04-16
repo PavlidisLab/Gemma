@@ -5,7 +5,6 @@
 <hibernate-mapping default-cascade="none">
 	<class name="ubic.gemma.model.analysis.expression.coexpression.OtherCoexpressionSupportDetailsImpl" table="OTHER_LINK_SUPPORT_DETAILS"
 		dynamic-insert="false" dynamic-update="false">
-		<cache usage="read-write" />
 		<id access="field" name="id" type="java.lang.Long" unsaved-value="null">
 			<column name="ID" sql-type="BIGINT" />
 			<generator class="org.hibernate.id.MultipleHiLoPerTableGenerator" />
