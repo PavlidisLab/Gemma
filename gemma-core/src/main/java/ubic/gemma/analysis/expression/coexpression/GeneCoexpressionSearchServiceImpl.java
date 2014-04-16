@@ -325,31 +325,31 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     private Integer chooseStringency( int size ) {
         // this is completely made up...
         if ( size < 5 ) {
-            return 1;
-        } else if ( size < 20 ) {
             return 2;
-        } else if ( size < 50 ) {
+        } else if ( size < 20 ) {
             return 3;
-        } else if ( size < 100 ) {
+        } else if ( size < 50 ) {
             return 4;
-        } else if ( size < 200 ) {
-            return 5;
-        } else if ( size < 300 ) {
+        } else if ( size < 100 ) {
             return 6;
-        } else if ( size < 400 ) {
+        } else if ( size < 200 ) {
             return 8;
-        } else if ( size < 600 ) {
+        } else if ( size < 300 ) {
             return 10;
+        } else if ( size < 400 ) {
+            return 15;
+        } else if ( size < 600 ) {
+            return 20;
         } else if ( size < 800 ) {
-            return 12;
+            return 25;
         } else if ( size < 1000 ) {
-            return 14;
+            return 35;
         } else if ( size < 1200 ) {
-            return 16;
+            return 45;
         } else if ( size < 1500 ) {
-            return 18;
+            return 55;
         }
-        return 20;
+        return 65;
     }
 
     /**

@@ -1389,12 +1389,17 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Map<Long, List<CoexpressionValueObject>> results = new HashMap<>();
 
         /*
-         * First, check the cache.
+         * First, check the cache -- if the stringency is > limit
          */
-        Collection<Long> genesNeeded = checkCache( genes, results );
+        Collection<Long> genesNeeded;
+        if ( stringency >= CoexpressionCache.CACHE_QUERY_STRINGENCY ) {
+            genesNeeded = checkCache( genes, results );
 
-        if ( genesNeeded.isEmpty() ) {
-            return results;
+            if ( genesNeeded.isEmpty() ) {
+                return results;
+            }
+        } else {
+            genesNeeded = new HashSet<>( genes );
         }
 
         /*
@@ -1446,10 +1451,18 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         Map<Long, List<CoexpressionValueObject>> finalResult = new HashMap<>();
 
-        Collection<Long> geneIdsNeeded = checkCache( genes, finalResult );
+        /*
+         * First, check the cache -- if the stringency is > limit
+         */
+        Collection<Long> genesNeeded;
+        if ( stringency >= CoexpressionCache.CACHE_QUERY_STRINGENCY ) {
+            genesNeeded = checkCache( genes, finalResult );
 
-        if ( geneIdsNeeded.isEmpty() ) {
-            return finalResult;
+            if ( genesNeeded.isEmpty() ) {
+                return finalResult;
+            }
+        } else {
+            genesNeeded = new HashSet<>( genes );
         }
 
         // we assume the genes are from the same taxon.
@@ -1459,7 +1472,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         StopWatch timer = new StopWatch();
         timer.start();
         int CHUNK_SIZE = 20;
-        BatchIterator<Long> geneIdsIt = new BatchIterator<>( geneIdsNeeded, CHUNK_SIZE );
+        BatchIterator<Long> geneIdsIt = new BatchIterator<>( genesNeeded, CHUNK_SIZE );
         int total = 0;
         for ( ; geneIdsIt.hasNext(); ) {
             StopWatch innertimer = new StopWatch();
@@ -1489,7 +1502,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         if ( timer.getTime() > 100 ) {
-            log.info( "Fetched " + total + "  coexpression results for " + geneIdsNeeded.size() + " genes in "
+            log.info( "Fetched " + total + "  coexpression results for " + genesNeeded.size() + " genes in "
                     + timer.getTime() + "ms" );
         }
 
@@ -1906,7 +1919,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         if ( !result.isEmpty() )
-            log.info( "Prefetched link data for " + result.size() + "/" + links.size() + " links in " + timer.getTime() + "ms" );
+            log.info( "Prefetched link data for " + result.size() + "/" + links.size() + " links in " + timer.getTime()
+                    + "ms" );
 
         return result;
     }
