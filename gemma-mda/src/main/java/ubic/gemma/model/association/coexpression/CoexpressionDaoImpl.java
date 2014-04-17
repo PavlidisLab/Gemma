@@ -412,6 +412,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Session sess = this.getSessionFactory().getCurrentSession();
         sess.setCacheMode( CacheMode.IGNORE );
 
+        log.info( "Fetching any old coexpression ..." );
         Collection<Gene2GeneCoexpression> links = getCoexpression( t, experiment );
 
         Set<NonPersistentNonOrderedCoexpLink> toRemove = new HashSet<>();
@@ -1277,6 +1278,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         // distinct because ee links are stored twice. However, the flipped versions of the ee links are linked to only
         // the forward version, so we only get half of the g2g links here.
+        log.info( "Fetching support details ..." );
         List<Long> supportDetails = sess
                 .createQuery(
                         "select distinct sd.id from " + CoexpressionQueryUtils.getExperimentLinkClassName( t ) + " e, "
@@ -1288,7 +1290,9 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         List<Gene2GeneCoexpression> results = new ArrayList<>();
 
+        log.info( "Fetching links ..." );
         // refetch, this time in a manner that gets the flipped versions too.
+        int i = 0;
         BatchIterator<Long> bi = BatchIterator.batches( supportDetails, 1024 );
         for ( ; bi.hasNext(); ) {
             results.addAll( sess
@@ -1296,10 +1300,14 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                             "from " + CoexpressionQueryUtils.getGeneLinkClassName( t )
                                     + " g2g join fetch g2g.supportDetails sd where sd.id in (:ids)" )
                     .setParameterList( "ids", bi.next() ).list() );
+            if ( ++i % 200 == 0 ) {
+                log.info( i + " batches fetched (" + results.size() + " links fetched so far)" );
+            }
         }
 
         assert results.size() % 2 == 0; // not a great check, but we should have flipped versions of every link.
 
+        log.info( "Fetched " + results.size() + " links" );
         return results;
 
     }

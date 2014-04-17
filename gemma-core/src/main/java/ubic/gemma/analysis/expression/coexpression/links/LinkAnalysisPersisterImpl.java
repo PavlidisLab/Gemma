@@ -262,7 +262,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
                 if ( g1HasLinks ) genesWithLinks.add( g1 );
             }
 
-            if ( i > 0 && i % 50000 == 0 ) {
+            if ( i > 0 && i % 200000 == 0 ) {
                 log.info( i + " links checked" );
             }
 
