@@ -112,7 +112,11 @@ public class PhenotypeWebService {
             String symbol = r.getOfficialSymbol();
             OntologyTerm term = results.get( r );
 
-            answer.add( ( new JSONObject() ).put( symbol, new JSONObject().put( term.getUri(), term ) ) );
+            JSONObject obj = new JSONObject();
+            JSONObject annot = obj;
+            annot.put( term.getUri(), term.getTerm() );
+            obj.put( symbol, annot );
+            answer.add( obj );
         }
 
         return answer;

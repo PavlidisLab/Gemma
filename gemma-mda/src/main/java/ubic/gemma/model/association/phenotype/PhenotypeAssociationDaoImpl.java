@@ -55,8 +55,8 @@ import ubic.gemma.persistence.AbstractDao;
  * deals with all basic queries used by Neurocarta
  * 
  * @author Nicolas
- * @version $Id$ TODO: change criteria
- *          queries to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ * @version $Id$ TODO: change criteria queries
+ *          to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
@@ -207,7 +207,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             String uri = ( String ) oa[1];
             GOEvidenceCode ev = ( GOEvidenceCode ) oa[2];
 
-            if ( !includeIEA && ev.equals( GOEvidenceCode.IEA ) ) {
+            if ( !includeIEA && ev != null && ev.equals( GOEvidenceCode.IEA ) ) {
                 continue;
             }
 
