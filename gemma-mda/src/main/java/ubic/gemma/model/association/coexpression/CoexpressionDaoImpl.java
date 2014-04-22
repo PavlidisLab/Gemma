@@ -1480,6 +1480,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         StopWatch timer = new StopWatch();
         timer.start();
         int CHUNK_SIZE = 20;
+        int genesQueried = 0;
         BatchIterator<Long> geneIdsIt = new BatchIterator<>( genesNeeded, CHUNK_SIZE );
         int total = 0;
         for ( ; geneIdsIt.hasNext(); ) {
@@ -1503,9 +1504,11 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             }
 
             if ( innertimer.getTime() > 100 ) {
-                log.info( "Fetched " + total + "  coexpression results for " + batch.size() + " genes in "
-                        + innertimer.getTime() + "ms" );
+                log.info( "Fetched " + total + "  coexpression results for " + genesQueried + "/" + genesNeeded.size()
+                        + " genes in " + innertimer.getTime() + "ms" );
             }
+
+            genesQueried += batch.size();
 
         }
 
