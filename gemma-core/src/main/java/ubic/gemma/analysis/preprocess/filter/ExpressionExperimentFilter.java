@@ -126,7 +126,7 @@ public class ExpressionExperimentFilter {
         return rowLevelFilter.filter( matrix );
     }
 
-    Collection<ArrayDesign> arrayDesignsUsed;
+    private Collection<ArrayDesign> arrayDesignsUsed;
 
     private final FilterConfig config;
 
@@ -295,7 +295,7 @@ public class ExpressionExperimentFilter {
 
             buf.append( "Filter summary:\n" );
             buf.append( "Filter summary for " + eeDoubleMatrix.getExpressionExperiment() + ":\n" );
-            buf.append( "Started with\t" + startingRows + "\n" );
+            buf.append( "Started with\t" + startingRows + " (" + eeDoubleMatrix.columns() + " columns) " + "\n" );
             if ( config.isRequireSequences() ) buf.append( "After Seq\t" + afterSequenceRemovalRows + "\n" );
             if ( usesAffymetrix() ) buf.append( "After removing Affy controls\t" + afterAffyControlsFilter + "\n" );
             if ( config.isMinPresentFractionIsSet() && !config.isIgnoreMinimumSampleThreshold() )

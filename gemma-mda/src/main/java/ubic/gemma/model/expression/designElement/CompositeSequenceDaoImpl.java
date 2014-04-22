@@ -424,11 +424,6 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             Collection<CompositeSequence> batch = it.next();
             batchGetGenesWithSpecificity( batch, results );
             total += batch.size();
-            timer.split();
-            if ( timer.getSplitTime() > 10000 ) {
-                log.info( "Probe to gene map: " + total + " retrieved in " + timer.getSplitTime() + "ms" );
-            }
-            timer.unsplit();
         }
 
         timer.stop();

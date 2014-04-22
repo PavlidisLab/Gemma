@@ -162,7 +162,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rowsToUse.size(), sourceMatrix.columns() );
         this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
 
-        log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
+        log.debug( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
 
         int i = 0;
         for ( CompositeSequence element : rowsToUse ) {
