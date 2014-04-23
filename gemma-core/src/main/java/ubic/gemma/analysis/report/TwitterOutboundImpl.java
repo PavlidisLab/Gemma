@@ -165,7 +165,8 @@ public class TwitterOutboundImpl implements TwitterOutbound {
      * 
      * @return
      */
-    String generateDailyFeed() {
+    @Override
+    public String generateDailyFeed() {
 
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();

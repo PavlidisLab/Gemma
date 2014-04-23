@@ -25,7 +25,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.analysis.report.TwitterOutboundImpl;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -43,7 +42,7 @@ public class TwitterOutboundTest extends BaseSpringContextTest {
 
     @Test
     public void testTweetLength() {
-        String status = ( ( TwitterOutboundImpl ) twitterOutbound ).generateDailyFeed();
+        String status = twitterOutbound.generateDailyFeed();
         assertNotNull( status );
         assertTrue( ( status.length() <= 140 ) );
     }
