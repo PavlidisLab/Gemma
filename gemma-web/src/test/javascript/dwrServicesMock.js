@@ -553,6 +553,10 @@ SystemMonitorController.enableStatistics = function( callback ) {
 };
 SystemMonitorController.disableStatistics = function( callback ) {
 };
+SystemMonitorController.enableTwitter = function( callback ) {
+};
+SystemMonitorController.disableTwitter = function( callback ) {
+};
 SystemMonitorController.resetHibernateStatus = function( callback ) {
 };
 SystemMonitorController.tweetManually = function( p0, callback ) {

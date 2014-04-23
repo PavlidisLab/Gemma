@@ -25,16 +25,17 @@ import javax.jms.JMSException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.analysis.report.TwitterOutbound;
 import ubic.gemma.job.grid.util.JMSBrokerMonitor;
 import ubic.gemma.util.monitor.CacheMonitor;
 import ubic.gemma.util.monitor.HibernateMonitor;
-import ubic.gemma.web.feed.TwitterOutbound;
 
 /**
  * Provide statistics about the system: hibernate, caches etc.
@@ -46,13 +47,16 @@ import ubic.gemma.web.feed.TwitterOutbound;
 public class SystemMonitorController {
 
     @Autowired
-    CacheMonitor cacheMonitor;
+    private CacheMonitor cacheMonitor;
+
     @Autowired
-    HibernateMonitor hibernateMonitor;
+    private HibernateMonitor hibernateMonitor;
+
     @Autowired
-    JMSBrokerMonitor jmsBrokerMonitor;
+    private JMSBrokerMonitor jmsBrokerMonitor;
+
     @Autowired
-    TwitterOutbound twitterOutbound;
+    private TwitterOutbound twitterOutbound;
 
     /**
      * Flush (clear) all caches. Exposed to AJAX
@@ -86,6 +90,16 @@ public class SystemMonitorController {
 
     public String getCacheStatus() {
         return cacheMonitor.getStats();
+    }
+
+    public void disableTwitter() {
+        twitterOutbound.disable();
+        Log.info( "Twitter disabled" );
+    }
+
+    public void enableTwitter() {
+        twitterOutbound.enable();
+        Log.info( "Twitter enabled" );
     }
 
     /**
@@ -174,11 +188,11 @@ public class SystemMonitorController {
     public String show() {
         return "/admin/systemStats";
     }
-    
+
     /**
      * manually send out a tweet. Exposed to AJAX
      */
-    public void tweetManually(String message) {
-    	twitterOutbound.sendManualTweet(message);
+    public void tweetManually( String message ) {
+        twitterOutbound.sendManualTweet( message );
     }
 }

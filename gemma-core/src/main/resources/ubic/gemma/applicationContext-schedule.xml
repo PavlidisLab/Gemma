@@ -190,9 +190,9 @@
 		</property>
 	</bean>
 	
-	<!--  Configure Twitter feeds -->
+	<!--  Configure Twitter feeds
 	<bean id="twitterOutbound"
-		class="ubic.gemma.web.feed.TwitterOutbound" />
+		class="ubic.gemma.web.feed.TwitterOutbound" /> -->
 
 <!--
 	 
