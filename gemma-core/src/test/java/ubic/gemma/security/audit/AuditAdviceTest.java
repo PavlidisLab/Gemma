@@ -240,6 +240,13 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         log.info( "events.get( 0 ).getAction() = " + events.get( 0 ).getAction() );
         log.info( "events.get( 1 ).getAction() = " + events.get( 1 ).getAction() );
 
+        if ( !events.get( 0 ).getAction().equals( AuditAction.CREATE ) ) {
+            log.info( "First event wasn't 'C', dumping trail" );
+            for ( AuditEvent ae : events ) {
+                log.info( ae );
+            }
+        }
+
         assertEquals( AuditAction.CREATE, events.get( 0 ).getAction() );
         assertEquals( AuditAction.UPDATE, events.get( sizeAfterFirstUpdate - 1 ).getAction() );
 
