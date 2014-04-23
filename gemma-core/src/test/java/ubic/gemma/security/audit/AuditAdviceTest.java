@@ -237,9 +237,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         int sizeAfterFirstUpdate = events.size();
 
         assertEquals( "Should have a 'create' and an 'update'", 2, sizeAfterFirstUpdate );
-        log.info( "events.get( 0 ).getAction() = " + events.get( 0 ).getAction() );
-        log.info( "events.get( 1 ).getAction() = " + events.get( 1 ).getAction() );
 
+        // debugging...
         if ( !events.get( 0 ).getAction().equals( AuditAction.CREATE ) ) {
             log.info( "First event wasn't 'C', dumping trail" );
             for ( AuditEvent ae : events ) {
