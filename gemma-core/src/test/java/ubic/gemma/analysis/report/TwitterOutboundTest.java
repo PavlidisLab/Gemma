@@ -34,7 +34,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class TwitterOutboundTest extends BaseSpringContextTest {
     @Autowired
-    private TwitterOutboundImpl twitterOutbound;
+    private TwitterOutbound twitterOutbound;
 
     @Before
     public void setup() {
@@ -43,7 +43,7 @@ public class TwitterOutboundTest extends BaseSpringContextTest {
 
     @Test
     public void testTweetLength() {
-        String status = twitterOutbound.generateDailyFeed();
+        String status = ( ( TwitterOutboundImpl ) twitterOutbound ).generateDailyFeed();
         assertNotNull( status );
         assertTrue( ( status.length() <= 140 ) );
     }

@@ -44,4 +44,11 @@ public interface TwitterOutbound {
 
     public abstract void sendManualTweet( String feed );
 
+    /**
+     * for testing
+     * 
+     * @return
+     */
+    abstract String generateDailyFeed();
+
 }
