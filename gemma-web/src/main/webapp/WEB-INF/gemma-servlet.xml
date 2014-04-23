@@ -247,7 +247,7 @@
 	<bean id="coexpressionSearchController" class="ubic.gemma.web.controller.coexpressionSearch.CoexpressionSearchController">
 		<dwr:remote javascript="CoexpressionSearchController">
 			<dwr:include method="doSearch" />
-			<dwr:include method="doSearchQuickComplete" /> 
+			<dwr:include method="doSearchQuickComplete" />
 			<dwr:include method="doBackgroundCoexSearch" />
 		</dwr:remote>
 	</bean>
@@ -648,6 +648,8 @@
 			<dwr:include method="resetHibernateStatus" />
 			<dwr:include method="enableStatistics" />
 			<dwr:include method="disableStatistics" />
+			<dwr:include method="enableTwitter" />
+			<dwr:include method="diableTwitter" />
 			<dwr:include method="tweetManually" />
 		</dwr:remote>
 	</bean>
@@ -802,7 +804,7 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject" />
-		
+
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionSearchCommand" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject" />
