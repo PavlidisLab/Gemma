@@ -19,6 +19,27 @@
 
 package ubic.gemma.search;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Queue;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
@@ -26,9 +47,9 @@ import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
@@ -37,11 +58,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.queryParser.QueryParser;
-import org.apache.lucene.util.Version;
-import org.compass.core.*;
+import org.compass.core.Compass;
+import org.compass.core.CompassCallback;
+import org.compass.core.CompassException;
+import org.compass.core.CompassHighlightedText;
+import org.compass.core.CompassHits;
+import org.compass.core.CompassQuery;
+import org.compass.core.CompassSession;
+import org.compass.core.CompassTemplate;
 import org.compass.core.mapping.CompassMapping;
 import org.compass.core.mapping.Mapping;
 import org.compass.core.mapping.ResourceMapping;
@@ -68,7 +93,11 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CharacteristicService;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
@@ -91,18 +120,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
-
-import javax.annotation.PostConstruct;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import ubic.gemma.util.Settings;
 
 /**
  * This service is used for performing searches using free text or exact matches to items in the database. <h2>
@@ -173,8 +193,6 @@ public class SearchServiceImpl implements SearchService {
      * getting the experiments associated with them ). See also MAX_CHARACTERISTIC_SEARCH_RESULTS.
      */
     private static final int SUFFICIENT_EXPERIMENT_RESULTS_FROM_CHARACTERISTICS = 100;
-
-    Analyzer analyzer = new EnglishAnalyzer( Version.LUCENE_36 );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
