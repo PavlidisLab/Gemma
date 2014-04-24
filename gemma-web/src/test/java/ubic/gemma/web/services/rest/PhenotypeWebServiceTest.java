@@ -22,7 +22,6 @@ package ubic.gemma.web.services.rest;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -55,7 +54,7 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
- * TODO Document Me
+ * Like PhenotypeAssociationTest but exercises web service functionality.
  * 
  * @author paul
  * @version $Id$
