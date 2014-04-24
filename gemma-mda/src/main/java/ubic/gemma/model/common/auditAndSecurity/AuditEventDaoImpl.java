@@ -100,7 +100,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select et, trail, event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date,event.id desc ";
 
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "trails", atmap.keySet() );
@@ -297,7 +297,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         Long id = auditable.getAuditTrail().getId();
         return this.getHibernateTemplate().findByNamedParam(
-                "select e from AuditTrailImpl t join t.events e where t.id = :id order by e.date ", "id", id );
+                "select e from AuditTrailImpl t join t.events e where t.id = :id order by e.date,e.id ", "id", id );
 
     }
 
@@ -339,7 +339,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         final String queryString = "select event from AuditTrailImpl trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
                 + "fetch all properties where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
-                + ") order by event.date desc ";
+                + ") order by e.date,event.id desc ";
 
         org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setCacheable( true );
@@ -376,7 +376,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select trail, ae from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join trail.events ae inner join ae.eventType et inner join fetch ae.performer where trail in (:trails) "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by ae.date desc ";
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by ae.date,ae.id desc ";
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -454,7 +454,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         final String queryString = "select trail,event,et from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
                 + "inner join fetch trail.events event inner join event.eventType et inner join fetch event.performer "
-                + "where trail in (:trails) order by event.date desc ";
+                + "where trail in (:trails) order by event.date,event.id desc ";
 
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> result = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
         try {
