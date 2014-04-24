@@ -321,6 +321,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                 Map<Long, List<CoexpressionValueObject>> multiGeneResults = geneCoexpressionService
                         .findCoexpressionRelationships( mouse, EntityUtils.getIds( genesWithLinks ),
                                 EntityUtils.getIds( ees ), 100, false );
+                
+                // these strange structures are to help with debugger.
                 if ( multiGeneResults.isEmpty() ) {
                     assertTrue( !multiGeneResults.isEmpty() );
                 }
