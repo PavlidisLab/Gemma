@@ -14,6 +14,7 @@
  */
 package ubic.gemma.analysis.preprocess.batcheffects;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 
@@ -28,13 +29,14 @@ public interface ScanDateExtractor {
     /**
      * @param is
      * @return
+     * @throws IOException
      */
-    public Date extract( InputStream is );
+    public Date extract( InputStream is ) throws IOException;
 
     /**
      * @param fileName
      * @return
      */
-    public Date extract( String fileName );
+    public Date extract( String fileName ) throws IOException;
 
 }
