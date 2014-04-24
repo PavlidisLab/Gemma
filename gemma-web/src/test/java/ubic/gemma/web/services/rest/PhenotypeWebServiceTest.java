@@ -96,19 +96,11 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
     @Before
     public void setup() throws Exception {
 
-        // if ( !dosLoaded ) {
-        os.getDiseaseOntologyService().loadTermsInNameSpace(
-                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-        int c = 0;
-        while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for DiseaseOntology to load" );
-            if ( ++c > 20 ) {
-                fail( "Ontology load timeout" );
-            }
+        if ( !dosLoaded ) {
+            os.getDiseaseOntologyService().loadTermsInNameSpace(
+                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
+            dosLoaded = true;
         }
-        // dosLoaded = true;
-        // }
 
         createGene();
         createExternalDatabase();

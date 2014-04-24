@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -103,14 +102,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         if ( !dosLoaded ) {
             os.getDiseaseOntologyService().loadTermsInNameSpace(
                     this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-            int c = 0;
-            while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
-                Thread.sleep( 1000 );
-                log.info( "Waiting for DiseaseOntology to load" );
-                if ( ++c > 20 ) {
-                    fail( "Ontology load timeout" );
-                }
-            }
+
             dosLoaded = true;
         }
 

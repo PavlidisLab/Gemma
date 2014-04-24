@@ -20,7 +20,6 @@ package ubic.gemma.ontology;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Collection;
 
@@ -51,14 +50,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
 
         os.getDiseaseOntologyService().loadTermsInNameSpace(
                 this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-        int c = 0;
-        while ( !os.getDiseaseOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for DiseaseOntology to load" );
-            if ( ++c > 20 ) {
-                fail( "Ontology load timeout" );
-            }
-        }
+
         Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null, null );
 
         assertTrue( name.size() > 0 );
