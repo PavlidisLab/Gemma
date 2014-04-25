@@ -20,6 +20,12 @@ package ubic.gemma.analysis.report;
 
 import gemma.gsec.SecurityService;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -31,6 +37,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.social.twitter.api.StatusDetails;
@@ -49,9 +58,19 @@ import ubic.gemma.util.Settings;
  */
 @Component
 public class TwitterOutboundImpl implements TwitterOutbound {
+    private static AtomicBoolean enabled = new AtomicBoolean( Settings.getBoolean( "gemma.twitter.enabled", false ) );
+
+    /**
+     * 
+     */
+    private static final String EXPERIMENT_URL_BASE = "http://www.chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=";
+
     private static Log log = LogFactory.getLog( TwitterOutboundImpl.class.getName() );
 
-    private static AtomicBoolean enabled = new AtomicBoolean( Settings.getBoolean( "gemma.twitter.enabled", false ) );
+    /**
+     * 
+     */
+    private static final String SHORTENER = "http://to.ly/api.php?json=0&longurl=";
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -81,6 +100,74 @@ public class TwitterOutboundImpl implements TwitterOutbound {
     public void enable() {
         enabled.set( true );
 
+    }
+
+    /**
+     * Generate content for the tweet; exposed for testing.
+     * 
+     * @return
+     */
+    @Override
+    public String generateDailyFeed() {
+
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addDays( date, -1 );
+        WhatsNew whatsNew = whatsNewService.getReport( date );
+
+        Collection<ExpressionExperiment> experiments = new ArrayList<ExpressionExperiment>();
+        int updatedExperimentsCount = 0;
+        int newExperimentsCount = 0;
+
+        Random rand = new Random();
+
+        // Query for all updated / new expression experiments to store into a experiments collection
+        if ( whatsNew != null ) {
+            Collection<ExpressionExperiment> updatedExperiments = whatsNew.getUpdatedExpressionExperiments();
+            Collection<ExpressionExperiment> newExperiments = whatsNew.getNewExpressionExperiments();
+            experiments.addAll( updatedExperiments );
+            experiments.addAll( newExperiments );
+            updatedExperimentsCount = updatedExperiments.size();
+            newExperimentsCount = newExperiments.size();
+        }
+
+        ExpressionExperiment experiment = null;
+
+        // Query latest experiments if there are no updated / new experiments
+        if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
+            Collection<ExpressionExperiment> latestExperiments = expressionExperimentService.findByUpdatedLimit( 10 );
+            Collection<ExpressionExperiment> publicExperiments = securityService.choosePublic( latestExperiments );
+
+            if ( publicExperiments.isEmpty() ) {
+                log.warn( "There are no valid experiments to tweet about" );
+                return null;
+            }
+
+            experiment = ( ExpressionExperiment ) publicExperiments.toArray()[rand.nextInt( publicExperiments.size() )];
+
+            // this shouldn't be needed.
+            if ( experiment.getStatus().getLastUpdateDate().before( DateUtils.addDays( new Date(), -1 ) ) ) {
+                log.info( "No updates in the last day, no tweeting" );
+                return null;
+            }
+
+        } else {
+            if ( experiments.isEmpty() ) {
+                log.warn( "There are no valid experiments to tweet about" );
+                return null;
+            }
+
+            experiment = ( ExpressionExperiment ) experiments.toArray()[rand.nextInt( experiments.size() )];
+        }
+
+        assert experiment != null;
+
+        String status = statusWithExperiment(
+                StringUtils.abbreviate( experiment.getShortName() + ": " + experiment.getName(), 60 ),
+                formExperimentUrl( experiment ), updatedExperimentsCount, newExperimentsCount );
+
+        return StringUtils.abbreviate( status, 140 ); // this will look a bit weird, and might chop off the url...but
+                                                      // have to ensure.
     }
 
     /*
@@ -160,94 +247,63 @@ public class TwitterOutboundImpl implements TwitterOutbound {
 
     }
 
-    /**
-     * Generate content for the tweet; exposed for testing.
-     * 
-     * @return
-     */
-    @Override
-    public String generateDailyFeed() {
+    private String formExperimentUrl( ExpressionExperiment ee ) {
+        return shortenUrl( EXPERIMENT_URL_BASE + ee.getId() );
+    }
 
-        Calendar c = Calendar.getInstance();
-        Date date = c.getTime();
-        date = DateUtils.addDays( date, -1 );
-        WhatsNew whatsNew = whatsNewService.getReport( date );
+    private String shortenUrl( String url ) {
 
-        Collection<ExpressionExperiment> experiments = new ArrayList<ExpressionExperiment>();
-        int updatedExperimentsCount = 0;
-        int newExperimentsCount = 0;
-
-        Random rand = new Random();
-
-        // Query for all updated / new expression experiments to store into a experiments collection
-        if ( whatsNew != null ) {
-            Collection<ExpressionExperiment> updatedExperiments = whatsNew.getUpdatedExpressionExperiments();
-            Collection<ExpressionExperiment> newExperiments = whatsNew.getNewExpressionExperiments();
-            experiments.addAll( updatedExperiments );
-            experiments.addAll( newExperiments );
-            updatedExperimentsCount = updatedExperiments.size();
-            newExperimentsCount = newExperiments.size();
+        URL toGet;
+        try {
+            toGet = new URL( SHORTENER + url );
+        } catch ( MalformedURLException e1 ) {
+            throw new IllegalArgumentException( "URL could not be shortened!" );
         }
 
-        ExpressionExperiment experiment = null;
+        // stupid warning, it is managed!
+        try (@SuppressWarnings("resource")
+        BufferedReader in = new BufferedReader( new InputStreamReader( toGet.openStream() ) );) {
+            StringBuilder buf = new StringBuilder();
 
-        // Query latest experiments if there are no updated / new experiments
-        if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
-            Collection<ExpressionExperiment> latestExperiments = expressionExperimentService.findByUpdatedLimit( 10 );
-            Collection<ExpressionExperiment> publicExperiments = securityService.choosePublic( latestExperiments );
+            // should be just one line...
+            String inputLine;
 
-            if ( publicExperiments.isEmpty() ) {
-                log.warn( "There are no valid experiments to tweet about" );
-                return null;
+            while ( ( inputLine = in.readLine() ) != null ) {
+                buf.append( inputLine );
             }
+            in.close();
 
-            experiment = ( ExpressionExperiment ) publicExperiments.toArray()[rand.nextInt( publicExperiments.size() )];
-
-            // this shouldn't be needed.
-            if ( experiment.getStatus().getLastUpdateDate().before( DateUtils.addDays( new Date(), -1 ) ) ) {
-                log.info( "No updates in the last day, no tweeting" );
-                return null;
-            }
-
-        } else {
-            if ( experiments.isEmpty() ) {
-                log.warn( "There are no valid experiments to tweet about" );
-                return null;
-            }
-
-            experiment = ( ExpressionExperiment ) experiments.toArray()[rand.nextInt( experiments.size() )];
+            return buf.toString();
+        } catch ( IOException e ) {
+            throw new RuntimeException( "URL could not be shortened!", e );
         }
-
-        assert experiment != null;
-
-        String status = statusWithExperiment(
-                StringUtils.abbreviate( experiment.getShortName() + ": " + experiment.getName(), 60 ),
-                updatedExperimentsCount, newExperimentsCount );
-
-        return StringUtils.abbreviate( status, 140 ); // this will look a bit weird, and might chop off the url...but
-                                                      // have to ensure.
     }
 
     /**
      * @param experimentName
+     * @param url link to experiment
      * @param updatedExperimentsCount
      * @param newExperimentsCount
      * @return a status that provides the number of updated and new experiments, a "randomly" chosen experiment and a
      *         link back to Gemma
      */
-    private String statusWithExperiment( String experimentName, int updatedExperimentsCount, int newExperimentsCount ) {
+    private String statusWithExperiment( String experimentName, String url, int updatedExperimentsCount,
+            int newExperimentsCount ) {
+
+        assert url != null && url.startsWith( "http" );
+
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
-            return "Experiment of the day: " + experimentName + "; View more at gemma.chibi.ubc.ca";
+            return "Experiment of the day: " + experimentName + " " + url + "; View more at gemma.chibi.ubc.ca";
         }
 
         if ( updatedExperimentsCount == 0 ) {
-            return "Experiment of the day: " + experimentName + "; View all " + newExperimentsCount
+            return "Experiment of the day: " + experimentName + " " + url + "; View all " + newExperimentsCount
                     + " new experiments at gemma.chibi.ubc.ca";
         } else if ( newExperimentsCount == 0 ) {
-            return "Experiment of the day: " + experimentName + "; View all " + updatedExperimentsCount
+            return "Experiment of the day: " + experimentName + " " + url + "; View all " + updatedExperimentsCount
                     + " updated experiments at gemma.chibi.ubc.ca";
         } else {
-            return "Experiment of the day: " + experimentName + "; View all " + updatedExperimentsCount
+            return "Experiment of the day: " + experimentName + " " + url + "; View all " + updatedExperimentsCount
                     + " updated and " + newExperimentsCount + " new at gemma.chibi.ubc.ca";
         }
     }

@@ -43,6 +43,7 @@ public class TwitterOutboundTest extends BaseSpringContextTest {
     @Test
     public void testTweetLength() {
         String status = twitterOutbound.generateDailyFeed();
+        log.info( status );
         assertNotNull( status );
         assertTrue( ( status.length() <= 140 ) );
     }
