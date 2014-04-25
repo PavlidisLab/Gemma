@@ -98,9 +98,9 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
 
         createGene();
         createExternalDatabase();
-
-        OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
-        assertNotNull( term );
+        //
+        // OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
+        // assertNotNull( term );
 
         createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );
     }
