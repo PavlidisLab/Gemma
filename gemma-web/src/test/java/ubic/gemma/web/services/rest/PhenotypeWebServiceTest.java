@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.InputStream;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -93,16 +94,18 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
     @Before
     public void setup() throws Exception {
 
-        os.getDiseaseOntologyService().loadTermsInNameSpace(
-                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
+        try (InputStream stream = this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" );) {
+            assertNotNull( stream );
+            os.getDiseaseOntologyService().loadTermsInNameSpace( stream );
 
-        createGene();
-        createExternalDatabase();
-        //
-        // OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
-        // assertNotNull( term );
+            createGene();
+            createExternalDatabase();
 
-        createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );
+            OntologyTerm term = os.getDiseaseOntologyService().getTerm( "http://purl.obolibrary.org/obo/DOID_2531" );
+            assertNotNull( term );
+
+            createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );
+        }
     }
 
     @Test
