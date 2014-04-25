@@ -79,8 +79,6 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
 
     private Taxon humanTaxon = null;
 
-    private static boolean dosLoaded = false;
-
     private Gene gene = null;
 
     private Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
@@ -95,11 +93,8 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
     @Before
     public void setup() throws Exception {
 
-        if ( !dosLoaded ) {
-            os.getDiseaseOntologyService().loadTermsInNameSpace(
-                    this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
-            dosLoaded = true;
-        }
+        os.getDiseaseOntologyService().loadTermsInNameSpace(
+                this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
         createGene();
         createExternalDatabase();
