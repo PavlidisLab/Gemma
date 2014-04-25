@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:task="http://www.springframework.org/schema/task"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
           http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
 
 
            http://www.springframework.org/schema/task
           http://www.springframework.org/schema/task/spring-task-3.0.xsd">
-	<!-- 
-	author: keshav   
-	$Id$ 
--->
+	<!-- author: keshav $Id$ -->
 
-    <task:annotation-driven/>
-	<!--
-		Note: we cannot use @Scheduled and @Async because the security context is not available to the runnables they create.
-	-->
+	<task:annotation-driven />
+	<!-- Note: we cannot use @Scheduled and @Async because the security context is not available to the runnables they create. -->
 
-	<!--
-		Quartz Configuration. The schedulerFactorBean is the main entry point. See also QuartzUtils for how this can be turned
-		off.
-	-->
+	<!-- Quartz Configuration. The schedulerFactorBean is the main entry point. See also QuartzUtils for how this can be turned 
+		off. -->
 	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
 		<property name="triggers">
 			<list>
@@ -32,19 +25,16 @@
 				<ref local="twitterOutboundTrigger" />
 				<ref local="neurocartaTrigger" />
 				<!-- <ref local="viewTrigger" /> -->
-				<!--<ref local="monitorSpaceTrigger" />-->
+				<!--<ref local="monitorSpaceTrigger" /> -->
 			</list>
 		</property>
 	</bean>
 
 	<!-- Triggers -->
-	<!--
-		Cron trigger fields are: Seconds 0-59 , - * / Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L W
-		Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See
-		http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html for details,
-		http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples. If you want a schedule that fire
-		frequently for testing, try <value>0 0/2 * ? * *</value>.
-	-->
+	<!-- Cron trigger fields are: Seconds 0-59 , - * / Minutes 0-59 , - * / Hours 0-23 , - * / Day-of-month 1-31 , - * ? / L 
+		W Month 1-12 or JAN-DEC , - * / Day-of-Week 1-7 or SUN-SAT , - * ? / L # Year (Optional) empty, 1970-2099 , - * / See http://www.opensymphony.com/quartz/api/org/quartz/CronExpression.html 
+		for details, http://www.opensymphony.com/quartz/api/org/quartz/CronTrigger.html for examples. If you want a schedule that 
+		fire frequently for testing, try <value>0 0/2 * ? * *</value>. -->
 	<bean id="indexTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
 		<property name="jobDetail">
 			<ref bean="indexJobDetail" />
@@ -66,7 +56,7 @@
 			<ref bean="arrayDesignReportJobDetail" />
 		</property>
 		<property name="cronExpression">
-			<value>0 30 1 1 * ?</value><!-- monthly at 1:30  -->
+			<value>0 30 1 1 * ?</value><!-- monthly at 1:30 -->
 		</property>
 	</bean>
 	<bean id="neurocartaTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -74,7 +64,7 @@
 			<ref bean="neurocartaJobDetail" />
 		</property>
 		<property name="cronExpression">
-				 <value>0 30 2 1 * ?</value><!-- monthly at 2:30  -->
+			<value>0 30 2 1 * ?</value><!-- monthly at 2:30 -->
 		</property>
 	</bean>
 	<bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
@@ -98,30 +88,24 @@
 			<ref bean="twitterOutboundJobDetail" />
 		</property>
 		<property name="cronExpression">
-			<value>0 0 9 * * ?</value><!--  daily at 9AM -->
+			<!-- <value>0 0 9 * * ?</value> --><!-- daily at 9AM -->
+			<value>0 0 9 1/3 * ? *</value><!-- every 3 days @ 9 am -->
 		</property>
 	</bean>
 
-<!-- TODO make this work in the space, disabling until then.  
-	<bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
-		<property name="jobDetail">
-			<ref bean="viewJobDetail" />
-		</property>
-		<property name="cronExpression">
-			<value>0 15 1 10 * ?</value> 
-		</property>
-	</bean>
--->
-	<!--<bean id="monitorSpaceTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">-->
-		<!--<property name="jobDetail">-->
-			<!--<ref bean="monitorSpaceJobDetail" />-->
-		<!--</property>-->
-		<!--<property name="repeatInterval">-->
-			<!--<value>5000</value> -->
-		<!--</property>-->
+	<!-- TODO make this work in the space, disabling until then. <bean id="viewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean"> 
+		<property name="jobDetail"> <ref bean="viewJobDetail" /> </property> <property name="cronExpression"> <value>0 15 1 10 * 
+		?</value> </property> </bean> -->
+	<!--<bean id="monitorSpaceTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean"> -->
+	<!--<property name="jobDetail"> -->
+	<!--<ref bean="monitorSpaceJobDetail" /> -->
+	<!--</property> -->
+	<!--<property name="repeatInterval"> -->
+	<!--<value>5000</value> -->
+	<!--</property> -->
 
-		<!--<property name="startDelay" value="12" /> &lt;!&ndash;  wait before beginning &ndash;&gt;-->
-	<!--</bean>-->
+	<!--<property name="startDelay" value="12" /> &lt;!&ndash; wait before beginning &ndash;&gt; -->
+	<!--</bean> -->
 
 
 	<!-- Job details -->
@@ -180,7 +164,7 @@
 			<value>sendDailyFeed</value>
 		</property>
 	</bean>
-		<bean id="neurocartaJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="neurocartaJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="phenotypeAssociationManagerService" />
 		</property>
@@ -189,30 +173,19 @@
 			<value>writeAllEvidenceToFile</value>
 		</property>
 	</bean>
-	
-	<!--  Configure Twitter feeds
-	<bean id="twitterOutbound"
-		class="ubic.gemma.web.feed.TwitterOutbound" /> -->
 
-<!--
-	 
-	<bean id="viewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
-		<property name="targetObject">
-			<ref bean="databaseViewGenerator" />
-		</property>
-		<property name="concurrent" value="false" />
-		<property name="targetMethod">
-			<value>runAll</value>
-		</property>
-	</bean>
--->
-	<!--<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">-->
-		<!--<property name="targetObject">-->
-			<!--<ref bean="spaceMonitor" />-->
-		<!--</property>-->
-		<!--<property name="concurrent" value="false" />&lt;!&ndash; set to true for interesting test &ndash;&gt;-->
-		<!--<property name="targetMethod">-->
-			<!--<value>ping</value>-->
-		<!--</property>-->
-	<!--</bean>-->
+	<!-- Configure Twitter feeds <bean id="twitterOutbound" class="ubic.gemma.web.feed.TwitterOutbound" /> -->
+
+	<!-- <bean id="viewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean"> <property 
+		name="targetObject"> <ref bean="databaseViewGenerator" /> </property> <property name="concurrent" value="false" /> <property 
+		name="targetMethod"> <value>runAll</value> </property> </bean> -->
+	<!--<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean"> -->
+	<!--<property name="targetObject"> -->
+	<!--<ref bean="spaceMonitor" /> -->
+	<!--</property> -->
+	<!--<property name="concurrent" value="false" />&lt;!&ndash; set to true for interesting test &ndash;&gt; -->
+	<!--<property name="targetMethod"> -->
+	<!--<value>ping</value> -->
+	<!--</property> -->
+	<!--</bean> -->
 </beans>
