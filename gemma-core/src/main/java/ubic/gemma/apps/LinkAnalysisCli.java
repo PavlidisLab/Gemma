@@ -616,12 +616,16 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         /*
          * Note that auditing is handled by the service.
          */
+        StopWatch sw = new StopWatch();
+        sw.start();
         try {
 
             if ( this.expressionExperiments.size() > 1 && linkAnalysisConfig.isTextOut() ) {
                 linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() )
                         + "-links.txt" ) );
             }
+
+            log.info( "==== Starting: [" + ee.getShortName() + "] ======" );
 
             linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
@@ -631,6 +635,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********" );
             log.error( e, e );
         }
+        log.info( "==== Done: [" + ee.getShortName() + "] ======" );
+        log.info( "Time elapsed: " + String.format( "%.2f", sw.getTime() / 1000.0 / 60.0 ) + " minutes" );
+
     }
 
 }

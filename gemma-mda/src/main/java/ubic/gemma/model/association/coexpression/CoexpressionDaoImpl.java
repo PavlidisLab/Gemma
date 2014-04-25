@@ -1102,6 +1102,9 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      */
     private Collection<Long> checkCacheForInterGeneLinks( Collection<Long> genes,
             Map<Long, List<CoexpressionValueObject>> results, int stringency ) {
+
+        if ( stringency < CoexpressionCache.CACHE_QUERY_STRINGENCY ) return genes;
+
         Collection<Long> genesNeeded = new HashSet<>();
         int resultsFound = 0;
         for ( Long gid : genes ) {
