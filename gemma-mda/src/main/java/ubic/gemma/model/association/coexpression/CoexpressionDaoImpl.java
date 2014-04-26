@@ -1455,7 +1455,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      * @param stringency minimum level of support required
      * @param quick whether to fill in the information on which data sets were supporting and how many datasets were
      *        tested.
-     * @return map of gene ids to ranked list of coexpression value objects.
+     * @return map of gene ids to ranked list of coexpression value objects, which will still need to be trimmed.
      */
     private Map<Long, List<CoexpressionValueObject>> getCoexpressionFromCacheOrDbViaGenes( Taxon t,
             Collection<Long> genes, int stringency, boolean quick ) {
@@ -1506,8 +1506,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 total += rr.get( g ).size();
             }
 
-            if ( innertimer.getTime() > 100 ) {
-                log.info( "Fetched " + total + "  coexpression results for " + genesQueried + "/" + genesNeeded.size()
+            if ( innertimer.getTime() > 1000 ) {
+                log.debug( "Fetched " + total + "  coexpression results for " + genesQueried + "/" + genesNeeded.size()
                         + " genes in " + innertimer.getTime() + "ms" );
             }
 
@@ -1515,8 +1515,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         }
 
-        if ( timer.getTime() > 100 ) {
-            log.info( "Fetched " + total + "  coexpression results for " + genesNeeded.size() + " genes in "
+        if ( timer.getTime() > 1000 ) {
+            log.debug( "Fetched " + total + "  coexpression results for " + genesNeeded.size() + " genes in "
                     + timer.getTime() + "ms" );
         }
 

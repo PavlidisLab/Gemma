@@ -213,7 +213,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
             // test for bug 4036
             for ( CoexpressionValueObjectExt cvo : results ) {
-                assert cvo.getNumTestedIn() <= eevos.size();
+                assert cvo.getNumTestedIn() <= eevos.size() : "Expected max testedin of " + eevos.size() + " but got "
+                        + cvo.getNumTestedIn() + " for query gene " + queryGene;
             }
 
             result.getResults().addAll( results );
