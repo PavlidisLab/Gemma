@@ -191,7 +191,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 
    /**
     * Does the search using CoexpressionSearchController.doSearchQuickComplete; fires events to notify state e.g. when
-    * results are ready (or error)
+    * results are ready (or error). The stringency should initially be that used for the first search (to populate the table)
     * 
     * @param newStringency
     * 
@@ -219,7 +219,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          return;
 
       }
-
+      
       var searchStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency( newStringency );
       this.stringency = searchStringency;
 

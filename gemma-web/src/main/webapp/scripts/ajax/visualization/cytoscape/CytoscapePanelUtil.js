@@ -126,10 +126,12 @@ Gemma.CytoscapePanelUtil.nodeDegreeColorMapper = function( nodeDegree, type ) {
  *           displayStringency
  */
 Gemma.CytoscapePanelUtil.restrictResultsStringency = function( displayStringency ) {
-   if ( displayStringency > 5 ) {
-      return displayStringency - Math.round( displayStringency / 4 );
-   }
-   return Gemma.MIN_STRINGENCY;
+   // FIXME explain/adjust this heuristic. The idea is we reduce the stringency a little so the user can adjust the view
+   // without triggering a requery.
+   // if ( displayStringency > 5 ) {
+   // return displayStringency - Math.round( displayStringency / 4 );
+   // }
+   return displayStringency;
 };
 
 /**
@@ -175,7 +177,7 @@ Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function( searchR
 
    var queryGeneCountHash = {};
 
-   for ( var i = 0; i < qlength; i++) {
+   for (var i = 0; i < qlength; i++) {
       geneIds.push( originalQueryGeneIds[i] );
       queryGeneCountHash[originalQueryGeneIds[i]] = 0;
    }
