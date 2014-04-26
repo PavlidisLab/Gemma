@@ -144,6 +144,17 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.testedInDatasets = new HashSet<>( testedInDatasets );
     }
 
+    /**
+     * @param coexGeneId
+     * @param coexGeneSymbol
+     * @param positiveCorrelation
+     * @param queryGeneId
+     * @param queryGeneSymbol
+     * @param support
+     * @param supportDetailsId
+     * @param supportingDatasets
+     * @param testedInDatasets
+     */
     protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
             Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
             Long[] supportingDatasets, Long[] testedInDatasets ) {
@@ -334,7 +345,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.support = this.supportingDatasets.size();
 
         if ( this.testedInDatasets != null ) {
-            changed = changed || this.testedInDatasets.retainAll( bas );
+            changed = this.testedInDatasets.retainAll( bas ) || changed;
             assert this.testedInDatasets.size() >= this.supportingDatasets.size();
         }
 
