@@ -148,68 +148,75 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
       }
    } );
 
+   // this works but the fonts for the widget labels do not.
    // http://plugins.jquery.com/cytoscape.js-panzoom/
    // the default values of each option are outlined below:
-   visualization.cytoscapePanzoom( {
-      zoomFactor : 0.1, // zoom factor per zoom tick
-      zoomDelay : 45, // how many ms between zoom ticks
-      minZoom : 0.1, // min zoom level
-      maxZoom : 10, // max zoom level
-      fitPadding : 50, // padding when fitting
-      panSpeed : 10, // how many ms in between pan ticks
-      panDistance : 10, // max pan distance per tick
-      panDragAreaSize : 75, // the length of the pan drag box in which the vector for panning is calculated (bigger =
-      // finer control of pan speed and direction)
-      panMinPercentSpeed : 0.25, // the slowest speed we can pan by (as a percent of panSpeed)
-      panInactiveArea : 8, // radius of inactive area in pan drag box
-      panIndicatorMinOpacity : 0.5, // min opacity of pan indicator (the draggable nib); scales from this to 1.0
-      autodisableForMobile : true, // disable the panzoom completely for mobile (since we don't really need it with
-      // gestures like pinch to zoom)
+//   visualization.cytoscapePanzoom( {
+//      zoomFactor : 0.1, // zoom factor per zoom tick
+//      zoomDelay : 45, // how many ms between zoom ticks
+//      minZoom : 0.1, // min zoom level
+//      maxZoom : 10, // max zoom level
+//      fitPadding : 50, // padding when fitting
+//      panSpeed : 10, // how many ms in between pan ticks
+//      panDistance : 10, // max pan distance per tick
+//      panDragAreaSize : 75, // the length of the pan drag box in which the vector for panning is calculated (bigger =
+//      // finer control of pan speed and direction)
+//      panMinPercentSpeed : 0.25, // the slowest speed we can pan by (as a percent of panSpeed)
+//      panInactiveArea : 8, // radius of inactive area in pan drag box
+//      panIndicatorMinOpacity : 0.5, // min opacity of pan indicator (the draggable nib); scales from this to 1.0
+//      autodisableForMobile : true, // disable the panzoom completely for mobile (since we don't really need it with
+//      // gestures like pinch to zoom)
+//
+//      // icon class names
+//      sliderHandleIcon : 'fa fa-minus',
+//      zoomInIcon : 'fa fa-plus',
+//      zoomOutIcon : 'fa fa-minus',
+//      resetIcon : 'fa fa-expand'
+//   } );
+   
+   // I did not get this to work
+//   visualization.cytoscapeNavigator({
+//      // options go here
+//   });
 
-      // icon class names
-      sliderHandleIcon : 'fa fa-minus',
-      zoomInIcon : 'fa fa-plus',
-      zoomOutIcon : 'fa fa-minus',
-      resetIcon : 'fa fa-expand'
-   } );
-
-   /*
-    * 
-    */
-   visualization.cytoscapeCxtmenu( {
-      menuRadius : 40, // the radius of the circular menu in pixels
-      selector : 'node', // nodes matching this Cytoscape.js selector will trigger cxtmenus
-      commands : [ // an array of commands to list in the menu
-
-      /*
-       * { // example command content: 'a command name' // html/text content to be displayed in the menu select:
-       * function(){ // a function to execute when the command is selected console.log( this.id() ) // `this` holds the
-       * reference to the active node } }
-       */
-
-      {
-         content : 'TESTING1',
-         select : function() {
-            console.log( this.data( 'officialName' ) );
-         }
-      }, {
-         content : 'TESTING2',
-         select : function() {
-            console.log( this.data( 'nodeDegree' ) );
-         }
-      } ],
-      fillColor : 'rgba(59, 59, 59, 0.75)', // the background colour of the menu
-      activeFillColor : 'rgba(92, 194, 237, 0.75)', // the colour used to indicate the selected command
-      activePadding : 2, // additional size in pixels for the active command
-      indicatorSize : null, // the size in pixels of the pointer to the active command
-      separatorWidth : 2, // the empty spacing in pixels between successive commands
-      spotlightPadding : 3, // extra spacing in pixels between the node and the spotlight
-      minSpotlightRadius : 24, // the minimum radius in pixels of the spotlight
-      maxSpotlightRadius : 26, // the maximum radius in pixels of the spotlight
-      itemColor : 'black', // the colour of text in the command's content
-      itemTextShadowColor : null, // the text shadow colour of the command's content
-      zIndex : 9999
-   // the z-index of the ui div
-   } );
+   // disabled until we have a functionality. Really need tooltips.
+//   /*
+//    * 
+//    */
+//   visualization.cytoscapeCxtmenu( {
+//      menuRadius : 40, // the radius of the circular menu in pixels
+//      selector : 'node', // nodes matching this Cytoscape.js selector will trigger cxtmenus
+//      commands : [ // an array of commands to list in the menu
+//
+//      /*
+//       * { // example command content: 'a command name' // html/text content to be displayed in the menu select:
+//       * function(){ // a function to execute when the command is selected console.log( this.id() ) // `this` holds the
+//       * reference to the active node } }
+//       */
+//
+//      {
+//         content : 'TESTING1',
+//         select : function() {
+//            console.log( this.data( 'officialName' ) );
+//         }
+//      }, {
+//         content : 'TESTING2',
+//         select : function() {
+//            console.log( this.data( 'nodeDegree' ) );
+//         }
+//      } ],
+//      fillColor : 'rgba(59, 59, 59, 0.75)', // the background colour of the menu
+//      activeFillColor : 'rgba(92, 194, 237, 0.75)', // the colour used to indicate the selected command
+//      activePadding : 2, // additional size in pixels for the active command
+//      indicatorSize : null, // the size in pixels of the pointer to the active command
+//      separatorWidth : 2, // the empty spacing in pixels between successive commands
+//      spotlightPadding : 3, // extra spacing in pixels between the node and the spotlight
+//      minSpotlightRadius : 24, // the minimum radius in pixels of the spotlight
+//      maxSpotlightRadius : 26, // the maximum radius in pixels of the spotlight
+//      itemColor : 'black', // the colour of text in the command's content
+//      itemTextShadowColor : null, // the text shadow colour of the command's content
+//      zIndex : 9999
+//   // the z-index of the ui div
+//   } );
 
 };
