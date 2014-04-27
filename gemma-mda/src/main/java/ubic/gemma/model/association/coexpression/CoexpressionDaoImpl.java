@@ -1477,6 +1477,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         // we assume the genes are from the same taxon.
+        assert t != null;
         String className = CoexpressionQueryUtils.getGeneLinkClassName( t );
 
         // fetch rest of genes needed from the database.
