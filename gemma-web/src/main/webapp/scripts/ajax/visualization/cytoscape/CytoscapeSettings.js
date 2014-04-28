@@ -36,6 +36,7 @@ Gemma.CytoscapeSettings = {
 
    // size stuff (edge size is in the cytoscapeJSCoexGraphInitializer)
    labelFontSize : 12,
+
    nodeSize : 18,
 
    nodeQueryColorTrue : "#AB1AE4", // purple
@@ -69,7 +70,8 @@ Gemma.CytoscapeSettings = {
       lowest : 0.3
    },
 
-   // alpha values. We're blending in white, so low numbers translate to dark
+   // Shades. We're blending in white, so low numbers translate to
+   // dark. Note: alpha is much slower.
    nodeDegreeColor : {
       lightest : 0.85,
       light : 0.65,
