@@ -67,7 +67,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'background-color' : 'data(nodeDegreeColor)',
          'text-valign' : 'top',
          // Do not show the labels when zoomed way out.
-         'min-zoomed-font-size' : 12,
+         'min-zoomed-font-size' : 9,
          'visibility' : 'visible' // filtering will show appropriate nodes
       } ).selector( 'node.basic' ).css( {
          'content' : 'data(name)',
@@ -84,7 +84,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'background-color' : Gemma.CytoscapeSettings.nodeColor,
          'text-valign' : 'top',
          // Do not show the labels when zoomed way out.
-         'min-zoomed-font-size' : 12,
+         'min-zoomed-font-size' : 9,
          'visibility' : 'visible'
       } ).selector( 'node.overlay' ).css( {
          'content' : 'data(name)',
@@ -101,7 +101,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'curve-style' : 'haystack',
 
          // Do not show the labels when zoomed way out.
-         'min-zoomed-font-size' : 12,
+         'min-zoomed-font-size' : 9,
          // node color
          'background-color' : Gemma.CytoscapeSettings.nodeColorOverlay,
          'text-valign' : 'top',
@@ -130,7 +130,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
       // was bugging out in version 2.0.3 with arbor on init. FIXME is this better in 2.1?
       // Set to arbor after null finishes layout as workaround
       layout : {
-         name : 'null'
+         name : 'arbor'
       },
 
       renderer : {
@@ -148,7 +148,6 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
       }
    } );
 
-    
    // http://plugins.jquery.com/cytoscape.js-panzoom/
    // the default values of each option are outlined below:
    visualization.cytoscapePanzoom( {
@@ -173,50 +172,45 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
       zoomOutIcon : 'fa fa-minus',
       resetIcon : 'fa fa-expand'
    } );
-   
-   // I did not get this to work
-//   visualization.cytoscapeNavigator({
-//      // options go here
-//   });
 
-   // disabled until we have a functionality. Really need tooltips.
-//   /*
-//    * 
-//    */
-//   visualization.cytoscapeCxtmenu( {
-//      menuRadius : 40, // the radius of the circular menu in pixels
-//      selector : 'node', // nodes matching this Cytoscape.js selector will trigger cxtmenus
-//      commands : [ // an array of commands to list in the menu
-//
-//      /*
-//       * { // example command content: 'a command name' // html/text content to be displayed in the menu select:
-//       * function(){ // a function to execute when the command is selected console.log( this.id() ) // `this` holds the
-//       * reference to the active node } }
-//       */
-//
-//      {
-//         content : 'TESTING1',
-//         select : function() {
-//            console.log( this.data( 'officialName' ) );
-//         }
-//      }, {
-//         content : 'TESTING2',
-//         select : function() {
-//            console.log( this.data( 'nodeDegree' ) );
-//         }
-//      } ],
-//      fillColor : 'rgba(59, 59, 59, 0.75)', // the background colour of the menu
-//      activeFillColor : 'rgba(92, 194, 237, 0.75)', // the colour used to indicate the selected command
-//      activePadding : 2, // additional size in pixels for the active command
-//      indicatorSize : null, // the size in pixels of the pointer to the active command
-//      separatorWidth : 2, // the empty spacing in pixels between successive commands
-//      spotlightPadding : 3, // extra spacing in pixels between the node and the spotlight
-//      minSpotlightRadius : 24, // the minimum radius in pixels of the spotlight
-//      maxSpotlightRadius : 26, // the maximum radius in pixels of the spotlight
-//      itemColor : 'black', // the colour of text in the command's content
-//      itemTextShadowColor : null, // the text shadow colour of the command's content
-//      zIndex : 9999
-//   // the z-index of the ui div
-//   } );
+   // disabled until we have a functionality - e.g: extend nodes; show details of gene. Also Really need tooltips.
+   // /*
+   // *
+   // */
+   // visualization.cytoscapeCxtmenu( {
+   // menuRadius : 40, // the radius of the circular menu in pixels
+   // selector : 'node', // nodes matching this Cytoscape.js selector will trigger cxtmenus
+   // commands : [ // an array of commands to list in the menu
+   //
+   // /*
+   // * { // example command content: 'a command name' // html/text content to be displayed in the menu select:
+   // * function(){ // a function to execute when the command is selected console.log( this.id() ) // `this` holds the
+   // * reference to the active node } }
+   // */
+   //
+   // {
+   // content : 'TESTING1',
+   // select : function() {
+   // console.log( this.data( 'officialName' ) );
+   // }
+   // }, {
+   // content : 'TESTING2',
+   // select : function() {
+   // console.log( this.data( 'nodeDegree' ) );
+   // }
+   // } ],
+   // fillColor : 'rgba(59, 59, 59, 0.75)', // the background colour of the menu
+   // activeFillColor : 'rgba(92, 194, 237, 0.75)', // the colour used to indicate the selected command
+   // activePadding : 2, // additional size in pixels for the active command
+   // indicatorSize : null, // the size in pixels of the pointer to the active command
+   // separatorWidth : 2, // the empty spacing in pixels between successive commands
+   // spotlightPadding : 3, // extra spacing in pixels between the node and the spotlight
+   // minSpotlightRadius : 24, // the minimum radius in pixels of the spotlight
+   // maxSpotlightRadius : 26, // the maximum radius in pixels of the spotlight
+   // itemColor : 'black', // the colour of text in the command's content
+   // itemTextShadowColor : null, // the text shadow colour of the command's content
+   // zIndex : 9999
+   // // the z-index of the ui div
+   // } );
 
 };
