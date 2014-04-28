@@ -494,7 +494,7 @@ Gemma.CoexpressionGrid = Ext
           */
          nodeDegreeStyler : function( value, metadata, record, row, col, ds ) {
             var data = record.data;
-            return data['queryGeneNodeDegree'] + ", " + data['foundGeneNodeDegree'];
+            return "<b>" + data['queryGeneNodeDegree'] + "</b>, " + data['foundGeneNodeDegree'];
          },
 
          /**
