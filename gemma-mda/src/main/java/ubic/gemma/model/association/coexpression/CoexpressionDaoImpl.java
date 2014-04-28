@@ -997,8 +997,6 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         // we usually need to get the support details, so we can security-filter the data. Exception is some admin
         // tasks.
-        // NOTE Hibernate implements this as a separate fetch for a batch of support details. That is, two queries are
-        // performed (despite specifying join fetching)
         //
         // select mousegenec0_.ID as ID66_, mousegenec0_.POSITIVE as POSITIVE66_, mousegenec0_.SUPPORT as SUPPORT66_,
         // mousegenec0_.FIRST_GENE_FK as FIRST4_66_, mousegenec0_.SECOND_GENE_FK as SECOND5_66_,
@@ -1008,7 +1006,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         // select mousecoexp0_.ID as ID93_0_, mousecoexp0_.BYTES as BYTES93_0_ from MOUSE_LINK_SUPPORT_DETAILS
         // mousecoexp0_ where mousecoexp0_.ID in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         if ( getSupportDetails ) {
-            query = query + " left join fetch g2g.supportDetails ";
+            query = query + " join fetch g2g.supportDetails ";
         }
 
         query = query + " where g2g.firstGene in (:geneIds) ";
@@ -1085,8 +1083,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         if ( genes.size() > 1 && geneIdsNeeded.size() < genes.size() ) {
-            log.info( "Found " + resultsFound + " results for " + ( genes.size() - geneIdsNeeded.size() )
-                    + " genes in the cache" );
+            log.info( "Found results for " + ( genes.size() - geneIdsNeeded.size() ) + " genes in the cache" );
+            log.debug( "There were " + resultsFound + " results, before any stringency filtering" );
         }
         return geneIdsNeeded;
     }
@@ -1345,7 +1343,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
              * NOTE we could have an experiment-level cache, but it would get big very fast for limited utility.
              */
             if ( bas.size() > 1 )
-                log.info( "Query in experiment-only mode, no gene constraint, " + bas.size() + " datasets specified" );
+                log.info( "Query in experiment-only mode, no gene constraint, " + bas.size()
+                        + " datasets specified, stringency=" + stringency );
 
             results = getCoexpressionFromDbViaExperiments( t, bas, stringency, quick );
 
@@ -1356,7 +1355,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
              * fetch the details after that.
              */
             if ( bas.size() > 1 )
-                log.info( "Query in experiment-first mode, with gene constraint, " + bas.size() + " datasets specified" );
+                log.info( "Query in experiment-first mode, with gene constraint, " + bas.size()
+                        + " datasets specified, stringency=" + stringency );
 
             results = getCoexpressionFromCacheOrDbViaExperiments( t, genes, bas, stringency, quick );
 
@@ -1366,7 +1366,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
              */
             if ( genes.size() > 1 ) {
                 log.info( "Query in gene-first mode for " + genes.size() + " genes, " + bas.size()
-                        + " datasets specified" );
+                        + " datasets specified, stringency=" + stringency );
             }
             results = this.getCoexpressionFromCacheOrDbViaGenes( t, genes, stringency, quick );
 
@@ -1677,32 +1677,31 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         Map<Long, List<CoexpressionValueObject>> results = new HashMap<>();
 
-        // we assume the genes are from the same taxon. FIXME check this query uses index.
+        // we assume the genes are from the same taxon. Confirmed: this uses the index (see bug 4055)
         String g2gClassName = CoexpressionQueryUtils.getGeneLinkClassName( taxon );
         final String firstQueryString = "select g2g from " + g2gClassName
-                + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) "
+                + " as g2g where g2g.firstGene in (:qgene) and g2g.secondGene in (:genes) "
                 + "and g2g.numDataSetsSupporting  >= :stringency ";
 
-        /*
-         * could do more than one query gene at a time? Will that use the index?
-         */
         StopWatch otimer = new StopWatch();
         otimer.start();
-        for ( Long queryGeneId : genes ) {
+        int batchSize = 32;
+        BatchIterator<Long> it = BatchIterator.batches( genes, batchSize );
+        // for ( Long queryGeneId : genes ) {
+        for ( ; it.hasNext(); ) {
 
-            log.debug( queryGeneId );
-
+            // log.debug( queryGeneId );
+            Collection<Long> queryGeneIds = it.next();
             StopWatch timer = new StopWatch();
             timer.start();
 
             Collection<Gene2GeneCoexpression> r = this.getHibernateTemplate().findByNamedParam( firstQueryString,
-                    new String[] { "qgene", "genes", "stringency" }, new Object[] { queryGeneId, genes, stringency } );
-            if ( timer.getTime() > 1000 ) {
-                log.info( firstQueryString + " took " + timer.getTime() + "ms" );
-            }
+                    new String[] { "qgene", "genes", "stringency" }, new Object[] { queryGeneIds, genes, stringency } );
 
-            timer.reset();
-            timer.start();
+            if ( timer.getTime() > 5000 ) {
+                log.info( "Slow query: " + firstQueryString + " took " + timer.getTime() + "ms (" + queryGeneIds.size()
+                        + " query genes, " + genes.size() + " target genes), Stringency=" + stringency );
+            }
 
             // raw db results.
             List<CoexpressionValueObject> g2gs = new ArrayList<>( r.size() );
@@ -1720,7 +1719,15 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             }
 
             if ( !quick ) {
+                timer.reset();
+                timer.start();
+
                 populateTestedInDetails( g2gs );
+
+                if ( timer.getTime() > 2000 ) {
+                    log.debug( "Query genes only,fetch tested-in details" + r.size() + " results took "
+                            + timer.getTime() + "ms" );
+                }
             }
 
             /*
@@ -1733,12 +1740,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 results.get( g2g.getQueryGeneId() ).add( g2g );
             }
 
-            if ( timer.getTime() > 1000 ) {
-                log.info( "Query genes only, fetch for " + r.size() + " results took " + timer.getTime() + "ms" );
-            }
-
         }
-        if ( otimer.getTime() > 1000 ) {
+        if ( otimer.getTime() > 2000 ) {
             log.info( "Query genes only, fetch for " + genes.size() + " genes took " + otimer.getTime() + "ms" );
         }
         for ( Long id : results.keySet() ) {

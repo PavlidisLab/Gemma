@@ -114,12 +114,13 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             Collection<CoexpressionValueObject> coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds ) {
 
         List<CoexpressionValueObjectExt> results = new ArrayList<>();
-        Collection<Long> coexpIds = new HashSet<Long>();
+        Collection<Long> coxpGenes = new HashSet<>();
         for ( CoexpressionValueObject cvo : coexp ) {
-            coexpIds.add( cvo.getCoexGeneId() );
+            coxpGenes.add( cvo.getCoexGeneId() );
         }
 
-        Map<Long, GeneValueObject> coexpedGenes = EntityUtils.getIdMap( geneService.loadValueObjects( coexpIds ) );
+        // database hit. loadValueObjects is too slow.
+        Map<Long, GeneValueObject> coexpedGenes = EntityUtils.getIdMap( geneService.loadValueObjectsLiter( coxpGenes ) );
 
         for ( CoexpressionValueObject cvo : coexp ) {
 
@@ -188,6 +189,12 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         Map<Long, List<CoexpressionValueObject>> allCoexpressions = new HashMap<>();
 
+        // Note: auto-choose stringency on client size not always giving something reasonable. Also: not clear we want
+        // to do this auto-adjust for 'query genes only'.
+        // if ( stringency == 1 )
+        stringency = chooseStringency( eeIds.size() );
+        log.info( "Stringency set to " + stringency + " based on number of experiments queried" );
+
         if ( queryGenesOnly ) {
             if ( genes.size() < 2 ) {
                 throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
@@ -195,7 +202,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds, stringency,
                     quick );
         } else {
-            if ( stringency == 1 ) stringency = chooseStringency( eeIds.size() );
+
             allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
                     maxResults, quick );
         }
@@ -326,34 +333,34 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     /**
      * If the user has not set a stringency higher than 1, we set it for them.
      * 
-     * @param size
+     * @param numExperimentsQueried
      * @return
      */
-    private Integer chooseStringency( int size ) {
+    private Integer chooseStringency( int numExperimentsQueried ) {
         // this is completely made up...
-        if ( size < 5 ) {
+        if ( numExperimentsQueried < 5 ) {
             return 2;
-        } else if ( size < 20 ) {
+        } else if ( numExperimentsQueried < 20 ) {
             return 3;
-        } else if ( size < 50 ) {
+        } else if ( numExperimentsQueried < 50 ) {
             return 4;
-        } else if ( size < 100 ) {
+        } else if ( numExperimentsQueried < 100 ) {
             return 6;
-        } else if ( size < 200 ) {
+        } else if ( numExperimentsQueried < 200 ) {
             return 8;
-        } else if ( size < 300 ) {
+        } else if ( numExperimentsQueried < 300 ) {
             return 10;
-        } else if ( size < 400 ) {
+        } else if ( numExperimentsQueried < 400 ) {
             return 15;
-        } else if ( size < 600 ) {
+        } else if ( numExperimentsQueried < 600 ) {
             return 20;
-        } else if ( size < 800 ) {
+        } else if ( numExperimentsQueried < 800 ) {
             return 25;
-        } else if ( size < 1000 ) {
+        } else if ( numExperimentsQueried < 1000 ) {
             return 35;
-        } else if ( size < 1200 ) {
+        } else if ( numExperimentsQueried < 1200 ) {
             return 45;
-        } else if ( size < 1500 ) {
+        } else if ( numExperimentsQueried < 1500 ) {
             return 55;
         }
         return 65;
