@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +75,6 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             try {
                 geneService.remove( gene );
             } catch ( Exception e ) {
-
             }
         }
 
@@ -86,25 +87,15 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     public void setUp() throws Exception {
 
         if ( !goService.isRunning() ) {
-
             goService.shutDown();
         }
 
         goService.loadTermsInNameSpace( new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/ontology/molecular-function.test.owl.gz" ) ) );
 
-        testTaxon = taxonService.findOrCreate( Taxon.Factory.newInstance( "foobly", "doobly", "bar", "fo", "fo", 9999,
-                true, true ) );
-
-        gene2GoService.removeAll();
-        Collection<Gene> oldgenes = geneService.loadAll( testTaxon );
-        for ( Gene gene : oldgenes ) {
-            try {
-                geneService.remove( gene );
-            } catch ( Exception e ) {
-
-            }
-        }
+        testTaxon = taxonService.findOrCreate( Taxon.Factory.newInstance(
+                "foobly" + RandomStringUtils.randomAlphabetic( 2 ), "doobly" + RandomStringUtils.randomAlphabetic( 2 ),
+                "bar" + RandomStringUtils.randomAlphabetic( 2 ), "fo", "fo", RandomUtils.nextInt( 5000 ), true, true ) );
 
         /*
          * Create genes
@@ -146,13 +137,14 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             Multifunctionality mf = gene.getMultifunctionality();
             if ( mf == null ) continue;
             if ( mf.getNumGoTerms() == 5 ) {
-                assertEquals( 0.913, mf.getRank(), 0.001 );
+                assertEquals( 0.245833, mf.getRank(), 0.001 );
                 found = true;
             }
+
+            // log.info( mf.getNumGoTerms() + " " + String.format( "%.4f", mf.getRank() ) );
 
         }
 
         assertTrue( found );
     }
-
 }
