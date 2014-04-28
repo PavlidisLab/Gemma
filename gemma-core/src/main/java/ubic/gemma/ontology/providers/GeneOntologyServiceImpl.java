@@ -779,6 +779,7 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         this.model = OntologyLoader.loadMemoryModel( is, null, OntModelSpec.OWL_MEM );
         Collection<OntologyResource> terms = OntologyLoader.initialize( null, model );
         this.indices.add( OntologyIndexer.indexOntology( "GeneOntology", model ) );
+        uri2Term.clear();
         addTerms( terms );
         ready.set( true );
     }
