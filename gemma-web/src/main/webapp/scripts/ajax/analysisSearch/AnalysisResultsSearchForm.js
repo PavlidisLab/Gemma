@@ -1,4 +1,3 @@
-Ext.namespace( 'Gemma' );
 
 /**
  * The input form to pick genes and experiments, and run coexpression or differential expression searches. This form has
@@ -28,7 +27,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend( Ext.FormPanel,
 
       eeSetReady : false,
       taxonId : null,
-      defaultIsDiffEx : true,
+      defaultIsDiffEx : false,
       geneIds : [],
       experimentIds : [],
 
@@ -419,7 +418,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend( Ext.FormPanel,
 
          this.searchExamples = new Gemma.AnalysisResultsSearchExamples( {
             ref : 'searchExamples',
-            defaultIsDiffEx : true
+            defaultIsDiffEx : false
          } );
 
          this.searchExamples.on( 'startingExample', function() {
