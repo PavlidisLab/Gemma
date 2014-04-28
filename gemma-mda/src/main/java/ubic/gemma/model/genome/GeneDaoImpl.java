@@ -540,7 +540,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             result.addAll( doLoadThawedLite( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
-            log.info( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
+            log.debug( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
         return result;
     }
@@ -556,7 +556,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             result.addAll( doLoadThawedLiter( batch ) );
         }
         if ( timer.getTime() > 1000 ) {
-            log.info( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
+            log.debug( "Load+thaw " + result.size() + " genes: " + timer.getTime() + "ms" );
         }
         return result;
     }
