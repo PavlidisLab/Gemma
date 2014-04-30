@@ -1202,7 +1202,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         if ( numUnsupported > 0 ) log.info( "Removed " + numUnsupported + " links that had support of zero." );
 
         if ( results.isEmpty() )
-            throw new IllegalStateException( "Removed everything! (of" + rawResults.size() + " results)" );
+            throw new IllegalStateException( "Removed everything! (of " + rawResults.size() + " results)" );
 
         return results;
 
@@ -1725,6 +1725,10 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         List<Object[]> q1results = query1.list();
 
+        if ( q1results.isEmpty() ) {
+            return new HashMap<>();
+        }
+
         List<Object[]> supportDetails = null;
         if ( populateSupportDetails ) {
             supportDetails = new ArrayList<>();
@@ -1736,6 +1740,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 supportDetailsIds.add( supportDetailsId );
             }
 
+            // Note: should never be empty
             String sqlQuery2 = "select ID,BYTES from " + CoexpressionQueryUtils.getSupportDetailsTableName( t )
                     + " where ID in (:ids)";
             SQLQuery query2 = sess.createSQLQuery( sqlQuery2 );
