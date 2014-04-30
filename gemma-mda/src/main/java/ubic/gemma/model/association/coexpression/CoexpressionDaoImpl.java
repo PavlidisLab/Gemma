@@ -52,6 +52,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressedGenes;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionTestedIn;
+import ubic.gemma.model.analysis.expression.coexpression.IdArrayValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
@@ -856,9 +857,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         log.debug( "Fetching data for gene=" + gene.getId() + " for cache" );
         Collection<Long> gg = new HashSet<>();
         gg.add( gene.getId() );
-        Map<Long, List<CoexpressionValueObject>> rr = getCoexpressionFromDbViaGenes( gg,
-                CoexpressionQueryUtils.getGeneLinkClassName( gene ), CoexpressionCache.CACHE_QUERY_STRINGENCY, true,
-                true );
+        // Map<Long, List<CoexpressionValueObject>> rr = getCoexpressionFromDbViaGenes( gg,
+        // CoexpressionQueryUtils.getGeneLinkClassName( gene ), CoexpressionCache.CACHE_QUERY_STRINGENCY, true,
+        // true );
+
+        Map<Long, List<CoexpressionValueObject>> rr = getCoexpressionFromDbViaGenes2( gg, gene.getTaxon(),
+                CoexpressionCache.CACHE_QUERY_STRINGENCY, true, true );
 
         List<CoexpressionValueObject> results = rr.get( gene.getId() );
 
@@ -997,14 +1001,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         // we usually need to get the support details, so we can security-filter the data. Exception is some admin
         // tasks.
-        //
-        // select mousegenec0_.ID as ID66_, mousegenec0_.POSITIVE as POSITIVE66_, mousegenec0_.SUPPORT as SUPPORT66_,
-        // mousegenec0_.FIRST_GENE_FK as FIRST4_66_, mousegenec0_.SECOND_GENE_FK as SECOND5_66_,
-        // mousegenec0_.SUPPORT_DETAILS_FK as SUPPORT6_66_ from MOUSE_GENE_COEXPRESSION mousegenec0_ where
-        // (mousegenec0_.FIRST_GENE_FK in (?)) and mousegenec0_.SUPPORT>0
-        //
-        // select mousecoexp0_.ID as ID93_0_, mousecoexp0_.BYTES as BYTES93_0_ from MOUSE_LINK_SUPPORT_DETAILS
-        // mousecoexp0_ where mousecoexp0_.ID in (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+
         if ( getSupportDetails ) {
             query = query + " join fetch g2g.supportDetails ";
         }
@@ -1135,6 +1132,83 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     }
 
     /**
+     * alt approach
+     * 
+     * @param rawResults
+     * @param supportDetails
+     * @param geneIds
+     * @return
+     */
+    private Map<Long, List<CoexpressionValueObject>> convertToValueObjects( List<Object[]> rawResults,
+            List<Object[]> supportDetails, Collection<Long> geneIds ) {
+
+        int removed = 0;
+        Set<NonPersistentNonOrderedCoexpLink> allSeen = new HashSet<>( rawResults.size() );
+
+        Map<Long, Long[]> supportDetailsLists = null;
+        if ( supportDetails != null ) {
+            supportDetailsLists = new HashMap<>();
+            for ( Object[] oa : supportDetails ) {
+                Long id = ( ( BigInteger ) oa[0] ).longValue();
+                byte[] data = ( byte[] ) oa[1];
+                IdArrayValueObject vo = new IdArrayValueObject( data );
+                supportDetailsLists.put( id, vo.getIds().toArray( new Long[] {} ) );
+            }
+        }
+
+        Map<Long, List<CoexpressionValueObject>> results = new HashMap<>();
+        int numUnsupported = 0;
+        for ( Object[] oa : rawResults ) {
+            Long id = ( ( BigInteger ) oa[0] ).longValue();
+            Boolean pos = ( byte ) oa[1] > 0 ? true : false;
+            Integer support = ( Integer ) oa[2];
+            Long queryGeneId = ( ( BigInteger ) oa[3] ).longValue();
+            Long secondGene = ( ( BigInteger ) oa[4] ).longValue();
+            Long supportDetailsId = ( ( BigInteger ) oa[5] ).longValue();
+
+            if ( support == 0 ) {
+                throw new IllegalArgumentException( "Links should not be unsupported: " + id );
+            }
+
+            NonPersistentNonOrderedCoexpLink seen = new NonPersistentNonOrderedCoexpLink( queryGeneId, secondGene, pos );
+
+            /*
+             * remove duplicates, since each link can be here twice (x->y and y->x). (can happen.)
+             */
+            if ( allSeen.contains( seen ) ) {
+                ++removed;
+                continue;
+            }
+
+            allSeen.add( seen );
+
+            if ( !results.containsKey( queryGeneId ) ) {
+                results.put( queryGeneId, new ArrayList<CoexpressionValueObject>() );
+            }
+
+            CoexpressionValueObject g2gvo = new CoexpressionValueObject( queryGeneId, secondGene, pos, support,
+                    supportDetailsId, supportDetailsLists == null ? null : supportDetailsLists.get( supportDetailsId ) );
+            assert g2gvo.getNumDatasetsSupporting() > 0;
+
+            results.get( queryGeneId ).add( g2gvo );
+
+            if ( geneIds != null && geneIds.contains( g2gvo.getCoexGeneId() ) ) {
+                g2gvo.setInterQueryLink( true );
+            }
+
+        }
+
+        if ( removed > 0 ) log.debug( "Removed " + removed + " duplicate links" );
+        if ( numUnsupported > 0 ) log.info( "Removed " + numUnsupported + " links that had support of zero." );
+
+        if ( results.isEmpty() )
+            throw new IllegalStateException( "Removed everything! (of" + rawResults.size() + " results)" );
+
+        return results;
+
+    }
+
+    /**
      * Remove duplicates and convert to value objects. Links are marked as "interQuery" if the geneIds is non-null and
      * the link is between two of them.
      * 
@@ -1250,7 +1324,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     }
 
     /**
-     * This method is for internal use only since it does not constrain on datasets.
+     * This method is for internal use only since it does not constrain on datasets. E.g. for node degree computations.
      * 
      * @param gene
      * @return results for the gene.
@@ -1483,7 +1557,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         // fetch rest of genes needed from the database.
         StopWatch timer = new StopWatch();
         timer.start();
-        int CHUNK_SIZE = 20;
+        int CHUNK_SIZE = 64; // how many genes to get at once.
         int genesQueried = 0;
         BatchIterator<Long> geneIdsIt = new BatchIterator<>( genesNeeded, CHUNK_SIZE );
         int total = 0;
@@ -1492,8 +1566,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             innertimer.start();
             Collection<Long> batch = geneIdsIt.next();
 
-            Map<Long, List<CoexpressionValueObject>> rr = getCoexpressionFromDbViaGenes( batch, className, stringency,
-                    !quick, true );
+            // Map<Long, List<CoexpressionValueObject>> rr = getCoexpressionFromDbViaGenes( batch, className,
+            // stringency,
+            // !quick, true );
+
+            Map<Long, List<CoexpressionValueObject>> rr = getCoexpressionFromDbViaGenes2( batch, t, stringency, !quick,
+                    true );
 
             // we should not cache unless everything is populated
             if ( !rr.isEmpty() && stringency <= CoexpressionCache.CACHE_QUERY_STRINGENCY && !quick ) {
@@ -1583,14 +1661,14 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     private Map<Long, List<CoexpressionValueObject>> getCoexpressionFromDbViaGenes( Collection<Long> geneIds,
             String className, int stringency, boolean populateTestedInDetails, boolean populateSupportDetails ) {
 
-        Query q = buildQuery( geneIds, className, stringency, populateSupportDetails );
+        Query q = buildQuery( geneIds, className, stringency, false );
         StopWatch timer = new StopWatch();
         timer.start();
         List<Gene2GeneCoexpression> rawResults = q.list();
 
         if ( timer.getTime() > 1000 ) {
-            log.debug( q.getQueryString() + " for " + geneIds.size() + "genes and sourceAnalysis took "
-                    + timer.getTime() + "ms: " + rawResults.size() + " results" );
+            log.debug( q.getQueryString() + " for " + geneIds.size() + "genes took " + timer.getTime() + "ms: "
+                    + rawResults.size() + " results" );
         }
 
         if ( rawResults.isEmpty() ) return new HashMap<>();
@@ -1613,7 +1691,83 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         }
 
         return results;
+    }
 
+    /**
+     * Alternative method: query twice.
+     * 
+     * @param geneIds
+     * @param t
+     * @param stringency
+     * @param populateTestedInDetails
+     * @param populateSupportDetails
+     * @return
+     */
+    private Map<Long, List<CoexpressionValueObject>> getCoexpressionFromDbViaGenes2( Collection<Long> geneIds, Taxon t,
+            int stringency, boolean populateTestedInDetails, boolean populateSupportDetails ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        String sqlQuery1 = "select ID, POSITIVE, SUPPORT, FIRST_GENE_FK, SECOND_GENE_FK, SUPPORT_DETAILS_FK from "
+                + CoexpressionQueryUtils.getGeneLinkTableName( t ) + " where FIRST_GENE_FK in (:genes) and SUPPORT>=:s";
+
+        Session sess = this.getSessionFactory().getCurrentSession();
+        SQLQuery query1 = sess.createSQLQuery( sqlQuery1 );
+
+        query1.setParameterList( "genes", geneIds.toArray() );
+
+        if ( stringency > 1 ) {
+            query1.setParameter( "s", stringency );
+        } else if ( !DELETE_ORPHAN_LINKS ) {
+            // means links could have support of zero, and we don't want those.
+            query1.setParameter( "s", 0 );
+        }
+
+        List<Object[]> q1results = query1.list();
+
+        List<Object[]> supportDetails = null;
+        if ( populateSupportDetails ) {
+            supportDetails = new ArrayList<>();
+
+            List<Long> supportDetailsIds = new ArrayList<>();
+
+            for ( Object[] oa : q1results ) {
+                Long supportDetailsId = ( ( BigInteger ) oa[5] ).longValue();
+                supportDetailsIds.add( supportDetailsId );
+            }
+
+            String sqlQuery2 = "select ID,BYTES from " + CoexpressionQueryUtils.getSupportDetailsTableName( t )
+                    + " where ID in (:ids)";
+            SQLQuery query2 = sess.createSQLQuery( sqlQuery2 );
+
+            query2.setParameterList( "ids", supportDetailsIds.toArray() );
+            supportDetails = query2.list();
+
+        }
+
+        if ( timer.getTime() > 1000 ) {
+            log.debug( "Coexpression query: " + geneIds.size() + " genes took " + timer.getTime() + "ms: "
+                    + q1results.size() + " results" );
+        }
+
+        timer.reset();
+        timer.start();
+        Map<Long, List<CoexpressionValueObject>> results = convertToValueObjects( q1results, supportDetails, geneIds );
+
+        for ( Long g : results.keySet() ) {
+            List<CoexpressionValueObject> gc = results.get( g );
+            Collections.sort( gc );
+            if ( populateTestedInDetails ) {
+                populateTestedInDetails( gc );
+            }
+        }
+
+        if ( timer.getTime() > 100 ) {
+            log.info( "Convert to value objects, filter, sort and finish " + q1results.size() + " results: "
+                    + timer.getTime() + "ms" );
+        }
+
+        return results;
     }
 
     /**

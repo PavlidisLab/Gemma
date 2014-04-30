@@ -123,7 +123,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
       },
       makeDetailsTab : function(experimentDetails) {
          return new Gemma.ExpressionExperimentDetails({
-               title : 'Details',
+               title : 'Overview',
                itemId : 'details',
                id : 'ee-details-panel',
                experimentDetails : experimentDetails,

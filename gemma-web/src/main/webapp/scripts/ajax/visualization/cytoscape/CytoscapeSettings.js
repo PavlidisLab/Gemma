@@ -71,7 +71,7 @@ Gemma.CytoscapeSettings = {
    },
 
    // Shades. We're blending in white, so low numbers translate to
-   // dark. Note: alpha is much slower.
+   // dark. Note: alpha is much slower. 
    nodeDegreeColor : {
       lightest : 0.85,
       light : 0.65,

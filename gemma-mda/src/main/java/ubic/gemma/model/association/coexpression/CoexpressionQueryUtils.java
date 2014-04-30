@@ -121,6 +121,24 @@ public class CoexpressionQueryUtils {
     }
 
     /**
+     * @param taxon
+     * @return the name of the SQL Tabel for the support details for that taxon.
+     */
+    static String getSupportDetailsTableName( Taxon taxon ) {
+        String g2gClassName;
+        if ( TaxonUtility.isHuman( taxon ) )
+            g2gClassName = "HUMAN_LINK_SUPPORT_DETAILS";
+        else if ( TaxonUtility.isMouse( taxon ) )
+            g2gClassName = "MOUSE_LINK_SUPPORT_DETAILS";
+        else if ( TaxonUtility.isRat( taxon ) )
+            g2gClassName = "RAT_LINK_SUPPORT_DETAILS";
+        else
+            // must be other
+            g2gClassName = "OTHER_LINK_SUPPORT_DETAILS";
+        return g2gClassName;
+    }
+
+    /**
      * @param links
      * @return map of gene IDs to genes it is coexpressed with,
      */

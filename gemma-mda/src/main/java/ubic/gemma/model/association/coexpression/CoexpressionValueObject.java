@@ -110,38 +110,23 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         // "testedin" is filled in later.
     }
 
-    void setMaxResults( int maxResults ) {
-        this.maxResults = maxResults;
-    }
-
-    void setQueryStringency( int queryStringency ) {
-        this.queryStringency = queryStringency;
-    }
-
     /**
-     * @param coexGeneId
-     * @param coexGeneSymbol
-     * @param positiveCorrelation
      * @param queryGeneId
-     * @param queryGeneSymbol
+     * @param coexGeneId
+     * @param positiveCorrelation
      * @param support
      * @param supportDetailsId
      * @param supportingDatasets
-     * @param testedInDatasets
      */
-    protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
-            Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
-            Set<Long> supportingDatasets, Set<Long> testedInDatasets ) {
+    protected CoexpressionValueObject( Long queryGeneId, Long coexGeneId, Boolean positiveCorrelation, Integer support,
+            Long supportDetailsId, Long[] supportingDatasets ) {
         super();
         this.coexGeneId = coexGeneId;
-        this.coexGeneSymbol = coexGeneSymbol;
         this.positiveCorrelation = positiveCorrelation;
         this.queryGeneId = queryGeneId;
-        this.queryGeneSymbol = queryGeneSymbol;
         this.support = support;
         this.supportDetailsId = supportDetailsId;
-        this.supportingDatasets = new HashSet<>( supportingDatasets );
-        this.testedInDatasets = new HashSet<>( testedInDatasets );
+        this.supportingDatasets = new HashSet<>( Arrays.asList( supportingDatasets ) );
     }
 
     /**
@@ -168,6 +153,32 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.supportDetailsId = supportDetailsId;
         this.supportingDatasets = new HashSet<>( Arrays.asList( supportingDatasets ) );
         this.testedInDatasets = new HashSet<>( Arrays.asList( testedInDatasets ) );
+    }
+
+    /**
+     * @param coexGeneId
+     * @param coexGeneSymbol
+     * @param positiveCorrelation
+     * @param queryGeneId
+     * @param queryGeneSymbol
+     * @param support
+     * @param supportDetailsId
+     * @param supportingDatasets
+     * @param testedInDatasets
+     */
+    protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
+            Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
+            Set<Long> supportingDatasets, Set<Long> testedInDatasets ) {
+        super();
+        this.coexGeneId = coexGeneId;
+        this.coexGeneSymbol = coexGeneSymbol;
+        this.positiveCorrelation = positiveCorrelation;
+        this.queryGeneId = queryGeneId;
+        this.queryGeneSymbol = queryGeneSymbol;
+        this.support = support;
+        this.supportDetailsId = supportDetailsId;
+        this.supportingDatasets = new HashSet<>( supportingDatasets );
+        this.testedInDatasets = new HashSet<>( testedInDatasets );
     }
 
     /*
@@ -297,15 +308,6 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.queryGeneSymbol = queryGeneSymbol;
     }
 
-    /**
-     * @param ids
-     */
-    void setTestedInDatasets( Collection<Long> ids ) {
-        assert ids != null && !ids.isEmpty();
-        assert this.testedInDatasets == null || this.testedInDatasets.isEmpty();
-        this.testedInDatasets = new HashSet<>( ids );
-    }
-
     @Override
     public String toString() {
         String[] fields = new String[] { queryGeneId.toString(), queryGeneSymbol, coexGeneId.toString(),
@@ -313,6 +315,14 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
                 ( this.testedInDatasets != null ? new Integer( this.testedInDatasets.size() ).toString() : "?" ),
                 positiveCorrelation ? "+" : "-" };
         return StringUtils.join( fields, "\t" );
+    }
+
+    void setMaxResults( int maxResults ) {
+        this.maxResults = maxResults;
+    }
+
+    void setQueryStringency( int queryStringency ) {
+        this.queryStringency = queryStringency;
     }
 
     /**
@@ -323,6 +333,15 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     void setSupportingDatasets( Collection<Long> ids ) {
         assert ids != null && !ids.isEmpty();
         this.supportingDatasets = new HashSet<>( ids );
+    }
+
+    /**
+     * @param ids
+     */
+    void setTestedInDatasets( Collection<Long> ids ) {
+        assert ids != null && !ids.isEmpty();
+        assert this.testedInDatasets == null || this.testedInDatasets.isEmpty();
+        this.testedInDatasets = new HashSet<>( ids );
     }
 
     /**

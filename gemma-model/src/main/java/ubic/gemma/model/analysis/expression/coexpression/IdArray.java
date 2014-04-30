@@ -67,7 +67,7 @@ public abstract class IdArray implements Serializable {
     public synchronized void addEntity( Long ds ) {
         assert ds > 0L;
 
-        if ( ds.intValue() > Integer.MAX_VALUE ) {
+        if ( ds > Integer.MAX_VALUE ) {
             throw new IllegalArgumentException( "Cannot store values larger than " + Integer.MAX_VALUE );
         }
 
