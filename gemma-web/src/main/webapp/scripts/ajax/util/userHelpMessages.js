@@ -444,7 +444,7 @@ Gemma.HelpText.WidgetDefaults = {
    GeneDetails : {
       probesTT : 'Number of elements/probes for this gene on expression platforms in Gemma',
       assocExpTT : 'Experiments that specifically involve manipulation (or naturally-occurring variation/mutations) of this gene as part of their design.',
-      multifuncTT : 'Overall multifunctionality is a function of both the number of GO terms and the sizes of the groups. Values range from 0-1 where 1 indicates the highest multifunctionality',
+      multifuncTT : 'Overall multifunctionality is a function of both the number of GO terms (including parent terms) and the sizes of the groups. Values range from 0-1 where 1 indicates the highest multifunctionality',
       // nodeDegreeTT : 'Relative measure estimating how &quot;hubby&quot; this gene is, based on coexpression. Values
       // range from 0-1 where 1 indicates the highest number of associations.',
       nodeDegreeTT : 'How many coexpression links this gene has at varying levels of support (number of studies)',

@@ -46,7 +46,7 @@ Gemma.GeneDetails = Ext
                }
             }
 
-            homologueStr = "No homologues defined"; // or if not available...
+            homologueStr = "None defined"; // or if not available...
 
             return homologueStr;
          },
@@ -82,12 +82,28 @@ Gemma.GeneDetails = Ext
           * @returns {String}
           */
          renderMultifunctionality : function( geneDetails ) {
+            var text;
             if ( geneDetails.multifunctionalityRank ) {
-               return geneDetails.numGoTerms + " GO Terms; Overall multifunctionality "
+               text = geneDetails.numGoTerms + " GO Terms; Overall multifunctionality "
                   + geneDetails.multifunctionalityRank.toFixed( 2 );
             } else {
-               return "[ Not available ]";
+               text = "[ Not available ]";
             }
+
+            return new Ext.Panel( {
+               border : false,
+               html : text,
+               listeners : {
+                  'afterrender' : function( c ) {
+                     jQuery( '#multifuncHelp' ).qtip( {
+                        content : Gemma.HelpText.WidgetDefaults.GeneDetails.multifuncTT,
+                        style : {
+                           name : 'cream'
+                        }
+                     } );
+                  }
+               }
+            } );
          },
 
          /**
@@ -96,6 +112,7 @@ Gemma.GeneDetails = Ext
           * @returns {String}
           */
          renderPhenotypes : function( geneDetails ) {
+            var text;
             if ( geneDetails.phenotypes && geneDetails.phenotypes.length > 0 ) {
                var phenotypes = geneDetails.phenotypes;
                phenotypes.sort( function( a, b ) {
@@ -111,8 +128,8 @@ Gemma.GeneDetails = Ext
                var text = '';
                var limit = Math.min( 3, phenotypes.length );
                for (i = 0; i < limit; i++) {
-                  text += '<a target="_blank" href="' + Gemma.LinkRoots.phenotypePage + phenotypes[i].urlId + '">'
-                     + phenotypes[i].value + '</a>';
+                  text += '<a target="_blank" ext:qtip="View all genes for this phenotype" href="'
+                     + Gemma.LinkRoots.phenotypePage + phenotypes[i].urlId + '">' + phenotypes[i].value + '</a>';
                   if ( (i + 1) !== limit ) {
                      text += ', ';
                   }
@@ -120,12 +137,28 @@ Gemma.GeneDetails = Ext
                if ( limit < phenotypes.length ) {
                   text += ', ' + (phenotypes.length - limit) + ' more';
                }
-               text += "<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='See all associated phenotypes'"
+               text += "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View the phenotype tab'"
                   + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;phenotypes&#39;)'>";
-               return text;
+
             } else {
-               return "[ None ]";
+               text = "[ None ]";
             }
+
+            return new Ext.Panel( {
+               border : false,
+               html : text,
+               listeners : {
+                  'afterrender' : function( c ) {
+                     jQuery( '#phenotypeHelp' ).qtip( {
+                        content : Gemma.HelpText.WidgetDefaults.GeneDetails.phenotypeTT,
+                        style : {
+                           name : 'cream'
+                        }
+                     } );
+                  }
+               }
+            } );
+
          },
 
          changeTab : function( tabName ) {
@@ -138,27 +171,37 @@ Gemma.GeneDetails = Ext
           * @returns {String}
           */
          renderAssociatedExperiments : function( ncbiId, count ) {
-            return '<a href="/Gemma/searcher.html?query=http%3A//purl.org/commons/record/ncbi_gene/' + ncbiId
-               + '&scope=E">' + count + '</a>';
+            return new Ext.Panel( {
+               border : false,
+               html : (count > 0 ? '<a href="/Gemma/searcher.html?query=http://purl.org/commons/record/ncbi_gene/'
+                  + ncbiId + '&scope=E">' + count + '</a>' : "No studies known to be about this gene"),
+               listeners : {
+                  'afterrender' : function( c ) {
+                     jQuery( "#studiesHelp" ).qtip( {
+                        content : Gemma.HelpText.WidgetDefaults.GeneDetails.assocExpTT,
+                        style : {
+                           name : 'cream'
+                        }
+                     } );
+                  }
+               }
+            } );
          },
 
          renderNodeDegree : function( geneDetails ) {
             if ( geneDetails.nodeDegrees && geneDetails.nodeDegrees.length > 1 ) {
-
-               // return geneDetails.nodeDegrees.join( "," ).replace( /^0,/, "" );
+               // Note: we need a panel here so we can pick up the rendering event so jquery can do its work.
                return new Ext.Panel( {
                   border : false,
-
                   html : '<span id="nodeDegreeSpark">...</span>',
                   listeners : {
                      'afterrender' : function( c ) {
 
                         /*
-                         * Build array of arrays
+                         * Build array of arrays. TODO make this cumulative instead of exact node degree
                          */
                         var nd = new Array();
                         var k = 0;
-                        // for (var i = geneDetails.nodeDegrees.length - 1; i > 0; i--) {
                         for (var i = 1; i < geneDetails.nodeDegrees.length; i++) {
                            nd.push( [ i, Math.log( geneDetails.nodeDegrees[i] + 0.01 ) / Math.log( 10.0 ) ] );
                            k++;
@@ -171,23 +214,33 @@ Gemma.GeneDetails = Ext
                               width : 200,
                               tooltipFormatter : function( spl, ops, fields ) {
                                  return "Links at support level " + fields.x + ": "
-                                    + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log-10 scaled)";
+                                    + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log10 scaled)";
                               }
                            } );
+
+                        jQuery( "#nodeDegreeHelp" ).qtip( {
+                           content : Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
+                           style : {
+                              name : 'cream'
+                           }
+                        } );
+
                      }
                   }
                } );
             } else {
-               return "[ Not available ]";
+               return "[ Not available ]"; // no help shown - FIXME
             }
          },
+
          renderAliases : function( aliases ) {
             if ( aliases != null && aliases.length > 0 ) {
                aliases.sort();
                return aliases.join( ', ' );
             }
-            return '';
+            return 'None available';
          },
+
          initComponent : function() {
             Gemma.GeneDetails.superclass.initComponent.call( this );
 
@@ -208,13 +261,20 @@ Gemma.GeneDetails = Ext
                         .loadGeneDetails(
                            this.geneId,
                            function( geneDetails ) {
-
                               this.loadMask.hide();
                               this
                                  .add( [
                                         {
                                            html : '<div style="font-weight: bold; font-size:1.2em;">'
-                                              + geneDetails.name + '<br />' + geneDetails.officialName + '<br/></div>'
+                                              + geneDetails.name
+                                              + '<br />'
+                                              + geneDetails.officialName
+                                              + '&nbsp;&nbsp;<a target="_blank" '
+                                              + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
+                                              + geneDetails.ncbiId
+                                              + '"><img ext:qtip="View NCBI record in a new window" alt="NCBI Gene Link" src="/Gemma/images/logo/ncbi.gif"/></a>'
+                                              + '<br/></div>'
+
                                         },
                                         {
                                            layout : 'form',
@@ -222,6 +282,7 @@ Gemma.GeneDetails = Ext
                                            defaults : {
                                               border : false
                                            },
+
                                            items : [
                                                     {
                                                        fieldLabel : 'Taxon',
@@ -231,14 +292,7 @@ Gemma.GeneDetails = Ext
                                                        fieldLabel : 'Aliases',
                                                        html : this.renderAliases( geneDetails.aliases )
                                                     },
-                                                    {
-                                                       fieldLabel : 'NCBI ID',
-                                                       html : geneDetails.ncbiId
-                                                          + ' <a target="_blank" title="NCBI Gene link"'
-                                                          + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
-                                                          + geneDetails.ncbiId
-                                                          + '"><img alt="NCBI Gene Link" src="/Gemma/images/logo/ncbi.gif"/></a>'
-                                                    },
+
                                                     {
                                                        fieldLabel : 'Homologues',
                                                        html : this.renderHomologues( geneDetails.homologues,
@@ -249,51 +303,52 @@ Gemma.GeneDetails = Ext
                                                        html : this.renderGeneSets( geneDetails.geneSets ).join( ', ' )
                                                     },
                                                     {
-                                                       fieldLabel : 'Studies'
-                                                          + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, '
-                                                          + '\'' + Gemma.HelpText.WidgetDefaults.GeneDetails.assocExpTT
-                                                          + '\'); return false">'
-                                                          + '<img src="/Gemma/images/help.png" /> </a>',
-                                                       html : this.renderAssociatedExperiments( geneDetails.ncbiId,
-                                                          geneDetails.associatedExperimentCount )
-                                                    },
-                                                    {
                                                        fieldLabel : 'Multifunc.'
-                                                          + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, '
-                                                          + '\''
-                                                          + Gemma.HelpText.WidgetDefaults.GeneDetails.multifuncTT
-                                                          + '\'); return false">'
-                                                          + '<img src="/Gemma/images/help.png" /> </a>',
-                                                       html : this.renderMultifunctionality( geneDetails )
+                                                          + '&nbsp;<img id="multifuncHelp" src="/Gemma/images/help.png" />',
+                                                       items : this.renderMultifunctionality( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'Coexp. degree'
-                                                          + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, '
-                                                          + '\''
-                                                          + Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT
-                                                          + '\'); return false">'
-                                                          + '<img src="/Gemma/images/help.png" /> </a>',
+                                                       fieldLabel : 'Coexp. deg'
+                                                          + '&nbsp<img id="nodeDegreeHelp" src="/Gemma/images/help.png" />',
                                                        items : this.renderNodeDegree( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'Phenotypes'
-                                                          + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, '
-                                                          + '\''
-                                                          + Gemma.HelpText.WidgetDefaults.GeneDetails.phenotypeTT
-                                                          + '\'); return false">'
-                                                          + '<img src="/Gemma/images/help.png" /> </a>',
-                                                       html : this.renderPhenotypes( geneDetails )
+                                                       fieldLabel : 'Phenotypes&nbsp; <img id="phenotypeHelp" src="/Gemma/images/help.png" />',
+                                                       items : this.renderPhenotypes( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'On platforms'
-                                                          + '&nbsp;<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, '
-                                                          + '\'' + Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT
-                                                          + '\'); return false">'
-                                                          + '<img src="/Gemma/images/help.png" /> </a>',
-                                                       html : geneDetails.compositeSequenceCount
-                                                          + ' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id='
-                                                          + geneDetails.id + '">'
-                                                          + '<img src="/Gemma/images/magnifier.png"> </a>'
+                                                       fieldLabel : 'Studies'
+                                                          + '&nbsp;<img id="studiesHelp" src="/Gemma/images/help.png" />',
+                                                       items : this.renderAssociatedExperiments( geneDetails.ncbiId,
+                                                          geneDetails.associatedExperimentCount )
+                                                    },
+                                                    {
+                                                       fieldLabel : 'Elements'
+                                                          + '&nbsp; <img id="elementsHelp" src="/Gemma/images/help.png" />',
+                                                       items : new Ext.Panel(
+                                                          {
+                                                             border : false,
+                                                             html : geneDetails.compositeSequenceCount
+                                                                + " on "
+                                                                + geneDetails.platformCount
+                                                                + " different platforms&nbsp;"
+                                                                + ' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id='
+                                                                + geneDetails.id
+                                                                + '">'
+                                                                + '<img ext:qtip="View all the elements for this gene" src="/Gemma/images/magnifier.png"> </a>',
+                                                             listeners : {
+                                                                'afterrender' : function( c ) {
+                                                                   jQuery( '#elementsHelp' )
+                                                                      .qtip(
+                                                                         {
+                                                                            content : Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT,
+                                                                            style : {
+                                                                               name : 'cream'
+                                                                            }
+                                                                         } );
+                                                                }
+                                                             }
+                                                          } )
                                                     }, {
                                                        fieldLabel : 'Notes',
                                                        html : geneDetails.description
