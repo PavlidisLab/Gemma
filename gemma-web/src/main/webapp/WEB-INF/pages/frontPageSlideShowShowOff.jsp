@@ -1,5 +1,4 @@
-<link rel="stylesheet" type="text/css" href="/Gemma/styles/jshowoff.css" />
-
+<%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText">
 	<h2 style="text-align: center; color: grey; font-size: 1.8em">Tools and database for meta-analysis of functional
 		genomics data</h2>
@@ -70,14 +69,17 @@
 <script type="text/javascript">
    jQuery.noConflict();
 
-   jQuery(document).ready(function() {
+   jQuery( document ).ready( function() {
 
-      jQuery('#features').jshowoff({
-      //cssClass : 'thumbFeatures',
-      effect : 'slideLeft', autoPlay : true, // default: true
-      controls : false, speed : 5000, // default: 3000 (ms)
-      hoverPause : false // default: true, was buggy
-      });
+      jQuery( '#features' ).jshowoff( {
+         //cssClass : 'thumbFeatures',
+         effect : 'slideLeft',
+         autoPlay : true, // default: true
+         controls : false,
+         speed : 5000, // default: 3000 (ms)
+         hoverPause : false
+      // default: true, was buggy
+      } );
 
-   });
+   } );
 </script>

@@ -13,9 +13,9 @@
  * specific language governing permissions and limitations under the License.
  * 
  */
-Ext.namespace('Gemma');
+Ext.namespace( 'Gemma' );
 
-Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
+Gemma.CoexpressionGridLight = Ext.extend( Ext.grid.GridPanel, {
 
    collapsible : false,
    editable : false,
@@ -30,18 +30,18 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
    },
 
    initComponent : function() {
-      this.ds = new Ext.data.Store({
-         proxy : new Ext.data.MemoryProxy([]),
-         reader : new Ext.data.ListRangeReader({
+      this.ds = new Ext.data.Store( {
+         proxy : new Ext.data.MemoryProxy( [] ),
+         reader : new Ext.data.ListRangeReader( {
             id : "id"
-         }, Gemma.CoexpressionGridRecordConstructor),
+         }, Gemma.CoexpressionGridRecordConstructor ),
          sortInfo : {
             field : 'posSupp',
             direction : 'DESC'
          }
-      });
+      } );
 
-      Ext.apply(this, {
+      Ext.apply( this, {
          columns : [ {
             id : 'visualize',
             header : "Visualize",
@@ -54,7 +54,7 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
             id : 'found',
             header : "Coexpressed Gene",
             dataIndex : "foundGene",
-            renderer : this.foundGeneStyler.createDelegate(this),
+            renderer : this.foundGeneStyler.createDelegate( this ),
             tooltip : "Coexpressed Gene",
             sortable : true
          }, {
@@ -62,7 +62,7 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
             header : "Support",
             dataIndex : "supportKey",
             width : 70,
-            renderer : this.supportStyler.createDelegate(this),
+            renderer : this.supportStyler.createDelegate( this ),
             tooltip : Gemma.HelpText.WidgetDefaults.CoexpressionGrid.supportColumnTT,
             sortable : true
          }, {
@@ -70,7 +70,7 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
             header : "PPI",
             dataIndex : "gene2GeneProteinAssociationStringUrl",
             width : 30,
-            renderer : this.proteinLinkStyler.createDelegate(this),
+            renderer : this.proteinLinkStyler.createDelegate( this ),
             tooltip : "Evidence for interactions from external sources",
             sortable : true,
             hidden : true
@@ -79,15 +79,15 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
             header : "Specificity",
             dataIndex : "foundGeneNodeDegree",
             width : 60,
-            renderer : this.nodeDegreeStyler.createDelegate(this),
+            renderer : this.nodeDegreeStyler.createDelegate( this ),
             tooltip : "How many links these genes have at this stringency (query, found)",
             sortable : true
          } ]
-      });
+      } );
 
-      Gemma.CoexpressionGridLight.superclass.initComponent.call(this);
+      Gemma.CoexpressionGridLight.superclass.initComponent.call( this );
 
-      this.on("cellclick", this.rowClickHandler, this);
+      this.on( "cellclick", this.rowClickHandler, this );
    },
 
    /**
@@ -96,11 +96,11 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
     * @param numQueryGenes
     * @param data
     */
-   loadData : function(data) {
+   loadData : function( data ) {
       this.getStore().proxy.data = data;
-      this.getStore().reload({
+      this.getStore().reload( {
          resetPage : true
-      });
+      } );
 
    },
 
@@ -110,68 +110,68 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
     * 
     * @param result
     */
-   loadDataCb : function(result) {
+   loadDataCb : function( result ) {
       if ( result.errorState ) {
-         this.handleError(result.errorState);
+         this.handleError( result.errorState );
       } else {
-         this.loadData(result.results);
+         this.loadData( result.results );
       }
    },
 
-   doSearch : function(csc) {
-      this.loadMask = new Ext.LoadMask(this.getEl(), {
+   doSearch : function( csc ) {
+      this.loadMask = new Ext.LoadMask( this.getEl(), {
          msg : "Loading ..."
-      });
+      } );
       this.loadMask.show();
-      var errorHandler = this.handleError.createDelegate(this);
-      CoexpressionSearchController.doSearch(csc, {
-         callback : this.loadDataCb.createDelegate(this),
+      var errorHandler = this.handleError.createDelegate( this );
+      CoexpressionSearchController.doSearch( csc, {
+         callback : this.loadDataCb.createDelegate( this ),
          errorHandler : errorHandler
-      });
+      } );
    },
 
    /**
     * Checks if store contains any results if not print message indicating that there are non. Stop loader. Called when
     * an error thrown of after data load processing
     */
-   handleError : function(errorMessage) {
-      if ( Ext.get('coexpression-msg') ) {
-         Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
-         Ext.DomHelper.overwrite("coexpression-msg", [ {
+   handleError : function( errorMessage ) {
+      if ( Ext.get( 'coexpression-msg' ) ) {
+         Ext.DomHelper.applyStyles( "coexpression-msg", "height: 2.2em" );
+         Ext.DomHelper.overwrite( "coexpression-msg", [ {
             tag : 'img',
             src : '/Gemma/images/icons/information.png'
          }, {
             tag : 'span',
             html : "&nbsp;&nbsp;" + errorMessage
-         } ]);
+         } ] );
       } else {
-         Ext.Msg.alert("Warning", errorMessage);
+         Ext.Msg.alert( "Warning", errorMessage );
          this.getView().refresh(); // show empty text
       }
       this.loadMask.hide();
    },
 
    clearError : function() {
-      Ext.DomHelper.overwrite("coexpression-messages", "");
+      Ext.DomHelper.overwrite( "coexpression-messages", "" );
    },
 
    filter : function() {
-      var text = Ext.getCmp(this.id + '-search-in-grid').getValue();
+      var text = Ext.getCmp( this.id + '-search-in-grid' ).getValue();
       var value;
 
       if ( text && text.length > 1 ) {
-         value = new RegExp(Ext.escapeRe(text), 'i');
+         value = new RegExp( Ext.escapeRe( text ), 'i' );
       }
 
-      return function(row) {
-         var foundGene = row.get("foundGene");
-         var queryGene = row.get("queryGene");
+      return function( row ) {
+         var foundGene = row.get( "foundGene" );
+         var queryGene = row.get( "queryGene" );
 
          if ( !value ) {
             return true;
          } else {
-            if ( value.test(foundGene.officialSymbol) || value.test(queryGene.officialSymbol)
-               || value.test(foundGene.officialName) || value.test(queryGene.officialName) ) {
+            if ( value.test( foundGene.officialSymbol ) || value.test( queryGene.officialSymbol )
+               || value.test( foundGene.officialName ) || value.test( queryGene.officialName ) ) {
                return true;
             }
          }
@@ -180,17 +180,17 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
    },
 
    // link for protein interactions
-   proteinLinkStyler : function(value, metadata, record, row, col, ds) {
+   proteinLinkStyler : function( value, metadata, record, row, col, ds ) {
       var data = record.data;
       var result = "";
 
       if ( data['gene2GeneProteinAssociationStringUrl'] ) {
-         result = String.format('<span>' + '<a href="{0}"  target="_blank" class="external">'
+         result = String.format( '<span>' + '<a href="{0}"  target="_blank" class="external">'
             + '<img src="/Gemma/images/logo/string_logo.gif" '
             + 'ext:qtip="Click to view the protein protein interaction obtained from {1} '
             + 'evidence with a combined association score of {2} from STRING" />' + '</a>' + '</span>',
             data['gene2GeneProteinAssociationStringUrl'], data['gene2GeneProteinInteractionEvidence'],
-            data['gene2GeneProteinInteractionConfidenceScore']);
+            data['gene2GeneProteinInteractionConfidenceScore'] );
       }
       if ( data['queryRegulatesFound'] ) {
          result = result + " " + '<span> <img height="16" width = "16" src="/Gemma/images/logo/pazar-icon.png"'
@@ -213,20 +213,20 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
     * @param ds
     * @return {*}
     */
-   nodeDegreeStyler : function(value, metadata, record, row, col, ds) {
+   nodeDegreeStyler : function( value, metadata, record, row, col, ds ) {
       var data = record.data;
 
-//      var displayedNodeDegree = 0;
-//
-//      if ( data['foundGeneNodeDegree'] === null ) {
-//         return 0;
-//      } else if ( data['queryGeneNodeDegree'] > data['foundGeneNodeDegree'] ) {
-//         displayedNodeDegree = data['queryGeneNodeDegree'];
-//      } else {
-//         displayedNodeDegree = data['foundGeneNodeDegree'];
-//      }
+      // var displayedNodeDegree = 0;
+      //
+      // if ( data['foundGeneNodeDegree'] === null ) {
+      // return 0;
+      // } else if ( data['queryGeneNodeDegree'] > data['foundGeneNodeDegree'] ) {
+      // displayedNodeDegree = data['queryGeneNodeDegree'];
+      // } else {
+      // displayedNodeDegree = data['foundGeneNodeDegree'];
+      // }
 
-      return data['queryGeneNodeDegree'] + ", " + data['foundGeneNodeDegree'];
+      return "<b>" + data['queryGeneNodeDegree'] + "</b>," + data['foundGeneNodeDegree'];
       // return displayedNodeDegree;
       // return Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(displayedNodeDegree);
    },
@@ -234,23 +234,23 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
    /**
     * 
     */
-   supportStyler : function(value, metadata, record, row, col, ds) {
+   supportStyler : function( value, metadata, record, row, col, ds ) {
       var data = record.data;
       if ( data['posSupp'] || data['negSupp'] ) {
          var style = "";
          if ( data['posSupp'] ) {
             style = style
-               + String.format("<span class='positiveLink'>{0}{1}</span> ", data['posSupp'], this
-                  .getSpecificLinkString(data['posSupp'], data['nonSpecPosSupp']));
+               + String.format( "<span class='positiveLink'>{0}{1}</span> ", data['posSupp'], this
+                  .getSpecificLinkString( data['posSupp'], data['nonSpecPosSupp'] ) );
          }
          if ( data['negSupp'] ) {
             style = style
-               + String.format("<span class='negativeLink'>{0}{1}</span> ", data['negSupp'], this
-                  .getSpecificLinkString(data['negSupp'], data['nonSpecNegSupp']));
+               + String.format( "<span class='negativeLink'>{0}{1}</span> ", data['negSupp'], this
+                  .getSpecificLinkString( data['negSupp'], data['nonSpecNegSupp'] ) );
          }
 
          if ( data['numTestedIn'] ) {
-            style = style + String.format("/ {0}", data['numTestedIn']);
+            style = style + String.format( "/ {0}", data['numTestedIn'] );
          }
          return style;
       } else {
@@ -261,23 +261,23 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
    /**
     * For displaying Gene ontology similarity
     */
-   goStyler : function(value, metadata, record, row, col, ds) {
+   goStyler : function( value, metadata, record, row, col, ds ) {
       var data = record.data;
       if ( data['goSim'] || data['maxGoSim'] ) {
-         return String.format("{0}/{1}", data['goSim'], data['maxGoSim']);
+         return String.format( "{0}/{1}", data['goSim'], data['maxGoSim'] );
       } else {
          return "-";
       }
    },
 
-   getSpecificLinkString : function(total, nonSpecific) {
-      return nonSpecific ? String.format("<span class='specificLink'> ({0})</span>", total - nonSpecific) : "";
+   getSpecificLinkString : function( total, nonSpecific ) {
+      return nonSpecific ? String.format( "<span class='specificLink'> ({0})</span>", total - nonSpecific ) : "";
    },
 
    /**
     * Display the target (found) genes.
     */
-   foundGeneStyler : function(value, metadata, record, row, col, ds) {
+   foundGeneStyler : function( value, metadata, record, row, col, ds ) {
       var gene = record.data.foundGene;
 
       if ( gene.officialName === null ) {
@@ -291,7 +291,7 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
          gene.taxonId = -1;
          gene.taxonName = "?";
       }
-      return this.foundGeneTemplateNoGemma.apply(gene);
+      return this.foundGeneTemplateNoGemma.apply( gene );
    },
 
    /**
@@ -300,12 +300,12 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
    foundGeneTemplate : new Ext.Template(
       "<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'>"
          + " <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
-      " &nbsp; ", "<a target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+      " &nbsp; ", "<a target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
 
-   foundGeneTemplateNoGemma : new Ext.Template("<a style='font-weight:{fontWeight};' "
-      + "target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}"),
+   foundGeneTemplateNoGemma : new Ext.Template( "<a style='font-weight:{fontWeight};' "
+      + "target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
 
-   visStyler : function(value, metadata, record, row, col, ds) {
+   visStyler : function( value, metadata, record, row, col, ds ) {
       return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
    },
 
@@ -315,42 +315,42 @@ Gemma.CoexpressionGridLight = Ext.extend(Ext.grid.GridPanel, {
     * @param rowIndex
     * @param columnIndex
     */
-   rowClickHandler : function(grid, rowIndex, columnIndex) {
+   rowClickHandler : function( grid, rowIndex, columnIndex ) {
       if ( this.getSelectionModel().hasSelection() ) {
 
-         var record = this.getStore().getAt(rowIndex);
-         var fieldName = this.getColumnModel().getDataIndex(columnIndex);
-         var queryGene = record.get("queryGene");
-         var foundGene = record.get("foundGene");
+         var record = this.getStore().getAt( rowIndex );
+         var fieldName = this.getColumnModel().getDataIndex( columnIndex );
+         var queryGene = record.get( "queryGene" );
+         var foundGene = record.get( "foundGene" );
 
          if ( fieldName === 'visualize' ) {
             var activeExperiments = record.data['supportingExperiments'];
 
             if ( activeExperiments === null || activeExperiments.length == 0 ) {
-               Ext.Msg.alert("Unavailable", "Details about the experiments are not available for visualization");
+               Ext.Msg.alert( "Unavailable", "Details about the experiments are not available for visualization" );
                return;
             }
 
-            var coexpressionVisualizationWindow = new Gemma.CoexpressionVisualizationWindow({
+            var coexpressionVisualizationWindow = new Gemma.CoexpressionVisualizationWindow( {
                cascadeOnFirstShow : true,
                admin : false,
                experiments : activeExperiments,
                queryGene : queryGene,
                foundGene : foundGene,
-               downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
-                  .join(','), queryGene.id, foundGene.id),
+               downloadLink : String.format( "/Gemma/dedv/downloadDEDV.html?ee={0}&g={1},{2}", activeExperiments
+                  .join( ',' ), queryGene.id, foundGene.id ),
                title : "Coexpression for:  " + queryGene.name + " + " + foundGene.name
-            });
+            } );
 
             var params = [];
-            params.push(activeExperiments);
-            params.push(queryGene.id);
-            params.push(foundGene.id);
+            params.push( activeExperiments );
+            params.push( queryGene.id );
+            params.push( foundGene.id );
 
-            coexpressionVisualizationWindow.show({
+            coexpressionVisualizationWindow.show( {
                params : params
-            });
+            } );
          }
       }
    }
-});
+} );
