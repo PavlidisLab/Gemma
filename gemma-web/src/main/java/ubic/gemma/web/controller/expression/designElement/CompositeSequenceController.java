@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -132,7 +131,7 @@ public class CompositeSequenceController extends BaseController {
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
 
         if ( ids == null || ids.size() == 0 ) {
-            return new HashSet<CompositeSequenceMapValueObject>();
+            return new HashSet<>();
         }
 
         Collection<CompositeSequence> compositeSequences = compositeSequenceService.loadMultiple( ids );

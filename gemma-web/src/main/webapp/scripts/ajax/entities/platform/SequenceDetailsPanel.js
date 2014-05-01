@@ -11,6 +11,8 @@ Gemma.SequenceDetailsPanel = Ext
           * Update the details listing.
           */
          updateSequenceInfo : function( r ) {
+
+            var pan = this.sequenceDetailsGrid;
             this.alignmentsGrid
                .getStore()
                .load(
@@ -21,7 +23,6 @@ Gemma.SequenceDetailsPanel = Ext
 
                      callback : function( records, options, success ) {
 
-                        var pan = Ext.getCmp( "sequence-info" );
                         pan.removeAll( true );
 
                         if ( !success || records === null || records.length == 0 ) {
@@ -141,18 +142,19 @@ Gemma.SequenceDetailsPanel = Ext
                width : 600
             } );
 
+            this.sequenceDetailsGrid = new Ext.Panel( {
+               padding : 8,
+               items : {
+                  border : false,
+                  html : "Sequence details will be shown here"
+               },
+               id : "sequence-info",
+               height : 200,
+               width : 600
+            } );
+
             Ext.apply( this, {
-               items : [ {
-                  xtype : 'panel',
-                  padding : 8,
-                  items : {
-                     border : false,
-                     html : "Sequence details will be shown here"
-                  },
-                  id : "sequence-info",
-                  height : 200,
-                  width : 600
-               }, this.alignmentsGrid ]
+               items : [ this.sequenceDetailsGrid, this.alignmentsGrid ]
             } );
 
             Gemma.SequenceDetailsPanel.superclass.initComponent.call( this );

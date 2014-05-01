@@ -95,7 +95,6 @@ public class ProbeMapUtils {
         result = prime * result + ( ( br.getTargetStart() == null ) ? 0 : br.getTargetStart().hashCode() );
         result = prime * result + ( ( br.getTargetStarts() == null ) ? 0 : br.getTargetStarts().hashCode() );
         return result;
-
     }
 
     /**

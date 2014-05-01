@@ -19,14 +19,15 @@ public interface ArrayDesignMapResultService {
      */
     public abstract Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign );
 
-    /**
-     * Version of objects that retains less information.
-     * 
-     * @param sequenceData
-     * @return
-     */
-    public abstract Collection<CompositeSequenceMapValueObject> getSmallerSummaryMapValueObjects(
-            Collection<Object[]> sequenceData );
+    // not used
+    // /**
+    // * Version of objects that retains less information.
+    // *
+    // * @param sequenceData
+    // * @return
+    // */
+    // public abstract Collection<CompositeSequenceMapValueObject> getSmallerSummaryMapValueObjects(
+    // Collection<Object[]> sequenceData );
 
     /**
      * FIXME this is only public so we can use it in the DesignElementController; need refactoring (see

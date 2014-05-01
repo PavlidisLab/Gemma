@@ -348,7 +348,9 @@ Gemma.GeneDetails = Ext
                                                                 + ' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id='
                                                                 + geneDetails.id
                                                                 + '">'
-                                                                + '<img ext:qtip="View all the elements for this gene" src="/Gemma/images/magnifier.png"> </a>',
+                                                                + "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View all the elements for this gene'"
+                                                                + "onClick='Ext.getCmp(&#39;" + this.id
+                                                                + "&#39;).changeTab(&#39;elements&#39;)'>",
                                                              listeners : {
                                                                 // FIXME refactor this common code
                                                                 'afterrender' : function( c ) {
@@ -364,12 +366,12 @@ Gemma.GeneDetails = Ext
                                                              }
                                                           } )
                                                     }
-                                                    //,
+                                           // ,
                                            // {
                                            // fieldLabel : 'Notes',
                                            // html : geneDetails.description
-                                           //                                                    }
-                                                    ]
+                                           // }
+                                           ]
                                         } ] );
                               this.syncSize();
                            }.createDelegate( this ) );

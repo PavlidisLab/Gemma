@@ -75,12 +75,13 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
      * Add your 'where' clause to this.
      */
     private static final String nativeBaseSummaryQueryString = "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
-            + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
-            + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc "
+            + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
+            + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc, "
+            + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId "
             + " from "
             + "COMPOSITE_SEQUENCE cs "
-            + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
-            + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=BIOLOGICAL_CHARACTERISTIC_FK "
+            + "left join BIO_SEQUENCE bs on cs.BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
+            + "left join SEQUENCE_SIMILARITY_SEARCH_RESULT ssr on ssr.QUERY_SEQUENCE_FK=cs.BIOLOGICAL_CHARACTERISTIC_FK "
             + "left join BIO_SEQUENCE2_GENE_PRODUCT bs2gp on BIO_SEQUENCE_FK=bs.ID "
             + "left join DATABASE_ENTRY bsDb on SEQUENCE_DATABASE_ENTRY_FK=bsDb.ID "
             + "left join CHROMOSOME_FEATURE geneProductRNA on (geneProductRNA.ID=bs2gp.GENE_PRODUCT_FK) "
@@ -482,7 +483,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     protected Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences, Integer limit ) {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
 
-        Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<>();
 
         /*
          * Note that running this without a limit is dangerous. If the sequence is an unmasked repeat, then we can get
@@ -520,13 +521,17 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
+
+        queryObject.addScalar( "chrom" ).addScalar( "tgst" ).addScalar( "tgend" ).addScalar( "tgstarts" )
+                .addScalar( "bsId" );
+
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.setMaxResults( MAX_CS_RECORDS );
         return queryObject.list();
     }
 
     /*
-     * (non-Javadoc)
+     * (non-Javadoc) Lighter version
      * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetRawSummary(ubic.gemma.model.expression
@@ -555,6 +560,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
+
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.setMaxResults( limit );
         return queryObject.list();

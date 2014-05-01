@@ -59,7 +59,7 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
 
     private Map<String, GeneValueObject> genes = new HashMap<>();
 
-    private Long numBlatHits = null;
+    private Integer numBlatHits = null;
 
     public CompositeSequenceMapValueObject() {
     }
@@ -159,7 +159,7 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     /**
      * @return the numBlatHits
      */
-    public Long getNumBlatHits() {
+    public Integer getNumBlatHits() {
         return numBlatHits;
     }
 
@@ -244,11 +244,7 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
     /**
      * @param numBlatHits the numBlatHits to set
      */
-    public void setNumBlatHits( long numBlatHits ) {
-        this.numBlatHits = numBlatHits;
-    }
-
-    public void setNumBlatHits( Long numBlatHits ) {
+    public void setNumBlatHits( Integer numBlatHits ) {
         this.numBlatHits = numBlatHits;
     }
 
