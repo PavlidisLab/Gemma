@@ -31,17 +31,41 @@ public class BioSequenceValueObject {
         return vo;
     }
 
-    private String name;
     private String description;
-    private Long id;
-    private String sequence;
-    private DatabaseEntryValueObject sequenceDatabaseEntry;
-    private Long length;
-    private ubic.gemma.model.genome.biosequence.SequenceType type;
 
     private Double fractionRepeats;
 
+    private Long id;
+    private Long length;
+    private String name;
+    private String sequence;
+    private DatabaseEntryValueObject sequenceDatabaseEntry;
     private TaxonValueObject taxon;
+    private ubic.gemma.model.genome.biosequence.SequenceType type;
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        BioSequenceValueObject other = ( BioSequenceValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) return false;
+        } else if ( !id.equals( other.id ) ) return false;
+
+        if ( sequenceDatabaseEntry == null ) {
+            if ( other.sequenceDatabaseEntry != null ) return false;
+        } else if ( !sequenceDatabaseEntry.equals( other.sequenceDatabaseEntry ) ) return false;
+
+        if ( name == null ) {
+            if ( other.name != null ) return false;
+        } else if ( !name.equals( other.name ) ) return false;
+
+        if ( type == null ) {
+            if ( other.type != null ) return false;
+        } else if ( !type.equals( other.type ) ) return false;
+        return true;
+    }
 
     public String getDescription() {
         return description;
@@ -77,6 +101,19 @@ public class BioSequenceValueObject {
 
     public ubic.gemma.model.genome.biosequence.SequenceType getType() {
         return this.type;
+    }
+
+    @Override
+    public int hashCode() {
+
+        if ( id != null ) return id.hashCode();
+        final int prime = 31;
+        int result = 1;
+
+        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        result = prime * result + ( ( sequenceDatabaseEntry == null ) ? 0 : sequenceDatabaseEntry.hashCode() );
+        result = prime * result + ( ( type == null ) ? 0 : type.hashCode() );
+        return result;
     }
 
     public void setDescription( String description ) {

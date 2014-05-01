@@ -1,4 +1,3 @@
 TaxonCombo.js
-GeneCombo.js
-GeneImportPanel.js
-GeneChooserPanel.js
+gene/
+

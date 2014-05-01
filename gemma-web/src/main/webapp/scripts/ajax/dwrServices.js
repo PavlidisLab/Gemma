@@ -221,6 +221,10 @@ CompositeSequenceController.getCsSummaries = function( p0, callback ) {
    dwr.engine._execute( CompositeSequenceController._path, 'CompositeSequenceController', 'getCsSummaries', p0,
       callback );
 };
+CompositeSequenceController.getGeneCsSummaries = function( p0, callback ) {
+   dwr.engine._execute( CompositeSequenceController._path, 'CompositeSequenceController', 'getGeneCsSummaries', p0,
+      callback );
+};
 CompositeSequenceController.getGeneMappingSummary = function( p0, callback ) {
    dwr.engine._execute( CompositeSequenceController._path, 'CompositeSequenceController', 'getGeneMappingSummary', p0,
       callback );
