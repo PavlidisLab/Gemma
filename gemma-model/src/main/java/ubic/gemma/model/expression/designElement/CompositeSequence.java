@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+
 /**
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
@@ -43,7 +45,7 @@ public abstract class CompositeSequence extends ubic.gemma.model.common.Describa
     private static final long serialVersionUID = -3859507822452159349L;
     private ubic.gemma.model.genome.biosequence.BioSequence biologicalCharacteristic;
 
-    private ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign;
+    private ArrayDesign arrayDesign;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -56,7 +58,7 @@ public abstract class CompositeSequence extends ubic.gemma.model.common.Describa
     /**
      * 
      */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign getArrayDesign() {
+    public ArrayDesign getArrayDesign() {
         return this.arrayDesign;
     }
 
@@ -67,7 +69,7 @@ public abstract class CompositeSequence extends ubic.gemma.model.common.Describa
         return this.biologicalCharacteristic;
     }
 
-    public void setArrayDesign( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public void setArrayDesign( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }
 

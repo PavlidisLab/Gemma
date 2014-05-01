@@ -24,9 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -42,6 +40,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.analysis.sequence.ProbeMapper;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
@@ -432,7 +431,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         final Collection<BlatResult> blatResults = blatResultService.findByBioSequence( bs );
 
-        removeDuplicates( blatResults );
+        ProbeMapUtils.removeDuplicates( blatResults );
 
         if ( blatResults == null || blatResults.isEmpty() ) return null;
 
@@ -553,33 +552,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
     }
 
-    private Integer hashBlatResult( BlatResult br ) {
-        int result = 1;
-        int prime = 31;
-        result = prime * result + ( ( br.getQuerySequence() == null ) ? 0 : br.getQuerySequence().hashCode() );
-        result = prime * result + ( ( br.getTargetChromosome() == null ) ? 0 : br.getTargetChromosome().hashCode() );
-
-        result = prime * result + ( ( br.getBlockCount() == null ) ? 0 : br.getBlockCount().hashCode() );
-        result = prime * result + ( ( br.getBlockSizes() == null ) ? 0 : br.getBlockSizes().hashCode() );
-        result = prime * result + ( ( br.getMatches() == null ) ? 0 : br.getMatches().hashCode() );
-        result = prime * result + ( ( br.getMismatches() == null ) ? 0 : br.getMismatches().hashCode() );
-        result = prime * result + ( ( br.getNs() == null ) ? 0 : br.getNs().hashCode() );
-        result = prime * result + ( ( br.getQueryEnd() == null ) ? 0 : br.getQueryEnd().hashCode() );
-        result = prime * result + ( ( br.getQueryGapBases() == null ) ? 0 : br.getQueryGapBases().hashCode() );
-        result = prime * result + ( ( br.getQueryGapCount() == null ) ? 0 : br.getQueryGapCount().hashCode() );
-        result = prime * result + ( ( br.getQueryStart() == null ) ? 0 : br.getQueryStart().hashCode() );
-        result = prime * result + ( ( br.getQueryStarts() == null ) ? 0 : br.getQueryStarts().hashCode() );
-        result = prime * result + ( ( br.getRepMatches() == null ) ? 0 : br.getRepMatches().hashCode() );
-        result = prime * result + ( ( br.getStrand() == null ) ? 0 : br.getStrand().hashCode() );
-        result = prime * result + ( ( br.getTargetEnd() == null ) ? 0 : br.getTargetEnd().hashCode() );
-        result = prime * result + ( ( br.getTargetGapBases() == null ) ? 0 : br.getTargetGapBases().hashCode() );
-        result = prime * result + ( ( br.getTargetGapCount() == null ) ? 0 : br.getTargetGapCount().hashCode() );
-        result = prime * result + ( ( br.getTargetStart() == null ) ? 0 : br.getTargetStart().hashCode() );
-        result = prime * result + ( ( br.getTargetStarts() == null ) ? 0 : br.getTargetStarts().hashCode() );
-        return result;
-
-    }
-
     /**
      * @param queue
      * @param generatorDone
@@ -615,31 +587,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         Gene gene = geneProduct.getGene();
         System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
                 + geneProduct.getName() + '\t' + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
-    }
-
-    /**
-     * @param blatResults
-     */
-    private void removeDuplicates( Collection<BlatResult> blatResults ) {
-        int init = blatResults.size();
-        Set<Integer> hashes = new HashSet<>();
-        for ( Iterator<BlatResult> it = blatResults.iterator(); it.hasNext(); ) {
-            BlatResult br = it.next();
-
-            Integer hash = hashBlatResult( br );
-
-            if ( hashes.contains( hash ) ) {
-                it.remove();
-            }
-
-            hashes.add( hash );
-
-        }
-
-        if ( blatResults.size() < init && log.isDebugEnabled() ) {
-            log.debug( "Pruned " + ( init - blatResults.size() ) + "/" + init + " duplicates" );
-        }
-
     }
 
 }

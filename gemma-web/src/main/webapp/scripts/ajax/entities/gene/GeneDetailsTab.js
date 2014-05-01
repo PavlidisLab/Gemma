@@ -193,17 +193,27 @@ Gemma.GeneDetails = Ext
                // Note: we need a panel here so we can pick up the rendering event so jquery can do its work.
                return new Ext.Panel( {
                   border : false,
-                  html : '<span id="nodeDegreeSpark">...</span>',
+                  html : '<span id="nodeDegreeSpark">...</span> Max support ' + (geneDetails.nodeDegrees.length - 1),
                   listeners : {
                      'afterrender' : function( c ) {
 
                         /*
-                         * Build array of arrays. TODO make this cumulative instead of exact node degree
+                         * Compute cumulative counts
+                         */
+                        var cumul = new Array();
+                        cumul[geneDetails.nodeDegrees.length - 1] = 0;
+                        for (var j = geneDetails.nodeDegrees.length - 1; j >= 0; j--) {
+                           cumul[j - 1] = geneDetails.nodeDegrees[j] + cumul[j];
+                        }
+                        cumul.pop();
+
+                        /*
+                         * Build array of arrays for plot
                          */
                         var nd = new Array();
                         var k = 0;
-                        for (var i = 1; i < geneDetails.nodeDegrees.length; i++) {
-                           nd.push( [ i, Math.log( geneDetails.nodeDegrees[i] + 0.01 ) / Math.log( 10.0 ) ] );
+                        for (var i = 0; i < cumul.length; i++) {
+                           nd.push( [ i + 1, Math.log( cumul[i] + 0.01 ) / Math.log( 10.0 ) ] );
                            k++;
                         }
 
@@ -211,9 +221,10 @@ Gemma.GeneDetails = Ext
                            nd,
                            {
                               height : 40,
-                              width : 200,
+                              chartRangeMin : -1,
+                              width : 150,
                               tooltipFormatter : function( spl, ops, fields ) {
-                                 return "Links at support level " + fields.x + ": "
+                                 return "Links at support level " + fields.x + " or higher: "
                                     + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log10 scaled)";
                               }
                            } );
@@ -314,7 +325,9 @@ Gemma.GeneDetails = Ext
                                                     },
                                                     {
                                                        fieldLabel : 'Phenotypes&nbsp; <img id="phenotypeHelp" src="/Gemma/images/help.png" />',
-                                                       items : this.renderPhenotypes( geneDetails )
+                                                       items : this.renderPhenotypes( geneDetails ),
+                                                       hidden : !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
+                                                          || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
                                                     },
                                                     {
                                                        fieldLabel : 'Studies'
@@ -337,6 +350,7 @@ Gemma.GeneDetails = Ext
                                                                 + '">'
                                                                 + '<img ext:qtip="View all the elements for this gene" src="/Gemma/images/magnifier.png"> </a>',
                                                              listeners : {
+                                                                // FIXME refactor this common code
                                                                 'afterrender' : function( c ) {
                                                                    jQuery( '#elementsHelp' )
                                                                       .qtip(
@@ -349,10 +363,13 @@ Gemma.GeneDetails = Ext
                                                                 }
                                                              }
                                                           } )
-                                                    }, {
-                                                       fieldLabel : 'Notes',
-                                                       html : geneDetails.description
-                                                    } ]
+                                                    }
+                                                    //,
+                                           // {
+                                           // fieldLabel : 'Notes',
+                                           // html : geneDetails.description
+                                           //                                                    }
+                                                    ]
                                         } ] );
                               this.syncSize();
                            }.createDelegate( this ) );

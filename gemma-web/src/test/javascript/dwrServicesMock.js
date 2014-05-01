@@ -1,5 +1,5 @@
 /**
- * To check for functions left out of this file, we have to compare to dwrServices.js. 
+ * To check for functions left out of this file, we have to compare to dwrServices.js.
  * <p>
  * grep "= function" ./main/webapp/scripts/ajax/dwrServices.js | perl -ne 'chomp; print "$_\n"; print `grep -L \"$_\"
  * ./test/javascript/dwrServicesMock.js`' | grep -B 1 dwr
@@ -131,6 +131,8 @@ if ( typeof CompositeSequenceController === 'undefined' ) {
 CompositeSequenceController.search = function( p0, p1, callback ) {
 };
 CompositeSequenceController.getCsSummaries = function( p0, callback ) {
+};
+CompositeSequenceController.getGeneCsSummaries = function( p0, callback ) {
 };
 CompositeSequenceController.getGeneMappingSummary = function( p0, callback ) {
 };

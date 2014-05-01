@@ -426,6 +426,7 @@
 		<dwr:remote javascript="CompositeSequenceController">
 			<dwr:include method="getGeneMappingSummary" />
 			<dwr:include method="getCsSummaries" />
+			<dwr:include method="getGeneCsSummaries" />
 			<dwr:include method="search" />
 		</dwr:remote>
 	</bean>

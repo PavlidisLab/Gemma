@@ -30,7 +30,9 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @version $Id$
  */
 public class CompositeSequenceMapValueObject implements Comparable<CompositeSequenceMapValueObject> {
+
     public static CompositeSequenceMapValueObject fromEntity( CompositeSequence cs ) {
+
         CompositeSequenceMapValueObject vo = new CompositeSequenceMapValueObject();
         vo.setArrayDesignId( cs.getArrayDesign().getId() );
         vo.setArrayDesignName( cs.getArrayDesign().getName() );
@@ -38,32 +40,26 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
         vo.setBioSequenceName( cs.getBiologicalCharacteristic().getName() );
         vo.setCompositeSequenceDescription( cs.getDescription() );
         vo.setCompositeSequenceId( cs.getId().toString() );
+        vo.setArrayDesignShortName( cs.getArrayDesign().getShortName() );
         vo.setCompositeSequenceName( cs.getName() );
-        // Map<String, GeneProductValueObject> gpvos = new HashMap<String, GeneProductValueObject>();
-        // Map<String, GeneValueObject> gvos = new HashMap<String, GeneValueObject>();
-        /*
-         * for (BioSequence2GeneProduct bs_2_gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
-         * GeneProduct gp = bs_2_gp.getGeneProduct(); gpvos.put(gp.getName(), GeneProductValueObject.fromEntity(gp));
-         * gvos.put(gp.getGene().getName(), GeneValueObject.fromEntity(gp.getGene())); }
-         * 
-         * vo.setGeneProducts(gpvos); vo.setGenes(gvos);
-         */
         return vo;
     }
 
-    private String compositeSequenceId = null;
-    private String compositeSequenceName = null;
-    private String compositeSequenceDescription = null;
+    private Long arrayDesignId = null;
+    private String arrayDesignName = null;
+    private String arrayDesignShortName = null;
     private String bioSequenceId = null;
     private String bioSequenceName = null;
     private String bioSequenceNcbiId = null;
-    private String arrayDesignName = null;
-    private Long arrayDesignId = null;
+    private String compositeSequenceDescription = null;
+    private String compositeSequenceId = null;
+    private String compositeSequenceName = null;
+
+    private Map<String, GeneProductValueObject> geneProducts = new HashMap<>();
+
+    private Map<String, GeneValueObject> genes = new HashMap<>();
 
     private Long numBlatHits = null;
-    private Map<String, GeneProductValueObject> geneProducts = new HashMap<String, GeneProductValueObject>();
-
-    private Map<String, GeneValueObject> genes = new HashMap<String, GeneValueObject>();
 
     public CompositeSequenceMapValueObject() {
     }
@@ -101,6 +97,10 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
 
     public String getArrayDesignName() {
         return arrayDesignName;
+    }
+
+    public String getArrayDesignShortName() {
+        return arrayDesignShortName;
     }
 
     /**
@@ -182,6 +182,10 @@ public class CompositeSequenceMapValueObject implements Comparable<CompositeSequ
 
     public void setArrayDesignName( String arrayDesignName ) {
         this.arrayDesignName = arrayDesignName;
+    }
+
+    public void setArrayDesignShortName( String arrayDesignShortName ) {
+        this.arrayDesignShortName = arrayDesignShortName;
     }
 
     /**

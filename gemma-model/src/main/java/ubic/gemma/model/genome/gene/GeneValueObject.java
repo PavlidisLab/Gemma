@@ -113,6 +113,8 @@ public class GeneValueObject implements java.io.Serializable {
 
     private Collection<CharacteristicValueObject> phenotypes;
 
+    private Integer platformCount;
+
     private Double score; // This is for genes in genesets might have a rank or a score associated with them.
 
     private String taxonCommonName;
@@ -308,6 +310,10 @@ public class GeneValueObject implements java.io.Serializable {
         return phenotypes;
     }
 
+    public Integer getPlatformCount() {
+        return platformCount;
+    }
+
     public Double getScore() {
         return score;
     }
@@ -397,6 +403,10 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
+    }
+
+    public void setPlatformCount( Integer platformCount ) {
+        this.platformCount = platformCount;
     }
 
     public void setScore( Double score ) {

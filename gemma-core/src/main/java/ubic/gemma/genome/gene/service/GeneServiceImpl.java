@@ -265,26 +265,6 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
 
-    // /**
-    // * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
-    // */
-    // @Override
-    // @Transactional(readOnly = true)
-    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( final Collection<Gene> genes,
-    // final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
-    // return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
-    // }
-    //
-    // /**
-    // * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
-    // */
-    // @Override
-    // @Transactional(readOnly = true)
-    // public QueryGeneCoexpression getCoexpressedGenes( final Gene gene, final Collection<? extends BioAssaySet> ees,
-    // final Integer stringency ) {
-    // return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
-    // }
-
     /**
      * @see GeneService#getCompositeSequenceCountById(Long)
      */
@@ -472,6 +452,9 @@ public class GeneServiceImpl implements GeneService {
 
         Long compositeSequenceCount = getCompositeSequenceCountById( id );
         gvo.setCompositeSequenceCount( compositeSequenceCount.intValue() );
+
+        Integer platformCount = this.geneDao.getPlatformCountById( id );
+        gvo.setPlatformCount( platformCount );
 
         Collection<GeneSet> genesets = this.geneSetSearch.findByGene( g );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();

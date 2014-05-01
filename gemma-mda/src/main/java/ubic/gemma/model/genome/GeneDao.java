@@ -128,9 +128,16 @@ public interface GeneDao extends BaseDao<Gene> {
     // java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
     /**
-     * 
+     * @param id
+     * @return how many platform elements (e.g. probes) represent this gene, totalled up over all platforms.
      */
     public long getCompositeSequenceCountById( long id );
+
+    /**
+     * @param id
+     * @return how many platforms have a representation of this gene
+     */
+    public int getPlatformCountById( Long id );
 
     /**
      * 

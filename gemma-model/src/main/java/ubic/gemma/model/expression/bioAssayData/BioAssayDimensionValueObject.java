@@ -148,9 +148,9 @@ public class BioAssayDimensionValueObject implements Serializable {
 
             // assert newOrdering.size() == bioAssays.size() : "Expected " + bioAssays.size() + " but new ordering had "
             // + newOrdering.size() + " elements";
-            if ( !newOrdering.containsAll( bioAssays ) ) {
-                System.err.println( "Oh no!" );
-            }
+            // if ( !newOrdering.containsAll( bioAssays ) ) {
+            // System.err.println( "Oh no!" );
+            // }
 
             if ( newOrdering.size() > bioAssays.size() ) {
                 /*

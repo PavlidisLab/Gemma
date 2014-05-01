@@ -75,4 +75,4 @@ Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
       }
 
    });
-Ext.reg('genegogrid', Gemma.GeneGOGrid);
+Ext.reg( 'genegogrid', Gemma.GeneGOGrid );

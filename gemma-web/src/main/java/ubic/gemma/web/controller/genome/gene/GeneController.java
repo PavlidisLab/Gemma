@@ -263,16 +263,6 @@ public class GeneController extends BaseController {
         ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
         mav.addObject( "numCompositeSequences", compositeSequences.size() );
 
-        // fill in by ajax instead.
-        // Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
-        // Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-        // .getSummaryMapValueObjects( rawSummaries );
-        //
-        // if ( summaries == null || summaries.size() == 0 ) {
-        // // / FIXME, return error or do something else intelligent.
-        // }
-        // mav.addObject( "sequenceData", summaries );
-
         StringBuilder buf = new StringBuilder();
         for ( CompositeSequence sequence : compositeSequences ) {
             buf.append( sequence.getId() );

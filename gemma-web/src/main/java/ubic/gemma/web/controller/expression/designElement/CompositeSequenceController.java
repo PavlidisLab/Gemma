@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,6 +41,8 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.sequence.GeneMappingSummary;
+import ubic.gemma.analysis.sequence.ProbeMapUtils;
+import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -120,7 +123,8 @@ public class CompositeSequenceController extends BaseController {
     }
 
     /**
-     * Exposed for AJAX calls (Probe browser)
+     * Exposed for AJAX calls (Probe browser) FIXME can probably remove soon since we should use getGeneCsSummaries?
+     * Might be another use for this
      * 
      * @param ids
      * @return
@@ -137,6 +141,26 @@ public class CompositeSequenceController extends BaseController {
     }
 
     /**
+     * Exposed for AJAX calls (Elements tab on gene details page)
+     * 
+     * @param geneId
+     * @return
+     */
+    public Collection<CompositeSequenceMapValueObject> getGeneCsSummaries( Long geneId ) {
+
+        if ( geneId == null ) {
+            throw new IllegalArgumentException( "Gene ID must not be null" );
+        }
+
+        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId );
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+        return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
+    }
+
+    @Autowired
+    private GeneService geneService;
+
+    /**
      * Exposed for AJAX calls.
      * 
      * @param csd
@@ -145,7 +169,7 @@ public class CompositeSequenceController extends BaseController {
     public Collection<GeneMappingSummary> getGeneMappingSummary( EntityDelegator csd ) {
         log.debug( "Started proccessing AJAX call: getGeneMappingSummary" );
         if ( csd == null || csd.getId() == null ) {
-            return new HashSet<GeneMappingSummary>();
+            return new HashSet<>();
         }
         CompositeSequence cs = compositeSequenceService.load( csd.getId() );
         compositeSequenceService.thaw( Arrays.asList( new CompositeSequence[] { cs } ) );
@@ -217,11 +241,12 @@ public class CompositeSequenceController extends BaseController {
     }
 
     /**
+     * Note that duplicate hits will be ignored here. See bug 4037.
+     * 
      * @param cs
      * @param blatResults
      */
-    private void addBlatResultsLackingGenes( CompositeSequence cs,
-            Map<BlatResultValueObject, GeneMappingSummary> blatResults ) {
+    private void addBlatResultsLackingGenes( CompositeSequence cs, Map<Integer, GeneMappingSummary> blatResults ) {
         /*
          * Pick up blat results that didn't map to genes.
          */
@@ -231,11 +256,11 @@ public class CompositeSequenceController extends BaseController {
                 .convert2ValueObjects( blatResultService.thaw( blatResultService
                         .findByBioSequence( biologicalCharacteristic ) ) );
         for ( BlatResultValueObject blatResult : allBlatResultsForCs ) {
-            if ( !blatResults.containsKey( blatResult ) ) {
+            if ( !blatResults.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.setBlatResult( blatResult );
                 // no gene...
-                blatResults.put( blatResult, summary );
+                blatResults.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }
         }
     }
@@ -249,7 +274,7 @@ public class CompositeSequenceController extends BaseController {
 
         biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
 
-        Map<BlatResultValueObject, GeneMappingSummary> results = new HashMap<BlatResultValueObject, GeneMappingSummary>();
+        Map<Integer, GeneMappingSummary> results = new HashMap<>();
         if ( biologicalCharacteristic == null || biologicalCharacteristic.getBioSequence2GeneProduct() == null ) {
             return results.values();
         }
@@ -260,6 +285,9 @@ public class CompositeSequenceController extends BaseController {
             GeneProductValueObject geneProduct = new GeneProductValueObject( bs2gp.getGeneProduct() );
 
             GeneValueObject gene = new GeneValueObject( bs2gp.getGeneProduct().getGene() );
+
+            assert gene != null;
+
             BlatResultValueObject blatResult = null;
 
             if ( ( bs2gp instanceof BlatAssociation ) ) {
@@ -278,14 +306,14 @@ public class CompositeSequenceController extends BaseController {
                 continue;
             }
 
-            if ( results.containsKey( blatResult ) ) {
-                results.get( blatResult ).addGene( geneProduct, gene );
+            if ( results.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
+                results.get( ProbeMapUtils.hashBlatResult( blatResult ) ).addGene( geneProduct, gene );
             } else {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
                 summary.setBlatResult( blatResult );
                 summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
-                results.put( blatResult, summary );
+                results.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }
 
         }
@@ -300,7 +328,7 @@ public class CompositeSequenceController extends BaseController {
             newInstance.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
             newInstance.setId( -1L );
             summary.setBlatResult( newInstance );
-            results.put( newInstance, summary );
+            results.put( ProbeMapUtils.hashBlatResult( newInstance ), summary );
         }
 
         return results.values();

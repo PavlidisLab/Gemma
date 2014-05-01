@@ -527,6 +527,21 @@ public class GeneDaoImpl extends GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.genome.GeneDao#getPlatformCountById(java.lang.Long)
+     */
+    @Override
+    public int getPlatformCountById( Long id ) {
+        final String queryString = "select count(distinct cs.arrayDesign) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
+        List<?> r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        return ( ( Long ) r.iterator().next() ).intValue();
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.GeneDao#loadThawed(java.util.Collection)
      */
     @Override

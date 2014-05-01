@@ -236,7 +236,8 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             vo.setCompositeSequenceId( csId.toString() );
             vo.setCompositeSequenceName( csName );
 
-            vo.setArrayDesignName( arrayDesignShortName );
+            vo.setArrayDesignShortName( arrayDesignShortName );
+            vo.setArrayDesignName( arrayDesignShortName ); // get rid of, just for backwards comp.
 
             // fill in value object
             if ( bioSequenceName != null && vo.getBioSequenceName() == null ) {
