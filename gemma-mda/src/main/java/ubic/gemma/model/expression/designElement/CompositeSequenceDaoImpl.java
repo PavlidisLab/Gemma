@@ -77,7 +77,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     private static final String nativeBaseSummaryQueryString = "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
             + "geneProductRNA.ID as gpId, geneProductRNA.NAME as gpName, geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
             + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc, "
-            + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId "
+            + " ssr.TARGET_CHROMOSOME_FK as chrom, ssr.TARGET_START as tgst, ssr.TARGET_END as tgend, ssr.TARGET_STARTS as tgstarts, ssr.QUERY_SEQUENCE_FK as bsId, ad.NAME as adName "
             + " from "
             + "COMPOSITE_SEQUENCE cs "
             + "left join BIO_SEQUENCE bs on cs.BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
@@ -526,6 +526,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 .addScalar( "bsId" );
 
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
+        queryObject.addScalar( "adName" );  
         queryObject.setMaxResults( MAX_CS_RECORDS );
         return queryObject.list();
     }
@@ -562,6 +563,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
 
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
+       
         queryObject.setMaxResults( limit );
         return queryObject.list();
     }

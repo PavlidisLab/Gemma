@@ -254,7 +254,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             vo.setCompositeSequenceName( csName );
 
             vo.setArrayDesignShortName( arrayDesignShortName );
-            vo.setArrayDesignName( arrayDesignShortName ); // get rid of, just for backwards comp.
+            vo.setArrayDesignName( ( String ) row[21] );
 
             // fill in value object
             if ( bioSequenceName != null && vo.getBioSequenceName() == null ) {

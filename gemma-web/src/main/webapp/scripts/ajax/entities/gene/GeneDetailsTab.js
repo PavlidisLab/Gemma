@@ -345,9 +345,6 @@ Gemma.GeneDetails = Ext
                                                                 + " on "
                                                                 + geneDetails.platformCount
                                                                 + " different platforms&nbsp;"
-                                                                + ' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id='
-                                                                + geneDetails.id
-                                                                + '">'
                                                                 + "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View all the elements for this gene'"
                                                                 + "onClick='Ext.getCmp(&#39;" + this.id
                                                                 + "&#39;).changeTab(&#39;elements&#39;)'>",

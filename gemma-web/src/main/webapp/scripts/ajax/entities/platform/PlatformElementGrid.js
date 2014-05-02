@@ -10,7 +10,7 @@ Gemma.ProbeGrid = Ext
       Ext.grid.GridPanel,
       {
 
-         autoExpandColumn : 'genes',
+         autoExpandColumn : 'platform',
 
          loadMask : {
             msg : "Loading ..."
@@ -49,8 +49,9 @@ Gemma.ProbeGrid = Ext
          },
 
          arraylink : function( data, metadata, record, row, column, store ) {
-            return "<a href='/Gemma/arrays/showArrayDesign.html?id=" + record.get( "arrayDesignId" ) + "'>"
-               + record.get( "arrayDesignName" ) + "</a>";
+            return "<a ext:qtip='" + record.get( "arrayDesignShortName" )
+               + " Click to view platform details' href='/Gemma/arrays/showArrayDesign.html?id="
+               + record.get( "arrayDesignId" ) + "'>" + record.get( "arrayDesignName" ) + "</a>";
          },
 
          // CompositeSequenceMapValueObject
@@ -96,6 +97,9 @@ Gemma.ProbeGrid = Ext
             type : "int"
          }, {
             name : "compositeSequenceName",
+            type : "string"
+         }, {
+            name : "arrayDesignShortName",
             type : "string"
          }, {
             name : "arrayDesignName",
@@ -146,10 +150,10 @@ Gemma.ProbeGrid = Ext
                      columns : [
                                 {
                                    sortable : true,
-                                   id : 'arraydesign',
+                                   id : 'platform',
                                    header : "Platform",
                                    width : 100,
-                                   dataIndex : "arrayDesignName",
+                                   dataIndex : "arrayDesignShortName",
                                    renderer : this.arraylink.createDelegate( this ),
                                    tooltip : "Name of platform (click for details - leaves this page)"
                                 },

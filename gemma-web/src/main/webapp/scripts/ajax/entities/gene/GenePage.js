@@ -49,6 +49,7 @@ Gemma.GenePage = Ext.extend( Ext.TabPanel, {
 
       this.add( new Gemma.GeneElementsPanel( {
          title : 'Elements',
+         itemId : 'elements',
          geneId : geneId
       } ) );
 

@@ -13,6 +13,8 @@ Gemma.SequenceDetailsPanel = Ext
          updateSequenceInfo : function( r ) {
 
             var pan = this.sequenceDetailsGrid;
+            var alignments = this.alignmentsGrid;
+
             this.alignmentsGrid
                .getStore()
                .load(
@@ -74,8 +76,8 @@ Gemma.SequenceDetailsPanel = Ext
                            }
                         } );
 
-                        if ( seq != null ) {
-
+                        if ( seq != null && seq.length != null ) {
+                           // alignments.show();
                            pan.add( {
                               border : false,
                               html : {
@@ -124,6 +126,17 @@ Gemma.SequenceDetailsPanel = Ext
                                     }
                                  } );
                            }
+                        } else {
+                           // alignments.hide();
+                           pan
+                              .add( {
+                                 border : false,
+                                 html : {
+                                    tag : 'span',
+                                    html : "No sequence; missing information or mapping was directly to gene without alignment"
+                                 }
+                              } );
+
                         }
                         pan.doLayout();
 
@@ -146,7 +159,7 @@ Gemma.SequenceDetailsPanel = Ext
                padding : 8,
                items : {
                   border : false,
-                  html : "Sequence details will be shown here"
+                  html : "Select an row to see details"
                },
                id : "sequence-info",
                height : 200,
