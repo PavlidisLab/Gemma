@@ -86,6 +86,8 @@ Gemma.GeneDetails = Ext
             if ( geneDetails.multifunctionalityRank ) {
                text = geneDetails.numGoTerms + " GO Terms; Overall multifunctionality "
                   + geneDetails.multifunctionalityRank.toFixed( 2 );
+               text += "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View the GO term tab'"
+                  + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;goGrid&#39;)'>";
             } else {
                text = "[ Not available ]";
             }
