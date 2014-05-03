@@ -44,8 +44,8 @@
 				<prop key="/dwr/**/*">dwrController</prop>
 				<prop key="/uploadFile.html">fileUploadController</prop>
 				<prop key="/bibRef/*">bibliographicReferenceController</prop>
-				<prop key="/arrayDesign/editArrayDesign.html">arrayDesignFormController</prop>
-				<prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop>
+				<prop key="/arrayDesign/*">arrayDesignFormController</prop>
+				<!-- <prop key="/arrayDesign/associateSequences.html">arrayDesignSequenceAddController</prop> deprecated -->
 				<prop key="/bioMaterial/*">bioMaterialController</prop>
 				<prop key="/compositeSequence/*">compositeSequenceController</prop>
 				<prop key="/experimentalDesign/*">experimentalDesignController</prop>
@@ -317,6 +317,7 @@
 			<dwr:include method="getDiffExAnalysisDetails" />
 			<dwr:include method="loadDetailedExpressionExperiments" />
 			<dwr:include method="loadExpressionExperiments" />
+			<dwr:include method="loadExperimentsForPlatform" />
 			<dwr:include method="loadExpressionExperimentDetails" />
 			<dwr:include method="loadQuantitationTypes" />
 			<dwr:include method="loadStatusSummaries" />
@@ -443,6 +444,7 @@
 			<dwr:include method="getCsSummaries" />
 			<dwr:include method="updateReport" />
 			<dwr:include method="getReportHtml" />
+			<dwr:include method="getDetails" />
 			<dwr:include method="addAlternateName" />
 			<dwr:include method="getArrayDesigns" />
 			<dwr:include method="loadArrayDesignsForShowAll" />
@@ -860,7 +862,12 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject"
 			javascript="ArrayDesignValueObject">
-			<dwr:exclude method="technologyType" />
+			<dwr:exclude method="technologyType" /> <!-- ?? -->
+		</dwr:convert>
+
+
+		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignValueObjectExt"
+			javascript="ArrayDesignValueObjectExt">
 		</dwr:convert>
 
 		<dwr:convert type="bean" class="ubic.gemma.job.progress.SubmittedTaskValueObject" />

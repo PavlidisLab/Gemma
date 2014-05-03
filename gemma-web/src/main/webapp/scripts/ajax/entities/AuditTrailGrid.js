@@ -7,7 +7,6 @@ Ext.namespace( 'Gemma' );
 Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
 
    title : "History",
-   collapsible : true,
    height : 200,
    width : 720,
    loadMask : true,

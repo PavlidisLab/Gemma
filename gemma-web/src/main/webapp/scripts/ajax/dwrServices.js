@@ -55,6 +55,10 @@ ArrayDesignController._path = '/Gemma/dwr';
 ArrayDesignController.remove = function( p0, callback ) {
    dwr.engine._execute( ArrayDesignController._path, 'ArrayDesignController', 'remove', p0, callback );
 };
+ArrayDesignController.getDetails = function( p0, callback ) {
+   googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ArrayDesignController/getDetails" );
+   dwr.engine._execute( ArrayDesignController._path, 'ArrayDesignController', 'getDetails', p0, callback );
+};
 ArrayDesignController.getArrayDesigns = function( p0, p1, p2, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ArrayDesignController/getArrayDesigns" );
    dwr.engine._execute( ArrayDesignController._path, 'ArrayDesignController', 'getArrayDesigns', p0, p1, p2, callback );
@@ -542,6 +546,13 @@ ExpressionExperimentController.loadDetailedExpressionExperiments = function( p0,
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
       'loadDetailedExpressionExperiments', p0, callback );
 };
+
+ExpressionExperimentController.loadExperimentsForPlatform = function( p0, callback ) {
+   googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ExpressionExperimentController/loadExperimentsForPlatform?" + p0 );
+   dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
+      'loadExperimentsForPlatform', p0, callback );
+};
+
 ExpressionExperimentController.loadStatusSummaries = function( p0, p1, p2, p3, p4, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ExpressionExperimentController/loadStatusSummaries" );
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadStatusSummaries',

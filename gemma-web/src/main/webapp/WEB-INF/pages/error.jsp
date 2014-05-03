@@ -3,87 +3,79 @@
 <%@ page language="java" isErrorPage="true"%>
 
 <title><fmt:message key="errorPage.title" /></title>
-<link rel="stylesheet" type="text/css" media="all" href="<c:url value='/styles/${appConfig["theme"]}/theme.css'/>" />
-
-<h1>
-	<fmt:message key="errorPage.heading" />
-</h1>
-
-<%@ include file="/common/messages.jsp"%>
-
 <input type="hidden" id="reloadOnLogin" value="true" />
 
-<c:choose>
-	<c:when test="${not empty param.exception}">
-		<p>${param.exception.message}</p>
+<div style="padding: 20px;">
+	<h2>
+		<fmt:message key="errorPage.heading" />
+	</h2>
 
-		<p>Possible next steps:
-		<ul>
-			<li>Try what you were doing again</li>
-			<li>Log in</li>
-			<li>Go to the <a href='/Gemma/'>home page</a></li>
-			<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-		</ul>
+	<c:choose>
+		<c:when test="${not empty param.exception}">
+			<p>${param.exception.message}</p>
 
-		</p>
+			<p>Possible next steps:
+			<ul>
+				<li>Go back and try what you were doing again</li>
+				<li>Do you need to log in?</li>
+				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
 
-		<security:authorize access="hasRole('GROUP_ADMIN')">
-			<Gemma:exception exception="${exception}" />
-		</security:authorize>
-	</c:when>
-	<c:when test="${not empty requestScope['javax.servlet.error.exception']}">
+			</p>
 
-		<p>${requestScope['javax.servlet.error.exception'].message}</p>
+			<security:authorize access="hasRole('GROUP_ADMIN')">
+				<Gemma:exception exception="${exception}" />
+			</security:authorize>
+		</c:when>
+		<c:when test="${not empty requestScope['javax.servlet.error.exception']}">
 
-		<p>Possible next steps:
-		<ul>
-			<li>- Try what you were doing again</li>
-			<li>- Log in</li>
-			<li>- Go to the <a href='/Gemma/'>home page</a></li>
-			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
-			</li>
-		</ul>
-		</p>
+			<p>${requestScope['javax.servlet.error.exception'].message}</p>
 
-		<security:authorize access="hasRole('GROUP_ADMIN')">
-			<%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
-			<Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />
-		</security:authorize>
-	</c:when>
+			<p>Possible next steps:
+			<ul>
+				<li>Go back and try what you were doing again</li>
+				<li>Do you need to log in?</li>
+				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
+			</p>
 
-	<c:when test="${not empty requestScope['exception']}">
-		<p>${requestScope['exception'].message}</p>
+			<security:authorize access="hasRole('GROUP_ADMIN')">
+				<%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
+				<Gemma:exception exception="${requestScope['javax.servlet.error.exception']}" />
+			</security:authorize>
+		</c:when>
 
-		<p>Possible next steps:
-		<ul>
-			<li>- Try what you were doing again</li>
-			<li>- Log in</li>
-			<li>- Go to the <a href='/Gemma/'>home page</a></li>
-			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
-			</li>
-		</ul>
-		</p>
+		<c:when test="${not empty requestScope['exception']}">
+			<p>${requestScope['exception'].message}</p>
+
+			<p>Possible next steps:
+			<ul>
+				<li>Go back and try what you were doing again</li>
+				<li>Do you need to log in?</li>
+				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
+			</p>
 
 
-		<security:authorize access="hasRole('GROUP_ADMIN')">
-			<Gemma:exception exception="${requestScope['exception']}" />
-		</security:authorize>
-	</c:when>
-	<c:otherwise>
-		<p>
-			<fmt:message key="errorPage.info.missing" />
-		</p>
+			<security:authorize access="hasRole('GROUP_ADMIN')">
+				<Gemma:exception exception="${requestScope['exception']}" />
+			</security:authorize>
+		</c:when>
+		<c:otherwise>
+			<p>
+				<fmt:message key="errorPage.info.missing" />
+			</p>
 
-		<p>Possible next steps:
-		<ul>
-			<li>- Try what you were doing again</li>
-			<li>- Log in</li>
-			<li>- Go to the <a href='/Gemma/'>home page</a></li>
-			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
-			</li>
-		</ul>
-		</p>
-	</c:otherwise>
+			<p>Possible next steps:
+			<ul>
+				<li>Go back and try what you were doing again</li>
+				<li>Do you need to log in?</li>
+				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
+			</p>
 
-</c:choose>
 
+		</c:otherwise>
+
+	</c:choose>
+</div>

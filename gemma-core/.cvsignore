@@ -5,3 +5,4 @@ null
 ontology.index.dir
 ehcache.disk.store.dir
 *.hprof
+$HOME

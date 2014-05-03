@@ -180,7 +180,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
       var nodes = this.cy.elements( "node:selected:visible" );
 
       var geneIds = [];
-      for ( var i = 0; i < nodes.length; i++) {
+      for (var i = 0; i < nodes.length; i++) {
          geneIds.push( nodes[i].data( "geneid" ) );
       }
       return geneIds;
@@ -194,6 +194,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          return;
       }
       this.hideAll();
+      // FIXME use the configured layout, don't assume this.
       this.cy.layout( Gemma.CytoscapejsSettings.arborLayout );
    },
 
@@ -297,7 +298,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
       };
 
       var nodesMatched = this.cy.filter( nodesMatchingFunction );
-      for ( var i = 0; i < nodesMatched.length; i++) {
+      for (var i = 0; i < nodesMatched.length; i++) {
 
          if ( nodesMatched[i] !== null ) {
             matchingCounts.total += 1;
@@ -349,7 +350,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
       var length = allNodes.length;
 
-      for ( var i = 0; i < length; i++) {
+      for (var i = 0; i < length; i++) {
 
          if ( nodesToShow.indexOf( allNodes[i] ) == -1 ) {
             nodeIdsToHide.push( allNodes[i] );

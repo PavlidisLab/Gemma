@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -63,12 +62,13 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -77,12 +77,13 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.tasks.AbstractTask;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
+
+import com.google.common.collect.Lists;
 
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
@@ -147,15 +148,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     private static boolean AJAX = true;
 
+    private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
+
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
     private static final int NUM_PROBES_TO_SHOW = 500;
 
-    private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
-
-    @Autowired
-    private TaskRunningService taskRunningService;
     @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService;
     @Autowired
@@ -170,6 +169,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private CompositeSequenceService compositeSequenceService;
     @Autowired
     private SearchService searchService;
+    @Autowired
+    private TaskRunningService taskRunningService;
     @Autowired
     private TaxonService taxonService;
 
@@ -275,6 +276,11 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         String fileName = fileBaseName + fileType + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX;
 
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
+
+        if ( !f.canRead() ) {
+            throw new RuntimeException( "The file could not be found for " + arrayDesign.getShortName()
+                    + ". Please contact gemma@chibi.ubc.ca for assistance" );
+        }
 
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
 
@@ -447,6 +453,75 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return summaries;
     }
 
+    @Override
+    public ArrayDesignValueObjectExt getDetails( Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ID cannot be null" );
+        }
+
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
+        }
+
+        log.info( "Loading details of " + arrayDesign );
+
+        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+
+        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( id );
+        arrayDesignReportService.fillInValueObjects( Lists.newArrayList( vo ) );
+        arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
+
+        ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
+
+        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
+        Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
+        int numExpressionExperiments = ee.size();
+
+        Collection<String> names = new HashSet<String>();
+        for ( AlternateName an : arrayDesign.getAlternateNames() ) {
+            names.add( an.getName() );
+        }
+        result.setAlternateNames( names );
+
+        Collection<Taxon> t = arrayDesignService.getTaxa( id );
+        for ( Taxon taxon : t ) {
+            taxonService.thaw( taxon );
+        }
+        result.setAdditionalTaxa( t );
+
+        Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
+        for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
+            externalReferences.add( new DatabaseEntryValueObject( en ) );
+        }
+        result.setExternalReferences( externalReferences );
+        result.setDesignElementCount( numCompositeSequences );
+        result.setExpressionExperimentCount( numExpressionExperiments );
+
+        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
+        if ( summary != null ) {
+            result.setNumProbeAlignments( summary.getNumProbeAlignments() );
+            result.setNumProbesToGenes( summary.getNumProbesToGenes() );
+            result.setNumProbeSequences( summary.getNumProbeSequences() );
+        }
+
+        AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
+        if ( troubleEvent != null ) {
+            result.setTroubled( true );
+            result.setTroubleDetails( StringEscapeUtils.escapeHtml4( troubleEvent.toString() ) );
+        }
+        AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
+        if ( validatedEvent != null ) {
+            result.setValidated( true );
+        }
+
+        populateMergeStatus( arrayDesign, result );
+
+        log.info( "Finished loading details of " + arrayDesign );
+        return result;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -457,7 +532,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     public Map<String, String> getReportHtml( EntityDelegator ed ) {
         assert ed.getId() != null;
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
 
         result.put( "id", ed.getId().toString() );
         if ( summary == null )
@@ -571,8 +646,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         String idStr = request.getParameter( "id" );
 
         if ( ( name == null ) && ( idStr == null ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Must provide an platform name or id. Displaying all platforms" );
+            throw new IllegalArgumentException( "Must provide a platform identifier or name" );
 
         }
         ArrayDesign arrayDesign = null;
@@ -586,78 +660,25 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             if ( arrayDesign == null ) {
                 Collection<ArrayDesign> byname = arrayDesignService.findByName( name );
                 if ( byname.isEmpty() ) {
-                    return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                            "message", "Unable to load platform with name: " + name + ". Displaying all platforms" );
-                } else if ( byname.size() > 1 ) {
-                    return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                            "message", "Unable to load single platform with name: " + name
-                                    + ". Displaying all platforms" );
+                    throw new IllegalArgumentException( "Must provide a valid platform identifier or name" );
+
                 }
                 arrayDesign = byname.iterator().next();
             }
         }
 
         if ( arrayDesign == null ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Unable to load platform with id: " + idStr + ". Displaying all platforms" );
+            throw new IllegalArgumentException( "Must provide a valid platform identifier or name" );
         }
-
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         long id = arrayDesign.getId();
 
-        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
-        Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
-        int numExpressionExperiments = ee.size();
-
-        Collection<Taxon> t = arrayDesignService.getTaxa( id );
-
-        Taxon primaryTaxon = arrayDesign.getPrimaryTaxon();
-
-        String taxa = formatTaxa( primaryTaxon, t );
-
-        String colorString = formatTechnologyType( arrayDesign );
-
-        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
-
-        String eeIds = formatExpressionExperimentIds( ee );
-
         ModelAndView mav = new ModelAndView( "arrayDesign.detail" );
 
-        AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
-        if ( troubleEvent != null ) {
-            mav.addObject( "troubleEvent", troubleEvent );
-            mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml4( troubleEvent.toString() ) );
-        }
-        AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
-        if ( validatedEvent != null ) {
-            mav.addObject( "validatedEvent", validatedEvent );
-            mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml4( validatedEvent.toString() ) );
-        }
+        mav.addObject( "arrayDesignId", id );
+        mav.addObject( "arrayDesignShortName", arrayDesign.getShortName() );
+        mav.addObject( "arrayDesignName", arrayDesign.getName() );
 
-        Collection<ArrayDesign> subsumees = arrayDesignService.thawLite( arrayDesign.getSubsumedArrayDesigns() );
-
-        ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
-
-        Collection<ArrayDesign> mergees = arrayDesignService.thawLite( arrayDesign.getMergees() );
-
-        ArrayDesign merger = arrayDesign.getMergedInto();
-
-        getAnnotationFileLinks( arrayDesign, mav );
-
-        mav.addObject( "subsumer", subsumer );
-        mav.addObject( "subsumees", subsumees );
-        mav.addObject( "merger", merger );
-        mav.addObject( "mergees", mergees );
-        mav.addObject( "taxon", taxa );
-        mav.addObject( "arrayDesign", arrayDesign );
-        mav.addObject( "alternateNames", this.formatAlternateNames( arrayDesign ) );
-        mav.addObject( "numCompositeSequences", numCompositeSequences );
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-
-        mav.addObject( "expressionExperimentIds", eeIds );
-        mav.addObject( "technologyType", colorString );
-        mav.addObject( "summary", summary );
         return mav;
     }
 
@@ -752,99 +773,43 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return StringUtils.join( names, "; " );
     }
 
-    private String formatExpressionExperimentIds( Collection<ExpressionExperiment> ee ) {
-        Collection<Long> eeIds = EntityUtils.getIds( ee );
-        String eeIdString = StringUtils.join( eeIds, "," );
-        return eeIdString;
-    }
-
     /**
-     * Method to format taxon list for display.
+     * Recursively populate the status. Recursion only goes 'up' - so the subsumer and merger, not the subsumees and
+     * mergees.
      * 
-     * @param primaryTaxon
-     * @param taxonSet Collection of taxon used to create array/platform
-     * @return Alpabetically sorted semicolon separated list of scientific names of taxa used on array/platform
-     */
-    private String formatTaxa( Taxon primaryTaxon, Collection<Taxon> taxonSet ) {
-
-        taxonService.thaw( primaryTaxon );
-
-        String taxonListString = primaryTaxon.getScientificName();
-        if ( !taxonSet.isEmpty() ) {
-            Collection<String> taxonList = new TreeSet<String>();
-            for ( Taxon taxon : taxonSet ) {
-                if ( taxon.equals( primaryTaxon ) ) continue;
-
-                taxonService.thaw( taxon );
-                taxonList.add( taxon.getScientificName() );
-            }
-
-            if ( taxonList.size() > 0 ) {
-                taxonListString = taxonListString + " (primary; Also contains sequences from: "
-                        + StringUtils.join( taxonList, "; " ) + ")";
-            }
-
-        }
-
-        return taxonListString;
-    }
-
-    /**
      * @param arrayDesign
-     * @return
+     * @param result
      */
-    private String formatTechnologyType( ArrayDesign arrayDesign ) {
-        TechnologyType technologyType = arrayDesign.getTechnologyType();
+    private void populateMergeStatus( ArrayDesign arrayDesign, ArrayDesignValueObjectExt result ) {
+        assert arrayDesign != null;
+        assert result != null;
 
-        String colorString = "Not specified";
-        if ( technologyType == null ) {
-            return colorString;
+        Collection<ArrayDesign> subsumees = arrayDesignService.thawLite( arrayDesign.getSubsumedArrayDesigns() );
+        ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
+        Collection<ArrayDesign> mergees = arrayDesignService.thawLite( arrayDesign.getMergees() );
+        ArrayDesign merger = arrayDesign.getMergedInto();
+
+        if ( subsumees != null && !subsumees.isEmpty() ) {
+            Collection<ArrayDesignValueObject> subsumeesVos = ArrayDesignValueObject.create( subsumees );
+            result.setSubsumees( subsumeesVos );
         }
-
-        if ( technologyType.equals( TechnologyType.ONECOLOR ) ) {
-            colorString = "one-color";
-        } else if ( technologyType.equals( TechnologyType.TWOCOLOR ) ) {
-            colorString = "two-color";
-        } else if ( technologyType.equals( TechnologyType.DUALMODE ) ) {
-            colorString = "dual mode";
-        } else if ( technologyType.equals( TechnologyType.NONE ) ) {
-            colorString = "non-array-based";
+        if ( subsumer != null ) {
+            ArrayDesignValueObjectExt subsumerVo = new ArrayDesignValueObjectExt( new ArrayDesignValueObject( subsumer ) );
+            result.setSubsumer( subsumerVo );
+            subsumer = arrayDesignService.thawLite( subsumer );
+            populateMergeStatus( subsumer, subsumerVo );
         }
-        return colorString;
-    }
-
-    /**
-     * @param arrayDesign
-     * @param mav
-     */
-    private void getAnnotationFileLinks( ArrayDesign arrayDesign, ModelAndView mav ) {
-
-        String mungedShortName = ArrayDesignAnnotationServiceImpl.mungeFileName( arrayDesign.getShortName() );
-        File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        File fap = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        File fbp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
-                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX
-                + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
-
-        // context here is Gemma/arrays
-        if ( fnp.exists() ) {
-            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=noParents" );
+        if ( mergees != null && !mergees.isEmpty() ) {
+            Collection<ArrayDesignValueObject> mergeesVos = ArrayDesignValueObject.create( mergees );
+            result.setMergees( mergeesVos );
         }
-        if ( fap.exists() ) {
-            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=allParents" );
-        }
-        if ( fbp.exists() ) {
-            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
-                    + "&fileType=bioProcess" );
+        if ( merger != null ) {
+            ArrayDesignValueObjectExt mergerVo = new ArrayDesignValueObjectExt( new ArrayDesignValueObject( merger ) );
+            result.setMerger( mergerVo );
+            merger = arrayDesignService.thawLite( merger );
+            populateMergeStatus( merger, mergerVo );
         }
 
     }
+
 }

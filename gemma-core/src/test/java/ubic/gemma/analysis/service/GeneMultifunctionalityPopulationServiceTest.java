@@ -63,8 +63,6 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     private Taxon testTaxon;
 
-    // private String[] goTerms = new String[] { "GO_0001726", "GO_0007049", "GO_0016874", "GO_0005759", "GO_0071681" };
-
     private String[] goTerms = new String[] { "GO_0047500", "GO_0051530", "GO_0051724", "GO_0004118", "GO_0005324" };
 
     @After
@@ -89,6 +87,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         if ( !goService.isRunning() ) {
             goService.shutDown();
         }
+        gene2GoService.removeAll();
 
         goService.loadTermsInNameSpace( new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/ontology/molecular-function.test.owl.gz" ) ) );

@@ -193,54 +193,58 @@ Gemma.GeneDetails = Ext
          renderNodeDegree : function( geneDetails ) {
             if ( geneDetails.nodeDegrees && geneDetails.nodeDegrees.length > 1 ) {
                // Note: we need a panel here so we can pick up the rendering event so jquery can do its work.
-               return new Ext.Panel( {
-                  border : false,
-                  html : '<span id="nodeDegreeSpark">...</span> Max support ' + (geneDetails.nodeDegrees.length - 1),
-                  listeners : {
-                     'afterrender' : function( c ) {
+               return new Ext.Panel(
+                  {
+                     border : false,
+                     html : '<span id="nodeDegreeSpark">...</span> Max support '
+                        + (geneDetails.nodeDegrees.length - 1)
+                        + "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View the coexpression tab'"
+                        + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;coex&#39;)'>",
+                     listeners : {
+                        'afterrender' : function( c ) {
 
-                        /*
-                         * Compute cumulative counts
-                         */
-                        var cumul = new Array();
-                        cumul[geneDetails.nodeDegrees.length - 1] = 0;
-                        for (var j = geneDetails.nodeDegrees.length - 1; j >= 0; j--) {
-                           cumul[j - 1] = geneDetails.nodeDegrees[j] + cumul[j];
-                        }
-                        cumul.pop();
+                           /*
+                            * Compute cumulative counts
+                            */
+                           var cumul = new Array();
+                           cumul[geneDetails.nodeDegrees.length - 1] = 0;
+                           for (var j = geneDetails.nodeDegrees.length - 1; j >= 0; j--) {
+                              cumul[j - 1] = geneDetails.nodeDegrees[j] + cumul[j];
+                           }
+                           cumul.pop();
 
-                        /*
-                         * Build array of arrays for plot
-                         */
-                        var nd = new Array();
-                        var k = 0;
-                        for (var i = 0; i < cumul.length; i++) {
-                           nd.push( [ i + 1, Math.log( cumul[i] + 0.01 ) / Math.log( 10.0 ) ] );
-                           k++;
-                        }
+                           /*
+                            * Build array of arrays for plot
+                            */
+                           var nd = new Array();
+                           var k = 0;
+                           for (var i = 0; i < cumul.length; i++) {
+                              nd.push( [ i + 1, Math.log( cumul[i] + 0.01 ) / Math.log( 10.0 ) ] );
+                              k++;
+                           }
 
-                        jQuery( '#nodeDegreeSpark' ).sparkline(
-                           nd,
-                           {
-                              height : 40,
-                              chartRangeMin : -1,
-                              width : 150,
-                              tooltipFormatter : function( spl, ops, fields ) {
-                                 return "Links at support level " + fields.x + " or higher: "
-                                    + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log10 scaled)";
+                           jQuery( '#nodeDegreeSpark' ).sparkline(
+                              nd,
+                              {
+                                 height : 40,
+                                 chartRangeMin : -1,
+                                 width : 150,
+                                 tooltipFormatter : function( spl, ops, fields ) {
+                                    return "Links at support level " + fields.x + " or higher: "
+                                       + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log10 scaled)";
+                                 }
+                              } );
+
+                           jQuery( "#nodeDegreeHelp" ).qtip( {
+                              content : Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
+                              style : {
+                                 name : 'cream'
                               }
                            } );
 
-                        jQuery( "#nodeDegreeHelp" ).qtip( {
-                           content : Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
-                           style : {
-                              name : 'cream'
-                           }
-                        } );
-
+                        }
                      }
-                  }
-               } );
+                  } );
             } else {
                return "[ Not available ]"; // no help shown - FIXME
             }
@@ -291,6 +295,10 @@ Gemma.GeneDetails = Ext
                                         },
                                         {
                                            layout : 'form',
+                                           labelWidth : 140,
+                                           labelAlign : 'right',
+                                           labelSeparator : ':',
+                                           labelStyle : 'font-weight:bold;',
                                            flex : 1,
                                            defaults : {
                                               border : false
@@ -317,29 +325,29 @@ Gemma.GeneDetails = Ext
                                                     },
                                                     {
                                                        fieldLabel : 'Multifunc.'
-                                                          + '&nbsp;<img id="multifuncHelp" src="/Gemma/images/help.png" />',
+                                                          + '&nbsp;<i id="multifuncHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderMultifunctionality( geneDetails )
                                                     },
                                                     {
                                                        fieldLabel : 'Coexp. deg'
-                                                          + '&nbsp<img id="nodeDegreeHelp" src="/Gemma/images/help.png" />',
+                                                          + '&nbsp<i id="nodeDegreeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderNodeDegree( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'Phenotypes&nbsp; <img id="phenotypeHelp" src="/Gemma/images/help.png" />',
+                                                       fieldLabel : 'Phenotypes&nbsp; <i id="phenotypeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderPhenotypes( geneDetails ),
                                                        hidden : !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
                                                           || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
                                                     },
                                                     {
                                                        fieldLabel : 'Studies'
-                                                          + '&nbsp;<img id="studiesHelp" src="/Gemma/images/help.png" />',
+                                                          + '&nbsp;<i id="studiesHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderAssociatedExperiments( geneDetails.ncbiId,
                                                           geneDetails.associatedExperimentCount )
                                                     },
                                                     {
                                                        fieldLabel : 'Elements'
-                                                          + '&nbsp; <img id="elementsHelp" src="/Gemma/images/help.png" />',
+                                                          + '&nbsp; <i id="elementsHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : new Ext.Panel(
                                                           {
                                                              border : false,

@@ -33,6 +33,8 @@ if ( typeof ArrayDesignController === 'undefined' ) {
 }
 ArrayDesignController.remove = function( p0, callback ) {
 };
+ArrayDesignController.getDetails = function( p0, callback ) {
+};
 ArrayDesignController.getArrayDesigns = function( p0, p1, p2, callback ) {
 };
 ArrayDesignController.loadArrayDesignsForShowAll = function( p0, callback ) {
@@ -276,6 +278,8 @@ ExpressionExperimentController.updatePubMed = function( p0, p1, callback ) {
 ExpressionExperimentController.deleteById = function( p0, callback ) {
 };
 ExpressionExperimentController.getDesignMatrixRows = function( p0, callback ) {
+};
+ExpressionExperimentController.loadExperimentsForPlatform = function( p0, callback ) {
 };
 ExpressionExperimentController.loadExpressionExperimentDetails = function( p0, callback ) {
 };

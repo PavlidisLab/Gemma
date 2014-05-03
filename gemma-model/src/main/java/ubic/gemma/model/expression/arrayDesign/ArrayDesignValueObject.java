@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Value object for quickly displaying varied information about Array Designs.
  * 
@@ -38,9 +41,9 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
 
     private String description;
 
-    private Long designElementCount;
+    private Integer designElementCount;
 
-    private Long expressionExperimentCount;
+    private Integer expressionExperimentCount;
 
     private Boolean hasBlatAssociations;
 
@@ -111,8 +114,22 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
                         .getDateCreated(), otherBean.getDescription(), otherBean.getTechnologyType() );
     }
 
-    public ArrayDesignValueObject( String name, String shortName, Long designElementCount, String taxon,
-            Long expressionExperimentCount, Boolean hasSequenceAssociations, Boolean hasBlatAssociations,
+    /**
+     * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
+     * 
+     * @param ad
+     */
+    public ArrayDesignValueObject( ArrayDesign ad ) {
+
+        this.name = ad.getName();
+        this.shortName = ad.getShortName();
+        this.description = ad.getDescription();
+        this.id = ad.getId();
+
+    }
+
+    public ArrayDesignValueObject( String name, String shortName, Integer designElementCount, String taxon,
+            Integer expressionExperimentCount, Boolean hasSequenceAssociations, Boolean hasBlatAssociations,
             Boolean hasGeneAssociations, Long id, String color, String numProbeSequences, String numProbeAlignments,
             String numProbesToGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
             java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed,
@@ -250,14 +267,14 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
     /**
      * 
      */
-    public Long getDesignElementCount() {
+    public Integer getDesignElementCount() {
         return this.designElementCount;
     }
 
     /**
      * 
      */
-    public Long getExpressionExperimentCount() {
+    public Integer getExpressionExperimentCount() {
         return this.expressionExperimentCount;
     }
 
@@ -486,11 +503,11 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
         this.description = description;
     }
 
-    public void setDesignElementCount( Long designElementCount ) {
+    public void setDesignElementCount( Integer designElementCount ) {
         this.designElementCount = designElementCount;
     }
 
-    public void setExpressionExperimentCount( Long expressionExperimentCount ) {
+    public void setExpressionExperimentCount( Integer expressionExperimentCount ) {
         this.expressionExperimentCount = expressionExperimentCount;
     }
 
@@ -603,5 +620,16 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
         return this.getShortName();
     }
 
+    /**
+     * @param subsumees
+     * @return
+     */
+    public static Collection<ArrayDesignValueObject> create( Collection<ArrayDesign> subsumees ) {
+        Collection<ArrayDesignValueObject> r = new HashSet<>();
+        for ( ArrayDesign ad : subsumees ) {
+            r.add( new ArrayDesignValueObject( ad ) );
+        }
+        return r;
+    }
     // ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject value-object java merge-point
 }

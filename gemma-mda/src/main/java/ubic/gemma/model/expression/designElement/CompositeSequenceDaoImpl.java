@@ -463,7 +463,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             }
 
         }
-        // just a chunk.
+        // just a chunk but get the full set of results.
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar = :ar";
         this.getHibernateTemplate().setMaxResults( numResults );
         List<?> cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
@@ -526,7 +526,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 .addScalar( "bsId" );
 
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
-        queryObject.addScalar( "adName" );  
+        queryObject.addScalar( "adName" );
         queryObject.setMaxResults( MAX_CS_RECORDS );
         return queryObject.list();
     }
@@ -563,7 +563,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
 
         queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
-       
+
         queryObject.setMaxResults( limit );
         return queryObject.list();
     }

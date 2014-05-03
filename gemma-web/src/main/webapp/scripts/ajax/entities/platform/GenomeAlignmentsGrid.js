@@ -36,6 +36,9 @@ Gemma.GenomeAlignmentsGrid = Ext.extend( Ext.grid.GridPanel, {
       name : "geneProductIdGeneMap"
    } ] ),
 
+   /**
+    * @memberOf Gemma.GenomeAlignmentsGrid
+    */
    numberformat : function( d ) {
       return Math.round( d * 100 ) / 100;
    },

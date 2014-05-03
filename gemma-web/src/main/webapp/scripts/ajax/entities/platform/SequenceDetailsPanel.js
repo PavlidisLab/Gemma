@@ -82,7 +82,8 @@ Gemma.SequenceDetailsPanel = Ext
                               border : false,
                               html : {
                                  tag : 'li',
-                                 html : "Length: " + seq.length + ", Type: " + seq.type.value,
+                                 html : "Length: " + seq.length + ", Type: "
+                                    + (seq.type != null ? seq.type.value : "?"),
                                  "ext:qtip" : "Sequence length in bases and Sequence type as classified by Gemma"
                               }
                            } );

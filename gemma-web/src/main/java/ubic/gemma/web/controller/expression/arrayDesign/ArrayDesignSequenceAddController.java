@@ -25,8 +25,10 @@ import org.springframework.stereotype.Controller;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated not used
  */
 // FIXME: dead code?
+@Deprecated
 @Controller
 public class ArrayDesignSequenceAddController {
 

@@ -4,6 +4,19 @@ Gemma.CITATION = "Zoubarev, A., et al., Gemma: A resource for the re-use, sharin
 Gemma.CITATION_DIRECTIONS = "If you use this file for your research, please cite: {0}" + Gemma.CITATION;
 Gemma.PHENOCARTA_CITATION = "If you use this file for your research, please cite PhenoCarta (previously known as Neurocarta): Portales-Casamar, E., et al., Neurocarta: aggregating and sharing disease-gene relations for the neurosciences. BMC Genomics. 2013 Feb 26;14(1):129.";
 
+(function() {
+   Gemma.helpTip = function( selecter, message, theme ) {
+      return function( c ) {
+         jQuery( selecter ).qtip( {
+            content : message,
+            style : {
+               name : theme ? theme : 'cream'
+            }
+         } );
+      };
+   };
+})();
+
 // TT = tooltip
 Gemma.EvidenceCodeInfo = {
    getQtipInfo : function( code, evidenceCodeInfo ) {

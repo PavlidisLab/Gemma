@@ -20,7 +20,9 @@ Gemma.ProbeGrid = Ext
             forceFit : true
          },
 
+         arrayDesignId : null,
          paging : false,
+         loadOnlyOnRender : false,
 
          /**
           * Show first batch of data.
@@ -129,7 +131,7 @@ Gemma.ProbeGrid = Ext
                id : "compositeSequenceId"
             }, this.record );
 
-            this.isArrayDesign = dwr.util.getValue( "arrayDesignId" );
+            this.isArrayDesign = this.arrayDesignId != null;
 
             var proxy;
             if ( this.isArrayDesign ) {
@@ -234,7 +236,7 @@ Gemma.ProbeGrid = Ext
                      text : 'Reset',
                      id : 'reset-button',
                      tooltip : 'Return to full list',
-                     handler : this.reset.createDelegate( this )
+                     handler : this.loadData.createDelegate( this )
 
                   } ]
 
@@ -252,7 +254,13 @@ Gemma.ProbeGrid = Ext
                this.fireEvent( 'select', sm.getSelected() );
             }.createDelegate( this ) );
 
-            this.loadData();
+            if ( !this.loadOnlyOnRender ) {
+               this.loadData();
+            } else {
+               this.on( 'render', function() {
+                  this.loadData();
+               } );
+            }
 
          },
 
@@ -266,7 +274,7 @@ Gemma.ProbeGrid = Ext
             if ( !this.isArrayDesign ) {
                return;
             }
-            var id = Ext.get( "arrayDesignId" ).getValue();
+            var id = this.arrayDesignId;
             var query = Ext.getCmp( 'search-field' ).getValue();
 
             // swap out table proxy, temporarily.

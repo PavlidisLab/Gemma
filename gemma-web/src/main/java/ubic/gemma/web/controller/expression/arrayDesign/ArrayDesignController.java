@@ -213,4 +213,12 @@ public interface ArrayDesignController {
      */
     public abstract String updateReportById( Long id );
 
+    /**
+     * AJAX
+     * 
+     * @param id
+     * @return
+     */
+    public ArrayDesignValueObject getDetails( Long id );
+
 }

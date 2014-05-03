@@ -1781,9 +1781,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 v.setTaxon( list.getString( 9 ) );
 
                 if ( !eeCounts.containsKey( v.getId() ) ) {
-                    v.setExpressionExperimentCount( 0L );
+                    v.setExpressionExperimentCount( 0 );
                 } else {
-                    v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
+                    v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
                 }
 
                 result.add( v );

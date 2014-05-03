@@ -1,4 +1,4 @@
-Ext.namespace('Gemma.LinkRoots');
+Ext.namespace( 'Gemma.LinkRoots' );
 
 Gemma.LinkRoots = {
    expressionExperimentPage : "/Gemma/expressionExperiment/showExpressionExperiment.html?id=",
@@ -8,3 +8,10 @@ Gemma.LinkRoots = {
    genePageNCBI : "/Gemma/gene/showGene.html?ncbiid=",
    phenotypePage : "/Gemma/phenotypes.html?phenotypeUrlId="
 };
+
+(function() {
+   Gemma.arrayDesignLink = function( ad ) {
+      return "<a ext:qtip='" + ad.name + "' href=\"/Gemma/arrays/showArrayDesign.html?id=" + ad.id + "\">"
+         + ad.shortName + "</a>";
+   };
+})();

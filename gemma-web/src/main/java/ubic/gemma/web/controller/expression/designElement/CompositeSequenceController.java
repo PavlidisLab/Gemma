@@ -258,6 +258,7 @@ public class CompositeSequenceController extends BaseController {
             if ( !blatResults.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.setBlatResult( blatResult );
+                summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
                 // no gene...
                 blatResults.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }

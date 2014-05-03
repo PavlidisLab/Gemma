@@ -1071,6 +1071,18 @@ public class ExpressionExperimentController {
     }
 
     /**
+     * AJAX get experiments that used a given platform. Don't retrieve too much detail.
+     * 
+     * @param id of platform
+     * @return
+     */
+    public Collection<ExpressionExperimentValueObject> loadExperimentsForPlatform( Long id ) {
+        return getFilteredExpressionExperimentValueObjects( null,
+                EntityUtils.getIds( arrayDesignService.getExpressionExperiments( arrayDesignService.load( id ) ) ),
+                false, null, true );
+    }
+
+    /**
      * AJAX - for display in tables. Get more details.
      * 
      * @param ids of EEs to load
@@ -1265,7 +1277,7 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Show all experiments (optionally conditioned on either a taxon, or a list of ids)
+     * Show all experiments (optionally conditioned on either a taxon, a list of ids, or a platform)
      * 
      * @param request
      * @param response

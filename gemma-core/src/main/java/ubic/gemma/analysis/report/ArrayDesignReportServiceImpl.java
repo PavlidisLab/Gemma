@@ -305,7 +305,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
         long numGenes = arrayDesignService.numGenes( ad );
 
-        adVo.setDesignElementCount( numProbes );
+        adVo.setDesignElementCount( (int)numProbes );
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );

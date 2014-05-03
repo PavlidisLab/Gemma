@@ -28,7 +28,9 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated not used
  */
+@Deprecated
 public class ArrayDesignSequenceAddCommand extends TaskCommand {
 
     /**
