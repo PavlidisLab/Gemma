@@ -2,7 +2,7 @@
 <head>
 
 	<title>My Expression Experiments</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js'
 		useRandomParam="false" />
 
 </head>

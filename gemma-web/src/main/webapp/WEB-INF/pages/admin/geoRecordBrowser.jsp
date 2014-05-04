@@ -3,7 +3,7 @@
 <head>
 <title>GEO Record browser</title>
 
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/geoBrowse.js' />
 
 <script type="text/javascript">

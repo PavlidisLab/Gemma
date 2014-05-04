@@ -2,7 +2,7 @@
 
 <head>
 	<title>Expression Experiments with QC Issues</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/ajax/entities/experiment/ExpressionExperimentQCGrid.js' />
 </head>
 <body>

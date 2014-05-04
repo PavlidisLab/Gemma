@@ -5,7 +5,7 @@
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
 <title><fmt:message key="experimentalDesign.details" /></title>
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/eeDataFetch.js' />
 <jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>

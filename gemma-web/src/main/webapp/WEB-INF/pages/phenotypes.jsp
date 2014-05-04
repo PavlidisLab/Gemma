@@ -2,7 +2,7 @@
 <head>
     <title><fmt:message key="phenotypes.title" /></title>
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	
 	<script type="text/javascript">
 		Ext.namespace('Gemma');

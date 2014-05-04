@@ -2,7 +2,7 @@
 <%--  version $ID$ --%>
 <head>
 <title>${expressionExperiment.shortName} Details</title>
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' useRandomParam="false" />
 <jwr:script src='/scripts/app/eeDataFetch.js' useRandomParam="false" />
 
 </head>

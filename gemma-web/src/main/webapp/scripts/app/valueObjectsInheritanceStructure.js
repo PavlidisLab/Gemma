@@ -7,41 +7,53 @@
  * 
  */
 
-if (typeof ExpressionExperimentSetValueObject === 'undefined') {
-    var ExpressionExperimentSetValueObject = function(){};
+if ( typeof ExpressionExperimentSetValueObject === 'undefined' ) {
+   var ExpressionExperimentSetValueObject = function() {
+   };
 }
-if (typeof SessionBoundExpressionExperimentSetValueObject === 'undefined') {
-    var SessionBoundExpressionExperimentSetValueObject = function(){};
+if ( typeof SessionBoundExpressionExperimentSetValueObject === 'undefined' ) {
+   var SessionBoundExpressionExperimentSetValueObject = function() {
+   };
 }
-if (typeof FreeTextExpressionExperimentResultsValueObject === 'undefined') {
-    var FreeTextExpressionExperimentResultsValueObject = function(){};
+if ( typeof FreeTextExpressionExperimentResultsValueObject === 'undefined' ) {
+   var FreeTextExpressionExperimentResultsValueObject = function() {
+   };
 }
-if (typeof DatabaseBackedGeneSetValueObject === 'undefined') {
-    var DatabaseBackedGeneSetValueObject = function(){};
+if ( typeof DatabaseBackedGeneSetValueObject === 'undefined' ) {
+   var DatabaseBackedGeneSetValueObject = function() {
+   };
 }
-if (typeof GeneSetValueObject === 'undefined') {
-    var GeneSetValueObject = function(){};
+if ( typeof GeneSetValueObject === 'undefined' ) {
+   var GeneSetValueObject = function() {
+   };
 }
-if (typeof FreeTextGeneResultsValueObject === 'undefined') {
-    var FreeTextGeneResultsValueObject = function(){};
+if ( typeof FreeTextGeneResultsValueObject === 'undefined' ) {
+   var FreeTextGeneResultsValueObject = function() {
+   };
 }
-if (typeof GOGroupValueObject === 'undefined') {
-    var GOGroupValueObject = function(){};
+if ( typeof GOGroupValueObject === 'undefined' ) {
+   var GOGroupValueObject = function() {
+   };
 }
-if (typeof PhenotypeGroupValueObject === 'undefined') {
-    var PhenotypeGroupValueObject = function(){};
+if ( typeof PhenotypeGroupValueObject === 'undefined' ) {
+   var PhenotypeGroupValueObject = function() {
+   };
 }
-if (typeof SessionBoundGeneSetValueObject === 'undefined') {
-    var SessionBoundGeneSetValueObject = function(){};
+if ( typeof SessionBoundGeneSetValueObject === 'undefined' ) {
+   var SessionBoundGeneSetValueObject = function() {
+   };
 }
-if (typeof EvidenceValueObject === 'undefined') {
-    var EvidenceValueObject = function(){};
+if ( typeof EvidenceValueObject === 'undefined' ) {
+   var EvidenceValueObject = function() {
+   };
 }
-if (typeof LiteratureEvidenceValueObject === 'undefined') {
-    var LiteratureEvidenceValueObject = function(){};
+if ( typeof LiteratureEvidenceValueObject === 'undefined' ) {
+   var LiteratureEvidenceValueObject = function() {
+   };
 }
-if (typeof ExperimentalEvidenceValueObject === 'undefined') {
-    var ExperimentalEvidenceValueObject = function(){};
+if ( typeof ExperimentalEvidenceValueObject === 'undefined' ) {
+   var ExperimentalEvidenceValueObject = function() {
+   };
 }
 
 SessionBoundExpressionExperimentSetValueObject.prototype = new ExpressionExperimentSetValueObject();

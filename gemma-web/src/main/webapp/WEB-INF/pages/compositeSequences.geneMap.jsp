@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/probe.grid.js' />
 
 <script type="text/javascript">

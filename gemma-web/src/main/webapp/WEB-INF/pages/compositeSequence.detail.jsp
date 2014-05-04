@@ -4,7 +4,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
 <title><fmt:message key="compositeSequence.title" /> ${ compositeSequence.name}</title>
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/probe.grid.js' />
 
 <script type="text/javascript" type="text/javascript">

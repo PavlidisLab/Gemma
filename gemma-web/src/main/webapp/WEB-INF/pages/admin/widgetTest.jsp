@@ -2,7 +2,7 @@
 
 <head>
 <title>Widget tests</title>
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 <jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
 <link rel="stylesheet" href="/Gemma/styles/font-awesome.css">

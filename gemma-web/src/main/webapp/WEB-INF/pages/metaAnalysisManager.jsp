@@ -2,7 +2,7 @@
 <head>
 <title>Meta-analysis Manager</title>
 
-<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/eeDataFetch.js' />
 </head>
 

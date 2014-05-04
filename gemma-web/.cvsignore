@@ -7,3 +7,5 @@ logs
 null
 ehcache.disk.store.dir
 .idea
+E:
+$HOME

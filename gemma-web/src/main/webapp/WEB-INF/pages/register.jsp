@@ -2,7 +2,7 @@
 
 <head>
 	<title>Registration</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/signup.js' />
 	<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js">
 	

@@ -1,23 +1,23 @@
-function handleFailure(data, e) {
+function handleFailure( data, e ) {
 
-   Ext.DomHelper.overwrite("messages", {
-         tag : 'img',
-         src : '/Gemma/images/icons/warning.png'
-      });
-   Ext.DomHelper.append("messages", {
-         tag : 'span',
-         html : "&nbsp;There was an error:<br/>" + data + " " + (e ? e : "")
-      });
+   Ext.DomHelper.overwrite( "messages", {
+      tag : 'img',
+      src : '/Gemma/images/icons/warning.png'
+   } );
+   Ext.DomHelper.append( "messages", {
+      tag : 'span',
+      html : "&nbsp;There was an error:<br/>" + data + " " + (e ? e : "")
+   } );
 
-   Ext.MessageBox.alert("Error", data + " ");
+   Ext.MessageBox.alert( "Error", data + " " );
 
 }
 
-function handleDoneGeneratingFile(url) {
+function handleDoneGeneratingFile( url ) {
    window.location = url;
 }
 
-function fetchData(filter, eeId, formatType, qtId, eeDId) {
+function fetchData( filter, eeId, formatType, qtId, eeDId ) {
 
    // Get the parameters from the form.
    var commandObj = {
@@ -28,82 +28,82 @@ function fetchData(filter, eeId, formatType, qtId, eeDId) {
       experimentalDesignId : eeDId
    };
 
-   Ext.DomHelper.overwrite("messages", {
-         tag : 'img',
-         src : '/Gemma/images/default/tree/loading.gif'
-      });
-   Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
+   Ext.DomHelper.overwrite( "messages", {
+      tag : 'img',
+      src : '/Gemma/images/default/tree/loading.gif'
+   } );
+   Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
-   ExpressionExperimentDataFetchController.getDataFile(commandObj, {
-         callback : function(taskId) {
-            var task = new Gemma.ObservableSubmittedTask({
-                  'taskId' : taskId
-               });
+   ExpressionExperimentDataFetchController.getDataFile( commandObj, {
+      callback : function( taskId ) {
+         var task = new Gemma.ObservableSubmittedTask( {
+            'taskId' : taskId
+         } );
 
-            task.on('task-completed', function(url) {
-                  handleDoneGeneratingFile(url);
-               });
+         task.on( 'task-completed', function( url ) {
+            handleDoneGeneratingFile( url );
+         } );
 
-            task.showTaskProgressWindow({
-                showLogButton : true
-            });
+         task.showTaskProgressWindow( {
+            showLogButton : true
+         } );
 
-         },
-         errorHandler : handleFailure
-      });
+      },
+      errorHandler : handleFailure
+   } );
 }
 
-function fetchCoExpressionData(eeId) {
+function fetchCoExpressionData( eeId ) {
 
-   Ext.DomHelper.overwrite("messages", {
-         tag : 'img',
-         src : '/Gemma/images/default/tree/loading.gif'
-      });
-   Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
+   Ext.DomHelper.overwrite( "messages", {
+      tag : 'img',
+      src : '/Gemma/images/default/tree/loading.gif'
+   } );
+   Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
-   ExpressionExperimentDataFetchController.getCoExpressionDataFile(eeId, {
-         callback : function(taskId) {
-            var task = new Gemma.ObservableSubmittedTask({
-                  'taskId' : taskId
-               });
+   ExpressionExperimentDataFetchController.getCoExpressionDataFile( eeId, {
+      callback : function( taskId ) {
+         var task = new Gemma.ObservableSubmittedTask( {
+            'taskId' : taskId
+         } );
 
-            task.on('task-completed', function(url) {
-                  handleDoneGeneratingFile(url);
-               });
+         task.on( 'task-completed', function( url ) {
+            handleDoneGeneratingFile( url );
+         } );
 
-            task.showTaskProgressWindow({
-                showLogButton : true
-            });
+         task.showTaskProgressWindow( {
+            showLogButton : true
+         } );
 
-         },
-         errorHandler : handleFailure
-      });
+      },
+      errorHandler : handleFailure
+   } );
 }
 
-function fetchDiffExpressionData(analysisId) {
+function fetchDiffExpressionData( analysisId ) {
 
-   Ext.DomHelper.overwrite("messages", {
-         tag : 'img',
-         src : '/Gemma/images/default/tree/loading.gif'
-      });
-   Ext.DomHelper.append("messages", "&nbsp;Fetching ...");
+   Ext.DomHelper.overwrite( "messages", {
+      tag : 'img',
+      src : '/Gemma/images/default/tree/loading.gif'
+   } );
+   Ext.DomHelper.append( "messages", "&nbsp;Fetching ..." );
 
-   ExpressionExperimentDataFetchController.getDiffExpressionDataFile(analysisId, {
-         callback : function(taskId) {
-            var task = new Gemma.ObservableSubmittedTask({
-                  'taskId' : taskId
-               });
+   ExpressionExperimentDataFetchController.getDiffExpressionDataFile( analysisId, {
+      callback : function( taskId ) {
+         var task = new Gemma.ObservableSubmittedTask( {
+            'taskId' : taskId
+         } );
 
-            task.on('task-completed', function(url) {
-                  handleDoneGeneratingFile(url);
-               });
+         task.on( 'task-completed', function( url ) {
+            handleDoneGeneratingFile( url );
+         } );
 
-            task.showTaskProgressWindow({
-                showLogButton : true
-            });
+         task.showTaskProgressWindow( {
+            showLogButton : true
+         } );
 
-         },
-         errorHandler : handleFailure
-      });
+      },
+      errorHandler : handleFailure
+   } );
 
 }

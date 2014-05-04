@@ -3,7 +3,7 @@
 	<jwr:script src="/scripts/json.js" />
 
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 
 	<script type="text/javascript">
 	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';

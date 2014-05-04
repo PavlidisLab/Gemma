@@ -3,7 +3,7 @@
 
 <head>
 	<title>Manage Gene Groups</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/GeneGroupManager.js'
 		useRandomParam='false' />
 </head>

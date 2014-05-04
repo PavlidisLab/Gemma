@@ -2,7 +2,7 @@
 
 <head>
 	<title>Task tests</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<script type="text/javascript">
 	Ext.onReady( function() {
 		var f = new Ext.form.FormPanel( {

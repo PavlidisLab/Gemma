@@ -6,7 +6,7 @@ version: $Id$
 
 <head>
 	<title>Users</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/userManager.js' useRandomParam='false' />
 </head>
 

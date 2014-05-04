@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
 	<title>${geneSetName} Details</title>
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' useRandomParam="false" />
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' useRandomParam="false" />
 </head>
 		 
 	<script>
