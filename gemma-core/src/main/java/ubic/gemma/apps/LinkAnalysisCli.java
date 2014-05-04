@@ -369,9 +369,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
      */
     private void loadTaxon() {
         this.taxon = taxonService.findByCommonName( analysisTaxon );
-        if ( this.taxon == null || !this.taxon.getIsSpecies() ) {
-            throw new IllegalArgumentException( "No such taxon held in system please check that it is a species: "
-                    + taxon );
+        if ( this.taxon == null || !this.taxon.getIsGenesUsable() ) {
+            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + taxon );
         }
         log.debug( taxon + "is used" );
     }
