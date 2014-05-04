@@ -1,7 +1,7 @@
 /**
  * To check for functions left out of this file, we have to compare to dwrServices.js.
  * <p>
- * grep "= function" ./main/webapp/scripts/ajax/dwrServices.js | perl -ne 'chomp; print "$_\n"; print `grep -L \"$_\"
+ * grep "= function" ./main/webapp/scripts/api/dwrServices.js | perl -ne 'chomp; print "$_\n"; print `grep -L \"$_\"
  * ./test/javascript/dwrServicesMock.js`' | grep -B 1 dwr
  */
 

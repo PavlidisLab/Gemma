@@ -41,6 +41,7 @@ Gemma.CoexVOUtil = {
     * @param currentQueryGeneIds
     * @param filterStringency
     * @returns {array} the graphNodeIds to retain (at least some of which will be query genes)
+    * @memberOf Gemma.CoexVOUtil
     */
    trimResultsForQueryGenes : function( results, currentQueryGeneIds, filterStringency ) {
 
@@ -72,6 +73,7 @@ Gemma.CoexVOUtil = {
     * @param {}
     *           item
     * @returns {Boolean} true if the array contains the item; false otherwise.
+    * @memberOf Gemma.CoexVOUtil
     */
    arContains : function( array, item ) {
       return array.indexOf( item ) !== -1;
@@ -97,6 +99,7 @@ Gemma.CoexVOUtil = {
     * @param {integer}
     *           resultsSizeLimit maximum number of results
     * @returns {Object} with geneResults and trimStringency values.
+    * @memberOf Gemma.CoexVOUtil
     */
    trimResultsForReducedGraph : function( results, currentQueryGeneIds, currentStringency, stringencyTrimLimit,
       resultsSizeLimit ) {
@@ -192,6 +195,7 @@ Gemma.CoexVOUtil = {
     * @param results
     * @param filterStringency
     * @returns {Array}
+    * @memberOf Gemma.CoexVOUtil
     */
    trimResults : function( results, filterStringency ) {
       var trimmedGeneResults = [];
@@ -211,6 +215,7 @@ Gemma.CoexVOUtil = {
     * @param {Array}
     *           entities, must have an 'id' field. Assumed to be unique!
     * @returns {Array} ids of the entities
+    * @memberOf Gemma.CoexVOUtil
     */
    getEntityIds : function( entities ) {
       var result = [];
@@ -228,6 +233,7 @@ Gemma.CoexVOUtil = {
     * @param geneIds
     * @param results
     * @returns {Array}
+    * @memberOf Gemma.CoexVOUtil
     */
    filterGeneResultsByGeneIds : function( geneIds, results ) {
 
@@ -250,6 +256,7 @@ Gemma.CoexVOUtil = {
     * @param geneIds
     * @param results
     * @returns {Array}
+    * @memberOf Gemma.CoexVOUtil
     */
    filterGeneResultsByGeneIdsMyGenesOnly : function( geneIds, results ) {
 
