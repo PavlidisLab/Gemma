@@ -272,6 +272,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                 continue;
             }
 
+            //
+
             GeneCoexpressionNodeDegreeValueObject queryGeneNodeDegree = nodeDegrees.get( coex.getQueryGene().getId() );
             GeneCoexpressionNodeDegreeValueObject foundGeneNodeDegree = nodeDegrees.get( coex.getFoundGene().getId() );
 

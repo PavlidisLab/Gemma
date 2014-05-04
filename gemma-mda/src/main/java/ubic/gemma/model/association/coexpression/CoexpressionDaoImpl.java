@@ -397,7 +397,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         if ( numRemovedFromCache > 0 ) log.info( numRemovedFromCache + " results evicted from cache" );
 
         // flush happens on commit...
-
+        log.info( "Done,  flushing changes ..." );
     }
 
     /*

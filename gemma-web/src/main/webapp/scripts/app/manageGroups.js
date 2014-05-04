@@ -44,7 +44,6 @@ Ext
       } );
 
       var selectAllChecks = function( selectAll ) {
-
          var recs = Ext.getCmp( "group-data-grid" ).getStore().getRange();
          Ext.each( recs, function( rec ) {
             if ( rec.get( 'allowModification' ) ) {
@@ -508,8 +507,7 @@ Ext
                          * selectAllChecks(this.selectAll);
                          * 
                          * //(this.selectAll)? this.setText("Select None") : this.setText("Select All"); this.selectAll =
-                         * !this.selectAll;
-                         *  } }
+                         * !this.selectAll; } }
                          */]
                   },
                   items : [ new Ext.grid.EditorGridPanel(

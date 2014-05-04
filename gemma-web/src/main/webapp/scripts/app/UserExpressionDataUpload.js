@@ -250,8 +250,6 @@ Ext
    .onReady( function() {
       Ext.QuickTips.init();
 
-      var q = Ext.QuickTips;
-
       Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
 
       tool = new Gemma.DatasetUploadTool();

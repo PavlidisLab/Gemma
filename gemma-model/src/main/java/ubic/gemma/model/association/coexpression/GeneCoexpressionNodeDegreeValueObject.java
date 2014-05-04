@@ -24,6 +24,8 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ubic.basecode.io.ByteArrayConverter;
 import cern.colt.list.IntArrayList;
@@ -43,6 +45,8 @@ public class GeneCoexpressionNodeDegreeValueObject {
     private TreeMap<Integer, Integer> nodeDegrees = new TreeMap<>();
 
     private TreeMap<Integer, Double> relDegrees = new TreeMap<>();
+
+    private static Logger log = LoggerFactory.getLogger( GeneCoexpressionNodeDegreeValueObject.class );
 
     public GeneCoexpressionNodeDegreeValueObject( GeneCoexpressionNodeDegree entity ) {
         this.geneId = entity.getGeneId();
@@ -117,6 +121,13 @@ public class GeneCoexpressionNodeDegreeValueObject {
         for ( int i = support; i <= getMaxSupport(); i++ ) {
             sum += nodeDegrees.containsKey( i ) ? nodeDegrees.get( i ) : 0;
         }
+
+        if ( sum == 0 ) {
+            // this can happen if the node degree is not yet populated, but yet know it has to be at least one
+            log.warn( "Node degree information invalid for gene=" + geneId );
+            return 1;
+        }
+
         return sum;
     }
 
@@ -125,6 +136,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
      * @return
      */
     public Double getRankAtMinimumSupport( Integer support ) {
+        // this can be invalid if node degree isn't updated for this gene.F
         return relDegrees.get( support );
     }
 

@@ -84,19 +84,18 @@
 						<include>lib/faces/**/.js</include>
 						<include>lib/rsvp.js</include>
 						<include>lib/*.js</include>
-						<include>ajax/ext/**/*.js</include>
-						<include>ajax/util/userHelpMessages.js</include>
-						<include>ajax/util/TutorialQtips.js</include>
-						<include>ajax/util/*.js</include>
-						<include>ajax/visualization/cytoscape/CytoscapeSettings.js</include>
-						<include>ajax/visualization/cytoscape/CytoscapeDisplay.js</include>
-						<include>ajax/visualization/cytoscape/*.js</include>
-						<include>ajax/**/*.js</include>
-						<include>ajax/*.js</include>
+						<include>api/ext/**/*.js</include>
+						<include>api/util/userHelpMessages.js</include>
+						<include>api/util/TutorialQtips.js</include>
+						<include>api/util/*.js</include>
+						<include>api/visualization/cytoscape/CytoscapeSettings.js</include>
+						<include>api/visualization/cytoscape/CytoscapeDisplay.js</include>
+						<include>api/visualization/cytoscape/*.js</include>
+						<include>api/**/*.js</include>
+						<include>api/*.js</include>
 						<include>app/*.js</include>
 					</sourceIncludes>
 					<sourceExcludes>
-						<exclude>cytoscape</exclude>
 						<exclude>ajax/dwrServices.js</exclude>
 						<exclude>app/AnalysisResultsSearchNonWidget.js</exclude>
 						<exclude>app/CharacteristicBrowser.js</exclude>

@@ -53,75 +53,32 @@ Gemma.PlatformDetails = Ext
          renderMerged : function( pd ) {
             var text = '';
 
-            // FIXME this sucks.
+            if ( pd.merger != null ) {
+               text = text + "Merged into: " + Gemma.arrayDesignLink( pd.merger );
+               text = text + "<br />";
+            }
+
             if ( pd.mergees != null && pd.mergees.length > 0 ) {
+               text = text + "Merges: ";
                for (var i = 0; i < pd.mergees.length; i++) {
                   var s = pd.mergees[i];
-                  text = text + "Merges " + Gemma.arrayDesignLink( s );
-                  var m = s.mergees;
-                  if ( m != null && m.length > 0 ) {
-                     text = text + " &#187; (Merges ";
-                     for (var j = 0; j < m.length; j++) {
-                        text = text + Gemma.arrayDesignLink( m[j] );
-                        // Could keep recursing, but this is rare.
-                     }
-                     text = text + ")";
-
-                  }
-                  m = s.subsumees;
-                  if ( m != null && m.length > 0 ) {
-                     text = text + " &#187; (Subsumes ";
-                     for (var j = 0; j < m.length; j++) {
-                        text = text + Gemma.arrayDesignLink( m[j] );
-                        // Could keep recursing, but this is rare.
-                     }
-                     text = text + ")";
-
-                  }
-                  text = text + "<br />";
-               }
-            } else if ( pd.merger != null ) {
-               text = "Merged into " + Gemma.arrayDesignLink( pd.merger );
-               var s = pd.merger;
-               var m = s.mergees;
-               if ( m != null && m.length > 0 ) {
-                  text = text + " &#187; (Merges ";
-                  for (var j = 0; j < m.length; j++) {
-                     text = text + Gemma.arrayDesignLink( m[j] ) + "&nbsp;";
-                     // Could keep recursing, but this is rare.
-                  }
-                  text = text + ")";
-               }
-               m = s.subsumees;
-               if ( m != null && m.length > 0 ) {
-                  text = text + " &#187; (Subsumes ";
-                  for (var j = 0; j < m.length; j++) {
-                     text = text + Gemma.arrayDesignLink( m[j] );
-                     // Could keep recursing, but this is rare.
-                  }
-                  text = text + ")";
-
+                  text = text + Gemma.arrayDesignLink( s ) + "&nbsp;";
                }
                text = text + "<br />";
-            } else if ( pd.subsumer != null ) {
-               var s = pd.subsumer;
-               text = "Subsumed by " + Gemma.arrayDesignLink( s );
-            } else if ( pd.subsumees != null && pd.subsumees.size() > 0 ) {
+            }
+
+            if ( pd.subsumer != null ) {
+               text = text + "Subsumed by: " + Gemma.arrayDesignLink( pd.subsumer );
+               text = text + "<br />";
+            }
+
+            if ( pd.subsumees != null && pd.subsumees.size() > 0 ) {
+               text = text + "Subsumes: ";
                for (var i = 0; i < pd.subsumees.length; i++) {
                   var s = pd.subsumees[i];
-                  text = text + "Subsumes " + Gemma.arrayDesignLink( subsumee );
-                  m = s.subsumees;
-                  if ( m != null && m.length > 0 ) {
-                     text = text + " &#187; Subsumes ";
-                     for (var j = 0; j < m.length; j++) {
-                        text = text + Gemma.arrayDesignLink( m[j] );
-                        // Could keep recursing, but this is rare.
-                     }
-                  }
-                  text = text + "<br />";
+                  text = text + Gemma.arrayDesignLink( s ) + "&nbsp;";
                }
-            } else {
-               text = "None";
+               text = text + "<br />";
             }
 
             return new Ext.Panel( {
@@ -129,7 +86,12 @@ Gemma.PlatformDetails = Ext
                html : text,
                listeners : {
                   'afterrender' : Gemma.helpTip( "#mergedHelp",
-                     "Relationship this platform has with others, such as merging." )
+                     "Relationship this platform has with others, such as merging. "
+                        + "Platforms are merged in part to accomodate experiments in"
+                        + " which different related platforms are used for different samples. "
+                        + "Subsumption means that all the sequences contained on a platform "
+                        + "are represented on another "
+                        + "(but is only computed for selected platforms as a precursor to merging)" )
                }
             } );
          },
