@@ -62,6 +62,25 @@ public class LinkAnalysisConfig implements Serializable {
 
     // only used for internal cache during calculations.
     private double correlationCacheThreshold = 0.8;
+    
+    private boolean checkForBatchEffect = true;
+    private boolean checkForOutliers = true;
+
+    public boolean isCheckForBatchEffect() {
+        return checkForBatchEffect;
+    }
+
+    public void setCheckForBatchEffect( boolean rejectForBatchEffect ) {
+        this.checkForBatchEffect = rejectForBatchEffect;
+    }
+
+    public boolean isCheckForOutliers() {
+        return checkForOutliers;
+    }
+
+    public void setCheckForOutliers( boolean rejectForOutliers ) {
+        this.checkForOutliers = rejectForOutliers;
+    }
 
     // family-wise error rate threshold we use to select links
     private double fwe = 0.01;

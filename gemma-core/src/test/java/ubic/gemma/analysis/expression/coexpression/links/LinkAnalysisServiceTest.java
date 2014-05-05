@@ -160,6 +160,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
         linkAnalysisConfig.setProbeDegreeThreshold( 25 );
         linkAnalysisConfig.setCheckCorrelationDistribution( false );
+        linkAnalysisConfig.setCheckForBatchEffect( false );
         filterConfig.setIgnoreMinimumSampleThreshold( true );
 
         // first time.

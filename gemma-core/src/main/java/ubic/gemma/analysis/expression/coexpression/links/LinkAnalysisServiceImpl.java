@@ -244,7 +244,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             filterConfig.setLowDistinctValueCut( FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION );
         }
 
-        qcCheck( ee ); // could have a 'force' option.
+        qcCheck( linkAnalysisConfig, ee );
 
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
                 dataVectors );
@@ -504,34 +504,40 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
      * @param ee
      * @throws UnsuitableForAnalysisException
      */
-    private void qcCheck( ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
+    private void qcCheck( LinkAnalysisConfig config, ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
 
-        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
-        if ( !outliers.isEmpty() ) {
-            throw new UnsuitableForAnalysisException( ee, "Potential outlier samples detected" );
+        if ( config.isCheckForOutliers() ) {
+            Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
+            if ( !outliers.isEmpty() ) {
+                throw new UnsuitableForAnalysisException( ee, "Potential outlier samples detected" );
+            }
         }
 
-        BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
+        if ( config.isCheckForBatchEffect() ) {
+            BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
 
-        if ( batchEffect == null ) {
-            throw new UnsuitableForAnalysisException( ee,
-                    "No batch information available, out of an abundance of caution we are skipping" );
-        }
-
-        // FIXME might want to adjust this stringency.
-        if ( batchEffect != null && batchEffect.getPvalue() < 0.001 ) {
-
-            double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
-            Integer component = batchEffect.getComponent();
-            // don't worry if it is a "minor" component. remember that is must be one of the first few to make it this
-            // far.
-            if ( component > 2 && componentVarianceProportion < 0.1 ) {
-                // FIXME might want to adjust this stringency
-                return;
+            if ( batchEffect == null ) {
+                // we may change this behaviour...
+                throw new UnsuitableForAnalysisException( ee,
+                        "No batch information available, out of an abundance of caution we are skipping" );
             }
 
-            throw new UnsuitableForAnalysisException( ee, String.format( "Strong batch effect detected (%s)",
-                    batchEffect ) );
+            // FIXME might want to adjust this stringency.
+            if ( batchEffect != null && batchEffect.getPvalue() < 0.001 ) {
+
+                double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
+                Integer component = batchEffect.getComponent();
+                // don't worry if it is a "minor" component. remember that is must be one of the first few to make it
+                // this
+                // far.
+                if ( component > 2 && componentVarianceProportion < 0.1 ) {
+                    // FIXME might want to adjust this stringency
+                    return;
+                }
+
+                throw new UnsuitableForAnalysisException( ee, String.format( "Strong batch effect detected (%s)",
+                        batchEffect ) );
+            }
         }
     }
 
