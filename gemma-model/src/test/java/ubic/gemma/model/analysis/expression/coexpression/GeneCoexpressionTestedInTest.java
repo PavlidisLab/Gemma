@@ -16,6 +16,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import static org.junit.Assert.*;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Random;
 
 import org.junit.Test;
@@ -39,6 +41,36 @@ public class GeneCoexpressionTestedInTest {
         f.removeEntity( 1094L );
         assertTrue( !f.isIncluded( 1094L ) );
         assertEquals( 0, f.getNumIds() );
+    }
+
+    @Test
+    public void testBulkAdd() {
+        IdArray f = new GeneCoexpressionTestedIn( 1L );
+
+        Collection<Long> toAdd = new HashSet<>();
+        toAdd.add( 5L );
+        toAdd.add( 15L );
+        toAdd.add( 2L );
+        toAdd.add( 235L );
+        toAdd.add( 775L );
+        toAdd.add( 54L );
+        toAdd.add( 3L );
+        toAdd.add( 23L );
+        toAdd.add( 98L );
+
+        f.addEntities( toAdd );
+        f.addEntity( 98L );
+        f.addEntity( 1000L );
+        assertTrue( f.isIncluded( 98L ) );
+        assertTrue( f.isIncluded( 1000L ) );
+        assertTrue( f.isIncluded( 5L ) );
+        assertTrue( f.isIncluded( 15L ) );
+        assertTrue( f.isIncluded( 2L ) );
+        assertTrue( f.isIncluded( 235L ) );
+        assertTrue( f.isIncluded( 775L ) );
+        assertTrue( f.isIncluded( 54L ) );
+        assertTrue( f.isIncluded( 3L ) );
+        assertTrue( f.isIncluded( 23L ) );
 
     }
 

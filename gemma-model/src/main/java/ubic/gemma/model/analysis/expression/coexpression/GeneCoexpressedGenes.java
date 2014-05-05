@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 /**
  * Important: this is slightly misnamed, since it potentially includes links that have support of zero. <strong>It
  * cannot be used to get coexpression information for genes</strong>. It is only used to speed up analysis of data sets,
@@ -37,6 +39,11 @@ public class GeneCoexpressedGenes extends IdArray {
 
     public GeneCoexpressedGenes( Long geneId ) {
         this.geneId = geneId;
+    }
+
+    @Override
+    public synchronized void addEntities( Collection<Long> ds ) {
+        super.addEntities( ds );
     }
 
     @Override

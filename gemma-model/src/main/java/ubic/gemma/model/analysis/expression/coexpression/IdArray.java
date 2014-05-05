@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.io.ByteArrayDataOutput;
@@ -57,6 +58,24 @@ public abstract class IdArray implements Serializable {
 
     // keep visible to subclasses.
     EWAHCompressedBitmap data = new EWAHCompressedBitmap();
+
+    /**
+     * @param ids
+     */
+    public synchronized void addEntities( Collection<Long> ids ) {
+        List<Long> idl = new ArrayList<>( ids );
+        Collections.sort( idl );
+
+        EWAHCompressedBitmap b = new EWAHCompressedBitmap();
+
+        for ( Long id : idl ) {
+            if ( id.intValue() > Integer.MAX_VALUE ) {
+                throw new IllegalArgumentException( "Cannot store values larger than " + Integer.MAX_VALUE );
+            }
+            b.set( id.intValue() );
+        }
+        data = data.or( b );
+    }
 
     /**
      * Add the data set to the list of those which are in the array. If it is already included, nothing will change.

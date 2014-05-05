@@ -2443,6 +2443,21 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Map<Long, Set<Long>> coexpressions = CoexpressionQueryUtils.linksToMap( links );
         Session sess = this.getSessionFactory().getCurrentSession();
         int i = 0;
+
+        // FIXME optimize: get gcti in batches. a bit complicated to check for values that are missing... later.
+        // BatchIterator<Long> ids = BatchIterator.batches( coexpressions.keySet(), 500 );
+        //
+        // for ( ; ids.hasNext(); ) {
+        // Collection<Long> batch = ids.next();
+        //
+        // Collection<GeneCoexpressedGenes> gctis = sess
+        // .createQuery( "from GeneCoexpressedGenes where geneId in (:ids)" ).setParameter( "ids", batch )
+        // .list();
+        // for ( GeneCoexpressedGenes gcti : gctis ) {
+        // gcti.getGeneId();
+        // }
+        // }
+
         for ( Long g : coexpressions.keySet() ) {
             GeneCoexpressedGenes gcti = ( GeneCoexpressedGenes ) sess
                     .createQuery( "from GeneCoexpressedGenes where geneId = :id" ).setParameter( "id", g )
@@ -2453,20 +2468,21 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 sess.save( gcti );
             }
 
-            for ( Long cog : coexpressions.get( g ) ) {
-                gcti.addEntity( cog );
-            }
+            // for ( Long cog : coexpressions.get( g ) ) {
+            // gcti.addEntity( cog );
+            // }
+            gcti.addEntities( coexpressions.get( g ) );
 
             assert gcti.getIds().size() > 0;
             assert gcti.getIds().contains( coexpressions.get( g ).iterator().next() );
 
-            if ( i++ % 1000 == 0 ) {
+            if ( ++i % 1000 == 0 ) {
                 log.info( "Updated gene-coexpressed-with information for " + i + " genes, last was geneid=" + g );
                 sess.flush();
                 sess.clear();
             }
         }
-        log.info( "Updated gene-coexpressed-with information for " + coexpressions.keySet().size() + " genes." );
+        log.info( "Updated gene-coexpressed-with information for " + coexpressions.size() + " genes." );
     }
 
 }
