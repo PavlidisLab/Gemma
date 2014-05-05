@@ -222,6 +222,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "choosecut" );
         addOption( chooseCutOption );
 
+        // finer-grained control is possible, of course.
+        Option skipQC = OptionBuilder.withDescription(
+                "Skip strict QC for outliers, batch effects and correlation distribution" ).create( "noqc" );
+        addOption( skipQC );
+
         // Option probeDegreeThresholdOption = OptionBuilder
         // .hasArg()
         // .withArgName( "threshold" )
@@ -439,6 +444,12 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
         if ( hasOption( 'w' ) ) {
             this.linkAnalysisConfig.setFwe( Double.parseDouble( getOptionValue( 'w' ) ) );
+        }
+
+        if ( hasOption( "noqc" ) ) {
+            this.linkAnalysisConfig.setCheckCorrelationDistribution( false );
+            this.linkAnalysisConfig.setCheckForBatchEffect( false );
+            this.linkAnalysisConfig.setCheckForOutliers( false );
         }
 
         getFilterConfigOptions();
