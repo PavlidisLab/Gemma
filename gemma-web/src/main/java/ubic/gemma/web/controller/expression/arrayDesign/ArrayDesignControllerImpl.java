@@ -459,7 +459,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new IllegalArgumentException( "ID cannot be null" );
         }
 
-        ArrayDesign arrayDesign = arrayDesignService.load( id );
+        ArrayDesign arrayDesign = arrayDesignService.load( id ); // this shouldn't really be necessary
 
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
@@ -476,10 +476,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
 
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
-        Collection<ExpressionExperiment> ee = arrayDesignService.getExpressionExperiments( arrayDesign );
-        int numExpressionExperiments = ee.size();
 
-        Collection<String> names = new HashSet<String>();
+        int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
+
+        Collection<String> names = new HashSet<>();
         for ( AlternateName an : arrayDesign.getAlternateNames() ) {
             names.add( an.getName() );
         }
@@ -516,7 +516,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             result.setValidated( true );
         }
 
-        populateMergeStatus( arrayDesign, result );
+        populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
         log.info( "Finished loading details of " + arrayDesign );
         return result;
@@ -796,8 +796,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( subsumer != null ) {
             ArrayDesignValueObjectExt subsumerVo = new ArrayDesignValueObjectExt( new ArrayDesignValueObject( subsumer ) );
             result.setSubsumer( subsumerVo );
-            subsumer = arrayDesignService.thawLite( subsumer );
-            populateMergeStatus( subsumer, subsumerVo );
+            // subsumer = arrayDesignService.thawLite( subsumer );
+            // populateMergeStatus( subsumer, subsumerVo );
         }
         if ( mergees != null && !mergees.isEmpty() ) {
             Collection<ArrayDesignValueObject> mergeesVos = ArrayDesignValueObject.create( mergees );
@@ -806,8 +806,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( merger != null ) {
             ArrayDesignValueObjectExt mergerVo = new ArrayDesignValueObjectExt( new ArrayDesignValueObject( merger ) );
             result.setMerger( mergerVo );
-            merger = arrayDesignService.thawLite( merger );
-            populateMergeStatus( merger, mergerVo );
+            // merger = arrayDesignService.thawLite( merger );
+            // populateMergeStatus( merger, mergerVo );
         }
 
     }

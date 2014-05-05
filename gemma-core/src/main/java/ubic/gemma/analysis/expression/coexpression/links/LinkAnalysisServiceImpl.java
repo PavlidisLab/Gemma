@@ -523,7 +523,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             }
 
             // FIXME might want to adjust this stringency.
-            if ( batchEffect != null && batchEffect.getPvalue() < 0.001 ) {
+            if ( batchEffect.getPvalue() < 0.001 ) {
 
                 double componentVarianceProportion = batchEffect.getComponentVarianceProportion();
                 Integer component = batchEffect.getComponent();

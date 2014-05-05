@@ -38,6 +38,8 @@ import ubic.gemma.persistence.BaseDao;
 @Repository
 public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
+
     /**
      * returns all compositeSequences for the given arrayDesign that do not have bioSequence associations.
      */
@@ -79,6 +81,12 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public Collection<ArrayDesign> findByAlternateName( String queryString );
 
     /**
+     * @param searchString
+     * @return
+     */
+    public Collection<ArrayDesign> findByManufacturer( String searchString );
+
+    /**
      * 
      */
     public Collection<ArrayDesign> findByName( String name );
@@ -87,6 +95,12 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * 
      */
     public ArrayDesign findByShortName( String shortName );
+
+    /**
+     * @param taxon
+     * @return
+     */
+    public Collection<ArrayDesign> findByTaxon( Taxon taxon );
 
     /**
      * 
@@ -103,10 +117,18 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      */
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
+
     /**
      * 
      */
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
+
+    /**
+     * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
+     *         excluded.
+     */
+    public Map<Taxon, Integer> getPerTaxonCount();
 
     /**
      * 
@@ -139,6 +161,14 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * 
      */
     public Map<Long, Boolean> isSubsumer( Collection<Long> ids );
+
+    /**
+     * Limited to those which map to a geneproduct FIXME rename this method to reflect that more obviously.
+     * 
+     * @param arrayDesign
+     * @return
+     */
+    public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
 
     /**
      * loads all Array designs as value objects.
@@ -229,6 +259,12 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
+     * @param arrayDesign
+     * @return how many experiments use this platform (not including experiment subsets)
+     */
+    public int numExperiments( ArrayDesign arrayDesign );
+
+    /**
      * Returns the number of Genes associated with this ArrayDesign
      */
     public long numGenes( ArrayDesign arrayDesign );
@@ -262,35 +298,5 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
      * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
      */
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
-
-    /**
-     * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
-     *         excluded.
-     */
-    public Map<Taxon, Integer> getPerTaxonCount();
-
-    /**
-     * @param searchString
-     * @return
-     */
-    public Collection<ArrayDesign> findByManufacturer( String searchString );
-
-    /**
-     * @param taxon
-     * @return
-     */
-    public Collection<ArrayDesign> findByTaxon( Taxon taxon );
-
-    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
-
-    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
-
-    /**
-     * Limited to those which map to a geneproduct FIXME rename this method to reflect that more obviously.
-     * 
-     * @param arrayDesign
-     * @return
-     */
-    public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign );
 
 }

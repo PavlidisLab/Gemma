@@ -36,6 +36,9 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  */
 public interface ArrayDesignService {
 
+    @Secured({ "GROUP_ADMIN" })
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
+
     /**
      * @return all compositeSequences for the given arrayDesign that do not have any bioSequence associations.
      */
@@ -53,16 +56,6 @@ public interface ArrayDesignService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
-
-    /**
-     * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
-     * sequences are also returned, so this can be used to do a thaw, in effect.
-     * 
-     * @param arrayDesign
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
     /**
      * @return global count of compositeSequences in the system.
@@ -100,6 +93,13 @@ public interface ArrayDesignService {
     public Collection<ArrayDesign> findByAlternateName( String queryString );
 
     /**
+     * @param searchString
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ArrayDesign> findByManufacturer( String searchString );
+
+    /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -127,16 +127,42 @@ public interface ArrayDesignService {
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign );
 
     /**
+     * Retrieves alignments for the platform elements, limited to those which map to a gene product (so not all
+     * blatresults)
+     * 
+     * @param arrayDesign
+     * @return map of compositesequences to alignments, if available.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
+
+    /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     /**
+     * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
+     * sequences are also returned, so this can be used to do a thaw, in effect.
+     * 
+     * @param arrayDesign
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
+
+    /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer getCompositeSequenceCount( ArrayDesign arrayDesign );
+
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
 
     /**
      * 
@@ -247,22 +273,6 @@ public interface ArrayDesignService {
     public Collection<ArrayDesignValueObject> loadAllValueObjects();
 
     /**
-     * 
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
-
-    /**
-     * Retrieves alignments for the platform elements, limited to those which map to a gene product (so not all
-     * blatresults)
-     * 
-     * @param arrayDesign
-     * @return map of compositesequences to alignments, if available.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
-
-    /**
      * Given a collection of ID (longs) will return a collection of ArrayDesigns
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -349,6 +359,12 @@ public interface ArrayDesignService {
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
+     * @param arrayDesign
+     * @return how many experiments use this platform (not including experiment subsets)
+     */
+    public int numExperiments( ArrayDesign arrayDesign );
+
+    /**
      * Returns the number of unique Genes associated with this ArrayDesign id
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
@@ -397,15 +413,5 @@ public interface ArrayDesignService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
-
-    /**
-     * @param searchString
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ArrayDesign> findByManufacturer( String searchString );
-
-    @Secured({ "GROUP_ADMIN" })
-    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
 
 }

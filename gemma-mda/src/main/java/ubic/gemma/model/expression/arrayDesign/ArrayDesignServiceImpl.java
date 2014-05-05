@@ -235,6 +235,12 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().getExpressionExperiments( arrayDesign );
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public int numExperiments( ArrayDesign arrayDesign ) {
+        return this.getArrayDesignDao().numExperiments( arrayDesign );
+    }
+
     /*
      * (non-Javadoc)
      * 
