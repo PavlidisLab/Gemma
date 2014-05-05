@@ -135,8 +135,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             processedExpressionDataVectorService.thaw( dataVectors );
 
             log.info( "Starting analysis" );
-            analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors ); 
-            
+            analyze( ee, filterConfig, linkAnalysisConfig, la, dataVectors );
+
             log.info( "Done with analysis phase, starting persistence" );
             saveResults( ee, la, linkAnalysisConfig, filterConfig );
             log.info( "Done with saving results for " + ee );
@@ -512,6 +512,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
+
+        if ( batchEffect == null ) {
+            throw new UnsuitableForAnalysisException( ee,
+                    "No batch information available, out of an abundance of caution we are skipping" );
+        }
+
         // FIXME might want to adjust this stringency.
         if ( batchEffect != null && batchEffect.getPvalue() < 0.001 ) {
 
