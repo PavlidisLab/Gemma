@@ -2461,10 +2461,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             assert gcti.getIds().contains( coexpressions.get( g ).iterator().next() );
 
             if ( i++ % 1000 == 0 ) {
+                log.info( "Updated gene-coexpressed-with information for " + i + " genes, last was geneid=" + g );
                 sess.flush();
                 sess.clear();
             }
         }
+        log.info( "Updated gene-coexpressed-with information for " + coexpressions.keySet().size() + " genes." );
     }
 
 }
