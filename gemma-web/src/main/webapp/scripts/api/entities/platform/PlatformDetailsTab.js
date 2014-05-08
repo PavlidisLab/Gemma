@@ -171,12 +171,12 @@ Gemma.PlatformDetails = Ext
             var text = '';
             if ( platformDetails.noParentsAnnotationLink )
                text += '<a  ext:qtip="Recommended version for ermineJ" class="annotationLink" href="'
-                  + platformDetails.noParentsAnnotationLink + '" >Basic</a>&nbsp;';
+                  + platformDetails.noParentsAnnotationLink + '" >Basic</a>&nbsp;&nbsp;';
             if ( platformDetails.allParentsAnnotationLink )
                text += '<a class="annotationLink" href="' + platformDetails.allParentsAnnotationLink
-                  + '" >All terms</a>&nbsp;';
+                  + '" >All terms</a>&nbsp;&nbsp;';
             if ( platformDetails.bioProcessAnnotationLink )
-               text += '<a ext:qtip="Biological process terms" class="annotationLink" href="'
+               text += '<a ext:qtip="Biological process terms only" class="annotationLink" href="'
                   + platformDetails.bioProcessAnnotationLink + '" >BP only</a>';
 
             return new Ext.Panel(
@@ -187,10 +187,10 @@ Gemma.PlatformDetails = Ext
                      'afterrender' : Gemma
                         .helpTip(
                            "#annotationHelp",
-                           "Download annotation files for this platform. The files include gene information as well as "
+                           "<p>Download annotation files for this platform. The files include gene information as well as "
                               + "GO terms and are compatible with ermineJ. "
-                              + "Up to three versions fo GO annotations are provided. "
-                              + "<p>The 'basic' version includes only directly annotated terms. "
+                              + "Up to three versions of GO annotations are provided:"
+                              + "<p>The 'Basic' version includes only directly annotated terms. "
                               + "<p>The 'All terms' version includes inferred terms based on propagation in the term hierarchy. "
                               + "<p>'BP only' includes only terms from the biological process ontology. "
                               + "<p>For ermineJ and uses where GO annotations are not needed, "
@@ -267,14 +267,14 @@ Gemma.PlatformDetails = Ext
                buttons : [ {
                   text : 'Cancel',
                   handler : function( button ) {
-                     dialog.hide();
+                     button.ownerCt.ownerCt.hide();
                   }
                }, {
                   text : 'Save',
                   handler : function( button ) {
                      var name = Ext.get( "alternate-name-textfield" ).getValue();
                      this.addAlternateName( id, name );
-                     dialog.hide();
+                     button.ownerCt.ownerCt.hide();
                   },
                   scope : this
                } ]
@@ -433,7 +433,7 @@ Gemma.PlatformDetails = Ext
                            this.platformId,
                            {
                               callback : function( platformDetails ) {
-                                 console.log( platformDetails );
+                                 // console.log( platformDetails );
                                  this.loadMask.hide();
                                  this
                                     .add( [
@@ -456,7 +456,6 @@ Gemma.PlatformDetails = Ext
                                               },
                                               // have an ArrayDesignValueObjectExt
                                               items : [
-                                                       // Validated / troubled?
                                                        {
                                                           fieldLabel : "Aliases "
                                                              + '&nbsp;<i id="aliasHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
@@ -508,16 +507,16 @@ Gemma.PlatformDetails = Ext
                                            } ] );
 
                                  if ( !platformDetails.troubled ) {
-                                    // add the last two items.
+                                    // add the last two items. could use display:none instead.
                                     var pan = Ext.getCmp( platformDetails.id + '_features' );
                                     pan
-                                       .add( { // FIXME hide if troubled.
+                                       .add( {
                                           fieldLabel : 'Annotation files'
                                              + '&nbsp<i id="annotationHelp"  class="fa fa-question-circle fa-fw-circle" style="font-size:smaller;color:grey"></i>',
                                           items : this.renderAnnotationFileLinks( platformDetails )
                                        } );
                                     pan
-                                       .add( {// FIXME hide if troubled.
+                                       .add( {
                                           fieldLabel : 'Gene map summary'
                                              + '&nbsp<i id="reportHelp"  class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
                                           items : this.renderReport( platformDetails )
