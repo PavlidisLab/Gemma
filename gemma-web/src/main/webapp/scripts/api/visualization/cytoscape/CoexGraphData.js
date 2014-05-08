@@ -24,7 +24,7 @@ Ext.namespace( 'Gemma' );
  */
 Gemma.CoexGraphData = function( coexpressionSearchData, cytoscapeCoexCommand ) {
 
-   this.originalResults = {};
+   this.originalResults = new Object();
    this.originalResults.geneResults = coexpressionSearchData.getCytoscapeResults();
    this.originalResults.trimStringency = coexpressionSearchData.getNonQueryGeneTrimmedValue();
 

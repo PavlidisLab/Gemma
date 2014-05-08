@@ -49,8 +49,9 @@ public class PazarLoaderImpl implements PazarLoader {
      */
     @Override
     public int load( File file ) throws IOException {
-        FileInputStream i = new FileInputStream( file );
-        return this.load( i );
+        try (FileInputStream i = new FileInputStream( file );) {
+            return this.load( i );
+        }
     }
 
     /*

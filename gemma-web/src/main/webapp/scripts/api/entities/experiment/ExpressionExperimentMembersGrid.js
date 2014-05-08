@@ -39,7 +39,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          hideOkCancel : false,
          showSeparateSaveAs : false, // show a 'save as' button in addition to a save button
          enableSaveOnlyAfterModification : false, // if save button is show, leave it disabled until an experiment is
-                                                   // added
+         // added
          // or removed
          /**
           * Set the expressionExperimentSetValueObject. (does not display the eesvo, use loadExperimentSet(eesvo) to do
@@ -188,16 +188,16 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
          initComponent : function() {
 
-            var extraButtons = [];
+            var extraButtons = new Array();
             if ( this.allowRemovals ) {
                var removeSelectedBtn = new Ext.Button( {
                   text : 'Remove Selected',
                   icon : "/Gemma/images/icons/cross.png",
                   hidden : true,
-                  handler : function() {
+                  handler : function( button ) {
                      var records = this.getSelectionModel().getSelections();
                      this.getStore().remove( records );
-                     removeSelectedBtn.setVisible( false );
+                     button.setVisible( false );
                   },
                   scope : this
                } );

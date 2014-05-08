@@ -375,7 +375,6 @@ Gemma.FactorValueGrid = Ext
             var ct = this.getTopToolbar().characteristicToolbar;
             var i;
             var matchIds = function( record, id ) {
-               var z = fvIds.indexOf( record.data.id + "" );
                return (fvIds.indexOf( record.data.id + "" ) > -1);
             };
             for (i = 0; i < fvIds.length; i++) {

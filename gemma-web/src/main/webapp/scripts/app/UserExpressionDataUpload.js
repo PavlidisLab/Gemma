@@ -1,6 +1,7 @@
 Ext.namespace( 'Gemma' );
 Ext.form.Field.prototype.msgTarget = 'side';
 Ext.BLANK_IMAGE_URL = "/Gemma/images/s.gif";
+Ext.Require( 'Ext.util.Observable', 'ExpressionDataFileUploadController' );
 
 Gemma.DatasetUploadTool = Ext
    .extend(
@@ -91,7 +92,7 @@ Gemma.DatasetUploadTool = Ext
                   buttons : [
                              {
                                 text : "OK",
-                                handler : function() {
+                                handler : function( button ) {
                                    w.hide();
                                    w.destroy();
                                    window.location = "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
@@ -100,10 +101,10 @@ Gemma.DatasetUploadTool = Ext
                                 }
                              }, {
                                 text : "Load another",
-                                handler : function() {
+                                handler : function( button ) {
                                    Ext.getCmp( 'main-form' ).getForm().reset();
                                    Ext.getCmp( 'upload-form' ).reset();
-                                   w.hide();
+                                   w.hide(); // button.container?
                                    w.destroy();
                                 },
                                 scope : this
@@ -124,7 +125,7 @@ Gemma.DatasetUploadTool = Ext
                         + payload.errorMessage,
                      buttons : [ {
                         text : "OK",
-                        handler : function() {
+                        handler : function( button ) {
                            w.hide();
                            w.destroy();
 
@@ -287,7 +288,7 @@ Ext
       var adminDataAvailabilityMessage = "Please note that experiment will be public because you are an administrator.";
       var userDataAvailabilityMessage = "Please note that experiment will be private but can be made public later.";
 
-      var form = new Ext.Panel(
+      new Ext.Panel(
          {
             renderTo : 'form',
             width : 600,

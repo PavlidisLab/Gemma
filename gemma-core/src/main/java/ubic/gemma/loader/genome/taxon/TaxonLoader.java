@@ -59,10 +59,10 @@ public class TaxonLoader {
         if ( !file.exists() || !file.canRead() ) {
             throw new IOException( "Could not read from file " + file.getPath() );
         }
-        InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );
-        int count = load( stream );
-        stream.close();
-        return count;
+        try (InputStream stream = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {
+            int count = load( stream );
+            return count;
+        }
     }
 
     /**

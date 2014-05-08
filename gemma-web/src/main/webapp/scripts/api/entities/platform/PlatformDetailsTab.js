@@ -1,5 +1,4 @@
 Ext.namespace( 'Gemma', 'Gemma.PlatformDetails' );
-
 /**
  * Need to set platformId as config.
  * <p>
@@ -111,11 +110,13 @@ Gemma.PlatformDetails = Ext
             text = {
                tag : "ul",
                style : 'padding:8px;background:#DFDFDF;width:400px',
+               id : platformDetails.id + "_report",
                children : [
+
                            {
                               tag : 'li',
                               html : 'Elements: ' + platformDetails.designElementCount,
-                              style : platformDetails.dateCached == null ? 'visibility:hidden' : ''
+                              style : platformDetails.dateCached == null ? 'display:none' : ''
                            },
                            {
                               tag : 'li',
@@ -123,7 +124,7 @@ Gemma.PlatformDetails = Ext
                                  + platformDetails.numProbeSequences
                                  + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements with sequences)</span>',
                               style : platformDetails.numProbeSequences == null
-                                 || platformDetails.technologyType == "NONE" ? 'visibility:hidden' : ''
+                                 || platformDetails.technologyType == "NONE" ? 'display:none' : ''
                            },
                            {
                               tag : 'li',
@@ -131,25 +132,25 @@ Gemma.PlatformDetails = Ext
                                  + platformDetails.numProbeAlignments
                                  + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements with at least one genome alignment)</span>',
                               style : platformDetails.numProbeAlignments == null
-                                 || platformDetails.technologyType == "NONE" ? 'visibility:hidden' : ''
+                                 || platformDetails.technologyType == "NONE" ? 'display:none' : ''
                            },
                            {
                               tag : 'li',
                               html : 'Mapped to genes: '
                                  + platformDetails.numProbesToGenes
                                  + '&nbsp;<span style="font-size:smaller;color:grey">(Number of elements mapped to at least one gene)</span>',
-                              style : platformDetails.numProbesToGenes === null ? 'visibility:hidden' : ''
+                              style : platformDetails.numProbesToGenes === null ? 'display:none' : ''
                            },
                            {
                               tag : 'li',
                               html : 'Unique genes: '
                                  + platformDetails.numGenes
                                  + '&nbsp;<span style="font-size:smaller;color:grey">(Number of distinct genes represented on the platform)</span>',
-                              style : platformDetails.numGenes === null ? 'visibility:hidden' : ''
+                              style : platformDetails.numGenes === null ? 'display:none' : ''
                            },
                            {
                               tag : 'li',
-                              html : (platformDetails.dateCached != null ? 'As of: ' + platformDetails.dateCached
+                              html : (platformDetails.dateCached != null ? 'As of ' + platformDetails.dateCached
                                  + "&nbsp;" : 'No report available')
                                  + updateT
                            } ]
@@ -265,12 +266,12 @@ Gemma.PlatformDetails = Ext
 
                buttons : [ {
                   text : 'Cancel',
-                  handler : function() {
+                  handler : function( button ) {
                      dialog.hide();
                   }
                }, {
                   text : 'Save',
-                  handler : function() {
+                  handler : function( button ) {
                      var name = Ext.get( "alternate-name-textfield" ).getValue();
                      this.addAlternateName( id, name );
                      dialog.hide();
@@ -333,6 +334,28 @@ Gemma.PlatformDetails = Ext
                      "The description includes that obtained from the data provider (i.e., GEO)"
                         + " but may include additional information added by Gemma, such as "
                         + "information on samples remvoed due to overlap with other data sets." )
+               }
+            } );
+         },
+
+         renderStatus : function( platformDetails ) {
+            var text = '';
+
+            if ( platformDetails.troubled ) {
+               text = '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+                  + platformDetails.troubleDetails + '"/> Unusable';
+            } else if ( platformDetails.validated ) {
+               text = "Validated";
+            } else {
+               // nothing to see here.
+            }
+
+            return new Ext.Panel( {
+               border : false,
+               html : text,
+               listeners : {
+                  'afterrender' : Gemma.helpTip( "#statusHelp",
+                     "Information on curation status, whether the platform is usable, etc." )
                }
             } );
          },
@@ -427,6 +450,7 @@ Gemma.PlatformDetails = Ext
                                               labelSeparator : ':',
                                               labelStyle : 'font-weight:bold;',
                                               flex : 1,
+                                              id : platformDetails.id + '_features',
                                               defaults : {
                                                  border : false
                                               },
@@ -444,14 +468,14 @@ Gemma.PlatformDetails = Ext
                                                           items : this.renderTaxon( platformDetails )
                                                        },
                                                        {
+                                                          fieldLabel : 'Platform type'
+                                                             + '&nbsp<i id="typeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                          items : this.renderType( platformDetails )
+                                                       },
+                                                       {
                                                           fieldLabel : 'Number of elements'
                                                              + '&nbsp<i id="numElementsHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                           items : this.renderElementsLink( platformDetails )
-                                                       },
-                                                       {
-                                                          fieldLabel : 'Description'
-                                                             + '&nbsp<i id="descriptionHelp" class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
-                                                          items : this.renderDescription( platformDetails.description )
                                                        },
                                                        {
                                                           fieldLabel : 'Experiments'
@@ -459,14 +483,9 @@ Gemma.PlatformDetails = Ext
                                                           items : this.renderExperimentLink( platformDetails )
                                                        },
                                                        {
-                                                          fieldLabel : 'Platform type'
-                                                             + '&nbsp<i id="typeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
-                                                          items : this.renderType( platformDetails )
-                                                       },
-                                                       {
-                                                          fieldLabel : 'Annotation files'
-                                                             + '&nbsp<i id="annotationHelp"  class="fa fa-question-circle fa-fw-circle" style="font-size:smaller;color:grey"></i>',
-                                                          items : this.renderAnnotationFileLinks( platformDetails )
+                                                          fieldLabel : 'Description'
+                                                             + '&nbsp<i id="descriptionHelp" class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
+                                                          items : this.renderDescription( platformDetails.description )
                                                        },
                                                        {
                                                           fieldLabel : 'Sources'
@@ -479,14 +498,32 @@ Gemma.PlatformDetails = Ext
                                                           items : this.renderMerged( platformDetails )
                                                        },
                                                        {
-                                                          fieldLabel : 'Gene map summary'
-                                                             + '&nbsp<i id="reportHelp"  class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
-                                                          items : this.renderReport( platformDetails )
+                                                          fieldLabel : 'Status'
+                                                             + '&nbsp<i id="statusHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                          items : this.renderStatus( platformDetails )
                                                        } ]
                                            /*
                                               * Edit button?
                                               */
                                            } ] );
+
+                                 if ( !platformDetails.troubled ) {
+                                    // add the last two items.
+                                    var pan = Ext.getCmp( platformDetails.id + '_features' );
+                                    pan
+                                       .add( { // FIXME hide if troubled.
+                                          fieldLabel : 'Annotation files'
+                                             + '&nbsp<i id="annotationHelp"  class="fa fa-question-circle fa-fw-circle" style="font-size:smaller;color:grey"></i>',
+                                          items : this.renderAnnotationFileLinks( platformDetails )
+                                       } );
+                                    pan
+                                       .add( {// FIXME hide if troubled.
+                                          fieldLabel : 'Gene map summary'
+                                             + '&nbsp<i id="reportHelp"  class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
+                                          items : this.renderReport( platformDetails )
+                                       } );
+                                 }
+
                                  this.syncSize();
                               }.createDelegate( this ),
                               errorHandler : function( er, exception ) {

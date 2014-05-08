@@ -92,7 +92,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
     private Map<String, GeoRecord> localInfo;
 
-    private XPathExpression xgds;
+    // private XPathExpression xgds;
     private XPathExpression xgse;
     private XPathExpression xtitle;
     private XPathExpression xgpls;
@@ -114,7 +114,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
         XPathFactory xf = XPathFactory.newInstance();
         XPath xpath = xf.newXPath();
-        xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
+        // xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
         xgse = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
         xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
         xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
@@ -361,7 +361,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
 
             NodeList samples = ( NodeList ) xsamples.evaluate( document, XPathConstants.NODESET );
 
-            String gds = ( String ) xgds.evaluate( document, XPathConstants.STRING ); // FIXME, use this.
+            // String gds = ( String ) xgds.evaluate( document, XPathConstants.STRING ); // FIXME, use this.
             String gse = "GSE" + ( String ) xgse.evaluate( document, XPathConstants.STRING );
             String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
             NodeList gpls = ( NodeList ) xgpls.evaluate( document, XPathConstants.NODESET ); // FIXME get description.

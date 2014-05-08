@@ -36,6 +36,7 @@ import ubic.gemma.analysis.preprocess.normalize.TwoColorArrayLoessNormalizer;
  * @author pavlidis
  * @version $Id$
  */
+@SuppressWarnings("deprecation")
 public class TwoColorArrayLoessNormalizerTest {
     private static Log log = LogFactory.getLog( TwoColorArrayLoessNormalizerTest.class );
     private TwoColorArrayLoessNormalizer normalizer;

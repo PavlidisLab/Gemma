@@ -388,16 +388,16 @@ Gemma.GeneMembersSaveGrid = Ext
 
          initComponent : function() {
 
-            var extraButtons = [];
+            var extraButtons = new Array();
             if ( this.allowRemovals ) {
                var removeSelectedBtn = new Ext.Button( {
                   text : 'Remove Selected',
                   icon : "/Gemma/images/icons/cross.png",
                   hidden : true,
-                  handler : function() {
+                  handler : function( button ) {
                      var records = this.getSelectionModel().getSelections();
                      this.getStore().remove( records );
-                     removeSelectedBtn.setVisible( false );
+                     button.setVisible( false );
                   },
                   scope : this
                } );
@@ -420,7 +420,7 @@ Gemma.GeneMembersSaveGrid = Ext
                } );
             }
 
-            var columns = [];
+            var columns = new Array();
             if ( this.sortableColumnsView ) {
 
                Ext.apply( this, {

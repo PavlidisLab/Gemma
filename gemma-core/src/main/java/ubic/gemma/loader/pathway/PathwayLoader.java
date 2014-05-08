@@ -46,10 +46,11 @@ public class PathwayLoader {
      * @param fileName location of biopax owl file to be loaded
      * @throws FileNotFoundException
      */
-    PathwayLoader( String fileName ) throws FileNotFoundException {
+    PathwayLoader( String fileName ) throws IOException {
         this();
-        InputStream inputStream = new FileInputStream( new File( fileName ) );
-        load( inputStream );
+        try (InputStream inputStream = new FileInputStream( new File( fileName ) );) {
+            load( inputStream );
+        }
 
     }
 
@@ -84,7 +85,7 @@ public class PathwayLoader {
      * @return
      */
     // public Set<BioPAXElement> getAllObjectsInModel(){
-    //        
+    //
     // return this.loadedModel.getObjects();
     // }
 
@@ -92,7 +93,7 @@ public class PathwayLoader {
      * @return
      */
     // public Set<Interaction> getAllInteractions(){
-    // 
+    //
     // return this.loadedModel.getObjects( Interaction.class );
     // }
 

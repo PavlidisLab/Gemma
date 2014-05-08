@@ -22,6 +22,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+import java.util.Set;
 
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -31,7 +32,7 @@ import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.Settings;
 
 /**
- * Retrieve information used for classifying Phenocarta evidence quality.
+ * Retrieve information used for classifying Phenocarta evidence quality. FIXME this doesn't do anything right now.
  * 
  * @author nicolas
  * @version $Id$
@@ -49,7 +50,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
             + "trainingSet.tsv";
 
     // comes from the excluded set
-    private HashSet<String> excludedPubmed = new HashSet<String>();
+    private Set<String> excludedPubmed = new HashSet<>();
 
     private BufferedWriter writer = null;
 
@@ -133,10 +134,10 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
         for ( MedicalSubjectHeading m : b.getMeshTerms() ) {
 
-            boolean isMajor = m.getIsMajorTopic();
-            for ( MedicalSubjectHeading q : m.getQualifiers() ) {
-                // ...
-            }
+            // boolean isMajor = m.getIsMajorTopic();
+            // for ( MedicalSubjectHeading q : m.getQualifiers() ) {
+            // // ...
+            // }
 
             result = result + m.getTerm() + ";";
         }
@@ -171,8 +172,6 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
     @Override
     protected void buildOptions() {
-        // TODO Auto-generated method stub
-
     }
 
     @Override

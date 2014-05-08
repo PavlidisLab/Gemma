@@ -87,8 +87,8 @@ Gemma.SecurityManager.managePermissions = function( elid, clazz, id, securityFor
       var availableGroups = securityInfo.availableGroups;
       var clazz = securityInfo.entityClazz;
 
-      var readerChecks = [];
-      var writerChecks = [];
+      var readerChecks = new Array();
+      var writerChecks = new Array();
 
       if ( availableGroups.length === 0 ) {
          readerChecks = [ {

@@ -197,7 +197,8 @@ public class GeoFamilyParser implements Parser<Object> {
             throw new IOException( "No bytes to read from the input stream." );
         }
 
-        try (final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
+        try (@SuppressWarnings("resource")
+        final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
 
             log.debug( "Parsing...." );
 

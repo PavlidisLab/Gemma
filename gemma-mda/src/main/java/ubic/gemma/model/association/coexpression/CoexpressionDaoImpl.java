@@ -1552,7 +1552,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         // we assume the genes are from the same taxon.
         assert t != null;
-        String className = CoexpressionQueryUtils.getGeneLinkClassName( t );
+        // String className = CoexpressionQueryUtils.getGeneLinkClassName( t );
 
         // fetch rest of genes needed from the database.
         StopWatch timer = new StopWatch();
@@ -2444,7 +2444,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Session sess = this.getSessionFactory().getCurrentSession();
         int i = 0;
 
-        // FIXME optimize: get gcti in batches. a bit complicated to check for values that are missing... later.
+        // TODO optimize: get gcti in batches. a bit complicated to check for values that are missing... later.
         // BatchIterator<Long> ids = BatchIterator.batches( coexpressions.keySet(), 500 );
         //
         // for ( ; ids.hasNext(); ) {
@@ -2468,9 +2468,6 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 sess.save( gcti );
             }
 
-            // for ( Long cog : coexpressions.get( g ) ) {
-            // gcti.addEntity( cog );
-            // }
             gcti.addEntities( coexpressions.get( g ) );
 
             assert gcti.getIds().size() > 0;

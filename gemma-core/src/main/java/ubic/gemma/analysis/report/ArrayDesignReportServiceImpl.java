@@ -273,13 +273,15 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     @Secured({ "GROUP_AGENT" })
     public void generateArrayDesignReport() {
         initDirectories();
-        log.info( "Generating global report" );
-        generateAllArrayDesignReport();
+
         Collection<ArrayDesignValueObject> ads = arrayDesignService.loadAllValueObjects();
         log.info( "Creating reports for " + ads.size() + " platforms" );
         for ( ArrayDesignValueObject ad : ads ) {
             generateArrayDesignReport( ad );
         }
+
+        log.info( "Generating global report" );
+        generateAllArrayDesignReport();
     }
 
     /*
@@ -305,7 +307,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         long numCsGenes = arrayDesignService.numCompositeSequenceWithGenes( ad );
         long numGenes = arrayDesignService.numGenes( ad );
 
-        adVo.setDesignElementCount( (int)numProbes );
+        adVo.setDesignElementCount( ( int ) numProbes );
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
