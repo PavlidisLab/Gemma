@@ -448,6 +448,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @Override
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
+        if ( rawSummaries == null ) {
+            return new HashSet<>();
+        }
         Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
                 .getSummaryMapValueObjects( rawSummaries );
         return summaries;
