@@ -154,6 +154,8 @@ public class PhenotypeController extends BaseController {
     }
 
     /**
+     * Important method, returns the big 'tree' data structure shown in phenocarta's page.
+     * 
      * @param taxonId
      * @param showOnlyEditable
      * @param databaseIds

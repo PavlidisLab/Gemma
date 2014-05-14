@@ -35,38 +35,43 @@ import ubic.basecode.ontology.model.OntologyTerm;
  */
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
-    /** Ontology term to TreeCharacteristicValueObject */
+    /**
+     * Ontology term to TreeCharacteristicValueObject
+     * 
+     * @param ontologyTerm
+     * @param phenotypeFoundInTree
+     * @return
+     */
     public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
-            Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree,
-            TreeSet<TreeCharacteristicValueObject> treesPhenotypes ) {
+            Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
-        Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
+        Collection<OntologyTerm> directChildTerms = ontologyTerm.getChildren( true );
 
-        TreeSet<TreeCharacteristicValueObject> childs = new TreeSet<>();
+        TreeSet<TreeCharacteristicValueObject> children = new TreeSet<>();
 
-        for ( OntologyTerm ot : ontologyTerms ) {
+        for ( OntologyTerm ot : directChildTerms ) {
+            if ( phenotypeFoundInTree.containsKey( ot.getUri() ) ) {
+                TreeCharacteristicValueObject child = phenotypeFoundInTree.get( ot.getUri() );
+                children.add( child );
 
-            if ( phenotypeFoundInTree.get( ot.getUri() ) != null ) {
-
-                childs.add( phenotypeFoundInTree.get( ot.getUri() ) );
-                treesPhenotypes.remove( phenotypeFoundInTree.get( ot.getUri() ) );
+                // See bug 4102. Removing wreaks havoc and I cannot see why it would be necessary.
+                // treesPhenotypes.remove( child );
             } else {
-                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree,
-                        treesPhenotypes );
+                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree );
                 phenotypeFoundInTree.put( tree.getValueUri(), tree );
-                childs.add( tree );
+                children.add( tree );
             }
         }
 
         TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
-                ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
+                ontologyTerm.getLabel(), ontologyTerm.getUri(), children );
 
         return treeCharacteristicVO;
     }
 
     private String _id = "";
 
-    private TreeSet<TreeCharacteristicValueObject> children = new TreeSet<TreeCharacteristicValueObject>();
+    private TreeSet<TreeCharacteristicValueObject> children = new TreeSet<>();
 
     /** phenotype present in the database */
     private boolean dbPhenotype = false;
@@ -88,10 +93,12 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         this._id = this.urlId;
     }
 
-    /** counts each private occurrence of genes for a phenotype */
+    /**
+     * counts each private occurrence of genes for a phenotype
+     */
     public void countPrivateGeneForEachNode( Map<String, Set<Integer>> phenotypesGenesAssociations ) {
 
-        HashSet<Integer> allGenes = new HashSet<Integer>();
+        Set<Integer> allGenes = new HashSet<>();
 
         for ( TreeCharacteristicValueObject tc : this.children ) {
 
@@ -131,7 +138,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
                     phenotypesGenesAssociations.get( getValueUri() ).addAll(
                             phenotypesGenesAssociations.get( tc.getValueUri() ) );
                 } else {
-                    HashSet<Integer> genesNBCI = new HashSet<Integer>();
+                    Set<Integer> genesNBCI = new HashSet<>();
                     genesNBCI.addAll( phenotypesGenesAssociations.get( tc.getValueUri() ) );
                     phenotypesGenesAssociations.put( getValueUri(), genesNBCI );
                 }
@@ -178,7 +185,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** the tree is built with many terms in the Ontology, this method removes all nodes not found in the database */
     public void removeUnusedPhenotypes() {
 
-        TreeSet<TreeCharacteristicValueObject> newChildren = new TreeSet<TreeCharacteristicValueObject>();
+        TreeSet<TreeCharacteristicValueObject> newChildren = new TreeSet<>();
 
         for ( TreeCharacteristicValueObject child : this.children ) {
 
@@ -226,10 +233,10 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         String output = "";
 
         for ( int i = 0; i < level; i++ ) {
-            output = output + " ******* ";
+            output = output + "    ";
         }
 
-        output = output + getValue() + "   " + getPublicGeneCount() + " (" + getPrivateGeneCount() + ")\n";
+        output = output + getValue() + " " + getPublicGeneCount() + " (" + getPrivateGeneCount() + ")\n";
 
         int currentLevel = level + 1;
         for ( TreeCharacteristicValueObject treeVO : this.children ) {

@@ -640,7 +640,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
+     * This method loads all phenotypes in the database and counts their occurence using the database It builds the tree
      * using parents of terms, and will return 3 trees representing Disease, HP and MP
      * 
      * @param taxonCommonName specify a taxon (optional)
@@ -653,10 +653,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<SimpleTreeValueObject> simpleTreeValueObjects = new TreeSet<>();
 
-        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true,
-                evidenceFilter, SecurityUtil.isUserAdmin(), false ) );
+        Collection<TreeCharacteristicValueObject> phenotypes = findAllPhenotypesByTree( true, evidenceFilter,
+                SecurityUtil.isUserAdmin(), false );
 
-        // undo the tree in a simple structure
+        Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( phenotypes );
+
+        // unpack the tree in a simple structure
         for ( TreeCharacteristicValueObject t : ontologyTrees ) {
             convertToFlatTree( simpleTreeValueObjects, t, null /* parent of root */);
         }
@@ -1446,7 +1448,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * take the trees made and put them in the exact way the client wants them
+     * Recursively take the trees made and put them in the exact way the client wants them
+     * 
+     * @param simpleTreeValueObjects
+     * @param treeCharacteristicValueObject
+     * @param parent
      */
     private void convertToFlatTree( Collection<SimpleTreeValueObject> simpleTreeValueObjects,
             TreeCharacteristicValueObject treeCharacteristicValueObject, String parent ) {
@@ -1723,14 +1729,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Map<String, Set<Integer>> publicPhenotypesGenesAssociations = new HashMap<>();
         Map<String, Set<Integer>> privatePhenotypesGenesAssociations = new HashMap<>();
-        // public phenotypes + private phenotypes (what the user can see)
-        Set<String> allPhenotypesGenesAssociations = new HashSet<String>();
+        Set<String> allPhenotypesGenesAssociations = new HashSet<>();
 
         boolean isUserLoggedIn = SecurityUtil.isUserLoggedIn();
         String userName = "";
-        Collection<String> groups = new HashSet<String>();
+        Collection<String> groups = new HashSet<>();
 
-        log.info( "Starting loading phenotype tree" );
+        log.info( "Starting loading phenotype tree" ); // note we can't cache this because varies per user.
         if ( isUserLoggedIn ) {
             userName = this.userManager.getCurrentUsername();
             // groups the user belong to
@@ -1738,7 +1743,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // show only my annotation was chosen
             if ( showOnlyEditable ) {
-                // log.info( "Loading editable" );
                 // show public owned by the user
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
                         taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
@@ -1746,44 +1750,28 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // show all private owned by the user or shared by a group
                 privatePhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
                         taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
-                // log.info( "Loaded editable: " + sw.getTime() + "ms" );
-            }
-            // default case to build the tree
-            else {
-                // log.info( "Loading all public" );
-                // all public evidences
+            } else {
+                // logged in, but not filtered. all public evidences
                 publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
                         taxon, null, null, groups, false, externalDatabaseIds, noElectronicAnnotation );
 
-                // log.info( "Loaded public: " + sw.getTime() + "ms" );
                 if ( isAdmin ) {
-                    // log.info( "Loading private" );
                     // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, null, null, false,
                                     externalDatabaseIds, noElectronicAnnotation );
-                    // log.info( "Loaded private: total time=" + sw.getTime() + "ms" );
                 } else {
                     // show all private owned by the user or shared by a group
-                    // log.info( "Loading owned" );
-                    // show all private since admin
                     privatePhenotypesGenesAssociations = this.associationService
                             .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups, false,
                                     externalDatabaseIds, noElectronicAnnotation );
-                    // log.info( "Loaded owned: total time=" + sw.getTime() + "ms" );
                 }
             }
-        }
-
-        // anonymous user
-        else if ( !showOnlyEditable ) {
-            // log.info( "Loading editable" );
+        } else if ( !showOnlyEditable ) {
+            // anonymous user
             publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations( taxon,
                     null, null, null, false, externalDatabaseIds, noElectronicAnnotation );
-            // log.info( "Loaded editable: total time=" + sw.getTime() + "ms" );
         }
-
-        // log.info( "Done loading associations" );
 
         for ( String phenotype : privatePhenotypesGenesAssociations.keySet() ) {
             allPhenotypesGenesAssociations.add( phenotype );
@@ -1793,17 +1781,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // map to help the placement of elements in the tree, used to find quickly the position to add subtrees
-        Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
+        Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<>();
 
-        // represents each phenotype and children found in the Ontology, TreeSet used to order trees
+        // represents each phenotype and children found in the Ontology, TreeSet used to order trees [why do we need a
+        // TreeSet? Can't we just sort at the end?]
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
 
         // creates the tree structure
         for ( String valueUri : allPhenotypesGenesAssociations ) {
 
-            // don't create the tree if it is already present in an other
-            if ( phenotypeFoundInTree.get( valueUri ) != null ) {
-                // flag the node as phenotype found in database
+            // don't create the tree if it is already present in an other [another what?]
+            if ( phenotypeFoundInTree.containsKey( valueUri ) ) {
+                // flag the node as phenotype found in database [when does this happen? It seems useless, since we don't
+                // use this]
                 phenotypeFoundInTree.get( valueUri ).setDbPhenotype( true );
             } else {
                 try {
@@ -1812,30 +1802,29 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     // we don't show obsolete terms
                     if ( ontologyTerm.isTermObsolete() ) {
-
                         log.error( "A valueUri found in the database is obsolete: " + valueUri );
-
                     } else {
 
                         // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
                         TreeCharacteristicValueObject treeCharacteristicValueObject = TreeCharacteristicValueObject
-                                .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree,
-                                        treesPhenotypes );
+                                .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree );
 
-                        // set flag that this node represents a phenotype in the database
+                        // set flag that this node represents a phenotype used in the database
                         treeCharacteristicValueObject.setDbPhenotype( true );
 
                         // add tree to the phenotypes found in ontology
                         phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
 
-                        treesPhenotypes.add( treeCharacteristicValueObject );
+                        if ( !treesPhenotypes.add( treeCharacteristicValueObject ) ) {
+                            throw new IllegalStateException( "Add failed for " + ontologyTerm );
+                        }
                         if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
 
                     }
 
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
-                        log.warn( "A valueUri found in the database was not found in the ontology; This can happen when a valueUri is updated in the ontology; valueUri: "
+                        log.warn( "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: "
                                 + valueUri );
                     } else {
                         throw new RuntimeException( "Ontologies are not fully loaded yet, try again soon ("
@@ -1846,7 +1835,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         if ( withParentTerms ) {
-            TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<TreeCharacteristicValueObject>();
+            TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<>();
 
             for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
                 findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
@@ -1857,17 +1846,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // set the public count
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.countPublicGeneForEachNode( publicPhenotypesGenesAssociations );
-        }
-
-        // set the private count
-        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
             tc.countPrivateGeneForEachNode( privatePhenotypesGenesAssociations );
+            tc.removeUnusedPhenotypes();
+
         }
 
-        // remove all nodes in the trees found in the Ontology but not in the database
-        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-            tc.removeUnusedPhenotypes();
-        }
+        // why were these separate loops?
+        // // set the private count
+        // for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+        // }
+        //
+        // // remove all nodes in the trees found in the Ontology but not in the database
+        // for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+        // }
         log.info( "Done total time=" + sw.getTime() + "ms" );
         return treesPhenotypes;
     }
@@ -1881,7 +1872,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     private Set<String> findAllPossibleChildren( Map<String, Set<String>> phenotypesWithChildren ) {
 
-        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
+        Set<String> possibleChildrenPhenotypes = new HashSet<>();
 
         for ( String key : phenotypesWithChildren.keySet() ) {
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
@@ -2005,7 +1996,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Build the full trees of the Ontology with the given branches
+     * Recursively build the full trees of the Ontology with the given branches
+     * 
+     * @return root
      */
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
@@ -2031,7 +2024,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     // add children to the parent
                     tree.getChildren().add( tc );
 
-                    // put node in the hashmap for fast acces
+                    // put node in the hashmap for fast access
                     phenotypeFoundInTree.put( tree.getValueUri(), tree );
 
                     findParentRoot( tree, finalTreesWithRoots, phenotypeFoundInTree );
