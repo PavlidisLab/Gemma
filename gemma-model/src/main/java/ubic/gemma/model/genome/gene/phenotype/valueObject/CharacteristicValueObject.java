@@ -173,7 +173,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
         if ( this.valueUri == null ) {
             if ( other.valueUri != null ) return false;
-        } else if ( !this.valueUri.equals( other.valueUri ) ) return false;
+        } else {
+            return this.valueUri.equals( other.valueUri );
+        }
 
         if ( this.value == null ) {
             if ( other.value != null ) return false;
