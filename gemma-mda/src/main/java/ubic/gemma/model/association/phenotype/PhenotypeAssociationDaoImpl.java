@@ -180,16 +180,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon, boolean includeIEA ) {
 
         Collection<OntologyTerm> children = term.getChildren( false );
-
         Map<String, OntologyTerm> uris = new HashMap<>();
         uris.put( term.getUri(), term );
         for ( OntologyTerm c : children ) {
             uris.put( c.getUri(), c );
         }
 
+        assert !uris.isEmpty();
+
         Session sess = this.getSessionFactory().getCurrentSession();
 
-        String q = "select distinct ph.gene, p.valueUri, p.evidenceCode from  PhenotypeAssociation ph join ph.phenotypes p where p.valueUri in (:t)";
+        String q = "select distinct ph.gene, p.valueUri, p.evidenceCode from PhenotypeAssociation ph join ph.phenotypes p where p.valueUri in (:t)";
 
         Query query = sess.createQuery( q );
 
@@ -213,16 +214,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
             GeneValueObject gvo = new GeneValueObject( g );
 
-            assert uris.get( uri ) != null;
+            OntologyTerm otForUri = uris.get( uri );
+            assert otForUri != null;
 
             /*
              * only clobber if this term is more specific
              */
-            if ( result.containsKey( gvo )
-                    && uris.get( result.get( gvo ) ).getParents( false ).contains( uris.get( uri ) ) ) {
+            if ( result.containsKey( gvo ) && otForUri.getParents( false ).contains( otForUri ) ) {
                 continue;
             }
-            result.put( gvo, uris.get( uri ) );
+            result.put( gvo, otForUri );
         }
 
         return result;
