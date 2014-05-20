@@ -140,7 +140,7 @@ Gemma.CoexpressionGridLight = Ext.extend( Ext.grid.GridPanel, {
     * Checks if store contains any results if not print message indicating that there are non. Stop loader. Called when
     * an error thrown of after data load processing
     */
-   handleError : function( errorMessage ) {
+   handleError : function( errorMessage, exception ) {
       if ( Ext.get( 'coexpression-msg' ) ) {
          Ext.DomHelper.applyStyles( "coexpression-msg", "height: 2.2em" );
          Ext.DomHelper.overwrite( "coexpression-msg", [ {

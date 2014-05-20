@@ -109,12 +109,11 @@ Gemma.GenePage = Ext.extend( Ext.TabPanel, {
       } );
 
       /*
-       * Quick = false so we get the number of datasets tested.
        */
       coexpressedGeneGrid.on( 'render', function() {
          coexpressedGeneGrid.doSearch( {
             geneIds : [ geneId ],
-            quick : false,
+            quick : true,
             stringency : 1
          } );
       } );
@@ -144,7 +143,6 @@ Gemma.GenePage = Ext.extend( Ext.TabPanel, {
       } );
       return diffExGrid;
    },
-
 
    /**
     * @memberOf Gemma.GenePage
