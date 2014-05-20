@@ -48,10 +48,8 @@ public class CoexpressionAnalysisDaoImpl extends CoexpressionAnalysisDaoBase {
 
     @Override
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
-
         String q = "select ccd from CoexpressionAnalysisImpl pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-
         return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
                 .setParameter( "ee", expressionExperiment ).uniqueResult();
 

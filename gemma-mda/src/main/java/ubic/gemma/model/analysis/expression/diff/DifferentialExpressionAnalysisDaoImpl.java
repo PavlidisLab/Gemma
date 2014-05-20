@@ -71,75 +71,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     /*
-     * This overrides the default method to speed it up.
-     * 
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
-     */
-    @Override
-    public void remove( DifferentialExpressionAnalysis analysis ) {
-        if ( analysis == null ) {
-            throw new IllegalArgumentException( "analysis cannot be null" );
-        }
-
-        Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
-        session.flush();
-        session.clear();
-
-        session.buildLockRequest( LockOptions.NONE ).lock( analysis );
-        int contrastsDone = 0;
-        int resultsDone = 0;
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
-
-            // Delete contrasts
-            final String nativeDeleteContrastsQuery = "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                    + " where d.RESULT_SET_FK = :rsid and d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
-            SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
-            q.setParameter( "rsid", rs.getId() );
-            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
-
-            // will happen by cascade.
-            // // delete HIT_LISTS
-            // String nativeDeleteHLQuery = "DELETE h from HIT_LIST_SIZE h"
-            // + " where h.RESULT_SET_FK = :rsid  ";
-            // q = session.createSQLQuery( nativeDeleteHLQuery );
-            // q.setParameter( "rsid", rs.getId() );
-            // resultsDone += q.executeUpdate();
-            //
-            // // delete P_VALUE_DISTRIBUTION
-            // String nativeDeletePVDQuery = "DELETE p from ANALYSIS_RESULT_SET ars, PVALUE_DISTRIBUTION p"
-            // + " where ars.ID=:rsid AND ars.PVALUE_DISTRIBUTION_FK = p.ID";
-            // q = session.createSQLQuery( nativeDeletePVDQuery );
-            // q.setParameter( "rsid", rs.getId() );
-            // resultsDone += q.executeUpdate();
-
-            // Delete AnalysisResults
-            String nativeDeleteARQuery = "DELETE d from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
-                    + " where d.RESULT_SET_FK = :rsid  ";
-            q = session.createSQLQuery( nativeDeleteARQuery );
-            q.setParameter( "rsid", rs.getId() );
-            resultsDone += q.executeUpdate();
-            // could do in a loop with limit , might be faster.
-
-            session.flush();
-            session.clear();
-        }
-        log.info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results in " + timer.getTime() + "ms" );
-
-        analysis = ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysisImpl.class,
-                analysis.getId() );
-
-        session.delete( analysis );
-        session.flush();
-        session.clear();
-    }
-
-    /*
      * (non-Javadoc)
      * 
      * @see
@@ -429,6 +360,106 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getExperimentsWithAnalysis(java.util
+     * .Collection)
+     */
+    @Override
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+        final String queryString = "select distinct e.id from DifferentialExpressionAnalysisImpl a"
+                + " inner join a.experimentAnalyzed e where e.id in (:eeIds)";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", idsToFilter );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getExperimentsWithAnalysis(ubic.gemma
+     * .model.genome.Taxon)
+     */
+    @Override
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+        final String queryString = "select distinct ee.id from DifferentialExpressionAnalysisImpl"
+                + " as doa inner join doa.experimentAnalyzed as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.sampleUsed as sample where sample.sourceTaxon = :taxon ";
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    /*
+     * This overrides the default method to speed it up.
+     * 
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
+     */
+    @Override
+    public void remove( DifferentialExpressionAnalysis analysis ) {
+        if ( analysis == null ) {
+            throw new IllegalArgumentException( "analysis cannot be null" );
+        }
+
+        Session session = this.getSessionFactory().getCurrentSession(); // hopefully okay.
+        session.flush();
+        session.clear();
+
+        session.buildLockRequest( LockOptions.NONE ).lock( analysis );
+        int contrastsDone = 0;
+        int resultsDone = 0;
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
+
+            // Delete contrasts
+            final String nativeDeleteContrastsQuery = "DELETE c FROM CONTRAST_RESULT c, DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
+                    + " where d.RESULT_SET_FK = :rsid and d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
+            SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
+            q.setParameter( "rsid", rs.getId() );
+            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
+
+            // will happen by cascade.
+            // // delete HIT_LISTS
+            // String nativeDeleteHLQuery = "DELETE h from HIT_LIST_SIZE h"
+            // + " where h.RESULT_SET_FK = :rsid  ";
+            // q = session.createSQLQuery( nativeDeleteHLQuery );
+            // q.setParameter( "rsid", rs.getId() );
+            // resultsDone += q.executeUpdate();
+            //
+            // // delete P_VALUE_DISTRIBUTION
+            // String nativeDeletePVDQuery = "DELETE p from ANALYSIS_RESULT_SET ars, PVALUE_DISTRIBUTION p"
+            // + " where ars.ID=:rsid AND ars.PVALUE_DISTRIBUTION_FK = p.ID";
+            // q = session.createSQLQuery( nativeDeletePVDQuery );
+            // q.setParameter( "rsid", rs.getId() );
+            // resultsDone += q.executeUpdate();
+
+            // Delete AnalysisResults
+            String nativeDeleteARQuery = "DELETE d from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT d"
+                    + " where d.RESULT_SET_FK = :rsid  ";
+            q = session.createSQLQuery( nativeDeleteARQuery );
+            q.setParameter( "rsid", rs.getId() );
+            resultsDone += q.executeUpdate();
+            // could do in a loop with limit , might be faster.
+
+            session.flush();
+            session.clear();
+        }
+        log.info( "Deleted " + contrastsDone + " contrasts, " + resultsDone + " results in " + timer.getTime() + "ms" );
+
+        analysis = ( DifferentialExpressionAnalysis ) session.load( DifferentialExpressionAnalysisImpl.class,
+                analysis.getId() );
+
+        session.delete( analysis );
+
+        session.flush();
+        session.clear();
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome
      * .Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
@@ -495,7 +526,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     protected Map<Investigation, Collection<DifferentialExpressionAnalysis>> handleFindByInvestigations(
             Collection<Investigation> investigations ) {
 
-        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<Investigation, Collection<DifferentialExpressionAnalysis>>();
+        Map<Investigation, Collection<DifferentialExpressionAnalysis>> results = new HashMap<>();
 
         for ( Investigation i : investigations ) {
             results.put( i, this.getAnalyses( i ) );

@@ -67,7 +67,8 @@ public interface PhenotypeAssociationService {
      *         the phenotype that was queries (that is, it may be a child term).
      * @author paul
      */
-    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm phenotype, Long taxonId, boolean includeIEA );
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm phenotype, Long taxonId,
+            boolean includeIEA );
 
     /**
      * create a GenericExperiment

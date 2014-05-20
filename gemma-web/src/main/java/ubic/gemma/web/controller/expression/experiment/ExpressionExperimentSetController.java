@@ -25,6 +25,8 @@ import java.util.HashSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +40,15 @@ import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValue
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 
 /**
- * For fetching and manipulating ExpressionExperimentSets
+ * For fetching and manipulating ExpressionExperimentSets. Methods take collections to be compatible with Store
+ * interfaces.
  * 
  * @author paul
  * @version $Id$
@@ -64,7 +69,9 @@ public class ExpressionExperimentSetController extends BaseController {
      * @param eeSetVos value object constructed on the client.
      * @param modificationBased whether the set was modified by the user
      * @return collection of added session groups (with updated reference.id etc)
+     * @deprecated
      */
+    @Deprecated
     public Collection<SessionBoundExpressionExperimentSetValueObject> addSessionGroups(
             Collection<SessionBoundExpressionExperimentSetValueObject> eeSetVos, Boolean modificationBased ) {
 
@@ -72,10 +79,22 @@ public class ExpressionExperimentSetController extends BaseController {
 
         for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
 
-            results.add( sessionListManager.addExperimentSet( eesvo, modificationBased ) );
+            results.add( addSessionGroup( eesvo, modificationBased ) );
         }
 
         return results;
+    }
+
+    /**
+     * AJAX adds the Expression Experiment group to the session
+     * 
+     * @param eesvo
+     * @param modificationBased
+     * @return
+     */
+    public SessionBoundExpressionExperimentSetValueObject addSessionGroup(
+            SessionBoundExpressionExperimentSetValueObject eesvo, Boolean modificationBased ) {
+        return sessionListManager.addExperimentSet( eesvo, modificationBased );
     }
 
     /**
@@ -138,7 +157,7 @@ public class ExpressionExperimentSetController extends BaseController {
     public Collection<ExpressionExperimentSetValueObject> create(
             Collection<ExpressionExperimentSetValueObject> entities ) {
 
-        Collection<Long> eeSetIds = new HashSet<Long>();
+        Collection<Long> eeSetIds = new HashSet<>();
         for ( ExpressionExperimentSetValueObject ees : entities ) {
 
             if ( ees.getExpressionExperimentIds() == null || ees.getExpressionExperimentIds().isEmpty() ) {
@@ -159,8 +178,32 @@ public class ExpressionExperimentSetController extends BaseController {
         if ( vo == null ) {
             throw new IllegalArgumentException( "No such set with id=" + id );
         }
-        // note that this is a bit inefficient....
+        // FIXME this is a bit inefficient...could have an ID-filtering interceptor.
         return EntityUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
+    }
+
+    /**
+     * @param groupId
+     * @param limit
+     * @return
+     */
+    public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long groupId, final Integer limit ) {
+
+        // FIXME inefficient....difficult to get a subset efficiently with security filtering
+        Collection<ExpressionExperimentValueObject> experimentInSet = expressionExperimentSetService
+                .getExperimentValueObjectsInSet( groupId );
+
+        if ( limit != null && limit > 0 && limit < experimentInSet.size() ) {
+            return CollectionUtils.select( experimentInSet, new Predicate() {
+                int i = 0;
+
+                @Override
+                public boolean evaluate( Object object ) {
+                    return i++ < limit;
+                }
+            } );
+        }
+        return experimentInSet;
     }
 
     /**

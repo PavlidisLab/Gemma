@@ -24,6 +24,8 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * Provides basic services for dealing with analyses
  * 
@@ -60,11 +62,39 @@ public interface AnalysisService<T extends Analysis> {
     public Collection<T> findByName( String name );
 
     /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<T> findByParentTaxon( Taxon taxon );
+
+    /**
+     * 
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<T> findByTaxon( Taxon taxon );
+
+    /**
      * An analysis is uniquely determined by its set of investigations. Only returns an analysis if the collection of
      * investigations given exacly matches other wise returns null
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public T findByUniqueInvestigations( Collection<? extends Investigation> investigations );
+
+    /**
+     * Not secured: for internal use only
+     * 
+     * @param idsToFilter starting list of bioassayset ids.
+     * @return the ones which have a coexpression analysis.
+     */
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+
+    /**
+     * Not secured: for internal use only
+     * 
+     * @param taxon
+     * @return ids of bioassaysets from the given taxon that have a coexpression analysis
+     */
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
     /**
      * Returns the analysis with the specified ID

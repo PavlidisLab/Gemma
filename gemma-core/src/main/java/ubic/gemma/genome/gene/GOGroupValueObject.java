@@ -79,11 +79,33 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setSearchTerm( searchTerm );
     }
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( !super.equals( obj ) ) {
+            return false;
+        }
+        if ( getClass() != obj.getClass() ) {
+            return false;
+        }
+        GOGroupValueObject other = ( GOGroupValueObject ) obj;
+        if ( goId == null ) {
+            if ( other.goId != null ) {
+                return false;
+            }
+        } else if ( !goId.equals( other.goId ) ) {
+            return false;
+        }
+        return true;
+    }
+
     /**
-     * @param searchTerm the searchTerm to set
+     * @return the goId
      */
-    public void setSearchTerm( String searchTerm ) {
-        this.searchTerm = searchTerm;
+    public String getGoId() {
+        return goId;
     }
 
     /**
@@ -91,6 +113,14 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
      */
     public String getSearchTerm() {
         return searchTerm;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ( ( goId == null ) ? 0 : goId.hashCode() );
+        return result;
     }
 
     /**
@@ -101,10 +131,10 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
     }
 
     /**
-     * @return the goId
+     * @param searchTerm the searchTerm to set
      */
-    public String getGoId() {
-        return goId;
+    public void setSearchTerm( String searchTerm ) {
+        this.searchTerm = searchTerm;
     }
 
 }

@@ -16,6 +16,9 @@
 
 Ext.namespace( 'Gemma' );
 
+/**
+ * 
+ */
 Gemma.ExperimentAndExperimentGroupComboRecord = Ext.data.Record.create( [ {
    name : "name",
    type : "string"
@@ -61,10 +64,10 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
          allQuery : '', // loading of auto gen and user's sets handled in Controller when query = ''
          enableKeyEvents : true,
 
-         loadingText : 'Searching...',
+         loadingText : 'Searching ...', // FIXME if field is blank use 'loading ...'
          emptyText : "Find experiments by keyword",
-         listEmptyTextBlankQuery : 'Enter text to search for experiments',
-         listEmptyText : 'No results found',
+         listEmptyTextBlankQuery : 'Search by keyword or ID',
+         listEmptyText : 'No results',
          minChars : 3,
          selectOnFocus : false,
          autoSelect : false,
@@ -109,7 +112,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                this.restrictHeight();
                if ( this.lastQuery === this.allQuery ) {
                   if ( this.editable ) {
-                     // this.el.dom.select();
+                     // this.el.dom.select(); // change from superclass
                   }
 
                   if ( this.autoSelect !== false && !this.selectByValue( this.value, true ) ) {
@@ -131,13 +134,63 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
          }, // end onLoad overwrite
 
          /**
+          * Filters the contents on the basis of whether the mode is 'coexpresssion' or differential expression'
+          * 
+          * @param {String}
+          *           mode
+          * @memberOf Gemma.ExperimentAndExperimentGroupCombo
+          */
+         setMode : function( mode ) {
+            // console.log( "set mode = " + mode );
+            /*
+             * filter the results
+             */
+            if ( mode == 'diffex' ) {
+               this.getStore().filterBy( function( rec, id ) {
+                  var r = rec.get( 'resultValueObject' );
+                  if ( r instanceof FreeTextExpressionExperimentResultsValueObject ) {
+                     return r.numWithDifferentialExpressionAnalysis > 0;
+                  } else if ( r instanceof SessionBoundExpressionExperimentSetValueObject ) {
+                     return r.numWithDifferentialExpressionAnalysis > 0;
+                  } else if ( r instanceof ExpressionExperimentSetValueObject ) {
+                     return r.numWithDifferentialExpressionAnalysis > 0;
+                  } else if ( r instanceof ExpressionExperimentValueObject ) {
+                     return r.hasDifferentialExpressionAnalysis;
+                  }
+                  return true;
+
+               } );
+            } else if ( mode == 'coex' ) {
+               this.getStore().filterBy( function( rec, id ) {
+                  var r = rec.get( 'resultValueObject' );
+                  if ( r instanceof FreeTextExpressionExperimentResultsValueObject ) {
+                     return r.numWithCoexpressionAnalysis > 0;
+                  } else if ( r instanceof SessionBoundExpressionExperimentSetValueObject ) {
+                     return r.numWithCoexpressionAnalysis > 0;
+                  } else if ( r instanceof ExpressionExperimentSetValueObject ) {
+                     return r.numWithCoexpressionAnalysis > 0;
+                  } else if ( r instanceof ExpressionExperimentValueObject ) {
+                     return r.hasCoexpressionAnalysis;
+                  }
+                  return true;
+               } );
+            } else {
+               console.log( "unknown mode" );
+            }
+         },
+
+         /**
           * Parameters for AJAX call.
           * 
-          * @param {}
+          * @private
+          * @Override
+          * @param {string}
           *           query
+          * 
           * @return {}
           */
          getParams : function( query ) {
+            // console.log( "ExperimentCombo getting parameters for search: " + query );
             return [ query, this.taxonId ];
          },
 
@@ -217,8 +270,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
 
             Gemma.ExperimentAndExperimentGroupCombo.superclass.initComponent.call( this );
 
-            this.on( 'select', this.setExpressionExperimentGroup, this );
-
             /** *** start of query queue fix **** */
 
             // enableKeyEvents config required
@@ -227,16 +278,31 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                this.displayingComboValueToQueryMatch = false;
             } );
 
+            this.getStore().on( 'beforeload', function( store, opts ) {
+               // fires before the loader request so not very useful.
+            }, this );
+
             this.getStore().on(
+               /* fires after loading.. */
                'load',
                function( store, records, options ) {
                   var query = (options.params) ? options.params[0] : null;
                   // if the query for which the store is returning is not the same as the last query made with the combo
                   // clear these results and add the previous query's results
 
-                  if ( this.urlInitiatedQuery ) {
+                  // if ( records.length > 0 && records[0].originalQuery
+                  // && records[0].originalQuery !== this.getValue() ) {
+                  // /*
+                  // * Abort loading; but the load event is fired too late. This could cause problems.
+                  // */
+                  // console.log( 'aborting previous query for ' + records[0].originalQuery );
+                  // store.remove( records );
+                  // }
+                  // console.log( 'valid results match the query=' + this.getValue() );
 
+                  if ( this.urlInitiatedQuery ) {
                      this.fireEvent( "select", this, records[0] );
+                     // } else if ( this.getValue() !== records[0].originalQuery ) {
 
                   } else if ( this.getValue() !== query ) {
 
@@ -253,7 +319,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                      // if the valid query hasn't returned yet, show loading text
                      if ( !this.displayingComboValueToQueryMatch ) {
                         // --- from Combo.js to show loading text ---
-                        this.innerList.update( this.loadingText ? '' + this.loadingText + '' : '' );
+                        this.innerList.update( this.loadingText ? '<div class="loading-indicator">' + this.loadingText
+                           + '</div>' : '' );
                         this.restrictHeight();
                         this.selectedIndex = -1;
                         // --- end of code from Combo.js ---
@@ -275,25 +342,23 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
             /** *** end of query queue fix **** */
 
             this.on( 'focus', function( field ) {
-               // if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
-               if ( this.getValue() === '' ) {
-
-                  /*
-                   * // passing in taxon instead of taxonId breaks this call
-                   * ExpressionExperimentController.searchExperimentsAndExperimentGroups("", this.taxonId,
-                   * function(records){ this.getStore().loadData(records); }.createDelegate(this));
-                   */
-                  this.doQuery( '', true );
-                  this.lastQuery = null; // needed for query queue fix
-               }
+               // if the text field is blank, show any public automatically available and user's own groups
+               setTimeout( function() {
+                  if ( this.getValue() === '' ) {
+                     this.doQuery( '', true );
+                     this.lastQuery = null; // needed for query queue fix
+                  }
+               }.createDelegate( this ), 1250 );
             }, this );
 
             this.addEvents( "experimentGroupUrlSelectionComplete" );
          },
 
+         /**
+          * @override
+          */
          reset : function() {
             Gemma.ExperimentAndExperimentGroupCombo.superclass.reset.call( this );
-            delete this.selectedExpressionExperimentGroup;
             this.lastQuery = null;
 
             if ( this.tooltip ) {
@@ -301,81 +366,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
             }
          },
 
-         getExpressionExperimentGroup : function() {
-            if ( this.getRawValue() === '' ) {
-               return null;
-            }
-            return this.selectedExpressionExperimentGroup;
-         },
-
-         getSelected : function() {
-            return this.getExpressionExperimentGroup();
-         },
-
-         /**
-          * Handler for select event.
-          * 
-          * @param {}
-          *           combo
-          * @param {}
-          *           record
-          * @param {}
-          *           index
-          * @see http://docs.sencha.com/extjs/3.4.0/#!/api/Ext.form.ComboBox
-          */
-         setExpressionExperimentGroup : function( combo, record, index ) {
-
-            // we don't need to grab the ids if the selected group is a session group (they are already there) or a
-            // single
-            // experiment
-            if ( record.get( 'resultValueObject' ) instanceof SessionBoundExpressionExperimentSetValueObject
-               || record.get( 'resultValueObject' ) instanceof ExpressionExperimentValueObject ) {
-               console.log( record.get( 'resultValueObject' ) );
-               this.lastQuery = null;
-               this.selectedExpressionExperimentGroup = record.data;
-               this.fireEvent( "recordSelected", this.selectedExpressionExperimentGroup, combo, index );
-            } else {
-               ExpressionExperimentSetController.getExperimentIdsInSet( record.data.resultValueObject.id, {
-                  callback : function( expIds ) {
-
-                     if ( !expIds || expIds.length === 0 ) {
-                        Ext.Msg.alert( 'No elements', 'No members were returned' );
-                        return;
-                     }
-
-                     // why do we require that this is set in two places? The answer has been lost to the sands of time
-                     record.set( 'memberIds', expIds );
-                     record.get( 'resultValueObject' ).expressionExperimentIds = expIds;
-                     this.lastQuery = null;
-                     this.selectedExpressionExperimentGroup = record.data;
-                     this.fireEvent( "recordSelected", this.selectedExpressionExperimentGroup, combo, index );
-                     if ( this.urlInitiatedQuery ) {
-                        this.urlInitiatedQuery = false;
-                        this.fireEvent( "experimentGroupUrlSelectionComplete" );
-                     }
-                  }.createDelegate( this )
-               } );
-
-            }
-
-         },
          setTaxonId : function( id ) {
             this.taxonId = id;
-         },
-
-         getAllTaxonGroup : function( taxon ) {
-
-            var urlparams = Ext.urlDecode( location.search.substring( 1 ) );
-
-            this.urlInitiatedQuery = true;
-            if ( isNaN( urlparams.taxon ) ) {
-               Ext.Msg.alert( Gemma.HelpText.CommonErrors.MissingInput.title,
-                  Gemma.HelpText.CommonErrors.MissingInput.taxon );
-               return;
-            }
-            ExpressionExperimentController.getAllTaxonExperimentGroup( urlparams.taxon, function( records ) {
-               this.store.loadData( records );
-            }.createDelegate( this ) );
-
          }
       } );

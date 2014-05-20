@@ -95,10 +95,11 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private static final AtomicBoolean ready = new AtomicBoolean( false );
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
-    private static Map<String, GOAspect> term2Aspect = new HashMap<String, GOAspect>();
+    // cache
+    private static Map<String, GOAspect> term2Aspect = new HashMap<>();
 
-    // map of uris to terms
-    private static Map<String, OntologyTerm> uri2Term = new HashMap<String, OntologyTerm>();
+    // cache
+    private static Map<String, OntologyTerm> uri2Term = new HashMap<>();
 
     /**
      * @param term
@@ -318,15 +319,23 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         queryString = queryString.trim();
         queryString = queryString.replaceAll( "\\s+", " AND " );
 
-        Collection<OntologyResource> rawMatches = new HashSet<OntologyResource>();
+        StopWatch timer = new StopWatch();
+        timer.start();
+        Collection<OntologyResource> rawMatches = new HashSet<>();
         for ( SearchIndex index : this.indices ) {
             rawMatches.addAll( OntologySearch.matchIndividuals( model, index, queryString ) );
         }
+        if ( timer.getTime() > 100 ) {
+            log.info( "Find " + rawMatches.size() + " raw go terms from " + queryString + ": " + timer.getTime()
+                    + " ms" );
+        }
+        timer.reset();
+        timer.start();
 
         /*
          * Required to make sure the descriptions are filled in.
          */
-        Collection<OntologyTerm> matches = new HashSet<OntologyTerm>();
+        Collection<OntologyTerm> matches = new HashSet<>();
         for ( OntologyResource r : rawMatches ) {
             if ( StringUtils.isBlank( r.getUri() ) ) continue;
             OntologyTerm termForURI = GeneOntologyServiceImpl.getTermForURI( r.getUri() );
@@ -336,6 +345,11 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
             }
             matches.add( termForURI );
         }
+
+        if ( timer.getTime() > 100 ) {
+            log.info( "Convert " + rawMatches.size() + " raw go terms to terms: " + timer.getTime() + " ms" );
+        }
+
         return matches;
     }
 

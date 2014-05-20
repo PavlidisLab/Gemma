@@ -678,7 +678,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
             } ]
          } ),
          view : new Ext.grid.GroupingView( {
-            emptyText : 'No results found.',
+            emptyText : 'No results.',
             deferEmptyText : true,
             enableRowBody : true,
             showPreview : true,

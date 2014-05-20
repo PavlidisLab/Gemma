@@ -42,7 +42,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
       } );
 
       display.coexDisplaySettings.on( 'gene_overlay', function() {
-         display.applyGeneListOverlay();
+         // display.applyGeneListOverlay();
       } );
 
       display.coexDisplaySettings.on( 'search_text_change', function( text ) {
@@ -79,16 +79,16 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
       ownerRef.cy.on( 'layoutstop', function( e ) {
          // this is a hack because in firefox the cytoscape code fires off two 'layoutstop' events for arbor when you
-         // use it for initialization
-         // workaround is use a different layout in initializer, then once it finishes use one we want.
+         // use it for initialization workaround is use a different layout in initializer, then once it finishes use one
+         // we want.
          console.log( 'cytoscape event: layoutstop, layout name:' + e.cy._private.layout.options.name );
-         if ( e.cy._private.layout.options.name == 'null' ) {
-            ownerRef.refreshLayout();
-         } else {
-            ownerRef.cytoscapePanel.loadMask.hide();
-            ownerRef.nodeDegreeEmphasize( true ); // FIXME allow default to change.
-            ownerRef.zoomToFit();
-         }
+         // if ( e.cy._private.layout.options.name == 'null' ) {
+         // ownerRef.refreshLayout();
+         // } else {
+         ownerRef.cytoscapePanel.loadMask.hide();
+         ownerRef.nodeDegreeEmphasize( true ); // FIXME allow default to change.
+         ownerRef.zoomToFit(); // FIXME this doesn't work that well.
+         // }
 
       } );
    },
@@ -265,7 +265,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
       var overlayIds = this.coexDisplaySettings.getOverlayGeneIds();
 
-      // slow
+      // slow - why is this here?
       this.applyDefaultGraphStyle( this.emphasized );
 
       if ( overlayIds.length == 0 ) {
@@ -374,7 +374,10 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
       var win = new Ext.Window( {
          title : Gemma.HelpText.WidgetDefaults.CytoscapePanel.exportPNGWindowTitle,
-         plain : true,
+         plain : false,
+         bodyStyle : {
+            "background-color" : "white"
+         },
          html : htmlString,
          height : 700,
          width : 900,

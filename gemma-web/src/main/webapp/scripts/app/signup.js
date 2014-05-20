@@ -53,7 +53,7 @@ Ext.onReady( function() {
       sb.showBusy();
    };
 
-   var signup = new Ext.FormPanel( {
+   new Ext.FormPanel( {
       labelWidth : 140, // label settings here cascade unless overridden
       url : '/Gemma/signup.html',
       renderTo : 'signup',

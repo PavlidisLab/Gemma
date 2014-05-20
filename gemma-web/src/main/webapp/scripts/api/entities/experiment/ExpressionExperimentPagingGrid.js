@@ -61,6 +61,12 @@ Gemma.ExperimentPagingStore = Ext.extend( Ext.data.Store, {
          name : "bioAssayCount",
          type : "int"
       }, {
+         name : "hasCoexpressionAnalysis",
+         type : "boolean"
+      }, {
+         name : "hasDifferentialExpressionAnalysis",
+         type : "boolean"
+      }, {
          name : "taxon",
          type : "string"
       }, {
@@ -189,13 +195,27 @@ Gemma.ExperimentPagingGrid = Ext
             },
             {
                header : "Status",
+               tooltip : "D=has differential expression analysis; C=has coexpression analysis",
                dataIndex : 'troubled',
                sortable : true,
-               width : 0.03,
-               hidden : true,
+               width : 0.05,
+               hidden : false,
                renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-                  return (value) ? '<img title="' + record.troubleDetails + '" src="/Gemma/images/icons/warning.png"/>'
-                     : '';
+
+                  if ( value ) {
+                     return '<img title="' + record.get( 'troubleDetails' )
+                        + '" src="/Gemma/images/icons/warning.png"/>';
+                  }
+
+                  var text = '';
+                  if ( record.get( 'hasCoexpressionAnalysis' ) ) {
+                     text = text + 'C&nbsp;';
+                  }
+                  if ( record.get( 'hasDifferentialExpressionAnalysis' ) ) {
+                     text = text + 'D&nbsp;';
+                  }
+
+                  return text;
                }
             },
             {
@@ -256,6 +276,7 @@ Gemma.ExperimentPagingGrid = Ext
           * 
           * @param {Object}
           *           eeIds
+          * @memberOf Gemma.ExperimentPagingGrid
           */
          loadExperimentsById : function( eeIds ) {
 
@@ -289,7 +310,7 @@ Gemma.ExperimentPagingGrid = Ext
                   this.setShowAsTextParams( null, eeIds );
                   this.nowSubset();
                }
-            } )
+            } );
 
          },
 
@@ -526,7 +547,7 @@ Gemma.ExperimentPagingGrid = Ext
                   var ids = selectedGroup.memberIds;
                   this.loadExperimentsById( ids );
                   // ids is not security filtered
-                  var totalCount = this.getStore().getTotalCount();
+                  // var totalCount = this.getStore().getTotalCount();
                   this.setTitle( "Displaying set: &quot;" + selectedGroup.name + "&quot;" );
 
                   // problem: if the user reaches this grid with a URL like '[...]?taxonId=4' and then does a

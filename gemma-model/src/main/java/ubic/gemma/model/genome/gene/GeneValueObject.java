@@ -100,10 +100,21 @@ public class GeneValueObject implements java.io.Serializable {
 
     private Integer ncbiId;
 
+    private double[] nodeDegreeNegRanks;
+
+    private double[] nodeDegreePosRanks;
+    
     /**
-     * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0)
+     * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0) for
+     * negative correlation coexpression
      */
-    private int[] nodeDegrees;
+    private int[] nodeDegreesNeg;
+    
+    /**
+     * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0) for
+     * positive coexpression
+     */
+    private int[] nodeDegreesPos;
 
     private Integer numGoTerms = 0;
 
@@ -284,8 +295,20 @@ public class GeneValueObject implements java.io.Serializable {
         return this.ncbiId;
     }
 
-    public int[] getNodeDegrees() {
-        return nodeDegrees;
+    public double[] getNodeDegreeNegRanks() {
+        return nodeDegreeNegRanks;
+    }
+
+    public double[] getNodeDegreePosRanks() {
+        return nodeDegreePosRanks;
+    }
+
+    public int[] getNodeDegreesNeg() {
+        return nodeDegreesNeg;
+    }
+
+    public int[] getNodeDegreesPos() {
+        return nodeDegreesPos;
     }
 
     public Integer getNumGoTerms() {
@@ -385,8 +408,20 @@ public class GeneValueObject implements java.io.Serializable {
         this.ncbiId = ncbiId;
     }
 
-    public void setNodeDegrees( int[] nodeDegrees ) {
-        this.nodeDegrees = nodeDegrees;
+    public void setNodeDegreeNegRanks( double[] nodeDegreeNegRanks ) {
+        this.nodeDegreeNegRanks = nodeDegreeNegRanks;
+    }
+
+    public void setNodeDegreePosRanks( double[] nodeDegreePosRanks ) {
+        this.nodeDegreePosRanks = nodeDegreePosRanks;
+    }
+
+    public void setNodeDegreesNeg( int[] nodeDegreesNeg ) {
+        this.nodeDegreesNeg = nodeDegreesNeg;
+    }
+
+    public void setNodeDegreesPos( int[] nodeDegreesPos ) {
+        this.nodeDegreesPos = nodeDegreesPos;
     }
 
     public void setNumGoTerms( Integer numGoTerms ) {

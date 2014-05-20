@@ -10,41 +10,61 @@ Ext.namespace( 'Gemma' );
 
 Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
    {
-      listModified : false,
-      
+
+      /**
+       * 
+       * @param gsvo
+       *           {GeneSetValueObject}
+       */
+      setSelectedGeneSetValueObject : function( gsvo ) {
+         if ( gsvo.resultValueObject != null ) {
+            this.selectedGeneSetValueObject = gsvo.resultValueObject;
+
+         } else {
+            this.selectedGeneSetValueObject = gsvo;
+         }
+
+      },
 
       /**
        * @memberOf Gemma.GeneSearchAndPreview
        */
-      getSelectedGeneOrGeneSetValueObject : function() {
-         return (this.selectedGeneOrGroup) ? this.selectedGeneOrGroup.resultValueObject : null;
-      },
-      setSelectedGeneSetValueObject : function( gsvo ) {
-         this.selectedGeneSetValueObject = gsvo;
-         this.isGeneSet = true;
-         this.isGene = false;
-      },
       getSelectedGeneSetValueObject : function() {
          return this.selectedGeneSetValueObject;
       },
-      resetGenePreview : function() {
-         this.preview.resetPreview();
+
+      reset : function() {
+         if ( this.loadMask )
+            this.loadMask.hide();
+         this.preview.reset();
+         this.geneCombo.reset();
+         this.geneCombo.enable().show();
+         this.helpBtn.show();
+         this.symbolListButton.show();
+         this.preview.hide();
+         this.doLayout();
       },
+
+      resetGenePreview : function() {
+         this.preview.reset();
+      },
+
       showGenePreview : function() {
          this.preview.showPreview();
       },
+
       collapsePreview : function() {
          this.preview.collapsePreview();
       },
+
       maskGenePreview : function() {
          if ( !this.loadMask && this.getEl() ) {
             this.loadMask = new Ext.LoadMask( this.getEl(), {
                msg : Gemma.StatusText.Loading.genes
             } );
          }
-         if ( this.loadMask ) {
-            this.loadMask.show();
-         }
+         this.loadMask.show();
+
       },
 
       showTaxonCombo : true,
@@ -59,107 +79,143 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
        */
       loadGeneOrGroup : function( record, query ) {
 
-         this.selectedGeneOrGroup = record.data;
-         if ( this.selectedGeneOrGroup.resultValueObject instanceof GeneSetValueObject ) {
-            this.setSelectedGeneSetValueObject( this.selectedGeneOrGroup.resultValueObject );
-            this.isGeneSet = true;
-            this.isGene = false;
-         } else if ( this.selectedGeneOrGroup.resultValueObject instanceof GeneValueObject ) {
-            this.isGene = true;
-            this.isGeneSet = false;
-         }
-
+         var vo = record.data.resultValueObject;
          var id = record.get( "resultValueObject" ).id;
          var size = record.get( "size" );
          var name = record.get( "name" );
          var taxonId = this.searchForm.getTaxonId();
+         this.preview.setTaxonId( taxonId );
+
+         if ( vo instanceof GeneSetValueObject ) {
+            this.setSelectedGeneSetValueObject( vo );
+         } else if ( vo instanceof GeneValueObject ) {
+            // we should deal with sets, not
+            // single gene objects, we end up having two cases too often. Convert gene directly to set and stick with
+            // it.
+            var newset = this.makeSessionBoundGeneSet( [ id ], taxonId, "From symbol",
+               'Group made from gene symbols entered' );
+            this.setSelectedGeneSetValueObject( newset );
+         } else {
+            console.log( record );
+            throw "Don't know what kind of object was received";
+         }
 
          // for bookmarking diff ex viz
          if ( id === null ) {
             var queryToGetSelected = "";
-            if ( this.isGeneSet && this.selectedGeneSetValueObject instanceof GOGroupValueObject
-               && this.name.match( /^GO_\d+/ ) ) {
+            if ( vo instanceof GOGroupValueObject && vo.name.match( /^GO_\d+/ ) ) {
                queryToGetSelected = "taxon:" + taxonId + ";GO:" + name;
-            } else if ( this.isGeneSet && this.selectedGeneSetValueObject instanceof FreeTextGeneResultsValueObject
-               && name.indexOf( query ) != -1 ) {
+            } else if ( vo instanceof FreeTextGeneResultsValueObject && vo.name.indexOf( query ) != -1 ) {
                queryToGetSelected = "taxon:" + taxonId + ";query:" + query;
             }
             this.queryUsedToGetSessionGroup = queryToGetSelected;
          }
 
-         var geneIds = [];
+         this.preview.loadGenePreviewFromGeneSet( this.getSelectedGeneSetValueObject() );
 
-         // load preview of group if group was selected
-         if ( this.isGeneSet ) {
-
-            this.preview.setTaxonId( taxonId );
-            this.preview.loadGenePreviewFromGeneSet( this.getSelectedGeneSetValueObject() );
-
-         }
-         // load single gene if gene was selected
-         else {
-
-            this.selectedGeneOrGroup.memberIds = [ id ];
-            this.geneIds = [ id ];
-
-            this.searchForm.geneGroupId = null;
-
-            // reset the gene preview panel content
-            this.resetGenePreview();
-
-            this.preview.setTaxonId( taxonId );
-            this.preview.loadGenePreviewFromGenes( [ this.selectedGeneOrGroup.resultValueObject ] );
-         }
       },
 
       /**
-       * update the contents of the gene preview box and the this.geneIds value using a list of gene Ids
        * 
        * @param geneIds
-       *           an array of geneIds to use
+       * @param taxonId
+       * @param name
+       * @param description
+       * @returns {SessionBoundGeneSetValueObject}
        */
-      loadGenes : function( ids, taxonId ) {
-
-         this.preview.mask();
-
-         // store the ids
-         this.geneIds = ids;
-         this.searchForm.geneIds = ids;
-         // load the preview
-         this.preview.setTaxonId( this.taxonId );
-         this.preview.loadGenePreviewFromIds( ids );
-         this.preview.on( 'previewLoaded', function( genes ) {
-            var geneSet = this.makeSessionBoundGeneSet( ids, taxonId, 'Backup GO group',
-               'GO database unavailable, using backup list' );
-            this.fireEvent( 'previewLoaded', geneSet );
-         }, this );
-
-      },
-
       makeSessionBoundGeneSet : function( geneIds, taxonId, name, description ) {
+         // debugger;
          this.searchForm.geneIds = geneIds;
          this.geneIds = geneIds;
          var newGeneSet = new SessionBoundGeneSetValueObject();
          newGeneSet.modified = false;
          newGeneSet.geneIds = geneIds;
          newGeneSet.taxonId = taxonId;
-         newGeneSet.name = name;// 'From Symbol List';
+         newGeneSet.name = name;// 'From Symbol List' etc.;
          newGeneSet.description = description, // 'Group made from gene symbols entered.';
          newGeneSet.size = geneIds.length;
          newGeneSet.id = null;
-         this.selectedGeneOrGroup = newGeneSet;
-         this.selectedGeneOrGroup.memberIds = geneIds;
-         this.selectedGeneOrGroup.resultValueObject = newGeneSet;
          return newGeneSet;
       },
 
+      /**
+       * Used when user pastes in a list of genes; or when reaching from a URL
+       * 
+       * @private
+       * @param queryToGenes
+       *           hash of queries to genes
+       * @param taxonId
+       * @return SessionBoundGeneSetValueObject
+       */
+      processGeneMultiSearch : function( queryToGenes, taxonId ) {
+
+         // debugger;
+         var geneIds = [];
+         var queriesWithNoResults = [];
+         var allGenes = [];
+
+         for ( var query in queryToGenes) {
+            var gene = queryToGenes[query];
+
+            if ( gene == null ) {
+               queriesWithNoResults.push( query );
+               continue;
+            }
+            geneIds.push( gene.id );
+            allGenes.push( gene );
+         }
+
+         this.searchForm.geneIds = geneIds;
+         this.geneIds = geneIds;
+
+         var geneset = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From Symbol List',
+            'Group made from gene symbols entered.' );
+
+         // if some genes weren't found
+         // prepare a msg for the user
+
+         var msgMany = ""; // FIXME, don't use.
+         var msgNone = "";
+
+         if ( queriesWithNoResults.length > 0 ) {
+            msgNone = queriesWithNoResults.length + ((queriesWithNoResults.length === 1) ? " query" : " queries")
+               + " did not match any genes in Gemma:<br><br>";
+            // for each query
+            var query = '';
+            for (var i = 0; i < queriesWithNoResults.length; i++) {
+               query = queriesWithNoResults[i];
+               msgNone += query + "<br>";
+            }
+         }
+
+         // reset the gene preview panel content
+         this.resetGenePreview();
+
+         this.preview.setTaxonId( taxonId );
+
+         var message = queriesWithNoResults.length > 0 ? String.format(
+            Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.inexactFromList, msgMany, msgNone ) : '';
+
+         // FIXME if there is already a set, we should add to it, not clobber it.
+         this.preview.loadGenePreviewFromGeneSet( geneset, message );
+
+         this.setSelectedGeneSetValueObject( geneset );
+
+         this.preview.show();
+
+         return geneset;
+      },
       /**
        * Given text, search Gemma for matching genes. Used to 'bulk load' genes from the GUI.
        * 
        * @param {}
        *           e
+       * @param {Number}
+       *           taxonId
        */
       getGenesFromList : function( e, taxonId ) {
+         // debugger;
+
          var taxonName;
          if ( !taxonId && this.searchForm.getTaxonId() ) {
             taxonId = this.searchForm.getTaxonId();
@@ -175,115 +231,17 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             return;
          }
 
+         this.maskGenePreview();
+
          this.searchForm.taxonChanged( taxonId, taxonName );
-         this.geneCombo.disable().hide();
-         this.helpBtn.hide();
-         this.symbolListButton.hide();
-         this.fireEvent( 'madeFirstSelection' );
-         this.doLayout();
 
-         var loadMask = new Ext.LoadMask( this.getEl(), {
-            msg : Gemma.StatusText.Loading.genes
-         } );
-         loadMask.show();
-         var text = e.geneNames;
+         var queries = e.geneNames.split( '\n' );
 
-         GenePickerController.searchMultipleGenesGetMap( text, taxonId, {
+         GenePickerController.searchMultipleGenesGetMap( queries, taxonId, {
 
             callback : function( queryToGenes ) {
-               var i;
-               var geneData = [];
-               var warned = false;
-               this.maskGenePreview();
-
-               var geneIds = [];
-               var queriesWithMoreThanOneResult = [];
-               var queriesWithNoResults = [];
-               var query;
-               var allGenes = [];
-
-               // for each query
-               for (query in queryToGenes) {
-                  var genes = queryToGenes[query];
-                  // for each result of that query
-
-                  // if a query matched more than one result, store for
-                  // notifying user
-                  if ( genes.length > 1 ) {
-                     queriesWithMoreThanOneResult.push( query );
-                  }
-
-                  // if a query matched no results, store for notifying user
-                  if ( genes.length === 0 ) {
-                     queriesWithNoResults.push( query );
-                  }
-
-                  for (i = 0; i < genes.length; i++) {
-                     // store all ids
-                     geneIds.push( genes[i].id );
-                     allGenes.push( genes[i] );
-                  }
-               }
-
-               this.searchForm.geneIds = geneIds;
-               this.geneIds = geneIds;
-
-               this.makeSessionBoundGeneSet( geneIds, taxonId, 'From Symbol List',
-                  'Group made from gene symbols entered.' );
-
-               // if some genes weren't found or some gene matches were
-               // inexact,
-               // prepare a msg for the user
-
-               var msgMany = "";
-               var msgNone = "";
-               if ( queriesWithMoreThanOneResult.length > 0 ) {
-                  msgMany = queriesWithMoreThanOneResult.length
-                     + ((queriesWithMoreThanOneResult.length === 1) ? " query" : " queries")
-                     + "  returned more than one gene, all were added to the results: <br>";
-                  // for each query
-                  query = '';
-                  for (i = 0; i < queriesWithMoreThanOneResult.length; i++) {
-                     query = queriesWithMoreThanOneResult[i];
-                     msgMany += "<br> - <b>" + query + "</b> matched: ";
-                     genes = queryToGenes[query];
-                     // for each result of that query
-                     for (var j = 0; j < genes.length && j < 10; j++) {
-                        msgMany += genes[j].officialSymbol;
-                        msgMany += (j + 1 < genes.length) ? ", " : ".";
-                     }
-                     if ( genes.length > 10 ) {
-                        msgMany += "...(" + genes.length - 20 + " more)";
-                     }
-                  }
-                  msgMany += '<br><br><br>';
-               }
-               if ( queriesWithNoResults.length > 0 ) {
-                  msgNone = queriesWithNoResults.length + ((queriesWithNoResults.length === 1) ? " query" : " queries")
-                     + " did not match any genes in Gemma:<br><br>";
-                  // for each query
-                  query = '';
-                  for (i = 0; i < queriesWithNoResults.length; i++) {
-                     query = queriesWithNoResults[i];
-                     msgNone += " - " + query + "<br>";
-                  }
-               }
-
-               // reset the gene preview panel content
-               this.resetGenePreview();
-
-               this.preview.setTaxonId( taxonId );
-               this.preview.loadGenePreviewFromGenes( allGenes );
-
-               if ( queriesWithMoreThanOneResult.length > 0 || queriesWithNoResults.length > 0 ) {
-
-                  this.preview.insertMessage( String.format(
-                     Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.inexactFromList, msgMany, msgNone ) );
-               }
-
-               this.preview.show();
-
-               loadMask.hide();
+               this.processGeneMultiSearch( queryToGenes, taxonId );
+               this.changeDisplayAfterSelection();
 
             }.createDelegate( this ),
 
@@ -292,9 +250,14 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
                Ext.Msg.alert( 'There was an error', e );
             }
          } );
+
+         this.fireEvent( 'madeFirstSelection' ); // important? why outside the callback?
          this.fireEvent( 'select' );
       },
 
+      /**
+       * 
+       */
       getGenesFromUrl : function() {
          var urlparams = Ext.urlDecode( location.search.substring( 1 ) );
 
@@ -303,110 +266,17 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
                Gemma.HelpText.CommonErrors.MissingInput.taxon );
             return;
          }
+         this.maskGenePreview();
 
-         this.geneCombo.disable().hide();
-         this.helpBtn.hide();
-         this.symbolListButton.hide();
-         this.fireEvent( 'madeFirstSelection' );
-         this.doLayout();
+         var queries = urlparams.geneList.split( "," );
+         this.searchForm.taxonChanged( urlparams.taxon, urlparams.taxonName /* FIXME need the species name */);
 
-         var loadMask = new Ext.LoadMask( this.getEl(), {
-            msg : Gemma.StatusText.Loading.genes
-         } );
-         loadMask.show();
-
-         var splitTextArray = urlparams.geneList.split( "," );
-         var geneList = "";
-         var j;
-         for (j = 0; j < splitTextArray.length; j++) {
-
-            splitTextArray[j] = splitTextArray[j].replace( /^\s+|\s+$/g, '' );
-
-            if ( splitTextArray[j].length < 2 )
-               continue;
-
-            geneList = geneList + splitTextArray[j] + "\n";
-         }
-
-         GenePickerController.searchMultipleGenesGetMap( geneList, urlparams.taxon, {
-
+         GenePickerController.searchMultipleGenesGetMap( queries, urlparams.taxon, {
             callback : function( queryToGenes ) {
-               var i;
-               var geneData = [];
-               var warned = false;
-               this.maskGenePreview();
-
-               var geneIds = [];
-
-               var queriesWithNoResults = [];
-               var query;
-               var allGenes = [];
-
-               // for each query
-               for (query in queryToGenes) {
-                  var genes = queryToGenes[query];
-                  // for each result of that query
-
-                  // if a query matched more than one result, store for
-                  // notifying user
-                  if ( genes.length > 1 ) {
-                     queriesWithMoreThanOneResult.push( query );
-                  }
-
-                  // if a query matched no results, store for notifying user
-                  if ( genes.length === 0 ) {
-                     queriesWithNoResults.push( query );
-                  }
-
-                  for (i = 0; i < genes.length; i++) {
-                     // store all ids
-                     geneIds.push( genes[i].id );
-                     allGenes.push( genes[i] );
-                  }
-               }
-
-               this.searchForm.geneIds = geneIds;
-               this.geneIds = geneIds;
-
-               this.makeSessionBoundGeneSet( geneIds, urlparams.taxon, 'From URL',
-                  'Group made from gene symbols in URL.' );
-
-               // if some genes weren't found or some gene matches were
-               // inexact,
-               // prepare a msg for the user
-
-               var msgMany = "";
-               var msgNone = "";
-
-               if ( queriesWithNoResults.length > 0 ) {
-                  msgNone = queriesWithNoResults.length + ((queriesWithNoResults.length === 1) ? " query" : " queries")
-                     + " did not match any genes in Gemma:<br><br>";
-                  // for each query
-                  query = '';
-                  for (i = 0; i < queriesWithNoResults.length; i++) {
-                     query = queriesWithNoResults[i];
-                     msgNone += " - " + query + "<br>";
-                  }
-               }
-
-               // reset the gene preview panel content
-               this.resetGenePreview();
-
-               this.preview.setTaxonId( urlparams.taxon );
-               this.preview.loadGenePreviewFromGenes( allGenes );
-
-               if ( queriesWithNoResults.length > 0 ) {
-
-                  this.preview.insertMessage( String.format(
-                     Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.inexactFromList, msgMany, msgNone ) );
-               }
-
-               this.preview.show();
-
-               loadMask.hide();
+               this.processGeneMultiSearch( queryToGenes, urlparams.taxon );
+               this.changeDisplayAfterSelection();
 
                this.fireEvent( 'geneListUrlSelectionComplete' );
-
             }.createDelegate( this ),
 
             errorHandler : function( e ) {
@@ -415,8 +285,10 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             }
          } );
 
+         this.fireEvent( 'madeFirstSelection' ); // important? why outside the callback?
          this.fireEvent( 'select' );
       },
+
       /**
        * Allows updates to the query genes in the form based on existing GeneValueObjects already returned from the
        * server.
@@ -431,32 +303,35 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
 
          this.searchForm.geneIds = geneIds;
          this.geneIds = geneIds;
-         var newGeneSet = new SessionBoundGeneSetValueObject();
-         newGeneSet.modified = false;
-         newGeneSet.geneIds = geneIds;
-         newGeneSet.taxonId = taxonId;
-         newGeneSet.name = 'From Symbol List';
-         newGeneSet.description = 'Group made from gene symbols entered.';
-         newGeneSet.size = geneIds.length;
-         newGeneSet.id = null;
-         this.selectedGeneOrGroup = newGeneSet;
-         this.selectedGeneOrGroup.memberIds = geneIds;
-         this.selectedGeneOrGroup.resultValueObject = newGeneSet;
+         var vo = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From symbol list', 'Group made from gene symbols' );
+
+         this.changeDisplayAfterSelection();
+
+         this.setSelectedGeneSetValueObject( vo );
 
          this.searchForm.taxonChanged( taxonId, taxonName );
-         this.geneCombo.disable().hide();
-         this.helpBtn.hide();
-         this.symbolListButton.hide();
-         this.fireEvent( 'madeFirstSelection' );
-         this.doLayout();
 
          this.preview.setTaxonId( taxonId );
          this.preview.loadGenePreviewFromGenes( genesToPreview );
          this.preview.show();
-
+         this.fireEvent( 'madeFirstSelection' ); // important?
          this.fireEvent( 'select' );
       },
 
+      changeDisplayAfterSelection : function() {
+         this.geneCombo.disable().hide();
+         this.helpBtn.hide();
+         this.symbolListButton.hide();
+         this.doLayout();
+         if ( this.loadMask )
+            this.loadMask.hide();
+
+      },
+
+      /**
+       * 
+       * @returns {Gemma.GeneImportPanel}
+       */
       createGeneImportPanel : function() {
          return new Gemma.GeneImportPanel( {
             height : 300,
@@ -479,6 +354,10 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             }
          } );
       },
+
+      /**
+       * @Override
+       */
       initComponent : function() {
 
          this.newBoxTriggered = false;
@@ -496,7 +375,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             var query = combo.store.baseParams.query;
             this.loadGeneOrGroup( record, query );
             this.preview.showPreview();
-            this.preview.show();
+            // this.preview.show();
 
             this.preview.setTaxonId( record.get( "taxonId" ) );
 
@@ -505,12 +384,12 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             if ( combo.startValue === '' && this.newBoxTriggered === false ) {
                this.fireEvent( 'madeFirstSelection' );
                this.newBoxTriggered = true;
-               this.helpBtn.hide();
-               this.symbolListButton.hide();
             }
+
             combo.disable().hide();
+            this.symbolListButton.hide(); // FIXME let them use it again.
             this.helpBtn.hide();
-            this.symbolListButton.hide();
+
             this.doLayout();
 
             // currently the event 'geneSelected' is just used for GeneSetOverlayPicker
@@ -535,17 +414,15 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
 
          this.preview = new Gemma.GeneSetPreview();
 
-         this.preview.on( 'geneListModified', function( newSets ) {
-            var i;
-            for (i = 0; i < newSets.length; i++) { // should only be one
-               if ( typeof newSets[i].geneIds !== 'undefined' && typeof newSets[i].name !== 'undefined' ) {
-                  // update record
-                  this.selectedGeneOrGroup.resultValueObject = newSets[i];
-                  this.setSelectedGeneSetValueObject( newSets[i] );
-               }
+         this.preview.on( 'geneListModified', function( newSet ) {
+            // FIXME why do we care about the name?
+            if ( typeof newSet.geneIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
+               this.setSelectedGeneSetValueObject( newSet );
             }
+
             // currently the event 'geneSelected' is just used for GeneSetOverlayPicker
-            this.fireEvent( 'geneSelected' );
+            this.fireEvent( 'geneSelected' ); // FIXME why is this outside the condition?
+
          }, this );
 
          this.preview.on( 'maskParentContainer', function() {
@@ -557,7 +434,8 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
          }, this );
 
          this.preview.on( 'removeMe', function() {
-            this.fireEvent( 'removeGene' );
+            this.reset();
+            this.fireEvent( 'removeGene', this );
          }, this );
 
          this.helpBtn = new Gemma.InlineHelpIcon( {

@@ -21,6 +21,7 @@ package ubic.gemma.genome.gene.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -225,6 +226,22 @@ public class GeneServiceImpl implements GeneService {
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.genome.gene.service.GeneService#findByOfficialSymbols(java.util.Collection, java.lang.Long)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
+        Map<String, GeneValueObject> result = new HashMap<>();
+        Map<String, Gene> genes = this.getGeneDao().findByOfficialSymbols( query, taxonId );
+        for ( String q : genes.keySet() ) {
+            result.put( q, new GeneValueObject( genes.get( q ) ) );
+        }
+        return result;
     }
 
     @Override
@@ -489,7 +506,15 @@ public class GeneServiceImpl implements GeneService {
 
         GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( g );
 
-        if ( nodeDegree != null ) gvo.setNodeDegrees( nodeDegree.asIntArray() );
+        if ( nodeDegree != null ) {
+            gvo.setNodeDegreesPos( nodeDegree.asIntArrayPos() );
+
+            gvo.setNodeDegreesNeg( nodeDegree.asIntArrayNeg() );
+
+            gvo.setNodeDegreePosRanks( nodeDegree.asDoubleArrayPosRanks() );
+
+            gvo.setNodeDegreeNegRanks( nodeDegree.asDoubleArrayNegRanks() );
+        }
 
         return gvo;
     }

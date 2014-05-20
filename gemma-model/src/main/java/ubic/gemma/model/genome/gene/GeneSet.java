@@ -19,9 +19,12 @@
 
 package ubic.gemma.model.genome.gene;
 
+import gemma.gsec.model.SecuredNotChild;
+
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -29,7 +32,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 /**
  * A grouping of genes that share a common relationship
  */
-public abstract class GeneSet extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredNotChild {
+public abstract class GeneSet extends Auditable implements SecuredNotChild {
 
     /**
      * Constructs new instances of {@link GeneSet}.

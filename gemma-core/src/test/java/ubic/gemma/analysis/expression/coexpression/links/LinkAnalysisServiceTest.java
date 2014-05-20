@@ -168,6 +168,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         // test delete is clean; to check this properly requires checking the db.
         linkAnalysisPersisterService.deleteAnalyses( ee );
+
         checkUnsupportedLinksHaveNoSupport();
         assertEquals( 0, geneCoexpressionService.getCoexpression( ee, true ).size() );
 

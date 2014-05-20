@@ -35,13 +35,16 @@ public class GeneCoexpressionNodeDegreeImpl extends GeneCoexpressionNodeDegree {
     private static final long serialVersionUID = 5947391450315581639L;
 
     GeneCoexpressionNodeDegreeImpl() {
-
     }
 
     GeneCoexpressionNodeDegreeImpl( Gene g ) {
         this.setGeneId( g.getId() );
-        this.setLinkCounts( new byte[] {} );
-        this.setRelativeLinkRanks( new byte[] {} );
+
+        this.setLinkCountsNegative( new byte[] {} );
+        this.setLinkCountsPositive( new byte[] {} );
+        this.setRelativeLinkRanksNegative( new byte[] {} );
+        this.setRelativeLinkRanksPositive( new byte[] {} );
+
     }
 
 }

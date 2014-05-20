@@ -98,6 +98,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          loadEntities : function( eeIds, callback, args ) {
             this.loadExperiments( eeIds, callback, args );
          },
+
          /**
           * Add to table.
           * 
@@ -115,11 +116,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
             ExpressionExperimentController.loadExpressionExperiments( eeIds, function( ees ) {
                var eeData = [];
-               var i;
 
-               var taxonId = (ees[0]) ? ees[0].taxonId : -1;
+               var taxonId = ees[0] ? ees[0].taxonId : -1;
 
-               for (i = 0; i < ees.length; ++i) {
+               for (var i = 0; i < ees.length; ++i) {
                   eeData.push( [ ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount,
                                 ees[i].bioAssayCount ] );
                   if ( taxonId != ees[i].taxonId ) {
@@ -140,6 +140,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                this.fireEvent( 'experimentsLoaded' );
             }.createDelegate( this ) );
          },
+
          /**
           * @param {Object}
           *           data eeSetValueObject
@@ -218,6 +219,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                } )
             } );
 
+            // FIXME add column showing analysis state, qc status
             var columns = [];
             if ( this.sortableColumnsView ) {
                Ext.apply( this, {
@@ -349,6 +351,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             } );
             this.saveButton.show();
 
+            /*
+             * TODO: add analysis state (diff, coex), quality control information
+             */
             Ext.apply( this, {
                store : new Ext.data.SimpleStore( {
                   fields : [ {
@@ -736,9 +741,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
             detailsWin.show();
          },
+
          saveHandler : function() {
             this.updateDatabase();
          },
+
          saveToSession : function() {
             var editedGroup;
             editedGroup = new SessionBoundExpressionExperimentSetValueObject();
@@ -750,20 +757,19 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             editedGroup.numExperiments = this.getEEIds().length;
             editedGroup.modified = true;
             editedGroup.isPublic = false;
+            editedGroup.numWithCoexpressionAnalysis = -1; // TODO
+            editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
 
-            ExpressionExperimentSetController.addSessionGroups( [ editedGroup ], true, // returns datasets added
-            function( newValueObjects ) {
-               // should be at least one datasetSet
-               if ( newValueObjects === null || newValueObjects.length === 0 ) {
-                  // TODO error message
-                  return;
-               } else {
-                  this.fireEvent( 'experimentListModified', newValueObjects );
-                  this.fireEvent( 'doneModification' );
-               }
+            ExpressionExperimentSetController.addSessionGroup( editedGroup, true, // returns datasets added
+            function( newValueObject ) {
+
+               this.fireEvent( 'experimentListModified', newValueObject );
+               this.fireEvent( 'doneModification' );
+
             }.createDelegate( this ) );
 
          },
+
          createInDatabase : function() {
             var editedGroup;
             if ( this.getSelectedExperimentSet() === null || typeof this.getSelectedExperimentSet() === 'undefined'
@@ -781,6 +787,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             editedGroup.numExperiments = this.getEEIds().length;
             editedGroup.isPublic = this.newGroupPublik;
             editedGroup.taxonId = (this.newGroupTaxon) ? this.newGroupTaxon.id : this.taxonId;
+            editedGroup.numWithCoexpressionAnalysis = -1; // TODO
+            editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
 
             ExpressionExperimentSetController.create( [ editedGroup ], // returns datasets added
             function( newValueObjects ) {
@@ -792,7 +800,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
                   Ext.MessageBox.alert( 'Save Successful', 'Group saved', function() {
 
-                     this.fireEvent( 'experimentListModified', newValueObjects );
+                     this.fireEvent( 'experimentListModified', newValueObjects[0] );
                      this.fireEvent( 'experimentListCreated', newValueObjects[0] );
                      this.fireEvent( 'doneModification' );
 
@@ -812,7 +820,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                Ext.MessageBox.alert( 'Save Successful', 'Group saved', function() {
 
                   this.getSelectedExperimentSet().expressionExperimentIds = eeIds;
-                  this.fireEvent( 'experimentListModified', [ this.getSelectedExperimentSet() ] );
+                  this.fireEvent( 'experimentListModified', this.getSelectedExperimentSet() );
                   this.fireEvent( 'experimentListSavedOver' );
                   this.fireEvent( 'doneModification' );
 

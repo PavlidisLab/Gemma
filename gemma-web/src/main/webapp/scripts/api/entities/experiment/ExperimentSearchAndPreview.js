@@ -1,4 +1,6 @@
 /**
+ * A combo box that shows previews of the selection
+ * 
  * @author thea
  * @version $Id$
  */
@@ -6,26 +8,71 @@ Ext.namespace( 'Gemma' );
 
 Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
    width : 330,
+
+   /**
+    * @type {Number}
+    */
    taxonId : null, // might be set by parent to control combo
+
    listModified : false,
    emptyText : "Search by keyword or ID",
-   getSelectedExperimentOrExperimentSetValueObject : function() {
-      return (this.selectedExperimentOrGroup) ? this.selectedExperimentOrGroup.resultValueObject : null;
+
+   mode : 'coex',
+
+   diffExMode : function() {
+      this.mode = 'diffex';
+      this.fireEvent( 'modechange', this.mode );
    },
+
+   /**
+    * Clear current state
+    */
+   reset : function() {
+      this.preview.reset();
+      this.experimentCombo.reset();
+      this.experimentCombo.enable().show();
+      this.helpBtn.show();
+      this.preview.hide();
+      this.doLayout();
+   },
+
+   coExMode : function() {
+      this.mode = 'coex';
+      this.fireEvent( 'modechange', this.mode );
+   },
+
+   /**
+    * 
+    * @param {ExpressionExperimentSetValueObject}
+    *           eesvo
+    */
    setSelectedExpressionExperimentSetValueObject : function( eesvo ) {
-      this.selectedExpressionExperimentSetValueObject = eesvo;
-      this.isExperimentSet = true;
-      this.isExperiment = false;
+
+      if ( eesvo.resultValueObject != null ) {
+         console.log( "Got a wrapped valueobject (has resultValueObject)" );
+         this.selectedExpressionExperimentGroup = eesvo.resultValueObject;
+      } else {
+         this.selectedExpressionExperimentGroup = eesvo;
+      }
+      this.preview.selectedSetValueObject = this.selectedExpressionExperimentGroup;
+
    },
+
    getSelectedExpressionExperimentSetValueObject : function() {
-      return this.selectedExpressionExperimentSetValueObject;
+      return this.selectedExpressionExperimentGroup;
    },
+
    resetExperimentPreview : function() {
-      this.preview.resetPreview();
+      this.preview.reset();
    },
+
    showExperimentPreview : function() {
       this.preview.showPreview();
    },
+
+   /**
+    * @public
+    */
    collapsePreview : function() {
       if ( typeof this.preview !== 'undefined' ) {
          this.preview.collapsePreview();
@@ -45,79 +92,100 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
          this.loadMask.show();
       }
    },
+
+   /**
+    * 
+    * @param experimentIds
+    * @param taxonId
+    * @param name
+    * @param description
+    * @returns {SessionBoundExperimentSetValueObject}
+    */
+   makeSessionBoundExperimentSet : function( experimentIds, taxonId, name, description ) {
+      // debugger;
+      this.searchForm.experimentIds = experimentIds;
+      this.experimentIds = experimentIds;
+      var newEESet = new SessionBoundExperimentSetValueObject();
+      newEESet.modified = false;
+      newEESet.eexpressionExperimentIds = experimenIds;
+      newEESet.taxonId = taxonId;
+      newEESet.name = name;// 'From Symbol List' etc.;
+      newEESet.description = description, newEESet.size = experimentIds.length;
+      newEESet.id = null;
+      return newEESet;
+   },
+
    /**
     * Show the selected eeset members
     */
    loadExperimentOrGroup : function( record, query ) {
 
-      this.selectedExperimentOrGroup = record;
+      var vo = record.get( 'resultValueObject' );
 
-      if ( this.selectedExperimentOrGroup.resultValueObject instanceof ExpressionExperimentSetValueObject ) {
-         this.setSelectedExpressionExperimentSetValueObject( this.selectedExperimentOrGroup.resultValueObject );
-         this.isExperiment = false;
-         this.isExperimentSet = true;
-      } else if ( this.selectedExperimentOrGroup.resultValueObject instanceof ExpressionExperimentValueObject ) {
-         delete this.selectedExpressionExperimentSetValueObject;
-         this.isExperiment = true;
-         this.isExperimentSet = false;
-      }
-      var id = record.resultValueObject.id;
+      var taxonId = this.searchForm.getTaxonId();
+      this.preview.setTaxonId( taxonId );
       this.queryUsedToGetSessionGroup = (id === null || id === -1) ? query : null;
 
-      var resultValueObject = record.resultValueObject;
-      var name = record.name;
-      var taxonId = record.taxonId;
+      if ( vo instanceof SessionBoundExpressionExperimentSetValueObject ) {
+         this.setSelectedExpressionExperimentSetValueObject( vo );
+      } else if ( vo instanceof ExpressionExperimentValueObject ) {
+         var newset = this.makeSessionBoundExperimentSet( [ vo.id ], taxonId, "From experiment",
+            'Group made from experiment' );
+         this.setSelectedExpressionExperimentSetValueObject( newset );
+      } else {
+         this.setSelectedExpressionExperimentSetValueObject( vo );
+      }
+
+      this.preview.loadExperimentPreviewFromExperimentSet( vo );
 
       // for bookmarking diff ex viz
       if ( id === null || id === -1 ) {
-         var queryToGetSelected = name;
-         if ( resultValueObject instanceof FreeTextExpressionExperimentResultsValueObject
-            && name.indexOf( query ) != -1 ) {
+         var queryToGetSelected = '';
+         // figure out if the query is useful to include in a bookmark?
+         if ( vo instanceof FreeTextExpressionExperimentResultsValueObject && vo.name.indexOf( query ) != -1 ) {
             queryToGetSelected = "taxon:" + taxonId + "query:" + query;
          }
          this.queryUsedToGetSessionGroup = queryToGetSelected;
       }
 
-      // load preview of group if group was selected
-      if ( this.isExperimentSet ) {
-         var eeIds = this.getSelectedExpressionExperimentSetValueObject().expressionExperimentIds;
-         this.experimentGroupId = id;
-         if ( !eeIds || eeIds === null || eeIds.length === 0 ) {
-            return;
-         }
-
-         this.preview.setTaxonId( taxonId );
-         this.preview.loadExperimentPreviewFromExperimentSet( this.selectedExperimentOrGroup.resultValueObject );
-
-      }
-      // load single experiment if experiment was selected
-      else {
-         this.experimentIds = [ id ];
-         this.selectedExperimentOrGroup.memberIds = [ id ];
-         // reset the experiment preview panel content
-         this.resetExperimentPreview();
-
-         this.preview.setTaxonId( taxonId );
-         this.preview.loadExperimentPreviewFromExperiments( [ this.selectedExperimentOrGroup.resultValueObject ] );
-
-      }
    },
 
    /**
-    * update the contents of the experiment preview box and the this.experimentIds value using a list of experiment Ids
+    * handler for select combo.
     * 
-    * @param {Number[]}
-    *           ids an array of experimentIds to use
+    * @param record
+    * @param combo
+    * @param index
     */
-   loadExperiments : function( ids ) {
+   showPreview : function( combo, record, index ) {
 
-      // store selected ids for searching
-      this.searchForm.experimentIds.push( ids );
-      this.experimentIds = ids;
+      // if the EE has changed taxon, reset the experiment combo
+      this.searchForm.taxonChanged( record.taxonId, record.taxonName );
+      this.preview.setTaxonId( record.taxonId );
 
-      this.preview.loadExperimentPreviewFromIds( ids );
+      // store the eeid(s) selected and load some EE into the
+      // previewer
+      // store the taxon associated with selection
+      var query = combo.store.baseParams.query;
+      this.loadExperimentOrGroup( record, query );
+      this.preview.showPreview();
+
+      // if this was the first time a selection was made using
+      // this box
+      if ( combo.startValue === '' && this.newBoxTriggered === false ) {
+         this.fireEvent( 'madeFirstSelection' );
+         this.newBoxTriggered = true;
+      }
+
+      combo.disable().hide();
+      this.helpBtn.hide();
+      this.doLayout();
 
    },
+
+   /**
+    * @override
+    */
    initComponent : function() {
 
       // Shows the combo box for EE groups
@@ -129,50 +197,17 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
          hideTrigger : true
       } );
 
-      this.experimentCombo.on( 'recordSelected', function( record, combo, index ) {
-
-         if ( record.memberIds.length === 0 ) {
-            console.log( "No elements returned" );
-            return;
-         }
-
-         // if the EE has changed taxon, reset the experiment combo
-         this.searchForm.taxonChanged( record.taxonId, record.taxonName );
-         this.preview.setTaxonId( record.taxonId );
-
-         // store the eeid(s) selected and load some EE into the
-         // previewer
-         // store the taxon associated with selection
-         var query = combo.store.baseParams.query;
-         this.loadExperimentOrGroup( record, query );
-         this.preview.showPreview();
-
-         // if this was the first time a selection was made using
-         // this box
-         if ( combo.startValue === '' && this.newBoxTriggered === false ) {
-            this.fireEvent( 'madeFirstSelection' );
-            this.newBoxTriggered = true;
-            this.helpBtn.hide();
-            // this.relayEvents(this.experimentCombo, ['select']);
-         }
-
-         combo.disable().hide();
-         this.helpBtn.hide();
-         this.doLayout();
-
-      }, this );
+      this.experimentCombo.on( 'select', this.showPreview, this );
 
       this.preview = new Gemma.ExperimentSetPreview();
 
-      this.preview.on( 'experimentListModified', function( newSets ) {
-         var i;
-         for (i = 0; i < newSets.length; i++) { // should only be one
-            if ( typeof newSets[i].expressionExperimentIds !== 'undefined' && typeof newSets[i].name !== 'undefined' ) {
-               // update record
-               this.selectedExperimentOrGroup.resultValueObject = newSets[i];
-               this.setSelectedExpressionExperimentSetValueObject( newSets[i] );
-            }
+      this.preview.on( 'experimentListModified', function( newSet ) {
+
+         if ( typeof newSet.expressionExperimentIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
+            // update record
+            this.setSelectedExpressionExperimentSetValueObject( newSet );
          }
+
       }, this );
 
       this.preview.on( 'maskParentContainer', function() {
@@ -184,7 +219,14 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
       }, this );
 
       this.preview.on( 'removeMe', function() {
-         this.fireEvent( 'removeExperiment' );
+         this.reset();
+         this.fireEvent( 'removeExperiment', this );
+      }, this );
+
+      this.searchForm.on( 'modechange', function( mode ) {
+         this.mode = mode;
+         this.experimentCombo.setMode( mode );
+         this.preview.setMode( mode );
       }, this );
 
       this.helpBtn = new Gemma.InlineHelpIcon( {

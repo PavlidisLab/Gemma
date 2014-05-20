@@ -57,9 +57,24 @@
 		</testResources>
 		<plugins>
 			<plugin>
+				<groupId>com.github.klieber</groupId>
+				<artifactId>phantomjs-maven-plugin</artifactId>
+				<version>0.3</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>install</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<version>1.9.7</version>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>com.github.searls</groupId>
 				<artifactId>jasmine-maven-plugin</artifactId>
-				<version>1.3.1.2</version>
+				<version>1.3.1.5</version>
 				<executions>
 					<execution>
 						<goals>
@@ -70,6 +85,7 @@
 				<configuration>
 					<jsSrcDir>src/main/webapp/scripts</jsSrcDir>
 					<sourceIncludes>
+						<!-- Order is observed. -->
 						<include>lib/prototype.js</include>
 						<include>lib/scriptaculous/scriptaculous.js</include>
 						<include>lib/scriptaculous/effects.js</include>
@@ -85,7 +101,8 @@
 						<include>lib/rsvp.js</include>
 						<include>lib/*.js</include>
 						<include>api/ext/**/*.js</include>
-						<include>api/util/userHelpMessages.js</include>
+						<include>api/valueObjectsInheritanceStructure.js</include>
+						<include>api/userHelpMessages.js</include>
 						<include>api/util/TutorialQtips.js</include>
 						<include>api/util/*.js</include>
 						<include>api/visualization/cytoscape/CytoscapeSettings.js</include>
@@ -93,30 +110,23 @@
 						<include>api/visualization/cytoscape/*.js</include>
 						<include>api/**/*.js</include>
 						<include>api/*.js</include>
-						<include>app/*.js</include>
 					</sourceIncludes>
 					<sourceExcludes>
-						<exclude>ajax/dwrServices.js</exclude>
-						<exclude>app/AnalysisResultsSearchNonWidget.js</exclude>
-						<exclude>app/CharacteristicBrowser.js</exclude>
-						<exclude>app/resetPassword.js</exclude>
-						<exclude>app/userManager.js</exclude>
-						<exclude>app/manageGroups.js</exclude>
-						<exclude>app/signup.js</exclude>
-						<exclude>app/loadExpressionExperiment.js</exclude>
-						<exclude>app/jobmonitoring.js</exclude>
-						<exclude>app/editUser.js</exclude>
-						<exclude>app/monitoring.js</exclude>
-						<exclude>app/indexer.js</exclude>
-						<exclude>app/UserExpressionDataUpload.js</exclude>
-						<exclude>app/bmFactorValues.js</exclude>
-						<exclude>app/ontologyReIndexer.js</exclude>
-						<exclude>app/ExperimentalDesign.js</exclude>
+						<exclude>dwrServices.js</exclude>
+						<exclude>app/*.js</exclude>
 					</sourceExcludes>
 					<preloadSources>
 						<source>dwrServicesMock.js</source>
 					</preloadSources>
 					<!-- <jsTestSrcDir></jsTestSrcDir> -->
+					<!-- instead of html unit -->
+					<webDriverClassName>org.openqa.selenium.phantomjs.PhantomJSDriver</webDriverClassName>
+					<webDriverCapabilities>
+						<capability>
+							<name>phantomjs.binary.path</name>
+							<value>${phantomjs.binary}</value>
+						</capability>
+					</webDriverCapabilities>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -172,6 +182,19 @@
 										<versionRange>[2.1,)</versionRange>
 										<goals>
 											<goal>copy-dependencies</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>com.github.klieber</groupId>
+										<artifactId>phantomjs-maven-plugin</artifactId>
+										<versionRange>[0.3,)</versionRange>
+										<goals>
+											<goal>install</goal>
 										</goals>
 									</pluginExecutionFilter>
 									<action>
@@ -352,8 +375,13 @@
 		</dependency>
 		<dependency>
 			<groupId>net.jawr</groupId>
-			<artifactId>jawr</artifactId>
-			<version>3.1.2</version>
+			<artifactId>jawr-core</artifactId>
+			<version>3.5.2</version>
+		</dependency>
+		<dependency>
+			<groupId>net.jawr.extensions</groupId>
+			<artifactId>jawr-dwr2.x-extension</artifactId>
+			<version>3.5.2</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-el</groupId>

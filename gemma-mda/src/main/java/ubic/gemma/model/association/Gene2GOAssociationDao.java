@@ -65,9 +65,29 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     public Collection<Gene> findByGOTerm( Collection<String> goTerms, Taxon taxon );
 
     /**
+     * @param termsToFetch
+     * @return
+     */
+    public Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch );
+
+    /**
      * 
      */
     public Gene2GOAssociation findOrCreate( Gene2GOAssociation gene2GOAssociation );
+
+    /**
+     * @param ids
+     * @return
+     */
+    public Collection<Gene> getGenes( Collection<String> ids );
+
+    public Collection<Gene> getGenes( Collection<String> ids, Taxon taxon );
+
+    /**
+     * @param uris
+     * @return
+     */
+    public Map<String, Collection<Gene>> getSets( Collection<String> uris );
 
     /**
      * Delete all {@link Gene2GOAssociation}s

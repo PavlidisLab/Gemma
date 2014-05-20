@@ -4,7 +4,7 @@
 <title>Dataset Group Manager</title>
 
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/ajax/entities/DatasetGroupEditor.js' />
+<jwr:script src='/scripts/api/entities/DatasetGroupEditor.js' />
 
 
 </head>

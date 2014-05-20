@@ -7,9 +7,10 @@ Ext.namespace( 'Gemma' );
 
 /**
  * 
- * Displays a small number of elements from the set with links to the set's page and a selection editor
+ * Displays a small number of elements from the set with links to the set's page and a selection editor. FIXME this
+ * should use a store.
  * 
- * This class should generally not be used, use one of the subclasses: GeneSetPreview and ExperimentSetPreview
+ * This class should generally not be used directly, use one of the subclasses: GeneSetPreview and ExperimentSetPreview
  * 
  * @class Gemma.SetPreview
  * @xtype Gemma.SetPreview
@@ -33,17 +34,30 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
       bodyStyle : 'border-color:#B5B8C8; background-color:ghostwhite',
 
       /**
+       * @abstract
+       */
+      previewContent : null,
+
+      /**
+       * @abstract
+       */
+      defaultPreviewTitle : null,
+
+      selectedSetValueObject : null,
+
+      /**
        * used for creating title and possibly enabling editing
        * 
-       * @param {GeneSetValueObject}
-       *           gsvo
+       * @param {SetValueObject}
+       *           vo
        * @memberOf Gemma.SetPreview
        */
-      setSelectedSetValueObject : function( gsvo ) {
-         this.selectedSetValueObject = gsvo;
+      setSelectedSetValueObject : function( vo ) {
+         this.selectedSetValueObject = vo;
          this.isSet = true;
-         this.isSingleEntity = false;
+         this.updateTitle();
       },
+
       /**
        * clear the contents of the preview
        */
@@ -51,17 +65,17 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
          Ext.DomHelper.overwrite( this.previewContent.body, {
             cn : ''
          } );
-         // this.genePreviewExpandBtn.disable().hide();
-         // this.moreIndicator.disable().hide();
+         this.selectedSetValueObject = null;
+         this.isSet = false;
       },
+
       /**
-       * insert a message into the preview
+       * insert a message into the preview FIXME make private
        * 
        * @param {String}
        *           msg
        */
       insertMessage : function( msg ) {
-
          Ext.DomHelper.append( this.previewContent.body, {
             cn : msg
          } );
@@ -69,6 +83,7 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
       /**
        * Set the taxon id for the preview and selection editor
        * 
+       * @private
        * @param {Number}
        *           taxonId
        */
@@ -79,16 +94,15 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             this.addingCombo.setTaxonId( taxonId );
          }
       },
-      /**
-       * get the taxon id for the preview
-       */
-      getTaxonId : function() {
-         return this.taxonId;
-      },
 
       /**
-       * @private Use public methods from subclasses instead ex: loadGenePreviewFromIds, loadGenePreviewFromGenes,
-       *          loadGenePreviewFromGeneSet (& analogs for experiment)
+       * @abstract
+       */
+      addingCombo : null,
+
+      /**
+       * @protected Use public methods from subclasses instead ex: loadGenePreviewFromIds, loadGenePreviewFromGenes,
+       *            loadGenePreviewFromGeneSet (& analogs for experiment) which will all eventually call this method
        * 
        * updates the contents of the preview box with the entities passed in
        * 
@@ -96,43 +110,48 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
        *           entities an array of geneValueObjects or ExpressionExperimentValueObjects to use to populate preview
        * @param {Number}
        *           total number of total entities (not just those being previewed)
+       * @param {String}
+       *           optional message that will be displayed (html)
        */
-      loadPreview : function( entities, total ) {
+      loadPreview : function( entities, total, message ) {
+         var size = total;
 
-         this.totalCount = (total && total > 0) ? total : this.totalCount;
-         // reset the preview panel content
-         this.resetPreview();
+         // reset the preview panel content, but don't erase the data.
+         Ext.DomHelper.overwrite( this.previewContent.body, {
+            cn : ''
+         } );
+
          for (var i = 0; i < entities.size(); i++) {
             this.previewContent.update( entities[i] );
          }
-         this.updateTitle();
 
          if ( entities.length >= total ) {
             this.moreIndicator.setText( '' );
             this.moreIndicator.disable().hide();
          } else {
             this.moreIndicator.enable().show();
-            this.moreIndicator.setText( '[' + (total - entities.size()) + ' more...]' );
+            this.moreIndicator.setText( '[' + (total - entities.size()) + ' more ...]' );
          }
+
+         if ( typeof message != 'undefined' && message != null )
+            this.insertMessage( message );
+
          this.previewContent.expand();
       },
 
       /**
-       * public don't use params if you want to update name based on this.selectedEntityOrGroup.resultValueObject
        * 
-       * @param {String}
-       *           name [optional]
-       * @param {Number}
-       *           size [optional]
+       * Subclasses should override
+       * 
+       * @public
+       * 
+       * 
        */
-      updateTitle : function( name, size ) {
-         if ( !name ) {
-            name = "Selection Preview";
-         }
-         this.previewContent.setTitle( '<span style="font-size:1.2em">' + name
-            + '</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + this.totalCount
-            + ((this.totalCount > 1) ? " entities)" : " entity)") );
+      updateTitle : function() {
+         this.previewContent.setTitle( '<span style="font-size:1.2em">' + 'Preview'
+            + '</span> &nbsp;&nbsp;<span style="font-weight:normal">' );
       },
+
       /**
        * show the preview and expand its contents
        */
@@ -181,12 +200,14 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
          this.selectionEditor.loadMask = new Ext.LoadMask( this.selectionEditor.getEl(), {
             msg : Gemma.StatusText.Loading.generic
          } );
+
          this.selectionEditor.loadMask.show();
          Ext.apply( this.selectionEditor, {
-            taxonId : this.getTaxonId()
+            taxonId : this.taxonId
          } );
 
          if ( this.entityIds && this.entityIds.length > 0 ) {
+            console.log( "using the entityIds, should be using selectedSetValueObject" );
             this.selectionEditor.loadEntities( this.entityIds, function() {
                this.selectionEditor.loadMask.hide();
             }.createDelegate( this, [], false ) );
@@ -202,6 +223,11 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             this.selectionEditor.loadMask.hide();
          }
 
+      },
+
+      clearHandler : function() {
+         this.resetPreview();
+         this.fireEvent( 'removeMe' );
       },
 
       // placeholder for subclasses
@@ -220,11 +246,8 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
          this.moreIndicator = new Ext.Button( {
             handler : this.launchSelectionEditor,
             scope : this,
-            // style: 'float:right;text-align:right; padding-right:10px',
             style : 'margin-left:10px; padding-bottom:5px;',
             tooltip : "Edit your selection",
-            // hidden: true,
-            // disabled : true, // enabling later is buggy in IE
             ctCls : 'transparent-btn transparent-btn-link'
          } );
 
@@ -268,7 +291,15 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
                handler : this.launchSelectionEditor,
                scope : this,
                qtip : 'Edit or save your set'
-            } ],
+            }, {
+               id : 'clear',
+               handler : this.clearHandler,
+               scope : this,
+               qtip : 'Clear'
+            } /*
+                * TODO: add a button to get to the gene set manager
+                */
+            ],
             listeners : {
                collapse : function() {
                   this.moreIndicator.hide();

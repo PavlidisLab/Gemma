@@ -36,11 +36,20 @@ Gemma.CoexpressionJSONUtils.constructJSONGraphData = function( currentQueryGeneI
    var edgeSet = {};
 
    // populate node data plus populate edge data
-   for ( var i = 0; i < results.length; i++) {
+   for (var i = 0; i < results.length; i++) {
 
       var r = results[i];
 
+      var fgr = r.foundGeneNodeDegreeRank;
+      if ( fgr == null )
+         fgr = 0.5;
+
+      var qgr = r.foundGeneNodeDegreeRank;
+      if ( qgr == null )
+         qgr = 0.5;
+
       if ( !graphNodeIds[r.foundGene.id] ) {
+
          var isQueryGene = currentQueryGeneIds.indexOf( r.foundGene.id ) !== -1;
 
          var data = {
@@ -52,8 +61,8 @@ Gemma.CoexpressionJSONUtils.constructJSONGraphData = function( currentQueryGeneI
                queryflag : isQueryGene ? 1 : 0,
                officialName : Gemma.CytoscapePanelUtil.ttSubstring( r.foundGene.officialName ),
                ncbiId : r.foundGene.ncbiId,
-               nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( r.foundGeneNodeDegreeRank, 'node' ),
-               nodeDegree : Gemma.CytoscapePanelUtil.decimalPlaceRounder( r.foundGeneNodeDegreeRank )
+               nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( fgr, 'node' ),
+               nodeDegree : Gemma.CytoscapePanelUtil.decimalPlaceRounder( fgr )
             }
          };
 
@@ -77,8 +86,8 @@ Gemma.CoexpressionJSONUtils.constructJSONGraphData = function( currentQueryGeneI
                queryflag : isQueryGene ? 1 : 0,
                officialName : Gemma.CytoscapePanelUtil.ttSubstring( r.queryGene.officialName ),
                ncbiId : r.queryGene.ncbiId,
-               nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( r.queryGeneNodeDegreeRank, 'node' ),
-               nodeDegree : Gemma.CytoscapePanelUtil.decimalPlaceRounder( r.queryGeneNodeDegreeRank )
+               nodeDegreeColor : Gemma.CytoscapePanelUtil.nodeDegreeColorMapper( qgr, 'node' ),
+               nodeDegree : Gemma.CytoscapePanelUtil.decimalPlaceRounder( qgr )
             }
          };
 
@@ -110,8 +119,8 @@ Gemma.CoexpressionJSONUtils.constructJSONGraphData = function( currentQueryGeneI
       }
 
       // compute the nodeDegree of the highest (worst) of the two. Low values are "good".
-      var nodeDegreeValue = Gemma.CytoscapePanelUtil.decimalPlaceRounder( Gemma.CytoscapePanelUtil.getMaxWithNull(
-         r.queryGeneNodeDegreeRank, r.foundGeneNodeDegreeRank ) );
+      var nodeDegreeValue = Gemma.CytoscapePanelUtil.decimalPlaceRounder( Gemma.CytoscapePanelUtil.getMaxWithNull( qgr,
+         fgr ) );
 
       var data = {
          group : 'edges',

@@ -1,11 +1,14 @@
 dwrServices.js
+Eventbus.js
+valueObjectsInheritanceStructure.js
+userHelpMessages.js
 ext/
 util/
+search/
+security/
 entities/
 annotation/
 diff/
 coexpression/
 visualization/
-search/
-security/
 

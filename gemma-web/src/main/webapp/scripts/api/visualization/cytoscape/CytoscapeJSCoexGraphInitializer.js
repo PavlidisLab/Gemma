@@ -126,11 +126,9 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'line-color' : Gemma.CytoscapeSettings.supportColorBoth
       } ),
 
-      // use something other than arbor for initialization because firefox
-      // was bugging out in version 2.0.3 with arbor on init. FIXME is this better in 2.1?
-      // Set to arbor after null finishes layout as workaround
       layout : {
-         name : 'arbor'
+         name : 'arbor', // cose
+         liveUpdate : false
       },
 
       renderer : {
@@ -144,7 +142,6 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
       ready : function() {
          ownerRef.cy = this;
          readyFunction( ownerRef );
-         console.log( "cytoscape says ready" );
       }
    } );
 

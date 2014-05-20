@@ -386,6 +386,9 @@ Gemma.GeneMembersSaveGrid = Ext
          enableSaveOnlyAfterModification : false,
          // end of config options
 
+         /**
+          * @memberOf Gemma.GeneMembersSaveGrid
+          */
          initComponent : function() {
 
             var extraButtons = new Array();
@@ -901,6 +904,7 @@ Gemma.GeneMembersSaveGrid = Ext
          saveHandler : function() {
             this.updateDatabase();
          },
+
          createInSession : function() {
             var editedGroup;
             editedGroup = new SessionBoundGeneSetValueObject();
@@ -913,19 +917,19 @@ Gemma.GeneMembersSaveGrid = Ext
             editedGroup.modified = true;
             editedGroup.isPublic = false;
 
-            GeneSetController.addSessionGroups( [ editedGroup ], true, // returns datasets added
-            function( geneSets ) {
+            GeneSetController.addSessionGroup( editedGroup, true, // returns datasets added
+            function( geneSet ) {
                // should be at least one datasetSet
-               if ( geneSets === null || geneSets.length === 0 ) {
-                  // TODO error message
+               if ( geneSet === null ) {
                   return;
                } else {
-                  this.fireEvent( 'geneListModified', geneSets, geneSets[0].geneIds );
+                  this.fireEvent( 'geneListModified', geneSet );
                   this.fireEvent( 'doneModification' );
                }
             }.createDelegate( this ) );
 
          },
+
          createInDatabase : function() {
             var editedGroup;
             if ( this.selectedGeneSetValueObject === null || typeof this.selectedGeneSetValueObject === 'undefined'
@@ -944,20 +948,19 @@ Gemma.GeneMembersSaveGrid = Ext
             editedGroup.taxonId = (this.newGroupTaxon) ? this.newGroupTaxon.id : this.taxonId;
             editedGroup.size = this.getGeneIds().length;
 
-            GeneSetController.create( [ editedGroup ], // returns datasets added
+            GeneSetController.create( [ editedGroup ], // returns datasets added: list, not single
             function( geneSets ) {
                // should be at least one datasetSet
                if ( geneSets === null || geneSets.length === 0 ) {
-                  // TODO error message
                   return;
+               } else if ( geneSets.length > 1 ) {
+                  throw "didn't expect more than one gene set";
                } else {
-                  this.fireEvent( 'geneListModified', geneSets, geneSets[0].geneIds );
+                  this.fireEvent( 'geneListModified', geneSets[0] );
                   this.fireEvent( 'geneSetCreated', geneSets[0] );
                   this.fireEvent( 'doneModification' );
                }
             }.createDelegate( this ) );
-
-            this.fireEvent( 'doneModification' );
 
          },
          updateDatabase : function() {
@@ -967,8 +970,7 @@ Gemma.GeneMembersSaveGrid = Ext
             GeneSetController.updateMembers( groupId, geneIds, function( msg ) {
                this.selectedGeneSetValueObject.geneIds = geneIds;
 
-               this.fireEvent( 'geneListModified', [ this.selectedGeneSetValueObject ],
-                  this.selectedGeneSetValueObject.geneIds );
+               this.fireEvent( 'geneListModified', this.selectedGeneSetValueObject );
                this.fireEvent( 'geneListSavedOver' );
                this.fireEvent( 'doneModification' );
             }.createDelegate( this ) );
@@ -1038,13 +1040,10 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend( Gemma.GeneGrid, {
    },
    showGeneGroup : function( groupRecord ) {
       this.getEl().mask( "Loading genes ..." );
-      GeneSetController.getGenesInGroup( groupRecord.get( 'id' ), {
+      GeneSetController.getGenesInGroup.apply( this, [ groupRecord.get( 'id' ), -1, {
          callback : this.afterLoadGenes.createDelegate( this, [ groupRecord ], true ),
-         errorHandler : function( e ) {
-            this.getEl().unmask();
-            Ext.Msg.alert( 'There was an error', e );
-         }
-      } );
+         errorHandler : Gemma.genericErrorHandler
+      } ] );
    },
 
    reset : function() {

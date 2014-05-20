@@ -71,7 +71,7 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
 
         this.setName( name );
         this.setDescription( description );
-        this.setNumExperiments( memberIds.size() );
+        this.setSize( memberIds.size() );
         this.setTaxonId( taxonId );
         this.setTaxonName( taxonName );
         this.setExpressionExperimentIds( memberIds );

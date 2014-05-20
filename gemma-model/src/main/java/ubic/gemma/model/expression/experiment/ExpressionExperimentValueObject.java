@@ -63,7 +63,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     public static List<ExpressionExperimentValueObject> convert2ValueObjectsOrdered(
             List<ExpressionExperiment> collection ) {
         List<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
-        for ( ExpressionExperiment ee : collection ) {
+        for ( BioAssaySet ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }
         return result;
@@ -121,6 +121,10 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private Boolean hasBothIntensities = false;
 
+    private Boolean hasCoexpressionAnalysis = false;
+
+    private Boolean hasDifferentialExpressionAnalysis = false;
+
     private Boolean hasEitherIntensity = false;
 
     private Boolean hasProbeSpecificForQueryGene;
@@ -132,6 +136,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     private Boolean isPublic = true;
 
     private boolean isShared = false;
+
+    private boolean isSubset = false;
 
     private String linkAnalysisEventType;
 
@@ -146,6 +152,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     private Integer numPopulatedFactors;
 
     private String owner;
+
+    private Long parentTaxonId;
 
     private String pcaAnalysisEventType;
 
@@ -167,8 +175,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private Long taxonId;
 
-    private Long parentTaxonId;
-
     private String technologyType;
 
     private boolean troubled = false;
@@ -176,8 +182,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     private String troubleDetails = "(Reason for trouble not populated)";
 
     private boolean validated = false;
-
-    private boolean isSubset = false;
 
     public ExpressionExperimentValueObject() {
     }
@@ -547,6 +551,14 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return hasBothIntensities;
     }
 
+    public Boolean getHasCoexpressionAnalysis() {
+        return hasCoexpressionAnalysis;
+    }
+
+    public Boolean getHasDifferentialExpressionAnalysis() {
+        return hasDifferentialExpressionAnalysis;
+    }
+
     /**
      * @return true if the experiment has any intensity information available. Relevant for two-channel studies.
      */
@@ -883,6 +895,14 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     public void setHasBothIntensities( Boolean hasBothIntensities ) {
         this.hasBothIntensities = hasBothIntensities;
+    }
+
+    public void setHasCoexpressionAnalysis( Boolean hasCoexpressionAnalysis ) {
+        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
+    }
+
+    public void setHasDifferentialExpressionAnalysis( Boolean hasDifferentialExpressionAnalysis ) {
+        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
     }
 
     public void setHasEitherIntensity( Boolean hasEitherIntensity ) {

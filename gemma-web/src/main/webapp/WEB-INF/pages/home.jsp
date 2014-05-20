@@ -3,9 +3,7 @@
 <title>Home</title>
 
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/ajax/analysisSearch/AnalysisResultsSearchNonWidget.js' />
-<jwr:script src='/scripts/app/generalSearchSimple.js' />
-
+<jwr:script src='/scripts/app/HomePageAnalysisSearch.js' />
 <jwr:script src='/scripts/scriptsnonjawr/arbor.js' />
 
 </head>

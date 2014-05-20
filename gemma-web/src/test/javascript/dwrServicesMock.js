@@ -263,8 +263,6 @@ ExpressionExperimentController.getAllTaxonExperimentGroup = function( p0, callba
 };
 ExpressionExperimentController.searchExperimentsAndExperimentGroups = function( p0, p1, callback ) {
 };
-ExpressionExperimentController.searchExperimentsAndExperimentGroupsGetIds = function( p0, p1, callback ) {
-};
 ExpressionExperimentController.getDescription = function( p0, callback ) {
 };
 ExpressionExperimentController.getFactorValues = function( p0, callback ) {
@@ -354,16 +352,18 @@ ExpressionExperimentSetController.addUserAndSessionGroups = function( p0, callba
 };
 ExpressionExperimentSetController.addSessionGroups = function( p0, p1, callback ) {
 };
+ExpressionExperimentSetController.addSessionGroup = function( p0, p1, callback ) {
+};
 ExpressionExperimentSetController.updateUserAndSessionGroups = function( p0, callback ) {
 };
 ExpressionExperimentSetController.loadAllUserAndSessionGroups = function( callback ) {
 };
 ExpressionExperimentSetController.loadAllSessionGroups = function( callback ) {
 };
-ExpressionExperimentSetController.getExperimentsInSet = function( p0, callback ) {
+ExpressionExperimentSetController.getExperimentsInSet = function( p0, p1, callback ) {
 };
-ExpressionExperimentSetController.getExperimentsInSetBySessionId = function( p0, callback ) {
-};
+//ExpressionExperimentSetController.getExperimentsInSetBySessionId = function( p0, callback ) {
+//};
 ExpressionExperimentSetController.getExperimentIdsInSet = function( p0, callback ) {
 };
 ExpressionExperimentSetController.canCurrentUserEditGroup = function( p0, callback ) {
@@ -501,7 +501,7 @@ SecurityController.getAuthenticatedUserCount = function( callback ) {
 if ( typeof GeneSetController === 'undefined' ) {
    var GeneSetController = {};
 }
-GeneSetController.getGenesInGroup = function( p0, callback ) {
+GeneSetController.getGenesInGroup = function( p0, p1, callback ) {
 };
 GeneSetController.load = function( p0, callback ) {
 };
@@ -520,6 +520,8 @@ GeneSetController.updateUserAndSessionGroups = function( p0, callback ) {
 GeneSetController.create = function( p0, callback ) {
 };
 GeneSetController.addSessionGroups = function( p0, p1, callback ) {
+};
+GeneSetController.addSessionGroup = function( p0, p1, callback ) {
 };
 GeneSetController.addUserAndSessionGroups = function( p0, callback ) {
 };

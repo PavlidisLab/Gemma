@@ -147,7 +147,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
 
         assertEquals( eeSet.getId(), eesvo.getId() );
-        assertEquals( eeSet.getExperiments().size(), eesvo.getNumExperiments().intValue() );
+        assertEquals( eeSet.getExperiments().size(), eesvo.getSize().intValue() );
         assertEquals( eeSet.getName(), eesvo.getName() );
         assertEquals( eeSet.getDescription(), eesvo.getDescription() );
         assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
@@ -163,7 +163,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
 
         assertEquals( eesvo.getId(), eeSet.getId() );
-        assertEquals( eesvo.getNumExperiments().intValue(), eeSet.getExperiments().size() );
+        assertEquals( eesvo.getSize().intValue(), eeSet.getExperiments().size() );
         assertEquals( eesvo.getName(), eeSet.getName() );
         assertEquals( eesvo.getDescription(), eeSet.getDescription() );
         assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );

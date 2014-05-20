@@ -46,17 +46,16 @@ Gemma.CoexpressionGrid = Ext
             emptyText : 'No coexpression to display'
          },
 
-         record : Gemma.CoexpressionGridRecordConstructor,
-
          /**
           * @memberOf Gemma.CoexpressionGrid
           */
          initComponent : function() {
+            // debugger;
             this.ds = new Ext.data.Store( {
                proxy : new Ext.data.MemoryProxy( [] ),
                reader : new Ext.data.ListRangeReader( {
                   id : "id"
-               }, this.record ),
+               }, Gemma.CoexpressionGridRecordConstructor ),
                sortInfo : {
                   field : 'sortKey',
                   direction : 'ASC'
@@ -235,9 +234,9 @@ Gemma.CoexpressionGrid = Ext
                   if ( numDatasets > k ) {
                      displayStringency = Gemma.MIN_STRINGENCY + Math.round( numDatasets / k );
                   }
-                  if ( displayStringency > 20 ) {
-                     displayStringency = 20;
-                  }
+                  // if ( displayStringency > 20 ) {
+                  // displayStringency = 20;
+                  // }
 
                   // should cause the spinner to update
                   coexpressionGrid.coexDisplaySettings.setStringency( displayStringency );
@@ -379,6 +378,9 @@ Gemma.CoexpressionGrid = Ext
           * when an error thrown of after data load processing
           */
          handleError : function( errorMessage ) {
+            /*
+             * FIXME this error region is ugly and inconsistent with other error message deliveries in the system.
+             */
             if ( Ext.get( 'coexpression-msg' ) ) {
                Ext.DomHelper.applyStyles( "coexpression-msg", "height: 2.2em" );
                Ext.DomHelper.overwrite( "coexpression-msg", [ {

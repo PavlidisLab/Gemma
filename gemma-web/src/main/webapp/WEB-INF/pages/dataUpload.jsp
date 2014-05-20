@@ -3,7 +3,7 @@
 
 	<title>Expression data upload</title>
 
-	<jwr:script src='/scripts/ajax/util/FileUploadForm.js' useRandomParam="false" />
+	<jwr:script src='/scripts/api/util/FileUploadForm.js' useRandomParam="false" />
 
 	<security:authorize access="hasAnyRole('GROUP_USER','GROUP_ADMIN')">
 		<jwr:script src='/scripts/app/UserExpressionDataUpload.js' useRandomParam="false" />

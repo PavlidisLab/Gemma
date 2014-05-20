@@ -944,15 +944,21 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         GeneCoexpressionNodeDegreeValueObject gcndvo = new GeneCoexpressionNodeDegreeValueObject( nd );
         gcndvo.clear();
 
-        assert gcndvo.getMaxSupport() == 0;
+        assert gcndvo.getMaxSupportNeg() == 0;
 
         for ( CoexpressionValueObject hit : hits ) {
-            gcndvo.increment( hit.getNumDatasetsSupporting() );
+            if ( hit.isPositiveCorrelation() ) {
+                gcndvo.increment( hit.getNumDatasetsSupporting(), true );
+            } else {
+                gcndvo.increment( hit.getNumDatasetsSupporting(), false );
+            }
         }
 
         assert gcndvo.total() == hits.size();
 
-        nd.setLinkCounts( gcndvo.toEntity().getLinkCounts() );
+        nd.setLinkCountsPositive( gcndvo.toEntity().getLinkCountsPositive() );
+        nd.setLinkCountsNegative( gcndvo.toEntity().getLinkCountsNegative() );
+
         sess.update( nd );
 
         // might not be necessary, but presumption is data is stale now...
@@ -968,19 +974,40 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      */
     @Override
     @Transactional
-    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGene ) {
+    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePositive,
+            Map<Long, List<Double>> relRanksPerGeneNegative ) {
         Session sess = this.getSessionFactory().getCurrentSession();
         ByteArrayConverter bac = new ByteArrayConverter();
+
+        /*
+         * FIXME could do pos and neg together
+         */
         int i = 0;
-        for ( Long g : relRanksPerGene.keySet() ) {
+        for ( Long g : relRanksPerGenePositive.keySet() ) {
             GeneCoexpressionNodeDegree nd = ( GeneCoexpressionNodeDegree ) sess.load(
                     GeneCoexpressionNodeDegreeImpl.class, g );
 
-            List<Double> relRanks = relRanksPerGene.get( g );
+            List<Double> relRanks = relRanksPerGenePositive.get( g );
 
             byte[] r = bac.doubleArrayToBytes( relRanks.toArray( new Double[] {} ) );
 
-            nd.setRelativeLinkRanks( r );
+            nd.setRelativeLinkRanksPositive( r );
+            sess.update( nd );
+            if ( ++i % 1024 == 0 ) {
+                sess.flush();
+                sess.clear();
+            }
+        }
+
+        for ( Long g : relRanksPerGeneNegative.keySet() ) {
+            GeneCoexpressionNodeDegree nd = ( GeneCoexpressionNodeDegree ) sess.load(
+                    GeneCoexpressionNodeDegreeImpl.class, g );
+
+            List<Double> relRanks = relRanksPerGeneNegative.get( g );
+
+            byte[] r = bac.doubleArrayToBytes( relRanks.toArray( new Double[] {} ) );
+
+            nd.setRelativeLinkRanksNegative( r );
             sess.update( nd );
             if ( ++i % 1024 == 0 ) {
                 sess.flush();

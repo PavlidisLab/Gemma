@@ -153,6 +153,11 @@ public class CompositeSequenceController extends BaseController {
 
         Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( geneId );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
+
+        if ( rawSummaries == null || rawSummaries.isEmpty() ) {
+            return new HashSet<>();
+        }
+
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 

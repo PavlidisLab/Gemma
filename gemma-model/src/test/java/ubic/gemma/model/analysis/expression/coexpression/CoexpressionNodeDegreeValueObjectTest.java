@@ -41,22 +41,22 @@ public class CoexpressionNodeDegreeValueObjectTest {
         GeneCoexpressionNodeDegree nd = GeneCoexpressionNodeDegree.Factory.newInstance( g );
 
         GeneCoexpressionNodeDegreeValueObject t = new GeneCoexpressionNodeDegreeValueObject( nd );
-        t.increment( 1 );
-        t.increment( 2 );
+        t.increment( 1, true );
+        t.increment( 2, true );
 
-        assertEquals( 2, t.getLinksWithMinimumSupport( 1 ).intValue() );
-        assertEquals( 1, t.getLinksWithExactSupport( 1 ).intValue() );
+        assertEquals( 2, t.getLinksWithMinimumSupport( 1, true ).intValue() );
+        assertEquals( 1, t.getLinksWithExactSupport( 1, true ).intValue() );
 
-        t.increment( 1 );
-        t.increment( 2 );
-        assertEquals( 4, t.getLinksWithMinimumSupport( 1 ).intValue() );
-        assertEquals( 2, t.getLinksWithMinimumSupport( 2 ).intValue() );
-        assertEquals( 2, t.getLinksWithExactSupport( 1 ).intValue() );
+        t.increment( 1, true );
+        t.increment( 2, true );
+        assertEquals( 4, t.getLinksWithMinimumSupport( 1, true ).intValue() );
+        assertEquals( 2, t.getLinksWithMinimumSupport( 2, true ).intValue() );
+        assertEquals( 2, t.getLinksWithExactSupport( 1, true ).intValue() );
 
-        assertEquals( 3, t.asIntArray().length );
-        assertEquals( 0, t.asIntArray()[0] );
-        assertEquals( 2, t.asIntArray()[1] );
-        assertEquals( 2, t.asIntArray()[2] );
+        assertEquals( 3, t.asIntArrayPos().length );
+        assertEquals( 0, t.asIntArrayPos()[0] );
+        assertEquals( 2, t.asIntArrayPos()[1] );
+        assertEquals( 2, t.asIntArrayPos()[2] );
 
     }
 

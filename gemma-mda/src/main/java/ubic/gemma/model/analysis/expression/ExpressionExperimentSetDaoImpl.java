@@ -25,11 +25,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
@@ -39,6 +42,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
@@ -214,14 +218,14 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
 
     @Override
     public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects() {
-
         return fetchValueObjects( null );
     }
 
     @Override
     public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
-        Collection<Long> setIds = new HashSet<Long>();
+        Collection<Long> setIds = new HashSet<>();
         setIds.add( id );
+
         Collection<ExpressionExperimentSetValueObject> vos = this.loadValueObjects( setIds );
         if ( vos.isEmpty() ) {
             return null;
@@ -231,7 +235,6 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
 
     @Override
     public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
-
         return fetchValueObjects( eeSetIds );
     }
 
@@ -369,54 +372,62 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
             v.setId( eeId );
             v.setName( ( String ) res[1] );
             v.setDescription( ( String ) res[2] );
-
             v.setTaxonName( ( String ) res[3] );
             v.setTaxonId( ( Long ) res[4] );
-            v.setNumExperiments( ( ( Long ) res[5] ).intValue() );
+            v.setSize( ( ( Long ) res[5] ).intValue() );
             vo.put( eeId, v );
 
         }
 
         Collection<ExpressionExperimentSetValueObject> result = vo.values();
-
-        /*
-         * populate 'modifiable' - if it has any analysis attached to it, it is not. Might want to make this optional.
-         */
-        if ( !result.isEmpty() ) {
-            populateModifiable( result );
-        }
+        pouplateAnalysisInformation( result );
         return result;
     }
 
     /**
-     * FIXME not implemented!
+     * Fill in information about how many experiments in each set have coexpression or differential expression analysis
      * 
-     * @param eeSets
+     * @param vo
      */
-    private void populateModifiable( Collection<ExpressionExperimentSetValueObject> eeSets ) {
+    private void pouplateAnalysisInformation( Collection<ExpressionExperimentSetValueObject> vo ) {
 
-        /*
-         * This can be sped up by checking if any are master sets.
-         */
+        Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( vo );
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<Object[]> withCoex = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select e.id, count(an) from ExpressionExperimentSetImpl e, CoexpressionAnalysisImpl an join e.experiments ea "
+                                + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
+                .setParameterList( "ids", idMap.keySet() ).list();
 
-        // Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( eeSets );
+        for ( Object[] oa : withCoex ) {
+            Long id = ( Long ) oa[0];
+            Integer c = ( ( Long ) oa[1] ).intValue();
+            idMap.get( id ).setNumWithCoexpressionAnalysis( c );
+        }
 
-        // FIXME: do we need this for meta-analysis?
+        List<Object[]> withDiffEx = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select e.id, count(an) from ExpressionExperimentSetImpl e, DifferentialExpressionAnalysisImpl an join e.experiments ea "
+                                + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
+                .setParameterList( "ids", idMap.keySet() ).list();
 
-        // Set<Long> ids = idMap.keySet();
+        for ( Object[] oa : withDiffEx ) {
+            Long id = ( Long ) oa[0];
+            Integer c = ( ( Long ) oa[1] ).intValue();
+            idMap.get( id ).setNumWithDifferentialExpressionAnalysis( c );
+        }
 
-        // /*
-        // * Currently the only type of analysis that ties up EEsets is the GenecoexpressionAnalysis.
-        // */
-        // List<Long> unmodifiable = this.getHibernateTemplate().findByNamedParam(
-        // "select es.id from GeneCoexpressionAnalysisImpl m "
-        // + "join m.expressionExperimentSetAnalyzed es where es.id in (:ids)", "ids", ids );
-
-        // for ( Long id : unmodifiable ) {
-        // idMap.get( id ).setModifiable( false );
-        // }
-
+        if ( timer.getTime() > 200 ) {
+            log.info( "Fetch analysis counts for " + vo.size() + " ee sets: " + timer.getTime() + "ms" );
+        }
     }
+
+    private static Logger log = LoggerFactory.getLogger( ExpressionExperimentSetDaoImpl.class );
 
     /**
      * @param ids

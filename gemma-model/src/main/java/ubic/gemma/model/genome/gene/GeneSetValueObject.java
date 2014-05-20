@@ -35,7 +35,6 @@ public class GeneSetValueObject implements SecureValueObject {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
-    private boolean userOwned = false;
     private boolean currentUserIsOwner = false;
     private String description;
     private Collection<Long> geneIds = new HashSet<Long>();
@@ -46,6 +45,7 @@ public class GeneSetValueObject implements SecureValueObject {
     private Integer size;
     private Long taxonId;
     private String taxonName;
+    private boolean userOwned = false;
 
     /**
      * default constructor to satisfy java bean contract
@@ -54,11 +54,26 @@ public class GeneSetValueObject implements SecureValueObject {
         super();
     }
 
-    public boolean equals( GeneSetValueObject ervo ) {
-        if ( ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() ) ) {
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
             return true;
         }
-        return false;
+        if ( obj == null ) {
+            return false;
+        }
+        if ( getClass() != obj.getClass() ) {
+            return false;
+        }
+        GeneSetValueObject other = ( GeneSetValueObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) {
+                return false;
+            }
+        } else if ( !id.equals( other.id ) ) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -130,6 +145,14 @@ public class GeneSetValueObject implements SecureValueObject {
     @Override
     public boolean getUserOwned() {
         return this.currentUserIsOwner;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
     }
 
     /**

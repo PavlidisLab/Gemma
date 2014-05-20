@@ -23,10 +23,10 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -65,6 +65,24 @@ public interface GeneSetService {
      * @return
      */
     public Collection<GeneSet> findByGene( Gene gene );
+
+    /**
+     * The ids of member genes will not be filled in
+     * 
+     * @param ids
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
+
+    /**
+     * Ids of member genes will be filled in
+     * 
+     * @param ids
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
      * Security filtering done at DAO level see {@link #ubic.gemma.model.genome.gene.GeneSetDao}
@@ -197,7 +215,7 @@ public interface GeneSetService {
      * Get a value object for the id param
      * 
      * @param id
-     * @return null if id doesn't match an experiment set
+     * @return null if id doesn't match an genes set
      */
     public DatabaseBackedGeneSetValueObject getValueObject( Long id );
 
@@ -274,6 +292,12 @@ public interface GeneSetService {
      * @return
      */
     public Collection<GeneValueObject> getGenesInGroup( Long groupId );
+
+    /**
+     * @param groupId
+     * @return ids of the genes in the group
+     */
+    public Collection<Long> getGenesIdsInGroup( Long groupId );
 
     /**
      * @param groupId

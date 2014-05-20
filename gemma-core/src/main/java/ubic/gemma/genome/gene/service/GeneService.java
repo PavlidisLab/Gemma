@@ -19,6 +19,7 @@
 package ubic.gemma.genome.gene.service;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
@@ -130,6 +131,15 @@ public interface GeneService {
      */
     public Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
 
+    /**
+     * Quickly load exact matches.
+     * 
+     * @param query
+     * @param taxonId
+     * @return
+     */
+    public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId );
+
     public Collection<AnnotationValueObject> findGOTerms( Long geneId );
 
     /**
@@ -141,32 +151,6 @@ public interface GeneService {
      * @return RelativeLocationData - a value object for containing the gene that is nearest the given physical location
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
-
-    // /**
-    // * @param genes
-    // * @param ees
-    // * @param stringency
-    // * @param knownGenesOnly
-    // * @param interGenesOnly
-    // * @param interGenesOnly if true, only links among the query genes will be returned. This is ingored if only a
-    // * single gene is entered
-    // * @return
-    // */
-    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<Gene> genes,
-    // Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly );
-    //
-    // /**
-    // * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
-    // * object:: CoexpressionCollectionValueObject
-    // *
-    // * @param gene
-    // * @param ees
-    // * @param stringency
-    // * @param knownGenesOnly
-    // * @return
-    // */
-    // public QueryGeneCoexpression getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
-    // Integer stringency );
 
     /**
      * @param id
@@ -218,12 +202,18 @@ public interface GeneService {
      */
     public Collection<Gene> loadAll();
 
-    public GeneValueObject loadGenePhenotypes( Long geneId );
-
     /**
      * Returns a collection of genes for the specified taxon
      */
     public Collection<Gene> loadAll( Taxon taxon );
+
+    /**
+     * @param ids
+     * @return
+     */
+    public GeneValueObject loadFullyPopulatedValueObject( Long id );
+
+    public GeneValueObject loadGenePhenotypes( Long geneId );
 
     /**
      * Gets all the microRNAs for a given taxon. Note query could be slow or inexact due to use of wild card searching
@@ -253,12 +243,6 @@ public interface GeneService {
      * @return
      */
     public GeneValueObject loadValueObject( Long id );
-
-    /**
-     * @param ids
-     * @return
-     */
-    public GeneValueObject loadFullyPopulatedValueObject( Long id );
 
     /**
      * @param ids
@@ -305,14 +289,14 @@ public interface GeneService {
 
     public Gene thawLiter( Gene gene );
 
+    @Secured({ "GROUP_ADMIN" })
+    public void update( Collection<Gene> genes );
+
     /**
      * @param gene
      */
     @Secured({ "GROUP_ADMIN" })
     /* we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that */
     public void update( Gene gene );
-
-    @Secured({ "GROUP_ADMIN" })
-    public void update( Collection<Gene> genes );
 
 }

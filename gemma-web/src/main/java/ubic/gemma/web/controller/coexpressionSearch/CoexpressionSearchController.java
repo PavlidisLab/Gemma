@@ -37,6 +37,7 @@ import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionSearchService
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -132,6 +133,9 @@ public class CoexpressionSearchController {
         return taskRunningService.submitLocalTask( job );
     }
 
+    @Autowired
+    private GeneSetService geneSetService;
+
     /**
      * Important entry point - called by the CoexpressionSearchTask
      * 
@@ -141,14 +145,21 @@ public class CoexpressionSearchController {
     public CoexpressionMetaValueObject doSearch( CoexpressionSearchCommand searchOptions ) {
 
         Collection<ExpressionExperiment> myEE = null;
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
 
         if ( searchOptions.getGeneIds() == null || searchOptions.getGeneIds().isEmpty() ) {
-            return getEmptyResult();
+
+            if ( searchOptions.getGeneSetId() != null ) {
+                searchOptions.setGeneIds( EntityUtils.getIds( geneSetService.getGenesInGroup( searchOptions
+                        .getGeneSetId() ) ) );
+            }
+
+            if ( searchOptions.getGeneIds().isEmpty() ) {
+                result.setErrorState( "No genes were selected" );
+                return result;
+            }
         }
 
-        restrictSearchOptionsQueryGenes( searchOptions );
-
-        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
             result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY + " genes" );
             return result;
@@ -197,11 +208,14 @@ public class CoexpressionSearchController {
 
         if ( eeIds.isEmpty() ) {
             // search all available experiments.
+        } else {
+            searchOptions.setEeIds( eeIds );
         }
 
+        restrictSearchOptionsQueryGenes( searchOptions );
         log.info( "Starting coexpression search: " + searchOptions );
 
-        result = geneCoexpressionService.coexpressionSearch( eeIds, searchOptions.getGeneIds(),
+        result = geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), searchOptions.getGeneIds(),
                 searchOptions.getStringency(), MAX_RESULTS_PER_GENE, searchOptions.getQueryGenesOnly() );
 
         // FIXME This is ugly - we need to consolidate some of this.
@@ -294,19 +308,16 @@ public class CoexpressionSearchController {
     }
 
     /**
-     * @return
-     */
-    private CoexpressionMetaValueObject getEmptyResult() {
-        return new CoexpressionMetaValueObject();
-    }
-
-    /**
      * Trim the gene ids used for the query.
      * 
      * @param searchOptions
      * @param queryGeneIds
      */
     private void restrictSearchOptionsQueryGenes( CoexpressionSearchCommand searchOptions ) {
+
+        /*
+         * TODO: if there is only one experiment set, do a 'my genes only' query.
+         */
 
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
             // this will be a 'my genes only' vis query since queryGeneIds !=null

@@ -60,6 +60,16 @@ create table GENE_COEX_TESTED_IN (ID BIGINT not null, NUM_TESTS SMALLINT not nul
 drop table if exists COEXPRESSION_NODE_DEGREE;
 create table COEXPRESSION_NODE_DEGREE (GENE_ID BIGINT not null, LINK_COUNTS MEDIUMBLOB not null, REL_LINK_RANKS MEDIUMBLOB not null,primary key (GENE_ID));
 
+-- late-breaking change...
+alter table COEXPRESSION_NODE_DEGREE add column LINK_COUNTS_POS mediumblob NOT NULL;
+alter table COEXPRESSION_NODE_DEGREE add column LINK_COUNTS_NEG mediumblob NOT NULL;
+alter table COEXPRESSION_NODE_DEGREE add column REL_LINK_RANKS_POS mediumblob NOT NULL;
+alter table COEXPRESSION_NODE_DEGREE add column REL_LINK_RANKS_NEG mediumblob NOT NULL;
+-- temporary
+update COEXPRESSION_NODE_DEGREE SET LINK_COUNTS_POS = LINK_COUNTS;
+update COEXPRESSION_NODE_DEGREE SET REL_LINK_RANKS_POS = REL_LINK_RANKS;
+
+
 drop table if exists GENE_COEX_GENES;
 create table GENE_COEX_GENES (ID BIGINT not null, BYTES MEDIUMBLOB not null, primary key (ID));
 

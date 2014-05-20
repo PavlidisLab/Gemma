@@ -44,14 +44,16 @@ public interface GeneDiffExMetaAnalysisService extends AnalysisService<GeneDiffe
     /**
      * 
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
+    public Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon );
 
     /**
      * 
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
+    public Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * @param analysisId

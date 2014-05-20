@@ -74,8 +74,9 @@ Gemma.StatefulRemoteCombo = Ext.extend( Ext.form.ComboBox, {
       }
    },
 
-   /*
-    * Private. Called only after the underlying store is ready. At this point applyState would already have been called.
+   /**
+    * @private. Called only after the underlying store is ready. At this point applyState would already have been
+    *           called.
     */
    restoreState : function() {
       if ( this.storedState ) {

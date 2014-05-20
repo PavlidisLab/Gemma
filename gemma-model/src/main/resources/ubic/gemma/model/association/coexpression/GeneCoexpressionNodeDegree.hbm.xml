@@ -12,11 +12,17 @@
 			<generator class="assigned">
 			</generator>
 		</id>
-		<property name="linkCounts" type="byte[]">
-			<column name="LINK_COUNTS" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
+		<property name="linkCountsPositive" type="byte[]">
+			<column name="LINK_COUNTS_POS" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
 		</property>
-		<property name="relativeLinkRanks" type="byte[]">
-			<column name="REL_LINK_RANKS" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
+		<property name="relativeLinkRanksPositive" type="byte[]">
+			<column name="REL_LINK_RANKS_POS" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
+		</property>
+		<property name="linkCountsNegative" type="byte[]">
+			<column name="LINK_COUNTS_NEG" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
+		</property>
+		<property name="relativeLinkRanksNegative" type="byte[]">
+			<column name="REL_LINK_RANKS_NEG" not-null="true" unique="false" sql-type="MEDIUMBLOB" />
 		</property>
 	</class>
 </hibernate-mapping>

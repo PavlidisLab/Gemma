@@ -30,8 +30,8 @@ public abstract class SearchSettings implements java.io.Serializable {
         /**
          * Constructs a new instance of {@link ubic.gemma.model.common.search.SearchSettings}.
          */
-        public static ubic.gemma.model.common.search.SearchSettings newInstance() {
-            return new ubic.gemma.model.common.search.SearchSettingsImpl();
+        public static SearchSettings newInstance() {
+            return new SearchSettingsImpl();
         }
 
     }

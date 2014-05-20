@@ -140,7 +140,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         assertEquals( newName, setVO.getName() );
         assertEquals( newDesc, setVO.getDescription() );
-        assertEquals( 1, setVO.getNumExperiments().intValue() ); // experiment IDs are not populated by default.
+        assertEquals( 1, setVO.getSize().intValue() ); // experiment IDs are not populated by default.
 
         Collection<ExpressionExperiment> eesInSet = expressionExperimentSetService.getExperimentsInSet( eeSet.getId() );
 

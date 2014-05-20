@@ -59,6 +59,11 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
     private static Log log = LogFactory.getLog( GeneSetSearchImpl.class );
 
+    /**
+     * Also defined in GeneSearchServiceImpl.
+     */
+    private static final int MAX_GO_GROUP_SIZE = 200;
+
     @Autowired
     private Gene2GOAssociationService gene2GoService;
 
@@ -69,13 +74,13 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     private GeneSetService geneSetService;
 
     @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -125,22 +130,33 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         Collection<? extends OntologyResource> matches = this.geneOntologyService.findTerm( StringUtils
                 .strip( goTermName ) );
 
-        Collection<GeneSet> results = new HashSet<GeneSet>();
-
-        Integer termsProcessed = 0;
+        Collection<GeneSet> results = new HashSet<>();
 
         for ( OntologyResource t : matches ) {
-            GeneSet converted = goTermToGeneSet( t, taxon, maxGeneSetSize );
-            // converted will be null if its size is more than maxGeneSetSize
-            if ( converted != null ) {
-                results.add( converted );
+            assert t instanceof OntologyTerm;
 
-                if ( maxGoTermsProcessed != null ) {
-                    termsProcessed++;
-                    if ( termsProcessed > maxGoTermsProcessed ) {
-                        return results;
-                    }
+            if ( taxon == null ) {
+                Collection<GeneSet> sets = goTermToGeneSets( ( OntologyTerm ) t, maxGeneSetSize );
+                for ( GeneSet geneSet : sets ) {
+                    results.add( geneSet );
                 }
+
+                // should we count each species as one go
+                if ( maxGoTermsProcessed != null && results.size() > maxGoTermsProcessed ) {
+                    // return results;
+                }
+            } else {
+
+                GeneSet converted = goTermToGeneSet( t, taxon, maxGeneSetSize );
+                // converted will be null if its size is more than maxGeneSetSize
+                if ( converted != null ) {
+                    results.add( converted );
+
+                }
+            }
+
+            if ( maxGoTermsProcessed != null && results.size() > maxGoTermsProcessed ) {
+                return results;
             }
         }
 
@@ -177,20 +193,23 @@ public class GeneSetSearchImpl implements GeneSetSearch {
     @Override
     public Collection<GeneSetValueObject> findByPhenotypeName( String phenotypeQuery, Taxon taxon ) {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         Collection<CharacteristicValueObject> phenotypes = phenotypeAssociationManagerService
                 .searchOntologyForPhenotypes( StringUtils.strip( phenotypeQuery ), null );
 
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> results = new HashSet<>();
 
         if ( phenotypes.isEmpty() ) {
             return results;
         }
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+        if ( timer.getTime() > 200 ) {
+            log.info( "Find phenotypes: " + timer.getTime() + "ms" );
+        }
+
         log.debug( " Converting CharacteristicValueObjects collection(size:" + phenotypes.size()
                 + ") into GeneSets for  phenotype query " + phenotypeQuery );
-        int convertedCount = 0;
         Map<String, CharacteristicValueObject> uris = new HashMap<>();
         for ( CharacteristicValueObject cvo : phenotypes ) {
             uris.put( cvo.getValueUri(), cvo );
@@ -198,6 +217,10 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         Map<String, Collection<? extends GeneValueObject>> genes = phenotypeAssociationManagerService
                 .findCandidateGenesForEach( uris.keySet(), taxon );
+
+        if ( timer.getTime() > 500 ) {
+            log.info( "Find phenotype genes done at " + timer.getTime() + "ms" );
+        }
 
         for ( String uri : genes.keySet() ) {
 
@@ -220,11 +243,9 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
         }
 
-        log.info( "added " + convertedCount + " results" );
-
         if ( timer.getTime() > 1000 ) {
-            log.info( "Converted CharacteristicValueObjects collection(size:" + phenotypes.size()
-                    + ") into GeneSets for  phenotype query " + phenotypeQuery + " in " + timer.getTime() + "ms" );
+            log.info( "Loaded " + phenotypes.size() + " phenotype gene sets for query " + phenotypeQuery + " in "
+                    + timer.getTime() + "ms" );
         }
         return results;
 
@@ -259,8 +280,13 @@ public class GeneSetSearchImpl implements GeneSetSearch {
          */
 
         if ( query.toUpperCase().startsWith( "GO" ) ) {
-            GeneSet goSet = findByGoId( query, tax );
-            if ( goSet != null ) foundGeneSets.add( goSet );
+            if ( tax == null ) {
+                Collection<GeneSet> goSets = findByGoId( query );
+                foundGeneSets.addAll( goSets );
+            } else {
+                GeneSet goSet = findByGoId( query, tax );
+                if ( goSet != null ) foundGeneSets.add( goSet );
+            }
         } else {
             foundGeneSets.addAll( findByGoTermName( query, tax ) );
         }
@@ -300,41 +326,51 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         return null;
     }
 
+    /**
+     * @param query
+     * @return
+     */
+    private Collection<GeneSet> findByGoId( String query ) {
+        OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( query ) );
+
+        if ( goTerm == null ) {
+            return new HashSet<>();
+        }
+        // if taxon is null, this returns genesets for all taxa
+        return goTermToGeneSets( goTerm, MAX_GO_GROUP_SIZE );
+    }
+
     private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
         return goTermToGeneSet( term, taxon, null );
 
     }
 
     /**
-     * Convert a GO term to a 'GeneSet', including genes from all child terms.
+     * Convert a GO term to a 'GeneSet', including genes from all child terms. Divide up by taxon.
      */
     private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon, Integer maxGeneSetSize ) {
+        assert taxon != null;
         if ( term == null ) return null;
         if ( term.getUri() == null ) return null;
 
-        Collection<OntologyResource> allMatches = new HashSet<OntologyResource>();
-
-        if ( term instanceof OntologyTerm ) {
-            allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
-        }
+        Collection<OntologyResource> allMatches = new HashSet<>();
         allMatches.add( term );
-
-        Collection<Gene> genes = new HashSet<Gene>();
-
+        assert term instanceof OntologyTerm;
+        allMatches.addAll( this.geneOntologyService.getAllChildren( ( OntologyTerm ) term ) );
+        log.info( term );
+        /*
+         * Gather up uris
+         */
+        Collection<String> termsToFetch = new HashSet<>();
         for ( OntologyResource t : allMatches ) {
             String goId = uri2goid( t );
-            /*
-             * This is a slow step. We might want to defer it. Getting a count would be faster
-             */
-            if ( taxon != null ) {
-                genes.addAll( this.gene2GoService.findByGOTerm( goId, taxon ) );
-            } else {
-                genes.addAll( this.gene2GoService.findByGOTerm( goId ) );
-            }
+            termsToFetch.add( goId );
+        }
 
-            if ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) {
-                return null;
-            }
+        Collection<Gene> genes = this.gene2GoService.findByGOTerms( termsToFetch, taxon );
+
+        if ( genes.isEmpty() || ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) ) {
+            return null;
         }
 
         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
@@ -352,6 +388,51 @@ public class GeneSetSearchImpl implements GeneSetSearch {
             transientGeneSet.getMembers().add( gmember );
         }
         return transientGeneSet;
+    }
+
+    /**
+     * @param goTerm
+     * @return
+     */
+    private Collection<GeneSet> goTermToGeneSets( OntologyTerm term, Integer maxGeneSetSize ) {
+        if ( term == null ) return null;
+        if ( term.getUri() == null ) return null;
+
+        Collection<OntologyResource> allMatches = new HashSet<>();
+        allMatches.add( term );
+        allMatches.addAll( this.geneOntologyService.getAllChildren( term ) );
+        log.info( term );
+        /*
+         * Gather up uris
+         */
+        Collection<String> termsToFetch = new HashSet<>();
+        for ( OntologyResource t : allMatches ) {
+            String goId = uri2goid( t );
+            termsToFetch.add( goId );
+        }
+
+        Map<Taxon, Collection<Gene>> genesByTaxon = this.gene2GoService.findByGOTermsPerTaxon( termsToFetch );
+
+        Collection<GeneSet> results = new HashSet<>();
+        for ( Taxon t : genesByTaxon.keySet() ) {
+            Collection<Gene> genes = genesByTaxon.get( t );
+
+            if ( genes.isEmpty() || ( maxGeneSetSize != null && genes.size() > maxGeneSetSize ) ) {
+                continue;
+            }
+
+            GeneSet transientGeneSet = GeneSet.Factory.newInstance();
+            transientGeneSet.setName( uri2goid( term ) );
+            transientGeneSet.setDescription( term.getLabel() );
+
+            for ( Gene gene : genes ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( gene );
+                transientGeneSet.getMembers().add( gmember );
+            }
+            results.add( transientGeneSet );
+        }
+        return results;
     }
 
     // /**

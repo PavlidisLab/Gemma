@@ -27,8 +27,8 @@ Ext.onReady( function() {
 
       keys : [ {
          key : Ext.EventObject.ENTER,
-         fn : function() {
-            editUser.getForm().submit( {
+         handler : function( e ) {
+            e.getTarget().getForm().submit( {
                url : this.url,
                method : 'POST',
                success : function() {
@@ -101,9 +101,9 @@ Ext.onReady( function() {
          text : 'Submit',
          formBind : true, // use with monitorValid in Ext.FormPanel for client side
          // validation
-         handler : function() {
+         handler : function( e ) {
 
-            editUser.getForm().submit( {
+            e.getTarget().getForm().submit( {
                url : this.url,
                method : 'POST',
                success : function() {
@@ -115,7 +115,7 @@ Ext.onReady( function() {
                   errMsg = "<font color='red'>" + action.result.message + "</font>";
                   Element.update( 'errorMessage', errMsg );
 
-                  editUser.getForm().reset();
+                  e.getTarget().getForm().reset();
                   Ext.getCmp( 'my-status' ).clearStatus();
                }
             } );

@@ -12,8 +12,6 @@ Ext.onReady( function() {
    // turn on validation errors beside the field globally
    Ext.form.Field.prototype.msgTarget = 'side';
 
-   var bd = Ext.getBody();
-
    var resetPassword = new Ext.FormPanel( {
       labelWidth : 75, // label settings here cascade unless overridden
       url : 'resetPassword.html',
@@ -107,7 +105,7 @@ Ext.onReady( function() {
    /**
     * 
     */
-   var panel = new Ext.Panel( {
+   new Ext.Panel( {
       width : 390,
       title : 'Reset Password',
       frame : false,

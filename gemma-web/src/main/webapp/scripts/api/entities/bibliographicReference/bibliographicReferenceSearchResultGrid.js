@@ -163,7 +163,7 @@ Gemma.BibliographicReference.SearchResultGrid = Ext.extend( Ext.grid.GridPanel, 
    layout : 'fit',
    view : new Ext.ux.InitialTextGridView( {
       initialText : 'Use search boxes above to find papers.',
-      emptyText : 'No results found.',
+      emptyText : 'No results.',
       deferEmptyText : true,
       forceFit : true
    } ),

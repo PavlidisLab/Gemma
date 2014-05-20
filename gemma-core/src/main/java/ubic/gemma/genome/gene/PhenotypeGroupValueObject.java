@@ -50,14 +50,6 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
 public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -7264201170714207356L;
-    private String phenotypeName;
-    private String phenotypeCategory;
-    private String searchTerm;
-
-    public PhenotypeGroupValueObject() {
-        super();
-    }
-
 
     /**
      * Method to create a display object from scratch
@@ -69,11 +61,19 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
      * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
      */
     public static PhenotypeGroupValueObject convertFromGeneSetValueObject( GeneSetValueObject gsvo, String searchTerm ) {
-
-        return new PhenotypeGroupValueObject( gsvo.getName(), gsvo.getDescription(), gsvo.getTaxonId(), gsvo.getTaxonName(),
-                gsvo.getGeneIds(), gsvo.getName(), gsvo.getDescription(), searchTerm );
+        return new PhenotypeGroupValueObject( gsvo.getName(), gsvo.getDescription(), gsvo.getTaxonId(),
+                gsvo.getTaxonName(), gsvo.getGeneIds(), gsvo.getName(), gsvo.getDescription(), searchTerm );
     }
-    
+
+    private String phenotypeCategory;
+    private String phenotypeName;
+
+    private String searchTerm;
+
+    public PhenotypeGroupValueObject() {
+        super();
+    }
+
     /**
      * Method to create a display object from scratch
      * 
@@ -99,11 +99,41 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         this.setSearchTerm( searchTerm );
     }
 
-    /**
-     * @param searchTerm the searchTerm to set
-     */
-    public void setSearchTerm( String searchTerm ) {
-        this.searchTerm = searchTerm;
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( !super.equals( obj ) ) {
+            return false;
+        }
+        if ( getClass() != obj.getClass() ) {
+            return false;
+        }
+        PhenotypeGroupValueObject other = ( PhenotypeGroupValueObject ) obj;
+        if ( phenotypeCategory == null ) {
+            if ( other.phenotypeCategory != null ) {
+                return false;
+            }
+        } else if ( !phenotypeCategory.equals( other.phenotypeCategory ) ) {
+            return false;
+        }
+        if ( phenotypeName == null ) {
+            if ( other.phenotypeName != null ) {
+                return false;
+            }
+        } else if ( !phenotypeName.equals( other.phenotypeName ) ) {
+            return false;
+        }
+        return true;
+    }
+
+    public String getPhenotypeCategory() {
+        return phenotypeCategory;
+    }
+
+    public String getPhenotypeName() {
+        return phenotypeName;
     }
 
     /**
@@ -113,21 +143,28 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
         return searchTerm;
     }
 
-    public String getPhenotypeCategory() {
-        return phenotypeCategory;
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ( ( phenotypeCategory == null ) ? 0 : phenotypeCategory.hashCode() );
+        result = prime * result + ( ( phenotypeName == null ) ? 0 : phenotypeName.hashCode() );
+        return result;
     }
 
     public void setPhenotypeCategory( String phenotypeCategory ) {
         this.phenotypeCategory = phenotypeCategory;
     }
 
-    public String getPhenotypeName() {
-        return phenotypeName;
-    }
-
     public void setPhenotypeName( String phenotypeName ) {
         this.phenotypeName = phenotypeName;
     }
 
+    /**
+     * @param searchTerm the searchTerm to set
+     */
+    public void setSearchTerm( String searchTerm ) {
+        this.searchTerm = searchTerm;
+    }
 
 }

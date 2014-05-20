@@ -39,6 +39,8 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -63,6 +65,12 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private CoexpressionAnalysisService coexpressionAnalysisService;
+
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private SecurityService securityService;
@@ -148,7 +156,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         // if an experiment was returned by both experiment and experiment set search, don't count it twice
         // (managed by set)
         Set<Long> eeIds = new HashSet<>();
-        Map<Long, HashSet<Long>> eeIdsByTaxonId = new HashMap<>();
+        Map<Long, Set<Long>> eeIdsByTaxonId = new HashMap<>();
 
         // add every individual experiment to the set, grouped by taxon and also altogether.
         for ( SearchResultDisplayObject srdo : experiments ) {
@@ -195,7 +203,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         // make an entry for each taxon
 
         Long taxonId2 = null;
-        for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
+        for ( Map.Entry<Long, Set<Long>> entry : eeIdsByTaxonId.entrySet() ) {
             taxonId2 = entry.getKey();
             Taxon taxon = taxonService.load( taxonId2 );
             if ( taxon != null && entry.getValue().size() > 0 ) {
@@ -204,6 +212,14 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                         "All " + taxon.getCommonName() + " results for '" + query + "'", "All " + taxon.getCommonName()
                                 + " experiments found for your query", taxon.getId(), taxon.getCommonName(),
                         entry.getValue(), query );
+
+                int numWithDifferentialExpressionAnalysis = differentialExpressionAnalysisService
+                        .getExperimentsWithAnalysis( entry.getValue() ).size();
+                int numWithCoexpressionAnalysis = coexpressionAnalysisService.getExperimentsWithAnalysis(
+                        entry.getValue() ).size();
+
+                ftvo.setNumWithCoexpressionAnalysis( numWithCoexpressionAnalysis );
+                ftvo.setNumWithDifferentialExpressionAnalysis( numWithDifferentialExpressionAnalysis );
                 displayResults.add( new SearchResultDisplayObject( ftvo ) );
             }
         }

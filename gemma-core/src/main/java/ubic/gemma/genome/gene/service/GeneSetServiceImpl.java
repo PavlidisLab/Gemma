@@ -32,12 +32,12 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetDao;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
@@ -259,6 +259,16 @@ public class GeneSetServiceImpl implements GeneSetService {
         // gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
         gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( foundGeneSets ) );
         return gsvos;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.genome.gene.service.GeneSetService#getGenesIdsInGroup(java.lang.Long)
+     */
+    @Override
+    public Collection<Long> getGenesIdsInGroup( Long groupId ) {
+        return this.getValueObject( groupId ).getGeneIds();
     }
 
     /**
@@ -502,6 +512,29 @@ public class GeneSetServiceImpl implements GeneSetService {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.genome.gene.service.GeneSetService#loadValueObjects(java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
+        return this.geneSetDao.loadValueObjects( ids );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.genome.gene.service.GeneSetService#loadValueObjectsLite(java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
+        return this.geneSetDao.loadValueObjectsLite( ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
     @Override
@@ -707,4 +740,5 @@ public class GeneSetServiceImpl implements GeneSetService {
         return geneSetValueObjectHelper.convertToValueObject( gset );
 
     }
+
 }

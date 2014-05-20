@@ -108,6 +108,12 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Collection<Gene>> getSets( Collection<String> uris ) {
+        return this.getGene2GOAssociationDao().getSets( uris );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -134,6 +140,41 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
     @Override
     protected void handleRemoveAll() {
         this.getGene2GOAssociationDao().removeAll();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerms(java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch ) {
+        return this.getGene2GOAssociationDao().getGenes( termsToFetch );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerms(java.util.Collection,
+     * ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon ) {
+        return this.getGene2GOAssociationDao().getGenes( termsToFetch, taxon );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTermsPerTaxon(java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch ) {
+        return this.getGene2GOAssociationDao().findByGoTermsPerTaxon( termsToFetch );
     }
 
 }

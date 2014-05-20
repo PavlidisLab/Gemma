@@ -43,39 +43,61 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  */
 public class SearchResultDisplayObject implements Comparable<SearchResultDisplayObject> {
 
-    private Class<?> resultClass;
+    /**
+     * Creates a collection of SearchResultDisplayObjects from a collection of objects. Object types handled are:
+     * GeneValueObject, GeneSetValueObject, ExpressionExperimentValueObject, ExpressionExperimentSetValueObject and
+     * SearchObjects containing an object of any of those types
+     * 
+     * @param results a collection of SearchResult objects to create SearchResultDisplayObjects for
+     * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
+     */
+    public static List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
+            List<SearchResult> results ) {
+
+        // collection of SearchResultDisplayObjects to return
+        List<SearchResultDisplayObject> searchResultDisplayObjects = new ArrayList<SearchResultDisplayObject>();
+
+        if ( results != null && results.size() > 0 ) {
+            // for every object passed in, create a SearchResultDisplayObject
+            for ( SearchResult result : results ) {
+                searchResultDisplayObjects.add( new SearchResultDisplayObject( result ) );
+            }
+        }
+        Collections.sort( searchResultDisplayObjects );
+
+        return searchResultDisplayObjects;
+    }
 
     // private boolean isSession;
 
-    private Boolean isGroup; // whether this search result represents a group of entities or not
-
-    private String name;
-
     private String description;
 
-    private int size; // the number of items; 1 if not a group
+    private Long id;
 
-    private String taxonName; // the common name of the associated taxon
-
-    private Long taxonId;
-
-    // for grouping.
-    private Long parentTaxonId;
-
-    public Long getParentTaxonId() {
-        return parentTaxonId;
-    }
-
-    public void setParentTaxonId( Long parentTaxonId ) {
-        this.parentTaxonId = parentTaxonId;
-    }
+    private Boolean isGroup; // whether this search result represents a group of entities or not
 
     /**
      * for genes and experiments, the memeberIds field is a collection containing just their id
      */
     private Collection<Long> memberIds = new HashSet<Long>();
 
+    private String name;
+
+    // the query exactly as entered by the user.F
+    private String originalQuery;
+
+    // for grouping.
+    private Long parentTaxonId;
+
+    private Class<?> resultClass;
+
     private Object resultValueObject;
+
+    private int size; // the number of items; 1 if not a group
+
+    private Long taxonId;
+
+    private String taxonName; // the common name of the associated taxon
 
     private boolean userOwned = false;
 
@@ -83,6 +105,273 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * satisfy javaBean contract
      */
     public SearchResultDisplayObject() {
+    }
+
+    /**
+     * @param entity
+     */
+    public SearchResultDisplayObject( Object entity ) {
+
+        if ( ExpressionExperimentSetValueObject.class.isAssignableFrom( entity.getClass() ) ) {
+            this.setValues( ( ExpressionExperimentSetValueObject ) entity );
+        } else if ( Gene.class.isAssignableFrom( entity.getClass() ) ) {
+            this.setValues( ( Gene ) entity );
+        } else if ( GeneSetValueObject.class.isAssignableFrom( entity.getClass() ) ) {
+            this.setValues( ( GeneSetValueObject ) entity );
+        } else if ( GeneValueObject.class.isAssignableFrom( entity.getClass() ) ) {
+            this.setValues( ( GeneValueObject ) entity );
+        } else if ( ExpressionExperimentValueObject.class.isAssignableFrom( entity.getClass() ) ) {
+            this.setValues( ( ExpressionExperimentValueObject ) entity );
+        } else if ( SearchResult.class.isAssignableFrom( entity.getClass() ) ) {
+            this.setValues( ( SearchResult ) entity );
+        } else {
+            throw new UnsupportedOperationException( entity.getClass() + " not supported" );
+        }
+    }
+
+    /**
+     * @param geneSet
+     */
+    public SearchResultDisplayObject( SessionBoundGeneSetValueObject geneSet ) {
+        setValues( geneSet );
+    }
+
+    @Override
+    public int compareTo( SearchResultDisplayObject o ) {
+        if ( o.name == null || o.description == null ) {
+            return 1;
+        }
+        if ( this.name == null || this.description == null ) {
+            return -1;
+        }
+        // sort GO groups by their text name, not their GO id
+        if ( o.getResultValueObject() instanceof GOGroupValueObject ) {
+            int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
+            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;
+        }
+        // sort experiments by their text name, not their GSE id
+        if ( o.getResultValueObject() instanceof ExpressionExperimentValueObject ) {
+            int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
+            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;
+        }
+        int result = this.name.toLowerCase().compareTo( o.name.toLowerCase() );
+        return ( result == 0 ) ? this.description.toLowerCase().compareTo( o.description.toLowerCase() ) : result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) {
+            return true;
+        }
+        if ( obj == null ) {
+            return false;
+        }
+        if ( getClass() != obj.getClass() ) {
+            return false;
+        }
+        SearchResultDisplayObject other = ( SearchResultDisplayObject ) obj;
+        if ( id == null ) {
+            if ( other.id != null ) {
+                return false;
+            }
+        } else if ( !id.equals( other.id ) ) {
+            return false;
+        }
+        if ( name == null ) {
+            if ( other.name != null ) {
+                return false;
+            }
+        } else if ( !name.equals( other.name ) ) {
+            return false;
+        }
+        if ( resultValueObject == null ) {
+            if ( other.resultValueObject != null ) {
+                return false;
+            }
+        } else if ( !resultValueObject.equals( other.resultValueObject ) ) {
+            return false;
+        }
+        return true;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public Boolean getIsGroup() {
+        return this.isGroup;
+    }
+
+    public Collection<Long> getMemberIds() {
+        return this.memberIds;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public String getOriginalQuery() {
+        return originalQuery;
+    }
+
+    public Long getParentTaxonId() {
+        return parentTaxonId;
+    }
+
+    public Class<?> getResultClass() {
+        return this.resultClass;
+    }
+
+    /**
+     * @return the resultValueObject
+     */
+    public Object getResultValueObject() {
+        return resultValueObject;
+    }
+
+    public int getSize() {
+        return this.size;
+    }
+
+    public Long getTaxonId() {
+        return this.taxonId;
+    }
+
+    public String getTaxonName() {
+        return this.taxonName;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        result = prime * result + ( ( resultValueObject == null ) ? 0 : resultValueObject.hashCode() );
+        return result;
+    }
+
+    /**
+     * @return the userOwned
+     */
+    public boolean isUserOwned() {
+        return userOwned;
+    }
+
+    public void setMemberIds( Collection<Long> memberIds ) {
+        this.memberIds = memberIds;
+    }
+
+    public void setOriginalQuery( String originalQuery ) {
+        this.originalQuery = originalQuery;
+    }
+
+    public void setParentTaxonId( Long parentTaxonId ) {
+        this.parentTaxonId = parentTaxonId;
+    }
+
+    public void setTaxonId( Long id ) {
+        this.taxonId = id;
+    }
+
+    public void setTaxonName( String name ) {
+        this.taxonName = name;
+    }
+
+    /**
+     * @param userOwned the userOwned to set
+     */
+    public void setUserOwned( boolean userOwned ) {
+        this.userOwned = userOwned;
+    }
+
+    /**
+     * @param resultValueObject the resultValueObject to set
+     */
+    private void setResultValueObject( Object resultValueObject ) {
+        this.resultValueObject = resultValueObject;
+        this.resultClass = resultValueObject.getClass();
+    }
+
+    /**
+     * @param geneSet
+     */
+    private void setValues( ExpressionExperimentSetValueObject eeSet ) {
+        this.isGroup = true;
+        this.size = eeSet.getSize();
+        this.taxonId = eeSet.getTaxonId();
+        this.taxonName = eeSet.getTaxonName();
+        this.name = eeSet.getName();
+        this.description = eeSet.getDescription();
+        this.memberIds = eeSet.getExpressionExperimentIds(); // might not be filled in.
+        this.id = eeSet.getId();
+        this.setResultValueObject( eeSet );
+    }
+
+    /**
+     * @param expressionExperiment
+     */
+    private void setValues( ExpressionExperimentValueObject expressionExperiment ) {
+        this.isGroup = false;
+        this.size = 1;
+        this.taxonId = expressionExperiment.getTaxonId();
+
+        this.parentTaxonId = expressionExperiment.getParentTaxonId();
+        this.taxonName = expressionExperiment.getTaxon();
+        this.name = expressionExperiment.getShortName();
+        this.description = expressionExperiment.getName();
+        this.memberIds.add( expressionExperiment.getId() );
+        this.id = expressionExperiment.getId();
+        setResultValueObject( expressionExperiment );
+    }
+
+    /**
+     * @param gene
+     */
+    private void setValues( Gene gene ) {
+        setResultValueObject( new GeneValueObject( gene ) );
+        this.isGroup = false;
+        this.size = 1;
+        if ( gene.getTaxon() != null ) {
+            this.taxonId = gene.getTaxon().getId();
+            this.taxonName = gene.getTaxon().getCommonName();
+
+        }
+
+        this.name = gene.getOfficialSymbol();
+        this.description = gene.getOfficialName();
+        this.memberIds.add( gene.getId() );
+        this.id = gene.getId();
+    }
+
+    /**
+     * @param geneSet
+     */
+    private void setValues( GeneSetValueObject geneSet ) {
+        this.isGroup = true;
+        this.size = geneSet.getSize();
+        this.taxonId = geneSet.getTaxonId();
+        this.taxonName = geneSet.getTaxonName();
+        this.name = geneSet.getName();
+        this.description = geneSet.getDescription();
+        this.memberIds = geneSet.getGeneIds();
+        this.id = geneSet.getId();
+        this.setResultValueObject( geneSet );
+    }
+
+    /**
+     * @param gene
+     */
+    private void setValues( GeneValueObject gene ) {
+        setResultValueObject( gene );
+        this.isGroup = false;
+        this.size = 1;
+        this.taxonId = gene.getTaxonId();
+        this.taxonName = gene.getTaxonCommonName();
+        this.name = gene.getOfficialSymbol();
+        this.description = gene.getOfficialName();
+        this.memberIds.add( gene.getId() );
+        this.id = gene.getId();
     }
 
     /**
@@ -120,231 +409,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
             this.description = "Unhandled result type: " + searchResultClass;
             this.memberIds = null;
         }
-    }
-
-    /**
-     * @param geneSet
-     */
-    public SearchResultDisplayObject( SessionBoundGeneSetValueObject geneSet ) {
-        setValues( geneSet );
-    }
-
-    /**
-     * @param entity
-     */
-    public SearchResultDisplayObject( Object entity ) {
-
-        if ( ExpressionExperimentSetValueObject.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( ExpressionExperimentSetValueObject ) entity );
-        } else if ( Gene.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( Gene ) entity );
-        } else if ( GeneSetValueObject.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( GeneSetValueObject ) entity );
-        } else if ( GeneValueObject.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( GeneValueObject ) entity );
-        } else if ( ExpressionExperimentValueObject.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( ExpressionExperimentValueObject ) entity );
-        } else if ( SearchResult.class.isAssignableFrom( entity.getClass() ) ) {
-            this.setValues( ( SearchResult ) entity );
-        } else {
-            throw new UnsupportedOperationException( entity.getClass() + " not supported" );
-        }
-    }
-
-    /**
-     * @param gene
-     */
-    private void setValues( Gene gene ) {
-        setResultValueObject( new GeneValueObject( gene ) );
-        this.isGroup = false;
-        this.size = 1;
-        if ( gene.getTaxon() != null ) {
-            this.taxonId = gene.getTaxon().getId();
-            this.taxonName = gene.getTaxon().getCommonName();
-
-        }
-
-        this.name = gene.getOfficialSymbol();
-        this.description = gene.getOfficialName();
-        this.memberIds.add( gene.getId() );
-    }
-
-    /**
-     * @param gene
-     */
-    private void setValues( GeneValueObject gene ) {
-        setResultValueObject( gene );
-        this.isGroup = false;
-        this.size = 1;
-        this.taxonId = gene.getTaxonId();
-        this.taxonName = gene.getTaxonCommonName();
-        this.name = gene.getOfficialSymbol();
-        this.description = gene.getOfficialName();
-        this.memberIds.add( gene.getId() );
-    }
-
-    /**
-     * @param geneSet
-     */
-    private void setValues( GeneSetValueObject geneSet ) {
-        this.isGroup = true;
-        this.size = geneSet.getSize();
-        this.taxonId = geneSet.getTaxonId();
-        this.taxonName = geneSet.getTaxonName();
-        this.name = geneSet.getName();
-        this.description = geneSet.getDescription();
-        this.memberIds = geneSet.getGeneIds();
-        this.setResultValueObject( geneSet );
-    }
-
-    /**
-     * @param geneSet
-     */
-    private void setValues( ExpressionExperimentSetValueObject eeSet ) {
-        this.isGroup = true;
-        this.size = eeSet.getNumExperiments();
-        this.taxonId = eeSet.getTaxonId();
-        this.taxonName = eeSet.getTaxonName();
-        this.name = eeSet.getName();
-        this.description = eeSet.getDescription();
-        this.memberIds = eeSet.getExpressionExperimentIds(); // might not be filled in.
-        this.setResultValueObject( eeSet );
-    }
-
-    /**
-     * @param expressionExperiment
-     */
-    private void setValues( ExpressionExperimentValueObject expressionExperiment ) {
-        this.isGroup = false;
-        this.size = 1;
-        this.taxonId = expressionExperiment.getTaxonId();
-
-        this.parentTaxonId = expressionExperiment.getParentTaxonId();
-        this.taxonName = expressionExperiment.getTaxon();
-        this.name = expressionExperiment.getShortName();
-        this.description = expressionExperiment.getName();
-        this.memberIds.add( expressionExperiment.getId() );
-        setResultValueObject( expressionExperiment );
-    }
-
-    public Class<?> getResultClass() {
-        return this.resultClass;
-    }
-
-    public Boolean getIsGroup() {
-        return this.isGroup;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public int getSize() {
-        return this.size;
-    }
-
-    public Long getTaxonId() {
-        return this.taxonId;
-    }
-
-    public void setTaxonId( Long id ) {
-        this.taxonId = id;
-    }
-
-    public String getTaxonName() {
-        return this.taxonName;
-    }
-
-    public void setTaxonName( String name ) {
-        this.taxonName = name;
-    }
-
-    public Collection<Long> getMemberIds() {
-        return this.memberIds;
-    }
-
-    public void setMemberIds( Collection<Long> memberIds ) {
-        this.memberIds = memberIds;
-    }
-
-    /**
-     * @param resultValueObject the resultValueObject to set
-     */
-    private void setResultValueObject( Object resultValueObject ) {
-        this.resultValueObject = resultValueObject;
-        this.resultClass = resultValueObject.getClass();
-    }
-
-    /**
-     * @return the resultValueObject
-     */
-    public Object getResultValueObject() {
-        return resultValueObject;
-    }
-
-    /**
-     * @param userOwned the userOwned to set
-     */
-    public void setUserOwned( boolean userOwned ) {
-        this.userOwned = userOwned;
-    }
-
-    /**
-     * @return the userOwned
-     */
-    public boolean isUserOwned() {
-        return userOwned;
-    }
-
-    /**
-     * Creates a collection of SearchResultDisplayObjects from a collection of objects. Object types handled are:
-     * GeneValueObject, GeneSetValueObject, ExpressionExperimentValueObject, ExpressionExperimentSetValueObject and
-     * SearchObjects containing an object of any of those types
-     * 
-     * @param results a collection of SearchResult objects to create SearchResultDisplayObjects for
-     * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
-     */
-    public static List<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
-            List<SearchResult> results ) {
-
-        // collection of SearchResultDisplayObjects to return
-        List<SearchResultDisplayObject> searchResultDisplayObjects = new ArrayList<SearchResultDisplayObject>();
-
-        if ( results != null && results.size() > 0 ) {
-            // for every object passed in, create a SearchResultDisplayObject
-            for ( SearchResult result : results ) {
-                searchResultDisplayObjects.add( new SearchResultDisplayObject( result ) );
-            }
-        }
-        Collections.sort( searchResultDisplayObjects );
-
-        return searchResultDisplayObjects;
-    }
-
-    @Override
-    public int compareTo( SearchResultDisplayObject o ) {
-        if ( o.name == null || o.description == null ) {
-            return 1;
-        }
-        if ( this.name == null || this.description == null ) {
-            return -1;
-        }
-        // sort GO groups by their text name, not their GO id
-        if ( o.getResultValueObject() instanceof GOGroupValueObject ) {
-            int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
-            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;
-        }
-        // sort experiments by their text name, not their GSE id
-        if ( o.getResultValueObject() instanceof ExpressionExperimentValueObject ) {
-            int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
-            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;
-        }
-        int result = this.name.toLowerCase().compareTo( o.name.toLowerCase() );
-        return ( result == 0 ) ? this.description.toLowerCase().compareTo( o.description.toLowerCase() ) : result;
     }
 
 }

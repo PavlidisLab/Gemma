@@ -64,12 +64,12 @@ public interface GeneSearchService {
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      * 
-     * @param query A list of gene names (symbols), one per line.
+     * @param query gene names (symbols)
      * @param taxonId
-     * @return map with each gene-query as a key and a collection of the search-results as the value
+     * @return query with match. Null values means nothing was found for that key (query)
      * @throws IOException
      */
-    public Map<String, Collection<GeneValueObject>> searchMultipleGenesGetMap( String query, Long taxonId )
+    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
             throws IOException;
 
 }

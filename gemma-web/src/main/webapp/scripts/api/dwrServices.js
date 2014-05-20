@@ -486,11 +486,6 @@ ExpressionExperimentController.searchExperimentsAndExperimentGroups = function( 
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
       'searchExperimentsAndExperimentGroups', p0, p1, callback );
 };
-ExpressionExperimentController.searchExperimentsAndExperimentGroupsGetIds = function( p0, p1, callback ) {
-   googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ExpressionExperimentController/searchExperimentsAndExperimentGroupsGetIds" );
-   dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',
-      'searchExperimentsAndExperimentGroupsGetIds', p0, p1, callback );
-};
 ExpressionExperimentController.getDescription = function( p0, callback ) {
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDescription', p0,
       callback );
@@ -702,6 +697,10 @@ ExpressionExperimentSetController.addSessionGroups = function( p0, p1, callback 
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
       'addSessionGroups', p0, p1, callback );
 };
+ExpressionExperimentSetController.addSessionGroup = function( p0, p1, callback ) {
+   dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+      'addSessionGroup', p0, p1, callback );
+};
 ExpressionExperimentSetController.updateUserAndSessionGroups = function( p0, callback ) {
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
       'updateUserAndSessionGroups', p0, callback );
@@ -714,13 +713,17 @@ ExpressionExperimentSetController.loadAllSessionGroups = function( callback ) {
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
       'loadAllSessionGroups', callback );
 };
-ExpressionExperimentSetController.getExperimentsInSetBySessionId = function( p0, callback ) {
-   dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
-      'getExperimentsInSetBySessionId', p0, callback );
-};
+// ExpressionExperimentSetController.getExperimentsInSetBySessionId = function( p0, callback ) {
+// dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+// 'getExperimentsInSetBySessionId', p0, callback );
+// };
 ExpressionExperimentSetController.getExperimentIdsInSet = function( p0, callback ) {
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
       'getExperimentIdsInSet', p0, callback );
+};
+ExpressionExperimentSetController.getExperimentsInSet = function( p0, p1, callback ) {
+   dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+      'getExperimentsInSet', p0, p1, callback );
 };
 ExpressionExperimentSetController.canCurrentUserEditGroup = function( p0, callback ) {
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
@@ -854,6 +857,11 @@ GenePickerController.getTaxaWithEvidence = function( callback ) {
 GenePickerController.searchMultipleGenes = function( p0, p1, callback ) {
    dwr.engine._execute( GenePickerController._path, 'GenePickerController', 'searchMultipleGenes', p0, p1, callback );
 };
+/**
+ * @param {Array}
+ * @param {Number}
+ * @param {Function}
+ */
 GenePickerController.searchMultipleGenesGetMap = function( p0, p1, callback ) {
    dwr.engine._execute( GenePickerController._path, 'GenePickerController', 'searchMultipleGenesGetMap', p0, p1,
       callback );
@@ -958,8 +966,8 @@ if ( typeof GeneSetController === 'undefined' ) {
    var GeneSetController = {};
 }
 GeneSetController._path = '/Gemma/dwr';
-GeneSetController.getGenesInGroup = function( p0, callback ) {
-   dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback );
+GeneSetController.getGenesInGroup = function( p0, p1, callback ) {
+   dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, p1, callback );
 };
 GeneSetController.load = function( p0, callback ) {
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'load', p0, callback );
@@ -983,6 +991,10 @@ GeneSetController.updateSessionGroups = function( p0, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/GeneSetController/updateSessionGroups" );
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'updateSessionGroups', p0, callback );
 };
+GeneSetController.updateSessionGroup = function( p0, callback ) {
+   googleAnalyticsTrackPageviewIfConfigured( "/Gemma/GeneSetController/updateSessionGroup" );
+   dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'updateSessionGroup', p0, callback );
+};
 GeneSetController.updateUserAndSessionGroups = function( p0, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/GeneSetController/updateUserAndSessionGroups" );
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'updateUserAndSessionGroups', p0, callback );
@@ -992,8 +1004,10 @@ GeneSetController.create = function( p0, callback ) {
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'create', p0, callback );
 };
 GeneSetController.addSessionGroups = function( p0, p1, callback ) {
-   googleAnalyticsTrackPageviewIfConfigured( "/Gemma/GeneSetController/addSessionGroups" );
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'addSessionGroups', p0, p1, callback );
+};
+GeneSetController.addSessionGroup = function( p0, p1, callback ) {
+   dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'addSessionGroup', p0, p1, callback );
 };
 GeneSetController.addUserAndSessionGroups = function( p0, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/GeneSetController/addUserAndSessionGroups" );

@@ -39,6 +39,7 @@ import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
@@ -53,6 +54,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.tasks.visualization.DifferentialExpressionSearchTaskCommand;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -75,6 +77,10 @@ public class DifferentialExpressionSearchController {
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
     @Autowired
     private GeneService geneService;
+
+    @Autowired
+    private GeneSetService geneSetService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
@@ -337,10 +343,17 @@ public class DifferentialExpressionSearchController {
         List<List<Gene>> genes = new ArrayList<>();
         List<String> geneGroupNames = new ArrayList<>();
 
+        // FIXME there will only be one...
         for ( GeneSetValueObject gsvo : geneValueObjects ) {
-            if ( gsvo != null ) {
-                geneGroupNames.add( gsvo.getName() );
-                genes.add( new ArrayList<>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
+            geneGroupNames.add( gsvo.getName() );
+            Collection<Long> geneIds = gsvo.getGeneIds();
+
+            if ( geneIds.isEmpty() ) {
+                // FIXME this is lame
+                genes.add( new ArrayList<>( geneService.loadMultiple( EntityUtils.getIds( geneSetService
+                        .getGenesInGroup( gsvo.getId() ) ) ) ) );
+            } else {
+                genes.add( new ArrayList<>( geneService.loadMultiple( geneIds ) ) );
             }
         }
 

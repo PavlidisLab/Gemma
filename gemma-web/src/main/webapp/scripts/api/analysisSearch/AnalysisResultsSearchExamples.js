@@ -2,7 +2,7 @@ Ext.namespace( 'Gemma' );
 
 /**
  * When the example queries are ready to run, 'examplesReady' event is fired with three param: taxonId,
- * geneExampleRecord, experimentExampleRecord
+ * geneExampleRecord, experimentExampleRecord.
  * 
  * @author thea
  * @version $Id$
@@ -31,7 +31,6 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
               {
                  goId : "GO_0051302",
                  eeSetName : 'Master set for yeast', // don't need one any more
-                 // eeSetId : '6223',
                  taxonId : '11',
                  backupGeneIds : [ 7678763, 7678783, 7676882, 7694443, 7685764, 7667629, 7672893, 7673265, 7686100,
                                   7697083, 7670169, 7692953 ]
@@ -176,8 +175,8 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
                size : expIds.length,
                taxonId : eeSet.taxonId,
                taxonName : eeSet.taxonName,
-               memberIds : expIds,
-               resultValueObject : eeSet,
+               memberIds : expIds, // needed?
+               resultValueObject : eeSet, // needed?
                userOwned : false
             } );
             this.fireEvent( 'eeExampleReady', record );
@@ -217,7 +216,8 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
       // make a gene combo record for the db-backed experimentSetValueObject
       GenePickerController.getGeneSetByGOId( goName, taxonId, function( geneSet ) {
 
-         // if the GO id failed to match a set, use the hard coded back up list of genes
+         // if the GO id failed to match a set, use the hard coded back up
+         // list of genes
          // (this might happen if Berkeleybop is down, see bug 2534)
          if ( geneSet === null ) {
             geneSet = myscope.makeSessionBoundGeneSet( backupGeneIds, taxonId, 'Backup gene list for ' + goName,
@@ -266,12 +266,15 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
       var backupGeneIds = exampleConfig.backupGeneIds;
 
       this.getExperimentSet( eeSetId, eeSetName );
-      // set the gene chooser
       this.getGOGeneSet( goName, taxonId, backupGeneIds );
 
       var queryRun = false;
       var geneExampleReady = false;
       var eeExampleReady = false;
+
+      /*
+       * FIXME: used chained promises here?
+       */
       this.on( 'geneExampleReady', function( record ) {
          geneExampleReady = true;
          this.geneExampleRecord = record;

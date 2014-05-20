@@ -19,6 +19,7 @@
 package ubic.gemma.model.genome;
 
 import java.util.Collection;
+import java.util.Map;
 
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -26,11 +27,16 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * @see ubic.gemma.model.genome.Gene
+ * @see Gene
  */
 public interface GeneDao extends BaseDao<Gene> {
 
     public Integer countAll();
+
+    /**
+     * 
+     */
+    public Gene find( Gene gene );
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
@@ -44,22 +50,23 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * 
      */
-    public Gene find( Gene gene );
-
-    /**
-     * 
-     */
     public Gene findByAccession( String accession, ExternalDatabase source );
 
     /**
-     * <p>
      * Locate genes that match the given alias string
-     * </p>
      */
-    public Collection<Gene> findByAlias( java.lang.String search );
+    public Collection<Gene> findByAlias( String search );
 
+    /**
+     * @param exactString
+     * @return
+     */
     public Collection<? extends Gene> findByEnsemblId( String exactString );
 
+    /**
+     * @param accession
+     * @return
+     */
     public Gene findByNcbiId( Integer accession );
 
     /**
@@ -67,12 +74,12 @@ public interface GeneDao extends BaseDao<Gene> {
      * Finder based on the official name.
      * </p>
      */
-    public java.util.Collection<Gene> findByOfficalSymbol( java.lang.String officialSymbol );
+    public Collection<Gene> findByOfficalSymbol( String officialSymbol );
 
     /**
      * 
      */
-    public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
+    public Collection<Gene> findByOfficialName( String officialName );
 
     /**
      * @param officialName
@@ -83,13 +90,23 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * 
      */
-    public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
-            ubic.gemma.model.genome.Taxon taxon );
+    public Gene findByOfficialSymbol( String symbol, Taxon taxon );
 
     /**
      * 
      */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
+    public Collection<Gene> findByOfficialSymbolInexact( String officialSymbol );
+
+    /**
+     * Quickly load exact matches.
+     * 
+     * @param query
+     * @param taxonId
+     * @return
+     */
+    public Map<String, Gene> findByOfficialSymbols( Collection<String> query, Long taxonId );
+
+    public Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
     /**
      * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
@@ -103,41 +120,11 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
 
-    // /**
-    // * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
-    // * value is a Map of CoexpressionCollectionValueObjects.
-    // *
-    // * @param genes
-    // * @param ees
-    // * @param stringency
-    // * @param interGeneOnly if true, only links among the query genes will be returned. This is ingored if only a
-    // single
-    // * gene is entered
-    // * @return
-    // */
-    // public Map<Gene, QueryGeneCoexpression> getCoexpressedGenes( Collection<ubic.gemma.model.genome.Gene> genes,
-    // java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean interGeneOnly );
-    //
-    // /**
-    // * <p>
-    // * Function to get coexpressed genes given a gene and a collection of expressionExperiments. The return value is a
-    // * CoexpressionCollectionValueObject.
-    // * </p>
-    // */
-    // public QueryGeneCoexpression getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-    // java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
-
     /**
      * @param id
      * @return how many platform elements (e.g. probes) represent this gene, totalled up over all platforms.
      */
     public long getCompositeSequenceCountById( long id );
-
-    /**
-     * @param id
-     * @return how many platforms have a representation of this gene
-     */
-    public int getPlatformCountById( Long id );
 
     /**
      * 
@@ -152,18 +139,24 @@ public interface GeneDao extends BaseDao<Gene> {
     /**
      * returns a collections of genes that match the given taxon
      */
-    public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> getGenesByTaxon( Taxon taxon );
 
     /**
      * Returns a collection of genes that are actually MicroRNA for a given taxon
      */
-    public java.util.Collection<Gene> getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> getMicroRnaByTaxon( Taxon taxon );
+
+    /**
+     * @param id
+     * @return how many platforms have a representation of this gene
+     */
+    public int getPlatformCountById( Long id );
 
     /**
      * Returns a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
      * genes)
      */
-    public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> loadKnownGenes( Taxon taxon );
 
     /**
      * @param ids
@@ -186,20 +179,17 @@ public interface GeneDao extends BaseDao<Gene> {
     public Gene thawAliases( Gene gene );
 
     /**
+     * @param genes
+     * @return
+     * @see loadThawed, which you should use instead of this method if you know you want to load thawed objects.
+     */
+    public Collection<Gene> thawLite( Collection<Gene> genes );
+
+    /**
      * @param gene
      * @return
      */
     public Gene thawLite( Gene gene );
 
     public Gene thawLiter( Gene gene );
-
-    /**
-     * @param genes
-     * @return
-     * @see loadThawed, which you should use instead of this method if you know you want to load thawed objects.
-     */
-    public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
-
-    public Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
-
 }

@@ -178,4 +178,26 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
         geneDiffExMetaAnalysisDao.update( analysis );
 
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+        return geneDiffExMetaAnalysisDao.getExperimentsWithAnalysis( idsToFilter );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+        return geneDiffExMetaAnalysisDao.getExperimentsWithAnalysis( taxon );
+    }
 }

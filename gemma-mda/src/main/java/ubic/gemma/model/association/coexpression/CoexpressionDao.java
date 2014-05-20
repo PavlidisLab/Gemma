@@ -137,8 +137,10 @@ public interface CoexpressionDao {
     public Map<Gene, Integer> countOldLinks( Collection<Gene> genes );
 
     /**
-     * @param relRanksPerGene
+     * @param relRanksPerGenePos
+     * @param relRanksPerGeneNeg
      */
-    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGene );
+    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePos,
+            Map<Long, List<Double>> relRanksPerGeneNeg );
 
 }

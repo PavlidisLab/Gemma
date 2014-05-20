@@ -26,6 +26,8 @@ import java.util.HashSet;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,16 +35,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.web.persistence.SessionListManager;
 
 /**
- * Exposes GeneServices methods over ajax
+ * Exposes GeneSetServices methods over ajax. Some methods take and return collections to be compatible with Store
+ * interfaces (which, as of May 2014, we do not use)
  * 
  * @author kelsey
  * @version $Id$
@@ -53,35 +56,50 @@ public class GeneSetController {
 
     @Autowired
     private GeneSetService geneSetService;
+
     @Autowired
     private SecurityService securityService;
+
     @Autowired
     private SessionListManager sessionListManager;
 
     /**
      * AJAX adds the gene group to the session, used by SessionGeneGroupStore and SessionDatasetGroupStore sets the
-     * groups taxon value and reference
+     * groups taxon value and reference.
      * 
      * @param geneSetVo value object constructed on the client.
      * @param modificationBased whether the set was modified by the user
      * @return collection of added session groups (with updated reference.id etc)
+     * @deprecated
      */
+    @Deprecated
     public Collection<SessionBoundGeneSetValueObject> addSessionGroups(
             Collection<SessionBoundGeneSetValueObject> geneSetVos, Boolean modificationBased ) {
 
-        Collection<SessionBoundGeneSetValueObject> results = new HashSet<SessionBoundGeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> results = new HashSet<>();
 
         for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
-            TaxonValueObject tax = geneSetService.getTaxonVOforGeneSetVO( gsvo );
-            gsvo.setTaxonId( tax.getId() );
-            gsvo.setTaxonName( tax.getCommonName() );
-
-            // sets the reference and stores the group
-            results.add( sessionListManager.addGeneSet( gsvo, modificationBased ) );
+            results.add( addSessionGroup( gsvo, modificationBased ) );
 
         }
 
         return results;
+    }
+
+    /**
+     * * AJAX adds the gene group to the session, used by SessionGeneGroupStore and SessionDatasetGroupStore sets the
+     * groups taxon value and reference.
+     * 
+     * @param gsvo
+     * @param modificationBased whether the set was modified by the user
+     * @return
+     */
+    public SessionBoundGeneSetValueObject addSessionGroup( SessionBoundGeneSetValueObject gsvo,
+            Boolean modificationBased ) {
+        TaxonValueObject tax = geneSetService.getTaxonVOforGeneSetVO( gsvo );
+        gsvo.setTaxonId( tax.getId() );
+        gsvo.setTaxonName( tax.getCommonName() );
+        return sessionListManager.addGeneSet( gsvo, modificationBased );
     }
 
     /**
@@ -94,7 +112,7 @@ public class GeneSetController {
 
         Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
 
-        Collection<SessionBoundGeneSetValueObject> sessionResult = new HashSet<SessionBoundGeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> sessionResult = new HashSet<>();
 
         for ( GeneSetValueObject gsvo : geneSetVos ) {
 
@@ -142,7 +160,7 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> create( Collection<GeneSetValueObject> geneSetVos ) {
 
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> results = new HashSet<>();
         for ( GeneSetValueObject geneSetVo : geneSetVos ) {
 
             if ( geneSetVo.getGeneIds() == null || geneSetVo.getGeneIds().isEmpty() ) {
@@ -182,10 +200,22 @@ public class GeneSetController {
      * @param groupId
      * @return
      */
-    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
+    public Collection<GeneValueObject> getGenesInGroup( Long groupId, final Integer limit ) {
 
-        return geneSetService.getGenesInGroup( groupId );
+        // FIXME a bit inefficient...
+        Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( groupId );
 
+        if ( limit != null && limit > 0 && limit < genesInGroup.size() ) {
+            return CollectionUtils.select( genesInGroup, new Predicate() {
+                int i = 0;
+
+                @Override
+                public boolean evaluate( Object object ) {
+                    return i++ < limit;
+                }
+            } );
+        }
+        return genesInGroup;
     }
 
     /**
@@ -197,11 +227,10 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> getUserAndSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
-        Collection<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSetValueObject> result = new ArrayList<>();
 
         Collection<DatabaseBackedGeneSetValueObject> dbresult = getUsersGeneGroups( privateOnly, taxonId );
 
-        // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
         Collection<SessionBoundGeneSetValueObject> sessionResult = sessionListManager.getAllGeneSets( taxonId );
 
         result.addAll( dbresult );
@@ -218,8 +247,6 @@ public class GeneSetController {
      * @return
      */
     public Collection<SessionBoundGeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {
-
-        // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
         Collection<SessionBoundGeneSetValueObject> result = sessionListManager.getAllGeneSets( taxonId );
         return result;
     }
@@ -237,7 +264,7 @@ public class GeneSetController {
     }
 
     /**
-     * AJAX
+     * AJAX - load with the IDs filled in
      * 
      * @param groupId
      * @return
@@ -252,28 +279,29 @@ public class GeneSetController {
     }
 
     /**
-     * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so). TODO do we need to
-     * return an empty set?
+     * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
      * 
      * @param groups
      */
     public Collection<DatabaseBackedGeneSetValueObject> remove( Collection<DatabaseBackedGeneSetValueObject> vos ) {
         geneSetService.deleteDatabaseEntities( vos );
-        return new HashSet<DatabaseBackedGeneSetValueObject>();
+        return new HashSet<>();
     }
 
     /**
      * AJAX Given a valid gene group will remove it from the session.
      * 
+     * @deprecated
      * @param groups
      */
+    @Deprecated
     public Collection<SessionBoundGeneSetValueObject> removeSessionGroups(
             Collection<SessionBoundGeneSetValueObject> vos ) {
         for ( SessionBoundGeneSetValueObject geneSetValueObject : vos ) {
             sessionListManager.removeGeneSet( geneSetValueObject );
         }
 
-        return new HashSet<SessionBoundGeneSetValueObject>();
+        return new HashSet<>();
     }
 
     /**
@@ -283,9 +311,9 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> removeUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
 
-        Collection<GeneSetValueObject> removedSets = new HashSet<GeneSetValueObject>();
-        Collection<DatabaseBackedGeneSetValueObject> databaseCollection = new HashSet<DatabaseBackedGeneSetValueObject>();
-        Collection<SessionBoundGeneSetValueObject> sessionCollection = new HashSet<SessionBoundGeneSetValueObject>();
+        Collection<GeneSetValueObject> removedSets = new HashSet<>();
+        Collection<DatabaseBackedGeneSetValueObject> databaseCollection = new HashSet<>();
+        Collection<SessionBoundGeneSetValueObject> sessionCollection = new HashSet<>();
 
         for ( GeneSetValueObject geneSetValueObject : vos ) {
             if ( geneSetValueObject instanceof SessionBoundGeneSetValueObject ) {
@@ -305,7 +333,9 @@ public class GeneSetController {
     }
 
     /**
-     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
+     * If the current user has access to given gene group will return the gene ids in the gene group;
+     * <p>
+     * FIXME do we use this?
      * 
      * @param groupId
      * @return
@@ -315,9 +345,6 @@ public class GeneSetController {
 
         ModelAndView mav = new ModelAndView( "geneSet.detail" );
 
-        // if this is slow, we can get rid of it
-        // checking the id here rather than in the js widget gives better error feedback
-        // though it doesn't mean we load the set twice
         GeneSetValueObject geneSet = getGeneSetFromRequest( request );
         mav.addObject( "geneSetId", geneSet.getId() );
         mav.addObject( "geneSetName", geneSet.getName() );
@@ -333,9 +360,7 @@ public class GeneSetController {
      * @param geneIds
      */
     public Collection<DatabaseBackedGeneSetValueObject> update( Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
-
         return geneSetService.updateDatabaseEntity( geneSetVos );
-
     }
 
     /**
@@ -346,9 +371,7 @@ public class GeneSetController {
      * @param geneIds
      */
     public String updateMembers( Long groupId, Collection<Long> geneIds ) {
-
         return geneSetService.updateDatabaseEntityMembers( groupId, geneIds );
-
     }
 
     /**
@@ -359,21 +382,32 @@ public class GeneSetController {
      * @param geneIds
      */
     public DatabaseBackedGeneSetValueObject updateNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
-
         return geneSetService.updateDatabaseEntityNameDesc( geneSetVO );
-
     }
 
     /**
      * AJAX Updates the session group.
      * 
      * @param groups
+     * @deprecated
      */
+    @Deprecated
     public Collection<SessionBoundGeneSetValueObject> updateSessionGroups(
             Collection<SessionBoundGeneSetValueObject> vos ) {
         for ( SessionBoundGeneSetValueObject geneSetValueObject : vos ) {
             sessionListManager.updateGeneSet( geneSetValueObject );
         }
+        return vos;
+    }
+
+    /**
+     * AJAX updates a session group
+     * 
+     * @param vos
+     * @return
+     */
+    public SessionBoundGeneSetValueObject updateSessionGroup( SessionBoundGeneSetValueObject vos ) {
+        sessionListManager.updateGeneSet( vos );
         return vos;
     }
 
@@ -384,9 +418,9 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> updateUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
 
-        Collection<GeneSetValueObject> updatedSets = new HashSet<GeneSetValueObject>();
-        Collection<DatabaseBackedGeneSetValueObject> databaseCollection = new HashSet<DatabaseBackedGeneSetValueObject>();
-        Collection<SessionBoundGeneSetValueObject> sessionCollection = new HashSet<SessionBoundGeneSetValueObject>();
+        Collection<GeneSetValueObject> updatedSets = new HashSet<>();
+        Collection<DatabaseBackedGeneSetValueObject> databaseCollection = new HashSet<>();
+        Collection<SessionBoundGeneSetValueObject> sessionCollection = new HashSet<>();
 
         for ( GeneSetValueObject geneSetValueObject : vos ) {
             if ( geneSetValueObject instanceof SessionBoundGeneSetValueObject ) {

@@ -40,20 +40,19 @@ import ubic.gemma.util.Settings;
 
 /**
  * <p>
- * Spring Service base class for <code>ubic.gemma.model.association.Gene2GOAssociationService</code>, provides access to
- * all services and entities referenced by this service.
+ * Spring Service base class for <code>Gene2GOAssociationService</code>, provides access to all services and entities
+ * referenced by this service.
  * </p>
  * 
- * @see ubic.gemma.model.association.Gene2GOAssociationService
+ * @see Gene2GOAssociationService
  */
-public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.association.Gene2GOAssociationService,
-        InitializingBean {
+public abstract class Gene2GOAssociationServiceBase implements Gene2GOAssociationService, InitializingBean {
     protected Cache gene2goCache;
 
     private static final String G2G_CACHE_NAME = "Gene2GoServiceCache";
 
     @Autowired
-    private ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao;
+    private Gene2GOAssociationDao gene2GOAssociationDao;
 
     @Autowired
     private ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao;
@@ -103,7 +102,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
+     * @see Gene2GOAssociationService#create(Gene2GOAssociation)
      */
     @Override
     @Transactional
@@ -111,30 +110,29 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         try {
             return this.handleCreate( gene2GOAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.create(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.create(Gene2GOAssociation gene2GOAssociation)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#find(ubic.gemma.model.association.Gene2GOAssociation)
+     * @see Gene2GOAssociationService#find(Gene2GOAssociation)
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.association.Gene2GOAssociation find(
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+    public Gene2GOAssociation find( final Gene2GOAssociation gene2GOAssociation ) {
         try {
             return this.handleFind( gene2GOAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.find(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.find(Gene2GOAssociation gene2GOAssociation)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findAssociationByGene(ubic.gemma.model.genome.Gene)
+     * @see Gene2GOAssociationService#findAssociationByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
     @Transactional(readOnly = true)
@@ -142,14 +140,14 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         try {
             return this.handleFindAssociationByGene( gene );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findAssociationByGene(ubic.gemma.model.genome.Gene gene)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.findAssociationByGene(ubic.gemma.model.genome.Gene gene)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGene(ubic.gemma.model.genome.Gene)
+     * @see Gene2GOAssociationService#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
     @Transactional(readOnly = true)
@@ -157,8 +155,8 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         try {
             return this.handleFindByGene( gene );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGene(ubic.gemma.model.genome.Gene gene)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.findByGene(ubic.gemma.model.genome.Gene gene)' --> "
                             + th, th );
         }
     }
@@ -169,15 +167,14 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         try {
             return this.getGene2GOAssociationDao().findByGoTerm( goID );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(java.lang.String,
-     *      ubic.gemma.model.genome.Taxon)
+     * @see Gene2GOAssociationService#findByGOTerm(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
     @Override
     @Transactional(readOnly = true)
@@ -186,30 +183,29 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         try {
             return this.handleFindByGOTerm( goID, taxon );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.findByGOTerm(java.lang.String goID, ubic.gemma.model.genome.Taxon taxon)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)
+     * @see Gene2GOAssociationService#findOrCreate(Gene2GOAssociation)
      */
     @Override
     @Transactional(readOnly = true)
-    public ubic.gemma.model.association.Gene2GOAssociation findOrCreate(
-            final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
+    public Gene2GOAssociation findOrCreate( final Gene2GOAssociation gene2GOAssociation ) {
         try {
             return this.handleFindOrCreate( gene2GOAssociation );
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findOrCreate(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.findOrCreate(Gene2GOAssociation gene2GOAssociation)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#removeAll()
+     * @see Gene2GOAssociationService#removeAll()
      */
     @Override
     @Transactional
@@ -217,16 +213,15 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
         try {
             this.handleRemoveAll();
         } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.Gene2GOAssociationServiceException(
-                    "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.removeAll()' --> " + th,
-                    th );
+            throw new Gene2GOAssociationServiceException(
+                    "Error performing 'Gene2GOAssociationService.removeAll()' --> " + th, th );
         }
     }
 
     /**
      * Sets the reference to <code>gene2GOAssociation</code>'s DAO.
      */
-    public void setGene2GOAssociationDao( ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao ) {
+    public void setGene2GOAssociationDao( Gene2GOAssociationDao gene2GOAssociationDao ) {
         this.gene2GOAssociationDao = gene2GOAssociationDao;
     }
 
@@ -253,16 +248,16 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     }
 
     /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.association.Gene2GOAssociation)}
+     * Performs the core logic for {@link #create(Gene2GOAssociation)}
      */
     protected abstract Gene2GOAssociation handleCreate( Gene2GOAssociation gene2GOAssociation )
             throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.association.Gene2GOAssociation)}
+     * Performs the core logic for {@link #find(Gene2GOAssociation)}
      */
-    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleFind(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
+    protected abstract Gene2GOAssociation handleFind( Gene2GOAssociation gene2GOAssociation )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}
@@ -283,10 +278,10 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
             ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.association.Gene2GOAssociation)}
+     * Performs the core logic for {@link #findOrCreate(Gene2GOAssociation)}
      */
-    protected abstract ubic.gemma.model.association.Gene2GOAssociation handleFindOrCreate(
-            ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) throws java.lang.Exception;
+    protected abstract Gene2GOAssociation handleFindOrCreate( Gene2GOAssociation gene2GOAssociation )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #removeAll()}

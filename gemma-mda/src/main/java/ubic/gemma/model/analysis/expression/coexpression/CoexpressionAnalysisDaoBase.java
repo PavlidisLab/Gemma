@@ -20,7 +20,7 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.AnalysisDaoImpl;
+import ubic.gemma.model.analysis.AnalysisDaoBase;
 
 /**
  * <p>
@@ -30,7 +30,7 @@ import ubic.gemma.model.analysis.AnalysisDaoImpl;
  * 
  * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */
-public abstract class CoexpressionAnalysisDaoBase extends AnalysisDaoImpl<CoexpressionAnalysis> implements
+public abstract class CoexpressionAnalysisDaoBase extends AnalysisDaoBase<CoexpressionAnalysis> implements
         CoexpressionAnalysisDao {
 
     /**

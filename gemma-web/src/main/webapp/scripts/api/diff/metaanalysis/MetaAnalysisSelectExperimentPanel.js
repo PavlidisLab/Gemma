@@ -9,8 +9,12 @@ Ext.namespace( 'Gemma' );
 Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPanel, {
    title : 'Select experiments',
    nextButtonText : 'Select factors',
+
+   /**
+    * @memberOf Gemma.MetaAnalysisSelectExperimentPanel
+    */
    initComponent : function() {
-      var experimentSearchAndPreview;
+      var experimentSearchAndPreview = null;
 
       var contentPanel = new Ext.Panel( {
          border : false,
@@ -63,7 +67,7 @@ Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPa
             items : [ nextButton, resetButton ]
          } ],
          getSelectedExperimentOrExperimentSetValueObject : function() {
-            return experimentSearchAndPreview.getSelectedExperimentOrExperimentSetValueObject();
+            return experimentSearchAndPreview.getSelectedExpressionExperimentSetValueObject();
          }
       } );
 

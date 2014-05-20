@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -208,6 +209,13 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .runDifferentialExpressionAnalyses( ee, config );
         assertTrue( !analyses.isEmpty() );
         differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
+
+        Collection<Long> experimentsWithAnalysis = differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
+        assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
+
+        assertTrue( differentialExpressionAnalysisService.getExperimentsWithAnalysis(
+                taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
 
         differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 

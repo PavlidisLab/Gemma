@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.Taxon;
 public class DifferentialExpressionAnalysisServiceImpl implements DifferentialExpressionAnalysisService {
 
     @Autowired
-    private  DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
@@ -210,6 +210,29 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
      */
     public DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
         return this.differentialExpressionAnalysisDao;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+        return this.getDifferentialExpressionAnalysisDao().getExperimentsWithAnalysis( idsToFilter );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+        return this.getDifferentialExpressionAnalysisDao().getExperimentsWithAnalysis( taxon );
+
     }
 
     /**

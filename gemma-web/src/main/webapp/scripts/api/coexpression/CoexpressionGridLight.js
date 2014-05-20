@@ -163,7 +163,7 @@ Gemma.CoexpressionGridLight = Ext.extend( Ext.grid.GridPanel, {
 
    filter : function() {
       var text = Ext.getCmp( this.id + '-search-in-grid' ).getValue();
-      var value;
+      var value = '';
 
       if ( text && text.length > 1 ) {
          value = new RegExp( Ext.escapeRe( text ), 'i' );

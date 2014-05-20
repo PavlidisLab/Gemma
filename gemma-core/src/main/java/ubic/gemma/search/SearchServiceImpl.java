@@ -429,7 +429,7 @@ public class SearchServiceImpl implements SearchService {
      */
     @Override
     public Map<Class<?>, List<SearchResult>> speedSearch( SearchSettings settings ) {
-        Map<Class<?>, List<SearchResult>> searchResults = new HashMap<Class<?>, List<SearchResult>>();
+        Map<Class<?>, List<SearchResult>> searchResults = new HashMap<>();
         try {
             searchResults = this.search( settings, true, true );
 
@@ -1260,7 +1260,7 @@ public class SearchServiceImpl implements SearchService {
          * search.
          */
 
-        Collection<SearchResult> allResults = new HashSet<SearchResult>();
+        Collection<SearchResult> allResults = new HashSet<>();
         // Skip compass searching of composite sequences because it only bloats the results.
         // allResults.addAll( compassCompositeSequenceSearch( settings ) );
         allResults.addAll( databaseCompositeSequenceSearch( settings ) );
@@ -1269,7 +1269,7 @@ public class SearchServiceImpl implements SearchService {
         /*
          * This last step is needed because the compassSearch for compositeSequences returns bioSequences too.
          */
-        Collection<SearchResult> finalResults = new HashSet<SearchResult>();
+        Collection<SearchResult> finalResults = new HashSet<>();
         for ( SearchResult sr : allResults ) {
             if ( CompositeSequence.class.isAssignableFrom( sr.getResultClass() ) ) {
                 finalResults.add( sr );
@@ -1404,20 +1404,20 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> databaseCompositeSequenceSearch( final SearchSettings settings ) {
 
-        if ( !settings.getUseDatabase() ) return new HashSet<SearchResult>();
+        if ( !settings.getUseDatabase() ) return new HashSet<>();
 
         StopWatch watch = startTiming();
 
-        Set<Gene> geneSet = new HashSet<Gene>();
+        Set<Gene> geneSet = new HashSet<>();
 
         String searchString = settings.getQuery();
         ArrayDesign ad = settings.getPlatformConstraint();
 
         // search by exact composite sequence name
-        Collection<CompositeSequence> matchedCs = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> matchedCs = new HashSet<>();
         if ( ad != null ) {
             CompositeSequence cs = compositeSequenceService.findByName( ad, searchString );
-            matchedCs.add( cs );
+            if ( cs != null ) matchedCs.add( cs );
         } else {
             matchedCs = compositeSequenceService.findByName( searchString );
         }
@@ -1520,13 +1520,13 @@ public class SearchServiceImpl implements SearchService {
      */
     private Collection<SearchResult> databaseGeneSearch( SearchSettings settings ) {
 
-        if ( !settings.getUseDatabase() ) return new HashSet<SearchResult>();
+        if ( !settings.getUseDatabase() ) return new HashSet<>();
 
         StopWatch watch = startTiming();
         String searchString = StringEscapeUtils.unescapeJava( settings.getQuery() );
-        if ( StringUtils.isBlank( searchString ) ) return new HashSet<SearchResult>();
+        if ( StringUtils.isBlank( searchString ) ) return new HashSet<>();
 
-        Collection<SearchResult> results = new HashSet<SearchResult>();
+        Collection<SearchResult> results = new HashSet<>();
 
         /*
          * First search by accession. If we find it, stop.
@@ -1909,7 +1909,7 @@ public class SearchServiceImpl implements SearchService {
 
                 } else if ( o instanceof GeneSet ) {
                     GeneSet geneSet = ( GeneSet ) o;
-                    currentTaxon = geneSetService.getTaxon( geneSet );
+                    currentTaxon = geneSetService.getTaxon( geneSet ); // FIXME SLOW? I may have fixed this.
 
                 } else if ( o instanceof CharacteristicValueObject ) {
                     CharacteristicValueObject charVO = ( CharacteristicValueObject ) o;
@@ -2008,7 +2008,8 @@ public class SearchServiceImpl implements SearchService {
      * with no duplicates.
      * 
      * @param searchSettings
-     * @param returnOnDbHit if true and if there is a match for a gene from the database, return immediately
+     * @param returnOnDbHit if true and if there is a match for a gene from the database, return immediately - much
+     *        faster
      * @return
      * @throws Exception
      */

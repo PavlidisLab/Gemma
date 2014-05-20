@@ -16,16 +16,13 @@
 <jwr:script src="/bundles/include.js" />
 <jwr:script src="/bundles/gemma-lib.js" />
 
-<%-- for dwr creation of javascript objects to mirror java value objects--%>
-<script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
+<%-- for dwr creation of javascript objects to mirror java value objects; including one of these causes all the objects to be exposed.--%>
+<script type='text/javascript' src='/Gemma/dwr/interface/EmptyController.js'></script>
 <%-- We should use this as soon as we figure out how to set generateDtoClasses option to dtoall 
 		script type='text/javascript' src='/Gemma/dwr/dtoall.js'></script>	--%>
 
 <%-- for registration, possible from any page--%>
 <script type="text/javascript" src="http://www.google.com/recaptcha/api/js/recaptcha_ajax.js"> </script>
-
-<%-- not bundled with JAWR, needs to be included *last* (at least after include.js & gemma-lib.js) --%>
-<jwr:script src='/scripts/app/valueObjectsInheritanceStructure.js' />
 
 <%-- log javascript errors --%>
 <script type="text/javascript">
@@ -33,9 +30,7 @@
 				// message == text-based error description
 			    // url     == url which exhibited the script error
 			    // line    == the line number being executed when the error occurred
-				JavascriptLogger.writeToErrorLog(errorMessage, url, line, document.location.href, navigator.userAgent);
-				
-				//return true; // supresses js error messages
+				JavascriptLogger.writeToErrorLog(errorMessage, url, line, document.location.href, navigator.userAgent);				
 			};
 		</script>
 

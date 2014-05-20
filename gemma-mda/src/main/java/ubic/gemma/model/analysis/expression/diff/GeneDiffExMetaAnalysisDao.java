@@ -35,19 +35,57 @@ import ubic.gemma.persistence.BaseDao;
 public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpressionMetaAnalysis> {
 
     /**
+     * @param analysisId
+     * @return a collection of included result set info value objects using the given meta-analysis id
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
+            long analysisId );
+
+    /**
+     * @param metaAnalysisIds
+     * @return a collection of summary value objects using the given ids of meta-analyses
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
+            Collection<Long> metaAnalysisIds );
+
+    /**
+     * @param analysisId
+     * @return a collection of result value objects using the given meta-analysis id
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
+
+    /**
+     * @param idsToFilter
+     * @return
+     */
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+
+    /**
+     * @param taxon
+     * @return
+     */
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
+
+    /** loads a neDifferentialExpressionMetaAnalysisResult */
+    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
+
+    /** loads a DifferentialExpressionMetaAnalysis containing a specific result */
+    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
+
+    /**
      * @param investigation
      * @return
      */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigation( Investigation investigation );
+
+    Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> findByInvestigations(
+            Collection<? extends Investigation> investigations );
 
     /**
      * @param name
      * @return
      */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByName( String name );
-
-    Map<Investigation, Collection<GeneDifferentialExpressionMetaAnalysis>> findByInvestigations(
-            Collection<? extends Investigation> investigations );
 
     /**
      * @param taxon
@@ -60,30 +98,4 @@ public interface GeneDiffExMetaAnalysisDao extends BaseDao<GeneDifferentialExpre
      * @return
      */
     Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon );
-
-    /** loads a DifferentialExpressionMetaAnalysis containing a specific result */
-    public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult );
-
-    /** loads a neDifferentialExpressionMetaAnalysisResult */
-    public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult );
-
-    /**
-     * @param metaAnalysisIds
-     * @return a collection of summary value objects using the given ids of meta-analyses
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> findMetaAnalyses(
-            Collection<Long> metaAnalysisIds );
-
-    /**
-     * @param analysisId
-     * @return a collection of included result set info value objects using the given meta-analysis id
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject> findIncludedResultSetsInfoById(
-            long analysisId );
-
-    /**
-     * @param analysisId
-     * @return a collection of result value objects using the given meta-analysis id
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId );
 }

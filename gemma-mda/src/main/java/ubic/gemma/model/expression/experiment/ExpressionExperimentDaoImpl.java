@@ -435,7 +435,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
 
     }
 
@@ -462,7 +462,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
 
     }
 
@@ -481,7 +481,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
     }
 
     @Override
@@ -513,7 +513,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list );
 
-        return new ArrayList<ExpressionExperimentValueObject>( vo.values() );
+        return new ArrayList<>( vo.values() );
     }
 
     /*
@@ -1070,7 +1070,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     protected Collection<ExpressionExperiment> handleFindByGene( Gene gene ) {
 
         /*
-         * NOTE uses GENE2CS table.
+         * uses GENE2CS table.
          */
         final String queryString = "select distinct ee.ID as eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, ARRAY_DESIGN ad, BIO_ASSAY ba, INVESTIGATION ee "
@@ -1079,20 +1079,16 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Collection<Long> eeIds = null;
 
-        try {
-            Session session = super.getSessionFactory().getCurrentSession();
-            org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-            queryObject.setLong( "geneID", gene.getId() );
-            queryObject.addScalar( "eeID", new LongType() );
-            ScrollableResults results = queryObject.scroll();
+        Session session = super.getSessionFactory().getCurrentSession();
+        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+        queryObject.setLong( "geneID", gene.getId() );
+        queryObject.addScalar( "eeID", new LongType() );
+        ScrollableResults results = queryObject.scroll();
 
-            eeIds = new HashSet<Long>();
+        eeIds = new HashSet<>();
 
-            while ( results.next() ) {
-                eeIds.add( results.getLong( 0 ) );
-            }
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        while ( results.next() ) {
+            eeIds.add( results.getLong( 0 ) );
         }
 
         return this.load( eeIds );
@@ -1350,7 +1346,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             throw new IllegalArgumentException( "Must provide at least one quantitation type" );
         }
 
-        // NOTE this essentially does a partial thaw.
+        // this essentially does a partial thaw.
         String queryString = "select dev from RawExpressionDataVectorImpl dev"
                 + " inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
@@ -1962,9 +1958,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Map<Long, ExpressionExperimentValueObject> vo;
 
         if ( initialSize == null ) {
-            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
+            vo = new LinkedHashMap<>();
         } else {
-            vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>( initialSize );
+            vo = new LinkedHashMap<>( initialSize );
         }
 
         for ( Object object : list ) {
@@ -2022,7 +2018,46 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             vo.put( eeId, v );
         }
 
+        pouplateAnalysisInformation( vo );
+
         return vo;
+
+    }
+
+    /**
+     * Fillin 'hasDifferentialExpressionAnalysis' and 'hasCoexpressionAnalysis'
+     * 
+     * @param vo
+     */
+    private void pouplateAnalysisInformation( Map<Long, ExpressionExperimentValueObject> vo ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<Long> withCoex = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
+                .setParameterList( "ids", vo.keySet() ).list();
+
+        for ( Long id : withCoex ) {
+            vo.get( id ).setHasCoexpressionAnalysis( true );
+        }
+
+        List<Long> withDiffEx = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select experimentAnalyzed.id from DifferentialExpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
+                .setParameterList( "ids", vo.keySet() ).list();
+
+        for ( Long id : withDiffEx ) {
+            vo.get( id ).setHasDifferentialExpressionAnalysis( true );
+        }
+
+        if ( timer.getTime() > 200 ) {
+            log.info( "Populate analysis info for " + vo.size() + " eevos: " + timer.getTime() + "ms" );
+        }
 
     }
 
@@ -2048,9 +2083,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " count(distinct SU), " // 19
                 + " ee.numberOfDataVectors, " // 20
                 + " ptax.id " // 21
-                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
-                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
-                + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
+                + " from ExpressionExperimentImpl as ee "
+                + " inner join ee.bioAssays as BA  "
+                + " left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
+                + " left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " left join taxon.parentTaxon as ptax "
                 + " inner join ee.experimentalDesign as EDES join ee.status as s ";
 

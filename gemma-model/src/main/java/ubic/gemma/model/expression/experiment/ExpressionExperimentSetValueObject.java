@@ -35,13 +35,9 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
 
     private static final long serialVersionUID = -6852364688337216390L;
 
-    private boolean userOwned = false;
-
-    private boolean userCanWrite = false;
-
     private String description = "";
 
-    private Collection<Long> expressionExperimentIds = new HashSet<Long>();
+    private Collection<Long> expressionExperimentIds = new HashSet<>();
 
     private Long id = null;
 
@@ -54,13 +50,21 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
 
     private String name = "";
 
-    private Integer numExperiments = 0;
+    private Integer size = 0;
+
+    private Integer numWithCoexpressionAnalysis = 0;
+
+    private Integer numWithDifferentialExpressionAnalysis = 0;
 
     private boolean shared = false;
 
     private Long taxonId;
+
     private String taxonName;
 
+    private boolean userCanWrite = false;
+
+    private boolean userOwned = false;
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();
     }
@@ -87,7 +91,6 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         } else if ( !id.equals( other.id ) ) return false;
         return true;
     }
-
     public String getDescription() {
         return description;
     }
@@ -115,8 +118,16 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         return name;
     }
 
-    public Integer getNumExperiments() {
-        return numExperiments;
+    public Integer getSize() {
+        return size;
+    }
+
+    public Integer getNumWithCoexpressionAnalysis() {
+        return numWithCoexpressionAnalysis;
+    }
+
+    public Integer getNumWithDifferentialExpressionAnalysis() {
+        return numWithDifferentialExpressionAnalysis;
     }
 
     @Override
@@ -189,8 +200,16 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         this.name = name;
     }
 
-    public void setNumExperiments( Integer numExperiments ) {
-        this.numExperiments = numExperiments;
+    public void setSize( Integer numExperiments ) {
+        this.size = numExperiments;
+    }
+
+    public void setNumWithCoexpressionAnalysis( Integer numWithCoexpressionAnalysis ) {
+        this.numWithCoexpressionAnalysis = numWithCoexpressionAnalysis;
+    }
+
+    public void setNumWithDifferentialExpressionAnalysis( Integer numWithDifferentialExpressionAnalysis ) {
+        this.numWithDifferentialExpressionAnalysis = numWithDifferentialExpressionAnalysis;
     }
 
     public void setTaxonId( Long taxonId ) {

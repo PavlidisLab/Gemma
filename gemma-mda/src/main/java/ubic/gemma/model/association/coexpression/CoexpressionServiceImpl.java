@@ -270,19 +270,34 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         log.info( "Updating node degree for all genes from " + t );
 
         // map of support to gene to number of links, in order of support.
-        TreeMap<Integer, Map<Long, Integer>> forRanks = new TreeMap<>();
+        TreeMap<Integer, Map<Long, Integer>> forRanksPos = new TreeMap<>();
+        TreeMap<Integer, Map<Long, Integer>> forRanksNeg = new TreeMap<>();
+
         int count = 0;
         for ( Gene g : this.geneDao.loadKnownGenes( t ) ) {
             GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );
 
+            /*
+             * Positive
+             */
             Long id = updatedVO.getGeneId();
-            int[] nodeDegreesAtSupports = updatedVO.asIntArray();
-            for ( int i = 0; i < nodeDegreesAtSupports.length; i++ ) {
-                if ( !forRanks.containsKey( i ) ) {
-                    forRanks.put( i, new HashMap<Long, Integer>() );
+            for ( int i = 0; i < updatedVO.asIntArrayPos().length; i++ ) {
+                if ( !forRanksPos.containsKey( i ) ) {
+                    forRanksPos.put( i, new HashMap<Long, Integer>() );
                 }
                 // note this is the cumulative value.
-                forRanks.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i ) );
+                forRanksPos.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i, true ) );
+            }
+
+            /*
+             * Negative
+             */
+            for ( int i = 0; i < updatedVO.asIntArrayNeg().length; i++ ) {
+                if ( !forRanksNeg.containsKey( i ) ) {
+                    forRanksNeg.put( i, new HashMap<Long, Integer>() );
+                }
+                // note this is the cumulative value.
+                forRanksNeg.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i, false ) );
             }
 
             if ( ++count % 1000 == 0 ) {
@@ -296,7 +311,22 @@ public class CoexpressionServiceImpl implements CoexpressionService {
          * Update the ranks. Each entry in the resulting map (key = gene id) is a list of the ranks at each support
          * threshold. So it means the rank "at or above" that level of support.
          */
-        Map<Long, List<Double>> relRanksPerGene = new HashMap<>();
+        Map<Long, List<Double>> relRanksPerGenePos = computeReleativeRanks( forRanksPos );
+        Map<Long, List<Double>> relRanksPerGeneNeg = computeReleativeRanks( forRanksNeg );
+
+        this.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
+
+        /*
+         * TODO: compute 'overall' for the taxon
+         */
+    }
+
+    /**
+     * @param forRanks
+     * @return
+     */
+    public Map<Long, List<Double>> computeReleativeRanks( TreeMap<Integer, Map<Long, Integer>> forRanks ) {
+        Map<Long, List<Double>> relRanksPerGenePos = new HashMap<>();
         for ( Integer support : forRanks.keySet() ) {
 
             // low ranks = low node degree = good.
@@ -309,16 +339,15 @@ public class CoexpressionServiceImpl implements CoexpressionService {
                 double relRank = rt.get( g ) / max;
                 // rt.put( g, relRank );
 
-                if ( !relRanksPerGene.containsKey( g ) ) {
-                    relRanksPerGene.put( g, new ArrayList<Double>() );
+                if ( !relRanksPerGenePos.containsKey( g ) ) {
+                    relRanksPerGenePos.put( g, new ArrayList<Double>() );
                 }
 
-                relRanksPerGene.get( g ).add( relRank );
+                relRanksPerGenePos.get( g ).add( relRank );
 
             }
         }
-
-        this.updateRelativeNodeDegrees( relRanksPerGene );
+        return relRanksPerGenePos;
     }
 
     /**
@@ -350,8 +379,9 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return this.coexpressionDao.updateNodeDegree( gene, nd );
     }
 
-    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGene ) {
-        this.coexpressionDao.updateRelativeNodeDegrees( relRanksPerGene );
+    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePos,
+            Map<Long, List<Double>> relRanksPerGeneNeg ) {
+        this.coexpressionDao.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
 
     }
 

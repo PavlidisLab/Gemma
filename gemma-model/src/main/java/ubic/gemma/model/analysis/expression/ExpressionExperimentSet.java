@@ -19,13 +19,19 @@
 
 package ubic.gemma.model.analysis.expression;
 
+import gemma.gsec.model.Securable;
+
 import java.util.Collection;
+import java.util.HashSet;
+
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * A grouping of expression studies.
  */
-public abstract class ExpressionExperimentSet extends ubic.gemma.model.common.Auditable implements
-        gemma.gsec.model.Securable {
+public abstract class ExpressionExperimentSet extends Auditable implements Securable {
 
     /**
      * Constructs new instances of {@link ExpressionExperimentSet}.
@@ -44,9 +50,10 @@ public abstract class ExpressionExperimentSet extends ubic.gemma.model.common.Au
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1034074709420077917L;
+
     private ubic.gemma.model.genome.Taxon taxon;
 
-    private Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experiments = new java.util.HashSet<ubic.gemma.model.expression.experiment.BioAssaySet>();
+    private Collection<BioAssaySet> experiments = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -59,7 +66,7 @@ public abstract class ExpressionExperimentSet extends ubic.gemma.model.common.Au
     /**
      * 
      */
-    public Collection<ubic.gemma.model.expression.experiment.BioAssaySet> getExperiments() {
+    public Collection<BioAssaySet> getExperiments() {
         return this.experiments;
     }
 
@@ -70,11 +77,11 @@ public abstract class ExpressionExperimentSet extends ubic.gemma.model.common.Au
         return this.taxon;
     }
 
-    public void setExperiments( Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experiments ) {
+    public void setExperiments( Collection<BioAssaySet> experiments ) {
         this.experiments = experiments;
     }
 
-    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
+    public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
     }
 

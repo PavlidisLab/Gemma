@@ -50,7 +50,7 @@ var showDesignUploadForm = function() {
          value : 'Cancel',
          text : 'Cancel',
          enabled : true,
-         handler : function() {
+         handler : function( button, ev ) {
             w.close();
          }
       } ]

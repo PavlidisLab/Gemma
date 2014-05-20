@@ -10,98 +10,75 @@ Gemma.AnalysesSearchUtils = {
     * @return {Array}
     * @memberOf Gemma.AnalysesSearchUtils
     */
-   getGeneIds : function( geneSetValueObjects ) {
+   getGeneIds : function( geneSetValueObject ) {
       var geneIds = [];
-      var i;
-      for (i = 0; i < geneSetValueObjects.length; i++) {
-         var vo = geneSetValueObjects[i];
-         if ( vo instanceof GeneValueObject ) {
-            geneIds.push( vo.id );
-         } else if ( vo instanceof GeneSetValueObject ) {
-            geneIds = geneIds.concat( vo.geneIds );
-         }
+      var vo = geneSetValueObject;
+      if ( vo instanceof GeneValueObject ) {
+         console.log( "got a sole gene" );
+         geneIds.push( vo.id );
+      } else if ( vo instanceof GeneSetValueObject ) {
+         geneIds = geneIds.concat( vo.geneIds );
       }
+
       return geneIds;
    },
 
    /**
     * @return {Array}
     */
-   getExperimentIds : function( experimentSetValueObjects ) {
+   getExperimentIds : function( experimentSetValueObject ) {
       var eeIds = [];
-      var i;
-      for (i = 0; i < experimentSetValueObjects.length; i++) {
-         var vo = experimentSetValueObjects[i];
-         if ( vo instanceof ExpressionExperimentValueObject ) {
-            eeIds.push( vo.id );
-         } else if ( vo instanceof ExpressionExperimentSetValueObject ) {
-            eeIds = eeIds.concat( vo.expressionExperimentIds );
-         }
+      var vo = experimentSetValueObject;
+      if ( vo instanceof ExpressionExperimentValueObject ) {
+         console.log( "Got a sole experiment" );
+         eeIds.push( vo.id );
+      } else if ( vo instanceof ExpressionExperimentSetValueObject ) {
+         eeIds = eeIds.concat( vo.expressionExperimentIds );
       }
+
       return eeIds;
    },
 
    /**
-    * fires 'searchAborted' event
     * 
-    * @private
     * @param {GeneSetValueObject[]}
     *           geneSetValueObjects
     * @return {boolean}
     */
-   isGeneSetsNonEmpty : function( geneSetValueObjects ) {
-      // verify that the array is not empty AND doesn't have empty sets.
-      var isEmpty = false;
-      if ( geneSetValueObjects.length === 0 ) {
+   isGeneSetEmpty : function( geneSetValueObject ) {
+
+      if ( geneSetValueObject == null ) {
          return true;
       }
-      if ( geneSetValueObjects[0].geneIds && geneSetValueObjects[0].geneIds.length === 0 ) {
-         isEmpty = true;
-      }
 
-      // TODO: ensure that other sets are non-empty
-      return isEmpty;
+      return geneSetValueObject.geneIds.length == 0 && geneSetValueObject.size === 0;
+
    },
 
    /**
-    * fires 'searchAborted' event
     * 
-    * @private
     * @param {ExperimentSetValueObject[]}
     *           experimentSetValueObjects
     * @return {boolean}
     */
-   isExperimentSetsNonEmpty : function( experimentSetValueObjects ) {
-      if ( experimentSetValueObjects.length === 0 ) {
+   isExperimentSetEmpty : function( experimentSetValueObject ) {
+      if ( experimentSetValueObject == null ) {
          return true;
       }
-      return false;
+
+      return experimentSetValueObject.expressionExperimentIds.length == 0 && experimentSetValueObject.size == 0;
    },
 
    /**
     * @param {GeneSetValueObject[]}
     *           geneSetValueObjects
     */
-   getGeneCount : function( geneSetValueObjects ) {
-      var geneCount = 0, i, vo;
-      for (i = 0; i < geneSetValueObjects.length; i++) {
-         vo = geneSetValueObjects[i];
-         if ( vo.geneIds ) {
-            geneCount += vo.geneIds.length;
-         }
-      }
-      return geneCount;
+   getGeneCount : function( geneSetValueObject ) {
+      return geneSetValueObject.size;
    },
 
-   getExperimentCount : function( experimentSetValueObjects ) {
-      var experimentCount = 0, i, vo;
-      for (i = 0; i < experimentSetValueObjects.length; i++) {
-         vo = experimentSetValueObjects[i];
-         if ( vo.expressionExperimentIds ) {
-            experimentCount += vo.expressionExperimentIds.length;
-         }
-      }
-      return experimentCount;
+   getExperimentCount : function( experimentSetValueObject ) {
+      return experimentSetValueObject.size;
    },
 
    /**
@@ -113,11 +90,9 @@ Gemma.AnalysesSearchUtils = {
     */
    trimGeneValueObjects : function( valueObjects, max ) {
       var runningCount = 0;
-      var i;
-      var valObj;
       var trimmedValueObjects = [];
-      for (i = 0; i < valueObjects.length; i++) {
-         valObj = valueObjects[i];
+      for (var i = 0; i < valueObjects.length; i++) {
+         var valObj = valueObjects[i];
          if ( valObj.geneIds && (runningCount + valObj.geneIds.length) < max ) {
             runningCount += valObj.geneIds.length;
             trimmedValueObjects.push( valObj );
@@ -146,11 +121,9 @@ Gemma.AnalysesSearchUtils = {
     */
    trimExperimentValObjs : function( valueObjects, max ) {
       var runningCount = 0;
-      var i;
-      var valObj;
       var trimmedValueObjects = [];
-      for (i = 0; i < valueObjects.length; i++) {
-         valObj = valueObjects[i];
+      for (var i = 0; i < valueObjects.length; i++) {
+         var valObj = valueObjects[i];
          if ( valObj.expressionExperimentIds && (runningCount + valObj.expressionExperimentIds.length) < max ) {
             runningCount += valObj.expressionExperimentIds.length;
             trimmedValueObjects.push( valObj );

@@ -18,6 +18,10 @@ Gemma.MetaAnalysisWindow = Ext
          height : 600,
          shadow : true,
          closeAction : 'close',
+
+         /**
+          * @memberOf Gemma.MetaAnalysisWindow
+          */
          initComponent : function() {
             var selectExperimentPanel;
 
@@ -26,11 +30,9 @@ Gemma.MetaAnalysisWindow = Ext
                   {
                      listeners : {
                         nextButtonClicked : function( panel ) {
-                           var experimentOrExperimentSet = this.getSelectedExperimentOrExperimentSetValueObject();
-
+                           var experimentOrExperimentSet = this.getSelectedExpressionExperimentSetValueObject();
                            selectFactorPanel
-                              .setSelectedExperimentIds( experimentOrExperimentSet.expressionExperimentIds ? experimentOrExperimentSet.expressionExperimentIds
-                                 : [ experimentOrExperimentSet.id ] );
+                              .setSelectedExperimentIds( experimentOrExperimentSet.expressionExperimentIds );
                         }
                      }
                   } );
@@ -61,7 +63,7 @@ Gemma.MetaAnalysisWindow = Ext
                      var indexOfTabToBeActivated = 1;
                      tabPanel.setActiveTab( indexOfTabToBeActivated );
 
-                     for ( var i = indexOfTabToBeActivated + 1; i < tabPanel.items.length; i++) {
+                     for (var i = indexOfTabToBeActivated + 1; i < tabPanel.items.length; i++) {
                         tabPanel.getComponent( i ).disable();
                      }
                   }

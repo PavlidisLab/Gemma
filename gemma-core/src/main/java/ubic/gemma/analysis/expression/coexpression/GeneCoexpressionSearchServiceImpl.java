@@ -277,11 +277,13 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             GeneCoexpressionNodeDegreeValueObject queryGeneNodeDegree = nodeDegrees.get( coex.getQueryGene().getId() );
             GeneCoexpressionNodeDegreeValueObject foundGeneNodeDegree = nodeDegrees.get( coex.getFoundGene().getId() );
 
-            coex.setQueryGeneNodeDegree( queryGeneNodeDegree.getLinksWithMinimumSupport( coex.getSupport() ) );
-            coex.setFoundGeneNodeDegree( foundGeneNodeDegree.getLinksWithMinimumSupport( coex.getSupport() ) );
+            boolean pos = coex.getNegSupp() == 0;
 
-            coex.setQueryGeneNodeDegreeRank( queryGeneNodeDegree.getRankAtMinimumSupport( coex.getSupport() ) );
-            coex.setFoundGeneNodeDegreeRank( foundGeneNodeDegree.getRankAtMinimumSupport( coex.getSupport() ) );
+            coex.setQueryGeneNodeDegree( queryGeneNodeDegree.getLinksWithMinimumSupport( coex.getSupport(), pos ) );
+            coex.setFoundGeneNodeDegree( foundGeneNodeDegree.getLinksWithMinimumSupport( coex.getSupport(), pos ) );
+
+            coex.setQueryGeneNodeDegreeRank( queryGeneNodeDegree.getRankAtMinimumSupport( coex.getSupport(), pos ) );
+            coex.setFoundGeneNodeDegreeRank( foundGeneNodeDegree.getRankAtMinimumSupport( coex.getSupport(), pos ) );
 
         }
 
@@ -341,7 +343,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     private Integer chooseStringency( int numExperimentsQueried ) {
         // this is completely made up...
         if ( numExperimentsQueried < 5 ) {
-            return 2;
+            return Math.min( numExperimentsQueried, 2 );
         } else if ( numExperimentsQueried < 20 ) {
             return 3;
         } else if ( numExperimentsQueried < 50 ) {

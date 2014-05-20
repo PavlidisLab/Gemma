@@ -192,13 +192,18 @@ Gemma.GeneDetails = Ext
          },
 
          renderNodeDegree : function( geneDetails ) {
-            if ( geneDetails.nodeDegrees && geneDetails.nodeDegrees.length > 1 ) {
+
+            /*
+             * TODO: positive and negative; Show relation of this to other genes using the relative ranks
+             */
+            console.log( geneDetails );
+            if ( geneDetails.nodeDegreesPos && geneDetails.nodeDegreesPos.length > 1 ) {
                // Note: we need a panel here so we can pick up the rendering event so jquery can do its work.
                return new Ext.Panel(
                   {
                      border : false,
                      html : '<span id="nodeDegreeSpark">...</span> Max support '
-                        + (geneDetails.nodeDegrees.length - 1)
+                        + (geneDetails.nodeDegreesPos.length - 1)
                         + "&nbsp;<img style='cursor:pointer' src='/Gemma/images/magnifier.png' ext:qtip='View the coexpression tab'"
                         + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;coex&#39;)'>",
                      listeners : {
@@ -208,34 +213,82 @@ Gemma.GeneDetails = Ext
                             * Compute cumulative counts
                             */
                            var cumul = new Array();
-                           cumul[geneDetails.nodeDegrees.length - 1] = 0;
-                           for (var j = geneDetails.nodeDegrees.length - 1; j >= 0; j--) {
-                              cumul[j - 1] = geneDetails.nodeDegrees[j] + cumul[j];
+                           cumul[geneDetails.nodeDegreesPos.length - 1] = 0;
+                           for (var j = geneDetails.nodeDegreesPos.length - 1; j >= 0; j--) {
+                              cumul[j - 1] = geneDetails.nodeDegreesPos[j] + cumul[j];
                            }
                            cumul.pop();
+
+                           var cumulNeg = new Array();
+                           if ( geneDetails.nodeDegreesNeg.length > 0 ) {
+                              cumulNeg[geneDetails.nodeDegreesNeg.length - 1] = 0;
+                              for (var j = geneDetails.nodeDegreesNeg.length - 1; j >= 0; j--) {
+                                 cumulNeg[j - 1] = geneDetails.nodeDegreesNeg[j] + cumulNeg[j];
+                              }
+                              cumulNeg.pop();
+                           }
 
                            /*
                             * Build array of arrays for plot
                             */
-                           var nd = new Array();
-                           var k = 0;
+                           var nd = new Array(); // support values
+                           var ndr = new Array(); // relative ranks
+
+                           var max = -1;
                            for (var i = 0; i < cumul.length; i++) {
-                              nd.push( [ i + 1, Math.log( cumul[i] + 0.01 ) / Math.log( 10.0 ) ] );
-                              k++;
+                              var v = Math.log( cumul[i] + 0.01 ) / Math.log( 10.0 );
+                              nd.push( [ i + 1, v ] );
+                              ndr.push( [ i + 1, , geneDetails.nodeDegreePosRanks[i] ] );
+                              if ( v > max ) {
+                                 max = v;
+                              }
                            }
+
+                           var ndneg = new Array();
+                           var ndrneg = new Array();
+                           for (var i = 0; i < cumulNeg.length; i++) {
+                              var v = Math.log( cumulNeg[i] + 0.01 ) / Math.log( 10.0 );
+                              ndneg.push( [ i + 1, ] );
+                              ndrneg.push( [ i + 1, geneDetails.nodeDegreeNegRanks[i] ] );
+                              if ( v > max ) {
+                                 max = v;
+                              }
+                           }
+
+                           /*
+                            * TOOD: do something with the relative ranks.
+                            */
 
                            jQuery( '#nodeDegreeSpark' ).sparkline(
                               nd,
                               {
                                  height : 40,
                                  chartRangeMin : -1,
+                                 chartRangeMax : max,
                                  width : 150,
                                  tooltipFormatter : function( spl, ops, fields ) {
-                                    return "Links at support level " + fields.x + " or higher: "
+                                    return "Positive correlation links at support level " + fields.x + " or higher: "
                                        + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log10 scaled)";
                                  }
                               } );
 
+                           // plot negative links on same axis
+                           if ( cumulNeg.length > 0 ) {
+                              jQuery( '#nodeDegreeSpark' ).sparkline(
+                                 ndneg,
+                                 {
+                                    composite : true,
+                                    height : 40,
+                                    chartRangeMin : -1,
+                                    chartRangeMax : max,
+                                    width : 150,
+                                    tooltipFormatter : function( spl, ops, fields ) {
+                                       return "Negative correlation links at support level " + fields.x
+                                          + " or higher: " + Math.pow( 10, fields.y ).toFixed( 0 )
+                                          + "  (Plot is log10 scaled)";
+                                    }
+                                 } );
+                           }
                            jQuery( "#nodeDegreeHelp" ).qtip( {
                               content : Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
                               style : {
@@ -247,7 +300,21 @@ Gemma.GeneDetails = Ext
                      }
                   } );
             } else {
-               return "[ Not available ]"; // no help shown - FIXME
+               // unavailable; show help anyway.
+               return new Ext.Panel( {
+                  border : false,
+                  html : "[ Not available ]",
+                  listeners : {
+                     'afterrender' : function( c ) {
+                        jQuery( "#nodeDegreeHelp" ).qtip( {
+                           content : Gemma.HelpText.WidgetDefaults.GeneDetails.nodeDegreeTT,
+                           style : {
+                              name : 'cream'
+                           }
+                        } );
+                     }
+                  }
+               } );
             }
          },
 

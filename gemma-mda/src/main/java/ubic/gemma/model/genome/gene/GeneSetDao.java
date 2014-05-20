@@ -36,46 +36,25 @@ import ubic.gemma.persistence.BaseDao;
 public interface GeneSetDao extends BaseDao<GeneSet> {
 
     /**
-     * Creates all the the given GeneSets in the given collection
+     * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all
+     * the members.
      * 
-     * @param sets
-     * @return
+     * @param id gene set id
+     * @return integer count of genes in set
      */
-    @Override
-    @Secured({ "GROUP_USER" })
-    Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities );
+    public int getGeneCount( Long id );
 
     /**
-     * Creates the given geneset in the DB
+     * Returns the taxon of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
      * 
-     * @param geneset
-     * @return
+     * @param id
+     * @return taxon of a random member of the set or null
      */
-    @Secured({ "GROUP_USER" })
+    public Taxon getTaxon( Long id );
+
     @Override
-    GeneSet create( GeneSet geneset );
-
-    /**
-     * @param gene
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> findByGene( Gene gene );
-
-    /**
-     * @param name uses the given name to do a name* search in the db
-     * @return a collection of geneSets that match the given search term.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> findByName( String name );
-
-    /**
-     * @param name
-     * @param taxon
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> findByName( String name, Taxon taxon );
+    public Collection<? extends GeneSet> load( Collection<Long> ids );
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
@@ -83,14 +62,7 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
 
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<? extends GeneSet> load( Collection<Long> ids );
-
-    @Override
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<? extends GeneSet> loadAll();
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<GeneSet> loadAll( Taxon tax );
 
     /**
      * Returns the {@link GeneSet}s for the currently logged in {@link User} - i.e, ones for which the current user has
@@ -122,6 +94,18 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<? extends GeneSet> loadMySharedGeneSets( Taxon tax );
 
+    /**
+     * @param ids
+     * @return
+     */
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids );
+
+    /**
+     * @param ids
+     * @return
+     */
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids );
+
     @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
     public void remove( Collection<? extends GeneSet> entities );
@@ -139,29 +123,48 @@ public interface GeneSetDao extends BaseDao<GeneSet> {
     public void update( GeneSet entity );
 
     /**
-     * This method does not do any permissions filtering. It assumes that id the user can see the set, they can see all
-     * the members.
+     * Creates all the the given GeneSets in the given collection
      * 
-     * @param id gene set id
-     * @return integer count of genes in set
+     * @param sets
+     * @return
      */
-    public int getGeneCount( Long id );
+    @Override
+    @Secured({ "GROUP_USER" })
+    public Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities );
 
     /**
-     * Returns the taxon id of a random member of the set, the taxon of the set may be a parent taxon of the one
-     * returned.
+     * Creates the given geneset in the DB
      * 
-     * @param id
-     * @return taxon id of a random member of the set or -1
+     * @param geneset
+     * @return
      */
-    public Long getTaxonId( Long id );
+    @Secured({ "GROUP_USER" })
+    @Override
+    public GeneSet create( GeneSet geneset );
 
     /**
-     * Returns the taxon of a random member of the set, the taxon of the set may be a parent taxon of the one returned.
-     * 
-     * @param id
-     * @return taxon of a random member of the set or null
+     * @param gene
+     * @return
      */
-    public Taxon getTaxon( Long id );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> findByGene( Gene gene );
+
+    /**
+     * @param name uses the given name to do a name* search in the db
+     * @return a collection of geneSets that match the given search term.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> findByName( String name );
+
+    /**
+     * @param name
+     * @param taxon
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> findByName( String name, Taxon taxon );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<GeneSet> loadAll( Taxon tax );
 
 }

@@ -365,7 +365,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             String queryPhenotype = el.getKey();
 
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = this.associationService
-                    .findGenesWithPhenotypes( el.getValue(), taxon, userName, groups, userAdmin, false, null );
+                    .findGenesWithPhenotypes( phenotypesWithChildren.keySet(), taxon, userName, groups, userAdmin, false, null );
 
             results.put( queryPhenotype, geneEvidenceValueObjects );
 

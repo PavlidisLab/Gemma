@@ -19,12 +19,18 @@
 package ubic.gemma.model.genome.gene;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.classic.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
@@ -51,7 +57,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
+     * @see ubic.gemma.persistence.BaseDao#create(Collection)
      */
     @Override
     public Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities ) {
@@ -100,7 +106,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      */
     @Override
     public Collection<GeneSet> findByName( String name ) {
-        if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
+        if ( StringUtils.isBlank( name ) ) return new HashSet<>();
         return this.getHibernateTemplate().findByNamedParam(
                 "select gs from GeneSetImpl gs where gs.name like :name order by gs.name", "name", name + "%" );
     }
@@ -110,22 +116,30 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
-        if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
+        StopWatch timer = new StopWatch();
+        timer.start();
+        if ( StringUtils.isBlank( name ) ) return new HashSet<>();
         assert taxon != null;
-
-        return this
+        // slow? would it be faster to just findbyname and then restrict taxon?
+        List<?> result = this
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select gs from GeneSetImpl gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name",
                         new String[] { "query", "taxon" }, new Object[] { name + "%", taxon } );
+        if ( timer.getTime() > 500 )
+            log.info( "Find genesets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
+        return ( Collection<GeneSet> ) result;
     }
+
+    private static Logger log = LoggerFactory.getLogger( GeneSetDaoImpl.class );
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
+     * @see ubic.gemma.persistence.BaseDao#load(Collection)
      */
     @Override
     public Collection<? extends GeneSet> load( Collection<Long> ids ) {
@@ -153,7 +167,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      */
     @Override
     public Collection<? extends GeneSet> loadAll() {
-        final java.util.Collection<GeneSetImpl> results = this.getHibernateTemplate().loadAll( GeneSetImpl.class );
+        final Collection<GeneSetImpl> results = this.getHibernateTemplate().loadAll( GeneSetImpl.class );
         return results;
     }
 
@@ -173,7 +187,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
+     * @see ubic.gemma.persistence.BaseDao#remove(Collection)
      */
     @Override
     public void remove( Collection<? extends GeneSet> entities ) {
@@ -217,7 +231,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
+     * @see ubic.gemma.persistence.BaseDao#update(Collection)
      */
     @Override
     public void update( final Collection<? extends GeneSet> entities ) {
@@ -264,11 +278,106 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
         return loadAll( tax );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#loadValueObjects(java.util.Collection)
+     */
+    @Override
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjects( Collection<Long> ids ) {
+        Collection<? extends DatabaseBackedGeneSetValueObject> result = this.loadValueObjectsLite( ids );
+
+        /*
+         * Populate gene members - a bit inefficient
+         */
+        Session sess = this.getSessionFactory().getCurrentSession();
+
+        // inner join is okay here, we only care about ones that have genes.
+        for ( GeneSetValueObject res : result ) {
+            res.setGeneIds( new HashSet<Long>() );
+            res.getGeneIds().addAll(
+                    sess.createQuery(
+                            "select genes.id from GeneSetImpl g join g.members m join m.gene genes where g.id = :id)" )
+                            .setParameter( "id", res.getId() ).list() );
+
+        }
+
+        return result;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneSetDao#loadValueObjectsLite(java.util.Collection)
+     */
+    @Override
+    public Collection<? extends DatabaseBackedGeneSetValueObject> loadValueObjectsLite( Collection<Long> ids ) {
+        Collection<DatabaseBackedGeneSetValueObject> result = new HashSet<>();
+
+        if ( ids.isEmpty() ) return result;
+
+        // Left join: includes one that have no members. Caller has to filter them out if they need to.
+        Session sess = this.getSessionFactory().getCurrentSession();
+        List<Object[]> list = sess
+                .createQuery(
+                        "select g.id, g.description, count(m), g.name from GeneSetImpl g"
+                                + " left join g.members m where g.id in (:ids) group by g.id" )
+                .setParameterList( "ids", ids ).list();
+
+        Map<Long, Taxon> taxa = getTaxa( ids );
+
+        for ( Object[] oa : list ) {
+
+            DatabaseBackedGeneSetValueObject dvo = new DatabaseBackedGeneSetValueObject();
+            dvo.setDescription( ( String ) oa[1] );
+            dvo.setId( ( Long ) oa[0] );
+            dvo.setSize( ( ( Long ) oa[2] ).intValue() );
+            dvo.setName( ( String ) oa[3] );
+
+            Taxon t = taxa.get( dvo.getId() );
+            dvo.setTaxonId( t.getId() );
+            dvo.setTaxonName( t.getCommonName() );
+            result.add( dvo );
+        }
+
+        return result;
+    }
+
+    /**
+     * @param ids
+     * @return
+     */
+    private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
+        // fast
+        Query q = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select distinct gs.id, t from GeneSetImpl gs join gs.members m"
+                                + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" );
+        q.setParameterList( "ids", ids );
+
+        Map<Long, Taxon> result = new HashMap<>();
+        for ( Object o : q.list() ) {
+            Object[] oa = ( Object[] ) o;
+
+            if ( result.containsKey( oa[0] ) ) {
+                throw new IllegalStateException( "More than one taxon in gene  set id= " + oa[0] );
+            }
+
+            result.put( ( Long ) oa[0], ( Taxon ) oa[1] );
+
+        }
+        // for ( Long id : ids ) {
+        // result.put( id, this.getTaxon( id ) );
+        // }
+        return result;
+    }
+
     @Override
     public int getGeneCount( Long id ) {
-
         List<?> o = this.getHibernateTemplate().findByNamedParam(
-                "select g.id, count(i) from GeneSetImpl g join g.members i where g.id in (:ids)", "ids", id );
+                "select count(i) from GeneSetImpl g join g.members i where g.id = id", "id", id );
 
         for ( Object object : o ) {
             Object[] oa = ( Object[] ) object;
@@ -280,48 +389,18 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     }
 
     @Override
-    public Long getTaxonId( Long id ) {
-
-        // using Query because I want to be able to limit the number of row returned to one
-
-        Query q = this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "select g.id, g.taxon.id from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
-        q.setParameter( "id", id );
-        q.setMaxResults( 1 );
-
-        List<?> list = q.list();
-        for ( Object obj : list ) {
-            Object[] oa = ( Object[] ) obj;
-            return ( ( Long ) oa[1] );
-        }
-
-        return new Long( -1 );
-
-    }
-
-    @Override
     public Taxon getTaxon( Long id ) {
-
-        // using Query because I want to be able to limit the number of row returned to one
-
-        Query q = this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "select g.id, g.taxon from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
+        // get one gene, check the taxon.
+        Query q = this.getSessionFactory().getCurrentSession()
+                .createQuery( "select g from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" );
         q.setParameter( "id", id );
         q.setMaxResults( 1 );
 
-        List<?> list = q.list();
-        for ( Object obj : list ) {
-            Object[] oa = ( Object[] ) obj;
-            return ( ( Taxon ) oa[1] );
+        Gene g = ( Gene ) q.uniqueResult();
+        if ( g == null ) {
+            return null;
         }
-
-        return null;
-
+        return g.getTaxon();
     }
+
 }

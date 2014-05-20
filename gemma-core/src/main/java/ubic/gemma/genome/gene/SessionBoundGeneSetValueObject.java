@@ -33,7 +33,7 @@ import ubic.gemma.session.GemmaSessionBackedValueObject;
 public class SessionBoundGeneSetValueObject extends GeneSetValueObject implements GemmaSessionBackedValueObject {
 
     private static final long serialVersionUID = 5073203626044664184L;
-    private boolean modified;
+    private boolean modified = false;
 
     /**
      * default constructor to satisfy java bean contract
@@ -41,14 +41,7 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
     public SessionBoundGeneSetValueObject() {
         super();
         this.setModified( false );
-    }
-
-    @Override
-    public boolean equals( GemmaSessionBackedValueObject ervo ) {
-        if ( ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() ) ) {
-            return true;
-        }
-        return false;
+        this.setId( new Long( this.hashCode() ) );
     }
 
     @Override

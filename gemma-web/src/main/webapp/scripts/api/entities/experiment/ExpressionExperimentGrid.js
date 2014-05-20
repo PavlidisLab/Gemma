@@ -20,6 +20,8 @@ Gemma.ExpressionExperimentGrid = Ext
 
          autoExpandColumn : 'name',
 
+         showAnalysisInfo : true,
+
          /**
           * @cfg Controls whether the experiment short name should be a link (to the experiment's page). Defaults to
           *      true but should be false when the user is required to select rows. (In this case, clicking the name has
@@ -52,8 +54,11 @@ Gemma.ExpressionExperimentGrid = Ext
             name : "description",
             type : "string"
          }, {
-            name : "differentialExpressionAnalysisId",
-            type : "string"
+            name : "hasCoexpressionAnalysis",
+            type : "boolean"
+         }, {
+            name : "hasDifferentialExpressionAnalysis",
+            type : "boolean"
          }, {
             name : 'taxonId',
             type : 'int'
@@ -180,11 +185,20 @@ Gemma.ExpressionExperimentGrid = Ext
                this.columns.push( {
                   id : 'analyses',
                   header : "Diff.An.",
-                  dataIndex : "differentialExpressionAnalysisId",
+                  dataIndex : "hasDifferentialExpressionAnalysis",
                   tooltip : "Indicates whether differential expression data is available for the study",
                   renderer : this.formatAnalysisInfo,
                   sortable : true,
-                  width : 0.15
+                  width : 0.05
+               } );
+               this.columns.push( {
+                  id : 'analyses',
+                  header : "Coexp.An.",
+                  dataIndex : "hasCoexpressionAnalysis",
+                  tooltip : "Indicates whether coexpression data is available for the study",
+                  renderer : this.formatAnalysisInfo,
+                  sortable : true,
+                  width : 0.05
                } );
             }
 
@@ -254,12 +268,11 @@ Gemma.ExpressionExperimentGrid = Ext
          },
 
          formatAnalysisInfo : function( value, metadata, record, row, col, ds ) {
-            var id = record.get( "differentialExpressionAnalysisId" );
-            if ( id ) {
-               return "<img src='/Gemma/images/icons/ok.png' height='16' width='16' ext:qtip='Has differential expression analysis' />";
-            } else {
-               return "";
-            }
+            if ( value )
+               return '<i id="aliasHelp" class="fa fa-check fa-fw" style="font-size:smaller;color:green"></i>';
+            //   return "<img src='/Gemma/images/icons/ok.png' height='16' width='16' ext:qtip='Has analysis' />";
+
+            return '';
          },
 
          formatAssayCount : function( value, metadata, record, row, col, ds ) {

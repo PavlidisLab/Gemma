@@ -54,22 +54,22 @@ public class GenePickerController {
     // private static Log log = LogFactory.getLog( GenePickerController.class );
 
     @Autowired
-    private GeneService geneService = null;
-
-    @Autowired
-    private TaxonService taxonService = null;
-
-    @Autowired
-    private GeneSetSearch geneSetSearch;
+    private GeneCoreService geneCoreService;
 
     @Autowired
     private GeneSearchService geneSearchService;
 
     @Autowired
-    private GeneCoreService geneCoreService;
+    private GeneService geneService = null;
+
+    @Autowired
+    private GeneSetSearch geneSetSearch;
 
     @Autowired
     private SessionListManager sessionListManager;
+
+    @Autowired
+    private TaxonService taxonService = null;
 
     /**
      * AJAX
@@ -172,7 +172,6 @@ public class GenePickerController {
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     public Collection<TaxonValueObject> getTaxaWithGenes() {
-
         return taxonService.getTaxaWithGenes();
     }
 
@@ -184,7 +183,6 @@ public class GenePickerController {
      * @return Collection of Gene entity objects
      */
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
-
         return geneCoreService.searchGenes( query, taxonId );
     }
 
@@ -219,6 +217,10 @@ public class GenePickerController {
         Collection<SearchResultDisplayObject> results = new ArrayList<SearchResultDisplayObject>();
         results.addAll( sessionSets );
         results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
+
+        for ( SearchResultDisplayObject r : results ) {
+            r.setOriginalQuery( query );
+        }
         return results;
 
     }
@@ -250,7 +252,7 @@ public class GenePickerController {
      * 
      * @param query A list of gene names (symbols), one per line.
      * @param taxonId
-     * @return colleciton of gene value objects
+     * @return collection of gene value objects
      * @throws IOException
      */
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
@@ -265,7 +267,7 @@ public class GenePickerController {
      * @return map with each gene-query as a key and a collection of the search-results as the value
      * @throws IOException
      */
-    public Map<String, Collection<GeneValueObject>> searchMultipleGenesGetMap( String query, Long taxonId )
+    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
             throws IOException {
         return geneSearchService.searchMultipleGenesGetMap( query, taxonId );
     }

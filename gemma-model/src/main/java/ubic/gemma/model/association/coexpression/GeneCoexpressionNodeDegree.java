@@ -42,14 +42,27 @@ public abstract class GeneCoexpressionNodeDegree implements Serializable {
      * Byte format of a int array. the first value is 0; the other values is the number of links at support=index.
      * Unlike the relativeLinkRanks these are not cumulative.
      */
-    private byte[] linkCounts;
+    private byte[] linkCountsNegative;
+
+    /**
+     * Byte format of a int array. the first value is 0; the other values is the number of links at support=index.
+     * Unlike the relativeLinkRanks these are not cumulative.
+     */
+    private byte[] linkCountsPositive;
 
     /**
      * Normalized rank values for the node degree of this gene at each threshold of support; that is, "at or above" the
      * threshold. The ranking is among all other genes for the taxon; the normalization factor is the node degree of the
      * most hubby gene (computed separately for each support threshold).
      */
-    private byte[] relativeLinkRanks;
+    private byte[] relativeLinkRanksNegative;
+
+    /**
+     * Normalized rank values for the node degree of this gene at each threshold of support; that is, "at or above" the
+     * threshold. The ranking is among all other genes for the taxon; the normalization factor is the node degree of the
+     * most hubby gene (computed separately for each support threshold).
+     */
+    private byte[] relativeLinkRanksPositive;
 
     @Override
     public boolean equals( Object obj ) {
@@ -74,11 +87,12 @@ public abstract class GeneCoexpressionNodeDegree implements Serializable {
         return geneId;
     }
 
-    /**
-     * @return
-     */
-    public byte[] getLinkCounts() {
-        return linkCounts;
+    public byte[] getLinkCountsNegative() {
+        return linkCountsNegative;
+    }
+
+    public byte[] getLinkCountsPositive() {
+        return linkCountsPositive;
     }
 
     /**
@@ -87,8 +101,18 @@ public abstract class GeneCoexpressionNodeDegree implements Serializable {
      * 
      * @return
      */
-    public byte[] getRelativeLinkRanks() {
-        return relativeLinkRanks;
+    public byte[] getRelativeLinkRanksNegative() {
+        return relativeLinkRanksNegative;
+    }
+
+    /**
+     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
+     * support.
+     * 
+     * @return
+     */
+    public byte[] getRelativeLinkRanksPositive() {
+        return relativeLinkRanksPositive;
     }
 
     @Override
@@ -106,12 +130,20 @@ public abstract class GeneCoexpressionNodeDegree implements Serializable {
         this.geneId = geneId;
     }
 
-    public void setLinkCounts( byte[] linkCounts ) {
-        this.linkCounts = linkCounts;
+    public void setLinkCountsNegative( byte[] linkCountsNegative ) {
+        this.linkCountsNegative = linkCountsNegative;
     }
 
-    public void setRelativeLinkRanks( byte[] relativeLinkRanks ) {
-        this.relativeLinkRanks = relativeLinkRanks;
+    public void setLinkCountsPositive( byte[] linkCountsPositive ) {
+        this.linkCountsPositive = linkCountsPositive;
+    }
+
+    public void setRelativeLinkRanksNegative( byte[] relativeLinkRanksNegative ) {
+        this.relativeLinkRanksNegative = relativeLinkRanksNegative;
+    }
+
+    public void setRelativeLinkRanksPositive( byte[] relativeLinkRanksPositive ) {
+        this.relativeLinkRanksPositive = relativeLinkRanksPositive;
     }
 
 }

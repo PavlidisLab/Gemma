@@ -25,6 +25,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey
@@ -73,5 +74,30 @@ public interface Gene2GOAssociationService {
      */
     @Secured({ "GROUP_ADMIN" })
     public void removeAll();
+
+    /**
+     * @param uris
+     * @return
+     */
+    Map<String, Collection<Gene>> getSets( Collection<String> uris );
+
+    /**
+     * @param termsToFetch
+     * @return all the genes that match any of the terms. Used to fetch genes associated with a term + children.
+     */
+    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch );
+
+    /**
+     * @param termsToFetch
+     * @param taxon constraint
+     * @return all the genes that match any of the terms. Used to fetch genes associated with a term + children.
+     */
+    public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon );
+
+    /**
+     * @param termsToFetch
+     * @return
+     */
+    public Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch );
 
 }

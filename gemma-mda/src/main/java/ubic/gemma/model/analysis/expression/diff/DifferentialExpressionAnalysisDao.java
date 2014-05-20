@@ -25,6 +25,7 @@ import ubic.gemma.model.analysis.AnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @version $Id$
@@ -81,9 +82,28 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     public Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * 
+     * @param expressionExperiments
+     * @return
      */
-    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+            Collection<? extends BioAssaySet> expressionExperiments );
+
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+            Collection<Long> expressionExperimentIds );
+
+    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId );
+
+    /**
+     * @param idsToFilter
+     * @return
+     */
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+
+    /**
+     * @param taxon
+     * @return
+     */
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
     /**
      * 
@@ -91,14 +111,7 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
-     * @param expressionExperiments
-     * @return
+     * 
      */
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
-            Collection<? extends BioAssaySet> expressionExperiments );
-
-    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId );
-
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
-            Collection<Long> expressionExperimentIds );
+    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 }

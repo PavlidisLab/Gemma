@@ -55,7 +55,7 @@ Gemma.GeneSetPage = Ext.extend( Ext.TabPanel, {
          if ( param.goid ) {
             var goids = param.goid.split( ',' );
             if ( goids.length === 1 ) {
-               this.geneSetGOId = ids[0];
+               this.geneSetGOId = goids[0];
             } else {
                this.invalidIdHandler( "GO Id was: " + param.goid );
                Gemma.GeneSetPage.superclass.initComponent.call( this );

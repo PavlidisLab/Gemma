@@ -14,12 +14,12 @@ Gemma.PlatformDetails = Ext
          padding : 10,
          defaults : {
             border : false,
-            flex : 0
+         // flex : 0
          },
-         layoutConfig : {
-            align : 'stretch'
-         },
-         layout : 'vbox',
+         // layoutConfig : {
+         // align : 'stretch'
+         // },
+         // layout : 'vbox',
 
          changeTab : function( tabName ) {
             this.fireEvent( 'changeTab', tabName );
@@ -333,7 +333,7 @@ Gemma.PlatformDetails = Ext
                   'afterrender' : Gemma.helpTip( "#descriptionHelp",
                      "The description includes that obtained from the data provider (i.e., GEO)"
                         + " but may include additional information added by Gemma, such as "
-                        + "information on samples remvoed due to overlap with other data sets." )
+                        + "information on samples removed due to overlap with other data sets." )
                }
             } );
          },

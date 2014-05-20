@@ -29,14 +29,6 @@ import java.util.Collection;
 public interface GemmaSessionBackedValueObject {
 
     /**
-     * FIXME should this not override Object.equals()? HashCode?
-     * 
-     * @param ervo
-     * @return
-     */
-    public boolean equals( GemmaSessionBackedValueObject ervo );
-
-    /**
      * @return
      */
     public Long getId();

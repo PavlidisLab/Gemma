@@ -202,8 +202,7 @@ public class SecurityServiceImpl implements SecurityService {
          * Take advantage of fast bulk loading of ACLs. Other methods should adopt this if they turn out to be heavily
          * used/slow.
          */
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
@@ -225,8 +224,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         if ( objectIdentities.isEmpty() ) return result;
 
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
@@ -295,7 +293,7 @@ public class SecurityServiceImpl implements SecurityService {
         String groupAuthority = groupName.toUpperCase() + "_"
                 + RandomStringUtils.randomAlphanumeric( 32 ).toUpperCase();
 
-        List<GrantedAuthority> auths = new ArrayList<GrantedAuthority>();
+        List<GrantedAuthority> auths = new ArrayList<>();
         auths.add( new SimpleGrantedAuthority( groupAuthority ) );
 
         this.userManager.createGroup( groupName, auths );
@@ -368,8 +366,7 @@ public class SecurityServiceImpl implements SecurityService {
         /*
          * Take advantage of fast bulk loading of ACLs.
          */
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         Map<T, Acl> result = new HashMap<>();
         for ( ObjectIdentity o : acls.keySet() ) {
@@ -399,7 +396,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Secured("GROUP_ADMIN")
     public Collection<String> getAuthenticatedUserNames() {
         List<Object> allPrincipals = this.sessionRegistry.getAllPrincipals();
-        Collection<String> result = new HashSet<String>();
+        Collection<String> result = new HashSet<>();
         for ( Object o : allPrincipals ) {
             result.add( o.toString() );
         }
@@ -415,7 +412,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Secured("GROUP_ADMIN")
     public Collection<Sid> getAvailableSids() {
 
-        Collection<Sid> results = new HashSet<Sid>();
+        Collection<Sid> results = new HashSet<>();
 
         Collection<String> users = userManager.findAllUsers();
 
@@ -473,12 +470,12 @@ public class SecurityServiceImpl implements SecurityService {
     public <T extends Securable> Map<T, Collection<String>> getGroupsEditableBy( Collection<T> securables ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
-        Map<T, Collection<String>> result = new HashMap<T, Collection<String>>();
+        Map<T, Collection<String>> result = new HashMap<>();
 
-        List<Permission> write = new ArrayList<Permission>();
+        List<Permission> write = new ArrayList<>();
         write.add( BasePermission.WRITE );
 
-        List<Permission> admin = new ArrayList<Permission>();
+        List<Permission> admin = new ArrayList<>();
         admin.add( BasePermission.ADMINISTRATION );
 
         for ( String groupName : groupNames ) {
@@ -523,7 +520,7 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     public <T extends Securable> Map<T, Collection<String>> getGroupsReadableBy( Collection<T> securables ) {
 
-        Map<T, Collection<String>> result = new HashMap<T, Collection<String>>();
+        Map<T, Collection<String>> result = new HashMap<>();
 
         if ( securables.isEmpty() ) return result;
 
@@ -577,7 +574,7 @@ public class SecurityServiceImpl implements SecurityService {
     public Collection<String> getGroupsUserCanEdit( String userName ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
-        Collection<String> result = new HashSet<String>();
+        Collection<String> result = new HashSet<>();
         for ( String gname : groupNames ) {
             UserGroup g = userManager.findGroupByName( gname );
             if ( this.isEditableByUser( g, userName ) ) {
@@ -617,8 +614,7 @@ public class SecurityServiceImpl implements SecurityService {
          * Take advantage of fast bulk loading of ACLs. Other methods sohuld adopt this if they turn out to be heavily
          * used/slow.
          */
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
@@ -641,7 +637,7 @@ public class SecurityServiceImpl implements SecurityService {
     public <T extends Securable> List<Boolean> hasPermission( List<T> svos, List<Permission> requiredPermissions,
             Authentication authentication ) {
 
-        List<Boolean> result = new ArrayList<Boolean>();
+        List<Boolean> result = new ArrayList<>();
 
         if ( svos.isEmpty() ) return result;
 
@@ -650,8 +646,7 @@ public class SecurityServiceImpl implements SecurityService {
         /*
          * Take advantage of fast bulk loading of ACLs.
          */
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         assert !acls.isEmpty();
 
@@ -692,7 +687,7 @@ public class SecurityServiceImpl implements SecurityService {
     public Map<SecureValueObject, Boolean> hasPermissionVO( Collection<SecureValueObject> svos,
             List<Permission> requiredPermissions, Authentication authentication ) {
 
-        Map<SecureValueObject, Boolean> result = new HashMap<SecureValueObject, Boolean>();
+        Map<SecureValueObject, Boolean> result = new HashMap<>();
 
         if ( svos.isEmpty() ) return result;
 
@@ -702,8 +697,7 @@ public class SecurityServiceImpl implements SecurityService {
          * Take advantage of fast bulk loading of ACLs.
          */
 
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         assert !acls.isEmpty();
 
@@ -904,7 +898,7 @@ public class SecurityServiceImpl implements SecurityService {
          * happens.
          */
 
-        List<Permission> perms = new Vector<Permission>();
+        List<Permission> perms = new Vector<>();
         perms.add( BasePermission.READ );
 
         Sid anonSid = new AclGrantedAuthoritySid( new SimpleGrantedAuthority(
@@ -948,7 +942,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     public boolean isReadableByGroup( Securable s, String groupName ) {
-        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        List<Permission> requiredPermissions = new ArrayList<>();
         requiredPermissions.add( BasePermission.READ );
 
         if ( groupHasPermission( s, requiredPermissions, groupName ) ) {
@@ -976,7 +970,7 @@ public class SecurityServiceImpl implements SecurityService {
          * happens.
          */
 
-        List<Permission> perms = new Vector<Permission>();
+        List<Permission> perms = new Vector<>();
         perms.add( BasePermission.READ );
 
         ObjectIdentity oi = objectIdentityRetrievalStrategy.getObjectIdentity( s );
@@ -1002,7 +996,7 @@ public class SecurityServiceImpl implements SecurityService {
      */
     @Override
     public boolean isViewableByUser( Securable s, String userName ) {
-        List<Permission> requiredPermissions = new ArrayList<Permission>();
+        List<Permission> requiredPermissions = new ArrayList<>();
         requiredPermissions.add( BasePermission.READ );
         if ( hasPermission( s, requiredPermissions, userName ) ) {
             return true;
@@ -1400,8 +1394,7 @@ public class SecurityServiceImpl implements SecurityService {
             sids.add( sid );
         }
 
-        Map<ObjectIdentity, Acl> acls = aclService
-                .readAclsById( new Vector<ObjectIdentity>( objectIdentities.keySet() ) );
+        Map<ObjectIdentity, Acl> acls = aclService.readAclsById( new Vector<>( objectIdentities.keySet() ) );
 
         for ( ObjectIdentity oi : acls.keySet() ) {
             Acl a = acls.get( oi );
@@ -1424,7 +1417,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         List<GrantedAuthority> auths = userManager.findGroupAuthorities( groupName );
 
-        List<Sid> sids = new ArrayList<Sid>();
+        List<Sid> sids = new ArrayList<>();
         for ( GrantedAuthority a : auths ) {
             AclGrantedAuthoritySid sid = new AclGrantedAuthoritySid( new SimpleGrantedAuthority(
                     userManager.getRolePrefix() + a.getAuthority() ) );

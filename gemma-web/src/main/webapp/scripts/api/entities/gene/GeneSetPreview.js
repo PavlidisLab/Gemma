@@ -15,24 +15,32 @@ Ext.namespace( 'Gemma' );
 Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
 
    /**
-    * public update the contents of the gene preview box
+    * Fetch some genes as examples.
+    * 
+    * @private
     * 
     * @param {Number[]}
     *           ids an array of geneIds to use to populate preview
     * @memberOf Gene.GeneSetPreview
     */
-   loadGenePreviewFromIds : function( ids ) {
+   _loadGenePreviewFromIds : function( ids, message ) {
 
-      this.entityIds = ids;
-      this.totalCount = ids.length;
       // load some genes to display
       var limit = (ids.size() < this.preview_size) ? ids.size() : this.preview_size;
       var previewIds = ids.slice( 0, limit );
-      GenePickerController.getGenes( previewIds, function( genes ) {
-         // this.unmask();
-         this.loadPreview( genes, ids.length );
-         this.fireEvent( 'previewLoaded', genes );
-      }.createDelegate( this ) );
+      GenePickerController.getGenes( previewIds, {
+         callback : function( genes ) {
+            this.loadPreview( genes, ids.length, message );
+            this.fireEvent( 'previewLoaded', genes );
+         }.createDelegate( this ),
+         errorHandler : Gemma.genericErrorHandler
+      } );
+   },
+
+   reset : function() {
+      this.resetPreview();
+      this.previewContent.setTitle( null );
+      this.setSelectedSetValueObject( null );
    },
 
    /**
@@ -41,137 +49,220 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
     * @param {GeneValueSetObject[]}
     *           geneSet populate preview with members
     */
-   loadGenePreviewFromGeneSet : function( geneSet ) {
+   loadGenePreviewFromGeneSet : function( geneSet, message ) {
+
+      /*
+       * FIXME this is a little confusing 'preview' and setting the actual set.
+       */
+      this.setSelectedSetValueObject( geneSet );
 
       var ids = geneSet.geneIds;
-      this.entityIds = ids;
-      // load some genes to display
-      this.loadGenePreviewFromIds( ids );
-      this.setSelectedSetValueObject( geneSet );
+
+      if ( ids.length > 0 ) {
+         this._loadGenePreviewFromIds( ids, message );
+      } else if ( geneSet.id > 0 ) {
+         // fetch from server.
+         GeneSetController.getGenesInGroup.apply( this, [ geneSet.id, this.preview_size, {
+            callback : function( genes ) {
+               this.loadPreview( genes, this.selectedSetValueObject.size, message );
+               this.fireEvent( 'previewLoaded', genes );
+            }.createDelegate( this ),
+            errorHandler : Gemma.genericErrorHandler
+         } ] );
+      } else {
+         alert( "Could not load" );
+      }
 
    },
 
    /**
-    * public update the contents of the gene preview box
+    * @public update the contents of the gene preview box. This is used when other components are adding genes to the
+    *         query (e.g.. from the cytoscape view)
     * 
     * @param {GeneValueObject[]}
     *           genes an array of genes to use to populate preview
     */
-   loadGenePreviewFromGenes : function( genes ) {
-
-      this.entityIds = [];
-      Ext.each( genes, function( item, index, allitems ) {
-         this.entityIds.push( item.id );
-      }, this );
-
-      this.totalCount = genes.length;
-      // load some genes to display
+   loadGenePreviewFromGenes : function( genes, message ) {
       var limit = (genes.size() < this.preview_size) ? genes.size() : this.preview_size;
       var previewGenes = genes.slice( 0, limit );
-      this.loadPreview( previewGenes, genes.length );
+      this.loadPreview( previewGenes, genes.length, message );
+   },
+
+   /**
+    * 
+    */
+   updateTitle : function() {
+      var selectedSet = this.selectedSetValueObject;
+
+      if ( typeof selectedSet == undefined || selectedSet == null ) {
+         return;
+      }
+      var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.geneIds.size();
+
+      if ( selectedSet instanceof DatabaseBackedGeneSetValueObject ) {
+
+         name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.geneSetPage + selectedSet.id + '">' + selectedSet.name
+            + '</a>';
+
+      } else if ( selectedSet instanceof PhenotypeGroupValueObject ) {
+
+         name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.phenotypePage + selectedSet.phenotypeName + '">'
+            + selectedSet.name + ": " + selectedSet.description + '</a>';
+
+      } else if ( selectedSet instanceof GOGroupValueObject ) {
+         name = selectedSet.name + ": " + selectedSet.description;
+      } else if ( selectedSet instanceof PhenotypeGroupValueObject ) {
+         name = selectedSet.name + ": " + selectedSet.description;
+      } else {
+         name = selectedSet.name;
+      }
+
+      this.previewContent.setTitle( '<span style="font-size:1.2em">' + name
+         + '</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1) ? " genes)" : " gene)") );
+   },
+
+   /**
+    * Given the current selection, when the user selects another result from the combo: we merge it in (FIXME harmonize
+    * with ExperimentSetPreview)
+    * 
+    * @param combo
+    * @param record
+    * @param index
+    * @returns
+    */
+   addToPreviewedSet : function( combo, record, index ) {
+
+      var geneSet = record.get( 'resultValueObject' );
+
+      if ( geneSet.geneIds.length > 0 ) {
+         /*
+          * Work with those directly.
+          */
+         var newIds = geneSet.ids;
+         this._appendAndUpdate( newIds );
+
+      } else if ( geneSet.id != null ) {
+         /*
+          * Add the genes to the current set. This is a bit clumsy...
+          */
+         GeneSetController.load( geneSet.id, function( fetched ) {
+            this._appendAndUpdate( fetched.geneIds );
+         }.createDelegate( this ) );
+
+      } else {
+         throw 'Cannot add to preview from this type of object';
+      }
+
+      var allIds = this.selectedSetValueObject.geneIds;
 
    },
 
    /**
-    * public don't use params if you want to update name based on this.selectedEntityOrGroup.resultValueObject
-    * 
-    * @param {Object}
-    *           name
-    * @param {Object}
-    *           size
+    * @private
+    * @param geneIdsToAdd
+    *           {Array}
     */
-   updateTitle : function( name, size ) {
+   _appendAndUpdate : function( geneIdsToAdd ) {
 
-      // if an gene group page exists for this set, make title a link
-      if ( !name && this.selectedSetValueObject instanceof GeneSetValueObject ) {
-         size = this.selectedSetValueObject.geneIds.size();
+      var allIds = this.selectedSetValueObject.geneIds;
+      /*
+       * FIXME: are these always all the geneIds? Preview-mode suggests not
+       * 
+       */
 
-         if ( this.selectedSetValueObject instanceof DatabaseBackedGeneSetValueObject ) {
-
-            name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.geneSetPage + this.selectedSetValueObject.id + '">'
-               + this.selectedSetValueObject.name + '</a>';
-
-         } else if ( this.selectedSetValueObject instanceof PhenotypeGroupValueObject ) {
-
-            name = "<a target=\"_blank\" href=\"" + Gemma.LinkRoots.phenotypePage
-               + this.selectedSetValueObject.phenotypeName + '">' + this.selectedSetValueObject.name + ": "
-               + this.selectedSetValueObject.description + '</a>';
-
-         } else if ( this.selectedSetValueObject instanceof GOGroupValueObject ) {
-            name = this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;
-         } else if ( this.selectedSetValueObject instanceof PhenotypeGroupValueObject ) {
-            name = this.selectedSetValueObject.name + ": " + this.selectedSetValueObject.description;
-         } else {
-            name = this.selectedSetValueObject.name;
+      for (var i = 0; i < geneIdsToAdd.length; i++) {
+         if ( allIds.indexOf( geneIdsToAdd[i] ) < 0 ) {
+            allIds.push( geneIdsToAdd[i] );
          }
-      } else if ( !name ) {
-         name = "Gene Selection Preview";
       }
-      this.previewContent.setTitle( '<span style="font-size:1.2em">' + name
-         + '</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + this.totalCount
-         + ((this.totalCount > 1) ? " genes)" : " gene)") );
+
+      /*
+       * if the current selection is just a session group, don't create a new one.
+       */
+      var editedGroup;
+
+      if ( typeof this.selectedSetValueObject == 'SessionBoundGeneSetValueObject' ) {
+         /*
+          * Don't wipe it, just add on.
+          */
+         editedGroup = this.selectedSetValueObject;
+         editedGroup.modified = true;
+         editedGroup.geneIds = allIds;
+         editedGroup.size = editedGroup.geneIds.length;
+
+         GeneSetController.updateSessionGroup( editedGroup, true, // returns datasets added
+         function( geneSet ) {
+
+            this._loadGenePreviewFromIds( geneSet.geneIds ); // async
+            this.setSelectedSetValueObject( geneSet );
+            this.updateTitle();
+            this.withinSetGeneCombo.reset();
+            this.withinSetGeneCombo.blur();
+
+            Fthis.fireEvent( 'geneListModified', geneSet );
+            this.fireEvent( 'doneModification' );
+
+         }.createDelegate( this ) /* FIXME error handler */);
+
+      } else {
+
+         editedGroup = new SessionBoundGeneSetValueObject();
+         editedGroup.id = null;
+
+         if ( !(this.selectedSetValueObject.name.lastIndexOf( "Modification of:\n" ) === 0) ) {
+            var currentTime = new Date();
+            var hours = currentTime.getHours();
+            var minutes = currentTime.getMinutes();
+            var time = '(' + hours + ':' + minutes + ') ';
+            editedGroup.name = "Modification of:\n" + this.selectedSetValueObject.name;
+            editedGroup.description = "You created this set by combining multiple items. Starting point was:\n"
+               + this.selectedSetValueObject.name + " (at " + time + ")";
+         } else {
+            editedGroup.name = this.selectedSetValueObject.name;
+            editedGroup.description = this.selectedSetValueObject.description;
+         }
+
+         editedGroup.geneIds = allIds;
+         editedGroup.taxonId = this.selectedSetValueObject.taxonId;
+         editedGroup.taxonName = this.selectedSetValueObject.taxonName;
+         editedGroup.size = editedGroup.geneIds.length;
+         editedGroup.modified = true;
+         editedGroup.isPublic = false;
+
+         GeneSetController.addSessionGroup( editedGroup, true, // returns datasets added
+         function( geneSet ) {
+
+            this._loadGenePreviewFromIds( geneSet.geneIds ); // async
+            this.setSelectedSetValueObject( geneSet );
+            this.updateTitle();
+
+            this.withinSetGeneCombo.reset();
+            this.withinSetGeneCombo.blur();
+
+            this.fireEvent( 'geneListModified', geneSet );
+            this.fireEvent( 'doneModification' );
+
+         }.createDelegate( this ) /* FIXME error handler */);
+      }
    },
 
+   /**
+    * @override
+    */
    initComponent : function() {
 
-      var withinSetGeneCombo = new Gemma.GeneAndGeneGroupCombo( {
+      this.withinSetGeneCombo = new Gemma.GeneAndGeneGroupCombo( {
          width : 300,
          style : 'margin:10px',
          hideTrigger : true,
          taxonId : this.taxonId,
          emptyText : 'Add genes to your group'
       } );
-      withinSetGeneCombo.setTaxonId( this.taxonId );
-      withinSetGeneCombo.on( 'select', function( combo, record, index ) {
+      this.withinSetGeneCombo.setTaxonId( this.taxonId );
 
-         var allIds = this.entityIds;
-         var newIds = record.get( 'memberIds' );
-         var i;
-         // don't add duplicates
-         for (i = 0; i < newIds.length; i++) {
-            if ( allIds.indexOf( newIds[i] ) < 0 ) {
-               allIds.push( newIds[i] );
-            }
-         }
-
-         var currentTime = new Date();
-         var hours = currentTime.getHours();
-         var minutes = currentTime.getMinutes();
-         if ( minutes < 10 ) {
-            minutes = "0" + minutes;
-         }
-         var time = '(' + hours + ':' + minutes + ') ';
-
-         var editedGroup;
-         editedGroup = new SessionBoundGeneSetValueObject();
-         editedGroup.id = null;
-         editedGroup.name = time + " Custom Gene Group";
-         editedGroup.description = "Temporary gene group created " + currentTime.toString();
-         editedGroup.geneIds = allIds;
-         editedGroup.taxonId = record.get( 'taxonId' );
-         editedGroup.taxonName = record.get( 'taxonName' );
-         editedGroup.size = editedGroup.geneIds.length;
-         editedGroup.modified = true;
-         editedGroup.isPublic = false;
-
-         GeneSetController.addSessionGroups( [ editedGroup ], true, // returns datasets added
-         function( geneSets ) {
-            // should be at least one datasetSet
-            if ( geneSets === null || geneSets.length === 0 ) {
-               // TODO error message
-               return;
-            } else {
-
-               withinSetGeneCombo.reset();
-               this.focus(); // want combo to lose focus
-               this.loadGenePreviewFromIds( geneSets[0].geneIds );
-               this.setSelectedSetValueObject( geneSets[0] );
-               this.updateTitle();
-               this.fireEvent( 'geneListModified', geneSets, geneSets[0].geneIds );
-               this.fireEvent( 'doneModification' );
-            }
-         }.createDelegate( this ) );
-      }, this );
+      // FIXME might want to do this by firing an event and let container handle (as it stands, preview and management
+      // are intertwined)
+      this.withinSetGeneCombo.on( 'select', this.addToPreviewedSet.createDelegate( this ), this );
 
       Ext.apply( this, {
          selectionEditor : new Gemma.GeneMembersSaveGrid( {
@@ -187,22 +278,19 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
 
          defaultPreviewTitle : "Gene Selection Preview",
 
-         addingCombo : withinSetGeneCombo
+         addingCombo : this.withinSetGeneCombo
 
       } );
+
       Gemma.GeneSetPreview.superclass.initComponent.call( this );
 
-      this.selectionEditor.on( 'geneListModified', function( newSets ) {
-         var i;
-         for (i = 0; i < newSets.length; i++) { // should only be one
-            if ( typeof newSets[i].geneIds !== 'undefined' && typeof newSets[i].name !== 'undefined' ) {
-               this.loadGenePreviewFromIds( newSets[i].geneIds );
-               this.setSelectedSetValueObject( newSets[i] );
-               this.updateTitle();
-            }
+      this.selectionEditor.on( 'geneListModified', function( geneset ) {
+         if ( typeof geneset.geneIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
+            this._loadGenePreviewFromIds( geneset.geneIds );
+            this.setSelectedSetValueObject( geneset );
+            this.updateTitle();
          }
-         this.listModified = true;
-         this.fireEvent( 'geneListModified', newSets );
+         this.fireEvent( 'geneListModified', newSet );
       }, this );
 
    }

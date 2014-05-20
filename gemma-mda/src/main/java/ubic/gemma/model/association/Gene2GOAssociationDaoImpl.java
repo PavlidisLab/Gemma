@@ -122,6 +122,32 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGoTermsPerTaxon(java.util.Collection)
+     */
+    @Override
+    public Map<Taxon, Collection<Gene>> findByGoTermsPerTaxon( Collection<String> termsToFetch ) {
+        Collection<Gene> genes = this.getGenes( termsToFetch );
+        Map<Taxon, Collection<Gene>> results = new HashMap<>();
+
+        for ( Gene g : genes ) {
+
+            if ( !results.containsKey( g.getTaxon() ) ) {
+
+                results.put( g.getTaxon(), new HashSet<Gene>() );
+
+            }
+
+            results.get( g.getTaxon() ).add( g );
+
+        }
+
+        return results;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.Gene2GOAssociationDaoBase#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation
      * )
@@ -134,6 +160,60 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             return existing;
         }
         return create( gene2GOAssociation );
+    }
+
+    @Override
+    public Collection<Gene> getGenes( Collection<String> ids ) {
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                + "where geneAss.ontologyEntry.value in ( :goIDs)";
+
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "goIDs", ids )
+                .list();
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#getGenes(java.util.Collection,
+     * ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<Gene> getGenes( Collection<String> ids, Taxon taxon ) {
+        if ( taxon == null ) return getGenes( ids );
+
+        final String queryString = "select distinct  "
+                + "  gene from Gene2GOAssociationImpl as geneAss join geneAss.gene as gene "
+                + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax";
+
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "goIDs", ids )
+                .setParameter( "tax", taxon ).list();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.Gene2GOAssociationDao#getSets(java.util.Collection)
+     */
+    @Override
+    public Map<String, Collection<Gene>> getSets( Collection<String> ids ) {
+        final String queryString = "select distinct geneAss.ontologyEntry.value, "
+                + "geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                + "where geneAss.ontologyEntry.value in ( :goIDs)";
+
+        Map<String, Collection<Gene>> result = new HashMap<>();
+        List<?> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "goIDs", ids ).list();
+
+        for ( Object o : list ) {
+            Object[] oa = ( Object[] ) o;
+            if ( !result.containsKey( oa[0] ) ) {
+                result.put( ( String ) oa[0], new HashSet<Gene>() );
+            }
+            result.get( oa[0] ).add( ( Gene ) oa[1] );
+        }
+
+        return result;
     }
 
     /*
@@ -179,15 +259,11 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
         Collection<Gene> results;
 
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
 
-            results = queryObject.list();
+        results = queryObject.list();
 
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
         return results;
     }
 
@@ -201,16 +277,12 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
         Collection<Gene> results;
 
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
-            queryObject.setParameter( "taxon", taxon );
+        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameter( "goID", goId.replaceFirst( ":", "_" ) );
+        queryObject.setParameter( "taxon", taxon );
 
-            results = queryObject.list();
+        results = queryObject.list();
 
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
         return results;
     }
 

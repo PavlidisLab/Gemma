@@ -50,6 +50,16 @@ public class CoexpressionSearchCommand {
 
     private String eeSetName;
 
+    private Long geneSetId;
+
+    public Long getGeneSetId() {
+        return geneSetId;
+    }
+
+    public void setGeneSetId( Long geneSetId ) {
+        this.geneSetId = geneSetId;
+    }
+
     private Collection<Long> geneIds;
 
     private boolean queryGenesOnly;

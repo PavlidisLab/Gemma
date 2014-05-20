@@ -38,12 +38,14 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
    },
 
    stateful : false,
+
    // what describes the state of this panel - in this case it is the "hidden" field
    getState : function() {
       return {
          hidden : this.hidden
       };
    },
+
    // specify when the state should be saved - in this case after panel was hidden or shown
    stateEvents : [ 'hide', 'show' ],
 
@@ -143,6 +145,10 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
       this.currIndex = index;
       this.showTip( this.tips[index] );
    },
+
+   /**
+    * @private
+    */
    updateBtnDisabling : function() {
       if ( this.currIndex === 0 ) {
          this.controlBtns.prevBtn.disable();
@@ -155,15 +161,27 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
          this.controlBtns.nextBtn.enable();
       }
    },
+
+   /**
+    * 
+    */
    showNextTip : function() {
       this.hideTip( this.tips[this.currIndex] );
       this.showTip( this.tips[++this.currIndex] );
    },
+
+   /**
+    * 
+    */
    showPrevTip : function() {
       if ( this.currIndex )
          this.hideTip( this.tips[this.currIndex] );
       this.showTip( this.tips[--this.currIndex] );
    },
+
+   /**
+    * 
+    */
    hideTutorial : function() {
       this.currIndex = -1;
       this.hideTips();
@@ -171,6 +189,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
       this.fireEvent( 'tutorialHidden' );
       // this.destroy();
    },
+
    /**
     * 
     * @param {Object}
@@ -185,6 +204,11 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
          this.hideTip( tipsToHide[i] );
       }
    },
+
+   /**
+    * 
+    * @param tip
+    */
    hideTip : function( tip ) {
       if ( !tip )
          return;
@@ -192,6 +216,11 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
       this.controlBtns['progBtn' + tip.tipIndex].toggle( false );
 
    },
+
+   /**
+    * 
+    * @param tip
+    */
    showTip : function( tip ) {
       if ( !tip )
          return;
@@ -216,6 +245,12 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
       }
       return trueTips;
    },
+
+   /**
+    * 
+    * @param tipDefinition
+    * @returns {Ext.ToolTip}
+    */
    initTip : function( tipDefinition ) {
       var element, tipTitle, tipBody, tipConfig;
       element = tipDefinition.element;
@@ -310,6 +345,10 @@ Gemma.Tutorial.ControlPanel = Ext.extend( Ext.Panel, {
 
       return tip;
    },
+
+   /**
+    * 
+    */
    updateRenderingTargets : function() {
       var i;
       // console.log(this.tips);
