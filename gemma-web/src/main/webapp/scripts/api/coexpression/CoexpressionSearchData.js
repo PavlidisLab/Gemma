@@ -117,8 +117,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
       var results = this.cytoscapeSearchResults.results;
       var genesMatchingSearch = [];
       var queries = query.split( "," );
-      var i, j;
-      for (j = 0; j < queries.length; j++) {
+      for (var j = 0; j < queries.length; j++) {
 
          queries[j] = queries[j].replace( /^\s+|\s+$/g, '' );
 
@@ -127,7 +126,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          }
          var queryRegEx = new RegExp( Ext.escapeRe( queries[j] ), 'i' );
 
-         for (i = 0; i < results.length; i++) {
+         for (var i = 0; i < results.length; i++) {
             var foundGene = results[i].foundGene;
             var queryGene = results[i].queryGene;
 

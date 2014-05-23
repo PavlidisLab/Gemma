@@ -33,7 +33,6 @@ import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -45,6 +44,7 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -53,8 +53,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.tasks.visualization.DifferentialExpressionSearchTaskCommand;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -115,7 +115,7 @@ public class DifferentialExpressionSearchController {
         Gene g = geneService.thaw( geneService.load( geneId ) );
 
         if ( g == null ) {
-            return new ArrayList<DifferentialExpressionValueObject>();
+            return new ArrayList<>();
         }
 
         return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
@@ -137,7 +137,7 @@ public class DifferentialExpressionSearchController {
 
         // for each DifferentialExpressionValueObject, check if its factors includes a batch factor and if so, remove
         // the batch factor
-        Collection<DifferentialExpressionValueObject> toRemove = new ArrayList<DifferentialExpressionValueObject>();
+        Collection<DifferentialExpressionValueObject> toRemove = new ArrayList<>();
         for ( DifferentialExpressionValueObject analysis : analyses ) {
             for ( ExperimentalFactorValueObject factor : analysis.getExperimentalFactors() ) {
                 if ( ExperimentalDesignUtils.isBatch( factor ) ) {
@@ -239,7 +239,7 @@ public class DifferentialExpressionSearchController {
      */
     public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( final Collection<Long> eeIds ) {
 
-        Collection<ExpressionExperimentExperimentalFactorValueObject> result = new HashSet<ExpressionExperimentExperimentalFactorValueObject>();
+        Collection<ExpressionExperimentExperimentalFactorValueObject> result = new HashSet<>();
 
         final Collection<Long> securityFilteredIds = securityFilterExpressionExperimentIds( eeIds );
 
@@ -305,62 +305,50 @@ public class DifferentialExpressionSearchController {
      * AJAX - method used for main display metaheatmap.
      * 
      * @param taxonId
-     * @param datasetValueObjects
-     * @param geneValueObjects
-     * @param geneSessionGroupQueries
-     * @param experimentSessionGroupQueries
+     * @param datasetsetFValueObject
+     * @param geneSetValueObject
      * @return
      */
-    public String scheduleDiffExpSearchTask( Long taxonId,
-            Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
-            Collection<GeneSetValueObject> geneValueObjects, List<String> geneSessionGroupQueries,
-            List<String> experimentSessionGroupQueries ) {
+    public String scheduleDiffExpSearchTask( Long taxonId, ExpressionExperimentSetValueObject eevo,
+            GeneSetValueObject gsvo ) {
 
         log.info( "Starting gene x condition search..." );
         // Load experiments
-        List<Collection<ExpressionExperiment>> experiments = new ArrayList<>();
+        Collection<ExpressionExperimentValueObject> experiments = new ArrayList<>();
         List<String> datasetGroupNames = new ArrayList<>();
-        for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
-            if ( eevo == null ) continue;
-
-            if ( eevo.getExpressionExperimentIds().isEmpty() ) {
-                if ( eevo.getId() != null ) {
-                    experiments.add( expressionExperimentSetService.getExperimentsInSet( eevo.getId() ) );
-                } else {
-                    throw new IllegalArgumentException(
-                            "Experiment group should either have an id or a list of ee ids." );
+        if ( eevo.getExpressionExperimentIds().isEmpty() ) {
+            if ( eevo.getId() != null ) {
+                experiments = expressionExperimentSetService.getExperimentValueObjectsInSet( eevo.getId() );
+            } else if ( eevo.getName() != null ) {
+                Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService.findByName( eevo.getName() );
+                if ( eesets.isEmpty() || eesets.size() > 1 ) {
+                    throw new IllegalArgumentException( "Did not get an identifiable experiment set" );
                 }
-            } else {
-                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
-            }
-            datasetGroupNames.add( eevo.getName() );
+                experiments = expressionExperimentSetService.getExperimentValueObjectsInSet( eesets.iterator().next()
+                        .getId() );
 
+            } else {
+                throw new IllegalArgumentException(
+                        "Experiment group should either have an id or a list of ee ids, or a unique name" );
+            }
+        } else {
+            experiments = loadExperimentsByIds( eevo.getExpressionExperimentIds() );
         }
 
-        // log.info( "Got experiments for set" );
+        datasetGroupNames.add( eevo.getName() );
 
         // Load genes
-        List<List<Gene>> genes = new ArrayList<>();
-        List<String> geneGroupNames = new ArrayList<>();
-
-        // FIXME there will only be one...
-        for ( GeneSetValueObject gsvo : geneValueObjects ) {
-            geneGroupNames.add( gsvo.getName() );
-            Collection<Long> geneIds = gsvo.getGeneIds();
-
-            if ( geneIds.isEmpty() ) {
-                // FIXME this is lame
-                genes.add( new ArrayList<>( geneService.loadMultiple( EntityUtils.getIds( geneSetService
-                        .getGenesInGroup( gsvo.getId() ) ) ) ) );
-            } else {
-                genes.add( new ArrayList<>( geneService.loadMultiple( geneIds ) ) );
-            }
+        Collection<GeneValueObject> genes = new ArrayList<>();
+        if ( gsvo.getGeneIds().isEmpty() ) {
+            genes = geneSetService.getGenesInGroup( gsvo.getId() );
+        } else {
+            genes = geneService.loadValueObjects( gsvo.getGeneIds() );
         }
 
         log.info( "Got genes" );
-
+        // fixme why not just pass in the eeset and geneset (security filtering could happen there)
         final DifferentialExpressionSearchTaskCommand taskCommand = new DifferentialExpressionSearchTaskCommand( genes,
-                experiments, geneGroupNames, datasetGroupNames );
+                experiments, gsvo.getName(), eevo.getName() );
 
         String taskId = taskRunningService.submitLocalTask( taskCommand );
 
@@ -434,12 +422,13 @@ public class DifferentialExpressionSearchController {
      * @param ids
      * @return
      */
-    private Collection<ExpressionExperiment> loadExperimentsByIds( Collection<Long> ids ) {
+    private Collection<ExpressionExperimentValueObject> loadExperimentsByIds( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             throw new IllegalArgumentException( "No ids were provided" );
         }
 
-        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( ids );
+        Collection<ExpressionExperimentValueObject> experiments = expressionExperimentService.loadValueObjects( ids,
+                false );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );

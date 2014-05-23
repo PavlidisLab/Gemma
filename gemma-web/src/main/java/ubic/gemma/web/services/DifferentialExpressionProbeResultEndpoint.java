@@ -36,12 +36,14 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Allows access to the differential expression analysis. Given 1) an expression experiment set id 2) a collection of
@@ -169,13 +171,13 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         responseWrapper.appendChild( responseElement );
 
         for ( Gene gene : geneCol ) {
-            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService
-                    .find( gene, bioAssaySets, Double.parseDouble( threshold ), null );
+            Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
+                    .find( gene, EntityUtils.getIds( bioAssaySets ), Double.parseDouble( threshold ), null );
 
-            for ( BioAssaySet ee : results.keySet() ) {
+            for ( ExpressionExperimentValueObject ee : results.keySet() ) {
                 // main call to the DifferentialExpressionAnalysisService to retrieve
                 // DifferentialExpressionAnalysisResultSet collection
-                Collection<DifferentialExpressionAnalysisResult> parCol = results.get( ee );
+                Collection<DifferentialExpressionValueObject> parCol = results.get( ee );
 
                 // check that a DifferentialExpressionAnalysisResult is not null
                 if ( parCol == null || parCol.isEmpty() ) {
@@ -196,10 +198,10 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
     }
 
     private void buildXMLResponse( Document document, Element responseElement, String gene, String ee,
-            Collection<DifferentialExpressionAnalysisResult> parCol ) throws Exception {
+            Collection<DifferentialExpressionValueObject> parCol ) throws Exception {
 
         if ( parCol != null ) {
-            for ( DifferentialExpressionAnalysisResult par : parCol ) {
+            for ( DifferentialExpressionValueObject par : parCol ) {
                 // gene id output
                 Element e1 = document.createElement( "gene_id" );
                 e1.appendChild( document.createTextNode( gene ) );
@@ -209,13 +211,12 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
                 e2.appendChild( document.createTextNode( ee ) );
                 responseElement.appendChild( e2 );
 
-                differentialExpressionResultService.thaw( par );
                 Element e3 = document.createElement( "probe" );
-                e3.appendChild( document.createTextNode( par.getProbe().getName() ) );
+                e3.appendChild( document.createTextNode( par.getProbe() ) );
                 responseElement.appendChild( e3 );
 
                 Element e4 = document.createElement( "q_value" );
-                e4.appendChild( document.createTextNode( par.getCorrectedPvalue().toString() ) );
+                e4.appendChild( document.createTextNode( par.getCorrP().toString() ) );
                 responseElement.appendChild( e4 );
             }
         } else {

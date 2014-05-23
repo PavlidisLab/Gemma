@@ -39,8 +39,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * @author Paul
  */
 @Repository
-public class ExpressionAnalysisResultSetDaoImpl extends
-        ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDaoBase {
+public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResultSetDaoBase {
 
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
@@ -119,8 +118,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory()
                 .getCurrentSession()
                 .load( DifferentialExpressionAnalysisImpl.class, differentialExpressionAnalysis.getId() );
-        // Hibernate.initialize( differentialExpressionAnalysis );
-        // Hibernate.initialize( differentialExpressionAnalysis.getResultSets() );
         Collection<ExpressionAnalysisResultSet> thawed = new HashSet<ExpressionAnalysisResultSet>();
         for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
             thawed.add( this.thaw( rs ) );

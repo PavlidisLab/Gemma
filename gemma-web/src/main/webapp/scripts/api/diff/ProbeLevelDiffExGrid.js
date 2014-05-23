@@ -147,7 +147,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
                                    header : "Probe",
                                    dataIndex : "probe",
                                    width : 80,
-                                   tooltip : "The specific probe; shown in color if it was used for the Meta-P-value computation",
+                                   tooltip : "The specific platform element",
                                    renderer : Gemma.ProbeLevelDiffExGrid.getProbeStyler(),
                                    sortable : true
                                 },
@@ -166,6 +166,7 @@ Gemma.ProbeLevelDiffExGrid = Ext
                                    dataIndex : "p",
                                    width : 80,
                                    renderer : function( p, metadata, record ) {
+                                      // FIXME isn't it always above threshold?
                                       if ( record.get( "metThreshold" ) ) {
                                          metadata.css = "metThreshold"; // typo.css
                                       }
@@ -320,8 +321,8 @@ Gemma.ProbeLevelDiffExGrid.getEEStyler = function() {
    if ( Gemma.ProbeLevelDiffExGrid.eeNameStyler === undefined ) {
       Gemma.ProbeLevelDiffExGrid.eeNameTemplate = new Ext.XTemplate(
          '<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-         '{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
-         ' ext:qtip="{name}">{shortName}</a></tpl>' );
+         '{[value.sourceExperiment ? value.sourceExperiment : values.id]}"',
+         ' ext:qtip="{name}">{[value.sourceExperiment ? "Subset of " + values.sourceExperiment : value.shortName]}</a></tpl>' );
       Gemma.ProbeLevelDiffExGrid.eeNameStyler = function( value, metadata, record, row, col, ds ) {
          var ee = record.data.expressionExperiment;
          return Gemma.ProbeLevelDiffExGrid.eeNameTemplate.apply( ee );

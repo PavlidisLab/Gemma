@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
@@ -140,7 +139,7 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
     public Collection<GeneDifferentialExpressionMetaAnalysisSummaryValueObject> loadAllMetaAnalyses() {
         Collection<GeneDifferentialExpressionMetaAnalysis> metaAnalyses = this.geneDiffExMetaAnalysisService.loadAll();
 
-        Collection<Long> metaAnalysisIds = new HashSet<Long>( metaAnalyses.size() );
+        Collection<Long> metaAnalysisIds = new HashSet<>( metaAnalyses.size() );
         for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
             metaAnalysisIds.add( metaAnalysis.getId() );
         }
@@ -152,24 +151,24 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
                     .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( vo.getId() ) );
 
             // Find meta-analysis so that its security settings can be copied to value object.
-            for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
-                if ( vo.getId().equals( metaAnalysis.getId() ) ) {
-                    boolean isEditable = false;
-
-                    try {
-                        isEditable = this.securityService.isEditable( metaAnalysis );
-                    } catch ( AccessDeniedException e ) {
-                        // nothing to do
-                    }
-
-                    // FIXME these should get set automatically by the security interceptor.
-                    vo.setEditable( isEditable );
-                    vo.setOwnedByCurrentUser( this.securityService.isOwnedByCurrentUser( metaAnalysis ) );
-                    vo.setPublic( this.securityService.isPublic( metaAnalysis ) );
-                    vo.setShared( this.securityService.isShared( metaAnalysis ) );
-                    break;
-                }
-            }
+            // for ( GeneDifferentialExpressionMetaAnalysis metaAnalysis : metaAnalyses ) {
+            // if ( vo.getId().equals( metaAnalysis.getId() ) ) {
+            // boolean isEditable = false;
+            //
+            // // try {
+            // // isEditable = this.securityService.isEditable( metaAnalysis );
+            // // } catch ( AccessDeniedException e ) {
+            // // // nothing to do
+            // // }
+            // //
+            // // // these should get set automatically by the security interceptor.
+            // // vo.setEditable( isEditable );
+            // // vo.setOwnedByCurrentUser( this.securityService.isOwnedByCurrentUser( metaAnalysis ) );
+            // // vo.setPublic( this.securityService.isPublic( metaAnalysis ) );
+            // // vo.setShared( this.securityService.isShared( metaAnalysis ) );
+            // break;
+            // }
+            // }
         }
 
         return vos;

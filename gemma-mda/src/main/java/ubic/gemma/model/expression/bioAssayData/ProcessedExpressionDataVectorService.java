@@ -146,4 +146,13 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "GROUP_USER" })
     public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
 
+    /**
+     * @param analyzedSet
+     * @param probes
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
+            Collection<Long> probes );
+
 }

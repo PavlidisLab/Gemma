@@ -17,6 +17,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.util.Collection;
 import java.util.Map;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -47,7 +48,8 @@ public interface GeneDifferentialExpressionService {
      * @param ee
      * @return
      */
-    public abstract ExpressionExperimentValueObject configExpressionExperimentValueObject( BioAssaySet ee );
+    public abstract ExpressionExperimentValueObject configExpressionExperimentValueObject(
+            ExpressionExperimentValueObject ee );
 
     /**
      * Get the differential expression results for the given gene that is in a specified set of experiments.

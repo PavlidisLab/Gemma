@@ -29,23 +29,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.Direction;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.util.AnchorTagUtil;
+import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -101,7 +97,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
 
         /*
-         * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client.
+         * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client. // FIXME???
          */
         efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString, 50 ) + ")" );
 
@@ -117,20 +113,17 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
      * .gemma.model.expression.experiment.BioAssaySet)
      */
     @Override
-    public ExpressionExperimentValueObject configExpressionExperimentValueObject( BioAssaySet ee ) {
-        ExpressionExperimentValueObject eevo = new ExpressionExperimentValueObject();
-        eevo.setId( ee.getId() );
+    public ExpressionExperimentValueObject configExpressionExperimentValueObject( ExpressionExperimentValueObject ee ) {
 
-        if ( ee instanceof ExpressionExperiment ) {
-            eevo.setShortName( ( ( ExpressionExperiment ) ee ).getShortName() );
-        } else if ( ee instanceof ExpressionExperimentSubSet ) {
-            eevo.setShortName( "Subset of "
-                    + ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getShortName() );
-            eevo.setSourceExperiment( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() );
-        }
-        eevo.setName( ee.getName() );
-        eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
-        return eevo;
+        // if ( ee instanceof ExpressionExperiment ) {
+        // eevo.setShortName( ( ( ExpressionExperiment ) ee ).getShortName() );
+        // } else if ( ee instanceof ExpressionExperimentSubSet ) {
+        // eevo.setShortName( "Subset of "
+        // + ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getShortName() );
+        // eevo.setSourceExperiment( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId() );
+        // }
+        // ee.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( ee.getId() ) );
+        return ee;
     }
 
     /*
@@ -145,12 +138,12 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             Collection<BioAssaySet> ees ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
         if ( gene == null ) return devos;
 
-        Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService
-                .find( gene, ees );
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
+                .find( gene, EntityUtils.getIds( ees ) );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
             log.info( "Diff ex results: " + timer.getTime() + " ms" );
@@ -170,12 +163,12 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             Collection<BioAssaySet> ees, double threshold, Integer limit ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
         if ( gene == null ) return devos;
 
-        Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService
-                .find( gene, ees, threshold, limit );
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
+                .find( gene, EntityUtils.getIds( ees ), threshold, limit );
         timer.stop();
         if ( timer.getTime() > 1000 ) {
             log.info( "Diff ex results: " + timer.getTime() + " ms" );
@@ -195,37 +188,39 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<DifferentialExpressionValueObject> result = new ArrayList<DifferentialExpressionValueObject>();
+        Collection<DifferentialExpressionValueObject> result = new ArrayList<>();
 
         if ( gene == null ) return result;
 
-        Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> rawDiffEx = differentialExpressionResultService
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> rawDiffEx = differentialExpressionResultService
                 .find( gene, threshold, null );
 
-        Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
-                rawDiffEx );
+        // Collection<DifferentialExpressionValueObject> rawProcResults = postProcessDiffExResults( gene, threshold,
+        // rawDiffEx );
 
-        Map<Long, DiffExpressionSelectedFactorCommand> eeId2FactorCommand = new HashMap<Long, DiffExpressionSelectedFactorCommand>();
+        Map<Long, DiffExpressionSelectedFactorCommand> eeId2FactorCommand = new HashMap<>();
         for ( DiffExpressionSelectedFactorCommand dsfc : factorMap ) {
             eeId2FactorCommand.put( dsfc.getEeId(), dsfc );
         }
 
-        for ( DifferentialExpressionValueObject raw : rawProcResults ) {
-            if ( eeId2FactorCommand.containsKey( raw.getExpressionExperiment().getId() ) ) {
-                DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand.get( raw
-                        .getExpressionExperiment().getId() );
+        for ( ExpressionExperimentValueObject ee : rawDiffEx.keySet() ) {
+            for ( DifferentialExpressionValueObject raw : rawDiffEx.get( ee ) ) {
+                if ( eeId2FactorCommand.containsKey( raw.getExpressionExperiment().getId() ) ) {
+                    DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand.get( raw
+                            .getExpressionExperiment().getId() );
 
-                assert !raw.getExperimentalFactors().isEmpty();
+                    assert !raw.getExperimentalFactors().isEmpty();
 
-                // interaction term?
-                if ( raw.getExperimentalFactors().size() > 1 ) {
-                    continue;
-                }
+                    // interaction term?
+                    if ( raw.getExperimentalFactors().size() > 1 ) {
+                        continue;
+                    }
 
-                ExperimentalFactorValueObject efvo = raw.getExperimentalFactors().iterator().next();
-                if ( factorCommandForEE.getEfId().equals( efvo.getId() ) ) {
-                    result.add( raw );
-                    continue;
+                    ExperimentalFactorValueObject efvo = raw.getExperimentalFactors().iterator().next();
+                    if ( factorCommandForEE.getEfId().equals( efvo.getId() ) ) {
+                        result.add( raw );
+                        continue;
+                    }
                 }
             }
         }
@@ -247,22 +242,15 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
             Integer limit ) {
 
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
         if ( gene == null ) return devos;
 
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Find experiments: " + timer.getTime() + " ms" );
-        }
-        timer.reset();
+        StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results = differentialExpressionResultService
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
                 .find( gene, threshold, limit );
-        timer.stop();
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Diff raw ex results: " + timer.getTime() + " ms" );
@@ -289,10 +277,10 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
          * Get results for each active experiment on given gene. Handling the threshold check below since we ignore this
          * for the meta analysis. The results returned are for all factors, not just the factors we are seeking.
          */
-        Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> resultsMap = differentialExpressionResultService
-                .find( g, activeExperiments );
+        Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
+                .find( g, EntityUtils.getIds( activeExperiments ) );
 
-        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = getFactors( resultsMap );
+        // Map<DifferentialExpressionValueObject, Collection<ExperimentalFactor>> dearToEf = getFactors( resultsMap );
 
         log.debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );
 
@@ -301,26 +289,27 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         DoubleArrayList pvaluesToCombine = new DoubleArrayList();
 
         /* a gene can have multiple probes that map to it, so store one diff value object for each probe */
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
         Collection<Long> eesThatMetThreshold = new HashSet<Long>();
 
-        for ( BioAssaySet ee : resultsMap.keySet() ) {
+        for ( ExpressionExperimentValueObject ee : resultsMap.keySet() ) {
 
             ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
 
-            Collection<DifferentialExpressionAnalysisResult> proberesults = resultsMap.get( ee );
+            Collection<DifferentialExpressionValueObject> proberesults = resultsMap.get( ee );
 
-            Collection<DifferentialExpressionAnalysisResult> filteredResults = new HashSet<DifferentialExpressionAnalysisResult>();
-            for ( DifferentialExpressionAnalysisResult r : proberesults ) {
-                Collection<ExperimentalFactor> efs = dearToEf.get( r );
+            Collection<DifferentialExpressionValueObject> filteredResults = new HashSet<>();
+            for ( DifferentialExpressionValueObject r : proberesults ) {
+                Collection<ExperimentalFactorValueObject> efs = r.getExperimentalFactors();
+
                 assert efs.size() > 0;
                 if ( efs.size() > 1 ) {
                     // We always ignore interaction effects.
                     continue;
                 }
 
-                ExperimentalFactor ef = efs.iterator().next();
+                ExperimentalFactorValueObject ef = efs.iterator().next();
 
                 /*
                  * note that we don't care about the reverse: the eefactorsmap can have stuff we don't need. We focus on
@@ -351,10 +340,10 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
              * For the diff expression meta analysis, ignore threshold. Select the 'best' penalized probe if multiple
              * probes map to the same gene.
              */
-            DifferentialExpressionAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
+            DifferentialExpressionValueObject res = findMinPenalizedProbeResult( filteredResults );
             if ( res == null ) continue;
 
-            Double p = res.getPvalue();
+            Double p = res.getP();
             if ( p == null ) continue;
 
             /*
@@ -364,34 +353,25 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
             /* for each filtered result, set up a devo (contains only results with chosen factor) */
 
-            differentialExpressionResultService.thaw( filteredResults );
+            for ( DifferentialExpressionValueObject r : filteredResults ) {
 
-            for ( DifferentialExpressionAnalysisResult r : filteredResults ) {
-
-                Collection<ExperimentalFactor> efs = dearToEf.get( r );
+                Collection<ExperimentalFactorValueObject> efs = r.getExperimentalFactors();
                 if ( efs == null ) {
                     // This should not happen any more, but just in case.
                     log.warn( "No experimentalfactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
 
-                DifferentialExpressionValueObject devo = diffExResultToValueObject( r, g, eevo, efs );
-
-                Boolean metThreshold = r.getCorrectedPvalue() != null
-                        && ( r.getCorrectedPvalue() <= threshold ? true : false );
-                devo.setMetThreshold( metThreshold );
+                Boolean metThreshold = r.getCorrP() != null && ( r.getCorrP() <= threshold ? true : false );
+                r.setMetThreshold( metThreshold );
 
                 if ( metThreshold ) {
                     eesThatMetThreshold.add( eevo.getId() );
                 }
 
                 Boolean fisherContribution = r.equals( res ) ? true : false;
-                devo.setFisherContribution( fisherContribution );
+                r.setFisherContribution( fisherContribution );
 
-                devo.setP( r.getPvalue() );
-                devo.setCorrP( r.getCorrectedPvalue() );
-                devo.setSortKey();
-                devos.add( devo );
             }
 
         }
@@ -415,37 +395,16 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         return mavo;
     }
 
-    private DifferentialExpressionValueObject diffExResultToValueObject( DifferentialExpressionAnalysisResult r,
-            Gene gene, ExpressionExperimentValueObject eevo, Collection<ExperimentalFactor> efs ) {
-
-        DifferentialExpressionValueObject devo = new DifferentialExpressionValueObject();
-        devo.setGene( new GeneValueObject( gene ) );
-        devo.setExpressionExperiment( eevo );
-        CompositeSequence probe = r.getProbe();
-        devo.setProbe( probe.getName() );
-        devo.setProbeId( probe.getId() );
-        devo.setExperimentalFactors( new HashSet<ExperimentalFactorValueObject>() );
-        devo.setId( r.getId() );
-
-        for ( ExperimentalFactor ef : efs ) {
-            ExperimentalFactorValueObject efvo = configExperimentalFactorValueObject( ef );
-
-            devo.getExperimentalFactors().add( efvo );
-            devo.setSortKey();
-        }
-        return devo;
-    }
-
     /**
      * When n probes map to the same gene, penalize by multiplying each pval by n and then take the 'best' value.
      * 
      * @param results
      * @return the result with the min p value.
      */
-    private DifferentialExpressionAnalysisResult findMinPenalizedProbeResult(
-            Collection<DifferentialExpressionAnalysisResult> results ) {
+    private DifferentialExpressionValueObject findMinPenalizedProbeResult(
+            Collection<DifferentialExpressionValueObject> results ) {
 
-        DifferentialExpressionAnalysisResult minResult = null;
+        DifferentialExpressionValueObject minResult = null;
 
         int numProbesForGene = results.size();
         if ( numProbesForGene == 1 ) {
@@ -454,23 +413,23 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
         double min = 0;
         int i = 0;
-        for ( DifferentialExpressionAnalysisResult r : results ) {
+        for ( DifferentialExpressionValueObject r : results ) {
 
             /*
              * FIXME use the contrasts.
              */
             r.getContrasts();
 
-            if ( r.getPvalue() == null ) continue;
+            if ( r.getP() == null ) continue;
             /* penalize pvals */
-            double pval = r.getPvalue() * numProbesForGene;
+            double pval = r.getP() * numProbesForGene;
             if ( pval > MAX_PVAL ) pval = MAX_PVAL;
 
             /* find the best pval */
             if ( i == 0 || pval <= min ) {
                 min = pval;
                 minResult = r;
-                minResult.setPvalue( min );
+                minResult.setP( min );
             }
 
             i++;
@@ -481,61 +440,32 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
     }
 
     /**
-     * Do this in one query to avoid extra db round trips.
-     * 
-     * @param resultsMap
-     * @return
-     */
-    private Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getFactors(
-            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> resultsMap ) {
-
-        // collapse them down to one collection.
-        Collection<DifferentialExpressionAnalysisResult> allRes = new HashSet<DifferentialExpressionAnalysisResult>();
-        for ( Collection<DifferentialExpressionAnalysisResult> p : resultsMap.values() ) {
-            allRes.addAll( p );
-        }
-
-        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = differentialExpressionResultService
-                .getExperimentalFactors( allRes );
-
-        return dearToEf;
-    }
-
-    /**
-     * Convert the raw results into DifferentialExpressionValueObjects
-     * 
      * @param gene
      * @param threshold
      * @param devos
      * @param results
      */
     private Collection<DifferentialExpressionValueObject> postProcessDiffExResults( Gene gene, double threshold,
-            Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> results ) {
+            Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<DifferentialExpressionValueObject> devos = new ArrayList<DifferentialExpressionValueObject>();
-
-        Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> dearToEf = getFactors( results );
+        Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
         /*
          * convert to DEVOs
          */
-        for ( BioAssaySet ee : results.keySet() ) {
+        for ( ExpressionExperimentValueObject eevo : results.keySet() ) {
 
-            ExpressionExperimentValueObject eevo = configExpressionExperimentValueObject( ee );
-
-            Collection<DifferentialExpressionAnalysisResult> probeResults = results.get( ee );
+            Collection<DifferentialExpressionValueObject> probeResults = results.get( eevo );
 
             assert probeResults != null && !probeResults.isEmpty();
 
-            assert dearToEf.keySet().containsAll( probeResults );
+            for ( DifferentialExpressionValueObject r : probeResults ) {
 
-            differentialExpressionResultService.thaw( probeResults );
+                // this doesn't do anything any more since we're already working with valueobjects.
 
-            for ( DifferentialExpressionAnalysisResult r : probeResults ) {
-                r.hashCode();
-                Collection<ExperimentalFactor> efs = dearToEf.get( r );
+                Collection<ExperimentalFactorValueObject> efs = r.getExperimentalFactors();
 
                 if ( efs == null ) {
                     // This should not happen any more, but just in case.
@@ -543,21 +473,17 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                     continue;
                 }
 
-                DifferentialExpressionValueObject devo = diffExResultToValueObject( r, gene, eevo, efs );
-
-                if ( r.getCorrectedPvalue() == null ) {
+                if ( r.getCorrP() == null ) {
                     log.warn( "No p-value for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
+                //
+                // r.setMetThreshold( r.getCorrP() < threshold ); // should always be tue
+                //
+                // Direction direction = computeDirection( r.getContrasts().getContrasts() ); // should already be done.
+                // r.setDirection( direction );
 
-                devo.setP( r.getPvalue() );
-                devo.setCorrP( r.getCorrectedPvalue() );
-                devo.setMetThreshold( r.getCorrectedPvalue() < threshold );
-
-                Direction direction = computeDirection( r.getContrasts() );
-                devo.setDirection( direction );
-
-                devos.add( devo );
+                devos.add( r );
 
             }
 
@@ -570,31 +496,31 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         return devos;
     }
 
-    private Direction computeDirection( Collection<ContrastResult> crs ) {
-        boolean down = false;
-        boolean up = false;
-        for ( ContrastResult cr : crs ) {
-            Double lf = cr.getLogFoldChange();
-            if ( lf == null ) {
-                /*
-                 * A contrast which is actually not valid, so it won't be counted in the hit list.
-                 */
-                continue;
-            } else if ( lf < 0 ) {
-                down = true;
-            } else if ( lf > 0 ) {
-                up = true;
-            }
-        }
-        if ( down && up ) {
-            return Direction.EITHER;
-        } else if ( down ) {
-            return Direction.DOWN;
-        } else if ( up ) {
-            return Direction.UP;
-        } else {
-            return null;
-        }
-    }
+    // private Direction computeDirection( List<ContrastVO> list ) {
+    // boolean down = false;
+    // boolean up = false;
+    // for ( ContrastVO cr : list ) {
+    // Double lf = cr.getLogFoldChange();
+    // if ( lf == null ) {
+    // /*
+    // * A contrast which is actually not valid, so it won't be counted in the hit list.
+    // */
+    // continue;
+    // } else if ( lf < 0 ) {
+    // down = true;
+    // } else if ( lf > 0 ) {
+    // up = true;
+    // }
+    // }
+    // if ( down && up ) {
+    // return Direction.EITHER;
+    // } else if ( down ) {
+    // return Direction.DOWN;
+    // } else if ( up ) {
+    // return Direction.UP;
+    // } else {
+    // return null;
+    // }
+    // }
 
 }

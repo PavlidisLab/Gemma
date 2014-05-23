@@ -16,6 +16,7 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 

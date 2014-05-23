@@ -25,14 +25,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.Direction;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 /**
  * Represents a complete set of data for a differential expression query over a set of genes x conditions (resultSets x
@@ -121,7 +117,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
         private Long factorId;
         private String factorCategory;
         private String experimentGroupName;
-        private int experimentGroupIndex;
         private String datasetShortName;
         private Integer numberOfProbesOnArray;
         private String id;
@@ -133,39 +128,31 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         private Long factorValueId;
 
-        public Condition( ExpressionExperiment experiment, DifferentialExpressionAnalysis analysis,
-                ExpressionAnalysisResultSet resultSet, FactorValue factorValue ) {
-            this( resultSet.getId(), factorValue.getId() );
-            numberOfProbesOnArray = resultSet.getNumberOfProbesTested();
-            numberOfGenesTested = resultSet.getNumberOfGenesTested();
-            ExperimentalFactor factor = factorValue.getExperimentalFactor();
+        public Condition( ExpressionExperimentValueObject experiment,
+                DifferentialExpressionAnalysisValueObject analysis, DiffExResultSetSummaryValueObject resultSet,
+                FactorValueValueObject factorValue ) {
+            this( resultSet.getResultSetId(), factorValue.getId() );
+            numberOfProbesOnArray = resultSet.getNumberOfProbesAnalyzed();
+            numberOfGenesTested = resultSet.getNumberOfGenesAnalyzed();
             datasetShortName = experiment.getShortName();
             datasetName = experiment.getName();
             datasetId = experiment.getId();
             analysisId = analysis.getId();
             baselineFactorValueId = resultSet.getBaselineGroup().getId();
-            factorName = factor.getName();
+            factorName = factorValue.getFactorValue();
             contrastFactorValue = getFactorValueString( factorValue );
             baselineFactorValue = getFactorValueString( resultSet.getBaselineGroup() );
-            factorDescription = factor.getDescription();
-            factorId = factor.getId();
+            factorDescription = resultSet.getExperimentalFactors().iterator().next().getDescription();
+            factorId = factorValue.getFactorId();
 
-            factorCategory = ( factor.getCategory() == null ) ? "[No category]" : factor.getCategory().getCategory();
+            factorCategory = ( factorValue.getCategory() == null ) ? "[No category]" : factorValue.getCategory();
 
             this.isSubset = analysis.getSubsetFactorValue() != null;
 
-            for ( HitListSize h : resultSet.getHitListSizes() ) {
-                if ( h.getThresholdQvalue() == THRESHOLD_QVALUE_FOR_HITLISTS ) {
-                    if ( h.getDirection().equals( Direction.DOWN ) ) {
-                        numberDiffExpressedProbesDown = h.getNumberOfProbes();
-                    } else if ( h.getDirection().equals( Direction.UP ) ) {
-                        numberDiffExpressedProbesUp = h.getNumberOfProbes();
-                    } else if ( h.getDirection().equals( Direction.EITHER ) ) {
-                        numberDiffExpressedProbes = h.getNumberOfProbes();
-                        numberOfGenesDiffExpressed = h.getNumberOfGenes();
-                    }
-                }
-            }
+            numberDiffExpressedProbesDown = resultSet.getDownregulatedCount();
+            numberDiffExpressedProbesUp = resultSet.getUpregulatedCount();
+            numberDiffExpressedProbes = resultSet.getNumberOfDiffExpressedProbes();
+            // DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD
         }
 
         public Condition( Long resultSetId, Long factorValueId ) {
@@ -217,10 +204,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         public String getDatasetShortName() {
             return datasetShortName;
-        }
-
-        public int getExperimentGroupIndex() {
-            return experimentGroupIndex;
         }
 
         public String getExperimentGroupName() {
@@ -304,10 +287,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
             return result;
         }
 
-        public void setExperimentGroupIndex( int experimentGroupIndex ) {
-            this.experimentGroupIndex = experimentGroupIndex;
-        }
-
         void setExperimentGroupName( String experimentGroupName ) {
             this.experimentGroupName = experimentGroupName;
         }
@@ -316,22 +295,23 @@ public class DifferentialExpressionGenesConditionsValueObject {
          * Helper method to get factor values. TODO: Fix FactorValue class to return correct factor value in the first
          * place.
          */
-        private String getFactorValueString( FactorValue fv ) {
+        private String getFactorValueString( FactorValueValueObject fv ) {
             if ( fv == null ) return "[No value]";
-
-            if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-                String fvString = "";
-                for ( Characteristic c : fv.getCharacteristics() ) {
-                    fvString += c.getValue() + " ";
-                }
-                return fvString;
-            } else if ( fv.getMeasurement() != null ) {
-                return fv.getMeasurement().getValue();
-            } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-                return fv.getValue();
-            } else {
-                return "[Missing]";
-            }
+            if ( fv.getValue() == null ) return "[Missing]";
+            return fv.getValue();
+            // if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+            // String fvString = "";
+            // for ( Characteristic c : fv.getCharacteristics() ) {
+            // fvString += c.getValue() + " ";
+            // }
+            // return fvString;
+            // } else if ( fv.getMeasurement() != null ) {
+            // return fv.getMeasurement().getValue();
+            // } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+            // return fv.getValue();
+            // } else {
+            // return "[Missing]";
+            // }
         }
 
         private DifferentialExpressionGenesConditionsValueObject getOuterType() {
@@ -341,16 +321,15 @@ public class DifferentialExpressionGenesConditionsValueObject {
     }
 
     // A Gene Value object specialized to hold differential expression results.
-    public class Gene {
+    public class DiffExGene {
         private Long id;
         private String name;
         private String fullName;
         private double specificityScore;
-        private Integer groupIndex;
         private String groupName;
         private boolean isSelected = false;
 
-        public Gene( long id, String name, String fullName ) {
+        public DiffExGene( long id, String name, String fullName ) {
             this.id = id;
             this.name = name;
             this.fullName = fullName;
@@ -361,7 +340,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
             if ( this == obj ) return true;
             if ( obj == null ) return false;
             if ( getClass() != obj.getClass() ) return false;
-            Gene other = ( Gene ) obj;
+            DiffExGene other = ( DiffExGene ) obj;
             if ( !getOuterType().equals( other.getOuterType() ) ) return false;
             if ( id != other.id ) return false;
             return true;
@@ -369,10 +348,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         public String getFullName() {
             return fullName;
-        }
-
-        public int getGroupIndex() {
-            return groupIndex;
         }
 
         public String getGroupName() {
@@ -408,10 +383,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
             this.fullName = fullName;
         }
 
-        public void setGroupIndex( int groupIndex ) {
-            this.groupIndex = groupIndex;
-        }
-
         public void setGroupName( String groupName ) {
             this.groupName = groupName;
         }
@@ -434,8 +405,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
     }
 
-    public static final double THRESHOLD_QVALUE_FOR_HITLISTS = 0.05;
-
     public static String constructConditionId( long resultSetId, long factorValueId ) {
         return "rs:" + resultSetId + "fv:" + factorValueId;
     }
@@ -456,7 +425,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     /*
      * The Gene dimension
      */
-    private List<Gene> genes;
+    private List<DiffExGene> genes;
 
     /**
      * 
@@ -464,7 +433,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     public DifferentialExpressionGenesConditionsValueObject() {
         cellData = new HashMap<String, Map<Long, Cell>>();
         conditions = new ArrayList<Condition>();
-        genes = new ArrayList<Gene>();
+        genes = new ArrayList<DiffExGene>();
     }
 
     /**
@@ -529,7 +498,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
 
         resultSetConditions.get( resultSetId ).add( condition );
         // // Start with a column of missing values.
-        for ( Gene gene : this.genes ) {
+        for ( DiffExGene gene : this.genes ) {
             this.addProbeMissingCell( gene.getId(), condition.getId() );
         }
     }
@@ -537,7 +506,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     /**
      * @param gene
      */
-    public void addGene( Gene gene ) {
+    public void addGene( DiffExGene gene ) {
         genes.add( gene );
     }
 
@@ -582,7 +551,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
     /**
      * @return
      */
-    public List<Gene> getGenes() {
+    public List<DiffExGene> getGenes() {
         return genes;
     }
 
@@ -597,7 +566,7 @@ public class DifferentialExpressionGenesConditionsValueObject {
         }
         buf.append( "\n" );
 
-        for ( Gene g : genes ) {
+        for ( DiffExGene g : genes ) {
             buf.append( g.getName() );
             for ( Condition c : conditions ) {
                 buf.append( String.format( "\t%.2f", cellData.get( c.getId() ).get( g.getId() ).getpValue() ) );

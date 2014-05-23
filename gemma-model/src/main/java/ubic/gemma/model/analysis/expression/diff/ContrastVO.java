@@ -30,11 +30,15 @@ public class ContrastVO {
 
     private Double pvalue = null;
 
-    public ContrastVO( Long id, Long factorValueId, Double logFoldchange, Double pvalue ) {
+    private Long secondFactorValueId = null;
+
+    public ContrastVO( Long id, Long factorValueId, Double logFoldchange, Double pvalue, Long secondFactorValueId ) {
         super();
         this.id = id;
         this.factorValueId = factorValueId;
         this.logFoldChange = logFoldchange;
+        this.secondFactorValueId = secondFactorValueId;
+
         this.pvalue = pvalue;
     }
 
@@ -52,6 +56,10 @@ public class ContrastVO {
 
     public Double getPvalue() {
         return pvalue;
+    }
+
+    public Long getSecondFactorValueId() {
+        return secondFactorValueId;
     }
 
 }

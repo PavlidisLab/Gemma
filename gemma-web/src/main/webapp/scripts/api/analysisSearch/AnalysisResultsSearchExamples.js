@@ -13,8 +13,8 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
       diffEx : [
                 {
                    goId : "GO_0021766",
-                   eeSetId : '6112',
-                   taxonId : '1',
+                   eeSetId : 6112,
+                   taxonId : 1,
                    backupGeneIds : [ 175764, 57412, 33449, 22652, 172517, 365527, 154351, 164380, 163012, 36178,
                                     258329, 325340, 119501, 161166, 169774, 43145, 12948, 74699, 203063, 120960, 33479,
                                     322804, 88959, 12966, 7187, 136503, 33369, 57883, 73088, 174546, 74174, 57397,
@@ -22,8 +22,8 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
                 },
                 {
                    goId : "GO_0021879",
-                   eeSetId : '6110',
-                   taxonId : '2',
+                   eeSetId : 6110,
+                   taxonId : 2,
                    backupGeneIds : [ 500611, 534025, 574982, 633950, 550316, 534368, 537487, 574759, 556740, 583115,
                                     634211, 534401, 500595 ]
                 } ],
@@ -31,13 +31,13 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
               {
                  goId : "GO_0051302",
                  eeSetName : 'Master set for yeast', // don't need one any more
-                 taxonId : '11',
+                 taxonId : 11,
                  backupGeneIds : [ 7678763, 7678783, 7676882, 7694443, 7685764, 7667629, 7672893, 7673265, 7686100,
                                   7697083, 7670169, 7692953 ]
               }, {
                  goId : "GO_0035418",
-                 eeSetId : '737',// don't need this any more.
-                 taxonId : '1',
+                 eeSetId : 737,// don't need this any more.
+                 taxonId : 1,
                  backupGeneIds : [ 269935, 194669, 232747, 36104, 316763 ]
               } ]
    },
@@ -218,10 +218,10 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
 
          // if the GO id failed to match a set, use the hard coded back up
          // list of genes
-         // (this might happen if Berkeleybop is down, see bug 2534)
+         // (this might happen if ontology isn't loaded e.g. source is down, see bug 2534)
          if ( geneSet === null ) {
-            geneSet = myscope.makeSessionBoundGeneSet( backupGeneIds, taxonId, 'Backup gene list for ' + goName,
-               'GO database unavailable, using backup list' );
+            geneSet = myscope.makeSessionBoundGeneSet( backupGeneIds, taxonId, 'Gene list for ' + goName,
+               'GO database unavailable, using a static list' );
          }
 
          var record = new Gemma.GeneAndGeneGroupComboRecord( {

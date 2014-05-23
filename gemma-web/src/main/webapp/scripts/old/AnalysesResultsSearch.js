@@ -146,7 +146,7 @@ Gemma.AnalysisResultsSearch = Ext.extend( Ext.Panel, {
             showTutorial : false
          } );
 
-         this.diffVisualizer = new Gemma.MetaHeatmapDataSelection( data );
+         this.diffVisualizer = new Gemma.DiffExSearchAndVisualize( data );
          this.diffVisualizer.on( 'visualizationLoaded', function() {
             this.searchPanel.collapse();
             formPanel.loadMask.hide();

@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,7 +59,7 @@ public class CommonQueries {
      * @return map of array designs to the experiments they were used in.
      */
     public static Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> ees, Session session ) {
-        Map<ArrayDesign, Collection<Long>> eeAdMap = new HashMap<ArrayDesign, Collection<Long>>();
+        Map<ArrayDesign, Collection<Long>> eeAdMap = new HashMap<>();
 
         // Safety 1st....
         if ( ees == null || ees.isEmpty() ) return eeAdMap;
@@ -67,8 +68,7 @@ public class CommonQueries {
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
-        queryObject.setCacheable( true );
-        queryObject.setParameterList( "ees", ees, LongType.INSTANCE );
+        queryObject.setParameterList( "ees", ees );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -84,6 +84,59 @@ public class CommonQueries {
         }
 
         return eeAdMap;
+    }
+
+    /**
+     * @param ees
+     * @param session
+     * @return map of experiment to collection of array design ids. If any of the ids given are for subsets, then the
+     *         key in the return value will be for the subset, not the source experiment (so it is consistent with the
+     *         input)
+     */
+
+    public static Map<Long, Collection<Long>> getArrayDesignsUsedEEMap( Collection<Long> ees, Session session ) {
+        Map<Long, Collection<Long>> ee2ads = new HashMap<>();
+
+        if ( ees == null || ees.isEmpty() ) return ee2ads;
+
+        final String eeAdQuery = "select distinct ee.id,ad.id from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id in (:ees)";
+
+        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
+        queryObject.setParameterList( "ees", ees );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
+        List<?> qr = queryObject.list();
+        for ( Object o : qr ) {
+            Object[] ar = ( Object[] ) o;
+            Long ee = ( Long ) ar[0];
+            Long ad = ( Long ) ar[1];
+            if ( !ee2ads.containsKey( ee ) ) {
+                ee2ads.put( ee, new HashSet<Long>() );
+            }
+            ee2ads.get( ee ).add( ad );
+        }
+
+        if ( ee2ads.size() < ees.size() ) {
+            // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
+            // source.
+            String subsetQuery = "select distinct ees.id,ad.id from ExpressionExperimentSubSetImpl as ees inner join ees.sourceExperiment ee "
+                    + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id in (:ees)";
+            qr = session.createQuery( subsetQuery )
+                    .setParameterList( "ees", CollectionUtils.removeAll( ees, ee2ads.keySet() ) ).list();
+            for ( Object o : qr ) {
+                Object[] ar = ( Object[] ) o;
+                Long ee = ( Long ) ar[0];
+                Long ad = ( Long ) ar[1];
+                if ( !ee2ads.containsKey( ee ) ) {
+                    ee2ads.put( ee, new HashSet<Long>() );
+                }
+                ee2ads.get( ee ).add( ad );
+            }
+        }
+
+        return ee2ads;
     }
 
     /**
@@ -145,7 +198,7 @@ public class CommonQueries {
      */
     public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Session session ) {
 
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<Long>> cs2genes = new HashMap<>();
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -178,7 +231,7 @@ public class CommonQueries {
     public static Map<Long, Collection<Long>> getCs2GeneIdMap( Collection<Long> genes, Collection<Long> arrayDesigns,
             Session session ) {
 
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<Long>> cs2genes = new HashMap<>();
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds) and g.AD in (:ads)";
         SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -215,7 +268,7 @@ public class CommonQueries {
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes) and cs.arrayDesign in (:ads) ";
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<>();
         Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "genes", genes );
@@ -255,7 +308,7 @@ public class CommonQueries {
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes)  ";
 
-        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
+        Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
         queryObject.setParameterList( "genes", genes );
@@ -285,7 +338,7 @@ public class CommonQueries {
      * @return A List of class names, including the given type.
      */
     public static List<String> getEventTypeClassHierarchy( Class<? extends AuditEventType> type, Session session ) {
-        List<String> classes = new ArrayList<String>();
+        List<String> classes = new ArrayList<>();
         classes.add( type.getCanonicalName() );
 
         // how to determine subclasses? There is no way to do this but the hibernate way.
@@ -312,9 +365,9 @@ public class CommonQueries {
      *         empty gene collection.
      */
     public static Map<Long, Collection<Long>> getCs2GeneMapForProbes( Collection<Long> probes, Session session ) {
-        if ( probes.isEmpty() ) return new HashMap<Long, Collection<Long>>();
+        if ( probes.isEmpty() ) return new HashMap<>();
 
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<Long>> cs2genes = new HashMap<>();
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.CS in (:probes) ";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
@@ -347,7 +400,7 @@ public class CommonQueries {
      * @return
      */
     public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+        Map<Long, Collection<Long>> cs2genes = new HashMap<>();
 
         String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );

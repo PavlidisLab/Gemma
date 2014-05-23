@@ -280,7 +280,7 @@ Ext
             applyTo : 'meta-heatmap-div'
          } );
 
-         this.diffVisualizer = new Gemma.MetaHeatmapDataSelection( data );
+         this.diffVisualizer = new Gemma.DiffExSearchAndVisualize( data );
 
          this.diffVisualizer.on( 'visualizationLoaded', function() {
             panel.loadMask.hide();

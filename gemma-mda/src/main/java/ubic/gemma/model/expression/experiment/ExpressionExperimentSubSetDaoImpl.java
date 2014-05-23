@@ -19,6 +19,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
@@ -65,12 +67,6 @@ public class ExpressionExperimentSubSetDaoImpl extends ExpressionExperimentSubSe
         return create( expressionExperimentSubSet );
     }
 
-    @Override
-    public Collection<? extends ExpressionExperimentSubSet> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSubSetImpl where id in (:ids)",
-                "ids", ids );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -89,4 +85,31 @@ public class ExpressionExperimentSubSetDaoImpl extends ExpressionExperimentSubSe
                 .setParameter( "es", entity ).setParameter( "ef", factor ).list();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao#getFactorValuesUsed(java.lang.Long,
+     * java.lang.Long)
+     */
+    @Override
+    public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
+        List<FactorValue> list = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select distinct fv from ExpressionExperimentSubSetImpl es join es.bioAssays ba join ba.sampleUsed bm "
+                                + "join bm.factorValues fv where es.id=:es and fv.experimentalFactor.id = :ef " )
+                .setParameter( "es", subSetId ).setParameter( "ef", experimentalFactor ).list();
+        Collection<FactorValueValueObject> result = new HashSet<>();
+        for ( FactorValue fv : list ) {
+            result.add( new FactorValueValueObject( fv ) );
+        }
+        return result;
+    }
+
+    @Override
+    public Collection<? extends ExpressionExperimentSubSet> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSubSetImpl where id in (:ids)",
+                "ids", ids );
+    }
 }

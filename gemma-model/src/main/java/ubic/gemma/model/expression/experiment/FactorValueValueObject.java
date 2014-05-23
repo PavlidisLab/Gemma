@@ -120,7 +120,9 @@ public class FactorValueValueObject implements Serializable {
      * @param value
      * @param c - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
      *        FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
-     *        confuses things. If c is null, the plain "value" is used.
+     *        confuses things. FIXME this makes no sense and we _do_ pass in the EF category in several places.
+     *        <p>
+     *        If c is null, the plain "value" is used.
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
         super();

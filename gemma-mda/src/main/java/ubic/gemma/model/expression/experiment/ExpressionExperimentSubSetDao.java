@@ -36,4 +36,11 @@ public interface ExpressionExperimentSubSetDao extends
 
     Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
+    /**
+     * @param subSetId
+     * @param experimentalFactor
+     * @return
+     */
+    Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
+
 }

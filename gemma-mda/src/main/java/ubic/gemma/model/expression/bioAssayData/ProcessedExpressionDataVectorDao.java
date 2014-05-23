@@ -36,7 +36,7 @@ import ubic.gemma.model.genome.Gene;
 public interface ProcessedExpressionDataVectorDao extends DesignElementDataVectorDao<ProcessedExpressionDataVector> {
 
     public enum RankMethod {
-        mean, max
+        max, mean
     }
 
     public void clearCache();
@@ -65,17 +65,17 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     /**
      * @param expressionExperiment
-     * @return
-     */
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment, int limit );
-
-    /**
-     * @param expressionExperiment
      * @param genes
      * @return
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment,
             Collection<Long> genes );
+
+    /**
+     * @param expressionExperiment
+     * @return
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArrays( BioAssaySet expressionExperiment, int limit );
 
     /**
      * @param expressionExperiments
@@ -92,6 +92,13 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      */
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> probes );
+
+    /**
+     * @param ee
+     * @param probes
+     * @return
+     */
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes );
 
     /**
      * @param expressionExperiment

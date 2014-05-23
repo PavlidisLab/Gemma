@@ -17,13 +17,14 @@
  *
  */
 
-package ubic.gemma.apps;
+package ubic.gemma.apps.deprecated;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -63,7 +64,7 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
         DifferentialExpressionAnalyzerService diffXs = this.getBean( DifferentialExpressionAnalyzerService.class );
         DifferentialExpressionAnalysisService diffS = this.getBean( DifferentialExpressionAnalysisService.class );
 
-        Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> allAnalyses = diffS
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> allAnalyses = diffS
                 .getAnalyses( this.expressionExperiments );
 
         for ( Iterator<BioAssaySet> it = this.expressionExperiments.iterator(); it.hasNext(); ) {

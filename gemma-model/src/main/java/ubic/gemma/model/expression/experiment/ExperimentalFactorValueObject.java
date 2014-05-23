@@ -21,6 +21,8 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 import java.util.HashSet;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
@@ -44,9 +46,9 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
 
     private String factorValues;
 
-    private long id;
+    private Long id;
     private String name;
-    private int numValues = 0;
+    private Integer numValues = 0;
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
 
@@ -89,33 +91,26 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
             return;
         }
 
-        this.numValues = factor.getFactorValues().size();
-
-        for ( FactorValue value : factor.getFactorValues() ) {
-
-            // if ( value.getMeasurement() != null ) {
-            // if ( this.type.equals( "categorical" ) ) {
-            // throw new IllegalStateException(
-            // "Violation of factor type requirement: factors with measurement must be be attached to factors of type 'continuous': "
-            // + factor );
-            // }
-            //
-            // this.type = "continuous";
-            // } else {
-            // if ( this.type.equals( "continuous" ) ) {
-            // throw new IllegalStateException(
-            // "Violation of factor type requirement: factors without measurement must be be attached to factors of type 'categorical': "
-            // + factor );
-            // }
-            // this.type = "categorical";
-            // }
-
-            Characteristic c = value.getExperimentalFactor().getCategory();
-            if ( c == null ) {
-                c = Characteristic.Factory.newInstance();
-                if ( value.getExperimentalFactor().getCategory() != null )
-                    c.setValue( value.getExperimentalFactor().getCategory().getCategory() );
+        Collection<FactorValue> fvs = factor.getFactorValues();
+        String factorValuesAsString = StringUtils.EMPTY;
+        for ( FactorValue fv : fvs ) {
+            String fvName = fv.toString();
+            if ( StringUtils.isNotBlank( fvName ) ) {
+                factorValuesAsString += fvName + ", ";
             }
+        }
+        /* clean up the start and end of the string */
+        factorValuesAsString = StringUtils.remove( factorValuesAsString, factor.getName() + ":" );
+        factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, ", " );
+
+        this.setFactorValues( factorValuesAsString );
+
+        this.numValues = factor.getFactorValues().size();
+        Characteristic c = factor.getCategory();
+        /*
+         * NOTE this replaces code that previously made no sense. PP
+         */
+        for ( FactorValue value : factor.getFactorValues() ) {
             vals.add( new FactorValueValueObject( value, c ) );
         }
 
@@ -148,7 +143,7 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         return factorValues;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
 
@@ -159,7 +154,7 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
     /**
      * @return the numValues
      */
-    public int getNumValues() {
+    public Integer getNumValues() {
         return this.numValues;
     }
 
@@ -200,7 +195,7 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.factorValues = factorValues;
     }
 
-    public void setId( long id ) {
+    public void setId( Long id ) {
         this.id = id;
     }
 
@@ -211,7 +206,7 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
     /**
      * @param numValues the numValues to set
      */
-    public void setNumValues( int numValues ) {
+    public void setNumValues( Integer numValues ) {
         this.numValues = numValues;
     }
 

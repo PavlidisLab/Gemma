@@ -475,7 +475,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
-                eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
+
+                // is this used?
+                // eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
 
                 if ( eeVo.getDateCreated() == null ) {
                     // should be filled in already.
@@ -587,7 +589,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Long id = eeVo.getId();
         assert id != null;
 
-        eeVo.setDifferentialExpressionAnalyses( differentialExpressionAnalysisService.getAnalysisValueObjects( id ) );
+        // eeVo.setDifferentialExpressionAnalyses( differentialExpressionAnalysisService.getAnalysisValueObjects( id )
+        // );
 
         // FIXME could get this from the CoexpressionAnalysis.
         // eeVo.setCoexpressionLinkCount( geneCoexpressionService.countLinks( id ) );

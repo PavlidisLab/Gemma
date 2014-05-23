@@ -798,11 +798,17 @@
 			javascript="PhenotypeValueObject" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject" javascript="ExternalDatabaseStatisticsValueObject" />
+
 		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Gene" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.ContrastsValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.ContrastVO" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Condition" />
 		<dwr:convert type="bean" class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$Cell" />
+		<dwr:convert type="bean"
+			class="ubic.gemma.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$DiffExGene" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl$TaskProgress" />
 

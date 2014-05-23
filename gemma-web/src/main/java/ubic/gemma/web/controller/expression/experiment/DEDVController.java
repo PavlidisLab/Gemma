@@ -48,15 +48,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.association.coexpression.CoexpressionService;
@@ -370,6 +369,10 @@ public class DEDVController {
      */
     public VisualizationValueObject[] getDEDVForDiffExVisualizationByExperiment( Long eeId, Long geneId,
             Double threshold, Boolean isSubset ) {
+
+        if ( geneId == null ) {
+            throw new IllegalArgumentException( "Gene ID cannot be null" );
+        }
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -854,25 +857,22 @@ public class DEDVController {
 
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
-        Collection<BioAssaySet> ees = new ArrayList<>();
-        ees.add( analyzedSet );
+        List<DifferentialExpressionValueObject> ee2probeResults = differentialExpressionResultService.findInResultSet(
+                ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
 
-        List<DifferentialExpressionAnalysisResult> ee2probeResults = differentialExpressionResultService
-                .findInResultSet( ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
-
-        Collection<CompositeSequence> probes = new HashSet<CompositeSequence>();
+        Collection<Long> probes = new HashSet<>();
         // Map<CompositeSequenceId, pValue>
         // using id instead of entity for map key because want to use a value object for retrieval later
         Map<Long, Double> pvalues = new HashMap<>();
-        for ( DifferentialExpressionAnalysisResult par : ee2probeResults ) {
-            probes.add( par.getProbe() );
-            pvalues.put( par.getProbe().getId(), par.getPvalue() );
+        for ( DifferentialExpressionValueObject par : ee2probeResults ) {
+            probes.add( par.getProbeId() );
+            pvalues.put( par.getProbeId(), par.getP() );
         }
 
         watch.reset();
         watch.start();
         Collection<DoubleVectorValueObject> processedDataArraysByProbe = processedExpressionDataVectorService
-                .getProcessedDataArraysByProbe( ees, probes );
+                .getProcessedDataArraysByProbeIds( analyzedSet, probes );
         List<DoubleVectorValueObject> dedvs = new ArrayList<>( processedDataArraysByProbe );
 
         watch.stop();

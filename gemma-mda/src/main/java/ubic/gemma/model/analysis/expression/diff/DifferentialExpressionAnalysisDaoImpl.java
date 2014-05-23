@@ -19,6 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -198,9 +201,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getAnalyses(java.util.Collection)
      */
     @Override
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> experiments ) {
-        Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> result = new HashMap<BioAssaySet, Collection<DifferentialExpressionAnalysis>>();
+        Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> result = new HashMap<>();
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -214,7 +217,8 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         int count = 0;
         for ( DifferentialExpressionAnalysis a : r1 ) {
             if ( !result.containsKey( a.getExperimentAnalyzed() ) ) {
-                result.put( a.getExperimentAnalyzed(), new HashSet<DifferentialExpressionAnalysis>() );
+                result.put( ( ExpressionExperiment ) a.getExperimentAnalyzed(),
+                        new HashSet<DifferentialExpressionAnalysis>() );
             }
             result.get( a.getExperimentAnalyzed() ).add( a );
             count++;
@@ -270,90 +274,106 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getAnalysisValueObjects(java.util
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getAnalysesByExperimentIds(java.util
      * .Collection)
      */
     @Override
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
+    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds(
             Collection<Long> expressionExperimentIds ) {
-        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
-        for ( Long id : expressionExperimentIds ) {
 
-            Collection<DifferentialExpressionAnalysisValueObject> analyses = this.getAnalysisValueObjects( id );
-            if ( analyses.isEmpty() ) continue;
-            result.put( id, analyses );
+        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> r = new HashMap<>();
+
+        Map<Long, Collection<Long>> arrayDesignsUsed = CommonQueries.getArrayDesignsUsedEEMap( expressionExperimentIds,
+                this.getSessionFactory().getCurrentSession() );
+
+        /*
+         * Fetch analyses of experiments.
+         */
+        Collection<DifferentialExpressionAnalysis> hits = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select a from DifferentialExpressionAnalysisImpl a join fetch a.experimentAnalyzed e join"
+                                + " fetch a.resultSets rs join fetch rs.hitListSizes where e.id in (:eeids)" )
+                .setParameterList( "eeids", expressionExperimentIds ).list();
+
+        Collection<Long> used = new HashSet<>();
+        for ( DifferentialExpressionAnalysis a : hits ) {
+            used.add( a.getExperimentAnalyzed().getId() );
         }
-        return result;
-    }
+        Collection<Long> probableSubSetIds = CollectionUtils.removeAll( expressionExperimentIds, used );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#getAnalysisValueObjects(java.lang
-     * .Long)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
-        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<>();
-        Collection<DifferentialExpressionAnalysis> analyses = getAnalysesForExperiment( experimentId );
-
-        // FIXME this can be made much faster with some query help.
-        for ( DifferentialExpressionAnalysis analysis : analyses ) {
-
-            Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
-
-            DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
-
-            BioAssaySet bioAssaySet = analysis.getExperimentAnalyzed();
-            if ( analysis.getSubsetFactorValue() != null ) {
-                avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
-                avo.setSubsetFactor( new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
-                        .getExperimentalFactor() ) );
-
-                assert bioAssaySet instanceof ExpressionExperimentSubSet;
-
+        Map<Long, Collection<FactorValue>> ee2fv = new HashMap<>();
+        List<Object[]> fvs;
+        { // factor values for the experiments
+            fvs = this
+                    .getSessionFactory()
+                    .getCurrentSession()
+                    .createQuery(
+                            "select distinct ee.id, fv from "
+                                    + "ExpressionExperimentImpl"
+                                    + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
+                    .setParameterList( "ees", arrayDesignsUsed.keySet() ).list();
+            for ( Object[] oa : fvs ) {
+                if ( !ee2fv.containsKey( oa[0] ) ) {
+                    ee2fv.put( ( Long ) oa[0], new HashSet<FactorValue>() );
+                }
+                ee2fv.get( oa[0] ).add( ( FactorValue ) oa[1] );
             }
+        }
 
-            for ( ExpressionAnalysisResultSet resultSet : results ) {
+        /*
+         * Deal with the analyses of subsets of the investigation. User has to know this is possible.
+         */
+        if ( !probableSubSetIds.isEmpty() ) {
+            hits.addAll( this
+                    .getSessionFactory()
+                    .getCurrentSession()
+                    .createQuery(
+                            "select a from "
+                                    + "ExpressionExperimentSubSetImpl"
+                                    + " ee, DifferentialExpressionAnalysisImpl a"
+                                    + " join ee.sourceExperiment see "
+                                    + " join fetch a.experimentAnalyzed eeanalyzed where see.id in (:eeids) and ee=eeanalyzed" )
+                    .setParameterList( "eeids", probableSubSetIds ).list() );
 
-                DifferentialExpressionSummaryValueObject desvo = new DifferentialExpressionSummaryValueObject();
-                desvo.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
-                desvo.setExperimentalFactors( resultSet.getExperimentalFactors() );
-                desvo.setResultSetId( resultSet.getId() );
-                desvo.setAnalysisId( analysis.getId() );
-                desvo.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
-
-                for ( HitListSize hitList : resultSet.getHitListSizes() ) {
-                    if ( hitList.getThresholdQvalue().equals(
-                            DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
-
-                        if ( hitList.getDirection().equals( Direction.UP ) ) {
-                            desvo.setUpregulatedCount( hitList.getNumberOfProbes() );
-                        } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
-                            desvo.setDownregulatedCount( hitList.getNumberOfProbes() );
-                        } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
-                            desvo.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
-                        }
-
+            { // subsets
+                fvs = this
+                        .getSessionFactory()
+                        .getCurrentSession()
+                        .createQuery(
+                                "select distinct ee.id, fv from "
+                                        + "ExpressionExperimentSubSetImpl"
+                                        + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv  where ee.id in (:ees)" )
+                        .setParameterList( "ees", probableSubSetIds ).list();
+                for ( Object[] oa : fvs ) {
+                    if ( !ee2fv.containsKey( oa[0] ) ) {
+                        ee2fv.put( ( Long ) oa[0], new HashSet<FactorValue>() );
                     }
+                    ee2fv.get( oa[0] ).add( ( FactorValue ) oa[1] );
                 }
-
-                if ( resultSet.getBaselineGroup() != null ) {
-                    desvo.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
-                }
-
-                avo.getResultSets().add( desvo );
-
-                populateWhichFactorValuesUsed( avo, bioAssaySet );
-
-                // Collection<ExperimentalFactor> experimentalFactors = par.getExperimentalFactors();
-
             }
-
-            summaries.add( avo );
         }
-        return summaries;
+
+        Collection<DifferentialExpressionAnalysisValueObject> summaries = convertToValueObjects( hits,
+                arrayDesignsUsed, ee2fv );
+
+        for ( DifferentialExpressionAnalysisValueObject an : summaries ) {
+
+            Long bioAssaySetId = null;
+            if ( an.getSourceExperiment() != null ) {
+                bioAssaySetId = an.getSourceExperiment();
+            } else {
+                bioAssaySetId = an.getBioAssaySetId();
+            }
+            if ( !r.containsKey( bioAssaySetId ) ) {
+                r.put( bioAssaySetId, new ArrayList<DifferentialExpressionAnalysisValueObject>() );
+            }
+            r.get( bioAssaySetId ).add( an );
+        }
+
+        return r;
+
     }
 
     /*
@@ -647,6 +667,82 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     }
 
     /**
+     * @param analyses
+     * @return
+     */
+    private Collection<DifferentialExpressionAnalysisValueObject> convertToValueObjects(
+            Collection<DifferentialExpressionAnalysis> analyses, Map<Long, Collection<Long>> arrayDesignsUsed,
+            Map<Long, Collection<FactorValue>> ee2fv ) {
+        Collection<DifferentialExpressionAnalysisValueObject> summaries = new HashSet<>();
+
+        for ( DifferentialExpressionAnalysis analysis : analyses ) {
+
+            Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
+
+            DifferentialExpressionAnalysisValueObject avo = new DifferentialExpressionAnalysisValueObject( analysis );
+
+            BioAssaySet bioAssaySet = analysis.getExperimentAnalyzed();
+
+            avo.setBioAssaySetId( bioAssaySet.getId() ); // might be a subset.
+
+            if ( analysis.getSubsetFactorValue() != null ) {
+                avo.setSubsetFactorValue( new FactorValueValueObject( analysis.getSubsetFactorValue() ) );
+                avo.setSubsetFactor( new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
+                        .getExperimentalFactor() ) );
+                assert bioAssaySet instanceof ExpressionExperimentSubSet;
+                avo.setSourceExperiment( ( ( ExpressionExperimentSubSet ) bioAssaySet ).getSourceExperiment().getId() );
+                assert arrayDesignsUsed.containsKey( avo.getSourceExperiment() );
+                avo.setArrayDesignsUsed( arrayDesignsUsed.get( avo.getSourceExperiment() ) );
+            } else {
+                Collection<Long> adids = arrayDesignsUsed.get( bioAssaySet.getId() );
+                avo.setArrayDesignsUsed( adids );
+            }
+
+            for ( ExpressionAnalysisResultSet resultSet : results ) {
+
+                DiffExResultSetSummaryValueObject desvo = new DiffExResultSetSummaryValueObject();
+                desvo.setThreshold( DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD );
+                for ( ExperimentalFactor ef : resultSet.getExperimentalFactors() ) {
+                    desvo.getExperimentalFactors().add( new ExperimentalFactorValueObject( ef ) );
+                }
+                desvo.setArrayDesignsUsed( avo.getArrayDesignsUsed() );
+                desvo.setBioAssaySetAnalyzedId( bioAssaySet.getId() ); // might be a subset.
+                desvo.setResultSetId( resultSet.getId() );
+                desvo.setAnalysisId( analysis.getId() );
+                desvo.setFactorIds( EntityUtils.getIds( resultSet.getExperimentalFactors() ) );
+                desvo.setNumberOfGenesAnalyzed( resultSet.getNumberOfGenesTested() );
+                desvo.setNumberOfProbesAnalyzed( resultSet.getNumberOfProbesTested() );
+
+                for ( HitListSize hitList : resultSet.getHitListSizes() ) {
+                    if ( hitList.getThresholdQvalue().equals(
+                            DifferentialExpressionAnalysisValueObject.DEFAULT_THRESHOLD ) ) {
+                        if ( hitList.getDirection().equals( Direction.UP ) ) {
+                            desvo.setUpregulatedCount( hitList.getNumberOfProbes() );
+                        } else if ( hitList.getDirection().equals( Direction.DOWN ) ) {
+                            desvo.setDownregulatedCount( hitList.getNumberOfProbes() );
+                        } else if ( hitList.getDirection().equals( Direction.EITHER ) ) {
+                            desvo.setNumberOfDiffExpressedProbes( hitList.getNumberOfProbes() );
+                        }
+
+                    }
+                }
+
+                if ( resultSet.getBaselineGroup() != null ) {
+                    desvo.setBaselineGroup( new FactorValueValueObject( resultSet.getBaselineGroup() ) );
+                }
+
+                avo.getResultSets().add( desvo );
+
+                populateWhichFactorValuesUsed( avo, ee2fv.get( bioAssaySet.getId() ) );
+
+            }
+
+            summaries.add( avo );
+        }
+        return summaries;
+    }
+
+    /**
      * @param differentialExpressionAnalysis
      * @param deep
      */
@@ -708,6 +804,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
     }
 
+    /**
+     * @param id
+     * @return
+     */
     private Collection<DifferentialExpressionAnalysis> getAnalysesForExperiment( Long id ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         final String query = "select distinct a from DifferentialExpressionAnalysisImpl a where a.experimentAnalyzed.id=:eeid ";
@@ -730,27 +830,25 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
      * @param avo
      * @param bioAssaySet
      */
-    private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo, BioAssaySet bioAssaySet ) {
+    private void populateWhichFactorValuesUsed( DifferentialExpressionAnalysisValueObject avo,
+            Collection<FactorValue> fvs ) {
         ExperimentalFactorValueObject subsetFactor = avo.getSubsetFactor();
 
-        for ( BioAssay ba : bioAssaySet.getBioAssays() ) {
-            BioMaterial bm = ba.getSampleUsed();
+        for ( FactorValue fv : fvs ) {
 
-            for ( FactorValue fv : bm.getFactorValues() ) {
+            Long experimentalFactorId = fv.getExperimentalFactor().getId();
 
-                Long experimentalFactorId = fv.getExperimentalFactor().getId();
-
-                if ( subsetFactor != null && experimentalFactorId.equals( subsetFactor.getId() ) ) {
-                    continue;
-                }
-
-                if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
-                    avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
-                }
-
-                avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
-
+            if ( subsetFactor != null && experimentalFactorId.equals( subsetFactor.getId() ) ) {
+                continue;
             }
+
+            if ( !avo.getFactorValuesUsed().containsKey( experimentalFactorId ) ) {
+                avo.getFactorValuesUsed().put( experimentalFactorId, new HashSet<FactorValueValueObject>() );
+            }
+
+            avo.getFactorValuesUsed().get( experimentalFactorId ).add( new FactorValueValueObject( fv ) );
+
+            // }
 
         }
     }

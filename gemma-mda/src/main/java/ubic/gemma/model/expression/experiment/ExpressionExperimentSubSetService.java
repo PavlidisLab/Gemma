@@ -34,6 +34,27 @@ public interface ExpressionExperimentSubSetService {
     @Secured({ "GROUP_USER" })
     public ExpressionExperimentSubSet create( ExpressionExperimentSubSet expressionExperimentSubSet );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
+
+    @Secured({ "GROUP_USER" })
+    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
+
+    /**
+     * @param entity
+     * @param factor
+     * @return the factor values of the given factor that are relevant to the subset.
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
+
+    /**
+     * @param subSetId
+     * @param experimentalFactor
+     * @return
+     */
+    public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor );
+
     /**
      * 
      */
@@ -45,20 +66,6 @@ public interface ExpressionExperimentSubSetService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSubSet> loadAll();
-
-    @Secured({ "GROUP_USER" })
-    public ExpressionExperimentSubSet findOrCreate( ExpressionExperimentSubSet entity );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity );
-
-    /**
-     * @param entity
-     * @param factor
-     * @return the factor values of the given factor that are relevant to the subset.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor );
 
     /**
      * Deletes an experiment subset and all of its associated DifferentialExpressionAnalysis objects. This method is

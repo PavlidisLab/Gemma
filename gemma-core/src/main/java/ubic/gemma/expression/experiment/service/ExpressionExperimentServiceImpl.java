@@ -1138,10 +1138,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
             Collection<Long> ids ) {
-
-        return new ArrayList<ExpressionExperimentValueObject>( this.expressionExperimentDao.loadValueObjectsOrdered(
-                orderField, descending, ids ) );
-
+        return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
     }
 
     /*

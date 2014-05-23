@@ -35,14 +35,17 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     private static final long serialVersionUID = 622877438067070041L;
 
+    private Collection<Long> arrayDesignsUsed = null;
+
     private Long bioAssaySetId;
 
-    // DO NOT change the key type without first checking all places it is used!
     private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
 
     private Long id;
 
-    private Collection<DifferentialExpressionSummaryValueObject> resultSets = new HashSet<>();
+    private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
+
+    private Long sourceExperiment;
 
     private ExperimentalFactorValueObject subsetFactor = null;
 
@@ -76,6 +79,10 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         return true;
     }
 
+    public Collection<Long> getArrayDesignsUsed() {
+        return arrayDesignsUsed;
+    }
+
     public Long getBioAssaySetId() {
         return bioAssaySetId;
     }
@@ -93,8 +100,12 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         return id;
     }
 
-    public Collection<DifferentialExpressionSummaryValueObject> getResultSets() {
+    public Collection<DiffExResultSetSummaryValueObject> getResultSets() {
         return resultSets;
+    }
+
+    public Long getSourceExperiment() {
+        return sourceExperiment;
     }
 
     public ExperimentalFactorValueObject getSubsetFactor() {
@@ -113,6 +124,14 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         return result;
     }
 
+    public boolean isSubset() {
+        return this.subsetFactor != null;
+    }
+
+    public void setArrayDesignsUsed( Collection<Long> arrayDesignsUsed ) {
+        this.arrayDesignsUsed = arrayDesignsUsed;
+    }
+
     public void setBioAssaySetId( Long bioAssaySetId ) {
         this.bioAssaySetId = bioAssaySetId;
     }
@@ -125,8 +144,17 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         this.id = id;
     }
 
-    public void setResultSets( Collection<DifferentialExpressionSummaryValueObject> resultSets ) {
+    public void setResultSets( Collection<DiffExResultSetSummaryValueObject> resultSets ) {
         this.resultSets = resultSets;
+    }
+
+    /**
+     * If this is a subset analysis
+     * 
+     * @param id
+     */
+    public void setSourceExperiment( Long id ) {
+        this.sourceExperiment = id;
     }
 
     public void setSubsetFactor( ExperimentalFactorValueObject subsetFactor ) {
@@ -134,7 +162,13 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
     }
 
     public void setSubsetFactorValue( FactorValueValueObject subsetFactorValue ) {
+
         this.subsetFactorValue = subsetFactorValue;
+    }
+
+    @Override
+    public String toString() {
+        return "DiffExAnalysisVO [id=" + id + ", bioAssaySetId=" + bioAssaySetId + "]";
     }
 
 }

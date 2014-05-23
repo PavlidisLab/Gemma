@@ -1952,6 +1952,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return getExpressionExperimentValueObjectMap( list, null, null );
     }
 
+    /**
+     * @param list
+     * @param qtMap
+     * @param initialSize
+     * @return
+     */
     private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List<?> list,
             Map<Long, Collection<QuantitationType>> qtMap, Integer initialSize ) {
 
@@ -2018,7 +2024,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             vo.put( eeId, v );
         }
 
-        pouplateAnalysisInformation( vo );
+        if ( !vo.isEmpty() ) pouplateAnalysisInformation( vo );
 
         return vo;
 

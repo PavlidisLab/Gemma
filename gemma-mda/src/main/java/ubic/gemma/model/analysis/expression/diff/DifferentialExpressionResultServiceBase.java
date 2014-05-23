@@ -27,11 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
- * Spring Service base class for
- * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService</code>, provides access to all
- * services and entities referenced by this service.
+ * Spring Service base class for <code>DifferentialExpressionResultService</code>, provides access to all services and
+ * entities referenced by this service.
  * 
- * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService
+ * @see DifferentialExpressionResultService
  * @version $Id$
  */
 public abstract class DifferentialExpressionResultServiceBase implements DifferentialExpressionResultService {
@@ -43,17 +42,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            final Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
-        return this.handleGetExperimentalFactors( differentialExpressionAnalysisResults );
-    }
-
-    /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)
+     * @see DifferentialExpressionResultService#getExperimentalFactors(DifferentialExpressionAnalysisResult)
      */
     @Override
     @Transactional(readOnly = true)
@@ -66,15 +55,14 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
      * Sets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
      */
     public void setDifferentialExpressionResultDao(
-            ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao differentialExpressionAnalysisResultDao ) {
+            DifferentialExpressionResultDao differentialExpressionAnalysisResultDao ) {
         this.differentialExpressionAnalysisResultDao = differentialExpressionAnalysisResultDao;
     }
 
     /**
      * Sets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
      */
-    public void setExpressionAnalysisResultSetDao(
-            ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao ) {
+    public void setExpressionAnalysisResultSetDao( ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao ) {
         this.expressionAnalysisResultSetDao = expressionAnalysisResultSetDao;
     }
 
@@ -103,7 +91,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
     }
 
     /**
-     * Performs the core logic for {@link #getExperimentalFactors(java.util.Collection)}
+     * Performs the core logic for {@link #getExperimentalFactors(Collection)}
      */
     protected abstract Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
             Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
@@ -111,7 +99,7 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
     /**
      * Performs the core logic for {@link #getExperimentalFactors(diff.DifferentialExpressionAnalysisResult)}
      */
-    protected abstract java.util.Collection<ExperimentalFactor> handleGetExperimentalFactors(
+    protected abstract Collection<ExperimentalFactor> handleGetExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     /**

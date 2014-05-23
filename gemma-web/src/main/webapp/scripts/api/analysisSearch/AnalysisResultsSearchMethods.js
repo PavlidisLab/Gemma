@@ -282,36 +282,18 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
 
    /**
     * @private
-    * @param geneSetValueObjects
-    * @param experimentSetValueObjects
-    * @return {{experimentSetValueObjects: *, geneSetValueObjects: *, geneNames: Array, datasetNames: Array, taxonId: *,
-    *         taxonName: *, pvalue: number, datasetCount: number}}
+    * @param geneSetValueObject
+    * @param experimentSetValueObject
+    * @return
     */
-   getDataForDiffVisualization : function( geneSetValueObjects, experimentSetValueObjects ) {
-      var geneNames = [];
-      var i;
-      if ( geneSetValueObjects.length > 0 ) {
-         for (i = 0; i < geneSetValueObjects.length; i++) {
-            geneNames.push( geneSetValueObjects[i].name );
-         }
-      }
-      var experimentNames = [];
-      var experimentCount = 0;
-      if ( experimentSetValueObjects.length > 0 ) {
-         for (i = 0; i < experimentSetValueObjects.length; i++) {
-            experimentNames.push( experimentSetValueObjects[i].name );
-            experimentCount += experimentSetValueObjects[i].expressionExperimentIds.size();
-         }
-      }
+   getDataForDiffVisualization : function( geneSetValueObject, experimentSetValueObject ) {
+
       var data = {
-         experimentSetValueObjects : experimentSetValueObjects,
-         geneSetValueObjects : geneSetValueObjects,
-         geneNames : geneNames,
-         datasetNames : experimentNames,
+         experimentSetValueObject : experimentSetValueObject,
+         geneSetValueObject : geneSetValueObject,
          taxonId : this.taxonId,
          taxonName : this.taxonName,
-         pvalue : 0.01,
-         datasetCount : experimentCount
+         pvalue : 0.01
       };
       return data;
    },

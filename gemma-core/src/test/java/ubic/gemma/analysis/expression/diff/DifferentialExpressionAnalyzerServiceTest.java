@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -58,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 
 /**
@@ -208,7 +210,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         assertTrue( !analyses.isEmpty() );
-        differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
 
         Collection<Long> experimentsWithAnalysis = differentialExpressionAnalysisService
                 .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
@@ -243,8 +244,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .runDifferentialExpressionAnalyses( ee, config );
 
         assertTrue( !analyses.isEmpty() );
-
-        differentialExpressionAnalysisService.getAnalysisValueObjects( analyses.iterator().next().getId() );
 
         differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 
@@ -341,13 +340,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
 
         // check that we read it back correctly.
-        Collection<DifferentialExpressionAnalysisValueObject> vos = differentialExpressionAnalysisService
-                .getAnalysisValueObjects( analysis.getExperimentAnalyzed().getId() );
+        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
+                .getAnalysesByExperiment( Collections.singleton( ee.getId() ) );
         assertEquals( 1, vos.size() );
-        for ( DifferentialExpressionAnalysisValueObject vo : vos ) {
-            assertNotNull( vo.getSubsetFactor() );
+
+        for ( DifferentialExpressionAnalysisValueObject vo : vos.entrySet().iterator().next().getValue() ) {
             assertNotNull( vo.getSubsetFactorValue() );
-            assertTrue( !vo.getFactorValuesUsed().isEmpty() );
         }
 
     }

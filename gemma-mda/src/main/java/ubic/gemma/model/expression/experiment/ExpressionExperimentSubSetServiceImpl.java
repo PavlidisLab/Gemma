@@ -60,6 +60,19 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
         return this.getExpressionExperimentSubSetDao().getFactorValuesUsed( entity, factor );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getFactorValuesUsed(java.lang.Long,
+     * java.lang.Long)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
+        return this.getExpressionExperimentSubSetDao().getFactorValuesUsed( subSetId, experimentalFactor );
+
+    }
+
     /**
       */
     @Override

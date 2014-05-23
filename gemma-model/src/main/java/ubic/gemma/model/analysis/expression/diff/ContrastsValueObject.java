@@ -33,8 +33,15 @@ public class ContrastsValueObject {
         this.resultId = resultId;
     }
 
-    public void addContrast( Long id, Long factorValueId, Double logFoldchange, Double pvalue ) {
-        contrasts.add( new ContrastVO( id, factorValueId, logFoldchange, pvalue ) );
+    /**
+     * @param id
+     * @param factorValueId
+     * @param logFoldchange
+     * @param pvalue
+     * @param secondFactorValueId null unless interaction
+     */
+    public void addContrast( Long id, Long factorValueId, Double logFoldchange, Double pvalue, Long secondFactorValueId ) {
+        contrasts.add( new ContrastVO( id, factorValueId, logFoldchange, pvalue, secondFactorValueId ) );
     }
 
     public List<ContrastVO> getContrasts() {

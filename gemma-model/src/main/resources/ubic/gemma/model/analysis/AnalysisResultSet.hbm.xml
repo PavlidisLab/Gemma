@@ -13,7 +13,7 @@
       </id>
       <discriminator column="class" type="string"/>
       <subclass name="ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet"   dynamic-insert="false" dynamic-update="false" abstract="true">
-         <set name="experimentalFactors" table="EXPERIMENTAL_FACTORS2FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS" lazy="true" fetch="select" inverse="false">
+         <set name="experimentalFactors" table="EXPERIMENTAL_FACTORS2FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS" lazy="true" fetch="join" inverse="false">
             <key foreign-key="EXPERIMENTAL_FACTOR_FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_C">
                <column name="FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_FK" sql-type="BIGINT"/>
             </key>

@@ -27,6 +27,8 @@ import ubic.gemma.model.analysis.AnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -90,12 +92,14 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     /**
      * 
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon );
 
     /**
      * 
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
 
@@ -112,18 +116,11 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
-            Collection<Long> expressionExperimentIds );
-
     /**
      * @param expressionExperiments
      * @return quite deeply thawed analyses (not the results themselves, but metadata)
      */
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments );
 
     /**
@@ -155,5 +152,12 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
+    /**
+     * @param ids
+     * @return
+     */
+    public Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids );
 
 }

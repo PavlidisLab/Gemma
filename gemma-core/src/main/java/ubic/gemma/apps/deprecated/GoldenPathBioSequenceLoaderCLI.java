@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.apps;
+package ubic.gemma.apps.deprecated;
 
 import java.io.IOException;
 

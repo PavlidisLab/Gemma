@@ -237,8 +237,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
-    public void addToTopHitsCache( ExpressionAnalysisResultSet resultSet,
-            List<DifferentialExpressionAnalysisResult> items ) {
+    public void addToTopHitsCache( ExpressionAnalysisResultSet resultSet, List<DifferentialExpressionValueObject> items ) {
         this.topHitsCache.put( new Element( resultSet.getId(), items ) );
 
     }
@@ -251,10 +250,10 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
      * .expression.diff.ExpressionAnalysisResultSet)
      */
     @Override
-    public List<DifferentialExpressionAnalysisResult> getTopHits( ExpressionAnalysisResultSet resultSet ) {
+    public List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet ) {
         Element element = this.topHitsCache.get( resultSet );
         if ( element == null ) return null;
-        return ( List<DifferentialExpressionAnalysisResult> ) element.getObjectValue();
+        return ( List<DifferentialExpressionValueObject> ) element.getObjectValue();
     }
 
 }

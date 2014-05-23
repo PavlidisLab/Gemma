@@ -22,14 +22,15 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.AnalysisDao;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
 /**
  * @version $Id$
- * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis
+ * @see DifferentialExpressionAnalysis
  */
 public interface DifferentialExpressionAnalysisDao extends AnalysisDao<DifferentialExpressionAnalysis> {
 
@@ -60,8 +61,8 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
      * @param threshold
      * @return
      */
-    public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
-            ExpressionAnalysisResultSet resultSet, double threshold );
+    public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
+            double threshold );
 
     /**
      * @param ef
@@ -72,26 +73,21 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     /**
      * 
      */
-    public java.util.Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
-            java.util.Collection<Long> investigationIds );
+    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
+            Collection<Long> investigationIds );
 
     /**
      * @param gene
      * @return
      */
-    public Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene );
 
     /**
      * @param expressionExperiments
      * @return
      */
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments );
-
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
-            Collection<Long> expressionExperimentIds );
-
-    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId );
 
     /**
      * @param idsToFilter
@@ -113,5 +109,13 @@ public interface DifferentialExpressionAnalysisDao extends AnalysisDao<Different
     /**
      * 
      */
-    public void thaw( java.util.Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );
+
+    /**
+     * Note: this method is not secure
+     * 
+     * @param ids
+     * @return
+     */
+    Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperimentIds( Collection<Long> ids );
 }

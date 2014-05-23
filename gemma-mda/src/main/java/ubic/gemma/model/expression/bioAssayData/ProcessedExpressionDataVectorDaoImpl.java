@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -69,13 +70,13 @@ import ubic.gemma.util.EntityUtils;
 public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<ProcessedExpressionDataVector>
         implements ProcessedExpressionDataVectorDao {
 
+    private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
+
     /*
      * Don't attempt to renormalize data that is smaller than this. This avoids unnecessary normalization in tests, and
      * in data sets where normalization is more likely to harm than good.
      */
     private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
-
-    private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
 
     @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
@@ -316,101 +317,24 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<? extends BioAssaySet> ees,
             Collection<CompositeSequence> probes ) {
 
-        Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
+        if ( probes.isEmpty() ) return new HashSet<>();
 
-        if ( probes.isEmpty() ) return results;
+        Collection<Long> probeIds = EntityUtils.getIds( probes );
 
-        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneMapForProbes( EntityUtils.getIds( probes ), this
-                .getSessionFactory().getCurrentSession() );
+        return getProcessedDataArraysByProbeIds( ees, probeIds );
 
-        Map<Long, Collection<Long>> noGeneProbes = new HashMap<Long, Collection<Long>>();
+    }
 
-        for ( CompositeSequence p : probes ) {
-            Long pid = p.getId();
-            if ( !cs2gene.containsKey( pid ) || cs2gene.get( pid ).isEmpty() ) {
-                noGeneProbes.put( pid, new HashSet<Long>() );
-                cs2gene.remove( pid );
-            }
-        }
-
-        log.info( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
-
-        /*
-         * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
-         */
-        Collection<Long> genes = new HashSet<Long>();
-        for ( Long cs : cs2gene.keySet() ) {
-            genes.addAll( cs2gene.get( cs ) );
-        }
-
-        Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
-        Collection<Long> genesToSearch = new HashSet<Long>();
-        checkCache( ees, genes, results, needToSearch, genesToSearch );
-
-        if ( !results.isEmpty() ) log.info( results.size() + " vectors fetched from cache" );
-
-        Map<ProcessedExpressionDataVector, Collection<Long>> rawResults = new HashMap<ProcessedExpressionDataVector, Collection<Long>>();
-
-        /*
-         * Small problem: noGeneProbes are never really cached since we use the gene as part of that.
-         */
-        if ( !noGeneProbes.isEmpty() ) {
-            Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<ExpressionExperiment>();
-            for ( BioAssaySet ee : ees ) {
-                if ( ee instanceof ExpressionExperiment ) {
-                    eesForNoGeneProbes.add( ( ExpressionExperiment ) ee );
-                } else {
-                    eesForNoGeneProbes.add( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment() );
-                }
-            }
-            needToSearch.addAll( eesForNoGeneProbes );
-            rawResults.putAll( getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
-        }
-
-        if ( !rawResults.isEmpty() ) log.info( rawResults.size() + " vectors retrieved so far, for noGeneProbes" );
-
-        /*
-         * Non-cached items.
-         */
-        if ( !needToSearch.isEmpty() ) {
-            rawResults.putAll( getProcessedVectors( EntityUtils.getIds( needToSearch ), cs2gene ) );
-        }
-
-        if ( !rawResults.isEmpty() )
-            log.info( rawResults.size() + " vectors retrieved so far, after fetching non-cached." );
-
-        /*
-         * Deal with possibility of 'gaps' and unpack the vectors.
-         */
-        Collection<DoubleVectorValueObject> newResults = new HashSet<DoubleVectorValueObject>();
-        for ( ExpressionExperiment ee : needToSearch ) {
-
-            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
-
-            if ( bioAssayDimensions.size() == 1 ) {
-                newResults.addAll( unpack( rawResults ) );
-            } else {
-                /*
-                 * See handleGetProcessedExpressionDataArrays(Collection<? extends BioAssaySet>, Collection<Gene>,
-                 * boolean) and bug 1704.
-                 */
-                BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
-                assert longestBad != null;
-                newResults.addAll( unpack( rawResults, longestBad ) );
-
-            }
-
-            if ( !newResults.isEmpty() ) {
-                cacheResults( newResults );
-
-                newResults = sliceSubsets( ees, newResults );
-
-                results.addAll( newResults );
-            }
-        }
-
-        return results;
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArraysByProbeIds(ubic
+     * .gemma.model.expression.experiment.BioAssaySet, java.util.Collection)
+     */
+    @Override
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes ) {
+        return this.getProcessedDataArraysByProbeIds( Collections.singleton( ee ), probes );
     }
 
     /*
@@ -496,7 +420,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             log.warn( "No composite sequences found for genes" );
             return new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
         }
-        Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
+        Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<>();
 
         BatchIterator<CompositeSequence> batchIterator = new BatchIterator<>( cs2gene.keySet(), 500 );
 
@@ -1060,6 +984,105 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     /**
      * @param ees
+     * @param probeIds
+     * @return
+     */
+    private Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds(
+            Collection<? extends BioAssaySet> ees, Collection<Long> probeIds ) {
+        Collection<DoubleVectorValueObject> results = new HashSet<>();
+
+        Map<Long, Collection<Long>> cs2gene = CommonQueries.getCs2GeneMapForProbes( probeIds, this.getSessionFactory()
+                .getCurrentSession() );
+
+        Map<Long, Collection<Long>> noGeneProbes = new HashMap<>();
+        for ( Long pid : probeIds ) {
+            if ( !cs2gene.containsKey( pid ) || cs2gene.get( pid ).isEmpty() ) {
+                noGeneProbes.put( pid, new HashSet<Long>() );
+                cs2gene.remove( pid );
+            }
+        }
+
+        log.info( cs2gene.size() + " probes associated with a gene; " + noGeneProbes.size() + " not" );
+
+        /*
+         * To Check the cache we need the list of genes 1st. Get from CS2Gene list then check the cache.
+         */
+        Collection<Long> genes = new HashSet<Long>();
+        for ( Long cs : cs2gene.keySet() ) {
+            genes.addAll( cs2gene.get( cs ) );
+        }
+
+        Collection<ExpressionExperiment> needToSearch = new HashSet<>();
+        Collection<Long> genesToSearch = new HashSet<>();
+        checkCache( ees, genes, results, needToSearch, genesToSearch );
+
+        if ( !results.isEmpty() ) log.info( results.size() + " vectors fetched from cache" );
+
+        Map<ProcessedExpressionDataVector, Collection<Long>> rawResults = new HashMap<>();
+
+        /*
+         * Small problem: noGeneProbes are never really cached since we use the gene as part of that.
+         */
+        if ( !noGeneProbes.isEmpty() ) {
+            Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<>();
+            for ( BioAssaySet ee : ees ) {
+                if ( ee instanceof ExpressionExperiment ) {
+                    eesForNoGeneProbes.add( ( ExpressionExperiment ) ee );
+                } else {
+                    eesForNoGeneProbes.add( ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment() );
+                }
+            }
+            needToSearch.addAll( eesForNoGeneProbes );
+            rawResults.putAll( getProcessedVectors( EntityUtils.getIds( eesForNoGeneProbes ), noGeneProbes ) );
+        }
+
+        if ( !rawResults.isEmpty() ) log.info( rawResults.size() + " vectors retrieved so far, for noGeneProbes" );
+
+        /*
+         * Non-cached items.
+         */
+        if ( !needToSearch.isEmpty() ) {
+            rawResults.putAll( getProcessedVectors( EntityUtils.getIds( needToSearch ), cs2gene ) );
+        }
+
+        if ( !rawResults.isEmpty() )
+            log.info( rawResults.size() + " vectors retrieved so far, after fetching non-cached." );
+
+        /*
+         * Deal with possibility of 'gaps' and unpack the vectors.
+         */
+        Collection<DoubleVectorValueObject> newResults = new HashSet<>();
+        for ( ExpressionExperiment ee : needToSearch ) {
+
+            Collection<BioAssayDimension> bioAssayDimensions = this.getBioAssayDimensions( ee );
+
+            if ( bioAssayDimensions.size() == 1 ) {
+                newResults.addAll( unpack( rawResults ) );
+            } else {
+                /*
+                 * See handleGetProcessedExpressionDataArrays(Collection<? extends BioAssaySet>, Collection<Gene>,
+                 * boolean) and bug 1704.
+                 */
+                BioAssayDimension longestBad = checkRagged( bioAssayDimensions );
+                assert longestBad != null;
+                newResults.addAll( unpack( rawResults, longestBad ) );
+
+            }
+
+            if ( !newResults.isEmpty() ) {
+                cacheResults( newResults );
+
+                newResults = sliceSubsets( ees, newResults );
+
+                results.addAll( newResults );
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * @param ees
      * @param cs2gene Map of probe to genes.
      * @return map of vectors to genes.
      */
@@ -1436,7 +1459,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private Map<CompositeSequence, DoubleVectorValueObject> unpack( Collection<? extends DesignElementDataVector> data,
             Map<Long, Collection<Long>> cs2GeneMap ) {
-        Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<CompositeSequence, DoubleVectorValueObject>();
+        Map<CompositeSequence, DoubleVectorValueObject> result = new HashMap<>();
         Map<BioAssayDimension, BioAssayDimensionValueObject> badvos = getBioAssayDimensionValueObjects( data );
         for ( DesignElementDataVector v : data ) {
             result.put(

@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,9 +42,12 @@ import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.DiffExprGeneSearchResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
@@ -62,9 +66,11 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.TableMaintenenceUtil;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * This is a test that requires complex setup: loading several data sets, information on genes, array design
@@ -400,14 +406,15 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             assertNotNull( vo.getGeneSymbol() );
         }
 
-        // this is a little extra test, related to bug 3341
-        {
-            differentialExpressionResultService.thaw( rs1 );
-
-            Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> factorsByResultMap = differentialExpressionResultService
-                    .getExperimentalFactors( rs1.getResults() );
-            assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
-        }
+        // // this is a little extra test, related to bug 3341
+        // {
+        // differentialExpressionResultService.thaw( rs1 );
+        //
+        // Map<DifferentialExpressionValueObject, Collection<ExperimentalFactor>> factorsByResultMap =
+        // differentialExpressionResultService
+        // .getExperimentalFactors( rs1.getResults() );
+        // assertTrue( factorsByResultMap.keySet().containsAll( rs1.getResults() ) );
+        // }
 
         // bug 3722
         analysisService.delete( metaAnalysis );
@@ -447,6 +454,46 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             assertEquals( 1, gm.size() );
             assertEquals( g, gm.values().iterator().next().iterator().next() );
         }
+
+        /*
+         * Moar tests since we have a bunch of stuff loaded.
+         */
+        {
+
+            Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ACTA2" );
+            assertTrue( !geneCollection.isEmpty() );
+            Gene g = geneCollection.iterator().next();
+
+            assertNotNull( differentialExpressionResultService.find( g ) );
+            assertNotNull( differentialExpressionResultService.find( g,
+                    EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ) );
+            assertNotNull( differentialExpressionResultService.find(
+                    EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ) );
+            assertNotNull( differentialExpressionResultService.find( g, 0.05, 10 ) );
+
+            assertTrue( !differentialExpressionResultService.find( g ).isEmpty() );
+            assertTrue( !differentialExpressionResultService.find( g,
+                    EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) ).isEmpty() );
+            assertTrue( !differentialExpressionResultService.find(
+                    EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ), 0.05, 10 ).isEmpty() );
+            assertTrue( !differentialExpressionResultService.find( g, 0.05, 10 ).isEmpty() );
+
+            Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperiment = differentialExpressionAnalysisService
+                    .getAnalysesByExperiment( EntityUtils.getIds( Arrays.asList( ds1, ds2, ds3 ) ) );
+
+            Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
+            for ( ExpressionExperimentValueObject evo : analysesByExperiment.keySet() ) {
+                for ( DifferentialExpressionAnalysisValueObject deavo : analysesByExperiment.get( evo ) ) {
+                    resultSets.addAll( deavo.getResultSets() );
+                }
+            }
+
+            Map<Long, Map<Long, DiffExprGeneSearchResult>> ffResultSets = differentialExpressionResultService
+                    .findDiffExAnalysisResultIdsInResultSets( resultSets, Arrays.asList( g.getId() ) );
+            assertNotNull( ffResultSets );
+            assertTrue( !ffResultSets.isEmpty() );
+        }
+
     }
 
     /**

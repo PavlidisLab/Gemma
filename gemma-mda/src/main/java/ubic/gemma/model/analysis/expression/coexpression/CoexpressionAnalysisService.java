@@ -43,12 +43,14 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
     /**
      * 
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<CoexpressionAnalysis> findByParentTaxon( Taxon taxon );
 
     /**
      * 
      */
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
 
@@ -58,6 +60,7 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
      * @param taxon
      * @return ids of bioassaysets from the given taxon that have a coexpression analysis
      */
+    @Override
     public Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
     /**
@@ -66,6 +69,7 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
      * @param idsToFilter starting list of bioassayset ids.
      * @return the ones which have a coexpression analysis.
      */
+    @Override
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
     /**

@@ -21,9 +21,9 @@ package ubic.gemma.model.analysis.expression.diff;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 
 import java.util.Collection;
@@ -38,9 +38,6 @@ import java.util.Map;
  */
 public interface DifferentialExpressionResultService {
 
-    // FIXME not used?
-    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
-
     /**
      * Given a list of experiments and a threshold value finds all the probes that met the cut off in the given
      * experiments
@@ -49,9 +46,9 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find(
-            Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
+            Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
@@ -61,8 +58,8 @@ public interface DifferentialExpressionResultService {
      * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
 
     /**
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by
@@ -72,9 +69,9 @@ public interface DifferentialExpressionResultService {
      * @param experimentsAnalyzed
      * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
-            Collection<BioAssaySet> experimentsAnalyzed );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+            Collection<Long> experimentsAnalyzed );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
@@ -85,9 +82,9 @@ public interface DifferentialExpressionResultService {
      * @param threshold
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
-            Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+            Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
@@ -97,8 +94,8 @@ public interface DifferentialExpressionResultService {
      * @param limit
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( ubic.gemma.model.genome.Gene gene,
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             double threshold, Integer limit );
 
     /**
@@ -110,13 +107,27 @@ public interface DifferentialExpressionResultService {
      * @return map of resultset IDs to map of gene id to differential expression results.
      */
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
-            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds );
+            Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
+    /**
+     * @param gene
+     * @param resultSet
+     * @param arrayDesignIds
+     * @param limit
+     * @return
+     */
     public List<Double> findGeneInResultSet( Gene gene, ExpressionAnalysisResultSet resultSet,
             Collection<Long> arrayDesignIds, Integer limit );
 
-    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet ar,
-            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
+    /**
+     * @param ar
+     * @param threshold
+     * @param maxResultsToReturn
+     * @param minNumberOfResults
+     * @return
+     */
+    public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet ar, Double threshold,
+            Integer maxResultsToReturn, Integer minNumberOfResults );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -137,12 +148,12 @@ public interface DifferentialExpressionResultService {
      */
     public DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
 
-    /**
-     * 
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
+    // /**
+    // *
+    // */
+    // @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    // public Map<DifferentialExpressionValueObject, Collection<ExperimentalFactor>> getExperimentalFactors(
+    // Collection<DifferentialExpressionValueObject> differentialExpressionAnalysisResults );
 
     /**
      * 

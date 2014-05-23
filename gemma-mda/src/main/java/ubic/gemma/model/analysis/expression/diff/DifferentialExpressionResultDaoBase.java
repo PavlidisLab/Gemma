@@ -19,6 +19,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
@@ -37,11 +39,11 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
         DifferentialExpressionResultDao {
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#create(int, java.util.Collection)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#create(int, Collection)
      */
     @Override
-    public java.util.Collection<? extends DifferentialExpressionAnalysisResult> create(
-            final java.util.Collection<? extends DifferentialExpressionAnalysisResult> entities ) {
+    public Collection<? extends DifferentialExpressionAnalysisResult> create(
+            final Collection<? extends DifferentialExpressionAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException(
                     "DifferentialExpressionAnalysisResult.create - 'entities' can not be null" );
@@ -51,7 +53,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends DifferentialExpressionAnalysisResult> entityIterator = entities
+                        for ( Iterator<? extends DifferentialExpressionAnalysisResult> entityIterator = entities
                                 .iterator(); entityIterator.hasNext(); ) {
                             create( entityIterator.next() );
                         }
@@ -77,36 +79,26 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#getExperimentalFactors(java.util.Collection)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#getExperimentalFactors(Collection)
      */
     @Override
-    public java.util.Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
-            final java.util.Collection<DifferentialExpressionAnalysisResult> DifferentialExpressionAnalysisResults ) {
-        try {
-            return this.handleGetExperimentalFactors( DifferentialExpressionAnalysisResults );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultDao.getExperimentalFactors(java.util.Collection DifferentialExpressionAnalysisResults)' --> "
-                            + th, th );
-        }
+    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+            final Collection<DifferentialExpressionAnalysisResult> DifferentialExpressionAnalysisResults ) {
+
+        return this.handleGetExperimentalFactors( DifferentialExpressionAnalysisResults );
+
     }
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult)
      */
     @Override
-    public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
+    public Collection<ExperimentalFactor> getExperimentalFactors(
             final DifferentialExpressionAnalysisResult DifferentialExpressionAnalysisResult ) {
-        try {
-            return this.handleGetExperimentalFactors( DifferentialExpressionAnalysisResult );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'diff.DifferentialExpressionAnalysisResultDao.getExperimentalFactors(diff.DifferentialExpressionAnalysisResult DifferentialExpressionAnalysisResult)' --> "
-                            + th, th );
-        }
-    }
 
-    
+        return this.handleGetExperimentalFactors( DifferentialExpressionAnalysisResult );
+
+    }
 
     /**
      * @see diff.DifferentialExpressionResultDao#load(int, java.lang.Long)
@@ -134,10 +126,10 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisResultDao#remove(java.util.Collection)
+     * @see ubic.gemma.model.analysis.AnalysisResultDao#remove(Collection)
      */
     @Override
-    public void remove( java.util.Collection<? extends DifferentialExpressionAnalysisResult> entities ) {
+    public void remove( Collection<? extends DifferentialExpressionAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException(
                     "DifferentialExpressionAnalysisResult.remove - 'entities' can not be null" );
@@ -158,10 +150,10 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.AnalysisResultDao#update(java.util.Collection)
+     * @see ubic.gemma.model.analysis.AnalysisResultDao#update(Collection)
      */
     @Override
-    public void update( final java.util.Collection<? extends DifferentialExpressionAnalysisResult> entities ) {
+    public void update( final Collection<? extends DifferentialExpressionAnalysisResult> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException(
                     "DifferentialExpressionAnalysisResult.update - 'entities' can not be null" );
@@ -171,7 +163,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends DifferentialExpressionAnalysisResult> entityIterator = entities
+                        for ( Iterator<? extends DifferentialExpressionAnalysisResult> entityIterator = entities
                                 .iterator(); entityIterator.hasNext(); ) {
                             update( entityIterator.next() );
                         }
@@ -193,16 +185,15 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * Performs the core logic for {@link #getExperimentalFactors(java.util.Collection)}
+     * Performs the core logic for {@link #getExperimentalFactors(Collection)}
      */
-    protected abstract java.util.Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
-            java.util.Collection<DifferentialExpressionAnalysisResult> DifferentialExpressionAnalysisResults )
-            throws java.lang.Exception;
+    protected abstract Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
+            Collection<DifferentialExpressionAnalysisResult> DifferentialExpressionAnalysisResults );
 
     /**
      * Performs the core logic for {@link #getExperimentalFactors(diff.DifferentialExpressionAnalysisResult)}
      */
-    protected abstract java.util.Collection<ExperimentalFactor> handleGetExperimentalFactors(
-            DifferentialExpressionAnalysisResult DifferentialExpressionAnalysisResult ) throws java.lang.Exception;
+    protected abstract Collection<ExperimentalFactor> handleGetExperimentalFactors(
+            DifferentialExpressionAnalysisResult DifferentialExpressionAnalysisResult );
 
 }

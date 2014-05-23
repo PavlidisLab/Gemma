@@ -77,12 +77,12 @@ public interface DifferentialExpressionResultCache {
     public abstract void setEnabled( Boolean enabled );
 
     public abstract void addToTopHitsCache( ExpressionAnalysisResultSet resultSet,
-            List<DifferentialExpressionAnalysisResult> items );
+            List<DifferentialExpressionValueObject> items );
 
     /**
      * @param resultSet
      * @return top hits, or null.
      */
-    public abstract List<DifferentialExpressionAnalysisResult> getTopHits( ExpressionAnalysisResultSet resultSet );
+    public abstract List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet );
 
 }

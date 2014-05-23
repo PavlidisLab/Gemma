@@ -337,10 +337,10 @@ DifferentialExpressionSearchController.getFactors = function( p0, callback ) {
       'getFactors', p0, callback );
 };
 
-DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function( p0, p1, p2, p3, p4, callback ) {
+DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function( p0, p1, p2, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/DifferentialExpressionSearchController/scheduleDiffExpSearchTask" );
    dwr.engine._execute( DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-      'scheduleDiffExpSearchTask', p0, p1, p2, p3, p4, callback );
+      'scheduleDiffExpSearchTask', p0, p1, p2, callback );
 };
 
 // ====================================================================================

@@ -19,9 +19,11 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +31,12 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author paul
@@ -187,22 +193,9 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySet, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments ) {
         return this.getDifferentialExpressionAnalysisDao().getAnalyses( expressionExperiments );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysisValueObjects(
-            Collection<Long> experimentIds ) {
-        return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentIds );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<DifferentialExpressionAnalysisValueObject> getAnalysisValueObjects( Long experimentId ) {
-        return this.getDifferentialExpressionAnalysisDao().getAnalysisValueObjects( experimentId );
     }
 
     /**
@@ -301,6 +294,36 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     public void update( ExpressionAnalysisResultSet a ) {
         this.getExpressionAnalysisResultSetDao().update( a );
 
+    }
+
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getAnalysesByExperiment(java.
+     * util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+            Collection<Long> ids ) {
+        Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this
+                .getDifferentialExpressionAnalysisDao().getAnalysesByExperimentIds( ids );
+
+        Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
+                .loadValueObjects( analysesByExperimentIds.keySet(), false ) );
+
+        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
+
+        for ( Long id : analysesByExperimentIds.keySet() ) {
+            if ( !idMap.containsKey( id ) ) continue; // defensive....
+            result.put( idMap.get( id ), analysesByExperimentIds.get( id ) );
+        }
+        return result;
     }
 
 }

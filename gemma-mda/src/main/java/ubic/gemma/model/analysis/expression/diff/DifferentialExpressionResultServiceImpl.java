@@ -18,17 +18,17 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.math.distribution.Histogram;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author keshav
@@ -40,29 +40,22 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
 
     @Override
     @Transactional(readOnly = true)
-    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
-        return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId,
-                threshold );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Map<BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find(
-            Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
+            Collection<Long> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( experimentsAnalyzed, threshold, limit );
 
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene ) {
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene ) {
         return this.getDifferentialExpressionResultDao().find( gene );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene,
-            Collection<BioAssaySet> experimentsAnalyzed ) {
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+            Collection<Long> experimentsAnalyzed ) {
         return this.getDifferentialExpressionResultDao().find( gene, experimentsAnalyzed );
     }
 
@@ -71,14 +64,15 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<BioAssaySet, java.util.List<DifferentialExpressionAnalysisResult>> find( Gene gene,
-            Collection<BioAssaySet> experimentsAnalyzed, double threshold, Integer limit ) {
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+            Collection<Long> experimentsAnalyzed, double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( gene, experimentsAnalyzed, threshold, limit );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<BioAssaySet, List<DifferentialExpressionAnalysisResult>> find( Gene gene, double threshold, Integer limit ) {
+    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+            double threshold, Integer limit ) {
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
 
@@ -86,15 +80,13 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService#
-     * findDifferentialExpressionAnalysisResultIdsInResultSet(java.util.Collection, java.util.Collection,
-     * java.util.Collection)
+     * findDifferentialExpressionAnalysisResultIdsInResultSet(Collection, Collection, Collection)
      */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
-            Map<ExpressionAnalysisResultSet, Collection<Long>> resultSetIdsToArrayDesignsUsed, Collection<Long> geneIds ) {
-        return this.getDifferentialExpressionResultDao().findDiffExAnalysisResultIdsInResultSets(
-                resultSetIdsToArrayDesignsUsed, geneIds );
+            Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds ) {
+        return this.getDifferentialExpressionResultDao().findDiffExAnalysisResultIdsInResultSets( resultSets, geneIds );
     }
 
     @Override
@@ -106,7 +98,7 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
 
     @Override
     @Transactional(readOnly = true)
-    public List<DifferentialExpressionAnalysisResult> findInResultSet( ExpressionAnalysisResultSet resultSet,
+    public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
             Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults ) {
         return this.getDifferentialExpressionResultDao().findInResultSet( resultSet, threshold, maxResultsToReturn,
                 minNumberOfResults );
@@ -179,7 +171,7 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
      * (non-Javadoc)
      * 
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultServiceBase#
-     * handleGetExperimentalFactors(java.util.Collection)
+     * handleGetExperimentalFactors(Collection)
      */
     @Override
     protected Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
