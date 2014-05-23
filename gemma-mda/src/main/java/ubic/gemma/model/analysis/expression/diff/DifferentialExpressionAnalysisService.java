@@ -154,9 +154,14 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
-     * @param ids
-     * @return
+     * Given a set of ids, find experiments or experimentsubsets that have differential expression analyses. Subsets are
+     * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
+     * latter case, the return value will contain experiments that were not explicitly queried for.
+     * 
+     * @param ids of experiments or experimentsubsets.
+     * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids );
 

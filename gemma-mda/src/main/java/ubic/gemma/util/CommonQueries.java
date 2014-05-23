@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -121,10 +121,13 @@ public class CommonQueries {
         if ( ee2ads.size() < ees.size() ) {
             // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
             // source.
-            String subsetQuery = "select distinct ees.id,ad.id from ExpressionExperimentSubSetImpl as ees inner join ees.sourceExperiment ee "
-                    + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id in (:ees)";
-            qr = session.createQuery( subsetQuery )
-                    .setParameterList( "ees", CollectionUtils.removeAll( ees, ee2ads.keySet() ) ).list();
+            String subsetQuery = "select distinct ees.id,ad.id from ExpressionExperimentSubSetImpl as ees join ees.sourceExperiment ee "
+                    + " join ee.bioAssays b join b.arrayDesignUsed ad where ees.id in (:ees)";
+            Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() ); // note:
+                                                                                              // CollectionUtils.removeAll
+                                                                                              // has a bug.
+
+            qr = session.createQuery( subsetQuery ).setParameterList( "ees", possibleEEsubsets ).list();
             for ( Object o : qr ) {
                 Object[] ar = ( Object[] ) o;
                 Long ee = ( Long ) ar[0];

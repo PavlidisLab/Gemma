@@ -340,12 +340,21 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         aclTestUtils.checkLacksAces( analysis );
 
         // check that we read it back correctly.
-        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
-                .getAnalysesByExperiment( Collections.singleton( ee.getId() ) );
-        assertEquals( 1, vos.size() );
+        {
+            Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
+                    .getAnalysesByExperiment( Collections.singleton( ee.getId() ) );
+            // it will retrieve the analysis of the subset.
+            assertEquals( 1, vos.size() );
+        }
 
-        for ( DifferentialExpressionAnalysisValueObject vo : vos.entrySet().iterator().next().getValue() ) {
-            assertNotNull( vo.getSubsetFactorValue() );
+        // retrieve the analysis of the subset directly.
+        {
+            Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> vos = differentialExpressionAnalysisService
+                    .getAnalysesByExperiment( Collections.singleton( eeset.getId() ) );
+            assertEquals( 1, vos.size() );
+            for ( DifferentialExpressionAnalysisValueObject vo : vos.entrySet().iterator().next().getValue() ) {
+                assertNotNull( vo.getSubsetFactorValue() );
+            }
         }
 
     }
