@@ -38,10 +38,10 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -78,15 +78,14 @@ import com.sdicons.json.parser.JSONParser;
  */
 public class ExpressionExperimentFormController extends BaseFormController {
 
-    ExpressionExperimentService expressionExperimentService = null;
-    ContactService contactService = null;
-    BioAssayService bioAssayService = null;
-    BioMaterialService bioMaterialService = null;
-    BibliographicReferenceService bibliographicReferenceService = null;
-    Persister persisterHelper = null;
-    QuantitationTypeService quantitationTypeService;
-    AuditTrailService auditTrailService;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private BioAssayService bioAssayService = null;
+    private BioMaterialService bioMaterialService = null;
+    private Persister persisterHelper = null;
+    private QuantitationTypeService quantitationTypeService;
+    private AuditTrailService auditTrailService;
 
+    private PreprocessorService preprocessorService;
     private ExternalDatabaseService externalDatabaseService = null;
 
     public ExpressionExperimentFormController() {
@@ -121,9 +120,17 @@ public class ExpressionExperimentFormController extends BaseFormController {
         /**
          * Much more complicated
          */
-        updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
+        boolean changedQT = updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
+        boolean changedBMM = updateBioMaterialMap( request, expressionExperiment );
 
-        updateBioMaterialMap( request, expressionExperiment );
+        if ( changedQT || changedBMM ) {
+            try {
+                preprocessorService.process( expressionExperiment );
+            } catch ( PreprocessingException e ) {
+                throw new RuntimeException( "There was an error while updating the experiment after "
+                        + "making changes to the quantitation types and/or biomaterial map.", e );
+            }
+        }
 
         return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
                 + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
@@ -179,13 +186,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
-     * @param bibliographicReferenceService the bibliographicReferenceService to set
-     */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
-    }
-
-    /**
      * @param bioAssayService the bioAssayService to set
      */
     public void setBioAssayService( BioAssayService bioAssayService ) {
@@ -197,13 +197,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     public void setBioMaterialService( BioMaterialService bioMaterialService ) {
         this.bioMaterialService = bioMaterialService;
-    }
-
-    /**
-     * @param contactService
-     */
-    public void setContactService( ContactService contactService ) {
-        this.contactService = contactService;
     }
 
     /**
@@ -305,8 +298,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * 
      * @param request
      * @param expressionExperiment
+     * @return true if there were changes
      */
-    private void updateBioMaterialMap( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
+    private boolean updateBioMaterialMap( HttpServletRequest request, ExpressionExperiment expressionExperiment ) {
         // parse JSON-serialized map
         String jsonSerialization = request.getParameter( "assayToMaterialMap" );
         // convert back to a map
@@ -396,25 +390,25 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         if ( anyChanges ) {
             /*
-             * TODO Decide if we need to delete the biomaterial -> factor value associations, it could be completely
+             * FIXME Decide if we need to delete the biomaterial -> factor value associations, it could be completely
              * fouled up.
              */
             log.info( "There were changes to the BioMaterial -> BioAssay map" );
+            audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(), newBioMaterialCount
+                    + " biomaterials" ); // remove unnecessary biomaterial associations
+            Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
+            for ( BioAssay assay : deleteKeys ) {
+                /*
+                 * BUG: if this fails, we end up with a useless extra biomaterial associated with the bioassay.
+                 */
+                bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
+            }
         } else {
             log.info( "There were NO changes to the BioMaterial -> BioAssay map" );
+
         }
 
-        // remove unnecessary biomaterial associations
-        Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
-        for ( BioAssay assay : deleteKeys ) {
-            /*
-             * BUG: if this fails, we end up with a useless extra biomaterial associated with the bioassay.
-             */
-            bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
-        }
-
-        audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(), newBioMaterialCount
-                + " biomaterials" );
+        return anyChanges;
     }
 
     /**
@@ -423,13 +417,15 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @param request
      * @param expressionExperiment
      * @param updatedQuantitationTypes
+     * @return whether any changes were made
      */
-    private void updateQuantTypes( HttpServletRequest request, ExpressionExperiment expressionExperiment,
+    private boolean updateQuantTypes( HttpServletRequest request, ExpressionExperiment expressionExperiment,
             Collection<QuantitationType> updatedQuantitationTypes ) {
 
         Collection<QuantitationType> oldQuantitationTypes = expressionExperimentService
                 .getQuantitationTypes( expressionExperiment );
 
+        boolean anyChanged = false;
         for ( QuantitationType qType : oldQuantitationTypes ) {
             assert qType != null;
             Long id = qType.getId();
@@ -540,8 +536,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
             if ( dirty ) {
                 // update the quantitation type
                 quantitationTypeService.update( qType );
+
             }
+            anyChanged = dirty;
         }
+        return anyChanged;
     }
 
 }
