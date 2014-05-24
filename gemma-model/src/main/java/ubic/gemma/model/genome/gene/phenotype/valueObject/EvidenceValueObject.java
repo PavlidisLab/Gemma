@@ -506,7 +506,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
     }
 
     public PhenotypeMappingType findPhenotypeMappingAsEnum() {
-
+        if ( this.phenotypeMapping == null ) return null;
         if ( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) ) {
             return PhenotypeMappingType.XREF;
         } else if ( phenotypeMapping.equalsIgnoreCase( "Curated" ) ) {
