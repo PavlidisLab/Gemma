@@ -328,7 +328,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         if ( timerFilterTroubled.getTime() > 100 ) {
-            log.info( "Filtering troubled eevos took " + timerFilterTroubled.getTime() + "ms" );
+            log.info( "Filtering eevos took " + timerFilterTroubled.getTime() + "ms" );
         }
 
         return eevos;
