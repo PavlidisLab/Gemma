@@ -37,7 +37,7 @@ Ext
 
       searchForm.render( "analysis-results-search-form" );
 
-      /*
+      /**
        * Check if the page was reached using a URL like:
        * 
        * http://chibi.ubc.ca/Gemma/home.html?taxon=1&geneList=ARHGAP42P5,TRAV8-5,OR11H12,RNU6-1239P,OR4K1,POTEG,OR11H13P,DUXAP10,POTEM,
@@ -59,6 +59,9 @@ Ext
       // uncomment this to have results grid resize with window, (panel must have layout: 'fit')
       // Ext.EventManager.onWindowResize(resultsPanel.doLayout, resultsPanel);
 
+      /**
+       * 
+       */
       function hideBannerElements() {
          if ( Ext.get( 'frontPageContent' ) ) {
             Ext.get( 'frontPageContent' ).remove();
@@ -70,7 +73,10 @@ Ext
             Ext.get( 'sloganText' ).remove();
          }
       }
-
+      /**
+       * 
+       * 
+       */
       function hideTutorials() {
          var tutorial = Ext.getCmp( 'tutorial-cntlPanel-diff-ex' );
          if ( tutorial ) {
@@ -89,8 +95,7 @@ Ext
          } );
       }
 
-      // Before every search, clear the results in preparation for new (possibly blank) results (not using flash that's
-      // old name)
+      // Before every search, clear the results in preparation for new (possibly blank) results
       searchForm.on( "beforesearch", function( panel ) {
          var flashPanel = coexpressionSearchResultsPanel.getItem( 'cytoscaperesults' );
          if ( flashPanel ) {
@@ -117,8 +122,26 @@ Ext
          hideBannerElements();
          hideTutorials();
 
+         // why is coex different from diff ex in this way?
          removeDiffExpressionVisualizer();
       } );
+
+      /**
+       * 
+       */
+      searchForm.on( 'differential_expression_search_query_ready', function( panel, result, data ) {
+         // show metaheatmap viewer (but not control panel)
+         // control panel is responsible for creating the visualisation view space
+         Ext.apply( data, {
+            applyTo : 'meta-heatmap-div'
+         } );
+
+         this.diffVisualizer = new Gemma.DiffExSearchAndVisualize( data );
+
+         this.diffVisualizer.on( 'visualizationLoaded', function() {
+            panel.loadMask.hide();
+         }, this );
+      }, this );
 
       /**
        * Code executes before coexpression query is fired off.
@@ -127,8 +150,6 @@ Ext
          coexpressionSearchResultsPanel.showCoexTutorial = showTutorial;
 
          var coexDisplaySettings = new Gemma.CoexpressionDisplaySettings();
-
-         // var displayStringency = decideInitialDisplayStringency(searchCommand.eeIds.length);
          coexDisplaySettings.setStringency( searchCommand.stringency );
          coexpressionSearchData.setSearchCommand( searchCommand );
 
@@ -167,7 +188,6 @@ Ext
 
          coexpressionSearchResultsPanel.add( coexpressionGrid );
          coexpressionSearchResultsPanel.add( cytoscapePanel );
-
          coexpressionSearchData.search( searchCommand );
 
          /*
@@ -193,7 +213,9 @@ Ext
       } );
 
       /**
-       * Home page tutorials.
+       * Home page tutorials. FIXME why this scope?
+       * 
+       * @private
        */
       var setupCoexTutorial = function( coexpressionSearchResultsPanel, knownGeneGrid ) {
          if ( this.coexTutorialControlPanel ) {
@@ -270,20 +292,4 @@ Ext
 
       };
 
-      /**
-       * 
-       */
-      searchForm.on( 'differential_expression_search_query_ready', function( panel, result, data ) {
-         // show metaheatmap viewer (but not control panel)
-         // control panel is responsible for creating the visualisation view space
-         Ext.apply( data, {
-            applyTo : 'meta-heatmap-div'
-         } );
-
-         this.diffVisualizer = new Gemma.DiffExSearchAndVisualize( data );
-
-         this.diffVisualizer.on( 'visualizationLoaded', function() {
-            panel.loadMask.hide();
-         }, this );
-      }, this );
    } );

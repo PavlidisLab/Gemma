@@ -7,6 +7,7 @@ Ext.namespace( 'Gemma' );
 Gemma.AnalysesSearchUtils = {
 
    /**
+    * @static
     * @return {Array}
     * @memberOf Gemma.AnalysesSearchUtils
     */
@@ -24,6 +25,7 @@ Gemma.AnalysesSearchUtils = {
    },
 
    /**
+    * @static
     * @return {Array}
     */
    getExperimentIds : function( experimentSetValueObject ) {
@@ -40,7 +42,7 @@ Gemma.AnalysesSearchUtils = {
    },
 
    /**
-    * 
+    * @static
     * @param {GeneSetValueObject[]}
     *           geneSetValueObjects
     * @return {boolean}
@@ -56,7 +58,7 @@ Gemma.AnalysesSearchUtils = {
    },
 
    /**
-    * 
+    * @static
     * @param {ExperimentSetValueObject[]}
     *           experimentSetValueObjects
     * @return {boolean}
@@ -70,6 +72,7 @@ Gemma.AnalysesSearchUtils = {
    },
 
    /**
+    * @static
     * @param {GeneSetValueObject[]}
     *           geneSetValueObjects
     */
@@ -77,11 +80,17 @@ Gemma.AnalysesSearchUtils = {
       return geneSetValueObject.size;
    },
 
+   /**
+    * @static
+    * @param experimentSetValueObject
+    * @returns
+    */
    getExperimentCount : function( experimentSetValueObject ) {
       return experimentSetValueObject.size;
    },
 
    /**
+    * @static
     * @param {GeneSetValueObject[]}
     *           valueObjects
     * @param {Number}
@@ -113,6 +122,7 @@ Gemma.AnalysesSearchUtils = {
    },
 
    /**
+    * @static
     * @param {Object}
     *           valueObjects
     * @param {Number}
@@ -143,6 +153,14 @@ Gemma.AnalysesSearchUtils = {
       return trimmedValueObjects;
    },
 
+   /**
+    * @static
+    * @param maxNumGenes
+    * @param geneCount
+    * @param maxNumExperiments
+    * @param experimentCount
+    * @returns {___anonymous5593_5663}
+    */
    constructMessages : function( maxNumGenes, geneCount, maxNumExperiments, experimentCount ) {
       var stateText = "";
       var maxText = "";
@@ -164,7 +182,7 @@ Gemma.AnalysesSearchUtils = {
    },
 
    /**
-    * 
+    * @static
     * @param maxNumGenes
     * @param geneCount
     * @param geneSetValueObjects

@@ -8,21 +8,20 @@ Ext.namespace( 'Gemma' );
 Gemma.SessionSetsUtils = {
 
    /**
+    * if using a just-made-by-user or GO group, register the geneSetValObj as a set in the session
+    * 
     * @memberOf Gemma.SessionSetUtils
+    * @returns {Promise}
+    * @static
     */
    registerGeneSetIfNotRegistered : function( geneSet ) {
       var defered = RSVP.defer();
 
-      // if using a GO group or 'all results' group for a search, register the geneSetValObj as a set in the session
+      if ( typeof geneSet === 'undefined' || geneSet === null || geneSet.id != -1 ) {
+         defered.resolve( geneSet );
+      } else {
 
-      if ( typeof geneSet !== 'undefined' && (geneSet.id === null || geneSet.id === -1) ) {
-         var geneSetClone = Object.clone( geneSet );
-         delete geneSetClone.memberIds;
-         // no memberIds field in a geneSetValueObject (????)
-         // but this object would have the field if it was a GO group object
-         // (this is a short cut fix, a better fix would be to make a new GSVO from the fields)
-
-         GeneSetController.addSessionGroup( geneSetClone, false, function( registeredGeneSet ) {
+         GeneSetController.addSessionGroup( geneSet, false, function( registeredGeneSet ) {
             if ( registeredGeneSet === null ) {
                Ext.Msg.alert( 'Error', 'There was a problem registering the gene set on the server' );
                defered.reject( 'There was a problem registering the gene set on the server' );
@@ -31,25 +30,22 @@ Gemma.SessionSetsUtils = {
             }
 
          } );
-      } else {
-         defered.resolve( geneSet );
       }
-
       return defered.promise;
+
    },
 
    /**
     * 
-    * @param experimentSets
-    * @returns
+    * @param experimentSet
+    * @returns {Promise}
+    * @static
     */
-   registerExperimentSetIfNotRegistered : function( experimentSet ) {
+   registerExperimentSetIfNotRegistered : function( esvo ) {
       var defered = new RSVP.defer();
-
-      var esvo = experimentSet;
-      // if the group has a null value for id, then it hasn't been
-      // created as a group in the database nor session
-      if ( typeof esvo !== 'undefined' && (esvo.id === -1 || esvo.id === null) ) {
+      if ( typeof esvo === 'undefined' || esvo === null || esvo.id != -1 ) {
+         return defered.resolve( esvo );
+      } else {
 
          ExpressionExperimentSetController.addSessionGroup( esvo, false, function( registeredESVO ) {
             if ( registeredESVO === null ) {
@@ -59,10 +55,7 @@ Gemma.SessionSetsUtils = {
                defered.resolve( registeredESVO );
             }
          } );
-      } else {
-         defered.resolve( esvo );
       }
-
       return defered.promise;
    }
 };

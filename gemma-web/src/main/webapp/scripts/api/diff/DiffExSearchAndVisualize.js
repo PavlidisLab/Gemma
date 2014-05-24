@@ -21,14 +21,19 @@ Gemma.DiffExSearchAndVisualize = Ext
          },
 
          geneGroupValueObject : {},
-         experimentGroupValueObjects : {},
+         experimentGroupValueObject : {},
 
          waitingForGeneSessionGroupBinding : false,
          waitingForDatasetSessionGroupBinding : false,
 
          taxonId : null,
 
-         // This is the callback for the differential expression search; just monitor progress.
+         /**
+          * This is the callback for the differential expression search; just monitor progress.
+          * 
+          * @private
+          * @param taskId
+          */
          _initBackgroundTaskProgress : function( taskId ) {
             var task = new Gemma.ObservableSubmittedTask( {
                'taskId' : taskId
@@ -42,6 +47,8 @@ Gemma.DiffExSearchAndVisualize = Ext
          /**
           * Callback to handle the return of the result from the server.
           * 
+          * @private
+          * @memberOf Gemma.DiffExSearchAndVisualize
           * @param data
           * @param task
           */
@@ -69,6 +76,7 @@ Gemma.DiffExSearchAndVisualize = Ext
                }
 
             } else {
+               // success
                var title = '<b>Differential Expression Visualisation</b>';
                var config = {
                   toolbarTitle : title,
@@ -89,6 +97,8 @@ Gemma.DiffExSearchAndVisualize = Ext
          /**
           * Callback for handling server-side error.
           * 
+          * @private
+          * @memberOf Gemma.DiffExSearchAndVisualize
           * @param error
           */
          _handleFail : function( error ) {
@@ -103,6 +113,7 @@ Gemma.DiffExSearchAndVisualize = Ext
           * 
           * Initiate the actual search on the server.
           * 
+          * @memberOf Gemma.DiffExSearchAndVisualize
           */
          doSearch : function() {
 
@@ -112,7 +123,7 @@ Gemma.DiffExSearchAndVisualize = Ext
             }
 
             if ( !this.taxonId || this.taxonId === null ) {
-               // DO SOMETHING!!
+               // shouldn't happen, but ... DO SOMETHING!!
             }
 
             // here it is!
@@ -124,7 +135,7 @@ Gemma.DiffExSearchAndVisualize = Ext
          },
 
          /**
-          * Restore state from the URL (e.g., bookmarkable link)
+          * @memberOf Gemma.DiffExSearchAndVisualize Restore state from the URL (e.g., bookmarkable link)
           */
          initializeSearchFromURL : function( url ) {
 
@@ -169,6 +180,10 @@ Gemma.DiffExSearchAndVisualize = Ext
              * this.initExperimentGroupReferences = arrs; }
              */
          },
+
+         /**
+          * @memberOf Gemma.DiffExSearchAndVisualize
+          */
          initComponent : function() {
 
             // FOR TESTING !!!!!

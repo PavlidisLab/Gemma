@@ -78,7 +78,7 @@ Gemma.CytoscapeSettings = {
       moderate : 0.5,
       dark : 0.35,
       darkest : 0.0
-   },
+   }
 
 };
 

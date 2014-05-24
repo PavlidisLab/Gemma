@@ -285,6 +285,13 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
       this.search( coexpressionSearchCommand );
    },
 
+   reset : function() {
+
+      this.searchResults = {};
+      this.allGeneIdsSet = [];
+      this.cytoscapeSearchResults = {};
+   },
+
    /**
     * Does a search using CoexpressionSearchController.doBackgroundCoexSearch
     * 

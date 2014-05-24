@@ -59,7 +59,6 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
             sign : '-'
          },
          border : false,
-         hidingExamples : false,
          listeners : {
             'render' : function() {
                this.body.on( 'click', function( e ) {
@@ -130,6 +129,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
       this.diffExExamples.show();
       this.coexExamples.hide();
    },
+
    showCoexExamples : function() {
       this.diffExExamples.hide();
       this.coexExamples.show();
@@ -175,8 +175,8 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
                size : expIds.length,
                taxonId : eeSet.taxonId,
                taxonName : eeSet.taxonName,
-               memberIds : expIds, // needed?
-               resultValueObject : eeSet, // needed?
+               memberIds : expIds,
+               resultValueObject : eeSet,
                userOwned : false
             } );
             this.fireEvent( 'eeExampleReady', record );
@@ -191,7 +191,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
     * @param setId
     *           must be a valid id for a database-backed experimetn set
     */
-   getExperimentSet : function( setId, setName ) {
+   loadExperimentSet : function( setId, setName ) {
 
       // make a ee set combo record for the db-backed experimentSetValueObject
       if ( setId ) {
@@ -209,7 +209,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
     * @param geneSetId
     *           must be a valid id for a database-backed gene group
     */
-   getGOGeneSet : function( goName, taxonId, backupGeneIds ) {
+   loadGeneSet : function( goName, taxonId, backupGeneIds ) {
 
       var myscope = this;
 
@@ -265,16 +265,10 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
       var taxonId = exampleConfig.taxonId;
       var backupGeneIds = exampleConfig.backupGeneIds;
 
-      this.getExperimentSet( eeSetId, eeSetName );
-      this.getGOGeneSet( goName, taxonId, backupGeneIds );
-
       var queryRun = false;
       var geneExampleReady = false;
       var eeExampleReady = false;
 
-      /*
-       * FIXME: used chained promises here?
-       */
       this.on( 'geneExampleReady', function( record ) {
          geneExampleReady = true;
          this.geneExampleRecord = record;
@@ -292,6 +286,9 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
             this.fireEvent( 'examplesReady', taxonId, this.geneExampleRecord, this.experimentExampleRecord );
          }
       } );
+
+      this.loadExperimentSet( eeSetId, eeSetName );
+      this.loadGeneSet( goName, taxonId, backupGeneIds );
 
    }
 

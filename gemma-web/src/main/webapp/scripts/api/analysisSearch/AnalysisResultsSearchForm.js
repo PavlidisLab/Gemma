@@ -102,7 +102,7 @@ Gemma.AnalysisResultsSearchForm = Ext
           * @param e
           */
          handleError : function( msg, e ) {
-            console.log( e.stack );
+            // console.log( e.stack );
 
             this.handleWarning( msg );
 

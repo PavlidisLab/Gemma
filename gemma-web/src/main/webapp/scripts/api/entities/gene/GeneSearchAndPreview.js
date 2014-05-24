@@ -125,8 +125,6 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
        */
       makeSessionBoundGeneSet : function( geneIds, taxonId, name, description ) {
          // debugger;
-         this.searchForm.geneIds = geneIds;
-         this.geneIds = geneIds;
          var newGeneSet = new SessionBoundGeneSetValueObject();
          newGeneSet.modified = false;
          newGeneSet.geneIds = geneIds;
@@ -166,7 +164,6 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
          }
 
          this.searchForm.geneIds = geneIds;
-         this.geneIds = geneIds;
 
          var geneset = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From Symbol List',
             'Group made from gene symbols entered.' );
@@ -302,7 +299,6 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
       getGenesFromGeneValueObjects : function( genesToPreview, geneIds, taxonId, taxonName ) {
 
          this.searchForm.geneIds = geneIds;
-         this.geneIds = geneIds;
          var vo = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From symbol list', 'Group made from gene symbols' );
 
          this.changeDisplayAfterSelection();

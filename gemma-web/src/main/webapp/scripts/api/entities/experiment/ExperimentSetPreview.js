@@ -81,6 +81,7 @@ Gemma.ExperimentSetPreview = Ext.extend( Gemma.SetPreview, {
 
    reset : function() {
       this.resetPreview();
+      this.entityIds = null;
       this.previewContent.setTitle( null );
       this.selectedSetValueObject = null;
    },

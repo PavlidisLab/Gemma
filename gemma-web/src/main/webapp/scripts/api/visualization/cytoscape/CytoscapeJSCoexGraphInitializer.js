@@ -65,12 +65,16 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'border-width' : 'mapData(queryflag,0,1,0,3)',
          // node color
          'background-color' : 'data(nodeDegreeColor)',
+         // 'z-index' : 'data(support)',
+
          'text-valign' : 'top',
          // Do not show the labels when zoomed way out.
          'min-zoomed-font-size' : 9,
          'visibility' : 'visible' // filtering will show appropriate nodes
       } ).selector( 'node.basic' ).css( {
          'content' : 'data(name)',
+         // 'z-index' : 'data(support)',
+
          // the text color
          'color' : Gemma.CytoscapeSettings.labelFontColor,
          'font-family' : Gemma.CytoscapeSettings.labelFontName,
@@ -88,6 +92,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'visibility' : 'visible'
       } ).selector( 'node.overlay' ).css( {
          'content' : 'data(name)',
+         // 'z-index' : 'data(support)',
 
          // the text color
          'color' : Gemma.CytoscapeSettings.nodeColorOverlay,
@@ -115,6 +120,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'width' : 'mapData(support,2,20,1,10)',
          'line-color' : 'data(nodeDegreeColor)'
       } ).selector( 'edge.basic' ).css( {
+         // 'z-index' : 'data(support)',
          // "For example, data(weight, 0, 100, blue, red) maps an element's weight to gradients between blue and red for
          // weights between 0 and 100"
          'width' : 'mapData(support,2,20,1,10)'

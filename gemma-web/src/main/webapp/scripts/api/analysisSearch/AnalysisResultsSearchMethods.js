@@ -18,8 +18,7 @@ Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
 
 /**
  * These methods are used to run a search from the AnalysisResultsSearchForm; note that it does not actually contain the
- * calls to the server-side methods. See also AnalysisResultsSearchNonWidget, which does the same thing but in a
- * non-widget format?
+ * calls to the server-side methods.
  * 
  * It's an Ext.util.Observable so that it can fire events (needed to keep form and UI in sync with steps of searching)
  * 
@@ -32,19 +31,9 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
    DEFAULT_STRINGENCY : Gemma.MIN_STRINGENCY,
    DEFAULT_useMyDatasets : false,
    DEFAULT_queryGenesOnly : false,
+
    // defaults for differential expression
    // using Gemma.DEFAULT_THRESHOLD, Gemma.MIN_THRESHOLD, Gemma.MAX_THRESHOLD (defined elsewhere)
-
-   geneIds : [],
-   geneGroupId : null, // keep track of what gene group has been selected
-   experimentIds : [],
-
-   hidingExamples : false,
-
-   SearchType : {
-      'COEXPRESSION' : 1,
-      "DIFFERENTIAL_EXPRESSION" : 2
-   },
 
    /**
     * 
@@ -150,7 +139,7 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
             return false;
          }
 
-         Ext.Msg.alert( "Error", "Gene(s) must be selected before continuing, or fewer experiments." );
+         Ext.Msg.alert( "Error", "Choose Genes or Experiments (or both)" );
          this.fireEvent( 'searchAborted' );
          return true;
       }
@@ -222,9 +211,9 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
       var coexpressionSearchCommand = {
          geneIds : geneIds,
          eeIds : eeIds,
-         stringency : this.DEFAULT_STRINGENCY,
-         useMyDatasets : this.DEFAULT_useMyDatasets,
-         queryGenesOnly : this.DEFAULT_queryGenesOnly,
+         stringency : this.DEFAULT_STRINGENCY, // FIXME let user change this.
+         useMyDatasets : this.DEFAULT_useMyDatasets, // FIXME let user change this
+         queryGenesOnly : this.DEFAULT_queryGenesOnly, // FIXME let user change this
          taxonId : this.taxonId,
          eeSetName : null,
          eeSetId : experimentSetValueObject != null ? experimentSetValueObject.id : null,
@@ -250,7 +239,7 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
     */
    validateCoexSearch : function( coexSearchCommand ) {
       if ( coexSearchCommand.queryGenesOnly
-         && (coexSearchCommand.geneIds == null || coexSearchCommand.geneIds.length < 2) ) {
+         && (coexSearchCommand.geneIds == null || coexSearchCommand.geneSet.size < 2) ) {
          return "You must select more than one query gene to use 'search among query genes only'";
       } else if ( coexSearchCommand.geneSetId == null
          && (!coexSearchCommand.geneIds || coexSearchCommand.geneIds.length === 0) ) {

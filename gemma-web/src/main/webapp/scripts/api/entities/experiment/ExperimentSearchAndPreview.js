@@ -15,9 +15,16 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
    taxonId : null, // might be set by parent to control combo
 
    listModified : false,
+
    emptyText : "Search by keyword or ID",
 
    mode : 'coex',
+
+   /**
+    * @private
+    * @type {ExpressionExperimentSetValueObject}
+    */
+   selectedExpressionExperimentGroup : null,
 
    diffExMode : function() {
       this.mode = 'diffex';
@@ -28,12 +35,16 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
     * Clear current state
     */
    reset : function() {
+      this.listModified = false;
+      this.queryUsedToGetSessionGroup = null;
       this.preview.reset();
       this.experimentCombo.reset();
+      this.selectedExpressionExperimentGroup = null;
       this.experimentCombo.enable().show();
       this.helpBtn.show();
       this.preview.hide();
       this.doLayout();
+
    },
 
    coExMode : function() {
@@ -58,6 +69,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
 
    },
 
+   /**
+    * @public
+    * @return {ExpressionExperimentSetValueObject}
+    */
    getSelectedExpressionExperimentSetValueObject : function() {
       return this.selectedExpressionExperimentGroup;
    },
@@ -103,11 +118,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
     */
    makeSessionBoundExperimentSet : function( experimentIds, taxonId, name, description ) {
       // debugger;
-      this.searchForm.experimentIds = experimentIds;
-      this.experimentIds = experimentIds;
       var newEESet = new SessionBoundExperimentSetValueObject();
       newEESet.modified = false;
-      newEESet.eexpressionExperimentIds = experimenIds;
+      newEESet.expressionExperimentIds = experimentIds;
       newEESet.taxonId = taxonId;
       newEESet.name = name;// 'From Symbol List' etc.;
       newEESet.description = description, newEESet.size = experimentIds.length;
