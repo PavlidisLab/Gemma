@@ -54,7 +54,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'content' : 'data(name)',
          'font-family' : Gemma.CytoscapeSettings.labelFontName,
          'font-size' : Gemma.CytoscapeSettings.labelFontSize,
-         'text-opacity' : 'data(nodeDegreeOpacity + 0.2)',
+         // 'text-opacity' : 'data(nodeDegreeOpacity + 0.2)',
          // 'text-outline-width': 1,
          // 'text-outline-color': '#888',
          'text-valign' : 'center',
@@ -65,7 +65,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'border-width' : 'mapData(queryflag,0,1,0,3)',
          // node color
          'background-color' : 'data(nodeDegreeColor)',
-         // 'z-index' : 'data(support)',
+         // 'z-index' : 'data(support)', // FIXME make less specific nodes behind
 
          'text-valign' : 'top',
          // Do not show the labels when zoomed way out.
@@ -92,8 +92,6 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'visibility' : 'visible'
       } ).selector( 'node.overlay' ).css( {
          'content' : 'data(name)',
-         // 'z-index' : 'data(support)',
-
          // the text color
          'color' : Gemma.CytoscapeSettings.nodeColorOverlay,
          'font-family' : Gemma.CytoscapeSettings.labelFontName,
@@ -120,7 +118,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'width' : 'mapData(support,2,20,1,10)',
          'line-color' : 'data(nodeDegreeColor)'
       } ).selector( 'edge.basic' ).css( {
-         // 'z-index' : 'data(support)',
+         // 'z-index' : 'data(support)', // FIXME make less important edges behind
          // "For example, data(weight, 0, 100, blue, red) maps an element's weight to gradients between blue and red for
          // weights between 0 and 100"
          'width' : 'mapData(support,2,20,1,10)'

@@ -59,11 +59,11 @@ Gemma.GeneGrid = Ext.extend( Ext.grid.GridPanel,
       /**
        * Add to table.
        * 
-       * @param {}
+       * @param {Array.Number}
        *           geneIds
-       * @param {}
+       * @param {Function}
        *           callback
-       * @param {}
+       * @param {Array}
        *           args
        */
       loadGenes : function( geneIds, callback, args ) {

@@ -246,9 +246,11 @@ public class GeneCoexpressionNodeDegreeValueObject {
         GeneCoexpressionNodeDegree r = new GeneCoexpressionNodeDegreeImpl();
         r.setGeneId( this.geneId );
 
+        r.setRelativeLinkRanksPositive( bac.doubleArrayToBytes( asDoubleArrayPosRanks() ) );
+        r.setRelativeLinkRanksNegative( bac.doubleArrayToBytes( asDoubleArrayNegRanks() ) );
+
         r.setLinkCountsPositive( bac.intArrayToBytes( asIntArrayPos() ) );
         r.setLinkCountsNegative( bac.intArrayToBytes( asIntArrayNeg() ) );
-
         return r;
     }
 

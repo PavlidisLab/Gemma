@@ -303,6 +303,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
 
          /**
           * update size of top left control panel so that side labels line up with data rows
+          * 
+          * @private
           */
          updatePnlMiniControlSize : function() {
             // Update size of top left control panel so that gene labels line up with data rows.
@@ -342,6 +344,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
 
          },
 
+         /**
+          * @public
+          */
          redraw : function( wasHeatmapChanged ) {
             // Hide hover window to prevent it being integrated into the layout.
             this.hoverWindow.hide();
@@ -382,12 +387,20 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             }
          },
 
+         /**
+          * @public
+          */
          draw : function() {
             this.variableWidthCol.boxHeatmap.draw();
             this.fixedWidthCol.boxSideLabels.draw();
             this.variableWidthCol.boxTopLabels.draw();
          },
 
+         /**
+          * @private
+          * @param label
+          * @param e
+          */
          onClickGeneLabel : function( label, e ) {
             // If user held down ctrl while clicking, select column or gene instead
             // of popping up window.
@@ -403,6 +416,11 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             }
          },
 
+         /**
+          * @private
+          * @param label
+          * @param e
+          */
          onClickConditionLabel : function( label, e ) {
             // If user held down ctrl while clicking, select column or gene instead
             // of popping up window.
@@ -419,6 +437,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             }
          },
 
+         /**
+          * 
+          */
          downloadImage : function() {
             var ctxMain = this.variableWidthCol.boxHeatmap.ctx;
             var ctxSide = this.fixedWidthCol.boxSideLabels.ctx;
@@ -496,9 +517,10 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             condition.display.label.drawFn( false );
          },
 
-         // Some gene/condition scores depend on what is currently visible: % of
-         // missing values, inverse of p values sum
-         // Other scores are not affected by it: specificity
+         /**
+          * Some gene/condition scores depend on what is currently visible: % of missing values, inverse of p values sum
+          * Other scores are not affected by it: specificity
+          */
          updateVisibleScores : function() {
             var i, j;
             // Calculate visible scores for conditons
@@ -600,7 +622,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
          },
 
          /**
-          * 
+          * @private
           * @param correctedPValue
           * @returns {Number}
           */
@@ -625,6 +647,12 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             return visualizationValue;
          },
 
+         /**
+          * @private
+          * @param type
+          * @param item
+          * @returns {Object}
+          */
          constructHoverWindowContent : function( type, item ) {
             var msg;
             if ( type === 'gene' ) {
@@ -715,6 +743,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             return dsIds;
          },
 
+         /**
+          * @private
+          */
          afterRender : function() {
             Gemma.Metaheatmap.VisualizationPanel.superclass.afterRender.apply( this, arguments );
 
@@ -726,6 +757,10 @@ Gemma.Metaheatmap.VisualizationPanel = Ext
             this.hoverWindow.hide();
          },
 
+         /**
+          * @private
+          * @override
+          */
          onRender : function() {
             Gemma.Metaheatmap.VisualizationPanel.superclass.onRender.apply( this, arguments );
 

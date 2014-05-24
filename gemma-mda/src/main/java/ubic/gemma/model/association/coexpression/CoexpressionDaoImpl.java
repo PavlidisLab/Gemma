@@ -956,8 +956,9 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         assert gcndvo.total() == hits.size();
 
-        nd.setLinkCountsPositive( gcndvo.toEntity().getLinkCountsPositive() );
-        nd.setLinkCountsNegative( gcndvo.toEntity().getLinkCountsNegative() );
+        GeneCoexpressionNodeDegree entity = gcndvo.toEntity();
+        nd.setLinkCountsPositive( entity.getLinkCountsPositive() );
+        nd.setLinkCountsNegative( entity.getLinkCountsNegative() );
 
         sess.update( nd );
 
