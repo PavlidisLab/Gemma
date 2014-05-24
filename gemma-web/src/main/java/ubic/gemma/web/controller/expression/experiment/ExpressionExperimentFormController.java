@@ -78,15 +78,15 @@ import com.sdicons.json.parser.JSONParser;
  */
 public class ExpressionExperimentFormController extends BaseFormController {
 
-    private ExpressionExperimentService expressionExperimentService = null;
+    private AuditTrailService auditTrailService;
     private BioAssayService bioAssayService = null;
     private BioMaterialService bioMaterialService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private ExternalDatabaseService externalDatabaseService = null;
     private Persister persisterHelper = null;
-    private QuantitationTypeService quantitationTypeService;
-    private AuditTrailService auditTrailService;
 
     private PreprocessorService preprocessorService;
-    private ExternalDatabaseService externalDatabaseService = null;
+    private QuantitationTypeService quantitationTypeService;
 
     public ExpressionExperimentFormController() {
         /*
@@ -215,6 +215,10 @@ public class ExpressionExperimentFormController extends BaseFormController {
      */
     public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
+    }
+
+    public void setPreprocessorService( PreprocessorService preprocessorService ) {
+        this.preprocessorService = preprocessorService;
     }
 
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {

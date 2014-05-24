@@ -170,15 +170,12 @@
 		</property>
 		<property name="bioMaterialService">
 			<ref bean="bioMaterialService" />
-		</property>
-		<property name="contactService">
-			<ref bean="contactService" />
-		</property>
+		</property> 
 		<property name="externalDatabaseService">
 			<ref bean="externalDatabaseService" />
 		</property>
-		<property name="bibliographicReferenceService">
-			<ref bean="bibliographicReferenceService" />
+		<property name="preprocessorService">
+			<ref bean="preprocessorService" />
 		</property>
 		<property name="persisterHelper">
 			<ref bean="persisterHelper" />
