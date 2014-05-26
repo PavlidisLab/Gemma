@@ -85,7 +85,7 @@ if (eeNames != null && eeNames.size() > 0) {
     System.out.println "${new Date()}: Loading all known $taxonName experiments...";
     ees = eeService.findByTaxon(taxon);
 }
-System.out.println "${new Date()}: Loaded ${ees.size()} $taxonName experiments (${ees[1]}, ...).";
+System.out.println "${new Date()}: Loaded ${ees.size()} $taxonName experiments.";
 
 //TODO
 /*genes = genes[1..3]
