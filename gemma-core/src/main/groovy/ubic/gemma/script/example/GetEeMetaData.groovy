@@ -7,6 +7,7 @@ cli.h(longOpt: 'help', 'Usage: groovy GetEeMetaData -o')
 cli.f(argName: 'file name', longOpt: 'inFile', required: false, args: 1, '')
 cli.o(argName: 'file name', longOpt: 'outFile prefix', required: true, args: 1, '')
 cli.t(argName: 'taxon', longOpt: 'taxon', required: true, args: 1, '')
+cli.e(argName: 'file name', longOpt: 'eeFile', required: false, args: 1, 'File containing list of data sets to load')
 
 opts = cli.parse(args)
 if (!opts) return;
@@ -55,7 +56,7 @@ fOut.close()
  * Load list of ees from a file or from Gemma (for a given taxon)
  */
 //ees = eeService.loadAll()
-eeNames = (opts.hasOption("e"))? new File(f).readLines() : null;
+eeNames = (opts.hasOption("e"))? new File(opts.getOptionValue("e")).readLines() : null;
 // load experiment list or everything for a given taxon
 if (eeNames != null && eeNames.size() > 0) {
     System.out.println "${new Date()}: Attempting to load ${eeNames.size()} $taxonName experiments...";
@@ -65,7 +66,7 @@ if (eeNames != null && eeNames.size() > 0) {
     System.out.println "${new Date()}: Loading all known $taxonName experiments...";
     ees = eeService.findByTaxon(taxon);
 }
-System.out.println "${new Date()}: Loaded ${ees.size()} $taxonName experiments (${ees[1..3]}, ...).";
+System.out.println "${new Date()}: Loaded ${ees.size()} $taxonName experiments (${ees[1]}, ...).";
 
 i = 0;
 
