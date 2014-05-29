@@ -306,7 +306,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 for ( DifferentialExpressionAnalysis analysis : results ) {
 
-                    this.differentialExpressionAnalysisService.thawFully( analysis );
+                    analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
 
                     for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 
