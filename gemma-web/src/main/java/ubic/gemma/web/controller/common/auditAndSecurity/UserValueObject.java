@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import ubic.gemma.model.common.auditAndSecurity.User;
+import gemma.gsec.model.User;
 
 /**
  * @author keshav

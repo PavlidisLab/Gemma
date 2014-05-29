@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * 
  */
-public abstract class Person extends ContactImpl implements gemma.gsec.model.Securable {
+public abstract class Person extends ContactImpl implements gemma.gsec.model.Person {
 
     /**
      * Constructs new instances of {@link Person}.
@@ -41,15 +41,18 @@ public abstract class Person extends ContactImpl implements gemma.gsec.model.Sec
     /**
      * 
      */
+    @Override
     public abstract String getFullName();
 
     /**
      * 
      */
+    @Override
     public String getLastName() {
         return this.lastName;
     }
 
+    @Override
     public void setLastName( String lastName ) {
         this.lastName = lastName;
     }

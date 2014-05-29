@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.model.User;
+
 import java.util.Date;
 
 import org.apache.commons.logging.Log;

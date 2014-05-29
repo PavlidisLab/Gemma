@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.model.User;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -141,7 +143,7 @@ public abstract class AuditEvent implements Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.common.auditAndSecurity.User getPerformer() {
+    public User getPerformer() {
         return this.performer;
     }
 

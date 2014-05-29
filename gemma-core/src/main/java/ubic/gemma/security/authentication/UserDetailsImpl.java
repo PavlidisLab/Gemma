@@ -18,14 +18,14 @@
  */
 package ubic.gemma.security.authentication;
 
+import gemma.gsec.model.User;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import ubic.gemma.model.common.auditAndSecurity.User;
 
 /**
  * Implementation for Spring Security.

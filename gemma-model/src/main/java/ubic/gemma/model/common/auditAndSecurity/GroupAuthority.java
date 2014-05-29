@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 /**
  * Authority for groups (kind of like a "user role", but for group-based authorization)
  */
-public abstract class GroupAuthority implements java.io.Serializable {
+public abstract class GroupAuthority implements gemma.gsec.model.GroupAuthority {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.GroupAuthority}.
@@ -85,6 +85,7 @@ public abstract class GroupAuthority implements java.io.Serializable {
      * Authority granted to the group
      * </p>
      */
+    @Override
     public String getAuthority() {
         return this.authority;
     }
@@ -92,6 +93,7 @@ public abstract class GroupAuthority implements java.io.Serializable {
     /**
      * 
      */
+    @Override
     public Long getId() {
         return this.id;
     }
@@ -107,10 +109,12 @@ public abstract class GroupAuthority implements java.io.Serializable {
         return hashCode;
     }
 
+    @Override
     public void setAuthority( String authority ) {
         this.authority = authority;
     }
 
+    @Override
     public void setId( Long id ) {
         this.id = id;
     }

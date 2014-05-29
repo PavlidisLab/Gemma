@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.model.User;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,11 +39,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.JSONUtil;
+import ubic.gemma.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 
 /**

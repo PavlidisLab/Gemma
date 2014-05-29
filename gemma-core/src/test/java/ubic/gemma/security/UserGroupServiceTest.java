@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
+import gemma.gsec.model.UserGroup;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,7 +37,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;

@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 
@@ -72,8 +71,8 @@ public class UserListControllerImpl implements UserListController {
 
         Collection<UserValueObject> userValueObjects = new ArrayList<UserValueObject>();
 
-        Collection<User> users = userManager.loadAll();
-        for ( User u : users ) {
+        Collection<gemma.gsec.model.User> users = userManager.loadAll();
+        for ( gemma.gsec.model.User u : users ) {
             UserValueObject uv = new UserValueObject( u );
             userValueObjects.add( uv );
         }
@@ -106,7 +105,7 @@ public class UserListControllerImpl implements UserListController {
     public void saveUser( UserValueObject user ) {
 
         String userName = user.getUserName();
-        User u = userManager.findByUserName( userName );
+        gemma.gsec.model.User u = userManager.findByUserName( userName );
 
         UserDetailsImpl userDetails;
 

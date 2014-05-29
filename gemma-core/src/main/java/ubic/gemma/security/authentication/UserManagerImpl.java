@@ -96,14 +96,14 @@ public class UserManagerImpl implements UserManager {
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = loadGroup( groupName );
 
-        for ( GroupAuthority ga : g.getAuthorities() ) {
+        for ( gemma.gsec.model.GroupAuthority ga : g.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority.getAuthority() ) ) {
                 logger.warn( "Group already has authority" + authority.getAuthority() );
                 return;
             }
         }
 
-        GroupAuthority auth = GroupAuthority.Factory.newInstance();
+        GroupAuthority auth = ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance();
         auth.setAuthority( authority.getAuthority() );
 
         g.getAuthorities().add( auth );
@@ -113,8 +113,8 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public void addUserToGroup( String username, String groupName ) {
-        User u = loadUser( username );
-        UserGroup g = loadGroup( groupName );
+        ubic.gemma.model.common.auditAndSecurity.User u = loadUser( username );
+        ubic.gemma.model.common.auditAndSecurity.UserGroup g = loadGroup( groupName );
         userService.addUserToGroup( g, u );
     }
 
@@ -136,7 +136,7 @@ public class UserManagerImpl implements UserManager {
 
         logger.debug( "Changing password for user '" + username + "'" );
 
-        User u = loadUser( username );
+        ubic.gemma.model.common.auditAndSecurity.User u = loadUser( username );
         u.setPassword( newPassword );
         userService.update( u );
 
@@ -159,7 +159,7 @@ public class UserManagerImpl implements UserManager {
                     + "for current user." );
         }
 
-        User u = userService.findByEmail( email );
+        ubic.gemma.model.common.auditAndSecurity.User u = userService.findByEmail( email );
 
         if ( u == null ) {
             throw new UsernameNotFoundException( "No user found for that email address." );
@@ -187,10 +187,11 @@ public class UserManagerImpl implements UserManager {
     @Override
     public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
 
-        UserGroup g = UserGroup.Factory.newInstance();
+        UserGroup g = ubic.gemma.model.common.auditAndSecurity.UserGroup.Factory.newInstance();
         g.setName( groupName );
         for ( GrantedAuthority ga : authorities ) {
-            g.getAuthorities().add( GroupAuthority.Factory.newInstance( ga.getAuthority() ) );
+            g.getAuthorities().add(
+                    ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance( ga.getAuthority() ) );
         }
 
         userService.create( g );
@@ -209,7 +210,7 @@ public class UserManagerImpl implements UserManager {
 
         validateUserName( user.getUsername() );
 
-        User u = User.Factory.newInstance();
+        User u = ubic.gemma.model.common.auditAndSecurity.User.Factory.newInstance();
         u.setUserName( user.getUsername() );
         u.setPassword( user.getPassword() );
         u.setEnabled( user.isEnabled() );
@@ -313,7 +314,7 @@ public class UserManagerImpl implements UserManager {
         UserGroup group = loadGroup( groupToSearch );
 
         List<GrantedAuthority> result = new ArrayList<GrantedAuthority>();
-        for ( GroupAuthority ga : group.getAuthorities() ) {
+        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
             result.add( new SimpleGrantedAuthority( ga.getAuthority() ) );
         }
 
@@ -350,10 +351,10 @@ public class UserManagerImpl implements UserManager {
 
         UserGroup group = loadGroup( groupName );
 
-        Collection<User> groupMembers = group.getGroupMembers();
+        Collection<gemma.gsec.model.User> groupMembers = group.getGroupMembers();
 
         List<String> result = new ArrayList<String>();
-        for ( User u : groupMembers ) {
+        for ( gemma.gsec.model.User u : groupMembers ) {
             result.add( u.getUserName() );
         }
         return result;
@@ -403,8 +404,12 @@ public class UserManagerImpl implements UserManager {
     }
 
     @Override
-    public Collection<User> loadAll() {
-        return this.userService.loadAll();
+    public Collection<gemma.gsec.model.User> loadAll() {
+        Collection<gemma.gsec.model.User> ret = new ArrayList<>();
+        for ( gemma.gsec.model.User u : this.userService.loadAll() ) {
+            ret.add( u );
+        }
+        return ret;
     }
 
     @Override
@@ -634,8 +639,8 @@ public class UserManagerImpl implements UserManager {
      * @param groupName
      * @return
      */
-    private UserGroup loadGroup( String groupName ) {
-        UserGroup group = userService.findGroupByName( groupName );
+    private ubic.gemma.model.common.auditAndSecurity.UserGroup loadGroup( String groupName ) {
+        ubic.gemma.model.common.auditAndSecurity.UserGroup group = userService.findGroupByName( groupName );
 
         if ( group == null ) {
             throw new UsernameNotFoundException( "Group could not be read" );
@@ -648,8 +653,8 @@ public class UserManagerImpl implements UserManager {
      * @param username
      * @return
      */
-    private User loadUser( String username ) {
-        User user = userService.findByUserName( username );
+    private ubic.gemma.model.common.auditAndSecurity.User loadUser( String username ) {
+        ubic.gemma.model.common.auditAndSecurity.User user = userService.findByUserName( username );
         if ( user == null ) {
             throw new UsernameNotFoundException( "User with name " + username + " could not be loaded" );
         }

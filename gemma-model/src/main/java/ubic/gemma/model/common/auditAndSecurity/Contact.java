@@ -25,7 +25,7 @@ import ubic.gemma.model.common.Auditable;
  * Representing a person or organization that can be contacted about, or is the source of, data in the system. A contact
  * has role and can be the member of a security group.
  */
-public abstract class Contact extends Auditable {
+public abstract class Contact extends Auditable implements gemma.gsec.model.Contact {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.Contact}.
@@ -57,10 +57,12 @@ public abstract class Contact extends Auditable {
     /**
      * 
      */
+    @Override
     public String getEmail() {
         return this.email;
     }
 
+    @Override
     public void setEmail( String email ) {
         this.email = email;
     }

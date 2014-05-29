@@ -18,6 +18,7 @@
  */
 package ubic.gemma.security.audit;
 
+import gemma.gsec.model.User;
 import gemma.gsec.util.CrudUtils;
 import gemma.gsec.util.CrudUtilsImpl;
 
@@ -47,7 +48,6 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;

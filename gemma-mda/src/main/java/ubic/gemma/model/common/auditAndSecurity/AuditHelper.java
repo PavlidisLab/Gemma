@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.model.User;
 import ubic.gemma.model.common.Auditable;
 
 /**

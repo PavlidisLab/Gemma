@@ -23,7 +23,7 @@ import java.util.Collection;
 /**
  * A user of the software system, who is authenticated.
  */
-public abstract class User extends PersonImpl implements gemma.gsec.model.SecuredNotChild {
+public abstract class User extends PersonImpl implements gemma.gsec.model.User {
 
     /**
      * Constructs new instances of {@link User}.
@@ -57,6 +57,7 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
     /**
      * 
      */
+    @Override
     public Boolean getEnabled() {
         return this.enabled;
     }
@@ -71,6 +72,7 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
     /**
      * 
      */
+    @Override
     public String getPassword() {
         return this.password;
     }
@@ -78,6 +80,7 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
     /**
      * 
      */
+    @Override
     public String getPasswordHint() {
         return this.passwordHint;
     }
@@ -92,6 +95,7 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
     /**
      * 
      */
+    @Override
     public String getSignupToken() {
         return this.signupToken;
     }
@@ -99,6 +103,7 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
     /**
      * 
      */
+    @Override
     public java.util.Date getSignupTokenDatestamp() {
         return this.signupTokenDatestamp;
     }
@@ -106,10 +111,12 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
     /**
      * 
      */
+    @Override
     public String getUserName() {
         return this.userName;
     }
 
+    @Override
     public void setEnabled( Boolean enabled ) {
         this.enabled = enabled;
     }
@@ -118,10 +125,12 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
         this.jobs = jobs;
     }
 
+    @Override
     public void setPassword( String password ) {
         this.password = password;
     }
 
+    @Override
     public void setPasswordHint( String passwordHint ) {
         this.passwordHint = passwordHint;
     }
@@ -130,14 +139,17 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.Secure
         this.savedQueries = savedQueries;
     }
 
+    @Override
     public void setSignupToken( String signupToken ) {
         this.signupToken = signupToken;
     }
 
+    @Override
     public void setSignupTokenDatestamp( java.util.Date signupTokenDatestamp ) {
         this.signupTokenDatestamp = signupTokenDatestamp;
     }
 
+    @Override
     public void setUserName( String userName ) {
         this.userName = userName;
     }

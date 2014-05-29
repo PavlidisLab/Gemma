@@ -19,7 +19,10 @@
 package ubic.gemma.security.authorization.acl;
 
 import gemma.gsec.acl.BaseAclAdvice;
+import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.Securable;
+import gemma.gsec.model.User;
+import gemma.gsec.model.UserGroup;
 
 import java.util.Collection;
 
@@ -37,10 +40,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.StatusImpl;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

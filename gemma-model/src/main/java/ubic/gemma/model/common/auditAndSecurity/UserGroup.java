@@ -19,22 +19,25 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
+
 import java.util.Collection;
 
 /**
  * An organized group of researchers with an identifiable leader and group members.
  */
-public abstract class UserGroup extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredNotChild {
+public abstract class UserGroup extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.UserGroup {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.UserGroup}.
+     * Constructs new instances of {@link UserGroup}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.UserGroup}.
+         * Constructs a new instance of {@link UserGroup}.
          */
-        public static ubic.gemma.model.common.auditAndSecurity.UserGroup newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.UserGroupImpl();
+        public static UserGroup newInstance() {
+            return new UserGroupImpl();
         }
 
     }
@@ -58,22 +61,26 @@ public abstract class UserGroup extends ubic.gemma.model.common.Auditable implem
     /**
      * 
      */
-    public Collection<ubic.gemma.model.common.auditAndSecurity.GroupAuthority> getAuthorities() {
+    @Override
+    public Collection<GroupAuthority> getAuthorities() {
         return this.authorities;
     }
 
     /**
      * 
      */
-    public Collection<ubic.gemma.model.common.auditAndSecurity.User> getGroupMembers() {
+    @Override
+    public Collection<User> getGroupMembers() {
         return this.groupMembers;
     }
 
-    public void setAuthorities( Collection<ubic.gemma.model.common.auditAndSecurity.GroupAuthority> authorities ) {
+    @Override
+    public void setAuthorities( Collection<GroupAuthority> authorities ) {
         this.authorities = authorities;
     }
 
-    public void setGroupMembers( Collection<ubic.gemma.model.common.auditAndSecurity.User> groupMembers ) {
+    @Override
+    public void setGroupMembers( Collection<User> groupMembers ) {
         this.groupMembers = groupMembers;
     }
 

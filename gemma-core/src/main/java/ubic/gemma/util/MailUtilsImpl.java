@@ -14,6 +14,8 @@
  */
 package ubic.gemma.util;
 
+import gemma.gsec.model.User;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -23,9 +25,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.security.authentication.UserService;
-import ubic.gemma.util.Settings;
 
 /**
  * TODO Document Me

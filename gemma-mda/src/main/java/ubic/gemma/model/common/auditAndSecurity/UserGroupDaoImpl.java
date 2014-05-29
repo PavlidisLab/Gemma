@@ -55,14 +55,14 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
     @Override
     public void addAuthority( UserGroup group, String authority ) {
 
-        for ( GroupAuthority ga : group.getAuthorities() ) {
+        for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority ) ) {
                 log.warn( "Group already has authority " + authority );
                 return;
             }
         }
 
-        GroupAuthority ga = GroupAuthority.Factory.newInstance();
+        GroupAuthority ga = ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance();
         ga.setAuthority( authority );
 
         group.getAuthorities().add( ga );
@@ -89,7 +89,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
      *      ubic.gemma.model.common.auditAndSecurity.UserGroup)
      */
     @Override
-    public UserGroup create( final ubic.gemma.model.common.auditAndSecurity.UserGroup userGroup ) {
+    public UserGroup create( final UserGroup userGroup ) {
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
         }
@@ -155,8 +155,9 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
     @Override
     public void removeAuthority( UserGroup group, String authority ) {
 
-        for ( Iterator<GroupAuthority> iterator = group.getAuthorities().iterator(); iterator.hasNext(); ) {
-            GroupAuthority ga = iterator.next();
+        for ( Iterator<gemma.gsec.model.GroupAuthority> iterator = group.getAuthorities().iterator(); iterator
+                .hasNext(); ) {
+            gemma.gsec.model.GroupAuthority ga = iterator.next();
             if ( ga.getAuthority().equals( authority ) ) {
                 iterator.remove();
             }

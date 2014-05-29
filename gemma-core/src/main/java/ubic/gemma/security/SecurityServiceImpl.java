@@ -64,7 +64,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.security.authentication.UserManager;
 
 /**
@@ -576,7 +575,7 @@ public class SecurityServiceImpl implements SecurityService {
 
         Collection<String> result = new HashSet<>();
         for ( String gname : groupNames ) {
-            UserGroup g = userManager.findGroupByName( gname );
+            gemma.gsec.model.UserGroup g = userManager.findGroupByName( gname );
             if ( this.isEditableByUser( g, userName ) ) {
                 result.add( gname );
             }
