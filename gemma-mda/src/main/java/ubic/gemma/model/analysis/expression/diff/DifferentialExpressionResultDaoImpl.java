@@ -376,8 +376,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             }
 
             resultsInter.get( id ).addContrast( SQLUtils.asId( rec[9] ), SQLUtils.asId( rec[5] ), ( Double ) rec[6],
-                    ( Double ) rec[8], SQLUtils.asId( rec[8] ) );
-
+                    ( Double ) rec[7], SQLUtils.asId( rec[8] ) );
         }
 
         // gather up probe information
