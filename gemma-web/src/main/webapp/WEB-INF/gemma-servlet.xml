@@ -972,7 +972,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.image.LinkOutValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DiffExResultSetSummaryValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject" />
 		<dwr:convert type="bean"
 			class="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisResultValueObject" />

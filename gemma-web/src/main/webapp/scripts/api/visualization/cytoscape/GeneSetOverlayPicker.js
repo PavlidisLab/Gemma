@@ -1,3 +1,6 @@
+/**
+ * Window to choose a set of genes for overlay on the visualization
+ */
 Gemma.GeneSetOverlayPicker = Ext.extend( Ext.Window,
    {
 

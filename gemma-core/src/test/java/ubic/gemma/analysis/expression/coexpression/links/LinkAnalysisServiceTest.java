@@ -301,7 +301,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             GeneCoexpressionNodeDegreeValueObject nodeDegree = geneCoexpressionService.getNodeDegree( gene );
 
             if ( links.size() != nodeDegree.getLinksWithMinimumSupport( 1 ).intValue() ) {
-
                 assertEquals( "Node degree check failed for gene " + gene, links.size(), nodeDegree
                         .getLinksWithMinimumSupport( 1 ).intValue() );
             }

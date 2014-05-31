@@ -266,11 +266,11 @@ public class CoexpressionSearchController {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes" );
+        log.info( "=== Graph-completion coexpression search for " + searchOptions.getGeneIds().size()
+                + " genes, stringency=" + searchOptions.getStringency() + " eeset=" + searchOptions.getEeSetId() );
 
         CoexpressionMetaValueObject result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(),
-                searchOptions.getGeneIds(), searchOptions.getStringency(), MAX_RESULTS_PER_GENE,
-                searchOptions.getQueryGenesOnly() );
+                searchOptions.getGeneIds(), searchOptions.getStringency(), MAX_RESULTS_PER_GENE, true );
 
         result.setSearchSettings( searchOptions );
         result.trim( new HashSet<>( queryGeneIds ) );
@@ -278,6 +278,10 @@ public class CoexpressionSearchController {
         if ( result.getResults() == null || result.getResults().isEmpty() ) {
             result.setErrorState( NOTHING_FOUND_MESSAGE );
             log.info( "No search results for query: " + searchOptions );
+        }
+
+        if ( timer.getTime() > 2000 ) {
+            log.info( "==== Search complete: " + result.getResults().size() + " hits" );
         }
 
         return result;

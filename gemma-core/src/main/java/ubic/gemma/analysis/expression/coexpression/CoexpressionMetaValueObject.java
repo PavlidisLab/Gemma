@@ -492,7 +492,8 @@ public class CoexpressionMetaValueObject {
 
             int oldtot = total;
             total += count;
-            log.info( "Testing number of edges at stringency " + stringency + " = " + total );
+            if ( log.isDebugEnabled() )
+                log.debug( "Testing number of edges at stringency " + stringency + " = " + total );
 
             // if we're over, use the previous limit. Remember we're going to add more edges.
             if ( oldtot > 0 && total > this.getMaxEdges() ) {

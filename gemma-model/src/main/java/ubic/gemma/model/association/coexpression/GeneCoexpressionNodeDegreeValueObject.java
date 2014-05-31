@@ -251,6 +251,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
 
         r.setLinkCountsPositive( bac.intArrayToBytes( asIntArrayPos() ) );
         r.setLinkCountsNegative( bac.intArrayToBytes( asIntArrayNeg() ) );
+
         return r;
     }
 

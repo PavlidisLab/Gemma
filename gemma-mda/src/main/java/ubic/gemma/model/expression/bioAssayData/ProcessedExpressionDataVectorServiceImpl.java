@@ -104,6 +104,19 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataArraysByProbeIds
+     * (ubic.gemma.model.expression.experiment.BioAssaySet, java.util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes ) {
+        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbeIds( ee, probes );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
      */
@@ -117,10 +130,6 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
             ExpressionExperiment expressionExperiment, int limit ) {
         return this.getProcessedExpressionDataVectorDao().getProcessedVectors( expressionExperiment, limit );
-    }
-
-    public ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {
-        return processedExpressionDataVectorDao;
     }
 
     @Override
@@ -185,16 +194,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataArraysByProbeIds
-     * (ubic.gemma.model.expression.experiment.BioAssaySet, java.util.Collection)
-     */
-    @Override
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet ee, Collection<Long> probes ) {
-        return this.getProcessedExpressionDataVectorDao().getProcessedDataArraysByProbeIds( ee, probes );
+    private ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {
+        return processedExpressionDataVectorDao;
     }
 
 }

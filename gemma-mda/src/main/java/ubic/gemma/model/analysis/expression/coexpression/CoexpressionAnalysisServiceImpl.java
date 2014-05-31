@@ -129,6 +129,41 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
         return coexpressionAnalysisDao;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService#getExperimentsWithAnalysis(java
+     * .util.Collection)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
+        return this.getCoexpressionAnalysisDao().getExperimentsWithAnalysis( idsToFilter );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService#getExperimentsWithAnalysis()
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
+        Collection<Long> haveCoexpressionAnalysis = new HashSet<>();
+        Collection<CoexpressionAnalysis> analyses = findByTaxon( taxon );
+        for ( CoexpressionAnalysis a : analyses ) {
+            haveCoexpressionAnalysis.add( a.getExperimentAnalyzed().getId() );
+        }
+        return haveCoexpressionAnalysis;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
+        return this.getCoexpressionAnalysisDao().hasCoexpCorrelationDistribution( ee );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public CoexpressionAnalysis load( Long id ) {
@@ -157,35 +192,6 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
     @Transactional
     public void update( CoexpressionAnalysis o ) {
         this.getCoexpressionAnalysisDao().update( o );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService#getExperimentsWithAnalysis()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
-        Collection<Long> haveCoexpressionAnalysis = new HashSet<>();
-        Collection<CoexpressionAnalysis> analyses = findByTaxon( taxon );
-        for ( CoexpressionAnalysis a : analyses ) {
-            haveCoexpressionAnalysis.add( a.getExperimentAnalyzed().getId() );
-        }
-        return haveCoexpressionAnalysis;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService#getExperimentsWithAnalysis(java
-     * .util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        return this.getCoexpressionAnalysisDao().getExperimentsWithAnalysis( idsToFilter );
     }
 
 }

@@ -40,4 +40,10 @@ public interface CoexpressionAnalysisDao extends AnalysisDao<CoexpressionAnalysi
      */
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
+    /**
+     * @param ee
+     * @return
+     */
+  public  Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
+
 }

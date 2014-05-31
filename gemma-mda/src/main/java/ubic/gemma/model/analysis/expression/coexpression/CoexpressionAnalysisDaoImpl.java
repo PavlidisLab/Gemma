@@ -55,6 +55,15 @@ public class CoexpressionAnalysisDaoImpl extends CoexpressionAnalysisDaoBase {
 
     }
 
+    @Override
+    public Boolean hasCoexpCorrelationDistribution(ExpressionExperiment ee) {
+        String q = "select ccd from CoexpressionAnalysisImpl pca "
+                + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
+        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
+                .setParameter( "ee", ee ).uniqueResult() != null;
+    }
+    
+    
     /*
      * (non-Javadoc)
      * 

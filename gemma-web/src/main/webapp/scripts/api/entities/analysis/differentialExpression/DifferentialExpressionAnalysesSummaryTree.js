@@ -499,6 +499,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
          /**
           * get experimental factor string and build analysis parent node text
           * 
+          * @private
           * @param {Object}
           *           resultSet
           * @return {[String,int]} an array with the first element being the factor text and the second a flag marking

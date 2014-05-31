@@ -747,7 +747,7 @@ public class ExpressionExperimentController {
         qc.setHasPCA( svdService.hasPca( ee.getId() ) );
         qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
         qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
-        qc.setHasCorrDist( true ); // FIXME
+        qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
         qc.setNumOutliersRemoved( numOutliersRemoved( ee ) );
         qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
         return qc.getQChtml();
@@ -832,7 +832,7 @@ public class ExpressionExperimentController {
                 return o1.getScientificName().compareTo( o2.getScientificName() );
             }
         } );
-        LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<String, Long>();
+        LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<>();
 
         long expressionExperimentCount = 0; // expressionExperimentService.countAll();
         for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
@@ -953,8 +953,7 @@ public class ExpressionExperimentController {
 
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
 
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( ee.getId() );
+        Collection<Long> ids = Collections.singleton( ee.getId() );
 
         Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids,
                 false );
@@ -979,7 +978,7 @@ public class ExpressionExperimentController {
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
         finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
 
-        Collection<TechnologyType> techTypes = new HashSet<TechnologyType>();
+        Collection<TechnologyType> techTypes = new HashSet<>();
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
             techTypes.add( ad.getTechnologyType() );
         }
@@ -1001,7 +1000,7 @@ public class ExpressionExperimentController {
         }
 
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<Long> adids = new HashSet<Long>();
+        Collection<Long> adids = new HashSet<>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             adids.add( ad.getId() );
         }
@@ -1009,9 +1008,6 @@ public class ExpressionExperimentController {
 
         finalResult.setUserCanWrite( securityService.isEditable( ee ) );
         finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
-
-        Collection<ExpressionExperimentValueObject> finalResultc = new HashSet<ExpressionExperimentValueObject>();
-        finalResultc.add( finalResult );
 
         /*
          * populate the publication and author information

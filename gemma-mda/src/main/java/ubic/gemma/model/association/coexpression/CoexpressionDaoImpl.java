@@ -1502,12 +1502,11 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Map<Long, List<CoexpressionValueObject>> results = new HashMap<>();
 
         /*
-         * First, check the cache -- if the stringency is > limit
+         * First, check the cache -- if the stringency is >= limit
          */
         Collection<Long> genesNeeded;
         if ( stringency >= CoexpressionCache.CACHE_QUERY_STRINGENCY ) {
             genesNeeded = checkCache( genes, results );
-
             if ( genesNeeded.isEmpty() ) {
                 return results;
             }
@@ -1565,7 +1564,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         Map<Long, List<CoexpressionValueObject>> finalResult = new HashMap<>();
 
         /*
-         * First, check the cache -- if the stringency is > limit
+         * First, check the cache -- if the stringency is > =limit
          */
         Collection<Long> genesNeeded;
         if ( stringency >= CoexpressionCache.CACHE_QUERY_STRINGENCY ) {
@@ -1743,13 +1742,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         SQLQuery query1 = sess.createSQLQuery( sqlQuery1 );
 
         query1.setParameterList( "genes", geneIds.toArray() );
-
-        if ( stringency > 1 ) {
-            query1.setParameter( "s", stringency );
-        } else if ( !DELETE_ORPHAN_LINKS ) {
-            // means links could have support of zero, and we don't want those.
-            query1.setParameter( "s", 0 );
-        }
+        query1.setParameter( "s", Math.max( 1, stringency ) );
 
         List<Object[]> q1results = query1.list();
 

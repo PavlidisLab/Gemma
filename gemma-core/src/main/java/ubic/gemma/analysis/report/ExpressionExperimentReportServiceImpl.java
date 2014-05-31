@@ -23,6 +23,7 @@ import gemma.gsec.SecurityService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,6 +52,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -195,8 +197,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @Override
     public ExpressionExperimentValueObject generateSummary( Long id ) {
         assert id != null;
-        Collection<Long> ids = new ArrayList<>();
-        ids.add( id );
+        Collection<Long> ids = Collections.singletonList( id );
         Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
         if ( results.size() > 0 ) {
             return results.iterator().next();
@@ -313,8 +314,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
-        Map<ExpressionExperiment, Boolean> privacyInfo = securityService.arePrivate( ees );
-        Map<ExpressionExperiment, Boolean> sharingInfo = securityService.areShared( ees );
+        // not necessary - gets filled in by the interceptor.
+        // Map<ExpressionExperiment, Boolean> privacyInfo = securityService.arePrivate( ees );
+        // Map<ExpressionExperiment, Boolean> sharingInfo = securityService.areShared( ees );
 
         /*
          * add in the last events of interest for all eeVos This step is remarkably slow.
@@ -411,13 +413,13 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setAutoTagDate( taggerEvent.getDate() );
             }
 
-            if ( privacyInfo.containsKey( ee ) ) {
-                eeVo.setIsPublic( !privacyInfo.get( ee ) );
-            }
-
-            if ( sharingInfo.containsKey( ee ) ) {
-                eeVo.setIsShared( sharingInfo.get( ee ) );
-            }
+            // if ( privacyInfo.containsKey( ee ) ) {
+            // eeVo.setIsPublic( !privacyInfo.get( ee ) );
+            // }
+            //
+            // if ( sharingInfo.containsKey( ee ) ) {
+            // eeVo.setIsShared( sharingInfo.get( ee ) );
+            // }
 
             /*
              * The following are keyed by ID
@@ -475,9 +477,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
                 eeVo.setDateCached( cacheVo.getDateCached() );
-
-                // is this used?
-                // eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
+                eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
 
                 if ( eeVo.getDateCreated() == null ) {
                     // should be filled in already.
@@ -589,8 +589,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Long id = eeVo.getId();
         assert id != null;
 
-        // eeVo.setDifferentialExpressionAnalyses( differentialExpressionAnalysisService.getAnalysisValueObjects( id )
-        // );
+        Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> analysis = differentialExpressionAnalysisService
+                .getAnalysesByExperiment( Collections.singleton( id ) );
+        if ( analysis != null && analysis.containsKey( eeVo ) ) {
+            eeVo.setDifferentialExpressionAnalyses( analysis.get( eeVo ) );
+        }
 
         // FIXME could get this from the CoexpressionAnalysis.
         // eeVo.setCoexpressionLinkCount( geneCoexpressionService.countLinks( id ) );

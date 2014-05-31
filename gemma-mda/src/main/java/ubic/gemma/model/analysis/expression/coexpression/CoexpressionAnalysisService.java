@@ -91,4 +91,11 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
     public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
             CoexpCorrelationDistribution coexpd );
 
+    /**
+     * @param ee
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
+
 }

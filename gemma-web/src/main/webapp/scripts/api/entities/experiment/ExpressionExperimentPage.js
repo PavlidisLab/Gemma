@@ -66,13 +66,16 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
          this.loadMask.show();
       } );
 
-      ExpressionExperimentController.loadExpressionExperimentDetails( eeId, function( experimentDetails ) {
-         this.initFromExperimentValueObject( experimentDetails, isAdmin );
+      ExpressionExperimentController.loadExpressionExperimentDetails( eeId, {
+         callback : function( experimentDetails ) {
+            this.initFromExperimentValueObject( experimentDetails, isAdmin );
 
-         this.checkURLforInitialTab();
-         this.setActiveTab( this.initialTab );
+            this.checkURLforInitialTab();
+            this.setActiveTab( this.initialTab );
 
-      }.createDelegate( this ) );
+         }.createDelegate( this ),
+         errorHandler : Gemma.genericErrorHandler
+      } );
 
       Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {
          var appScope = this;

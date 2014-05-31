@@ -92,29 +92,21 @@ Gemma.CytoscapejsSettings = {
    coseLayout : {
       name : 'cose',
       refresh : 0,
+      liveUpdate : false,
       fit : true,
    },
 
    // See also http://arborjs.org/reference
    arborLayout : {
       name : 'arbor',
-      // liveUpdate : true,
-      // edgeLength:100,
-      // nodeMass : 2,
-      // maxSimulationTime : 4000,
-      repulsion : 100,
-      stiffness : 60,
-      // edgeLength : function( el ) {
-      // return 5.0 / el.support;
-      // },
-      //
-      // nodeMass : function( el ) {
-      // return 1.0;
-      // },
-
-      // gravity: false,
-      friction : 0.1,
-      // simulationBounds : [ 0, 0, 7000, 5000 ],
+      liveUpdate : false,
+      repulsion : 1000,
+      stiffness : 600,
+      maxSimulationTime : 4000,
+      friction : 0.5,
+      gravity : true,
+      fps : 12,
+      precision : 0.1,
       fit : true
    }
 
