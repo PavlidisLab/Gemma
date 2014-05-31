@@ -169,17 +169,20 @@ Gemma.ExperimentSetPreview = Ext.extend( Gemma.SetPreview, {
       editedGroup.numWithCoexpressionAnalysis = -1; // TODO
       editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
 
-      ExpressionExperimentSetController.addSessionGroup( editedGroup, true, function( newValueObject ) {
-         combo.reset();
-         combo.blur();
-         this.setSelectedSetValueObject( newValueObject );
-         this.loadExperimentPreviewFromExperimentSet( newValueObject );
+      ExpressionExperimentSetController.addSessionGroup( editedGroup, true, {
+         callback : function( newValueObject ) {
+            combo.reset();
+            combo.blur();
+            this.setSelectedSetValueObject( newValueObject );
+            this.loadExperimentPreviewFromExperimentSet( newValueObject );
 
-         this.updateTitle();
-         this.fireEvent( 'experimentListModified', newValueObject );
-         this.fireEvent( 'doneModification' );
+            this.updateTitle();
+            this.fireEvent( 'experimentListModified', newValueObject );
+            this.fireEvent( 'doneModification' );
 
-      }.createDelegate( this ) );
+         }.createDelegate( this ),
+         errorHandler : Gemma.genericErrorHandler
+      } );
 
    },
 

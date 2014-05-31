@@ -285,12 +285,12 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
       Gemma.GeneSetPreview.superclass.initComponent.call( this );
 
       this.selectionEditor.on( 'geneListModified', function( geneset ) {
-         if ( typeof geneset.geneIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
+         if ( typeof geneset.geneIds !== 'undefined' && typeof geneset.name !== 'undefined' ) {
             this._loadGenePreviewFromIds( geneset.geneIds );
             this.setSelectedSetValueObject( geneset );
             this.updateTitle();
          }
-         this.fireEvent( 'geneListModified', newSet );
+         this.fireEvent( 'geneListModified', geneset );
       }, this );
 
    }
