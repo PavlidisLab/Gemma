@@ -125,9 +125,7 @@
 					<webDriverCapabilities>
 						<capability>
 							<name>phantomjs.binary.path</name>
-							<!-- <value>${phantomjs.binary}</value> -->
-
-							<value>/Users/paul/dev/phantomjs-1.9.7-macosx/bin/phantomjs</value>
+							<value>${phantomjs.binary}</value>
 						</capability>
 					</webDriverCapabilities>
 				</configuration>
