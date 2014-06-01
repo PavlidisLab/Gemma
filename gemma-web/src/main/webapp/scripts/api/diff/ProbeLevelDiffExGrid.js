@@ -321,8 +321,8 @@ Gemma.ProbeLevelDiffExGrid.getEEStyler = function() {
    if ( Gemma.ProbeLevelDiffExGrid.eeNameStyler === undefined ) {
       Gemma.ProbeLevelDiffExGrid.eeNameTemplate = new Ext.XTemplate(
          '<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-         '{[value.sourceExperiment ? value.sourceExperiment : values.id]}"',
-         ' ext:qtip="{name}">{[value.sourceExperiment ? "Subset of " + values.sourceExperiment : value.shortName]}</a></tpl>' );
+         '{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
+         ' ext:qtip="{name}">{[values.sourceExperiment ? "Subset of " + values.sourceExperiment : values.shortName]}</a></tpl>' );
       Gemma.ProbeLevelDiffExGrid.eeNameStyler = function( value, metadata, record, row, col, ds ) {
          var ee = record.data.expressionExperiment;
          return Gemma.ProbeLevelDiffExGrid.eeNameTemplate.apply( ee );
