@@ -170,7 +170,9 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int maxResults, boolean quick ) {
 
-        // FIXME if the number of data sets is small, switch to doing a experiment-oriented query
+        if ( ( genes == null || genes.isEmpty() ) && t == null ) {
+            throw new IllegalArgumentException( "Must specify genes or the taxon" );
+        }
 
         Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findCoexpressionRelationships( t,
                 genes, bas, maxResults, quick );
@@ -316,9 +318,6 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
         this.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
 
-        /*
-         * TODO: compute 'overall' for the taxon
-         */
     }
 
     /**

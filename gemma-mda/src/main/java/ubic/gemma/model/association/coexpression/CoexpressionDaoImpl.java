@@ -544,6 +544,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         Collection<Long> g = new HashSet<>();
         g.add( gene.getId() );
+        assert gene.getTaxon() != null;
         Map<Long, List<CoexpressionValueObject>> r = this.getCoexpressionFromCacheOrDb( gene.getTaxon(), g, bas,
                 bas.size(), maxResults, quick );
 

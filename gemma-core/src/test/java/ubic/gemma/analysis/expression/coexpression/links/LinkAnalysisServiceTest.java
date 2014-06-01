@@ -286,7 +286,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         }
 
         for ( Gene gene : geneService.loadAll() ) {
-
+            assert gene.getTaxon() != null;
             Collection<CoexpressionValueObject> links = geneCoexpressionService.findCoexpressionRelationships( gene,
                     EntityUtils.getIds( ees ), 1, 0, false );
 
@@ -301,6 +301,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             GeneCoexpressionNodeDegreeValueObject nodeDegree = geneCoexpressionService.getNodeDegree( gene );
 
             if ( links.size() != nodeDegree.getLinksWithMinimumSupport( 1 ).intValue() ) {
+                log.info( nodeDegree );
                 assertEquals( "Node degree check failed for gene " + gene, links.size(), nodeDegree
                         .getLinksWithMinimumSupport( 1 ).intValue() );
             }
