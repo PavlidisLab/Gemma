@@ -59,9 +59,10 @@
 			<plugin>
 				<groupId>com.github.klieber</groupId>
 				<artifactId>phantomjs-maven-plugin</artifactId>
-				<version>0.3</version>
+				<version>0.4</version>
 				<executions>
 					<execution>
+						<phase>test-compile</phase>
 						<goals>
 							<goal>install</goal>
 						</goals>
@@ -124,7 +125,9 @@
 					<webDriverCapabilities>
 						<capability>
 							<name>phantomjs.binary.path</name>
-							<value>${phantomjs.binary}</value>
+							<!-- <value>${phantomjs.binary}</value> -->
+
+							<value>/Users/paul/dev/phantomjs-1.9.7-macosx/bin/phantomjs</value>
 						</capability>
 					</webDriverCapabilities>
 				</configuration>
