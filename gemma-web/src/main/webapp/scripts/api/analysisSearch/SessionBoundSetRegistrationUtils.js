@@ -36,15 +36,16 @@ Gemma.SessionSetsUtils = {
    },
 
    /**
-    * 
+    * @memberOf Gemma.SessionSetUtils
     * @param experimentSet
     * @returns {Promise}
     * @static
     */
    registerExperimentSetIfNotRegistered : function( esvo ) {
       var defered = new RSVP.defer();
+
       if ( typeof esvo === 'undefined' || esvo === null || esvo.id != -1 ) {
-         return defered.resolve( esvo );
+         defered.resolve( esvo );
       } else {
 
          ExpressionExperimentSetController.addSessionGroup( esvo, false, function( registeredESVO ) {

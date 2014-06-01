@@ -20,8 +20,8 @@ Gemma.DiffExSearchAndVisualize = Ext
             Gemma.DiffExSearchAndVisualize.superclass.constructor.call( this );
          },
 
-         geneGroupValueObject : {},
-         experimentGroupValueObject : {},
+         geneGroupValueObject : null,
+         experimentGroupValueObject : null,
 
          waitingForGeneSessionGroupBinding : false,
          waitingForDatasetSessionGroupBinding : false,
@@ -113,6 +113,7 @@ Gemma.DiffExSearchAndVisualize = Ext
           * 
           * Initiate the actual search on the server.
           * 
+          * @private
           * @memberOf Gemma.DiffExSearchAndVisualize
           */
          doSearch : function() {
@@ -229,26 +230,25 @@ Gemma.DiffExSearchAndVisualize = Ext
                }
             }
 
-            this.on( 'geneGroupsReadyForVisualization', function() {
-               if ( !this.waitingForDatasetSessionGroupBinding ) {
-                  this.doSearch();
-               }
-            }, this );
-            this.on( 'datasetGroupsReadyForVisualization', function() {
-               if ( !this.waitingForGeneSessionGroupBinding ) {
-                  this.doSearch();
-               }
-            }, this );
+            // this.on( 'geneGroupsReadyForVisualization', function() {
+            // if ( !this.waitingForDatasetSessionGroupBinding ) {
+            // this.doSearch();
+            // }
+            // }, this );
+            // this.on( 'datasetGroupsReadyForVisualization', function() {
+            // if ( !this.waitingForGeneSessionGroupBinding ) {
+            // this.doSearch();
+            // }
+            // }, this );
 
             Gemma.DiffExSearchAndVisualize.superclass.initComponent.apply( this, arguments );
 
+            // if we're already ready ...
             if ( this.geneGroupValueObject && this.experimentGroupValueObject ) {
                this.doSearch();
             }
-         },
-         onRender : function() {
-            Gemma.DiffExSearchAndVisualize.superclass.onRender.apply( this, arguments );
          }
+
       } );
 
 Ext.reg( 'metaVizDataSelection', Gemma.DiffExSearchAndVisualize );
