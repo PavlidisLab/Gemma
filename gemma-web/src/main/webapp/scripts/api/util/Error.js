@@ -4,8 +4,15 @@ Gemma.genericErrorHandler = function( err, exception ) {
    if ( typeof this.getEl == 'function' && this.getEl() != null && typeof this.getEl().unmask == 'function' ) {
       this.getEl().unmask();
    }
-   Ext.Msg.alert( "Generic error handler", err + "\n" + (exception ? exception.stack : 'No details') );
-   console.log( exception.stack );
+   if ( err.stack ) {
+      console.log( err.stack );
+      Ext.Msg.alert( "Generic error handler", err + "\n" + err.stack );
+   } else {
+      console.log( exception.stack );
+
+      Ext.Msg.alert( "Generic error handler", err + "\n" + (exception ? exception.stack : 'No details') );
+
+   }
 };
 
 Gemma.alertUserToError = function( baseValueObject, title ) {

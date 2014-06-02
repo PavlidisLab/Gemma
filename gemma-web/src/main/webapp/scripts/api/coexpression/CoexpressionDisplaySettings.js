@@ -39,7 +39,7 @@ Gemma.CoexpressionDisplaySettings = Ext.extend( Ext.util.Observable, {
    setStringency : function( newValue ) {
       if ( this.stringency !== newValue ) {
          this.stringency = newValue;
-         this.fireEvent( "stringency_change", newValue );
+         this.fireEvent( "stringency_change", this.stringency );
       }
    },
 
@@ -50,7 +50,7 @@ Gemma.CoexpressionDisplaySettings = Ext.extend( Ext.util.Observable, {
    setSearchTextValue : function( newValue ) {
       if ( this.searchTextValue !== newValue ) {
          this.searchTextValue = newValue;
-         this.fireEvent( "search_text_change", newValue );
+         this.fireEvent( "search_text_change", this.searchTextValue );
       }
    },
 
@@ -61,7 +61,7 @@ Gemma.CoexpressionDisplaySettings = Ext.extend( Ext.util.Observable, {
    setQueryGenesOnly : function( newValue ) {
       if ( this.queryGenesOnly !== newValue ) {
          this.queryGenesOnly = newValue;
-         this.fireEvent( "query_genes_only_change", newValue );
+         this.fireEvent( "query_genes_only_change", gene_overlay );
       }
    },
 
@@ -71,7 +71,7 @@ Gemma.CoexpressionDisplaySettings = Ext.extend( Ext.util.Observable, {
 
    setOverlayGeneIds : function( newOverlayGeneIds ) {
       this.overlayGeneIds = newOverlayGeneIds;
-      this.fireEvent( "gene_overlay", newOverlayGeneIds );
+      this.fireEvent( "gene_overlay", this.overlayGeneIds );
    },
 
    /**

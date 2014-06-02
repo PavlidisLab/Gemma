@@ -78,13 +78,8 @@ Gemma.CytoscapeControlBar = Ext
                }, {
                   itemId : 'applyGeneListOverlayButton',
                   text : "Gene List Overlay",
-                  checked : false,
                   handler : function( item ) {
-                     if ( !item.checked ) {
-                        this.geneSetOverlayPicker.show();
-                     } else {
-                        this.coexDisplaySettings.setOverlayGeneIds( [] );
-                     }
+                     this.geneSetOverlayPicker.show();
                   },
                   scope : this
                } ]

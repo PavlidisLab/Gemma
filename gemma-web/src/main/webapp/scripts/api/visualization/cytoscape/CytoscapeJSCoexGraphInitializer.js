@@ -43,9 +43,6 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
 
       container : document.getElementById( 'cy' ),
 
-      // performance optimization, but disconcerting: edges disappear when dragging etc.
-      // hideEdgesOnViewport : true,
-
       showOverlay : false,
       fit : false,
 
@@ -64,7 +61,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
          'border-width' : 'mapData(queryflag,0,1,0,3)',
          // node color
-         'background-color' : 'data(nodeDegreeColor)',
+         'background-color' : 'data(nodeDegreeColor)', // doesn't play nice with overlay.
          // 'z-index' : 'data(support)', // FIXME make less specific nodes behind
 
          'text-valign' : 'top',
@@ -101,7 +98,6 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'height' : Gemma.CytoscapeSettings.nodeSize,
          'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
          'border-width' : 'mapData(queryflag,0,1,0,3)',
-         'curve-style' : 'haystack',
 
          // Do not show the labels when zoomed way out.
          'min-zoomed-font-size' : 9,

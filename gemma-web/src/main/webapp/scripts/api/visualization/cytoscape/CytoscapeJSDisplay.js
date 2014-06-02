@@ -21,29 +21,31 @@ Ext.namespace( 'Gemma' );
 Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
    /**
+    * @private
+    */
+   ready : false,
+
+   /**
+    * @private
+    */
+   emphasized : true,
+
+   /**
     * @memberOf Gemma.CytoscapeJSDisplay
     */
    initComponent : function() {
       this.ready = false;
-
-      this.emphasized = true;
 
       var display = this;
 
       Gemma.CytoscapeJSDisplay.superclass.initComponent.apply( this, arguments );
       this.addEvents( 'selection_available', 'selection_unavailable', 'layout_complete' );
 
-      display.coexDisplaySettings.on( 'stringency_change', function() {
-         display.filter();
-      } );
+      display.coexDisplaySettings.on( 'stringency_change', display.update.createDelegate( display ) );
 
-      display.coexDisplaySettings.on( 'query_genes_only_change', function() {
-         display.filter();
-      } );
+      display.coexDisplaySettings.on( 'query_genes_only_change', display.update.createDelegate( display ) );
 
-      display.coexDisplaySettings.on( 'gene_overlay', function() {
-         // display.applyGeneListOverlay();
-      } );
+      display.coexDisplaySettings.on( 'gene_overlay', display.update.createDelegate( display ) );
 
       display.coexDisplaySettings.on( 'search_text_change', function( text ) {
          display.selectNodesMatchingText( text );
@@ -71,37 +73,45 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
     */
    onGraphReady : function( ownerRef ) {
       ownerRef.cy.on( 'done', function( e ) {
-         console.log( 'cytoscape event: done' );
          ownerRef.cy.panningEnabled( true );
          ownerRef.fireEvent( 'selection_available' );
          ownerRef.ready = true;
       } );
 
       ownerRef.cy.on( 'layoutstop', function( e ) {
-         // this is a hack because in firefox the cytoscape code fires off two 'layoutstop' events for arbor when you
-         // use it for initialization workaround is use a different layout in initializer, then once it finishes use one
-         // we want.
-         console.log( 'cytoscape event: layoutstop, layout name:' + e.cy._private.layout.options.name );
-         // if ( e.cy._private.layout.options.name == 'null' ) {
-         // ownerRef.refreshLayout();
-         // } else {
+         ownerRef.update();
          ownerRef.cytoscapePanel.loadMask.hide();
-         ownerRef.nodeDegreeEmphasize( true ); // FIXME allow default to change.
-         ownerRef.zoomToFit(); // FIXME this doesn't work that well.
-         // }
-
+         ownerRef.zoomToFit();
       } );
    },
 
    /**
-    * 
+    * @private
     * @param isNodeDegreeEmphasis
     */
-   applyDefaultGraphStyle : function( isNodeDegreeEmphasis ) {
-      // switch nodes that have emphasis to the opposite; switch nodes that are basic to the opposite?
-      this.cy.elements().toggleClass( 'emphasis', isNodeDegreeEmphasis );
-      this.cy.elements().toggleClass( 'basic', !isNodeDegreeEmphasis );
-      this.filter();
+   applyDefaultGraphStyle : function() {
+      // reset the overlay
+      this.cy.nodes().toggleClass( 'overlay', false );
+
+      // switch nodes that have emphasis to the opposite; switch nodes that are basic to the opposite? I don't get it.
+      this.cy.elements().toggleClass( 'emphasis', this.emphasized );
+      this.cy.elements().toggleClass( 'basic', !this.emphasized );
+   },
+
+   /**
+    * Update the display based on the current settings.
+    */
+   update : function() {
+      if ( !this.ready ) {
+         return;
+      }
+      try {
+         this.filter();
+         this.applyDefaultGraphStyle();
+         this.applyGeneListOverlay();
+      } catch (err) {
+         Gemma.genericErrorHandler( err );
+      }
    },
 
    /**
@@ -112,9 +122,8 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
       if ( !this.ready ) {
          return;
       }
-
       this.emphasized = isNodeDegreeEmphasis;
-      this.applyGeneListOverlay();
+      this.update();
    },
 
    /**
@@ -197,7 +206,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
          return;
       }
       this.hideAll();
-      // FIXME use the configured layout, don't assume this.
+
       this.cy.layout( Gemma.CytoscapejsSettings.arborLayout );
    },
 
@@ -208,7 +217,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
       if ( !this.ready ) {
          return;
       }
-      this.cy.fit();
+      this.cy.fit( 50 );
    },
 
    /**
@@ -256,6 +265,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
    },
 
    /**
+    * @private
     * @public
     */
    applyGeneListOverlay : function() {
@@ -265,11 +275,8 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
 
       var overlayIds = this.coexDisplaySettings.getOverlayGeneIds();
 
-      // slow - why is this here?
-      this.applyDefaultGraphStyle( this.emphasized );
-
       if ( overlayIds.length == 0 ) {
-         this.cy.nodes().toggleClass( 'overlay', false );
+         // this.cy.nodes().toggleClass( 'overlay', false );
          return;
       }
 
@@ -342,7 +349,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
    },
 
    /**
-    * 
+    * @private
     * @param nodesToShow
     * @param allNodes
     * @returns {Array}

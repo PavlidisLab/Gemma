@@ -100,27 +100,6 @@ Gemma.CytoscapePanelUtil.nodeDegreeColorMapper = function( nodeDegree, type ) {
 
 };
 
-// Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function( nodeDegree ) {
-//
-// // no data for some genes
-// if ( nodeDegree == null ) {
-// return 'not defined';
-// }
-//
-// if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.lightest ) {
-// return Gemma.CytoscapeSettings.nodeDegreeColor.lightest.name;
-// } else if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.light ) {
-// return Gemma.CytoscapeSettings.nodeDegreeColor.light.name;
-// } else if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.moderate ) {
-// return Gemma.CytoscapeSettings.nodeDegreeColor.moderate.name;
-// } else if ( nodeDegree > Gemma.CytoscapeSettings.nodeDegreeValue.dark ) {
-// return Gemma.CytoscapeSettings.nodeDegreeColor.dark.name;
-// } else {
-// return Gemma.CytoscapeSettings.nodeDegreeColor.darkest.name;
-// }
-//
-// };
-
 /**
  * @param {int}
  *           displayStringency

@@ -36,6 +36,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
       reset : function() {
          if ( this.loadMask )
             this.loadMask.hide();
+         this.selectedGeneSetValueObject = null;
          this.preview.reset();
          this.geneCombo.reset();
          this.geneCombo.enable().show();
@@ -89,6 +90,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
          if ( vo instanceof GeneSetValueObject ) {
             this.setSelectedGeneSetValueObject( vo );
          } else if ( vo instanceof GeneValueObject ) {
+            console.log( "Got a single gene, converting to a session-bound geneset" );
             // we should deal with sets, not
             // single gene objects, we end up having two cases too often. Convert gene directly to set and stick with
             // it.
@@ -96,7 +98,6 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
                'Group made from gene symbols entered' );
             this.setSelectedGeneSetValueObject( newset );
          } else {
-            console.log( record );
             throw "Don't know what kind of object was received";
          }
 
@@ -202,6 +203,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
 
          return geneset;
       },
+
       /**
        * Given text, search Gemma for matching genes. Used to 'bulk load' genes from the GUI.
        * 
@@ -314,6 +316,9 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
          this.fireEvent( 'select' );
       },
 
+      /**
+       * 
+       */
       changeDisplayAfterSelection : function() {
          this.geneCombo.disable().hide();
          this.helpBtn.hide();
@@ -321,7 +326,6 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
          this.doLayout();
          if ( this.loadMask )
             this.loadMask.hide();
-
       },
 
       /**

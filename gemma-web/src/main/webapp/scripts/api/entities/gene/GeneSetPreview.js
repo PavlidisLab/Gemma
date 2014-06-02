@@ -138,7 +138,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
          /*
           * Work with those directly.
           */
-         var newIds = geneSet.ids;
+         var newIds = geneSet.geneIds;
          this._appendAndUpdate( newIds );
 
       } else if ( geneSet.id != null ) {
