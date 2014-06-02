@@ -102,8 +102,7 @@ Ext.onReady( function() {
          formBind : true, // use with monitorValid in Ext.FormPanel for client side
          // validation
          handler : function( e ) {
-
-            e.getTarget().getForm().submit( {
+            editUser.getForm().submit( {
                url : this.url,
                method : 'POST',
                success : function() {

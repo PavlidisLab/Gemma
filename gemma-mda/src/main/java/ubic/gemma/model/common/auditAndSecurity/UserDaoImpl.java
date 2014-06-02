@@ -195,17 +195,24 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
             throw new IllegalArgumentException( "User.update - 'user' can not be null" );
         }
 
-        UserImpl userToUpdate = this.getHibernateTemplate().load( UserImpl.class, user.getId() );
-        if ( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( userToUpdate.getName() )
-                && !userToUpdate.getName().equals( user.getName() ) ) {
-            throw new IllegalArgumentException( "Cannot modify name of user "
-                    + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+        // check the original isn't 'administrator'. See init-acls.sql
+        if ( user.getId() == AuthorityConstants.REQUIRED_ADMINISTRATOR_ID
+                && !AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( user.getName() ) ) {
+            throw new IllegalArgumentException( "Cannot modify name of user ID="
+                    + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
         }
 
-        // we're done with it.
-        this.getSessionFactory().getCurrentSession().evict( userToUpdate );
+        // FIXME for reasons that remain obscure, I cannot get this to work using a regular session.update.
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
+                .setParameter( "id", user.getId() ).setParameter( "a", user.getPassword() ).executeUpdate();
 
-        this.getHibernateTemplate().update( user );
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET USER_NAME=:a WHERE ID=:id" )
+                .setParameter( "id", user.getId() ).setParameter( "a", user.getUserName() ).executeUpdate();
+
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
+                .setParameter( "id", user.getId() ).setParameter( "a", user.getEmail() ).executeUpdate();
+
+        // / this.getSessionFactory().getCurrentSession().update( user ); // no SQL gets fired.
     }
 
     /**
@@ -214,11 +221,11 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
      * @return
      */
     private User findByEmail( final String queryString, final String email ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
+        List<String> argNames = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
         args.add( email );
         argNames.add( "email" );
-        Set<User> results = new LinkedHashSet<User>( this.getHibernateTemplate().findByNamedParam( queryString,
+        Set<User> results = new LinkedHashSet<>( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         User result = null;
         if ( results.size() > 1 ) {
