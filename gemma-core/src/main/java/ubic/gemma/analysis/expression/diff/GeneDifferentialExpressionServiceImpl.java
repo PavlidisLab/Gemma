@@ -280,8 +280,6 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> resultsMap = differentialExpressionResultService
                 .find( g, EntityUtils.getIds( activeExperiments ) );
 
-        // Map<DifferentialExpressionValueObject, Collection<ExperimentalFactor>> dearToEf = getFactors( resultsMap );
-
         log.debug( resultsMap.size() + " results for " + g + " in " + activeExperiments );
 
         DifferentialExpressionMetaAnalysisValueObject mavo = new DifferentialExpressionMetaAnalysisValueObject();
@@ -477,11 +475,6 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                     log.warn( "No p-value for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
-                //
-                // r.setMetThreshold( r.getCorrP() < threshold ); // should always be tue
-                //
-                // Direction direction = computeDirection( r.getContrasts().getContrasts() ); // should already be done.
-                // r.setDirection( direction );
 
                 devos.add( r );
 
@@ -495,32 +488,5 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
         return devos;
     }
-
-    // private Direction computeDirection( List<ContrastVO> list ) {
-    // boolean down = false;
-    // boolean up = false;
-    // for ( ContrastVO cr : list ) {
-    // Double lf = cr.getLogFoldChange();
-    // if ( lf == null ) {
-    // /*
-    // * A contrast which is actually not valid, so it won't be counted in the hit list.
-    // */
-    // continue;
-    // } else if ( lf < 0 ) {
-    // down = true;
-    // } else if ( lf > 0 ) {
-    // up = true;
-    // }
-    // }
-    // if ( down && up ) {
-    // return Direction.EITHER;
-    // } else if ( down ) {
-    // return Direction.DOWN;
-    // } else if ( up ) {
-    // return Direction.UP;
-    // } else {
-    // return null;
-    // }
-    // }
 
 }
