@@ -200,7 +200,7 @@ public class GenePickerController {
         Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxonId != null ) ? sessionListManager
                 .getModifiedGeneSets( taxonId ) : sessionListManager.getModifiedGeneSets();
 
-        List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
         // create SearchResultDisplayObjects
         if ( sessionResult != null && sessionResult.size() > 0 ) {
@@ -214,7 +214,7 @@ public class GenePickerController {
         Collections.sort( sessionSets );
 
         // maintain order: session sets first
-        Collection<SearchResultDisplayObject> results = new ArrayList<SearchResultDisplayObject>();
+        Collection<SearchResultDisplayObject> results = new ArrayList<>();
         results.addAll( sessionSets );
         results.addAll( geneSearchService.searchGenesAndGeneGroups( query, taxonId ) );
 

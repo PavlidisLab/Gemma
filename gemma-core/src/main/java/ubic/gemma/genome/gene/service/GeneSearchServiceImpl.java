@@ -345,7 +345,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         if ( taxon != null ) {
 
             if ( query.toUpperCase().startsWith( "GO" ) ) {
-                // FIXME this should be  little more careful.
+                // FIXME this should be little more careful.
                 log.debug( "Getting results from geneSetSearch.findByGoId for GO prefixed query: " + query );
                 GeneSet goSet = geneSetSearch.findByGoId( query, taxon );
                 if ( goSet != null && goSet.getMembers() != null && goSet.getMembers().size() > 0 ) {
@@ -702,7 +702,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         // session-bound sets
 
         // right now, no public gene sets are useful so we don't want to prompt them
-        boolean promptPublicSets = false;
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -710,7 +709,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
         // filtered by security.
         Collection<GeneSet> sets = new ArrayList<>();
-        if ( promptPublicSets && !SecurityUtil.isUserLoggedIn() ) {
+        if ( !SecurityUtil.isUserLoggedIn() ) {
             try {
                 sets = geneSetService.loadAll( taxon );
                 if ( watch.getTime() > 100 )
