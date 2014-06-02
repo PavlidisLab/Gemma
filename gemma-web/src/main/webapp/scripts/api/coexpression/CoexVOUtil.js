@@ -9,6 +9,7 @@ Gemma.CoexVOUtil = {
    /**
     * takes an array of CoexpressionValueObjectExts (results) returns a set of all the geneIds contained in it
     * 
+    * @static
     * @param results
     * @returns {Array}
     * @memberOf Gemma.CoexVOUtil
@@ -37,6 +38,7 @@ Gemma.CoexVOUtil = {
     * Keep links that involve any query genes (not necessarily between query genes) and which meet the filter
     * stringency.
     * 
+    * @static
     * @param results
     * @param currentQueryGeneIds
     * @param filterStringency
@@ -68,6 +70,7 @@ Gemma.CoexVOUtil = {
    /**
     * Utility method; Syntactic sugar.
     * 
+    * @static
     * @param {Array}
     *           array
     * @param {}
@@ -88,6 +91,7 @@ Gemma.CoexVOUtil = {
     * over resultsSizeLimit.
     * </ol>
     * 
+    * @static
     * @param {Array}
     *           results CoexpressionValueObjectExts
     * @param {Array}
@@ -192,6 +196,7 @@ Gemma.CoexVOUtil = {
    /**
     * Filter results at the given stringency.
     * 
+    * @static
     * @param results
     * @param filterStringency
     * @returns {Array}
@@ -212,6 +217,7 @@ Gemma.CoexVOUtil = {
    /**
     * Utility method.
     * 
+    * @static
     * @param {Array}
     *           entities, must have an 'id' field. Assumed to be unique!
     * @returns {Array} ids of the entities
@@ -230,6 +236,7 @@ Gemma.CoexVOUtil = {
     * for filtering results down to only results that involve geneids; if the query or known gene is contained in the
     * original query geneids
     * 
+    * @static
     * @param geneIds
     * @param results
     * @returns {Array}
@@ -253,6 +260,7 @@ Gemma.CoexVOUtil = {
    /**
     * Filter results so that they are only links among the given genes.
     * 
+    * @static
     * @param geneIds
     * @param results
     * @returns {Array}
@@ -275,6 +283,7 @@ Gemma.CoexVOUtil = {
    /**
     * used by cytoscape panel to get gene node ids for highlighting
     * 
+    * @static
     * @param text
     * @param results
     * @returns {Array}
@@ -324,7 +333,14 @@ Gemma.CoexVOUtil = {
       return genesMatchingSearch;
    },
 
-   // used by coexpressionGrid to grab results for exporting
+   /**
+    * used by coexpressionGrid to grab results for exporting
+    * 
+    * @static
+    * @param text
+    * @param results
+    * @returns {Array}
+    */
    filterGeneResultsByText : function( text, results ) {
 
       var value = new RegExp( Ext.escapeRe( text ), 'i' );
@@ -345,6 +361,7 @@ Gemma.CoexVOUtil = {
    /**
     * Find a stringency, possibly lower than the initialDisplayStringency, to ensure we see some results.
     * 
+    * @static
     * @param results
     * @param initialDisplayStringency
     * @returns {number}

@@ -107,11 +107,12 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
      * @param coexp
      * @param stringency
      * @param queryGenesOnly
-     * @param geneIds
+     * @param queryGeneIds all those included in the query
      * @return results
      */
     private List<CoexpressionValueObjectExt> addExtCoexpressionValueObjects( GeneValueObject queryGene,
-            Collection<CoexpressionValueObject> coexp, int stringency, boolean queryGenesOnly, Collection<Long> geneIds ) {
+            Collection<CoexpressionValueObject> coexp, int stringency, boolean queryGenesOnly,
+            Collection<Long> queryGeneIds ) {
 
         List<CoexpressionValueObjectExt> results = new ArrayList<>();
         Collection<Long> coxpGenes = new HashSet<>();
@@ -127,14 +128,23 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             /*
              * sanity check
              */
-            if ( queryGenesOnly && !geneIds.contains( cvo.getCoexGeneId() ) ) {
+            if ( queryGenesOnly && !queryGeneIds.contains( cvo.getCoexGeneId() ) ) {
                 log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly" );
                 continue;
             }
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
             ecvo.setQueryGene( queryGene );
-            ecvo.setFoundGene( coexpedGenes.get( cvo.getCoexGeneId() ) );
+            GeneValueObject foundGene = coexpedGenes.get( cvo.getCoexGeneId() );
+
+            if ( !queryGeneIds.contains( foundGene.getId() ) ) {
+                foundGene.setIsQuery( false );
+            } else {
+                foundGene.setIsQuery( true );
+
+            }
+
+            ecvo.setFoundGene( foundGene );
 
             if ( cvo.isPositiveCorrelation() ) {
                 ecvo.setPosSupp( cvo.getNumDatasetsSupporting() );
@@ -217,7 +227,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             Collection<CoexpressionValueObject> coexpressions = allCoexpressions.get( queryGene );
 
             List<CoexpressionValueObjectExt> results = addExtCoexpressionValueObjects( idMap.get( queryGene ),
-                    coexpressions, stringency, queryGenesOnly, genes );
+                    coexpressions, stringency, queryGenesOnly, queryGeneIds );
 
             // test for bug 4036
             // for ( CoexpressionValueObjectExt cvo : results ) {

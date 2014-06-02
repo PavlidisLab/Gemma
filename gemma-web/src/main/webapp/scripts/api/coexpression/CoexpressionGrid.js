@@ -686,6 +686,11 @@ Gemma.CoexpressionGrid = Ext
                filteredData = Gemma.CoexVOUtil.filterGeneResultsByText( text, filteredData );
             }
 
+            if ( filteredData.length == 0 ) {
+               Ext.Msg.alert( 'No data', 'Nothing to download' );
+               return;
+            }
+
             var win = new Gemma.CoexpressionDownloadWindow( {
                title : "Coexpression Data"
             } );

@@ -94,6 +94,12 @@ public class GeneValueObject implements java.io.Serializable {
 
     private Long id;
 
+    /**
+     * Was this gene directly used in a query? Or is it inferred somehow. The default is true, use this when you need to
+     * differentiate
+     */
+    private Boolean isQuery = true;
+
     private Double multifunctionalityRank = 0.0;
 
     private String name;
@@ -103,13 +109,13 @@ public class GeneValueObject implements java.io.Serializable {
     private double[] nodeDegreeNegRanks;
 
     private double[] nodeDegreePosRanks;
-    
+
     /**
      * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0) for
      * negative correlation coexpression
      */
     private int[] nodeDegreesNeg;
-    
+
     /**
      * Array containing number of links supported by 0,1,2, .... data sets (value in first index is always 0) for
      * positive coexpression
@@ -277,6 +283,10 @@ public class GeneValueObject implements java.io.Serializable {
         return this.id;
     }
 
+    public Boolean getIsQuery() {
+        return isQuery;
+    }
+
     public Double getMultifunctionalityRank() {
         return multifunctionalityRank;
     }
@@ -394,6 +404,10 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public void setIsQuery( Boolean isQuery ) {
+        this.isQuery = isQuery;
     }
 
     public void setMultifunctionalityRank( Double multifunctionalityRank ) {

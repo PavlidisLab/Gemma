@@ -71,7 +71,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
        */
       var r = [];
       for (var i = 0; i < this.searchResults.results.length; i++) {
-         if ( this.searchResults.results[i].interQueryLink ) {
+         if ( this.searchResults.results[i].foundGene.isQuery ) {
             r.push( this.searchResults.results[i] );
          }
       }
