@@ -75,13 +75,13 @@ public abstract class UserGroup extends ubic.gemma.model.common.Auditable implem
     }
 
     @Override
-    public void setAuthorities( Collection<GroupAuthority> authorities ) {
-        this.authorities = authorities;
+    public <T extends GroupAuthority> void setAuthorities( Collection<T> authorities ) {
+        this.authorities = ( Collection<GroupAuthority> ) authorities;
     }
 
     @Override
-    public void setGroupMembers( Collection<User> groupMembers ) {
-        this.groupMembers = groupMembers;
+    public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
+        this.groupMembers = ( Collection<User> ) groupMembers;
     }
 
 }
