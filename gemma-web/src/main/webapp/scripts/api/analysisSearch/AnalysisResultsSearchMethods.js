@@ -92,8 +92,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
          || experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY ) {
          // trim (optional)
          Gemma.AnalysesSearchUtils.showTrimInputDialogWindow( Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY, geneCount,
-            geneSetValueObjects, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY, experimentCount,
-            experimentSetValueObjects, this );
+            geneSetValueObject, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY, experimentCount, experimentSetValueObject,
+            this );
       } else {
          // skip trimming
          this.startDifferentialExpressionSearch( geneSetValueObject, experimentSetValueObject );
