@@ -4,7 +4,7 @@ import java.util.concurrent.ForkJoinPool;
 
 import ubic.gemma.script.framework.SpringSupport;
 import ubic.gemma.tasks.visualization.DifferentialExpressionVisualizationValueObject.GeneScore;
-import ubic.gemma.model.analysis.Direction
+import ubic.gemma.model.analysis.expression.diff.Direction
 
 cli = new CliBuilder()
 cli.h(longOpt: 'help', 'Usage: groovy DiffExprMatrix -togiv')
@@ -193,6 +193,7 @@ for (gene in genes) {
                 }
             } catch (Exception e) {
                 System.err.println "$gene.officialSymbol $id $vals";
+                e.printStackTrace();
             }
         }
         
