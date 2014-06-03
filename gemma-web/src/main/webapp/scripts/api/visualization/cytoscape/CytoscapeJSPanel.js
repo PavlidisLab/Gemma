@@ -233,7 +233,7 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel,
        */
       searchForCytoscapeData : function() {
          this.loadMask.show();
-         var stringency = this.coexDisplaySettings.getStringency();
+         var stringency = this.coexpressionSearchData.getQueryStringency();
          this.coexpressionSearchData.searchForCytoscapeDataWithStringency( stringency );
       },
 
@@ -264,7 +264,7 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel,
          // option of reloading graph
          // at new stringency or returning display to current cytoscape stringency
          var displayStringency = this.coexDisplaySettings.getStringency();
-         var resultsStringency = this.coexpressionSearchData.getResultsStringency();
+         var resultsStringency = this.coexpressionSearchData.getQueryStringency();
 
          if ( this.display.ready && displayStringency < resultsStringency ) {
             Ext.Msg.show( {

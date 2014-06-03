@@ -215,8 +215,8 @@ public class CoexpressionSearchController {
                 searchOptions.getStringency(), MAX_RESULTS_PER_GENE, searchOptions.getQueryGenesOnly() );
 
         // FIXME This is ugly - we need to consolidate some of this.
-        if ( result.getAppliedStringency() > searchOptions.getStringency() ) {
-            searchOptions.setStringency( result.getAppliedStringency() );
+        if ( result.getTrimStringency() > searchOptions.getStringency() ) {
+            searchOptions.setStringency( result.getTrimStringency() );
         }
         result.setSearchSettings( searchOptions );
         result.trim();

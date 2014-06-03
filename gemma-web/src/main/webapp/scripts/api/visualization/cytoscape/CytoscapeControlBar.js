@@ -119,23 +119,11 @@ Gemma.CytoscapeControlBar = Ext
                                  enableKeyEvents : true,
                                  listeners : {
                                     "spin" : {
-                                       fn : function( spinner ) {
-                                          var stringency = spinner.field.getValue();
-                                          if ( stringency < Gemma.MIN_STRINGENCY ) {
-                                             spinner.field.setValue( Gemma.MIN_STRINGENCY );
-                                          } else {
-                                             this.onStringencyChange( stringency );
-                                          }
-                                       },
+                                       fn : this.onStringencyChange,
                                        scope : this
                                     },
                                     "keyup" : {
-                                       fn : function( field ) {
-                                          var value = field.getValue();
-                                          if ( Ext.isNumber( value ) && value > 1 ) {
-                                             this.onStringencyChange( value );
-                                          }
-                                       },
+                                       fn : this.onStringencyChange,
                                        scope : this,
                                        delay : 500
                                     }
@@ -279,55 +267,26 @@ Gemma.CytoscapeControlBar = Ext
             }, this );
          },
 
-         onStringencyChange : function( requestedDisplayStringency ) {
-            var controlBar = this;
+         /**
+          * @private handler
+          * @param requestedDisplayStringency
+          */
+         onStringencyChange : function( spinner ) {
 
-            var savedDisplayStringency = this.coexDisplaySettings.getStringency();
-            var resultsStringency = this.coexpressionSearchData.getResultsStringency();
+            var requestedDisplayStringency = spinner.field.getValue();
 
-            if ( requestedDisplayStringency < resultsStringency
-               && !this.cytoscapePanel.coexpressionSearchData.searchCommandUsed.queryGenesOnly
-               && requestedDisplayStringency >= Gemma.MIN_STRINGENCY ) {
+            /*
+             * Don't allow the stringency to go lower than that used in the query
+             */
+            var appliedStringency = this.coexpressionSearchData.searchResults.appliedStringency;
 
-               /*
-                * Temporarily disable the requery function.
-                */
-               Ext.Msg.show( {
-                  title : 'Stringency limit',
-                  msg : "Lowering of the support threshold is currently disabled."
-               } );
-
-               // Ext.Msg.show({
-               // title : 'New Search',
-               // msg : Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
-               // buttons : {
-               // ok : 'Proceed',
-               // cancel : 'Cancel'
-               // },
-               // fn : function(button) {
-               // if ( button === 'ok' ) {
-               // controlBar.coexpressionSearchData
-               // .searchForCytoscapeDataWithStringency(requestedDisplayStringency);
-               // controlBar.coexDisplaySettings.setStringency(requestedDisplayStringency);
-               // } else {
-               // // restore spinner field
-               // controlBar.setStringencySpinnerValue(savedDisplayStringency);
-               // }
-               // }
-               // });
-            } else if ( this.cytoscapePanel.coexpressionSearchData.searchCommandUsed.queryGenesOnly ) {
-               /*
-                * not sure if alerting the user is the best idea Ext.Msg.show({ title: 'Low stringency results have been
-                * trimmed', msg: 'Because of the number of genes in your search, low stringency results have been
-                * removed because of browser performance limitations, you cannot lower the stringency any lower',
-                * buttons: { ok: 'Proceed' }, fn: function (button) { controlBar.setStringencySpinnerValue(
-                * savedDisplayStringency ); } });
-                */
-
-               controlBar.coexDisplaySettings.setStringency( requestedDisplayStringency );
+            if ( requestedDisplayStringency < appliedStringency ) {
+               spinner.field.setValue( appliedStringency );
+               this.coexDisplaySettings.setStringency( appliedStringency );
             } else {
-               controlBar.coexDisplaySettings.setStringency( requestedDisplayStringency );
+               this.coexDisplaySettings.setStringency( requestedDisplayStringency );
             }
+
          },
 
          setStringencySpinnerValue : function( stringency ) {

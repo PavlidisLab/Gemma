@@ -217,7 +217,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                     maxResults, quick );
         }
 
-        result.setAppliedStringency( stringency );
+        result.setQueryStringency( stringency );
         Set<Long> queryGeneIds = allCoexpressions.keySet();
         Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( geneService.loadValueObjects( queryGeneIds ) );
 

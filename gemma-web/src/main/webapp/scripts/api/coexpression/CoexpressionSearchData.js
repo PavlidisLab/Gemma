@@ -54,6 +54,15 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    },
 
    /**
+    * The stringency that was used on the server - may not be what the user requested
+    * 
+    * @returns {Number}
+    */
+   getQueryStringency : function() {
+      return this.searchResults.queryStringency;
+   },
+
+   /**
     * 
     * @returns {Array}
     */
@@ -79,21 +88,13 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    },
 
    /**
-    * Stringency which was used to trim non-query results. FIXME
+    * The stringency that was applied on the server to trim the results - that is, the actual stringency used (be
+    * careful)
     * 
     * @returns
     */
-   getNonQueryGeneTrimmedValue : function() {
-      return this.cytoscapeSearchResults.nonQueryGeneTrimmedValue;
-   },
-
-   /**
-    * The stringency that was applied on the server to trim the results.
-    * 
-    * @returns
-    */
-   getAppliedStringency : function() {
-      return this.searchResults.appliedStringency;
+   getTrimStringency : function() {
+      return this.searchResults.trimStringency;
    },
 
    /**
@@ -147,6 +148,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    },
 
    /**
+    * FIXME This is redundant and confusing.
     * 
     * @returns
     */
@@ -206,6 +208,10 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          this.cytoscapeSearchResults = this.searchResults;
          this.searchCommandUsed.stringency = newStringency;
          this.cytoscapeResultsUpToDate = true;
+
+         /*
+          * last arg is the search settings
+          */
          this.fireEvent( 'complete-search-results-ready', this.searchResults, {
             geneIds : this.searchCommandUsed.geneIds,
             eeIds : this.searchCommandUsed.eeIds,

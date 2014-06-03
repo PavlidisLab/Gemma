@@ -49,7 +49,20 @@ public class CoexpressionMetaValueObject {
     /**
      * The stringency actually used if the results were trimmed
      */
-    private int appliedStringency;
+    private int trimStringency;
+
+    /**
+     * The stringency used in the initial query.
+     */
+    private int queryStringency;
+
+    public int getQueryStringency() {
+        return queryStringency;
+    }
+
+    public void setQueryStringency( int queryStringency ) {
+        this.queryStringency = queryStringency;
+    }
 
     private double[] degreeQuintiles = new double[5];
 
@@ -71,7 +84,7 @@ public class CoexpressionMetaValueObject {
     /**
      * This will be greater than zero if the data were trimmed prior to sending to the client.
      */
-    private int nonQueryGeneTrimmedValue = 0;
+    // private int nonQueryGeneTrimmedValue = 0;
 
     /**
      * How many data sets were actually used in the query; that is, which had coexpression analysis done.
@@ -104,8 +117,8 @@ public class CoexpressionMetaValueObject {
         super();
     }
 
-    public int getAppliedStringency() {
-        return appliedStringency;
+    public int getTrimStringency() {
+        return trimStringency;
     }
 
     public String getErrorState() {
@@ -116,9 +129,9 @@ public class CoexpressionMetaValueObject {
         return maxEdges;
     }
 
-    public int getNonQueryGeneTrimmedValue() {
-        return nonQueryGeneTrimmedValue;
-    }
+    // public int getNonQueryGeneTrimmedValue() {
+    // return nonQueryGeneTrimmedValue;
+    // }
 
     public int getNumDatasetsQueried() {
         return numDatasetsQueried;
@@ -155,8 +168,8 @@ public class CoexpressionMetaValueObject {
         return queryGenesOnly;
     }
 
-    public void setAppliedStringency( int appliedStringency ) {
-        this.appliedStringency = appliedStringency;
+    public void setTrimStringency( int appliedStringency ) {
+        this.trimStringency = appliedStringency;
     }
 
     public void setErrorState( String errorState ) {
@@ -172,9 +185,10 @@ public class CoexpressionMetaValueObject {
         this.maxEdges = maxEdges;
     }
 
-    public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
-        this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
-    }
+    //
+    // public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
+    // this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
+    // }
 
     /**
      * @param numDatasetsQueried the number of data sets which were actually used in the query (a subset of those
@@ -240,24 +254,24 @@ public class CoexpressionMetaValueObject {
         if ( geneResults.size() <= this.getMaxEdges() ) return;
 
         int startStringency = this.getSearchSettings().getStringency();
-        int trimStringency = startStringency;
+        int initialTrimStringency = startStringency;
 
         List<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<>();
 
         for ( CoexpressionValueObjectExt cvoe : geneResults ) {
-            if ( cvoe.getSupport() >= trimStringency ) {
+            if ( cvoe.getSupport() >= initialTrimStringency ) {
                 strippedGeneResults.add( cvoe );
             }
 
             // check if we identified the stringency threshold we want to use; we only set this once. Say the start
             // stringency is 2. If we end up with enough results at stringency 10, we get the rest of the results for
             // that stringency, but no more. Unfortunately this means we can get too many results, still.
-            if ( trimStringency == startStringency && strippedGeneResults.size() >= this.getMaxEdges() ) {
-                trimStringency = cvoe.getSupport();
+            if ( initialTrimStringency == startStringency && strippedGeneResults.size() >= this.getMaxEdges() ) {
+                initialTrimStringency = cvoe.getSupport();
             }
         }
 
-        assert trimStringency >= startStringency;
+        assert initialTrimStringency >= startStringency;
 
         log.info( "Original results size: " + geneResults.size() + " trimmed results size: "
                 + strippedGeneResults.size() + "  Total results removed: "
@@ -265,12 +279,12 @@ public class CoexpressionMetaValueObject {
 
         Collections.sort( strippedGeneResults );
         this.setResults( strippedGeneResults );
-        this.setAppliedStringency( trimStringency );
+        this.setTrimStringency( initialTrimStringency );
 
         // but this doesn't just deal with non-query gene edges.
-        this.setNonQueryGeneTrimmedValue( trimStringency );
+        // this.setNonQueryGeneTrimmedValue( trimStringency );
 
-        if ( this.searchSettings != null ) this.searchSettings.setStringency( trimStringency );
+        if ( this.searchSettings != null ) this.searchSettings.setStringency( initialTrimStringency );
 
         trimUnusedSummaries();
 
@@ -295,7 +309,7 @@ public class CoexpressionMetaValueObject {
          * Pick stringency that doesn't go over the limit.
          */
         CountingMap<Integer> supportDistribution = CoexpressionUtils.getSupportDistribution( geneResults );
-        int trimStringency = findTrimStringency( startStringency, supportDistribution );
+        int initialTrimStringency = findTrimStringency( startStringency, supportDistribution );
 
         // Map<Long, Integer> nodeDegreeDistribution = CoexpressionUtils.getNodeDegreeDistribution( geneResults );
 
@@ -341,8 +355,8 @@ public class CoexpressionMetaValueObject {
         // }
         // }
 
-        if ( trimStringency > startStringency ) {
-            log.info( "Trim stringency will be " + trimStringency + ", instead of " + startStringency );
+        if ( initialTrimStringency > startStringency ) {
+            log.info( "Trim stringency will be " + initialTrimStringency + ", instead of " + startStringency );
         } else {
             // no trimming will happen, so we can bail. But we shouldn't get here.
             // assert geneResults.size() <= this.getMaxEdges();
@@ -401,12 +415,12 @@ public class CoexpressionMetaValueObject {
                     geneIds.add( g2 );
                 } else if ( f ) {
                     geneIds.add( g1 );
-                    if ( cvoe.getSupport() >= trimStringency ) {
+                    if ( cvoe.getSupport() >= initialTrimStringency ) {
                         geneIds.add( g2 );
                     }
                 } else if ( q ) {
                     geneIds.add( g2 );
-                    if ( cvoe.getSupport() >= trimStringency ) {
+                    if ( cvoe.getSupport() >= initialTrimStringency ) {
                         geneIds.add( g1 );
                     }
                 }
@@ -417,9 +431,9 @@ public class CoexpressionMetaValueObject {
             // check if we identified the stringency threshold we want to use; we only set this once. Say the start
             // stringency is 2. If we end up with enough results at stringency 10, we get the rest of the results for
             // that stringency, but no more.
-            if ( trimStringency == startStringency && strippedGeneResults.size() >= this.getMaxEdges() ) {
-                trimStringency = cvoe.getSupport();
-                log.info( "Trim stringency raised to " + trimStringency );
+            if ( initialTrimStringency == startStringency && strippedGeneResults.size() >= this.getMaxEdges() ) {
+                initialTrimStringency = cvoe.getSupport();
+                log.info( "Trim stringency raised to " + initialTrimStringency );
             }
         }
 
@@ -427,7 +441,7 @@ public class CoexpressionMetaValueObject {
          * Retain links that involve the genes included above, at the trim stringency.
          */
         for ( CoexpressionValueObjectExt cvoe : maybe ) {
-            if ( cvoe.getSupport() >= trimStringency && geneIds.contains( cvoe.getFoundGene().getId() )
+            if ( cvoe.getSupport() >= initialTrimStringency && geneIds.contains( cvoe.getFoundGene().getId() )
                     && geneIds.contains( cvoe.getQueryGene().getId() ) ) {
                 strippedGeneResults.add( cvoe );
             }
@@ -438,10 +452,10 @@ public class CoexpressionMetaValueObject {
 
         Collections.sort( strippedGeneResults );
         this.setResults( strippedGeneResults );
-        this.setAppliedStringency( trimStringency );
+        this.setTrimStringency( initialTrimStringency );
 
         // but this doesn't just deal with non-query gene edges.
-        this.setNonQueryGeneTrimmedValue( trimStringency );
+        // this.setNonQueryGeneTrimmedValue( trimStringency );
 
         trimUnusedSummaries();
     }
@@ -480,7 +494,7 @@ public class CoexpressionMetaValueObject {
      * @return
      */
     private int findTrimStringency( int startStringency, CountingMap<Integer> stringencyDist ) {
-        int trimStringency = startStringency;
+        int initTrimStringency = startStringency;
         List<Integer> s = new ArrayList<>( stringencyDist.keySet() );
         Collections.sort( s );
         int total = 0;
@@ -497,13 +511,13 @@ public class CoexpressionMetaValueObject {
 
             // if we're over, use the previous limit. Remember we're going to add more edges.
             if ( oldtot > 0 && total > this.getMaxEdges() ) {
-                trimStringency = stringency + 1;
-                assert trimStringency >= startStringency;
+                initTrimStringency = stringency + 1;
+                assert initTrimStringency >= startStringency;
                 break;
             }
 
         }
-        return trimStringency;
+        return initTrimStringency;
     }
 
 }

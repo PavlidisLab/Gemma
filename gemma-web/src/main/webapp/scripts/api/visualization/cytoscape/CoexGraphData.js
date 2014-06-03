@@ -26,7 +26,8 @@ Gemma.CoexGraphData = function( coexpressionSearchData, cytoscapeCoexCommand ) {
 
    this.originalResults = new Object();
    this.originalResults.geneResults = coexpressionSearchData.getCytoscapeResults();
-   this.originalResults.trimStringency = coexpressionSearchData.getNonQueryGeneTrimmedValue();
+   this.originalResults.trimStringency = coexpressionSearchData.getTrimStringency();
+   this.originalResults.queryStringency = coexpressionSearchData.getQueryStringency();
 
    this.defaultSize = "medium";
 

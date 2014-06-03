@@ -358,36 +358,36 @@ Gemma.CoexVOUtil = {
       return genesMatchingSearch;
    },
 
-   /**
-    * Find a stringency, possibly lower than the initialDisplayStringency, to ensure we see some results.
-    * 
-    * @static
-    * @param results
-    * @param initialDisplayStringency
-    * @returns {number}
-    */
-   findMaximalStringencyToApply : function( results, initialDisplayStringency ) {
-
-      var highestResultStringency = Gemma.MIN_STRINGENCY;
-
-      for (var i = 0; i < results.length; i++) {
-
-         if ( results[i].posSupp > highestResultStringency ) {
-            highestResultStringency = results[i].posSupp;
-         }
-
-         if ( results[i].negSupp > highestResultStringency ) {
-            highestResultStringency = results[i].negSupp;
-         }
-
-         if ( highestResultStringency <= initialDisplayStringency ) {
-            // then we know we can use this stringency and see some results.
-            return initialDisplayStringency;
-         }
-
-      }
-
-      return Math.min( highestResultStringency, initialDisplayStringency );
-   }
-
+/**
+ * Find a stringency, possibly lower than the initialDisplayStringency, to ensure we see some results.
+ * 
+ * @static
+ * @param results
+ * @param initialDisplayStringency
+ *           should be the stringency used to query ... so this method isn't going to do anything.
+ * @returns {number}
+ */
+// findMaximalStringencyToApply : function( results, initialDisplayStringency ) {
+//
+// var highestResultStringency = Gemma.MIN_STRINGENCY;
+//
+// for (var i = 0; i < results.length; i++) {
+//
+// if ( results[i].posSupp > highestResultStringency ) {
+// highestResultStringency = results[i].posSupp;
+// }
+//
+// if ( results[i].negSupp > highestResultStringency ) {
+// highestResultStringency = results[i].negSupp;
+// }
+//
+// if ( highestResultStringency <= initialDisplayStringency ) {
+// // then we know we can use this stringency and see some results.
+// return initialDisplayStringency;
+// }
+//
+// }
+//
+// return Math.min( highestResultStringency, initialDisplayStringency );
+// }
 };

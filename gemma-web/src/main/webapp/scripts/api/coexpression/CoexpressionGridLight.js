@@ -297,22 +297,14 @@ Gemma.CoexpressionGridLight = Ext.extend( Ext.grid.GridPanel, {
          gene.taxonId = -1;
          gene.taxonName = "?";
       }
-      return this.foundGeneTemplateNoGemma.apply( gene );
+      return this.geneTemplate.apply( gene );
    },
 
-   /**
-    * FIXME this should use the same analysis as the last query. Here we always use 'All'.
-    */
-   foundGeneTemplate : new Ext.Template(
-      "<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'>"
-         + " <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
-      " &nbsp; ", "<a target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
-
-   foundGeneTemplateNoGemma : new Ext.Template( "<a style='font-weight:{fontWeight};' "
+   geneTemplate : new Ext.Template( "<a style='cursor:pointer;font-weight:{fontWeight};' "
       + "target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
 
    visStyler : function( value, metadata, record, row, col, ds ) {
-      return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+      return "<img style='cursor:pointer' src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
    },
 
    /**

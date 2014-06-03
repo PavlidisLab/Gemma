@@ -61,7 +61,7 @@ Gemma.CoexpressionDisplaySettings = Ext.extend( Ext.util.Observable, {
    setQueryGenesOnly : function( newValue ) {
       if ( this.queryGenesOnly !== newValue ) {
          this.queryGenesOnly = newValue;
-         this.fireEvent( "query_genes_only_change", gene_overlay );
+         this.fireEvent( "query_genes_only_change", this.queryGenesOnly );
       }
    },
 

@@ -133,7 +133,6 @@ Gemma.CoexpressionGrid = Ext
                               width : 60,
                               enableKeyEvents : true,
                               listeners : {
-                                 /* TODO: pass new value to handler. */
                                  'spin' : {
                                     fn : this.onStringencyChange,
                                     scope : this
@@ -220,47 +219,44 @@ Gemma.CoexpressionGrid = Ext
             /*
              * Event handler: Respond to search results.
              */
-            this.coexpressionSearchData.on( "search-results-ready",
-               function() {
-                  var resultsData = coexpressionGrid.coexpressionSearchData.getResults(); // Array
-                  var numDatasets = coexpressionGrid.coexpressionSearchData.getNumberOfDatasetsUsable();
-                  var initialStringency = coexpressionGrid.coexpressionSearchData.getAppliedStringency();
+            this.coexpressionSearchData.on( "search-results-ready", function() {
+               var resultsData = coexpressionGrid.coexpressionSearchData.getResults(); // Array
+               var numDatasets = coexpressionGrid.coexpressionSearchData.getNumberOfDatasetsUsable();
+               var initialStringency = coexpressionGrid.coexpressionSearchData.getQueryStringency();
 
-                  // Lower stringency until results are visible.
-                  var displayStringency = Gemma.CoexVOUtil
-                     .findMaximalStringencyToApply( resultsData, initialStringency );
+               // Lower stringency until results are visible. FIXME this won't do anything to go _down_
+               // var displayStringency = Gemma.CoexVOUtil.findMaximalStringencyToApply( resultsData, initialStringency
+               // );
+               var displayStringency = initialStringency;
 
-                  var k = 50;
-                  if ( numDatasets > k ) {
-                     displayStringency = Gemma.MIN_STRINGENCY + Math.round( numDatasets / k );
-                  }
-                  // if ( displayStringency > 20 ) {
-                  // displayStringency = 20;
-                  // }
+               // var k = 50;
+               // if ( numDatasets > k ) {
+               // displayStringency = Gemma.MIN_STRINGENCY + Math.round( numDatasets / k );
+               // }
 
-                  // should cause the spinner to update
-                  coexpressionGrid.coexDisplaySettings.setStringency( displayStringency );
+               // should cause the spinner to update
+               coexpressionGrid.coexDisplaySettings.setStringency( displayStringency );
 
-                  var bbarText = coexpressionGrid.getBottomToolbar().getComponent( 'bbarStatus' );
-                  if ( displayStringency > Gemma.MIN_STRINGENCY ) {
-                     bbarText.setText( "Display Stringency set to " + displayStringency
-                        + " based on number of experiments used." );
-                  }
+               var bbarText = coexpressionGrid.getBottomToolbar().getComponent( 'bbarStatus' );
+               // if ( displayStringency > Gemma.MIN_STRINGENCY ) {
+               // bbarText.setText( "Display Stringency set to " + displayStringency
+               // + " based on number of experiments used." );
+               // }
 
-                  var numQueryGenes = coexpressionGrid.coexpressionSearchData.getQueryGeneIds().length;
-                  coexpressionGrid.decideQueryColumn( numQueryGenes );
+               var numQueryGenes = coexpressionGrid.coexpressionSearchData.searchResults.queryGenes.length;
+               coexpressionGrid.decideQueryColumn( numQueryGenes );
 
-                  if ( resultsData.length < 1 ) {
-                     bbarText.setText( "No results to display" );
-                     coexpressionGrid.getBottomToolbar().show();
-                  } else {
-                     // TODO: show how many genes are involved.
-                     bbarText.setText( resultsData.length + " results from " + numDatasets
-                        + " datasets usable in query." );
-                     coexpressionGrid.loadData( resultsData );
-                  }
+               if ( resultsData.length < 1 ) {
+                  bbarText.setText( "No results to display" );
+                  coexpressionGrid.getBottomToolbar().show();
+               } else {
+                  // TODO: show how many genes are involved.
+                  bbarText.setText( resultsData.length + " results from " + numDatasets
+                     + " datasets usable in query, query for " + numQueryGenes + " genes" );
+                  coexpressionGrid.loadData( resultsData );
+               }
 
-               } );
+            } );
 
             /**
              * 
@@ -313,12 +309,25 @@ Gemma.CoexpressionGrid = Ext
             this.on( "cellclick", coexpressionGrid.rowClickHandler );
          },
 
-         // called from toolbar why is this different from CytoscapeControlBar setup?
-         onStringencyChange : function() {
-            var spinnerValue = this.getTopToolbar().getComponent( 'stringencySpinner' ).getValue();
-            if ( Ext.isNumber( spinnerValue ) && spinnerValue >= Gemma.MIN_STRINGENCY ) {
+         /**
+          * called from toolbar why is this different from CytoscapeControlBar setup?
+          * 
+          * @private
+          * @param spinner
+          */
+         onStringencyChange : function( spinner ) {
+            var spinnerValue = spinner.field.getValue();
+
+            /*
+             * Don't allow the stringency to go lower than that used in the query
+             */
+            var appliedStringency = this.coexpressionSearchData.getQueryStringency();
+
+            if ( spinnerValue >= appliedStringency ) {
                this.coexDisplaySettings.setStringency( spinnerValue );
                this.applyFilters();
+            } else {
+               spinner.field.setValue( appliedStringency );
             }
          },
 
@@ -352,11 +361,11 @@ Gemma.CoexpressionGrid = Ext
           */
          decideQueryColumn : function( numQueryGenes ) {
             var queryIndex = this.getColumnModel().getIndexById( 'query' );
-            if ( numQueryGenes > 1 ) {
-               this.getColumnModel().setHidden( queryIndex, false );
-            } else {
-               this.getColumnModel().setHidden( queryIndex, true );
-            }
+            // if ( numQueryGenes == 1 ) { // FIXME we always show for now.
+            // this.getColumnModel().setHidden( queryIndex, true );
+            // } else {
+            this.getColumnModel().setHidden( queryIndex, false );
+            // }
          },
 
          /**
@@ -576,23 +585,14 @@ Gemma.CoexpressionGrid = Ext
             if ( this.coexpressionSearchData.getQueryGeneIds().indexOf( gene.id ) !== -1 ) {
                gene.fontWeight = 'bold';
             }
-            return this.foundGeneTemplateNoGemma.apply( gene );
+            return this.geneTemplate.apply( gene );
          },
-
-         /**
-          * FIXME this should use the same analysis as the last query. Here we always use 'All'. (???)
-          */
-         foundGeneTemplate : new Ext.Template(
-            "<a href='/Gemma/searchCoexpression.html?g={id}&s=3&t={taxonId}&an=All {taxonName}'>"
-               + " <img src='/Gemma/images/logo/gemmaTiny.gif' ext:qtip='Make {officialSymbol} the query gene' /> </a>",
-            " &nbsp; ",
-            "<a target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
 
          /**
           * 
           */
-         foundGeneTemplateNoGemma : new Ext.Template(
-            "<a style='font-weight:{fontWeight};' target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
+         geneTemplate : new Ext.Template(
+            "<a style='cursor:pointer;font-weight:{fontWeight};' target='_blank' href='/Gemma/gene/showGene.html?id={id}'>{officialSymbol}</a> {officialName}" ),
 
          /**
           * 
@@ -611,11 +611,11 @@ Gemma.CoexpressionGrid = Ext
             }
             gene.abaGeneUrl = record.data.abaQueryGeneUrl;
             gene.fontWeight = 'bold';
-            return this.foundGeneTemplateNoGemma.apply( gene );
+            return this.geneTemplate.apply( gene );
          },
 
          visStyler : function( value, metadata, record, row, col, ds ) {
-            return "<img src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
+            return "<img style='cursor:pointer' src='/Gemma/images/icons/chart_curve.png' ext:qtip='Visualize the data' />";
          },
 
          /**
