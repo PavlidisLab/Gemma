@@ -1,5 +1,5 @@
 /*!
- * This file is part of cytoscape.js 2.2.7.
+ * This file is part of cytoscape.js 2.2.9.
  * 
  * Cytoscape.js is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the Free
@@ -176,7 +176,7 @@ var cytoscape;
   
 })( cytoscape, typeof window === 'undefined' ? null : window );
 
-;(function($$){ 'use strict';
+;(function($$, window){ 'use strict';
   
   // utility functions only for internal use
 
@@ -909,14 +909,16 @@ var cytoscape;
   $$.util.regex.hex3 = "\\#[0-9a-fA-F]{3}";
   $$.util.regex.hex6 = "\\#[0-9a-fA-F]{6}";
 
-  var requestAnimationFrame = typeof window === 'undefined' ? function(fn){ if(fn){ fn(); } } : ( window.requestAnimationFrame || window.mozRequestAnimationFrame ||  
+  var raf = !window ? null : ( window.requestAnimationFrame || window.mozRequestAnimationFrame ||  
         window.webkitRequestAnimationFrame || window.msRequestAnimationFrame );
 
+  raf = raf || function(fn){ if(fn){ setTimeout(fn, 1000/60) } };
+
   $$.util.requestAnimationFrame = function(fn){
-    requestAnimationFrame(fn);
+    raf( fn );
   };
 
-})( cytoscape );
+})( cytoscape, typeof window === 'undefined' ? null : window  );
 
 ;(function($$){ 'use strict';
   
@@ -5085,9 +5087,9 @@ var cytoscape;
             // console.log(i + ' x MISS: rolling back context');
             this.rollBackContext( ele, context );
             removedCxts.push( context );
-          }
 
-          delete _p.styleCxts[i];
+            delete _p.styleCxts[i];
+          }
         }
       } // for context
 
@@ -5243,6 +5245,13 @@ var cytoscape;
         percent = 0;
       } else {
         percent = (fieldVal - prop.fieldMin) / (prop.fieldMax - prop.fieldMin);
+      }
+
+      // make sure to bound percent value
+      if( percent < 0 ){
+        percent = 0;
+      } else if( percent > 1 ){
+        percent = 1;
       }
 
       if( type.color ){
@@ -7306,6 +7315,61 @@ var cytoscape;
 
       return this; // chaining
     },
+
+    viewport: function( opts ){ 
+      var _p = this._private;
+      var zoomDefd = true;
+      var panDefd = true;
+      var events = []; // to trigger
+      var zoomFailed = false;
+      var panFailed = false;
+
+      if( !opts ){ return this; }
+      if( !$$.is.number(opts.zoom) ){ zoomDefd = false; }
+      if( !$$.is.plainObject(opts.pan) ){ panDefd = false; }
+      if( !zoomDefd && !panDefd ){ return this; }
+
+      if( zoomDefd ){
+        var z = opts.zoom;
+
+        if( z < _p.minZoom || z > _p.maxZoom || !_p.zoomingEnabled ){
+          zoomFailed = true;
+
+        } else {
+          _p.zoom = z;
+
+          events.push('zoom');
+        }
+      }
+
+      if( panDefd && !zoomFailed && _p.panningEnabled ){
+        var p = opts.pan;
+
+        if( $$.is.number(p.x) ){
+          _p.pan.x = p.x;
+          panFailed = false;
+        }
+
+        if( $$.is.number(p.y) ){
+          _p.pan.y = p.y;
+          panFailed = false;
+        }
+
+        if( !panFailed ){
+          events.push('pan');
+        }
+      }
+
+      if( events.length > 0 ){
+        this.trigger( events.join(' ') );
+      }
+
+      this.notify({
+        type: 'viewport'
+      });
+
+      return this; // chaining
+    },
     
     // get the bounding box of the elements (in raw model position)
     boundingBox: function( selector ){
@@ -8000,12 +8064,13 @@ var cytoscape;
     // do a breadth first search from the nodes in the collection
     // from pseudocode on wikipedia
     breadthFirstSearch: function( roots, fn, directed ){
-      directed = arguments.length === 1 && !$$.is.fn(fn) ? fn : directed;
+      directed = arguments.length === 2 && !$$.is.fn(fn) ? fn : directed;
       fn = $$.is.fn(fn) ? fn : function(){};
       var cy = this._private.cy;
       var v = $$.is.string(roots) ? this.filter(roots) : roots;
       var Q = [];
-      var connectedEles = [];
+      var connectedNodes = [];
+      var connectedBy = {};
       var id2depth = {};
       var V = {};
       var j = 0;
@@ -8019,7 +8084,7 @@ var cytoscape;
           Q.unshift( v[i] );
           V[ v[i].id() ] = true; 
 
-          connectedEles.push( v[i] );
+          connectedNodes.push( v[i] );
           id2depth[ v[i].id() ] = 0;
         }
       }
@@ -8051,11 +8116,24 @@ var cytoscape;
 
             id2depth[ w.id() ] = id2depth[ v.id() ] + 1;
 
-            connectedEles.push( w );
-            connectedEles.push( e );
+            connectedNodes.push( w );
+            connectedBy[ w.id() ] = e;
           }
         }
         
+      }
+
+      var connectedEles = [];
+
+      for( var i = 0; i < connectedNodes.length; i++ ){
+        var node = connectedNodes[i];
+        var edge = connectedBy[ node.id() ];
+
+        if( edge ){
+          connectedEles.push( edge );
+        }
+
+        connectedEles.push( node );
       }
 
       return {
@@ -8067,7 +8145,7 @@ var cytoscape;
     // do a depth first search on the nodes in the collection
     // from pseudocode on wikipedia (iterative impl)
     depthFirstSearch: function( roots, fn, directed ){
-      directed = arguments.length === 1 && !$$.is.fn(fn) ? fn : directed;
+      directed = arguments.length === 2 && !$$.is.fn(fn) ? fn : directed;
       fn = $$.is.fn(fn) ? fn : function(){};
       var cy = this._private.cy;
       var v = $$.is.string(roots) ? this.filter(roots) : roots;
@@ -10795,6 +10873,7 @@ var cytoscape;
     var containerStyle = this.data.canvasContainer.style;
     containerStyle.position = 'absolute';
     containerStyle.zIndex = '0';
+    containerStyle.overflow = 'hidden';
 
     this.data.container.appendChild( this.data.canvasContainer );
 
@@ -14957,22 +15036,18 @@ var cytoscape;
           }
         }
         
-        if ( cy.boxSelectionEnabled() &&  Math.pow(select[2] - select[0], 2) + Math.pow(select[3] - select[1], 2) > 7 && select[4] ) {
-          // console.log('box selection');
-          
+        if ( cy.boxSelectionEnabled() &&  Math.pow(select[2] - select[0], 2) + Math.pow(select[3] - select[1], 2) > 7 && select[4] ) {         
           var newlySelected = [];
-          var box = r.getAllInBox(select[0], select[1], select[2], select[3]);
+          var box = r.getAllInBox( select[0], select[1], select[2], select[3] );
 
           r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
 
-          if (box.length > 0) { 
+          if( box.length > 0 ) { 
             r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
           }
 
-          // console.log(box);
-          for (var i=0;i<box.length;i++) { 
-            if (box[i]._private.selectable) {
-              draggedElements.push( box[i] ); 
+          for( var i = 0; i < box.length; i++ ){ 
+            if( box[i]._private.selectable ){
               newlySelected.push( box[i] );
             }
           }
@@ -14989,7 +15064,7 @@ var cytoscape;
             newlySelCol.select();
           }
 
-          if (box.length === 0) { 
+          if( newlySelected.length === 0 ){
             r.redraw();
           }
           
@@ -15184,7 +15259,7 @@ var cytoscape;
         ];
 
         // consider context tap
-        if( distance1 < 200 ){
+        if( distance1 < 200 && !e.touches[2] ){
 
           var near1 = r.findNearestElement(now[0], now[1], true);
           var near2 = r.findNearestElement(now[2], now[3], true);
@@ -15429,7 +15504,7 @@ var cytoscape;
 
       }  
 
-      if( capture && r.touchData.cxt ){
+      if( capture && r.touchData.cxt ){ 
         var cxtEvt = new $$.Event(e, {
           type: 'cxtdrag',
           cyPosition: { x: now[0], y: now[1] }
@@ -15474,7 +15549,7 @@ var cytoscape;
 
         }
 
-      } else if( capture && e.touches[2] && cy.boxSelectionEnabled() ){
+      } else if( capture && e.touches[2] && cy.boxSelectionEnabled() ){ 
         r.data.bgActivePosistion = undefined;
         clearTimeout( this.threeFingerSelectTimeout );
         this.lastThreeTouch = +new Date();
@@ -15498,6 +15573,16 @@ var cytoscape;
       } else if ( capture && e.touches[1] && cy.zoomingEnabled() && cy.panningEnabled() && cy.userZoomingEnabled() && cy.userPanningEnabled() ) { // two fingers => pinch to zoom
         r.data.bgActivePosistion = undefined;
         r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
+
+        var draggedEles = r.dragData.touchDragEles;
+        if( draggedEles ){ 
+          r.data.canvasNeedsRedraw[CanvasRenderer.DRAG] = true;
+
+          for( var i = 0; i < draggedEles.length; i++ ){
+            draggedEles[i]._private.grabbed = false;
+            draggedEles[i]._private.rscratch.inDragLayer = false;
+          }
+        }
 
         // console.log('touchmove ptz');
 
@@ -15579,12 +15664,10 @@ var cytoscape;
             ;
           }
 
-          cy._private.zoom = zoom2;
-          cy._private.pan = pan2;
-          cy
-            .trigger('pan zoom')
-            .notify('viewport')
-          ;
+          cy.viewport({
+            zoom: zoom2,
+            pan: pan2
+          });
 
           distance1 = distance2;  
           f1x1 = f1x2;
@@ -15603,11 +15686,7 @@ var cytoscape;
       } else if (e.touches[0]) {
         var start = r.touchData.start;
         var last = r.touchData.last;
-        var near = null;
-
-        if( !r.hoverData.draggingEles ){
-          r.findNearestElement(now[0], now[1], true);
-        }
+        var near = near || r.findNearestElement(now[0], now[1], true);;
 
         if ( start != null && start._private.group == 'nodes' && r.nodeIsDraggable(start)) {
           var draggedEles = r.dragData.touchDragEles;
@@ -15729,6 +15808,8 @@ var cytoscape;
             }
 
             r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
+
+            r.touchData.start = null;
           }
 
           cy.panBy({x: disp[0] * cy.zoom(), y: disp[1] * cy.zoom()});
@@ -15827,7 +15908,7 @@ var cytoscape;
         clearTimeout( this.threeFingerSelectTimeout );
         //this.threeFingerSelectTimeout = setTimeout(function(){
           var newlySelected = [];
-          var box = r.getAllInBox(select[0], select[1], select[2], select[3]);
+          var box = r.getAllInBox( select[0], select[1], select[2], select[3] );
 
           select[0] = undefined;
           select[1] = undefined;
@@ -15838,13 +15919,13 @@ var cytoscape;
           r.data.canvasNeedsRedraw[CanvasRenderer.SELECT_BOX] = true;
 
           // console.log(box);
-          for (var i=0;i<box.length;i++) { 
-            if (box[i]._private.selectable) {
+          for( var i = 0; i< box.length; i++ ) { 
+            if( box[i]._private.selectable ){
               newlySelected.push( box[i] );
             }
           }
 
-          var newlySelCol = (new $$.Collection( cy, newlySelected ));
+          var newlySelCol = new $$.Collection( cy, newlySelected );
 
           if( cy.selectionType() === 'single' ){
             cy.$(':selected').not( newlySelCol ).unselect();
@@ -15852,8 +15933,10 @@ var cytoscape;
 
           newlySelCol.select();
           
-          if (box.length > 0) { 
+          if( newlySelCol.length > 0 ) { 
             r.data.canvasNeedsRedraw[CanvasRenderer.NODE] = true; 
+          } else {
+            r.redraw();
           }
 
         //}, 100);
