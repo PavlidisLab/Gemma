@@ -84,7 +84,7 @@ Gemma.CytoscapePanelUtil.nodeDegreeColorMapper = function( nodeDegree, type ) {
       return Gemma.CytoscapeSettings.nodeDegreeColor.lightest;
    }
 
-   // return tint - so worst rank gets lightest color; low values are "good". The nodeDegreeColors are alpha values
+   // return tint - so worst rank gets lightest color; low values are "good".
    // we're going to use.
    if ( nodeDegree < Gemma.CytoscapeSettings.nodeDegreeValue.lowest ) {
       return base.toCSS();

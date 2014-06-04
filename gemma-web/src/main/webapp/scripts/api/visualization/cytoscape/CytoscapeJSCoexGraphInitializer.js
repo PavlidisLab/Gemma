@@ -61,7 +61,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
          'border-color' : Gemma.CytoscapeSettings.nodeQueryColorTrue,
          'border-width' : 'mapData(queryflag,0,1,0,3)',
          // node color
-         'background-color' : 'data(nodeDegreeColor)', // doesn't play nice with overlay.
+         'background-color' : 'data(nodeDegreeColor)',
          // 'z-index' : 'data(support)', // FIXME make less specific nodes behind
 
          'text-valign' : 'top',

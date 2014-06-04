@@ -568,21 +568,21 @@ Gemma.AnalysisResultsSearchForm = Ext
 
                   if ( urlparams.type == 'diff' ) {
                      this.coexToggle.toggle( false );
-                     this.diffExToggle.toggle( true ); // TODO initiate Search
+                     this.diffExToggle.toggle( true );
                   } else {
                      this.coexToggle.toggle( true );
-                     this.diffExToggle.toggle( false ); // TODO initiate Search
+                     this.diffExToggle.toggle( false );
                   }
 
                } else {
                   // backwards compatibility; assume coexpression
                   this.coexToggle.toggle( true );
                   this.diffExToggle.toggle( false );
-                  /*
-                   * TODO initiate Search
-                   */
 
                }
+
+               // TODO initiate Search? Rather than wait for user to proceed. For diff ex we need to specify the
+               // experiments...
             }
          },
 

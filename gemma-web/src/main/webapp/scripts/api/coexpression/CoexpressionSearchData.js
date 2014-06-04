@@ -1,8 +1,8 @@
 Ext.namespace( 'Gemma' );
 
 /**
- * Responsible for conducting a coexpression search, and holds the results. Basically mimics a
- * CoexpressionMetaValueObject
+ * Responsible for conducting a coexpression search, and holds the results. Basically wraps a
+ * CoexpressionMetaValueObject and encapsluates the search
  * 
  * @author cam
  * @class
@@ -16,14 +16,13 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    // CoexpressionMetaValueObject; also contains a copy of the command, whic his the original used.
    searchResults : {},
 
-   // not sure what this is for...
+   // CoexpressionMetaValueObject, which might be filtered different for the graph view.
    cytoscapeSearchResults : {},
 
    cytoscapeResultsUpToDate : false,
-   coexSearchTimeout : 420000,
 
-   // 
-   stringency : null,
+   coexSearchTimeout : 420000, // ms
+
    allGeneIdsSet : [],
 
    /**
@@ -45,10 +44,18 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
       Gemma.CoexpressionSearchData.superclass.constructor.call( this );
    },
 
+   /**
+    * 
+    * @returns {Number}
+    */
    getNumberOfDatasetsUsable : function() {
       return this.searchResults.numDatasetsQueried;
    },
 
+   /**
+    * 
+    * @returns
+    */
    getOriginalQuerySettings : function() {
       return this.searchResults.searchSettings;
    },
@@ -99,14 +106,19 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 
    /**
     * 
-    * @returns
+    * @returns {Array.CoexpressionValueObjectExt}
     */
    getCytoscapeResults : function() {
       return this.cytoscapeSearchResults.results;
    },
 
-   setCytoscapeKnownGeneResults : function( results ) {
-      this.cytoscapeSearchResults.results = results;
+   /**
+    * 
+    * @param results
+    *           {Array.CoexpressionValueObjectExt}
+    */
+   setCytoscapeResults : function( results ) {
+      this.cytoscapeSearchResults.results = results; // this seems a bad idea...
    },
 
    /**
@@ -164,32 +176,13 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
       return this.searchResults.queryGenes;
    },
 
-   /**
-    * Return how many links the gene has genome-wide at the given stringency.
-    * 
-    * @param geneId
-    * @param stringency
-    */
-   getNodeDegree : function( geneId, stringency ) {
-      var s = this.searchResults.summaries[geneId];
-      /*
-       * s is a CoexpressionSummaryValueObject
-       */
-      var c = s.coexpNodeDegree;
-
-      /*
-       * n is a TreeMap ...
-       */
-      var n = c.nodeDegrees;
-   },
-
    getTaxonId : function() {
       return this.searchCommandUsed.taxonId;
    },
 
-   setSearchCommand : function( searchCommand ) {
-      this.searchCommandUsed = searchCommand;
-   },
+   // setSearchCommand: function (searchCommand) {
+   // this.searchCommandUsed = searchCommand;
+   // },
 
    /**
     * Does the search using CoexpressionSearchController.doSearchQuickComplete; fires events to notify state e.g. when

@@ -151,7 +151,7 @@ Ext
 
          var coexDisplaySettings = new Gemma.CoexpressionDisplaySettings();
          coexDisplaySettings.setStringency( searchCommand.stringency );
-         coexpressionSearchData.setSearchCommand( searchCommand );
+       //  coexpressionSearchData.setSearchCommand( searchCommand ); // done on server.
 
          /**
           * 

@@ -217,7 +217,7 @@ Gemma.CytoscapeJSDisplay = Ext.extend( Ext.BoxComponent, {
       if ( !this.ready ) {
          return;
       }
-      this.cy.fit( 50 );
+      this.cy.fit( 50 ); // 50=margin
    },
 
    /**

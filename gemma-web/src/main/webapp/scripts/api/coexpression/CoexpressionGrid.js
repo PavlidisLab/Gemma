@@ -219,44 +219,47 @@ Gemma.CoexpressionGrid = Ext
             /*
              * Event handler: Respond to search results.
              */
-            this.coexpressionSearchData.on( "search-results-ready", function() {
-               var resultsData = coexpressionGrid.coexpressionSearchData.getResults(); // Array
-               var numDatasets = coexpressionGrid.coexpressionSearchData.getNumberOfDatasetsUsable();
-               var initialStringency = coexpressionGrid.coexpressionSearchData.getQueryStringency();
+            this.coexpressionSearchData.on( "search-results-ready",
+               function() {
+                  var resultsData = coexpressionGrid.coexpressionSearchData.getResults(); // Array
+                  var numDatasets = coexpressionGrid.coexpressionSearchData.getNumberOfDatasetsUsable();
+                  var initialStringency = coexpressionGrid.coexpressionSearchData.getQueryStringency();
 
-               // Lower stringency until results are visible. FIXME this won't do anything to go _down_
-               // var displayStringency = Gemma.CoexVOUtil.findMaximalStringencyToApply( resultsData, initialStringency
-               // );
-               var displayStringency = initialStringency;
+                  // Lower stringency until results are visible. FIXME this won't do anything to go _down_
+                  // var displayStringency = Gemma.CoexVOUtil.findMaximalStringencyToApply( resultsData,
+                  // initialStringency
+                  // );
+                  var displayStringency = initialStringency;
 
-               // var k = 50;
-               // if ( numDatasets > k ) {
-               // displayStringency = Gemma.MIN_STRINGENCY + Math.round( numDatasets / k );
-               // }
+                  // var k = 50;
+                  // if ( numDatasets > k ) {
+                  // displayStringency = Gemma.MIN_STRINGENCY + Math.round( numDatasets / k );
+                  // }
 
-               // should cause the spinner to update
-               coexpressionGrid.coexDisplaySettings.setStringency( displayStringency );
+                  // should cause the spinner to update
+                  coexpressionGrid.coexDisplaySettings.setStringency( displayStringency );
 
-               var bbarText = coexpressionGrid.getBottomToolbar().getComponent( 'bbarStatus' );
-               // if ( displayStringency > Gemma.MIN_STRINGENCY ) {
-               // bbarText.setText( "Display Stringency set to " + displayStringency
-               // + " based on number of experiments used." );
-               // }
+                  var bbarText = coexpressionGrid.getBottomToolbar().getComponent( 'bbarStatus' );
+                  // if ( displayStringency > Gemma.MIN_STRINGENCY ) {
+                  // bbarText.setText( "Display Stringency set to " + displayStringency
+                  // + " based on number of experiments used." );
+                  // }
 
-               var numQueryGenes = coexpressionGrid.coexpressionSearchData.searchResults.queryGenes.length;
-               coexpressionGrid.decideQueryColumn( numQueryGenes );
+                  var numQueryGenes = coexpressionGrid.coexpressionSearchData.searchResults.queryGenes.length;
+                  coexpressionGrid.decideQueryColumn( numQueryGenes );
 
-               if ( resultsData.length < 1 ) {
-                  bbarText.setText( "No results to display" );
-                  coexpressionGrid.getBottomToolbar().show();
-               } else {
-                  // TODO: show how many genes are involved.
-                  bbarText.setText( resultsData.length + " results from " + numDatasets
-                     + " datasets usable in query, query for " + numQueryGenes + " genes" );
-                  coexpressionGrid.loadData( resultsData );
-               }
+                  if ( resultsData.length < 1 ) {
+                     bbarText.setText( "No results to display" );
+                     coexpressionGrid.getBottomToolbar().show();
+                  } else {
+                     // TODO: show how many genes are involved.
+                     bbarText.setText( resultsData.length + " results from " + numDatasets
+                        + " datasets usable in query for " + numQueryGenes + " genes at stringency "
+                        + initialStringency );
+                     coexpressionGrid.loadData( resultsData );
+                  }
 
-            } );
+               } );
 
             /**
              * 
