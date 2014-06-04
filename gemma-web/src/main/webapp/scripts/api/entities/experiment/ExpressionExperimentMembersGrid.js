@@ -87,11 +87,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             this.setSelectedExpressionExperimentValueObject( eesvo );
             // update genes in grid
 
-            ExpressionExperimentSetController.getExperimentIdsInSet( eesvo.id, {
-               callback : function( expIds ) {
-                  this.loadExperiments( expIds, callback, args );
-               }.createDelegate( this )
-            } );
+            if ( eesvo.expressionExperimentIds.length > 0 ) {
+               this.loadExperiments( eesvo.expressionExperimentIds, callback, args );
+            } else {
+               // FIXME save this round-trip, just get the experiments immediately.
+               ExpressionExperimentSetController.getExperimentIdsInSet( eesvo.id, {
+                  callback : function( expIds ) {
+                     eesvo.experimentIds = expIds;
+                     this.loadExperiments( expIds, callback, args );
+                  }.createDelegate( this )
+               } );
+            }
 
          },
          // used as 'interface' with geneMembersGrid
@@ -114,31 +120,35 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                return;
             }
 
-            ExpressionExperimentController.loadExpressionExperiments( eeIds, function( ees ) {
-               var eeData = [];
+            ExpressionExperimentController.loadExpressionExperiments( eeIds, {
+               callback : function( ees ) {
+                  var eeData = [];
 
-               var taxonId = ees[0] ? ees[0].taxonId : -1;
+                  var taxonId = ees[0] ? ees[0].taxonId : -1;
 
-               for (var i = 0; i < ees.length; ++i) {
-                  eeData.push( [ ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount,
-                                ees[i].bioAssayCount ] );
-                  if ( taxonId != ees[i].taxonId ) {
-                     var taxonId = -1;
+                  for (var i = 0; i < ees.length; ++i) {
+                     eeData.push( [ ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount,
+                                   ees[i].bioAssayCount, ees[i].hasCoexpressionAnalysis,
+                                   ees[i].hasDifferentialExpressionAnalysis ] );
+                     if ( taxonId != ees[i].taxonId ) {
+                        var taxonId = -1;
+                     }
                   }
-               }
-               if ( taxonId != -1 ) {
-                  this.setTaxonId( taxonId );
-               }
-               /*
-                * FIXME this can result in the same gene listed twice. This is taken care of at the server side but
-                * looks funny.
-                */
-               this.getStore().loadData( eeData );
-               if ( callback ) {
-                  callback( args );
-               }
-               this.fireEvent( 'experimentsLoaded' );
-            }.createDelegate( this ) );
+                  if ( taxonId != -1 ) {
+                     this.setTaxonId( taxonId );
+                  }
+                  /*
+                   * FIXME this can result in the same item listed twice. This is taken care of at the server side but
+                   * looks funny.
+                   */
+                  this.getStore().loadData( eeData );
+                  if ( callback ) {
+                     callback( args );
+                  }
+                  this.fireEvent( 'experimentsLoaded' );
+               }.createDelegate( this ),
+               errorHandler : Gemma.genericErrorHandler
+            } );
          },
 
          /**
@@ -219,7 +229,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                } )
             } );
 
-            // FIXME add column showing analysis state, qc status
+            // FIXME add column showing qc status
             var columns = [];
             if ( this.sortableColumnsView ) {
                Ext.apply( this, {
@@ -232,7 +242,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                      renderer : function( value, metadata, record, row, col, ds ) {
                         return String
                            .format(
-                              "<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>",
+                              "<a  style='cursor:pointer;' target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>",
                               record.data.id, record.data.shortName );
                      },
                      sortable : true,
@@ -245,19 +255,37 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   sortable : true,
                   width : 150
                } );
-            } else {
                columns.push( {
-                  id : 'shortName',
-                  header : "Dataset",
-                  dataIndex : "shortName",
-                  renderer : function( value, metadata, record, row, col, ds ) {
-                     return String.format(
-                        "<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
-                           + "<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
-                        record.data.id, record.data.shortName, record.data.name );
-                  },
-                  sortable : true
+                  id : 'hasCoex',
+                  header : "Coex",
+                  dataIndex : "hasCoexpressionAnalysis",
+                  sortable : true,
+                  width : 150
                } );
+               columns.push( {
+                  id : 'hasDiff',
+                  header : "Diff",
+                  dataIndex : "hasDifferentialExpressionAnalysis",
+                  sortable : true,
+                  width : 150
+               } );
+            } else {
+               columns
+                  .push( {
+                     id : 'shortName',
+                     header : "Dataset",
+                     dataIndex : "shortName",
+                     renderer : function( value, metadata, record, row, col, ds ) {
+                        // FIXME hide unanalyzed experiments.
+                        return String
+                           .format(
+                              "<a style='cursor:pointer;' target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
+                                 + "&nbsp;<span style='color:grey'>{3}&nbsp;{4}</span>" + "<br>{2}", record.data.id,
+                              record.data.shortName, record.data.name, record.data.hasCoexpressionAnalysis ? 'C' : '',
+                              record.data.hasDifferentialExpressionAnalysis ? 'D' : '' );
+                     },
+                     sortable : true
+                  } );
             }
 
             if ( this.allowRemovals ) {
@@ -323,11 +351,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             // defaults to false
             } );
             this.okButton = new Ext.Button( {
-               text : "OK",
+               text : "Done",
                handler : this.okHandler,
                scope : this,
-               disabled : (!this.allowSaveToSession || this.hideOkCancel),
-               hidden : (!this.allowSaveToSession || this.hideOkCancel)
+               hidden : this.hideOkCancel
             } );
             this.cancelButton = new Ext.Button( {
                text : "Cancel",
@@ -340,19 +367,27 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                icon : "/Gemma/images/download.gif",
                tooltip : "Export to text",
                handler : this.exportToTxt,
+               scope : this
+            } );
+            this.managerButton = new Ext.Button( {
+               text : 'Go to manager',
+               tooltip : 'View the full experiment set manager interface',
+               handler : this.openManager,
                scope : this,
-               disabled : false
+               hidden : true || this.hideOkCancel
+            // FIXME TEMPORARY
+
             } );
 
             Ext.apply( this, {
                buttonAlign : 'left',
-               buttons : [ this.exportButton, '->', this.saveButton, this.saveAsButton, this.okButton,
-                          this.cancelButton ]
+               buttons : [ this.exportButton, this.managerButton, '->', this.saveButton, this.saveAsButton,
+                          this.okButton, this.cancelButton ]
             } );
             this.saveButton.show();
 
             /*
-             * TODO: add analysis state (diff, coex), quality control information
+             * TODO: add quality control information
              */
             Ext.apply( this, {
                store : new Ext.data.SimpleStore( {
@@ -371,6 +406,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   }, {
                      name : "bioAssayCount",
                      type : "int"
+                  }, {
+                     name : "hasCoexpressionAnalysis",
+                     type : "boolean"
+                  }, {
+                     name : "hasDifferentialExpressionAnalysis",
+                     type : "boolean"
                   } ],
                   sortInfo : {
                      field : 'shortName',
@@ -445,14 +486,15 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             }
          },
 
-         formatEE : function( value, metadata, record, row, col, ds ) {
-            // fixme: this is duplicated code.
-            var eeTemplate = new Ext.XTemplate(
-               '<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-               '{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
-               ' ext:qtip="{name}">{shortName}</a></tpl>' );
-            return eeTemplate.apply( record.data );
-         },
+         // formatEE : function( value, metadata, record, row, col, ds ) {
+         // // fixme: this is duplicated code.
+         // var eeTemplate = new Ext.XTemplate(
+         // '<tpl for="."><a style="pointer:cursor;" target="_blank" title="{name}"
+         // href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+         // '{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
+         // ' ext:qtip="{name}">{shortName}</a></tpl>' );
+         // return eeTemplate.apply( record.data );
+         // },
 
          /**
           * Return all the ids of the experiments shown in this grid.
@@ -558,6 +600,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             this.saveToSession();
          },
 
+         /**
+          * 
+          */
          exportToTxt : function() {
             // make download link
             var downloadLink = String.format(
@@ -565,6 +610,14 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             window.open( downloadLink );
          },
 
+         openManager : function() {
+            // TODO - show the EE set manager.
+            Ext.Msg.alert( "Not implemented yet", "Coming soon" );
+         },
+
+         /**
+          * Prompt user to register. FIXME refactor this out - code duplicated in GeneMembersGrid
+          */
          launchRegisterWidget : function() {
             if ( this.ajaxRegister == null ) {
 
@@ -622,6 +675,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             } );
 
          },
+
          /**
           * When user clicks 'save as', check if they are logged in or not, then in the callback, call saveAsHandler
           */
@@ -640,6 +694,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
          },
 
+         /**
+          * FIXME refactor this out - code duplicated in GeneMembersGrid
+          * 
+          * @param save
+          */
          promptLoginForSave : function( save ) {
 
             // Check to see if another login widget is open (rare case but possible)
@@ -663,12 +722,15 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             }, this );
 
          },
+
+         /**
+          * 
+          */
          loggedInSaveHandler : function() {
 
             // check if user is trying to save an empty set
             if ( this.getStore().getRange() && this.getStore().getRange().length === 0 ) {
-               Ext.Msg.alert( 'Cannot save empty set', 'You are trying to save an empty set. '
-                  + 'Please add some experiments and try again.' );
+               Ext.Msg.alert( 'Cannot save empty set', 'Please add some experiments and try again.' );
                return;
             }
 
@@ -718,6 +780,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                this.saveAsHandler();
             }
          },
+
+         /**
+          * 
+          */
          saveAsHandler : function() {
             // input window for creation of new groups
             var detailsWin = new Gemma.CreateSetDetailsWindow( {
@@ -812,6 +878,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             this.fireEvent( 'doneModification' );
 
          },
+
          updateDatabase : function() {
             var id = this.getSelectedExperimentSet().id;
             var eeIds = this.getEEIds();
@@ -833,14 +900,14 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
             var text = Ext.getCmp( 'ee-search-in-grid' ).getValue();
 
-            var value;
+            var value = null;
 
             if ( text && text.length > 1 ) {
                value = new RegExp( Ext.escapeRe( text ), 'i' );
             }
             return function( r, id ) {
 
-               if ( !value ) {
+               if ( value == null ) {
                   return true;
                } else {
 
@@ -865,6 +932,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
 
    extraButtons : [],
+
+   /**
+    * @memberOf Gemma.ExperimentAndGroupAdderToolbar
+    */
    initComponent : function() {
 
       Gemma.ExperimentAndGroupAdderToolbar.superclass.initComponent.call( this );

@@ -212,7 +212,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
 
       this.experimentCombo.on( 'select', this.showPreview, this );
 
-      this.preview = new Gemma.ExperimentSetPreview();
+      this.preview = new Gemma.ExperimentSetPreview( {
+         hideUnanalyzedDatasets : true
+      } );
 
       this.preview.on( 'experimentListModified', function( newSet ) {
 

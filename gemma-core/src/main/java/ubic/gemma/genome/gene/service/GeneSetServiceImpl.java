@@ -267,8 +267,8 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.genome.gene.service.GeneSetService#getGenesIdsInGroup(java.lang.Long)
      */
     @Override
-    public Collection<Long> getGenesIdsInGroup( Long groupId ) {
-        return this.getValueObject( groupId ).getGeneIds();
+    public Collection<Long> getGeneIdsInGroup( GeneSetValueObject object ) {
+        return this.getValueObject( object.getId() ).getGeneIds();
     }
 
     /**
@@ -279,11 +279,11 @@ public class GeneSetServiceImpl implements GeneSetService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
+    public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object ) {
 
         Collection<GeneValueObject> results = null;
 
-        GeneSet gs = load( groupId );
+        GeneSet gs = load( object.getId() );
         if ( gs == null ) return null; // FIXME: Send and error code/feedback?
 
         results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
@@ -299,8 +299,8 @@ public class GeneSetServiceImpl implements GeneSetService {
      */
     @Override
     @Transactional(readOnly = true)
-    public int getSize( Long groupId ) {
-        return this.geneSetDao.getGeneCount( groupId );
+    public int getSize( GeneSetValueObject object ) {
+        return this.geneSetDao.getGeneCount( object.getId() );
     }
 
     /**

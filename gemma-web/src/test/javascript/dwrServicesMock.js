@@ -362,8 +362,8 @@ ExpressionExperimentSetController.loadAllSessionGroups = function( callback ) {
 };
 ExpressionExperimentSetController.getExperimentsInSet = function( p0, p1, callback ) {
 };
-//ExpressionExperimentSetController.getExperimentsInSetBySessionId = function( p0, callback ) {
-//};
+// ExpressionExperimentSetController.getExperimentsInSetBySessionId = function( p0, callback ) {
+// };
 ExpressionExperimentSetController.getExperimentIdsInSet = function( p0, callback ) {
 };
 ExpressionExperimentSetController.canCurrentUserEditGroup = function( p0, callback ) {
@@ -502,6 +502,8 @@ if ( typeof GeneSetController === 'undefined' ) {
    var GeneSetController = {};
 }
 GeneSetController.getGenesInGroup = function( p0, p1, callback ) {
+};
+GeneSetController.getGeneIdsInGroup = function( p0, callback ) {
 };
 GeneSetController.load = function( p0, callback ) {
 };

@@ -22,6 +22,7 @@ package ubic.gemma.model.genome.gene;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -52,6 +53,30 @@ public class GeneSetValueObject implements SecureValueObject {
      */
     public GeneSetValueObject() {
         super();
+    }
+
+    /**
+     * Create a lightweight wrapper that can be used for security filtering
+     * 
+     * @param id
+     */
+    public GeneSetValueObject( Long id ) {
+        super();
+        this.id = id;
+    }
+
+    /**
+     * Create a lightweight wrapper that can be used for security filtering
+     * 
+     * @param ids
+     * @return
+     */
+    public static Collection<GeneSetValueObject> fromIds( Collection<Long> ids ) {
+        Collection<GeneSetValueObject> result = new ArrayList<>();
+        for ( Long id : ids ) {
+            result.add( new GeneSetValueObject( id ) );
+        }
+        return result;
     }
 
     @Override

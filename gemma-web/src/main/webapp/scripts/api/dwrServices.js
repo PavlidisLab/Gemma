@@ -969,6 +969,9 @@ GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function( p0, p1, callback ) {
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, p1, callback );
 };
+GeneSetController.getGenesIdsInGroup = function( p0, callback ) {
+   dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'getGeneIdsInGroup', p0, callback );
+};
 GeneSetController.load = function( p0, callback ) {
    dwr.engine._execute( GeneSetController._path, 'GeneSetController', 'load', p0, callback );
 };

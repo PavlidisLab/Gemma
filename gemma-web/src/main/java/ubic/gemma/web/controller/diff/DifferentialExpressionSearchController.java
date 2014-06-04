@@ -340,7 +340,7 @@ public class DifferentialExpressionSearchController {
         // Load genes
         Collection<GeneValueObject> genes = new ArrayList<>();
         if ( gsvo.getGeneIds().isEmpty() ) {
-            genes = geneSetService.getGenesInGroup( gsvo.getId() );
+            genes = geneSetService.getGenesInGroup( gsvo );
         } else {
             genes = geneService.loadValueObjects( gsvo.getGeneIds() );
         }

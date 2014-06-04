@@ -255,6 +255,10 @@ public interface GeneSetService {
      */
     public String updateDatabaseEntityMembers( Long groupId, Collection<Long> geneIds );
 
+    /**
+     * @param geneSetVos
+     * @return
+     */
     public Collection<DatabaseBackedGeneSetValueObject> updateDatabaseEntity(
             Collection<DatabaseBackedGeneSetValueObject> geneSetVos );
 
@@ -263,16 +267,22 @@ public interface GeneSetService {
      */
     public void deleteDatabaseEntity( DatabaseBackedGeneSetValueObject geneSetVO );
 
+    /**
+     * Security is handled within method
+     * 
+     * @param vos
+     */
     public void deleteDatabaseEntities( Collection<DatabaseBackedGeneSetValueObject> vos );
 
     /**
-     * Returns just the current users gene sets
+     * Returns just the current user's gene sets
      * 
      * @param privateOnly
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
      * @param sharedPublicOnly TODO
      * @return
      */
+    @Secured({ "GROUP_USER" })
     public Collection<GeneSet> getUsersGeneGroups( boolean privateOnly, Long taxonId, boolean sharedPublicOnly );
 
     /**
@@ -282,34 +292,39 @@ public interface GeneSetService {
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
      * @return
      */
+    @Secured({ "GROUP_USER", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroupsValueObjects( boolean privateOnly,
             Long taxonId );
 
     /**
      * Get the gene value objects for the members of the group param
      * 
-     * @param groupId
+     * @param can be just a wrapper to trigger security
      * @return
      */
-    public Collection<GeneValueObject> getGenesInGroup( Long groupId );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<GeneValueObject> getGenesInGroup( GeneSetValueObject object );
 
     /**
      * @param groupId
      * @return ids of the genes in the group
      */
-    public Collection<Long> getGenesIdsInGroup( Long groupId );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<Long> getGeneIdsInGroup( GeneSetValueObject geneSetVO );
 
     /**
      * @param groupId
      * @return
      */
-    public int getSize( Long groupId );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public int getSize( GeneSetValueObject geneSetVO );
 
     /**
      * @param query string to match to gene sets
      * @param taxonId
      * @return collection of GeneSetValueObjects that match name query
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId );
 
     /**
@@ -319,6 +334,7 @@ public interface GeneSetService {
      * @param geneSetVos
      * @return the taxon or null if the gene set param was null
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO );
 
     /**
@@ -330,6 +346,11 @@ public interface GeneSetService {
      */
     public Taxon getTaxon( GeneSet geneSet );
 
+    /**
+     * @param id
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<DatabaseBackedGeneSetValueObject> getValueObjects( Collection<Long> id );
 
 }

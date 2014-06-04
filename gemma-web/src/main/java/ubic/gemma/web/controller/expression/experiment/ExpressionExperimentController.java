@@ -1966,12 +1966,7 @@ public class ExpressionExperimentController {
 
         // the front end has the brilliant logic of sending in a negative limit to denote sorting in date ascending
         // order
-        boolean descending;
-        if ( limit == null || limit > 0 ) {
-            descending = true;
-        } else {
-            descending = false;
-        }
+        boolean descending = limit == null || limit > 0;
 
         if ( filterDataForUser ) {
             try {
@@ -1979,7 +1974,7 @@ public class ExpressionExperimentController {
                  * This could be sped up by making value object methods, but because these are not so many, this should
                  * be acceptable.
                  */
-                List<ExpressionExperiment> ees = showPublic ? new ArrayList<ExpressionExperiment>(
+                List<ExpressionExperiment> ees = showPublic ? new ArrayList<>(
                         expressionExperimentService.loadUserOwnedExpressionExperiments() )
                         : new ArrayList<ExpressionExperiment>(
                                 expressionExperimentService.loadMySharedExpressionExperiments() );

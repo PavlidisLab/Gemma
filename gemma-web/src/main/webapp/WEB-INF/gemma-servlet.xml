@@ -170,7 +170,7 @@
 		</property>
 		<property name="bioMaterialService">
 			<ref bean="bioMaterialService" />
-		</property> 
+		</property>
 		<property name="externalDatabaseService">
 			<ref bean="externalDatabaseService" />
 		</property>
@@ -359,6 +359,7 @@
 			<dwr:include method="getUserSessionGeneGroups" />
 			<dwr:include method="getUserAndSessionGeneGroups" />
 			<dwr:include method="getGenesInGroup" />
+			<dwr:include method="getGenesIdsInGroup" />
 			<dwr:include method="getGeneSetByGOId" />
 			<dwr:include method="update" />
 			<dwr:include method="updateNameDesc" />

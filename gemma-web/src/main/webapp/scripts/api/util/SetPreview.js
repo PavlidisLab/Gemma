@@ -7,8 +7,7 @@ Ext.namespace( 'Gemma' );
 
 /**
  * 
- * Displays a small number of elements from the set with links to the set's page and a selection editor. FIXME this
- * should use a store.
+ * Displays a small number of elements from the set with links to the set's page and a selection editor.
  * 
  * This class should generally not be used directly, use one of the subclasses: GeneSetPreview and ExperimentSetPreview
  * 
@@ -185,8 +184,6 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
        */
       launchSelectionEditor : function() {
 
-         // let owner component control masking, body masking can interact badly with flash components in Firefox
-         // Ext.getBody().mask();
          this.fireEvent( 'maskParentContainer' );
 
          if ( !(this.selectedEntityOrGroup && this.selectedEntityOrGroup.resultValueObject)
@@ -195,16 +192,15 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             return;
          }
 
-         this.selectionEditorWindow.show();
+         Ext.apply( this.selectionEditor, {
+            taxonId : this.taxonId
+         } );
 
          this.selectionEditor.loadMask = new Ext.LoadMask( this.selectionEditor.getEl(), {
             msg : Gemma.StatusText.Loading.generic
          } );
 
-         this.selectionEditor.loadMask.show();
-         Ext.apply( this.selectionEditor, {
-            taxonId : this.taxonId
-         } );
+         this.selectionEditorWindow.show();
 
          if ( this.entityIds && this.entityIds.length > 0 ) {
             console.log( "using the entityIds, should be using selectedSetValueObject" );
@@ -216,7 +212,9 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             // the id should be the real id of an entity in the database.
 
             this.selectionEditor.loadSetValueObject( this.selectedSetValueObject, function() {
-               this.selectionEditor.loadMask.hide();
+               if ( this.selectionEditor.loadMask ) {
+                  this.selectionEditor.loadMask.hide();
+               }
             }.createDelegate( this, [], false ) );
 
          } else {
@@ -297,7 +295,7 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
                scope : this,
                qtip : 'Clear'
             } /*
-                * TODO: add a button to get to the gene set manager
+                * TODO: add a button to get to the full set manager
                 */
             ],
             listeners : {

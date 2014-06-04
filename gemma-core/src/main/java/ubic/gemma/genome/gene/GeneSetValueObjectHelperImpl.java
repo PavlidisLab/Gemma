@@ -108,7 +108,8 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
 
         DatabaseBackedGeneSetValueObject dbgsvo = convertToLightValueObject( gs );
 
-        Collection<Long> ids = EntityUtils.getIds( this.geneSetService.getGenesInGroup( gs.getId() ) );
+        Collection<Long> ids = EntityUtils.getIds( this.geneSetService.getGenesInGroup( new GeneSetValueObject( gs
+                .getId() ) ) );
         dbgsvo.getGeneIds().addAll( ids );
         dbgsvo.setSize( ids.size() );
 
@@ -187,7 +188,7 @@ public class GeneSetValueObjectHelperImpl implements GeneSetValueObjectHelper {
             sbgsvo.setSize( gs.getMembers() != null ? gs.getMembers().size() : 0 );
         } else {// this case may never happen as this is only called from convertToGoValueObject() leaving here in case
                 // this method is ever called from somewhere else
-            sbgsvo.setSize( this.geneSetService.getSize( gs.getId() ) );
+            sbgsvo.setSize( this.geneSetService.getSize( new GeneSetValueObject( gs.getId() ) ) );
         }
 
         Collection<Long> gids = new HashSet<>();

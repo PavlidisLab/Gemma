@@ -18,99 +18,134 @@ Gemma.MAX_GENES_PER_QUERY = 1000;
  * @class Gemma.GeneMembersGrid
  * @extends Ext.grid.GridPanel
  */
-Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel, {
+Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
+   {
 
-   collapsible : false,
-   autoWidth : true,
-   stateful : false,
-   frame : true,
-   layout : 'fit',
-   stripeRows : true,
-   changeMade : false,
-   // bubbleEvents: ['geneListModified'],
-   loggedId : null,
-   extraButtons : [],
-   /*
-    * columnSet can be "reduced" or "full", if "reduced": only symbol and description are shown if "full": symbol,
-    * description, species and 'in list' boolean are shown
-    */
-   columnSet : "reduced",
-   allowSaveToSession : true, // if false, user can only save to db
+      collapsible : false,
+      autoWidth : true,
+      stateful : false,
+      frame : true,
+      layout : 'fit',
+      stripeRows : true,
+      changeMade : false,
+      // bubbleEvents: ['geneListModified'],
+      loggedId : null,
+      extraButtons : [],
+      /*
+       * columnSet can be "reduced" or "full", if "reduced": only symbol and description are shown if "full": symbol,
+       * description, species and 'in list' boolean are shown
+       */
+      columnSet : "reduced",
+      allowSaveToSession : true, // if false, user can only save to db
 
-   viewConfig : {
-      forceFit : true,
-      emptyText : "Multiple genes can be listed here"
-   },
-   autoScroll : true,
+      viewConfig : {
+         forceFit : true,
+         emptyText : "Multiple genes can be listed here"
+      },
+      autoScroll : true,
 
-   autoExpandColumn : 'desc',
+      autoExpandColumn : 'desc',
 
-   showRemoveColumn : function() {
-      // if config is set for "full" column model, show more columns
-      this.getColumnModel().setHidden( this.getColumnModel().getIndexById( "remove" ), false );
-   },
+      showRemoveColumn : function() {
+         // if config is set for "full" column model, show more columns
+         this.getColumnModel().setHidden( this.getColumnModel().getIndexById( "remove" ), false );
+      },
 
-   getFullColumnModel : function() {
-      // if config is set for "full" column model, show more columns
-      this.getColumnModel().setHidden( this.getColumnModel().getIndexById( "taxon" ), false );
-      this.getColumnModel().setHidden( this.getColumnModel().getIndexById( "inList" ), false );
-   },
-   setSelectedGeneSetValueObject : function( data ) {
-      this.selectedGeneSetValueObject = data;
-   },
-   getSelectedGeneSetValueObject : function() {
-      return this.selectedGeneSetValueObject;
-   },
-   // used as 'interface' with experimentMembersGrid
-   loadSetValueObject : function( gsvo, callback, args ) {
-      this.loadGeneSetValueObject( gsvo, callback, args );
-   },
+      getFullColumnModel : function() {
+         // if config is set for "full" column model, show more columns
+         this.getColumnModel().setHidden( this.getColumnModel().getIndexById( "taxon" ), false );
+         this.getColumnModel().setHidden( this.getColumnModel().getIndexById( "inList" ), false );
+      },
 
-   /**
-    * @memberOf Gemma.GeneMembersGrid
-    */
-   loadGeneSetValueObject : function( gsvo, callback, args ) {
-      // update title
-      this.setTitle( "Edit your gene selection, from group: \"" + gsvo.name + "\"" );
-      // update this.selectedGeneSetValueObject
-      this.setSelectedGeneSetValueObject( gsvo );
-      // update genes in grid
-      this.loadGenes( gsvo.geneIds, callback, args );
-   },
-   // used as 'interface' with experimentMembersGrid
-   loadEntities : function( geneIds, callback, args ) {
-      this.loadGenes( geneIds, callback, args );
-   },
-   /**
-    * Add to table.
-    * 
-    * @param {}
-    *           geneIds
-    * @param {}
-    *           callback optional
-    * @param {}
-    *           args for callback optional
-    */
-   loadGenes : function( geneIds, callback, args ) {
-      if ( !geneIds || geneIds.length === 0 ) {
-         return;
-      }
-      if ( this.getEl() ) {
-         this.loadMask = new Ext.LoadMask( this.getEl(), {
-            msg : Gemma.StatusText.Loading.genes,
-            msgCls : 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+      /**
+       * 
+       * @param data
+       */
+      setSelectedGeneSetValueObject : function( data ) {
+         this.selectedGeneSetValueObject = data;
+      },
+
+      /**
+       * 
+       * @returns
+       */
+      getSelectedGeneSetValueObject : function() {
+         return this.selectedGeneSetValueObject;
+      },
+
+      /**
+       * 
+       * @param gsvo
+       * @param callback
+       * @param args
+       */
+      loadSetValueObject : function( gsvo, callback, args ) {
+         this.loadGeneSetValueObject( gsvo, callback, args );
+      },
+
+      /**
+       * @memberOf Gemma.GeneMembersGrid
+       */
+      loadGeneSetValueObject : function( gsvo, callback, args ) {
+         // update title
+         this.setTitle( "Edit your gene selection, from group: \"" + gsvo.name + "\"" );
+         // update this.selectedGeneSetValueObject
+         this.setSelectedGeneSetValueObject( gsvo );
+
+         // update genes in grid
+         if ( gsvo.geneIds.length > 0 ) {
+            this.loadGenes( gsvo.geneIds, callback, args );
+         } else {
+            GeneSetController.getGenesInGroup( gsvo.id, -1, {
+               callback : this._loadGeneRecords.createDelegate( this ),
+               errorHandler : Gemma.genericErrorHandler
+            } );
+         }
+
+      },
+
+      // used as 'interface' with experimentMembersGrid
+      loadEntities : function( geneIds, callback, args ) {
+         this.loadGenes( geneIds, callback, args );
+      },
+
+      /**
+       * Add to table.
+       * 
+       * @param {}
+       *           geneIds
+       */
+      loadGenes : function( geneIds, callback, args ) {
+         if ( !geneIds || geneIds.length === 0 ) {
+            return;
+         }
+
+         if ( this.getEl() ) {
+            this.loadMask = new Ext.LoadMask( this.getEl(), {
+               msg : Gemma.StatusText.Loading.genes,
+               msgCls : 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+            } );
+            this.loadMask.show();
+         }
+
+         GenePickerController.getGenes( geneIds, {
+            callback : _loadGeneRecords.createDelegate( this ),
+            errorHandler : Gemma.genericErrorHandler
          } );
-         this.loadMask.show();
-      }
+      },
 
-      GenePickerController.getGenes( geneIds, function( genes ) {
+      /**
+       * @private
+       * @param genes
+       *           {Array.GeneValueObject}
+       */
+      _loadGeneRecords : function( genes, callback, args ) {
          if ( this.loadMask ) {
             this.loadMask.hide();
          }
          var geneData = [];
-         var i = 0;
          var taxonId = (genes[0]) ? genes[0].taxonId : -1;
-         for (i = 0; i < genes.length; i++) {
+         for (var i = 0; i < genes.length; i++) {
             geneData
                .push( [ genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol, genes[i].officialName ] );
             if ( taxonId != genes[i].taxonId ) {
@@ -130,211 +165,213 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel, {
             callback( args );
          }
          this.fireEvent( 'genesLoaded' );
-      }.createDelegate( this ) );
-   },
+      },
 
-   addGenes : function( searchResultValObj ) { // for adding from combo
-      if ( !searchResultValObj ) {
-         return;
-      }
-
-      var geneIdsToAdd = [];
-      geneIdsToAdd = searchResultValObj.memberIds;
-
-      if ( !geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0 ) {
-         return;
-      }
-
-      GenePickerController.getGenes( geneIdsToAdd, function( genes ) {
-
-         for (var j = 0; j < genes.size(); j++) {
-            if ( this.getStore().find( "id", genes[j].id ) < 0 ) {
-               var Constructor = this.store.recordType;
-               var record = new Constructor( genes[j] );
-               this.getStore().add( [ record ] );
-            }
+      /**
+       * 
+       * @param searchResultValObj
+       */
+      addGenes : function( searchResultValObj ) { // for adding from combo
+         if ( !searchResultValObj ) {
+            return;
          }
 
-      }.createDelegate( this ) );
+         var geneIdsToAdd = [];
+         geneIdsToAdd = searchResultValObj.memberIds;
 
-   },
-   /*
-    * set the taxon for this grid and for the toolbar to control what can be added from combo
-    */
-   setTaxonId : function( taxonId ) {
-      this.taxonId = taxonId;
-      if ( this.getTopToolbar() ) {
-         Ext.apply( this.getTopToolbar().geneCombo, {
-            taxonId : taxonId
-         } );
-      }
+         if ( !geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0 ) {
+            return;
+         }
 
-   },
-   initComponent : function() {
-      Ext.apply( this, {
-         store : new Ext.data.SimpleStore( {
-            fields : [ {
-               name : 'id',
-               type : 'int'
-            }, {
-               name : 'taxon'
-            }, {
-               name : 'officialSymbol',
-               type : 'string'
-            }, {
-               name : 'officialName',
-               type : 'string'
-            }, {
-               name : 'inList',
-               type : 'boolean',
-               defaultValue : true
-            } ],
-            sortInfo : {
-               field : 'officialSymbol',
-               direction : 'ASC'
+         GenePickerController.getGenes( geneIdsToAdd, function( genes ) {
+            for (var j = 0; j < genes.size(); j++) {
+               if ( this.getStore().find( "id", genes[j].id ) < 0 ) {
+                  var Constructor = this.store.recordType;
+                  var record = new Constructor( genes[j] );
+                  this.getStore().add( [ record ] );
+               }
             }
-         } ),
-         colModel : new Ext.grid.ColumnModel( {
-            defaults : {
-               sortable : true
-            },
-            columns : [
-                       {
-                          header : 'Symbol',
-                          toolTip : 'Gene symbol',
-                          dataIndex : 'officialSymbol',
-                          width : 75,
-                          renderer : function( value, metadata, record, row, col, ds ) {
-                             return String.format(
-                                "<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br>"
-                                   + "<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
-                                record.data.id, record.data.officialSymbol, record.data.officialName );
-                          }
-                       }/*
-                         * ,{header: 'Name', id: 'desc', toolTip: 'Gene name', dataIndex: 'officialName' }
-                         */, {
-                          id : 'taxon',
-                          toolTip : 'Gene\'s Taxon',
-                          header : 'Taxon',
-                          dataIndex : 'taxon',
-                          hidden : true
-                       }, {
-                          id : 'inList',
-                          toolTip : 'Marks whether this gene is present in one of your lists',
-                          header : 'In List(s)',
-                          dataIndex : 'inList',
-                          hidden : true
-                       } ]
-         } )
-      } );
 
-      // add columns dependent on columnSet config
-      if ( this.columnSet === "full" ) {
-         Ext.apply( this, this.getFullColumnModel() );
-      }
+         }.createDelegate( this ) );
 
-      Gemma.GeneMembersGrid.superclass.initComponent.call( this );
+      },
+      /*
+       * set the taxon for this grid and for the toolbar to control what can be added from combo
+       */
+      setTaxonId : function( taxonId ) {
+         this.taxonId = taxonId;
+         if ( this.getTopToolbar() ) {
+            Ext.apply( this.getTopToolbar().geneCombo, {
+               taxonId : taxonId
+            } );
+         }
 
-      this.addEvents( 'addgenes', 'removegenes', 'geneListModified' );
+      },
+      initComponent : function() {
+         Ext.apply( this, {
+            store : new Ext.data.SimpleStore( {
+               fields : [ {
+                  name : 'id',
+                  type : 'int'
+               }, {
+                  name : 'taxon'
+               }, {
+                  name : 'officialSymbol',
+                  type : 'string'
+               }, {
+                  name : 'officialName',
+                  type : 'string'
+               }, {
+                  name : 'inList',
+                  type : 'boolean',
+                  defaultValue : true
+               } ],
+               sortInfo : {
+                  field : 'officialSymbol',
+                  direction : 'ASC'
+               }
+            } ),
+            colModel : new Ext.grid.ColumnModel( {
+               defaults : {
+                  sortable : true
+               },
+               columns : [
+                          {
+                             header : 'Symbol',
+                             toolTip : 'Gene symbol',
+                             dataIndex : 'officialSymbol',
+                             width : 75,
+                             renderer : function( value, metadata, record, row, col, ds ) {
+                                return String.format(
+                                   "<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br>"
+                                      + "<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
+                                   record.data.id, record.data.officialSymbol, record.data.officialName );
+                             }
+                          }/*
+                            * ,{header: 'Name', id: 'desc', toolTip: 'Gene name', dataIndex: 'officialName' }
+                            */, {
+                             id : 'taxon',
+                             toolTip : 'Gene\'s Taxon',
+                             header : 'Taxon',
+                             dataIndex : 'taxon',
+                             hidden : true
+                          }, {
+                             id : 'inList',
+                             toolTip : 'Marks whether this gene is present in one of your lists',
+                             header : 'In List(s)',
+                             dataIndex : 'inList',
+                             hidden : true
+                          } ]
+            } )
+         } );
 
-   },// eo initComponent
+         // add columns dependent on columnSet config
+         if ( this.columnSet === "full" ) {
+            Ext.apply( this, this.getFullColumnModel() );
+         }
 
-   listeners : {
-      render : function() {
+         Gemma.GeneMembersGrid.superclass.initComponent.call( this );
 
-         // load genes stored in genes var, which can either be an array or comma
-         // separated list of gene ids
-         if ( this.selectedGeneSetValueObject ) {
-            this.loadGeneSetValueObject( this.selectedGeneSetValueObject );
-         } else if ( this.genes || this.geneIds ) {
-            var gis = ((this.genes) ? this.genes : this.geneIds);
-            var genes = gis instanceof Array ? gis : gis.split( "," );
-            this.loadGenes( gis );
+         this.addEvents( 'addgenes', 'removegenes', 'geneListModified' );
+
+      },// eo initComponent
+
+      listeners : {
+         render : function() {
+
+            // load genes stored in genes var, which can either be an array or comma
+            // separated list of gene ids
+            if ( this.selectedGeneSetValueObject ) {
+               this.loadGeneSetValueObject( this.selectedGeneSetValueObject );
+            } else if ( this.genes || this.geneIds ) {
+               var gis = ((this.genes) ? this.genes : this.geneIds);
+               var genes = gis instanceof Array ? gis : gis.split( "," );
+               this.loadGenes( gis );
+            }
+         },
+         keypress : function( e ) {
+            if ( !this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE ) {
+               this.removeGene();
+            }
          }
       },
-      keypress : function( e ) {
-         if ( !this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE ) {
-            this.removeGene();
+
+      removeGene : function() {
+         var selected = this.getSelectionModel().getSelections();
+         var i;
+         for (i = 0; i < selected.length; i++) {
+            this.getStore().remove( selected[i] );
          }
+         this.getSelectionModel().selectLastRow();
+      },
+
+      removeAllGenes : function() {
+         this.getStore().removeAll();
+      },
+
+      record : Ext.data.Record.create( [ {
+         name : 'id',
+         type : 'int'
+      }, {
+         name : 'taxon'
+      }, {
+         name : 'officialSymbol',
+         type : 'string'
+      }, {
+         name : 'officialName',
+         type : 'string'
+      }, {
+         name : 'inList',
+         type : 'boolean',
+         defaultValue : true
+      } ] ),
+
+      addGene : function( gene ) {
+         if ( !gene ) {
+            return;
+         }
+
+         if ( this.getStore().find( "id", gene.id ) < 0 ) {
+            var Constructor = this.record;
+            var record = new Constructor( gene );
+            this.getStore().add( [ record ] );
+         }
+      },
+
+      getGeneIds : function() {
+         var ids = [];
+         var all = this.getStore().getRange();
+         var i = 0;
+         for (i = 0; i < all.length; ++i) {
+            ids.push( all[i].data.id );
+         }
+         return ids;
+      },
+
+      getGenes : function() {
+         var genes = [];
+         var all = this.getStore().getRange();
+         var i = 0;
+         for (i = 0; i < all.length; ++i) {
+            genes.push( all[i].data );
+         }
+         return genes;
+      },
+
+      /**
+       * When user clicks cancel, just let parent know
+       */
+      cancel : function() {
+         this.fireEvent( 'doneModification' );
+      },
+
+      exportToTxt : function() {
+         // make download link
+         var downloadLink = String.format( "/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds() );
+         window.open( downloadLink );
       }
-   },
 
-   removeGene : function() {
-      var selected = this.getSelectionModel().getSelections();
-      var i;
-      for (i = 0; i < selected.length; i++) {
-         this.getStore().remove( selected[i] );
-      }
-      this.getSelectionModel().selectLastRow();
-   },
-
-   removeAllGenes : function() {
-      this.getStore().removeAll();
-   },
-
-   record : Ext.data.Record.create( [ {
-      name : 'id',
-      type : 'int'
-   }, {
-      name : 'taxon'
-   }, {
-      name : 'officialSymbol',
-      type : 'string'
-   }, {
-      name : 'officialName',
-      type : 'string'
-   }, {
-      name : 'inList',
-      type : 'boolean',
-      defaultValue : true
-   } ] ),
-
-   addGene : function( gene ) {
-      if ( !gene ) {
-         return;
-      }
-
-      if ( this.getStore().find( "id", gene.id ) < 0 ) {
-         var Constructor = this.record;
-         var record = new Constructor( gene );
-         this.getStore().add( [ record ] );
-      }
-   },
-
-   getGeneIds : function() {
-      var ids = [];
-      var all = this.getStore().getRange();
-      var i = 0;
-      for (i = 0; i < all.length; ++i) {
-         ids.push( all[i].data.id );
-      }
-      return ids;
-   },
-
-   getGenes : function() {
-      var genes = [];
-      var all = this.getStore().getRange();
-      var i = 0;
-      for (i = 0; i < all.length; ++i) {
-         genes.push( all[i].data );
-      }
-      return genes;
-   },
-
-   /**
-    * When user clicks cancel, just let parent know
-    */
-   cancel : function() {
-      this.fireEvent( 'doneModification' );
-   },
-
-   exportToTxt : function() {
-      // make download link
-      var downloadLink = String.format( "/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds() );
-      window.open( downloadLink );
-   }
-
-} );
+   } );
 Ext.reg( 'geneMembersGrid', Gemma.GeneMembersGrid );
 
 /**
@@ -510,18 +547,17 @@ Gemma.GeneMembersSaveGrid = Ext
                hidden : !this.showSeparateSaveAs
             } );
             this.saveButton = new Ext.Button( {
-               text : "Save...",
+               text : "Save ...",
                handler : this.saveBtnHandler,
                tooltip : Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.saveTT,
                scope : this,
                disabled : this.enableSaveOnlyAfterModification
             } );
             this.okButton = new Ext.Button( {
-               text : "OK",
+               text : "Done",
                handler : this.okHandler,
                scope : this,
-               disabled : (!this.allowSaveToSession || this.hideOkCancel),
-               hidden : (!this.allowSaveToSession || this.hideOkCancel)
+               hidden : this.hideOkCancel
             } );
             this.cancelButton = new Ext.Button( {
                text : "Cancel",
@@ -534,13 +570,23 @@ Gemma.GeneMembersSaveGrid = Ext
                icon : "/Gemma/images/download.gif",
                tooltip : Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.exportTT,
                handler : this.exportToTxt,
+               scope : this
+            } );
+
+            this.managerButton = new Ext.Button( {
+               text : 'Go to manager',
+               tooltip : 'View the full gene set manager interface',
+               handler : this.openManager,
                scope : this,
-               disabled : false
+               hidden : true || this.hideOkCancel
+            // FIXME TEMPORARY
+
             } );
 
             Ext.apply( this, {
                buttonAlign : 'left',
-               fbar : [ this.exportButton, '->', this.saveButton, this.saveAsButton, this.okButton, this.cancelButton ]
+               fbar : [ this.exportButton, this.managerButton, '->', this.saveButton, this.saveAsButton, this.okButton,
+                       this.cancelButton ]
             } );
 
             // note: using initComponent of super's super!! (otherwise buttons don't work)
@@ -667,20 +713,6 @@ Gemma.GeneMembersSaveGrid = Ext
 
                // Use simple, non descriptive naming for now
                this.newGroupName = time + "Custom Gene Group";
-
-               // if group name was already made in this way, just change root
-               // var prefix = "Edited \''";
-               // var suffix = '\' group';
-
-               // var matches = groupName.match(/^\(\d+:\d+\)\s*/);
-               // if ( matches !== null) {
-               // groupName = groupName.substring(matches[0].length, groupName.length);
-               // if (groupName.substring(0, prefix.length) === prefix &&
-               // groupName.substring(groupName.length - suffix.length, groupName.length) === suffix) {
-               // groupName = groupName.substring(prefix.length, groupName.length - suffix.length);
-               // }
-               // }
-               // this.newGroupName = time + prefix + groupName + suffix;
             }
 
             // if description for new group wasn't passed from parent component,
@@ -689,6 +721,7 @@ Gemma.GeneMembersSaveGrid = Ext
                this.newGroupDescription = "Temporary gene group created " + (new Date()).toString();
             }
          },
+
          okHandler : function() {
             // if user has made changes, save to session
             // if user hasn't made changes, just close
@@ -726,6 +759,14 @@ Gemma.GeneMembersSaveGrid = Ext
             window.open( downloadLink );
          },
 
+         openManager : function() {
+            // TODO - show the gene set manager.
+            Ext.Msg.alert( "Not implemented yet", "Coming soon" );
+         },
+
+         /**
+          * Prompt user to register
+          */
          launchRegisterWidget : function() {
             if ( this.ajaxRegister === null ) {
 
@@ -823,12 +864,15 @@ Gemma.GeneMembersSaveGrid = Ext
             }, this );
 
          },
+
+         /**
+          * 
+          */
          loggedInSaveHandler : function() {
 
             // check if user is trying to save an empty set
             if ( this.getStore().getRange() && this.getStore().getRange().length === 0 ) {
-               Ext.Msg.alert( 'Cannot save empty set', 'You are trying to save an empty set. '
-                  + 'Please add some genes and try again.' );
+               Ext.Msg.alert( 'Cannot save empty set', 'Please add some genes and try again.' );
                return;
             }
 
@@ -842,35 +886,38 @@ Gemma.GeneMembersSaveGrid = Ext
 
                // if group is db-bound and user has editing privileges, they can either save or save as
                // in all other cases, user can only save as
-               GeneSetController.canCurrentUserEditGroup( this.selectedGeneSetValueObject, function( response ) {
-                  var dataMsg = Ext.util.JSON.decode( response );
-                  if ( dataMsg.userCanEditGroup && dataMsg.groupIsDBBacked ) {
-                     // ask user if they want to save changes
-                     Ext.Msg.show( {
-                        title : 'Save Changes?',
-                        msg : 'You have edited an <b>existing group</b>, '
-                           + 'how would you like to save your changes?<br>',
-                        buttons : {
-                           ok : 'Save over',
-                           yes : 'Save as...',
-                           no : 'Cancel'
-                        },
-                        fn : function( btnId ) {
-                           if ( btnId === 'ok' ) {
-                              this.saveHandler();
-                           } else if ( btnId === 'yes' ) {
-                              this.saveAsHandler();
-                           } else if ( btnId === 'no' ) {
-                              // just close the prompt
-                           }
-                        },
-                        scope : this,
-                        icon : Ext.MessageBox.QUESTION
-                     } );
-                  } else {
-                     this.saveAsHandler();
-                  }
-               }.createDelegate( this ) );
+               GeneSetController.canCurrentUserEditGroup( this.selectedGeneSetValueObject, {
+                  callback : function( response ) {
+                     var dataMsg = Ext.util.JSON.decode( response );
+                     if ( dataMsg.userCanEditGroup && dataMsg.groupIsDBBacked ) {
+                        // ask user if they want to save changes
+                        Ext.Msg.show( {
+                           title : 'Save Changes?',
+                           msg : 'You have edited an <b>existing group</b>, '
+                              + 'how would you like to save your changes?<br>',
+                           buttons : {
+                              ok : 'Save over',
+                              yes : 'Save as...',
+                              no : 'Cancel'
+                           },
+                           fn : function( btnId ) {
+                              if ( btnId === 'ok' ) {
+                                 this.saveHandler();
+                              } else if ( btnId === 'yes' ) {
+                                 this.saveAsHandler();
+                              } else if ( btnId === 'no' ) {
+                                 // just close the prompt
+                              }
+                           },
+                           scope : this,
+                           icon : Ext.MessageBox.QUESTION
+                        } );
+                     } else {
+                        this.saveAsHandler();
+                     }
+                  }.createDelegate( this ),
+                  errorHandler : Gemma.genericErrorHandler
+               } );
 
             } else {
                // only save option is to save as
@@ -984,6 +1031,10 @@ Ext.reg( 'geneMembersSaveGrid', Gemma.GeneMembersSaveGrid );
  */
 Gemma.GeneAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
    extraButtons : [],
+
+   /**
+    * @memberOf Gemma.GeneAndGroupAdderToolbar
+    */
    initComponent : function() {
 
       Gemma.GeneAndGroupAdderToolbar.superclass.initComponent.call( this );
@@ -1021,6 +1072,10 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
       } );
 
    },
+
+   /**
+    * 
+    */
    afterRender : function( c, l ) {
       Gemma.GeneAndGroupAdderToolbar.superclass.afterRender.call( this, c, l );
       this.add( this.geneCombo, this.addBtn );
@@ -1038,6 +1093,10 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend( Gemma.GeneGrid, {
    initComponent : function() {
       Gemma.GeneGroupMemberPanelClassic.superclass.initComponent.call( this );
    },
+
+   /**
+    * @memberOf Gemma.GeneGroupMemberPanelClassic
+    */
    showGeneGroup : function( groupRecord ) {
       this.getEl().mask( "Loading genes ..." );
       GeneSetController.getGenesInGroup.apply( this, [ groupRecord.get( 'id' ), -1, {
@@ -1046,6 +1105,9 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend( Gemma.GeneGrid, {
       } ] );
    },
 
+   /**
+    * @memberOf Gemma.GeneGroupMemberPanelClassic
+    */
    reset : function() {
       this.getTopToolbar().taxonCombo.reset();
       this.getTopToolbar().geneCombo.reset();
@@ -1065,12 +1127,18 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend( Gemma.GeneGrid, {
       this.currentGroupSize = 0;
    },
 
+   /**
+    * @memberOf Gemma.GeneGroupMemberPanelClassic
+    */
    lockInTaxon : function( taxon ) {
       this.getTopToolbar().taxonCombo.setTaxon( taxon );
       this.getTopToolbar().geneCombo.setTaxon( taxon );
       this.getTopToolbar().taxonCombo.setDisabled( true );
    },
 
+   /**
+    * @memberOf Gemma.GeneGroupMemberPanelClassic
+    */
    afterLoadGenes : function( geneValueObjs, groupRecord ) {
 
       if ( groupRecord.get( 'userCanWrite' ) ) {

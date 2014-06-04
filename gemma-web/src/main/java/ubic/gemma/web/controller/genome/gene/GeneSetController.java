@@ -190,7 +190,6 @@ public class GeneSetController {
      * @return collection of GeneSetValueObject
      */
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
-
         return geneSetService.findGeneSetsByName( query, taxonId );
     }
 
@@ -198,12 +197,14 @@ public class GeneSetController {
      * AJAX If the current user has access to given gene group, will return the gene value objects in the gene group
      * 
      * @param groupId
+     * @param limit if greater than zero, limit to how many genes are returned (for previews)
      * @return
      */
     public Collection<GeneValueObject> getGenesInGroup( Long groupId, final Integer limit ) {
+        if ( groupId == null || groupId < 0 ) throw new IllegalArgumentException( "Must be a persistent gene group" );
 
-        // FIXME a bit inefficient...
-        Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( groupId );
+        // FIXME inefficient way to implement the limit
+        Collection<GeneValueObject> genesInGroup = geneSetService.getGenesInGroup( new GeneSetValueObject( groupId ) );
 
         if ( limit != null && limit > 0 && limit < genesInGroup.size() ) {
             return CollectionUtils.select( genesInGroup, new Predicate() {
@@ -216,6 +217,17 @@ public class GeneSetController {
             } );
         }
         return genesInGroup;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param groupId
+     * @return ids of genes in the gene set.
+     */
+    public Collection<Long> getGeneIdsInGroup( Long groupId ) {
+        if ( groupId == null || groupId < 0 ) throw new IllegalArgumentException( "Must be a persistent gene group" );
+        return geneSetService.getGeneIdsInGroup( new GeneSetValueObject( groupId ) );
     }
 
     /**
