@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
+import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -332,7 +333,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      */
     @Override
     @Transactional(readOnly = true)
-    public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO ) {
+    public TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO ) {
 
         if ( geneSetVO == null ) return null;
 

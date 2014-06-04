@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
+import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
@@ -334,8 +335,7 @@ public interface GeneSetService {
      * @param geneSetVos
      * @return the taxon or null if the gene set param was null
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public TaxonValueObject getTaxonVOforGeneSetVO( GeneSetValueObject geneSetVO );
+    public TaxonValueObject getTaxonVOforGeneSetVO( SessionBoundGeneSetValueObject geneSetVO );
 
     /**
      * get the taxon for the gene set parameter, assumes that the taxon of the first gene will be representational of
