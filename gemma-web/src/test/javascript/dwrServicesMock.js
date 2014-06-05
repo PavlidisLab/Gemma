@@ -420,6 +420,7 @@ GenePickerController.getGenesByGOId = function( p0, p1, callback ) {
 GenePickerController.searchGenes = function( p0, p1, callback ) {
 };
 GenePickerController.searchGenesAndGeneGroups = function( p0, p1, callback ) {
+   console.log( "Called GenePickerController.searchGenesAndGeneGroups" );
 };
 GenePickerController.searchGenesAndGeneGroupsGetIds = function( p0, p1, callback ) {
 };

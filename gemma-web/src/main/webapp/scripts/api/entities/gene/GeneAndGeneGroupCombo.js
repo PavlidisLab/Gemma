@@ -312,11 +312,8 @@ Gemma.GeneAndGeneGroupCombo = Ext
              * Don't fire right away
              */
             this.on( 'focus', function( field ) {
-
+               // if the text field is blank, show the available groups
                setTimeout( function() {
-
-                  // if the text field is blank, show the automatically generated groups (like 'All human', 'All rat'
-                  // etc). Possibly don't even do this, wait for the trigger click or down-arrow
                   if ( this.getValue() === '' ) {
                      this.doQuery( '', true );
                      this.lastQuery = null; // needed for query queue fix

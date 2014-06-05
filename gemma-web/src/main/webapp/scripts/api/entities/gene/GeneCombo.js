@@ -63,7 +63,8 @@ Gemma.GeneCombo = Ext
          initComponent : function() {
 
             var template = new Ext.XTemplate(
-               '<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{officialName} ({[values.taxonScientificName]})"> {officialSymbol} {officialName} ({[values.taxonScientificName]})</div></tpl>' );
+               '<tpl for="."><div style="font-size:11px" class="x-combo-list-item" ext:qtip="{officialName}'
+                  + ' ({[values.taxonScientificName]})"> {officialSymbol} {officialName} ({[values.taxonScientificName]})</div></tpl>' );
 
             Ext.apply( this, {
                tpl : template,
@@ -226,6 +227,9 @@ Gemma.GeneSearch = Ext.extend( Ext.FormPanel, {
    layout : 'fit',
    stickyTaxon : true,
 
+   /**
+    * @memberOf Gemma.GeneSearch
+    */
    initComponent : function() {
 
       Gemma.GeneSearch.superclass.initComponent.call( this );
