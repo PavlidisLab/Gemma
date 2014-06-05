@@ -42,7 +42,7 @@ describe( "CoexVOUtil", function() {
    } );
 } );
 
-describe( "searchForGenes", function() {
+describe( "search For Genes with empty query", function() {
    var searchForm = {};
 
    beforeEach( function( done ) {
@@ -59,15 +59,18 @@ describe( "searchForGenes", function() {
       searchForm.geneSearchAndPreview.geneCombo.setValue( '' );
       searchForm.geneSearchAndPreview.geneCombo.fireEvent( 'focus' );
 
-      // wait for the call
+      // wait for the call; there is a delay of 1200ms before we do an empty search
       setTimeout( function() {
          done();
       }, 1300 );
 
    } );
 
-   it( 'test behaviour of gene search combo', function() {
-      expect( GenePickerController.searchGenesAndGeneGroups ).toHaveBeenCalled();
+   it( 'check GenePickerController was called', function() {
+      expect( GenePickerController.searchGenesAndGeneGroups ).toHaveBeenCalledWith( '', null, {
+         callback : jasmine.any( Function ),
+         errorHandler : jasmine.any( Function )
+      } );
    } );
 
    afterEach( function() {
