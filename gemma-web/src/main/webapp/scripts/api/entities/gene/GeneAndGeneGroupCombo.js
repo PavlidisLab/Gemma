@@ -238,7 +238,8 @@ Gemma.GeneAndGeneGroupCombo = Ext
                } ),
                store : {
                   reader : new Ext.data.ListRangeReader( {}, Gemma.GeneAndGeneGroupComboRecord ),
-                  proxy : new Ext.data.DWRProxy( GenePickerController.searchGenesAndGeneGroups ),
+                  proxy : new Ext.data.DWRProxy( GenePickerController.searchGenesAndGeneGroups,
+                     Gemma.genericErrorHandler ),
                   autoLoad : false
                }
             } );

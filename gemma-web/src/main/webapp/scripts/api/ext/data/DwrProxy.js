@@ -41,7 +41,9 @@ Ext.namespace( "Ext.ux.data" );
  * </pre></code>
  * @constructor
  * @param {Object}
- *           configOrMethod The config object, or a read metod.
+ *           configOrMethod The config object, or a read method.
+ * @param {Function}
+ *           errorHandler
  */
 Ext.ux.data.DwrProxy = function( configOrMethod, errorHandler ) {
 

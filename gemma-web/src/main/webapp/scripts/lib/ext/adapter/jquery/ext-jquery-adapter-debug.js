@@ -1686,75 +1686,25 @@ Ext.TaskMgr.start(task);
  * <p>See the {@link #start} method for details about how to configure a task object.</p>
  * @singleton
  */
-Ext.TaskMgr = new Ext.util.TaskRunner();(function(){
+Ext.TaskMgr = new Ext.util.TaskRunner();if(typeof jQuery == "undefined"){
+    throw "Unable to load Ext, jQuery not found.";
+}
 
-var libFlyweight,
-    version = Prototype.Version.split('.'),
-    mouseEnterSupported = (parseInt(version[0], 10) >= 2) || (parseInt(version[1], 10) >= 7) || (parseInt(version[2], 10) >= 1),
-    mouseCache = {},
-    elContains = function(parent, child) {
-       if(parent && parent.firstChild){
-         while(child) {
-            if(child === parent) {
-                return true;
-            }
-            child = child.parentNode;
-            if(child && (child.nodeType != 1)) {
-                child = null;
-            }
-          }
-        }
-        return false;
-    },
-    checkRelatedTarget = function(e) {
-        return !elContains(e.currentTarget, Ext.lib.Event.getRelatedTarget(e));
-    };
+(function(){
+var libFlyweight;
 
 Ext.lib.Dom = {
     getViewWidth : function(full){
-        return full ? this.getDocumentWidth() : this.getViewportWidth();
+        // jQuery doesn't report full window size on document query, so max both
+        return full ? Math.max(jQuery(document).width(),jQuery(window).width()) : jQuery(window).width();
     },
 
     getViewHeight : function(full){
-        return full ? this.getDocumentHeight() : this.getViewportHeight();
+        // jQuery doesn't report full window size on document query, so max both
+        return full ? Math.max(jQuery(document).height(),jQuery(window).height()) : jQuery(window).height();
     },
 
-    getDocumentHeight: function() { // missing from prototype?
-        var scrollHeight = (document.compatMode != "CSS1Compat") ? document.body.scrollHeight : document.documentElement.scrollHeight;
-        return Math.max(scrollHeight, this.getViewportHeight());
-    },
-
-    getDocumentWidth: function() { // missing from prototype?
-        var scrollWidth = (document.compatMode != "CSS1Compat") ? document.body.scrollWidth : document.documentElement.scrollWidth;
-        return Math.max(scrollWidth, this.getViewportWidth());
-    },
-
-    getViewportHeight: function() { // missing from prototype?
-        var height = self.innerHeight;
-        var mode = document.compatMode;
-
-        if ( (mode || Ext.isIE) && !Ext.isOpera ) {
-            height = (mode == "CSS1Compat") ?
-                    document.documentElement.clientHeight : // Standards
-                    document.body.clientHeight; // Quirks
-        }
-
-        return height;
-    },
-
-    getViewportWidth: function() { // missing from prototype?
-        var width = self.innerWidth;  // Safari
-        var mode = document.compatMode;
-
-        if (mode || Ext.isIE) { // IE, Gecko, Opera
-            width = (mode == "CSS1Compat") ?
-                    document.documentElement.clientWidth : // Standards
-                    document.body.clientWidth; // Quirks
-        }
-        return width;
-    },
-
-    isAncestor : function(p, c){ // missing from prototype?
+    isAncestor : function(p, c){
         var ret = false;
 
         p = Ext.getDom(p);
@@ -1777,6 +1727,11 @@ Ext.lib.Dom = {
         return Ext.lib.Region.getRegion(el);
     },
 
+    //////////////////////////////////////////////////////////////////////////////////////
+    // Use of jQuery.offset() removed to promote consistent behavior across libs.
+    // JVS 05/23/07
+    //////////////////////////////////////////////////////////////////////////////////////
+
     getY : function(el){
         return this.getXY(el)[1];
     },
@@ -1785,7 +1740,7 @@ Ext.lib.Dom = {
         return this.getXY(el)[0];
     },
 
-    getXY : function(el){ // this initially used Position.cumulativeOffset but it is not accurate enough
+    getXY : function(el) {
         var p, pe, b, scroll, bd = (document.body || document.documentElement);
         el = Ext.getDom(el);
 
@@ -1854,7 +1809,7 @@ Ext.lib.Dom = {
         return [x, y];
     },
 
-    setXY : function(el, xy){ // this initially used Position.cumulativeOffset but it is not accurate enough
+    setXY : function(el, xy){
         el = Ext.fly(el, '_setXY');
         el.position();
         var pts = el.translatePoints(xy);
@@ -1875,22 +1830,83 @@ Ext.lib.Dom = {
     }
 };
 
+// all lib flyweight calls use their own flyweight to prevent collisions with developer flyweights
+function fly(el){
+    if(!libFlyweight){
+        libFlyweight = new Ext.Element.Flyweight();
+    }
+    libFlyweight.dom = el;
+    return libFlyweight;
+}
 Ext.lib.Event = {
     getPageX : function(e){
-        return Event.pointerX(e.browserEvent || e);
+        e = e.browserEvent || e;
+        return e.pageX;
     },
 
     getPageY : function(e){
-        return Event.pointerY(e.browserEvent || e);
+        e = e.browserEvent || e;
+        return e.pageY;
     },
 
     getXY : function(e){
         e = e.browserEvent || e;
-        return [Event.pointerX(e), Event.pointerY(e)];
+        return [e.pageX, e.pageY];
     },
 
     getTarget : function(e){
-        return Event.element(e.browserEvent || e);
+        return e.target;
+    },
+
+    // all Ext events will go through event manager which provides scoping
+    on : function(el, eventName, fn, scope, override){
+        jQuery(el).bind(eventName, fn);
+    },
+
+    un : function(el, eventName, fn){
+        jQuery(el).unbind(eventName, fn);
+    },
+
+    purgeElement : function(el){
+        jQuery(el).unbind();
+    },
+
+    preventDefault : function(e){
+        e = e.browserEvent || e;
+        if(e.preventDefault){
+            e.preventDefault();
+        }else{
+            e.returnValue = false;
+        }
+    },
+
+    stopPropagation : function(e){
+        e = e.browserEvent || e;
+        if(e.stopPropagation){
+            e.stopPropagation();
+        }else{
+            e.cancelBubble = true;
+        }
+    },
+
+    stopEvent : function(e){
+        this.preventDefault(e);
+        this.stopPropagation(e);
+    },
+
+    onAvailable : function(id, fn, scope){
+        var start = new Date();
+        var f = function(){
+            if(start.getElapsed() > 10000){
+                clearInterval(iid);
+            }
+            var el = document.getElementById(id);
+            if(el){
+                clearInterval(iid);
+                fn.call(scope||window, el);
+            }
+        };
+        var iid = setInterval(f, 50);
     },
 
     resolveTextNode: Ext.isGecko ? function(node){
@@ -1906,7 +1922,7 @@ Ext.lib.Event = {
         return node && node.nodeType == 3 ? node.parentNode : node;
     },
 
-    getRelatedTarget: function(ev) { // missing from prototype?
+    getRelatedTarget: function(ev) {
         ev = ev.browserEvent || ev;
         var t = ev.relatedTarget;
         if (!t) {
@@ -1918,85 +1934,20 @@ Ext.lib.Event = {
         }
 
         return this.resolveTextNode(t);
-    },
-
-    on : function(el, eventName, fn){
-        if((eventName == 'mouseenter' || eventName == 'mouseleave') && !mouseEnterSupported){
-            var item = mouseCache[el.id] || (mouseCache[el.id] = {});
-            item[eventName] = fn;
-            fn = fn.createInterceptor(checkRelatedTarget);
-            eventName = (eventName == 'mouseenter') ? 'mouseover' : 'mouseout';
-        }
-        Event.observe(el, eventName, fn, false);
-    },
-
-    un : function(el, eventName, fn){
-        if((eventName == 'mouseenter' || eventName == 'mouseleave') && !mouseEnterSupported){
-            var item = mouseCache[el.id],
-                ev = item && item[eventName];
-
-            if(ev){
-                fn = ev.fn;
-                delete item[eventName];
-                eventName = (eventName == 'mouseenter') ? 'mouseover' : 'mouseout';
-            }
-        }
-        Event.stopObserving(el, eventName, fn, false);
-    },
-
-    purgeElement : function(el){
-        // no equiv?
-    },
-
-    preventDefault : function(e){   // missing from prototype?
-        e = e.browserEvent || e;
-        if(e.preventDefault) {
-            e.preventDefault();
-        } else {
-            e.returnValue = false;
-        }
-    },
-
-    stopPropagation : function(e){   // missing from prototype?
-        e = e.browserEvent || e;
-        if(e.stopPropagation) {
-            e.stopPropagation();
-        } else {
-            e.cancelBubble = true;
-        }
-    },
-
-    stopEvent : function(e){
-        Event.stop(e.browserEvent || e);
-    },
-
-    onAvailable : function(id, fn, scope){  // no equiv
-        var start = new Date(), iid;
-        var f = function(){
-            if(start.getElapsed() > 10000){
-                clearInterval(iid);
-            }
-            var el = document.getElementById(id);
-            if(el){
-                clearInterval(iid);
-                fn.call(scope||window, el);
-            }
-        };
-        iid = setInterval(f, 50);
     }
 };
 
 Ext.lib.Ajax = function(){
-    var createSuccess = function(cb){
-         return cb.success ? function(xhr){
-            cb.success.call(cb.scope||window, createResponse(cb, xhr));
-         } : Ext.emptyFn;
+    var createComplete = function(cb){
+         return function(xhr, status){
+            if((status == 'error' || status == 'timeout') && cb.failure){
+                cb.failure.call(cb.scope||window, createResponse(cb, xhr));
+            }else if(cb.success){
+                cb.success.call(cb.scope||window, createResponse(cb, xhr));
+            }
+         };
     };
-    var createFailure = function(cb){
-         return cb.failure ? function(xhr){
-            cb.failure.call(cb.scope||window, createResponse(cb, xhr));
-         } : Ext.emptyFn;
-    };
+
     var createResponse = function(cb, xhr){
         var headerObj = {},
             headerStr,
@@ -2034,44 +1985,50 @@ Ext.lib.Ajax = function(){
     return {
         request : function(method, uri, cb, data, options){
             var o = {
-                method: method,
-                parameters: data || '',
+                type: method,
+                url: uri,
+                data: data,
                 timeout: cb.timeout,
-                onSuccess: createSuccess(cb),
-                onFailure: createFailure(cb)
+                complete: createComplete(cb)
             };
+
             if(options){
                 var hs = options.headers;
-                if(hs){
-                    o.requestHeaders = hs;
-                }
                 if(options.xmlData){
-                    method = (method ? method : (options.method ? options.method : 'POST'));
+                    o.data = options.xmlData;
+                    o.processData = false;
+                    o.type = (method ? method : (options.method ? options.method : 'POST'));
                     if (!hs || !hs['Content-Type']){
                         o.contentType = 'text/xml';
                     }
-                    o.postBody = options.xmlData;
-                    delete o.parameters;
-                }
-                if(options.jsonData){
-                    method = (method ? method : (options.method ? options.method : 'POST'));
+                }else if(options.jsonData){
+                    o.data = typeof options.jsonData == 'object' ? Ext.encode(options.jsonData) : options.jsonData;
+                    o.processData = false;
+                    o.type = (method ? method : (options.method ? options.method : 'POST'));
                     if (!hs || !hs['Content-Type']){
                         o.contentType = 'application/json';
                     }
-                    o.postBody = typeof options.jsonData == 'object' ? Ext.encode(options.jsonData) : options.jsonData;
-                    delete o.parameters;
+                }
+                if(hs){
+                    o.beforeSend = function(xhr){
+                        for (var h in hs) {
+                            if (hs.hasOwnProperty(h)) {
+                                xhr.setRequestHeader(h, hs[h]);
+                            }
+                        }
+                    };
                 }
             }
-            new Ajax.Request(uri, o);
+            jQuery.ajax(o);
         },
 
         formRequest : function(form, uri, cb, data, isUpload, sslUri){
-            new Ajax.Request(uri, {
-                method: Ext.getDom(form).method ||'POST',
-                parameters: Form.serialize(form)+(data?'&'+data:''),
+            jQuery.ajax({
+                type: Ext.getDom(form).method ||'POST',
+                url: uri,
+                data: jQuery(form).serialize()+(data?'&'+data:''),
                 timeout: cb.timeout,
-                onSuccess: createSuccess(cb),
-                onFailure: createFailure(cb)
+                complete: createComplete(cb)
             });
         },
 
@@ -2084,40 +2041,32 @@ Ext.lib.Ajax = function(){
         },
 
         serializeForm : function(form){
-            return Form.serialize(form.dom||form);
+            return jQuery(form.dom||form).serialize();
         }
     };
 }();
 
-
 Ext.lib.Anim = function(){
-
-    var easings = {
-        easeOut: function(pos) {
-            return 1-Math.pow(1-pos,2);
-        },
-        easeIn: function(pos) {
-            return 1-Math.pow(1-pos,2);
-        }
-    };
     var createAnim = function(cb, scope){
+        var animated = true;
         return {
             stop : function(skipToLast){
-                this.effect.cancel();
+                // do nothing
             },
 
             isAnimated : function(){
-                return this.effect.state == 'running';
+                return animated;
             },
 
             proxyCallback : function(){
+                animated = false;
                 Ext.callback(cb, scope);
             }
         };
     };
     return {
         scroll : function(el, args, duration, easing, cb, scope){
-            // not supported so scroll immediately?
+            // scroll anim not supported so just scroll immediately
             var anim = createAnim(cb, scope);
             el = Ext.getDom(el);
             if(typeof args.scroll.to[0] == 'number'){
@@ -2135,15 +2084,19 @@ Ext.lib.Anim = function(){
         },
 
         color : function(el, args, duration, easing, cb, scope){
-            return this.run(el, args, duration, easing, cb, scope);
+            // color anim not supported, so execute callback immediately
+            var anim = createAnim(cb, scope);
+            anim.proxyCallback();
+            return anim;
         },
 
         run : function(el, args, duration, easing, cb, scope, type){
+            var anim = createAnim(cb, scope), e = Ext.fly(el, '_animrun');
             var o = {};
             for(var k in args){
-                switch(k){   // scriptaculous doesn't support, so convert these
+                switch(k){   // jquery doesn't support, so convert
                     case 'points':
-                        var by, pts, e = Ext.fly(el, '_animrun');
+                        var by, pts;
                         e.position();
                         if(by = args.points.by){
                             var xy = e.getXY();
@@ -2151,44 +2104,63 @@ Ext.lib.Anim = function(){
                         }else{
                             pts = e.translatePoints(args.points.to);
                         }
-                        o.left = pts.left+'px';
-                        o.top = pts.top+'px';
+                        o.left = pts.left;
+                        o.top = pts.top;
+                        if(!parseInt(e.getStyle('left'), 10)){ // auto bug
+                            e.setLeft(0);
+                        }
+                        if(!parseInt(e.getStyle('top'), 10)){
+                            e.setTop(0);
+                        }
+                        if(args.points.from){
+                            e.setXY(args.points.from);
+                        }
                     break;
                     case 'width':
-                        o.width = args.width.to+'px';
+                        o.width = args.width.to;
+                        if (args.width.from)
+                            e.setWidth(args.width.from);
                     break;
                     case 'height':
-                        o.height = args.height.to+'px';
+                        o.height = args.height.to;
+                        if (args.height.from)
+                            e.setHeight(args.height.from);
                     break;
                     case 'opacity':
-                        o.opacity = String(args.opacity.to);
+                        o.opacity = args.opacity.to;
+                        if (args.opacity.from)
+                            e.setOpacity(args.opacity.from);
                     break;
+                    case 'left':
+                        o.left = args.left.to;
+                        if (args.left.from)
+                            e.setLeft(args.left.from);
+                    break;
+                    case 'top':
+                        o.top = args.top.to;
+                        if (args.top.from)
+                            e.setTop(args.top.from);
+                    break;
+                        // jQuery can't handle callback, scope, and xy arguments, so break here
+                    case 'callback':
+                    case 'scope':
+                    case 'xy':
+                    break;
+
                     default:
-                        o[k] = String(args[k].to);
+                        o[k] = args[k].to;
+                        if (args[k].from)
+                            e.setStyle(k, args[k].from);
                     break;
                 }
             }
-            var anim = createAnim(cb, scope);
-            anim.effect = new Effect.Morph(Ext.id(el), {
-                duration: duration,
-                afterFinish: anim.proxyCallback,
-                transition: easings[easing] || Effect.Transitions.linear,
-                style: o
-            });
+            // TODO: find out about easing plug in?
+            jQuery(el).animate(o, duration*1000, undefined, anim.proxyCallback);
             return anim;
         }
     };
 }();
 
-
-// all lib flyweight calls use their own flyweight to prevent collisions with developer flyweights
-function fly(el){
-    if(!libFlyweight){
-        libFlyweight = new Ext.Element.Flyweight();
-    }
-    libFlyweight.dom = el;
-    return libFlyweight;
-}
 
 Ext.lib.Region = function(t, r, b, l) {
     this.top = t;
@@ -2271,7 +2243,6 @@ Ext.lib.Point = function(x, y) {
 };
 
 Ext.lib.Point.prototype = new Ext.lib.Region();
-
 
 // prevent IE leaks
 if(Ext.isIE) {

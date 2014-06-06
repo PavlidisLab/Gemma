@@ -823,6 +823,7 @@ GenePickerController.searchGenes = function( p0, p1, callback ) {
    dwr.engine._execute( GenePickerController._path, 'GenePickerController', 'searchGenes', p0, p1, callback );
 };
 GenePickerController.searchGenesAndGeneGroups = function( p0, p1, callback ) {
+   console.log( "Called GenePickerController.searchGenesAndGeneGroups" );
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/GenePickerController/searchGenesAndGeneGroups" );
    dwr.engine._execute( GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroups', p0, p1,
       callback );
