@@ -174,13 +174,11 @@
 		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
 	</bean>
 
-	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" lazy-init="true">
-		<property name="configLocation" ref="cacheConfigResource" />
-	</bean>
-
-	<!-- so the file can be found even if it is inside the gemma-mda jar file -->
-	<bean id="cacheConfigResource" class="org.springframework.core.io.ClassPathResource">
-		<constructor-arg name="path" value="${gemma.ehcache.configfile.name}" />
-	</bean>
+  <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
+        p:cache-manager-ref="ehcache" />
+        
+    <bean id="ehcache"
+        class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
+        p:config-location="classpath:${gemma.ehcache.configfile.name}" p:shared="true"/>
 
 </beans>
