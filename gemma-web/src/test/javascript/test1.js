@@ -159,3 +159,13 @@ describe( "search For Genes with empty query", function() {
    } );
 
 } );
+
+describe("check user groups manager is okay", function() {
+   
+   /*
+    * Log in.
+    */
+   
+});
+
+

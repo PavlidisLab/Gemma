@@ -98,7 +98,7 @@ Gemma.MyDatasetsPanel = Ext
                : '';
 
             // only allow admins to mess with batch (in any obvious way)
-            var isAdmin = (Ext.getDom( 'hasAdmin' )) ? Ext.getDom( 'hasAdmin' ).getValue() : false;
+            var isAdmin = (Ext.get( 'hasAdmin' )) ? Ext.get( 'hasAdmin' ).getValue() : false;
             var c = reportGrid.getColumnModel().findColumnIndex( 'dateBatchFetch' );
             reportGrid.getColumnModel().setHidden( c, !isAdmin );
 
@@ -237,7 +237,7 @@ Gemma.EEReportGrid = Ext
             } );
 
             store.on( 'load', function( store, records, options ) {
-               this.updateTitle( records.size() );
+               this.updateTitle( records.length );
             }, this );
 
             Ext.apply( this, {

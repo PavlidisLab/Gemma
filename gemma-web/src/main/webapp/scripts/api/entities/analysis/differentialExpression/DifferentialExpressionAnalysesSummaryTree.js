@@ -78,7 +78,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             this.setRootNode( root );
 
             // just show "Not available" root if no analyses
-            if ( !analyses || analyses.size() === 0 ) {
+            if ( !analyses || analyses.length === 0 ) {
                root.appendChild( new Ext.tree.TreeNode( {
                   id : 'nodeNA',
                   expanded : false,
@@ -93,7 +93,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             var nodeId = 0; // used to keep track of nodes and give
             // each a specific
             // div in which to draw a pie chart
-            for (var j = 0; j < analyses.size(); j++) {
+            for (var j = 0; j < analyses.length; j++) {
                var analysis = analyses[j];
 
                var parentNode = null;
@@ -109,7 +109,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                if ( analysis.subsetFactor ) {
                   var subsetFactor = analysis.subsetFactor;
                   subsetText = this.getSubsetText( analysis );
-                  subsetIdent = subsetFactor + analysis.resultSets.size();
+                  subsetIdent = subsetFactor + analysis.resultSets.length;
                   // if a similar subset node has already been created, insert
                   // this node adjacent to it
                   neighbourNode = root.findChild( 'subsetIdent', subsetIdent );
@@ -141,7 +141,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                // if analysis has only one result set, don't give
                // it children and
                // put all info in parent node
-               if ( analysis.resultSets.size() === 1 ) {
+               if ( analysis.resultSets.length === 1 ) {
                   resultSet = analysis.resultSets[0];
                   // get experimental factor string and build analysis parent node text
                   analysisName = this.getFactorNameText( analysis, resultSet );
@@ -168,18 +168,17 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                   /*
                    * How many levels were used.
                    */
-                  parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.size();
+                  parentNode.attributes.numberOfFactors = resultSet.experimentalFactors.length;
                   parentNode.attributes.analysisId = resultSet.analysisId;
                   parentNode.attributes.resultSetId = resultSet.resultSetId;
-                  if ( resultSet.experimentalFactors.size() == 1 ) {
-                     parentNode.attributes.numberOfFactorValues = analysis.factorValuesUsed[resultSet.experimentalFactors[0].id]
-                        .size();
+                  if ( resultSet.experimentalFactors.length == 1 ) {
+                     parentNode.attributes.numberOfFactorValues = analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].length;
                   }
                }
                // if analysis has >1 result set, create result set
                // children
                else {
-                  for (var i = 0; i < analysis.resultSets.size(); i++) {
+                  for (var i = 0; i < analysis.resultSets.length; i++) {
                      resultSet = analysis.resultSets[i];
 
                      // console.log(resultSet);
@@ -195,7 +194,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                      // only grab factor name when 1 factor,
                      // otherwise will grab
                      // doubles from interaction
-                     if ( resultSet.experimentalFactors.size() === 1 ) {
+                     if ( resultSet.experimentalFactors.length === 1 ) {
                         // keep factors in alpha order
                         parentText = (!parentText) ? factor : (factor < parentText) ? (factor + " & " + parentText)
                            : (parentText + " & " + factor);
@@ -223,11 +222,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                            /*
                             * How many levels were used.
                             */
-                           numberOfFactors : resultSet.experimentalFactors.size(),
+                           numberOfFactors : resultSet.experimentalFactors.length,
                            analysisId : resultSet.analysisId,
                            resultSetId : resultSet.resultSetId,
-                           numberOfFactorValues : resultSet.experimentalFactors.size() === 1 ? analysis.factorValuesUsed[resultSet.experimentalFactors[0].id]
-                              .size()
+                           numberOfFactorValues : resultSet.experimentalFactors.length === 1 ? analysis.factorValuesUsed[resultSet.experimentalFactors[0].id].length
                               : null,
 
                            leaf : true
@@ -243,11 +241,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
                // figure out type of a ANOVA
                var numberOfFactors = 0;
-               for (i = 0; i < analysis.resultSets.size(); i++) {
+               for (i = 0; i < analysis.resultSets.length; i++) {
                   resultSet = analysis.resultSets[i];
                   // ignore the result sets where interactions are
                   // being looked at
-                  if ( resultSet.experimentalFactors.size() === 1 ) {
+                  if ( resultSet.experimentalFactors.length === 1 ) {
                      numberOfFactors++;
                   }
                }
@@ -508,13 +506,13 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
          getFactorNameText : function( analysis, resultSet ) {
             var factor = '';
             var interaction = 0;
-            if ( resultSet.experimentalFactors === null || resultSet.experimentalFactors.size() === 0 ) {
+            if ( resultSet.experimentalFactors === null || resultSet.experimentalFactors.length === 0 ) {
                factor = "n/a";
             } else {
 
-               for (var k = 0; k < resultSet.experimentalFactors.size(); k++) {
+               for (var k = 0; k < resultSet.experimentalFactors.length; k++) {
                   var ef = resultSet.experimentalFactors[k];
-                  if ( k > 0 && k < resultSet.experimentalFactors.size() ) {
+                  if ( k > 0 && k < resultSet.experimentalFactors.length ) {
                      factor = factor + "&nbsp;X&nbsp;";
                      interaction = interaction + 1;
                   }
@@ -539,7 +537,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
           */
          getFactorNameExtra : function( analysis, resultSet ) {
 
-            if ( resultSet.experimentalFactors.size() > 1 ) {
+            if ( resultSet.experimentalFactors.length > 1 ) {
                return '';
             }
 
@@ -553,8 +551,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             // for categorical, list the names
             var abrLen = 20;
             if ( ef.type === 'categorical' ) {
-               for (var m = 0; m < fvu.size(); m++) {
-                  if ( m > 0 && m < fvu.size() ) {
+               for (var m = 0; m < fvu.length; m++) {
+                  if ( m > 0 && m < fvu.length ) {
                      text = text + "&semi;&nbsp;";
                   }
                   text = text + Ext.util.Format.ellipsis( fvu[m].value, abrLen, true );
@@ -563,10 +561,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             } else {
                // for continuous, show range like "(0 - 10)"
                var vals = [];
-               for (var m = 0; m < fvu.size(); m++) {
+               for (var m = 0; m < fvu.length; m++) {
                   vals[m] = fvu[m].value;
                }
-               if ( vals.size() > 1 ) {
+               if ( vals.length > 1 ) {
                   // assume numeric, fall back on string.
                   try {
                      // numeric
@@ -575,11 +573,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
                      } );
 
                      text = Number( vals[0] ).toPrecision( 2 ) + "&nbsp;&ndash;&nbsp;"
-                        + Number( vals[vals.size() - 1] ).toPrecision( 2 );
+                        + Number( vals[vals.length - 1] ).toPrecision( 2 );
                   } catch (err) {
                      vals.sort(); // alpha
                      text = Ext.util.Format.ellipsis( vals[0] ) + "&nbsp;&ndash;&nbsp;"
-                        + Ext.util.Format.ellipsis( vals[vals.size() - 1], abrLen, true );
+                        + Ext.util.Format.ellipsis( vals[vals.length - 1], abrLen, true );
                   }
                }
 
@@ -688,7 +686,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
 
          drawPieCharts : function() {
             var ctx, diffExpressed, interesting;
-            for (var i = 0; i < this.contrastPercents.size(); i++) {
+            for (var i = 0; i < this.contrastPercents.length; i++) {
                var chartElement = Ext.get( this.calculateChartId( this.ee.id, i ) );
 
                if ( chartElement ) {

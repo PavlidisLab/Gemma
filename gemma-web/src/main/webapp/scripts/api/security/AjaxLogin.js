@@ -34,16 +34,16 @@ Gemma.AjaxLogin.logoutFn = function() {
        * @memberOf Gemma.AjaxLogin
        */
       success : function( response, options ) {
-         var hasuser = Ext.getDom( 'hasUser' );
+         var hasuser = Ext.get( 'hasUser' );
          if ( hasuser ) {
             hasuser.value = '';
          }
-         var hasadmin = Ext.getDom( 'hasAdmin' );
+         var hasadmin = Ext.get( 'hasAdmin' );
          if ( hasadmin ) {
             hasadmin.value = '';
          }
 
-         var hasname = Ext.getDom( 'username-logged-in' );
+         var hasname = Ext.get( 'username-logged-in' );
          if ( hasname ) {
             hasname.value = '';
          }

@@ -172,7 +172,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
             ExpressionExperimentController.loadExpressionExperiments( eeIdsToAdd, function( ees ) {
 
-               for (var j = 0; j < ees.size(); j++) {
+               for (var j = 0; j < ees.length; j++) {
                   if ( this.getStore().find( "id", ees[j].id ) < 0 ) {
                      var Constructor = this.store.recordType;
                      var record = new Constructor( ees[j] );

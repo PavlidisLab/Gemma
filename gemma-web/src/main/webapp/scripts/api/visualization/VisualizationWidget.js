@@ -110,7 +110,7 @@ Gemma.prepareProfiles = function( data ) {
    var preparedData = [];
    var geneExpressionProfile = data.profiles;
 
-   for (var i = 0; i < geneExpressionProfile.size(); i++) {
+   for (var i = 0; i < geneExpressionProfile.length; i++) {
       var profile = geneExpressionProfile[i].profile;
 
       var probeId = geneExpressionProfile[i].probe.id;
@@ -138,7 +138,7 @@ Gemma.prepareProfiles = function( data ) {
       if ( genes !== undefined && genes.length > 0 ) {
          var k, gene, link, geneName;
 
-         for (k = 0; k < genes.size(); k++) {
+         for (k = 0; k < genes.length; k++) {
             gene = genes[k];
             geneName = genes[k].officialName;
             link = '<a href="' + Gemma.LinkRoots.genePage + gene.id + '" target="_blank" ext:qtip="' + qtip + '">'
@@ -163,7 +163,7 @@ Gemma.prepareProfiles = function( data ) {
        * Turn a flat vector into an array of points (that's what flotr needs)
        */
       var points = [];
-      for (var j = 0; j < profile.size(); j++) {
+      for (var j = 0; j < profile.length; j++) {
          var point = [ j, profile[j] ];
          points.push( point );
       }
@@ -269,7 +269,7 @@ Gemma.ProfileTemplate = Ext.extend( Ext.XTemplate, {
          /*
           * Note: passing in 'newDiv' works in FF but not in IE. (flotr, anyway)
           */
-         LinePlot.draw( $( shortName + "_vis" + randomnumber ), record.profiles, this.graphConfig, null,
+         LinePlot.draw( Ext.get( shortName + "_vis" + randomnumber ), record.profiles, this.graphConfig, null,
             record.factorValuesToNames ); // no
          // sample
          // names
@@ -306,7 +306,7 @@ Gemma.HeatmapTemplate = Ext.extend( Ext.XTemplate, {
          /*
           * Note: 'newDiv' works in FF but not in IE.
           */
-         Heatmap.draw( $( shortName + "_vis_" + randomnumber ), record.profiles, this.graphConfig, null,
+         Heatmap.draw( Ext.get( shortName + "_vis_" + randomnumber ), record.profiles, this.graphConfig, null,
             record.factorValuesToNames, null ); // no
          // sample
          // names
@@ -495,7 +495,8 @@ Gemma.VisualizationZoomPanel = Ext
             if ( doHeatmap ) {
                graphConfig.legend.container = this.legendDiv ? this.legendDiv : this.body.id;
                profiles.sort( Gemma.sortByImportance );
-               Heatmap.draw( $( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels, conditionLabelKey );
+               Heatmap.draw( Ext.get( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels,
+                  conditionLabelKey );
             } else {
                profiles.sort( Gemma.sortByImportance );
 
@@ -504,8 +505,8 @@ Gemma.VisualizationZoomPanel = Ext
                   Ext.DomHelper.overwrite( this.legendDiv, '' );
                }
 
-               LinePlot
-                  .draw( $( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels, conditionLabelKey );
+               LinePlot.draw( Ext.get( this.body.id ), profiles, graphConfig, sampleNames, conditionLabels,
+                  conditionLabelKey );
 
                // make the line chart legend clickable. Selector is based on
                // flotr's output.
@@ -530,7 +531,7 @@ Gemma.VisualizationZoomPanel = Ext
                      var conditionLabels = record.get( "factorValuesToNames" );
                      var conditionLabelKey = record.get( "factorNames" );
 
-                     for (var i = 0; i < profiles.size(); i++) {
+                     for (var i = 0; i < profiles.length; i++) {
 
                         if ( profiles[i].labelID == probeId ) {
                            if ( profiles[i].selected ) {
@@ -580,24 +581,34 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend( Ext.Window, {
       var panelConfigParam = {};
 
       // add extra config params to panel
-      // The $H() construct creates a prototype-extended Hash.
-      // subclass defaults
-      $H( this.extraPanelParams ).each( function( pair ) {
-         panelConfigParam[pair.key] = pair.value;
-      } );
+      // $.each: jquery Isn't there an easier way to do this? apply?
+      if ( this.extraPanelParams ) {
+         $.each( this.extraPanelParams, function( key ) {
+            panelConfigParam[key] = this.extraPanelParams[key];
+         } );
+      }
       // add extra config params to panel
-      // The $H() construct creates a prototype-extended Hash.
-      // instatiation configs
-      $H( config ).each( function( pair ) {
-         panelConfigParam[pair.key] = pair.value;
-      } );
-      $H( config.extraPanelParams ).each( function( pair ) {
-         panelConfigParam[pair.key] = pair.value;
-      } );
+      if ( config ) {
+         $.each( config, function( key ) {
+            panelConfigParam[key] = config[key];
+         } );
+      }
+
+      if ( config.extraPanelParams ) {
+         $.each( config.extraPanelParams, function( key ) {
+            panelConfigParam[key] = config.extraPanelParams[key];
+         } );
+      }
+
+      // console.log( panelConfigParam );
+
       this.panelConfigParam = panelConfigParam;
       Gemma.VisualizationWithThumbsWindow.superclass.constructor.apply( this, arguments );
    },
 
+   /**
+    * 
+    */
    initComponent : function() {
 
       if ( this.title ) {
@@ -715,7 +726,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       var returnedGeneIds = {};
       var returnedGeneCount = 0;
       for (var i = 0; i < records.length; i++) {
-         for (var j = 0; j < records[i].get( 'profiles' ).size(); j++) {
+         for (var j = 0; j < records[i].get( 'profiles' ).length; j++) {
             for (var k = 0; k < records[i].get( 'profiles' )[j].genes.length; k++) {
                if ( returnedGeneIds[records[i].get( 'profiles' )[j].genes[k].id] === undefined ) {
                   returnedGeneIds[records[i].get( 'profiles' )[j].genes[k].id] = true;
@@ -911,7 +922,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
             toggleLegendBtn.setVisible( false );
          }
 
-         var zoomLegendDiv = $( this.zoomLegendId );
+         var zoomLegendDiv = Ext.get( this.zoomLegendId );
          if ( zoomLegendDiv && zoomLegendDiv != null ) {
             zoomLegendDiv.innerHTML = '';
          }
@@ -1036,7 +1047,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
                   this.expand();
                }
                Ext.DomHelper.overwrite( this.body.id, '' );
-               FactorValueLegend.draw( $( this.body.id ), conditionLabelKey );
+               FactorValueLegend.draw( Ext.get( this.body.id ), conditionLabelKey );
             }
          }
       } );
@@ -1313,14 +1324,14 @@ Gemma.sortByImportance = function( a, b ) {
       return 1;
    }
 
-   if ( (!a.genes || a.genes.size() < 1) && (!b.genes || b.genes.size() < 1) ) {
+   if ( (!a.genes || a.genes.length < 1) && (!b.genes || b.genes.length < 1) ) {
       return a.labelID > b.labelID;
    }
 
-   if ( !a.genes || a.genes.size() < 1 ) {
+   if ( !a.genes || a.genes.length < 1 ) {
       return -1;
    }
-   if ( !b.genes || b.genes.size() < 1 ) {
+   if ( !b.genes || b.genes.length < 1 ) {
       return 1;
    }
 
@@ -1374,7 +1385,7 @@ var FactorValueLegend = (function() {
          } );
          var legendDiv = Ext.get( id );
 
-         var ctx = constructCanvas( $( legendDiv ), legendWidth, legendHeight );
+         var ctx = constructCanvas( Ext.get( legendDiv ), legendWidth, legendHeight );
 
          // draw legend for experimental design / condition bar chart
 
@@ -1385,7 +1396,7 @@ var FactorValueLegend = (function() {
          // var ctxDummy = this.el.dom.getContext("2d");
          // CanvasTextFunctions.enable(ctxDummy);
          // ctxDummy.font = fontSize + "px sans-serif";
-         for (factorCategory in conditionLabelKey) {
+         for ( var factorCategory in conditionLabelKey) {
             factorCount++;
             // compute the room needed for the labels.
             if ( ctx.measureText( factorCategory ).width > maxColumnWidth ) {
@@ -1408,8 +1419,8 @@ var FactorValueLegend = (function() {
             * factorCount;
          legendHeight = 3 * TRIM + lineHeight * (factorValueCount + 1);
 
-         Ext.DomHelper.overwrite( $( legendDiv ), '' );
-         ctx = constructCanvas( $( legendDiv ), legendWidth, legendHeight );
+         Ext.DomHelper.overwrite( Ext.get( legendDiv ), '' );
+         ctx = constructCanvas( Ext.get( legendDiv ), legendWidth, legendHeight );
 
          ctx.fillStyle = "#000000";
          ctx.font = fontSize + "px sans-serif";
@@ -1417,7 +1428,7 @@ var FactorValueLegend = (function() {
          ctx.translate( 10, 20 );
          x = 0;
          y = 0;
-         for (factorCategory in conditionLabelKey) {
+         for ( var factorCategory in conditionLabelKey) {
             facCat = Ext.util.Format.ellipsis( factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR );
             var maxLabelWidthInCategory = 0;
             dim = ctx.measureText( facCat );
@@ -1427,7 +1438,7 @@ var FactorValueLegend = (function() {
             }
             ctx.fillText( facCat, x, y );
             y += PER_CONDITION_LABEL_HEIGHT + 2;
-            for (factorValue in conditionLabelKey[factorCategory]) {
+            for ( var factorValue in conditionLabelKey[factorCategory]) {
                var facVal = Ext.util.Format.ellipsis( factorValue, FACTOR_VALUE_LABEL_MAX_CHAR );
                colour = conditionLabelKey[factorCategory][factorValue];
                ctx.fillStyle = colour;
@@ -1480,7 +1491,7 @@ var FactorValueLegend = (function() {
 
          // check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
          if ( !document.createElement( "canvas" ).getContext && Prototype.Browser.IE ) {
-            canvas = $( window.G_vmlCanvasManager.initElement( canvas ) );
+            canvas = Ext.get( window.G_vmlCanvasManager.initElement( canvas ) );
          }
 
          return canvas.getContext( '2d' );

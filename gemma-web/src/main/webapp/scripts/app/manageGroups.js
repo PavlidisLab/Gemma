@@ -494,8 +494,8 @@ Ext
                         tooltip : "Show/hide your public data sets.",
                         boxLabel : "Show your public data",
                         // hide by default if admin user
-                        showPublicData : !((Ext.getDom( 'hasAdmin' )) ? Ext.getDom( 'hasAdmin' ).getValue() : false),
-                        checked : !((Ext.getDom( 'hasAdmin' )) ? Ext.getDom( 'hasAdmin' ).getValue() : false),
+                        showPublicData : !Gemma.SecurityManager.isAdmin(),
+                        checked : !Gemma.SecurityManager.isAdmin(),
                         handler : function( checkbox, event ) {
                            this.showPublicData = checkbox.getValue();
                            refreshData( currentGroup, !this.showPublicData );

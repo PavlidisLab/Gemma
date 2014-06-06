@@ -10,6 +10,14 @@ Gemma.SecurityManager = {};
 Gemma.SecurityManager.adminGroupName = "Administrators";
 Gemma.SecurityManager.usersGroupName = "Users";
 
+Gemma.SecurityManager.isAdmin = function() {
+   return Ext.get( 'hasAdmin' ) ? Ext.get( 'hasAdmin' ).getValue() : false;
+};
+
+Gemma.SecurityManager.isLoggedIn = function() {
+   return Ext.get( 'hasUser' ) ? Ext.get( 'hasUser' ).getValue() : false;
+};
+
 /**
  * Show the manager for the given entity.
  * 
@@ -282,7 +290,7 @@ Gemma.SecurityManager.managePermissions = function( elid, clazz, id, securityFor
 
       var ownerHtml = "<b>Owner</b>: " + ownerName;
 
-      var isAdmin = (Ext.getDom( 'hasAdmin' )) ? Ext.getDom( 'hasAdmin' ).getValue() : false;
+      var isAdmin = Gemma.SecurityManager.isAdmin();
 
       if ( isAdmin ) {
 

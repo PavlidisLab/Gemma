@@ -120,7 +120,7 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             cn : ''
          } );
 
-         for (var i = 0; i < entities.size(); i++) {
+         for (var i = 0; i < entities.length; i++) {
             this.previewContent.update( entities[i] );
          }
 
@@ -129,7 +129,7 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             this.moreIndicator.disable().hide();
          } else {
             this.moreIndicator.enable().show();
-            this.moreIndicator.setText( '[' + (total - entities.size()) + ' more ...]' );
+            this.moreIndicator.setText( '[' + (total - entities.length) + ' more ...]' );
          }
 
          if ( typeof message != 'undefined' && message != null )

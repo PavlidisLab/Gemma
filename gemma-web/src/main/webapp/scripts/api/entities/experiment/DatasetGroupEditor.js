@@ -37,7 +37,7 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
 
       Gemma.DatasetGroupEditor.superclass.initComponent.call( this );
 
-      var userLoggedIn = (Ext.getDom( 'hasUser' ) && Ext.getDom( 'hasUser' ).getValue() === 'true') ? true : false;
+      var userLoggedIn = (Ext.get( 'hasUser' ) && Ext.get( 'hasUser' ).getValue() === 'true') ? true : false;
       this.isLoggedIn = Ext.get( 'loggedIn' ).getValue() || userLoggedIn;
 
       /**

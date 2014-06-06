@@ -6,7 +6,7 @@
 
 	//Perform serach by creating a bookmark and forwarding to search page. 
 	doSearch = function( ){
-				var query = $('searchfield').getValue();
+				var query = $('searchfield').value;
 				if (valid(query)) {
 						location.href='/Gemma/searcher.html?query=' + query + '&scope=SEGAP'
 				}							

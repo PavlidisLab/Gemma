@@ -83,9 +83,9 @@ Gemma.GemmaNavigationHeader = Ext
                   scope : this
                }
             } );
-            var isAdmin = (Ext.getDom( 'hasAdmin' ) && Ext.getDom( 'hasAdmin' ).getValue() === 'true') ? true : false;
-            var userLoggedIn = (Ext.getDom( 'hasUser' ) && Ext.getDom( 'hasUser' ).getValue() === 'true') ? true
-               : false;
+
+            var isAdmin = Gemma.SecurityManager.isAdmin();
+            var userLoggedIn = Gemma.SecurityManager.isLoggedIn();
 
             var menuDefaults = {
                cls : 'x-menu-item-large'

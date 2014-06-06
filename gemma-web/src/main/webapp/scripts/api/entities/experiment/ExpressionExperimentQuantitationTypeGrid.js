@@ -149,7 +149,7 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          this.loadMask.show();
          var store = this.store;
          ExpressionExperimentController.loadQuantitationTypes( this.eeid, function( qts ) {
-            for (var j = 0; j < qts.size(); j++) {
+            for (var j = 0; j < qts.length; j++) {
                if ( this.getStore().find( "id", qts[j].id ) < 0 ) {
                   var Constructor = this.store.recordType;
                   var record = new Constructor( qts[j] );

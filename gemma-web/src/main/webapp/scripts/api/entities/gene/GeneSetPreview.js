@@ -26,7 +26,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    _loadGenePreviewFromIds : function( ids, message ) {
 
       // load some genes to display
-      var limit = (ids.size() < this.preview_size) ? ids.size() : this.preview_size;
+      var limit = (ids.length < this.preview_size) ? ids.length : this.preview_size;
       var previewIds = ids.slice( 0, limit );
       GenePickerController.getGenes( previewIds, {
          callback : function( genes ) {
@@ -83,7 +83,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
     *           genes an array of genes to use to populate preview
     */
    loadGenePreviewFromGenes : function( genes, message ) {
-      var limit = (genes.size() < this.preview_size) ? genes.size() : this.preview_size;
+      var limit = (genes.length < this.preview_size) ? genes.length : this.preview_size;
       var previewGenes = genes.slice( 0, limit );
       this.loadPreview( previewGenes, genes.length, message );
    },
@@ -97,7 +97,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
       if ( typeof selectedSet == undefined || selectedSet == null ) {
          return;
       }
-      var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.geneIds.size();
+      var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.geneIds.length;
 
       if ( selectedSet instanceof DatabaseBackedGeneSetValueObject ) {
 

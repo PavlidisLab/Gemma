@@ -344,7 +344,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
                                                record.data.id, record.data.public, record.data.shared,
                                                record.data.editable, // Can current user edit?
                                                null, null, null, // It is title in Security dialog. Specify null to use
-                                                                  // the object name.
+                                               // the object name.
                                                record.data.ownedByCurrentUser ); // Is current user owner?
                                       }
                                       return adminLinks;

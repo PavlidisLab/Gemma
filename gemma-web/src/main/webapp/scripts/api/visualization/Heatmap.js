@@ -57,9 +57,10 @@ var Heatmap = function() {
    };
 
    // black-red-orange-yellow-white
-   var COLOR_16 = ["rgb(0, 0, 0)", "rgb(32, 0, 0)", "rgb(64, 0, 0)", "rgb(96, 0, 0)", "rgb(128, 0, 0)", "rgb(159, 32, 0)", "rgb(191, 64, 0)", "rgb(223, 96, 0)",
-      "rgb(255, 128, 0)", "rgb(255, 159, 32)", "rgb(255, 191, 64)", "rgb(255, 223, 96)", "rgb(255, 255, 128)", "rgb(255, 255, 159)", "rgb(255, 255, 191)", "rgb(255, 255, 223)",
-      "rgb(255, 255, 255)"];
+   var COLOR_16 = [ "rgb(0, 0, 0)", "rgb(32, 0, 0)", "rgb(64, 0, 0)", "rgb(96, 0, 0)", "rgb(128, 0, 0)",
+                   "rgb(159, 32, 0)", "rgb(191, 64, 0)", "rgb(223, 96, 0)", "rgb(255, 128, 0)", "rgb(255, 159, 32)",
+                   "rgb(255, 191, 64)", "rgb(255, 223, 96)", "rgb(255, 255, 128)", "rgb(255, 255, 159)",
+                   "rgb(255, 255, 191)", "rgb(255, 255, 223)", "rgb(255, 255, 255)" ];
 
    /**
     * @param container
@@ -70,9 +71,9 @@ var Heatmap = function() {
     * @param sampleLabels
     *           optional.
     */
-   function HeatMap(container, data, config, sampleLabels, conditionLabels, conditionLabelKey) {
+   function HeatMap( container, data, config, sampleLabels, conditionLabels, conditionLabelKey ) {
 
-      if (!config) {
+      if ( !config ) {
          config = DEFAULT_CONFIG;
       } else {
          config.label = config.label || false;
@@ -80,12 +81,12 @@ var Heatmap = function() {
          config.allowTargetSizeAdjust = config.allowTargetSizeAdjust || false;
       }
 
-      drawMap(data, container, COLOR_16, config, sampleLabels, conditionLabels, conditionLabelKey);
+      drawMap( data, container, COLOR_16, config, sampleLabels, conditionLabels, conditionLabelKey );
 
       // Creates 1 canvas per row of the heat map
-      function drawMap(vectorObjs, target, colors, config, sampleLabels, conditionLabels, conditionLabelKey) {
+      function drawMap( vectorObjs, target, colors, config, sampleLabels, conditionLabels, conditionLabelKey ) {
 
-         if (target.getWidth() <= 0 || target.getHeight() <= 0 || vectorObjs.length === 0) {
+         if ( target.getWidth() <= 0 || target.getHeight() <= 0 || vectorObjs.length === 0 ) {
             return;
          }
 
@@ -98,63 +99,64 @@ var Heatmap = function() {
 
          var rowLabelSizePixels = 0;
 
-         if (config.label) {
+         if ( config.label ) {
 
             // Try to figure out the room needed for the row labels. note: this is confusing because the label
             // contains html. The actual displayed text is less, so we
             // check rawLabel.
             var maxRowLabelLength = 0;
             for (var i = 0; i < vectorObjs.length; i++) {
-               if (vectorObjs[i].rawLabel) {
-                  labelLength = Math.min(vectorObjs[i].rawLabel.length, MAX_LABEL_LENGTH_CHAR);
-                  if (labelLength > maxRowLabelLength) {
+               if ( vectorObjs[i].rawLabel ) {
+                  labelLength = Math.min( vectorObjs[i].rawLabel.length, MAX_LABEL_LENGTH_CHAR );
+                  if ( labelLength > maxRowLabelLength ) {
                      maxRowLabelLength = labelLength;
                   }
                }
             }
 
             // multiplier is a guesstimate. Can get from ctx.measureText but we don't have that yet...
-            rowLabelSizePixels = Math.min(MAX_LABEL_LENGTH_PIXELS, maxRowLabelLength * 8);
+            rowLabelSizePixels = Math.min( MAX_LABEL_LENGTH_PIXELS, maxRowLabelLength * 8 );
          }
 
          var heatmapHeight = panelHeight; // initial guess.
          var labelHeight = 0;
 
-         if (config.showSampleNames && sampleLabels) {
+         if ( config.showSampleNames && sampleLabels ) {
 
             // compute the room needed for the labels.
             var maxLabelLength = 0;
             for (var j = 0; j < sampleLabels.length; j++) {
-               if (sampleLabels[j].length > maxLabelLength) {
+               if ( sampleLabels[j].length > maxLabelLength ) {
                   maxLabelLength = sampleLabels[j].length;
                }
             }
 
             // maximum space for the label depends on mode.
             var maxLabelSize;
-            if (config.forceFit) {
+            if ( config.forceFit ) {
                // if we know the heatmap height here...
             } else {
                // FIXME allow as much as it wants.
             }
 
             // compute approximate pixel size of that label...not so easy.
-            labelHeight = Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, SAMPLE_LABEL_MAX_CHAR) * 8);
+            labelHeight = Math.min( MAX_SAMPLE_LABEL_HEIGHT_PIXELS,
+               Math.min( maxLabelLength, SAMPLE_LABEL_MAX_CHAR ) * 8 );
 
             heatmapHeight = heatmapHeight - labelHeight;
          }
 
-         var calculatedBoxHeight = Math.floor(heatmapHeight / numRows);
+         var calculatedBoxHeight = Math.floor( heatmapHeight / numRows );
 
-         if (calculatedBoxHeight > config.maxBoxHeight) {
+         if ( calculatedBoxHeight > config.maxBoxHeight ) {
             boxHeight = config.maxBoxHeight;
-         } else if (calculatedBoxHeight < MIN_BOX_HEIGHT_FOR_LABELS && config.label) {
+         } else if ( calculatedBoxHeight < MIN_BOX_HEIGHT_FOR_LABELS && config.label ) {
             boxHeight = MIN_BOX_HEIGHT_FOR_LABELS;
          } else {
-            boxHeight = Math.max(MIN_BOX_HEIGHT, calculatedBoxHeight);
+            boxHeight = Math.max( MIN_BOX_HEIGHT, calculatedBoxHeight );
          }
 
-         if (boxHeight <= 0) {
+         if ( boxHeight <= 0 ) {
             return;
          }
 
@@ -163,20 +165,20 @@ var Heatmap = function() {
 
          var numberOfColumns = vectorObjs[0].data.length; // assumed to be the same always.
          // avoid insanity
-         if (numberOfColumns === 0) {
+         if ( numberOfColumns === 0 ) {
             return;
          }
 
          var increment = 1;
          var heatmapWidth = 1;
          var boxWidth = 1;
-         if (config.forceFit) {
+         if ( config.forceFit ) {
             /*
              * shrink it down. Should always be true for thumbnails, or settable by user for big ones.
              */
-            heatmapWidth = config.label ? Math.max(panelWidth - rowLabelSizePixels, MIN_IMAGE_SIZE) : panelWidth;
+            heatmapWidth = config.label ? Math.max( panelWidth - rowLabelSizePixels, MIN_IMAGE_SIZE ) : panelWidth;
 
-            if (heatmapWidth <= 0) {
+            if ( heatmapWidth <= 0 ) {
                return;
             }
 
@@ -204,118 +206,121 @@ var Heatmap = function() {
             heatmapWidth = boxWidth * numberOfColumns;
          }
 
-         if (config.allowTargetSizeAdjust && heatmapHeight < panelHeight) {
+         if ( config.allowTargetSizeAdjust && heatmapHeight < panelHeight ) {
             try {
-               Ext.DomHelper.applyStyles(target, "height:" + heatmapHeight + "px");
+               Ext.DomHelper.applyStyles( target, "height:" + heatmapHeight + "px" );
             } catch (e) {
                // just in case.
             }
          }
 
          // put the heatmap in a scroll panel if it is too big to display.
-         if (heatmapHeight + labelHeight > panelHeight || (!config.forceFit && heatmapWidth + rowLabelSizePixels > panelWidth)) {
+         if ( heatmapHeight + labelHeight > panelHeight
+            || (!config.forceFit && heatmapWidth + rowLabelSizePixels > panelWidth) ) {
 
             try {
-               Ext.DomHelper.applyStyles(target, "overflow:auto");
+               Ext.DomHelper.applyStyles( target, "overflow:auto" );
             } catch (e) {
                // IE sometimes throws.
             }
          } else {
             try {
-               Ext.DomHelper.applyStyles(target, "overflow:inherit");
+               Ext.DomHelper.applyStyles( target, "overflow:inherit" );
             } catch (e) {
                // IE sometimes throws.
             }
          }
 
-         if (config.legend && config.legend.show && config.legend.container) {
-            insertLegend(config.legend.container);
+         if ( config.legend && config.legend.show && config.legend.container ) {
+            insertLegend( config.legend.container );
          }
 
          /*
           * Add labels to the columns. FIXME: if the heatmap itself isn't taking much space, make more room for the
           * labels.
           */
-         if (config.showSampleNames && sampleLabels) {
+         if ( config.showSampleNames && sampleLabels ) {
             var id = 'sampleLabels-' + Ext.id();
 
-            if (boxWidth >= SHOW_LABEL_MIN_SIZE) {
+            if ( boxWidth >= SHOW_LABEL_MIN_SIZE ) {
 
-               Ext.DomHelper.append(target, {
-                     id : id,
-                     tag : 'div',
-                     width : heatmapWidth,
-                     height : MAX_SAMPLE_LABEL_HEIGHT_PIXELS
-                  });
-               var labelDiv = Ext.get(id);
+               Ext.DomHelper.append( target, {
+                  id : id,
+                  tag : 'div',
+                  width : heatmapWidth,
+                  height : MAX_SAMPLE_LABEL_HEIGHT_PIXELS
+               } );
+               var labelDiv = Ext.get( id );
 
-               var ctx = constructCanvas($(labelDiv), heatmapWidth, labelHeight);
+               var ctx = constructCanvas( Ext.get( labelDiv ), heatmapWidth, labelHeight );
 
                ctx.fillStyle = "#000000";
-               ctx.font = Math.min(10, boxWidth - 1) + "px sans-serif";
+               ctx.font = Math.min( 10, boxWidth - 1 ) + "px sans-serif";
                ctx.textAlign = "left";
-               ctx.translate(0, labelHeight - 2);
+               ctx.translate( 0, labelHeight - 2 );
 
                for (j = 0; j < sampleLabels.length; j++) {
                   // the shorter the better for performance.
-                  var lab = Ext.util.Format.ellipsis(sampleLabels[j], SAMPLE_LABEL_MAX_CHAR);
+                  var lab = Ext.util.Format.ellipsis( sampleLabels[j], SAMPLE_LABEL_MAX_CHAR );
 
-                  ctx.translate(boxWidth, 0);
-                  ctx.rotate(-Math.PI / 2);
-                  ctx.fillText(lab, 0, 0);
-                  ctx.rotate(Math.PI / 2);
+                  ctx.translate( boxWidth, 0 );
+                  ctx.rotate( -Math.PI / 2 );
+                  ctx.fillText( lab, 0, 0 );
+                  ctx.rotate( Math.PI / 2 );
                }
-            } else if (config.forceFit) {
+            } else if ( config.forceFit ) {
 
                var message;
                // If too many, no matter how wide they make it, there won't be room
                // -- expand is better.
-               if (numberOfColumns.length > 100) { // FIXME -- see if they have access to 'expand'.
+               if ( numberOfColumns.length > 100 ) { // FIXME -- see if they have access to 'expand'.
                   message = "Click 'zoom in' to see the sample labels";
                } else {
                   message = "Click 'zoom in' or try widening the window to see the sample labels";
                }
 
-               Ext.DomHelper.append(target, {
-                     id : id,
-                     tag : 'div',
-                     width : target.getWidth() - TRIM,
-                     height : 20
-                  });
+               Ext.DomHelper.append( target, {
+                  id : id,
+                  tag : 'div',
+                  width : target.getWidth() - TRIM,
+                  height : 20
+               } );
 
-               labelDiv = Ext.get(id);
-               ctx = constructCanvas($(labelDiv), target.getWidth() - TRIM, 20);
-               ctx.translate(0, 10);
-               ctx.fillText(message, 0, 0);
+               labelDiv = Ext.get( id );
+               ctx = constructCanvas( Ext.get( labelDiv ), target.getWidth() - TRIM, 20 );
+               ctx.translate( 0, 10 );
+               ctx.fillText( message, 0, 0 );
             }
 
          }
-         if (conditionLabels) { // draw the colour labels above the columns
+         if ( conditionLabels ) { // draw the colour labels above the columns
 
             var factorCount = 0;
             maxLabelLength = 0;
-            for (var factorCategory in conditionLabelKey) {
+            for ( var factorCategory in conditionLabelKey) {
                factorCount++;
                // compute the room needed for the labels.
-               if (factorCategory.length > maxLabelLength) {
+               if ( factorCategory.length > maxLabelLength ) {
                   maxLabelLength = factorCategory.length;
                }
             }
             // compute approximate pixel size of labels
-            var labelWidth = Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, SAMPLE_LABEL_MAX_CHAR) * 8);
+            var labelWidth = Math.min( MAX_SAMPLE_LABEL_HEIGHT_PIXELS,
+               Math.min( maxLabelLength, SAMPLE_LABEL_MAX_CHAR ) * 8 );
 
             id = 'conditionLabels-' + Ext.id();
             // id = 'conditionLabels-' + container.id;
 
-            Ext.DomHelper.append(target, {
-                  id : id,
-                  tag : 'div',
-                  width : heatmapWidth + 10 + labelWidth,
-                  height : factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM
-               });
-            labelDiv = Ext.get(id);
+            Ext.DomHelper.append( target, {
+               id : id,
+               tag : 'div',
+               width : heatmapWidth + 10 + labelWidth,
+               height : factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM
+            } );
+            labelDiv = Ext.get( id );
 
-            ctx = constructCanvas($(labelDiv), heatmapWidth + 10 + labelWidth, factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM);
+            ctx = constructCanvas( Ext.get( labelDiv ), heatmapWidth + 10 + labelWidth, factorCount
+               * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM );
             var x = 0;
             var y = 0;
             // store row/column info for hover text
@@ -332,23 +337,23 @@ var Heatmap = function() {
 
                   adjacentColumnsDrawnAsOne = 0;
 
-                  if (increment > 1) {
-                     var colours = [colour];
+                  if ( increment > 1 ) {
+                     var colours = [ colour ];
                      // take the mode of adjacent columns.
                      for (var k = 1; k < increment && j + k < conditionLabels.length - 1; k++) {
 
                         factorValueArr = conditionLabels[j + k][factorCategory];
                         value = factorValueArr[0];
                         colour = factorValueArr[1];
-                        colours.push(colour);
+                        colours.push( colour );
                         adjacentColumnsDrawnAsOne++;
 
                      }
-                     colour = mode(colours);
+                     colour = mode( colours );
                   }
 
                   ctx.fillStyle = colour;
-                  ctx.fillRect(x, y, boxWidth, PER_CONDITION_LABEL_HEIGHT);
+                  ctx.fillRect( x, y, boxWidth, PER_CONDITION_LABEL_HEIGHT );
                   factorValueByLocation[y / PER_CONDITION_LABEL_HEIGHT] = [];
                   factorValueByLocation[y / PER_CONDITION_LABEL_HEIGHT][j] = value;
                   y += PER_CONDITION_LABEL_HEIGHT;
@@ -359,29 +364,30 @@ var Heatmap = function() {
             }
             // end of line labels
             ctx.fillStyle = "#000000";
-            ctx.font = Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1) + "px sans-serif";
+            ctx.font = Math.min( 10, PER_CONDITION_LABEL_HEIGHT - 1 ) + "px sans-serif";
             ctx.textAlign = "left";
-            ctx.translate(boxWidth * conditionLabels.length / increment + 10, Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1));
+            ctx.translate( boxWidth * conditionLabels.length / increment + 10, Math.min( 10,
+               PER_CONDITION_LABEL_HEIGHT - 1 ) );
             x = 0;
             y = 0;
             for (factorCategory in conditionLabelKey) {
-               var facCat = Ext.util.Format.ellipsis(factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR);
-               ctx.fillText(facCat, x, y);
+               var facCat = Ext.util.Format.ellipsis( factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR );
+               ctx.fillText( facCat, x, y );
                y += PER_CONDITION_LABEL_HEIGHT;
             }
 
          }
          var vid = "heatmapCanvas-" + Ext.id();
-         Ext.DomHelper.append(target, {
-               id : vid,
-               tag : 'div',
-               width : panelWidth,
-               height : boxHeight,
-               style : "width:" + panelWidth + ";height:" + heatmapHeight
-            });
+         Ext.DomHelper.append( target, {
+            id : vid,
+            tag : 'div',
+            width : panelWidth,
+            height : boxHeight,
+            style : "width:" + panelWidth + ";height:" + heatmapHeight
+         } );
 
-         var canvasDiv = Ext.get(vid);
-         ctx = constructCanvas($(vid), heatmapWidth, heatmapHeight);
+         var canvasDiv = Ext.get( vid );
+         ctx = constructCanvas( Ext.get( vid ), heatmapWidth, heatmapHeight );
 
          /*
           * Draw the heatmap.
@@ -394,13 +400,13 @@ var Heatmap = function() {
 
                var a = d[j][1];
 
-               if (a > CLIP) {
+               if ( a > CLIP ) {
                   a = CLIP;
-               } else if (a < -CLIP) {
+               } else if ( a < -CLIP ) {
                   a = -CLIP;
                }
 
-               if (increment > 1) {
+               if ( increment > 1 ) {
                   // take an average of adjacent columns. If we hit an NaN, too bad...
                   for (k = 1; k < increment && j < d.length - 1; k++) {
                      j++;
@@ -411,14 +417,14 @@ var Heatmap = function() {
 
                }
 
-               if (isNaN(a)) {
+               if ( isNaN( a ) ) {
                   ctx.fillStyle = NAN_COLOR;
                } else {
-                  ctx.fillStyle = getColor(a, binSize, colors);
+                  ctx.fillStyle = getColor( a, binSize, colors );
                }
 
                try {
-                  ctx.fillRect(offsetx, offsety, boxWidth, boxHeight);
+                  ctx.fillRect( offsetx, offsety, boxWidth, boxHeight );
                } catch (e) {
                   /*
                    * Probably a config error somewhere...
@@ -430,26 +436,26 @@ var Heatmap = function() {
 
             }
 
-            if (config.label) {
+            if ( config.label ) {
                // Add row label FIXME let these have more room if the heatmap fits okay, instead of
                // chopping it off.
                var rowLabel = DEFAULT_ROW_LABEL;
-               if (vectorObjs[i].label) {
+               if ( vectorObjs[i].label ) {
                   rowLabel = vectorObjs[i].label;
                }
-               var text = Ext.DomHelper.append(canvasDiv, {
-                     id : "heatmaplabel-" + Ext.id(),
-                     tag : 'div',
-                     html : "&nbsp;" + rowLabel,
-                     style : "white-space: nowrap"
-                  }, true);
-               Ext.DomHelper.applyStyles(text, "position:absolute;top:" + offsety + "px;left:" + (offsetx + 5) + "px");
+               var text = Ext.DomHelper.append( canvasDiv, {
+                  id : "heatmaplabel-" + Ext.id(),
+                  tag : 'div',
+                  html : "&nbsp;" + rowLabel,
+                  style : "white-space: nowrap"
+               }, true );
+               Ext.DomHelper.applyStyles( text, "position:absolute;top:" + offsety + "px;left:" + (offsetx + 5) + "px" );
             }
             offsety += boxHeight;
          }
 
          // add legend for experimental design / condition bar chart
-         if (config.conditionLegend) {
+         if ( config.conditionLegend ) {
 
             var factorValueCount = 0;
             factorCount = 0;
@@ -458,70 +464,71 @@ var Heatmap = function() {
             for (factorCategory in conditionLabelKey) {
                factorCount++;
                // compute the room needed for the labels.
-               if (ctx.measureText(factorCategory).width > maxColumnWidth) {
-                  maxColumnWidth = ctx.measureText(factorCategory).width;
+               if ( ctx.measureText( factorCategory ).width > maxColumnWidth ) {
+                  maxColumnWidth = ctx.measureText( factorCategory ).width;
                }
-               for (var factorValue in conditionLabelKey[factorCategory]) {
+               for ( var factorValue in conditionLabelKey[factorCategory]) {
                   factorValueCount++;
                   // compute the room needed for the labels.
-                  var dim = ctx.measureText(factorValue);
-                  var width = Math.round(dim.width);
-                  if (width > maxColumnWidth) {
+                  var dim = ctx.measureText( factorValue );
+                  var width = Math.round( dim.width );
+                  if ( width > maxColumnWidth ) {
                      maxColumnWidth = width;
                   }
                }
                allColumnsWidth += maxColumnWidth;
                maxColumnWidth = 0;
             }
-            var fontSize = Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1);
-            var charWidth = Math.floor(fontSize * 0.8);
+            var fontSize = Math.min( 10, PER_CONDITION_LABEL_HEIGHT - 1 );
+            var charWidth = Math.floor( fontSize * 0.8 );
             // compute approximate pixel size of labels
             labelWidth = allColumnsWidth + (FACTOR_VALUE_LABEL_BOX_WIDTH + SMALL_TRIM + SMALL_TRIM) * factorCount;
 
             id = 'conditionKey-' + Ext.id();
 
-            Ext.DomHelper.append(target, {
-                  id : id,
-                  tag : 'div',
-                  width : heatmapWidth,
-                  height : factorValueCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM
-               });
-            labelDiv = Ext.get(id);
+            Ext.DomHelper.append( target, {
+               id : id,
+               tag : 'div',
+               width : heatmapWidth,
+               height : factorValueCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM
+            } );
+            labelDiv = Ext.get( id );
 
-            ctx = constructCanvas($(labelDiv), 10 + labelWidth, factorValueCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM + 20);
+            ctx = constructCanvas( Ext.get( labelDiv ), 10 + labelWidth, factorValueCount * PER_CONDITION_LABEL_HEIGHT
+               + SMALL_TRIM + 20 );
             ctx.fillStyle = "#000000";
             ctx.font = fontSize + "px sans-serif";
             ctx.textAlign = "left";
-            ctx.translate(10, 20);
+            ctx.translate( 10, 20 );
             x = 0;
             y = 0;
             for (factorCategory in conditionLabelKey) {
-               facCat = Ext.util.Format.ellipsis(factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR);
+               facCat = Ext.util.Format.ellipsis( factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR );
                var maxLabelWidthInCategory = 0;
-               dim = ctx.measureText(facCat);
-               width = Math.round(dim.width);
-               if (width > maxLabelWidthInCategory) {
+               dim = ctx.measureText( facCat );
+               width = Math.round( dim.width );
+               if ( width > maxLabelWidthInCategory ) {
                   maxLabelWidthInCategory = width;
                }
-               ctx.fillText(facCat, x, y);
+               ctx.fillText( facCat, x, y );
                y += PER_CONDITION_LABEL_HEIGHT + 2;
                for (factorValue in conditionLabelKey[factorCategory]) {
-                  var facVal = Ext.util.Format.ellipsis(factorValue, FACTOR_VALUE_LABEL_MAX_CHAR);
+                  var facVal = Ext.util.Format.ellipsis( factorValue, FACTOR_VALUE_LABEL_MAX_CHAR );
                   colour = conditionLabelKey[factorCategory][factorValue];
                   ctx.fillStyle = colour;
-                  ctx.fillRect(x, y - fontSize, FACTOR_VALUE_LABEL_BOX_WIDTH, PER_CONDITION_LABEL_HEIGHT);
+                  ctx.fillRect( x, y - fontSize, FACTOR_VALUE_LABEL_BOX_WIDTH, PER_CONDITION_LABEL_HEIGHT );
                   x += FACTOR_VALUE_LABEL_BOX_WIDTH + SMALL_TRIM;
                   ctx.fillStyle = "#000000";
-                  ctx.fillText(facVal, x, y);
+                  ctx.fillText( facVal, x, y );
                   x = 0;
                   y += PER_CONDITION_LABEL_HEIGHT;
-                  dim = ctx.measureText(facVal);
-                  width = Math.round(dim.width);
-                  if (width > maxLabelWidthInCategory) {
+                  dim = ctx.measureText( facVal );
+                  width = Math.round( dim.width );
+                  if ( width > maxLabelWidthInCategory ) {
                      maxLabelWidthInCategory = width;
                   }
                }
-               ctx.translate(FACTOR_VALUE_LABEL_BOX_WIDTH + SMALL_TRIM + maxLabelWidthInCategory + SMALL_TRIM, 0);
+               ctx.translate( FACTOR_VALUE_LABEL_BOX_WIDTH + SMALL_TRIM + maxLabelWidthInCategory + SMALL_TRIM, 0 );
                x = 0;
                y = 0;
             }
@@ -529,10 +536,10 @@ var Heatmap = function() {
       }
 
       // figure out which colour to use
-      function getColor(a, binSize, colors) {
+      function getColor( a, binSize, colors ) {
 
-         var v = Math.floor((a + CLIP) / binSize);
-         if (v > colors.length - 1) {
+         var v = Math.floor( (a + CLIP) / binSize );
+         if ( v > colors.length - 1 ) {
             v = colors.length - 1;
          }
          return colors[v];
@@ -544,15 +551,15 @@ var Heatmap = function() {
       /**
        * Add a legend to the heatmap
        */
-      function insertLegend(container, vertical) {
+      function insertLegend( container, vertical ) {
 
-         if (!container) {
+         if ( !container ) {
             return;
          }
 
-         var legendDiv = $(container);
+         var legendDiv = Ext.get( container );
 
-         if (!legendDiv) {
+         if ( !legendDiv ) {
             return;
          }
 
@@ -567,12 +574,12 @@ var Heatmap = function() {
 
          var numBoxes = COLOR_16.length / 2;
          var scalebarLength = 0;
-         if (vertical) {
-            scalebarLength = Math.ceil(boxHeight * numBoxes);
-            ctx = constructCanvas($(container), 50, 60 + scalebarLength);
+         if ( vertical ) {
+            scalebarLength = Math.ceil( boxHeight * numBoxes );
+            ctx = constructCanvas( Ext.get( container ), 50, 60 + scalebarLength );
          } else {
-            scalebarLength = Math.ceil(boxWidth * numBoxes);
-            ctx = constructCanvas($(container), 60 + scalebarLength, 40);
+            scalebarLength = Math.ceil( boxWidth * numBoxes );
+            ctx = constructCanvas( Ext.get( container ), 60 + scalebarLength, 40 );
          }
 
          ctx.fillStyle = "#000000"; // black...
@@ -584,26 +591,26 @@ var Heatmap = function() {
          var x;
          var y = 3;
 
-         if (vertical) {
+         if ( vertical ) {
             x = boxWidth + 3;
          } else {
             x = 3;
          }
 
          ctx.save();
-         ctx.translate(x, y);
-         ctx.fillText(sprintf("%.1f", -CLIP), 0, 0);
+         ctx.translate( x, y );
+         ctx.fillText( sprintf( "%.1f", -CLIP ), 0, 0 );
          ctx.restore();
 
-         if (vertical) {
+         if ( vertical ) {
             x = 3;
          } else {
-            x += ctx.measureText(sprintf("%.1f", -CLIP)).width + 4;
+            x += ctx.measureText( sprintf( "%.1f", -CLIP ) ).width + 4;
          }
 
          for (var i = 0; i < COLOR_16.length; i += 2) {
 
-            if (!COLOR_16[i]) {
+            if ( !COLOR_16[i] ) {
                break;
             }
 
@@ -612,21 +619,21 @@ var Heatmap = function() {
             // draw outlines.
             ctx.beginPath();
 
-            if (vertical) {
+            if ( vertical ) {
 
             } else {
-               ctx.moveTo(x, y);
-               ctx.lineTo(x + boxWidth, y);
-               ctx.moveTo(x, y + boxHeight);
-               ctx.lineTo(x + boxWidth, y + boxHeight);
+               ctx.moveTo( x, y );
+               ctx.lineTo( x + boxWidth, y );
+               ctx.moveTo( x, y + boxHeight );
+               ctx.lineTo( x + boxWidth, y + boxHeight );
             }
             ctx.stroke();
             ctx.restore();
 
             ctx.fillStyle = COLOR_16[i];
-            ctx.fillRect(x, y, boxWidth, boxHeight);
+            ctx.fillRect( x, y, boxWidth, boxHeight );
 
-            if (vertical) {
+            if ( vertical ) {
                y += boxHeight;
             } else {
                x += boxWidth;
@@ -636,14 +643,14 @@ var Heatmap = function() {
          // close box at right
          ctx.save();
          ctx.beginPath();
-         ctx.moveTo(x, y);
-         ctx.lineTo(x, y + boxHeight);
+         ctx.moveTo( x, y );
+         ctx.lineTo( x, y + boxHeight );
          ctx.stroke();
          ctx.restore();
 
          x += 4; // next to the last box
          ctx.fillStyle = "#000000"; // black...
-         ctx.fillText(sprintf("%.1f", CLIP), x, y);
+         ctx.fillText( sprintf( "%.1f", CLIP ), x, y );
 
       }
 
@@ -656,59 +663,59 @@ var Heatmap = function() {
        * 
        * Returns: ctx
        */
-      function constructCanvas(div, canvasWidth, canvasHeight) {
+      function constructCanvas( div, canvasWidth, canvasHeight ) {
 
          /**
           * For positioning labels and overlay.
           */
-         div.setStyle({
-               'position' : 'relative'
-            });
+         div.setStyle( {
+            'position' : 'relative'
+         } );
 
-         if (canvasWidth <= 0 || canvasHeight <= 0) {
+         if ( canvasWidth <= 0 || canvasHeight <= 0 ) {
             throw 'Invalid dimensions for plot, width = ' + canvasWidth + ', height = ' + canvasHeight;
          }
 
-         var canvas = Ext.DomHelper.append(div, {
-               tag : 'canvas',
-               width : canvasWidth,
-               height : canvasHeight
-            });
+         var canvas = Ext.DomHelper.append( div, {
+            tag : 'canvas',
+            width : canvasWidth,
+            height : canvasHeight
+         } );
 
          // check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
-         if (!document.createElement("canvas").getContext && Prototype.Browser.IE) {
-            canvas = $(window.G_vmlCanvasManager.initElement(canvas));
+         if ( !document.createElement( "canvas" ).getContext && Prototype.Browser.IE ) {
+            canvas = Ext.get( window.G_vmlCanvasManager.initElement( canvas ) );
          }
 
-         return canvas.getContext('2d');
+         return canvas.getContext( '2d' );
       }
 
    }
 
    return {
-      clean : function(element) {
+      clean : function( element ) {
          element.innerHTML = '';
       },
 
-      draw : function(target, data, options, sampleLabels, conditionLabels, conditionLabelKey) {
-         var map = new HeatMap(target, data, options, sampleLabels, conditionLabels, conditionLabelKey);
+      draw : function( target, data, options, sampleLabels, conditionLabels, conditionLabelKey ) {
+         var map = new HeatMap( target, data, options, sampleLabels, conditionLabels, conditionLabelKey );
          return map;
       }
    };
 }();
 
-function mode(array) {
-   if (array.length == 0)
+function mode( array ) {
+   if ( array.length == 0 )
       return null;
    var modeMap = {};
    var maxEl = array[0], maxCount = 1;
    for (var i = 0; i < array.length; i++) {
       var el = array[i];
-      if (modeMap[el] == null)
+      if ( modeMap[el] == null )
          modeMap[el] = 1;
       else
          modeMap[el]++;
-      if (modeMap[el] > maxCount) {
+      if ( modeMap[el] > maxCount ) {
          maxEl = el;
          maxCount = modeMap[el];
       }

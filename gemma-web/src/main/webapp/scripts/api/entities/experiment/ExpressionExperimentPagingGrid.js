@@ -644,7 +644,7 @@ Gemma.ExperimentPagingGrid = Ext
             // });
 
             // if the user is an admin, show the status column
-            var isAdmin = (Ext.getDom( 'hasAdmin' )) ? Ext.getDom( 'hasAdmin' ).getValue() : false;
+            var isAdmin = (Ext.get( 'hasAdmin' )) ? Ext.get( 'hasAdmin' ).getValue() : false;
             this.adjustForIsAdmin( isAdmin );
 
             Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {

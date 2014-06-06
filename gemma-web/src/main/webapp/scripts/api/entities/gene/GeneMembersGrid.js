@@ -184,7 +184,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
          }
 
          GenePickerController.getGenes( geneIdsToAdd, function( genes ) {
-            for (var j = 0; j < genes.size(); j++) {
+            for (var j = 0; j < genes.length; j++) {
                if ( this.getStore().find( "id", genes[j].id ) < 0 ) {
                   var Constructor = this.store.recordType;
                   var record = new Constructor( genes[j] );
@@ -1162,11 +1162,11 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend( Gemma.GeneGrid, {
       // selection
       this.currentGroupId = groupRecord.get( 'id' );
 
-      if ( !geneValueObjs || geneValueObjs.size() === 0 ) {
+      if ( !geneValueObjs || geneValueObjs.length === 0 ) {
          this.reset();
       } else {
 
-         this.currentGroupSize = geneValueObjs.size();
+         this.currentGroupSize = geneValueObjs.length;
 
          var taxonId = geneValueObjs[0].taxonId;
          for (var i = 0; i < geneValueObjs.length; i++) {

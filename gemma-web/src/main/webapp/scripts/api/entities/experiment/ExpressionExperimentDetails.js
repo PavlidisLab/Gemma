@@ -138,8 +138,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"/>';
             }
 
-            var isUserLoggedIn = (Ext.getDom( 'hasUser' ) && Ext.getDom( 'hasUser' ).getValue() === 'true') ? true
-               : false;
+            var isUserLoggedIn = (Ext.get( 'hasUser' ) && Ext.get( 'hasUser' ).getValue() === 'true') ? true : false;
 
             if ( isUserLoggedIn ) {
                result = result

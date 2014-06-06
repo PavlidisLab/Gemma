@@ -185,11 +185,11 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
    setTaxonByCommonName : function( commonName ) {
       var records = this.store.getRange();
 
-      if ( !records || records.size() < 1 ) {
+      if ( !records || records.length < 1 ) {
          return -1;
       }
       var i = 0;
-      for (i = 0; i < records.size(); i++) {
+      for (i = 0; i < records.length; i++) {
          if ( records[i].data.commonName === commonName ) {
             this.setTaxon( records[i].data.id );
             return records[i].data;

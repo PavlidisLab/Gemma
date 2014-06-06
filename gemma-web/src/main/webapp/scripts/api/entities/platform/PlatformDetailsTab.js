@@ -71,7 +71,7 @@ Gemma.PlatformDetails = Ext
                text = text + "<br />";
             }
 
-            if ( pd.subsumees != null && pd.subsumees.size() > 0 ) {
+            if ( pd.subsumees != null && pd.subsumees.length > 0 ) {
                text = text + "Subsumes: ";
                for (var i = 0; i < pd.subsumees.length; i++) {
                   var s = pd.subsumees[i];

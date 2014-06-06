@@ -30,7 +30,7 @@ Gemma.ExperimentSetPreview = Ext
          loadExperimentPreviewFromIds : function( ids ) {
             this.entityIds = ids;
             // load some experiments to display
-            var limit = (ids.size() < this.preview_size) ? ids.size() : this.preview_size;
+            var limit = (ids.length < this.preview_size) ? ids.length : this.preview_size;
             var previewIds = ids.slice( 0, limit );
 
             ExpressionExperimentController.loadExpressionExperiments( previewIds, {
@@ -107,7 +107,7 @@ Gemma.ExperimentSetPreview = Ext
             }
 
             // if an experiment group page exists for this set, make title a link
-            var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.expressionExperimentIds.size();
+            var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.expressionExperimentIds.length;
 
             var numWithCoex = selectedSet.numWithCoexpressionAnalysis;
             var numWithDiffex = selectedSet.numWithDifferentialExpressionAnalysis;
