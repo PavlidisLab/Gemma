@@ -31,7 +31,7 @@ var Heatmap = function() {
    var MIN_BOX_HEIGHT_FOR_LABELS = 12;
    var MAX_BOX_HEIGHT = 16;
    var MIN_BOX_HEIGHT = 2;
-   var MAX_ROWS_BEFORE_SCROLL = 30;
+   // var MAX_ROWS_BEFORE_SCROLL = 30;
    var MIN_IMAGE_SIZE = 50;
 
    // column labels
@@ -40,7 +40,7 @@ var Heatmap = function() {
    var PER_CONDITION_LABEL_HEIGHT = 10;
 
    // condition key
-   var MAX_PER_FACTOR_VALUE_LABEL_WIDTH = 200;
+   // var MAX_PER_FACTOR_VALUE_LABEL_WIDTH = 200;
    var FACTOR_VALUE_LABEL_MAX_CHAR = 125;
    var FACTOR_VALUE_LABEL_BOX_WIDTH = 10;
 
@@ -103,7 +103,7 @@ var Heatmap = function() {
 
             // Try to figure out the room needed for the row labels. note: this is confusing because the label
             // contains html. The actual displayed text is less, so we
-            // check rawLabel.
+            // check rawLabel. FIXME the rawLabel has the html too.
             var maxRowLabelLength = 0;
             for (var i = 0; i < vectorObjs.length; i++) {
                if ( vectorObjs[i].rawLabel ) {

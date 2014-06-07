@@ -48,7 +48,7 @@
 
 /*
 	Modfied for Gemma
-	
+	@Deprecated - remove when switched to jquery.qtip.
 	Version: $Id$
 */
 

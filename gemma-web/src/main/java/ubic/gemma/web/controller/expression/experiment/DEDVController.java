@@ -64,6 +64,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -1121,14 +1122,25 @@ public class DEDVController {
     private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
             Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
+        // FIXME this is inefficient - we don't need to check all the vectors if they all have the same samples...though
+        // we do need to set it for all of them?
+
         for ( DoubleVectorValueObject vec : vectors ) {
             List<String> sampleNames = new ArrayList<String>();
             if ( layouts != null && layouts.get( vec.getExpressionExperiment().getId() ) != null ) {
-                for ( BioAssayValueObject ba : layouts.get( vec.getExpressionExperiment().getId() ).keySet() ) {
-                    sampleNames.add( ba.getName() ); // fIXME
+                Collection<BioMaterialValueObject> seenSamples = new HashSet<>(); // if same sample was run more than
+                                                                                  // once on diff platforms.
 
+                for ( BioAssayValueObject ba : layouts.get( vec.getExpressionExperiment().getId() ).keySet() ) {
+                    if ( seenSamples.contains( ba.getSample() ) ) {
+                        continue;
+                    }
+                    seenSamples.add( ba.getSample() );
+                    sampleNames.add( ba.getName() );
                 }
                 if ( sampleNames.size() > 0 ) {
+
+                    assert sampleNames.size() == vec.getData().length;
                     log.debug( sampleNames.size() + " sample names!" );
                     vvo.setSampleNames( sampleNames );
                 }
@@ -1153,6 +1165,9 @@ public class DEDVController {
         for ( BioAssayValueObject ba : dedv.getBioAssays() ) {
             result.add( ba.getName() );
         }
+
+        assert result.size() == dedv.getData().length;
+
         return result;
     }
 
@@ -1456,10 +1471,18 @@ public class DEDVController {
 
         Collection<String> factorsMissingValues = new HashSet<>();
 
+        Collection<BioMaterialValueObject> seenSamples = new HashSet<>(); // if same sample was run more than once on
+                                                                          // diff platforms.
         Map<Long, FactorValue> fvs = new HashMap<Long, FactorValue>(); // avoid loading repeatedly.
         Collection<ExperimentalFactor> seenFactors = new HashSet<>();
 
         for ( BioAssayValueObject ba : eeLayouts.keySet() ) {
+
+            if ( seenSamples.contains( ba.getSample() ) ) {
+                continue;
+            }
+            seenSamples.add( ba.getSample() );
+
             // double should be the factorValue id, defined in
             // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
             // BioAssayDimension)
@@ -1470,7 +1493,7 @@ public class DEDVController {
             // for every factor, add a missing-value entry (guards against missing data messing up the layout)
             for ( ExperimentalFactor facName : factorNames ) {
                 String[] facValAndColour = new String[] { "No value", missingValueColour };
-                // FIXME are names unique?
+                // FIXME are names unique? Not guaranteed...
                 factorNamesToValueColourPairs.put( facName.getName(), facValAndColour );
             }
 
@@ -1546,6 +1569,7 @@ public class DEDVController {
             }
             factorValueMaps.add( factorNamesToValueColourPairs );
         }
+
         // add missing value entries here so they show up at the end of the legend's value lists
         if ( !factorsMissingValues.isEmpty() ) {
             for ( String factorName : factorsMissingValues ) {
@@ -1558,5 +1582,4 @@ public class DEDVController {
         vvo.setFactorNames( factorToValueNames ); // this is summary of values & colours by factor, used for legend
         vvo.setFactorValuesToNames( factorValueMaps ); // this is list of maps for each sample
     }
-
 }

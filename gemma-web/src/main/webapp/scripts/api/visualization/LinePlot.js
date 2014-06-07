@@ -152,7 +152,7 @@ var LinePlot = (function() {
                   height : labelHeight
                } );
 
-               var ctx = constructCanvas( $( id ), sampleLabelsWidth, labelHeight );
+               var ctx = constructCanvas( Ext.get( id ), sampleLabelsWidth, labelHeight );
 
                ctx.fillStyle = "#000000";
                ctx.font = fontSize + "px sans-serif";
@@ -191,7 +191,7 @@ var LinePlot = (function() {
                   height : 20
                } );
 
-               var ctx = constructCanvas( $( mid ), plotWidth, 20 );
+               var ctx = constructCanvas( Ext.get( mid ), plotWidth, 20 );
                ctx.translate( 10, 10 );
                ctx.fillText( message, 0, 0 );
                plotHeight = plotHeight - 20;
@@ -226,9 +226,10 @@ var LinePlot = (function() {
             } );
             labelDiv = Ext.get( id );
 
-            // ctx = constructCanvas($(labelDiv), plotWidth + 10 + labelWidth, factorCount * PER_CONDITION_LABEL_HEIGHT
+            // ctx = constructCanvas(Ext.get(labelDiv), plotWidth + 10 + labelWidth, factorCount *
+            // PER_CONDITION_LABEL_HEIGHT
             // + SMALL_TRIM);
-            ctx = constructCanvas( $( labelDiv ), plotWidth + 10, conditionLabelsHeight );
+            ctx = constructCanvas( Ext.get( labelDiv ), plotWidth + 10, conditionLabelsHeight );
             var x = 0;
             var y = 0;
             ctx.translate( TRIM, 0 );
@@ -264,13 +265,13 @@ var LinePlot = (function() {
 
          // todo: vary colours
 
-         var vid = "plotCanvas-" + Ext.id();
+         var vid = "lineplotCanvas-" + Ext.id();
          Ext.DomHelper.append( container, {
             id : vid,
             tag : 'div',
             style : "margin:" + TRIM + "px;width:" + plotWidth + "px;height:" + plotHeight + "px"
          } );
-         var target = $( vid );
+         var target = Ext.get( vid ).dom;
 
          Flotr.draw( target, series, config );
       }
@@ -353,7 +354,7 @@ var LinePlot = (function() {
       } );
       // check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
       if ( !document.createElement( "canvas" ).getContext && Prototype.Browser.IE ) {
-         canvas = $( window.G_vmlCanvasManager.initElement( canvas ) );
+         canvas = Ext.get( window.G_vmlCanvasManager.initElement( canvas ) );
       }
 
       return canvas.getContext( '2d' );

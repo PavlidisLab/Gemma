@@ -581,26 +581,17 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend( Ext.Window, {
       var panelConfigParam = {};
 
       // add extra config params to panel
-      // $.each: jquery Isn't there an easier way to do this? apply?
       if ( this.extraPanelParams ) {
-         $.each( this.extraPanelParams, function( key ) {
-            panelConfigParam[key] = this.extraPanelParams[key];
-         } );
+         Ext.apply( panelConfigParam, this.extraPanelParams );
       }
       // add extra config params to panel
       if ( config ) {
-         $.each( config, function( key ) {
-            panelConfigParam[key] = config[key];
-         } );
-      }
+         Ext.apply( panelConfigParam, config );
 
+      }
       if ( config.extraPanelParams ) {
-         $.each( config.extraPanelParams, function( key ) {
-            panelConfigParam[key] = config.extraPanelParams[key];
-         } );
+         Ext.apply( panelConfigParam, config.extraPanelParams );
       }
-
-      // console.log( panelConfigParam );
 
       this.panelConfigParam = panelConfigParam;
       Gemma.VisualizationWithThumbsWindow.superclass.constructor.apply( this, arguments );

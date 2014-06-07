@@ -81,19 +81,9 @@ Gemma.VectorDisplay = Ext.extend( Ext.Window,
 
       this.preparedData = Gemma.prepareProfiles( data[0].data );
 
-      // var eevo = data[0].data.eevo;
-
       Heatmap.draw( $( this.body.id ), this.preparedData.profiles, this.graphConfig, this.sampleLabels );
 
       this.hideMask();
-
-      // var downloadLink = String
-      // .format(
-      // "<a ext:qtip='Download raw data in a tab delimited format' target='_blank'
-      // href='/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}' ><img src='/Gemma/images/download.gif'/></a>",
-      // eevo.id, geneIds);
-
-      // this.setTitle(this.title + "&nbsp;&nbsp;" + downloadLink);
 
       this.doLayout();
 

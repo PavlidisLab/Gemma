@@ -106,8 +106,9 @@ public class SubmittedTaskLocal<T extends TaskResult> extends SubmittedTaskAbstr
     @SuppressWarnings("unchecked")
     @Override
     public synchronized void addEmailAlert() {
-        if (emailAlert) return;
+        if ( emailAlert ) return;
         emailAlert = true;
+        assert taskPostProcessing != null : "Task postprocessing was null";
         taskPostProcessing.addEmailNotification( ( ListenableFuture<TaskResult> ) future, new EmailNotificationContext(
                 taskCommand.getTaskId(), taskCommand.getSubmitter(), taskCommand.getTaskClass().getSimpleName() ) );
     }
