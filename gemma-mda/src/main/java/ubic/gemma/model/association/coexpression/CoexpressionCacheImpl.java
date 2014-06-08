@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -116,6 +117,8 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
     @Autowired
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
+    private AtomicBoolean enabled = new AtomicBoolean( true );
+
     /**
      * Initialize the cache; if it already exists it will not be recreated.
      * 
@@ -188,6 +191,8 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      */
     @Override
     public void cacheCoexpression( Long geneId, Collection<CoexpressionValueObject> r ) {
+        if ( !this.enabled.get() ) return;
+
         assert r != null; // but can be empty, if there is no coexpression.
         assert geneId != null;
         List<CoexpressionCacheValueObject> forCache = new ArrayList<>();
@@ -204,6 +209,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
 
     @Override
     public void cacheCoexpression( Map<Long, List<CoexpressionValueObject>> r ) {
+        if ( !this.enabled.get() ) return;
 
         StopWatch timer = new StopWatch();
 
@@ -227,6 +233,8 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      */
     @Override
     public void clearCache() {
+        if ( !this.enabled.get() ) return;
+
         CacheManager manager = CacheManager.getInstance();
         synchronized ( cache ) {
             manager.getCache( GENE_COEXPRESSION_CACHE_NAME ).removeAll();
@@ -240,6 +248,8 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      */
     @Override
     public List<CoexpressionValueObject> get( Long g ) {
+        if ( !this.enabled.get() ) return null;
+
         synchronized ( cache ) {
             Element element = this.cache.get( new GeneCached( g ) );
             if ( element == null ) return null;
@@ -262,13 +272,14 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      */
     @Override
     public int remove( Collection<Long> genes ) {
-        int affected = 0;
-        for ( Long long1 : genes ) {
-            synchronized ( cache ) {
+        if ( !this.enabled.get() ) return 0;
+        synchronized ( cache ) {
+            int affected = 0;
+            for ( Long long1 : genes ) {
                 if ( this.cache.remove( long1 ) ) affected++;
             }
+            return affected;
         }
-        return affected;
     }
 
     /*
@@ -278,8 +289,22 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      */
     @Override
     public boolean remove( Long id ) {
+        if ( !this.enabled.get() ) return false;
         synchronized ( cache ) {
             return this.cache.remove( new GeneCached( id ) );
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.CoexpressionCache#shutdown()
+     */
+    @Override
+    public void shutdown() {
+        synchronized ( cache ) {
+            this.enabled.set( false );
+            this.cache.dispose();
         }
     }
 

@@ -57,17 +57,22 @@ public interface CoexpressionCache {
     public abstract List<CoexpressionValueObject> get( Long g );
 
     /**
-     * @param id
-     * @return
-     */
-    public abstract boolean remove( Long id );
-
-    /**
      * Bulk remove from cache.
      * 
      * @param genes
      * @return number of cache entries affected
      */
     public int remove( Collection<Long> genes );
+
+    /**
+     * @param id
+     * @return
+     */
+    public abstract boolean remove( Long id );
+
+    /**
+     * Clearn and disable the cache
+     */
+    public void shutdown();
 
 }

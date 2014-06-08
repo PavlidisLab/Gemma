@@ -142,6 +142,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     @Before
     public void setup() {
         super.setTestCollectionSize( 100 );
+        gene2GeneCoexpressionCache.shutdown();
     }
 
     @After
@@ -214,8 +215,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         linkAnalysisService.process( ee2, filterConfig, linkAnalysisConfig );
 
         updateNodeDegree();
-
-        gene2GeneCoexpressionCache.clearCache();
 
         // expect to get at least one links with support >1
         ees.add( ee2 );
