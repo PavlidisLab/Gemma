@@ -16,6 +16,7 @@ Gemma.FactorValueCombo = Ext.extend( Ext.form.ComboBox, {
    triggerAction : "all",
    listWidth : 200,
 
+   // defined in FactorValueEditior.js
    record : Gemma.FactorValueRecord,
 
    /**
@@ -26,6 +27,7 @@ Gemma.FactorValueCombo = Ext.extend( Ext.form.ComboBox, {
       /*
        * Option to pass in data directly from JSON (JsonReader, not ArrayReader)
        */
+
       if ( this.data ) {
 
          this.store = new Ext.data.Store( {
@@ -37,7 +39,7 @@ Gemma.FactorValueCombo = Ext.extend( Ext.form.ComboBox, {
             proxy : new Ext.data.DWRProxy( ExperimentalDesignController.getFactorValues ),
             reader : new Ext.data.ListRangeReader( {
                id : "id"
-            }, this.record ),
+            }, Gemma.FactorValueRecord ),
             remoteSort : false,
             sortInfo : {
                field : "id"
