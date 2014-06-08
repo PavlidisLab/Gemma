@@ -58,6 +58,14 @@ a:hover {
 	text-decoration: none;
 }
 
+.ui-state-hover {
+	background: lightyellow;
+}
+
+.ui-state-active {
+	background: blue
+}
+
 a.annotationLink {
 	text-decoration: underline;
 }

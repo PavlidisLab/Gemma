@@ -15,7 +15,9 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -27,6 +29,14 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
  * @version $Id$
  */
 public class BioAssayValueObject implements Serializable {
+
+    public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
+        Collection<BioAssayValueObject> result = new HashSet<>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            result.add( new BioAssayValueObject( bioAssay ) );
+        }
+        return result;
+    }
 
     private DatabaseEntryValueObject accession = null;
 

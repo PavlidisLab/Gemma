@@ -31,6 +31,8 @@ import java.util.List;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 
 /**
  * @author kelsey
@@ -1041,5 +1043,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     public String toString() {
         return this.getShortName() + " (id = " + this.getId() + ")";
     }
+
 
 }

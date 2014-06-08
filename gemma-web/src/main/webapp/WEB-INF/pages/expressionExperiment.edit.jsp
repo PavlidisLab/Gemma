@@ -6,7 +6,7 @@
 </head>
 <jsp:directive.page import="org.apache.commons.lang.StringUtils" />
 <jsp:useBean id="expressionExperiment" scope="request"
-	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditCommand" />
+	class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject" />
 <spring:bind path="expressionExperiment.*">
 	<c:if test="${not empty status.errorMessages}">
 		<div class="error">
@@ -137,8 +137,7 @@
 	</p>
 
 
-
-	<Gemma:assayView expressionExperiment="${expressionExperiment}" edit="true"></Gemma:assayView>
+	<Gemma:assayView bioAssays="${expressionExperiment.bioAssays}" edit="true"></Gemma:assayView>
 
 	<table>
 		<tr>

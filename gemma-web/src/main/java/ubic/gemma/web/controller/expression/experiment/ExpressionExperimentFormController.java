@@ -51,19 +51,20 @@ import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.web.controller.BaseFormController;
-import antlr.RecognitionException;
-import antlr.TokenStreamException;
+import antlr.ANTLRException;
 
-import com.sdicons.json.model.JSONArray;
 import com.sdicons.json.model.JSONInteger;
 import com.sdicons.json.model.JSONObject;
 import com.sdicons.json.model.JSONString;
@@ -93,7 +94,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
          */
         setSessionForm( true );
-        setCommandClass( ExpressionExperiment.class );
+        setCommandClass( ExpressionExperimentEditValueObject.class );
     }
 
     /**
@@ -108,7 +109,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
 
-        ExpressionExperimentEditCommand eeCommand = ( ExpressionExperimentEditCommand ) command;
+        ExpressionExperimentEditValueObject eeCommand = ( ExpressionExperimentEditValueObject ) command;
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( eeCommand.getId() );
 
         if ( expressionExperiment == null ) {
@@ -151,7 +152,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         log.debug( "entering processFormSubmission" );
 
-        Long id = ( ( ExpressionExperimentEditCommand ) command ).getId();
+        Long id = ( ( ExpressionExperimentValueObject ) command ).getId();
 
         if ( request.getParameter( "cancel" ) != null ) {
             if ( id != null ) {
@@ -240,20 +241,30 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new IllegalArgumentException( "Id was not a number " + id );
         }
 
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
-        List<QuantitationType> qts = new ArrayList<QuantitationType>();
+        List<QuantitationTypeValueObject> qts = new ArrayList<>();
         log.debug( id );
-        ExpressionExperimentEditCommand obj;
+        ExpressionExperimentEditValueObject obj;
         if ( id != null ) {
-            ee = expressionExperimentService.load( id );
+            ExpressionExperiment ee = expressionExperimentService.load( id );
+            if ( ee == null ) {
+                throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+            }
+
             ee = expressionExperimentService.thawLite( ee );
-            qts.addAll( expressionExperimentService.getQuantitationTypes( ee ) );
-            obj = new ExpressionExperimentEditCommand( ee, qts );
+
+            qts.addAll( QuantitationTypeValueObject.convert2ValueObjects( expressionExperimentService
+                    .getQuantitationTypes( ee ) ) );
+
+            obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( id ) );
+
+            obj.setQuantitationTypes( qts );
+            obj.setBioAssays( BioAssayValueObject.convert2ValueObjects( ee.getBioAssays() ) );
+
         } else {
-            obj = new ExpressionExperimentEditCommand( ee, qts );
+            obj = new ExpressionExperimentEditValueObject();
         }
 
-        if ( ee.getId() != null ) {
+        if ( id != null ) {
             this.saveMessage( request, "Editing dataset" );
         }
 
@@ -312,20 +323,19 @@ public class ExpressionExperimentFormController extends BaseFormController {
         Map<String, JSONValue> bioAssayMap = null;
         try (StringInputStream aStream = new StringInputStream( jsonSerialization );) {
             JSONParser parser = new JSONParser( aStream );
-
             bioAssayMap = ( ( JSONObject ) parser.nextValue() ).getValue();
-
-        } catch ( IOException | TokenStreamException | RecognitionException e ) {
+        } catch ( IOException | ANTLRException e ) {
             throw new RuntimeException( e );
         }
 
         Map<BioAssay, BioMaterial> deleteAssociations = new HashMap<>();
-        // set the bioMaterial - bioAssay associations if they are different
         Set<Entry<String, JSONValue>> bioAssays = bioAssayMap.entrySet();
 
         boolean anyChanges = false;
 
         int newBioMaterialCount = 0;
+
+        // Map<Long, BioAssay> baMap = EntityUtils.getIdMap( expressionExperiment.getBioAssays() );
 
         for ( Entry<String, JSONValue> entry : bioAssays ) {
             // check if the bioAssayId is a nullElement
@@ -335,61 +345,48 @@ public class ExpressionExperimentFormController extends BaseFormController {
             }
             Long bioAssayId = Long.parseLong( entry.getKey() );
 
-            Collection<JSONValue> bioMaterialValues = ( ( JSONArray ) entry.getValue() ).getValue();
-            Collection<Long> newBioMaterials = new ArrayList<Long>();
-            for ( JSONValue value : bioMaterialValues ) {
-                if ( value.isString() ) {
-                    Long newMaterial = Long.parseLong( ( ( JSONString ) value ).getValue() );
-                    newBioMaterials.add( newMaterial );
-                } else {
-                    Long newMaterial = ( ( JSONInteger ) value ).getValue().longValue();
-                    newBioMaterials.add( newMaterial );
-                }
+            JSONValue value = entry.getValue();
+
+            Long newMaterialId = null;
+            if ( value.isString() ) {
+                newMaterialId = Long.parseLong( ( ( JSONString ) value ).getValue() );
+            } else {
+                newMaterialId = ( ( JSONInteger ) value ).getValue().longValue();
             }
 
-            newBioMaterialCount = newBioMaterials.size();
+            BioAssay bioAssay = bioAssayService.load( bioAssayId ); // maybe we need to do
+            // this load to avoid stale data?
 
-            BioAssay bioAssay = bioAssayService.load( bioAssayId );
-            bioAssayService.thaw( bioAssay );
-            BioMaterial bMats = bioAssay.getSampleUsed();
-            Collection<Long> oldBioMaterials = new ArrayList<Long>();
-
-            oldBioMaterials.add( bMats.getId() );
-
-            // try to find the bioMaterials in the list of current samples
-            // if it is not in the current samples, add it
-            // if it is in the current sample list, skip to next entry
-            // if the current sample does not exist in the new bioMaterial list, remove it
-            for ( Long newBioMaterialId : newBioMaterials ) {
-                if ( oldBioMaterials.contains( newBioMaterialId ) ) {
-                    continue;
-                }
-                BioMaterial newMaterial;
-                if ( newBioMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
-                    BioMaterial oldBioMaterial = bMats;
-                    newMaterial = bioMaterialService.copy( oldBioMaterial );
-                    newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
-                    newMaterial.getFactorValues().clear();
-                    newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
-                } else {
-                    newMaterial = bioMaterialService.load( newBioMaterialId );
-                }
-                anyChanges = true;
-                bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
+            if ( bioAssay == null ) {
+                throw new IllegalArgumentException( "Bioassay with id=" + bioAssayId
+                        + " was not associated with the experiment" );
             }
 
-            // put all unnecessary associations in a collection
-            // they are not deleted immediately to let all new associations be added first
-            // before any deletions are made. This makes sure that
-            // no bioMaterials are removed unnecessarily
-            for ( Long oldBioMaterialId : oldBioMaterials ) {
-                if ( newBioMaterials.contains( oldBioMaterialId ) ) {
-                    continue;
-                }
-                BioMaterial oldMaterial = bioMaterialService.load( oldBioMaterialId );
-                deleteAssociations.put( bioAssay, oldMaterial );
+            BioMaterial currentBioMaterial = bioAssay.getSampleUsed();
+
+            if ( newMaterialId.equals( currentBioMaterial.getId() ) ) {
+                // / no change
+                continue;
             }
 
+            BioMaterial newMaterial;
+            if ( newMaterialId < 0 ) { // This kludge signifies that it is a 'brand new' biomaterial.
+                BioMaterial oldBioMaterial = currentBioMaterial;
+                newMaterial = bioMaterialService.copy( oldBioMaterial );
+                newMaterial.setName( "Modeled after " + oldBioMaterial.getName() );
+                newMaterial.getFactorValues().clear();
+                newMaterial = ( BioMaterial ) persisterHelper.persist( newMaterial );
+                newBioMaterialCount++;
+            } else {
+                // FIXME can we just use this from the experiment, probably no need to fetch it again.
+                newMaterial = bioMaterialService.load( newMaterialId );
+                if ( newMaterial == null ) {
+                    throw new IllegalArgumentException( "BioMaterial with id=" + newMaterialId + " could not be loaded" );
+                }
+            }
+            anyChanges = true;
+            log.info( "Associating " + bioAssay + " with " + newMaterial );
+            bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
         }
 
         if ( anyChanges ) {
@@ -408,7 +405,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
             }
         } else {
-            log.info( "There were NO changes to the BioMaterial -> BioAssay map" );
+            log.info( "There were no changes to the BioMaterial -> BioAssay map" );
 
         }
 
@@ -424,7 +421,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @return whether any changes were made
      */
     private boolean updateQuantTypes( HttpServletRequest request, ExpressionExperiment expressionExperiment,
-            Collection<QuantitationType> updatedQuantitationTypes ) {
+            Collection<QuantitationTypeValueObject> updatedQuantitationTypes ) {
 
         Collection<QuantitationType> oldQuantitationTypes = expressionExperimentService
                 .getQuantitationTypes( expressionExperiment );
@@ -435,7 +432,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
             Long id = qType.getId();
             boolean dirty = false;
             QuantitationType revisedType = QuantitationType.Factory.newInstance();
-            for ( QuantitationType newQtype : updatedQuantitationTypes ) {
+            for ( QuantitationTypeValueObject newQtype : updatedQuantitationTypes ) {
                 if ( newQtype.getId().equals( id ) ) {
 
                     String oldName = qType.getName();
@@ -453,13 +450,13 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
                     String newName = newQtype.getName();
                     String newDescription = newQtype.getDescription();
-                    GeneralType newgentype = newQtype.getGeneralType();
+                    GeneralType newgentype = GeneralType.fromString( newQtype.getGeneralType() );
                     boolean newisBkg = newQtype.getIsBackground();
                     boolean newisBkgSub = newQtype.getIsBackgroundSubtracted();
                     boolean newisNormalized = newQtype.getIsNormalized();
-                    PrimitiveType newrep = newQtype.getRepresentation();
-                    ScaleType newscale = newQtype.getScale();
-                    StandardQuantitationType newType = newQtype.getType();
+                    PrimitiveType newrep = PrimitiveType.fromString( newQtype.getRepresentation() );
+                    ScaleType newscale = ScaleType.fromString( newQtype.getScale() );
+                    StandardQuantitationType newType = StandardQuantitationType.fromString( newQtype.getType() );
                     boolean newisPreferred = newQtype.getIsPreferred();
                     boolean newIsmaskedPreferred = newQtype.getIsMaskedPreferred();
                     boolean newisRatio = newQtype.getIsRatio();
@@ -546,5 +543,4 @@ public class ExpressionExperimentFormController extends BaseFormController {
         }
         return anyChanged;
     }
-
 }

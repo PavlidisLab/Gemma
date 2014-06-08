@@ -51,11 +51,11 @@ public class QuantitationTypeValueObject implements Serializable {
         return results;
     }
 
-    private String name;
-
     private String description;
 
     private String generalType;
+
+    private Long id;
 
     private boolean isBackground;
 
@@ -70,6 +70,8 @@ public class QuantitationTypeValueObject implements Serializable {
     private boolean isPreferred;
 
     private boolean isRatio;
+
+    private String name;
 
     private String representation;
 
@@ -91,6 +93,7 @@ public class QuantitationTypeValueObject implements Serializable {
      * @param gs
      */
     public QuantitationTypeValueObject( QuantitationType qt ) {
+        this.id = qt.getId();
         this.setName( qt.getName() );
         this.setDescription( qt.getDescription() );
         this.setGeneralType( qt.getGeneralType().toString() );
@@ -115,6 +118,10 @@ public class QuantitationTypeValueObject implements Serializable {
      */
     public String getGeneralType() {
         return this.generalType;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     /**
@@ -196,6 +203,10 @@ public class QuantitationTypeValueObject implements Serializable {
 
     public void setGeneralType( String generalType ) {
         this.generalType = generalType;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     public void setIsBackground( boolean isBackground ) {

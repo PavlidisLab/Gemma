@@ -84,7 +84,7 @@ public class BioAssayController {
         }
 
         ee = eeService.thawLite( ee );
-        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+        Collection<BioAssayValueObject> result = new HashSet<>();
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 
@@ -114,7 +114,7 @@ public class BioAssayController {
             return null;
         }
         ee = eeService.thawLite( ee );
-        Collection<BioAssayValueObject> result = new HashSet<BioAssayValueObject>();
+        Collection<BioAssayValueObject> result = new HashSet<>();
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
 
@@ -181,7 +181,7 @@ public class BioAssayController {
     @RequestMapping("/showAllBioAssays.html")
     public ModelAndView showAllBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         String sId = request.getParameter( "id" );
-        Collection<BioAssay> bioAssays = new ArrayList<BioAssay>();
+        Collection<BioAssay> bioAssays = new ArrayList<>();
         if ( StringUtils.isBlank( sId ) ) {
             /*
              * Probably not desirable ... there are >70,000 of them

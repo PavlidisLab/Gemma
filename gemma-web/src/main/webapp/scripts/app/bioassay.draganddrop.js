@@ -1,7 +1,10 @@
+/**
+ * Draggable bioassays association with biomaterials.
+ */
+
 Ext.namespace( 'Gemma' );
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady( function() {
-   // all the bioassays
 
    Ext.QuickTips.init();
    Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
@@ -15,87 +18,80 @@ Ext.onReady( function() {
       window.location.reload( true );
    } );
 
-   var dragItems = document.getElementsByClassName( 'dragItem' );
+   // see AssayViewTag
 
-   var windowIdArray = new Array( dragItems.length );
-   for (var j = 0; j < dragItems.length; j++) {
-      windowIdArray[j] = dragItems[j].id;
-   }
+} );
 
-   for (var i = 0; i < windowIdArray.length; i++) {
-      var windowId = windowIdArray[i];
-      // set to be draggable
-      $( windowId ).draggable();
-      /*
-       * new Draggable(windowId, { revert :true, ghosting :true });
-       */
+jQuery.fn.swap = function( b ) {
+   // method from: http://blog.pengoworks.com/index.cfm/2008/9/24/A-quick-and-dirty-swap-method-for-jQuery
+   b = jQuery( b )[0];
+   var a = this[0];
+   var t = a.parentNode.insertBefore( document.createTextNode( '' ), a );
+   b.parentNode.insertBefore( a, b );
+   t.parentNode.insertBefore( b, t );
+   t.parentNode.removeChild( t );
+   return this;
+};
 
-      // set to be droppable
-      $( windowId ).droppable(
-         {
-            drop : function( event, ui ) {
+$( function() {
 
-               var element = event.target;
-               var droppableElement = event.draggable;
+   $( '.dragItem' ).draggable( {
+      axis : 'y',
+      cursor : 'move',
+      revert : true
+   } );
 
-               // error check
-               // if between columns (ArrayDesigns), do not allow
-               if ( element.getAttribute( 'arrayDesign' ) == droppableElement.getAttribute( 'arrayDesign' ) ) {
-                  // initialize variables
-                  var removeFromElement = element.getAttribute( 'material' );
-                  var removeFromDroppable = droppableElement.getAttribute( 'material' );
-                  // swap the assays
-                  var temp = element.getAttribute( 'assay' );
-                  element.setAttribute( 'assay', droppableElement.getAttribute( 'assay' ) );
-                  droppableElement.setAttribute( 'assay', temp );
+   $( '.dragItem' ).droppable(
+      {
+         accept : '.dragItem',
+         activeClass : "ui-state-hover",
+         hoverClass : "ui-state-active",
+         drop : function( event, ui ) {
 
-                  // retrieve the JSON object and parse it
-                  var materialString = document.getElementById( 'assayToMaterialMap' ).value;
-                  var materialMap = Ext.util.JSON.decode( materialString );
+            var target = $( this ); // the cell we dropped on to.
+            var source = ui.draggable; // the item that was dropped.
 
-                  // write the new values into the materialMap
-                  materialMap[element.getAttribute( 'assay' )].push( element.getAttribute( 'material' ) );
-                  materialMap[droppableElement.getAttribute( 'assay' )].push( droppableElement
-                     .getAttribute( 'material' ) );
-
-                  // remove the old values from the materialMap
-                  var elementToRemove;
-                  for (var k = 0; k < materialMap[element.getAttribute( 'assay' )].length; k++) {
-                     if ( materialMap[element.getAttribute( 'assay' )][k] = removeFromElement ) {
-                        elementToRemove = k;
-                        break;
-                     }
-                  }
-
-                  materialMap[element.getAttribute( 'assay' )].splice( k, 1 );
-                  for (var k = 0; k < materialMap[droppableElement.getAttribute( 'assay' )].length; k++) {
-                     if ( materialMap[droppableElement.getAttribute( 'assay' )][k] = removeFromDroppable ) {
-                        elementToRemove = k;
-                        break;
-                     }
-                  }
-
-                  if ( elementToRemove != null ) {
-                     materialMap[droppableElement.getAttribute( 'assay' )].splice( elementToRemove, 1 );
-                  }
-
-                  // serialize the JSON object
-                  document.getElementById( 'assayToMaterialMap' ).value = Ext.util.JSON.encode( materialMap );
-
-                  // swap inner HTML
-                  var content1 = element.innerHTML;
-                  var content2 = droppableElement.innerHTML;
-                  droppableElement.innerHTML = content1;
-                  element.innerHTML = content2;
-               } else {
-                  /*
-                   * new Effect.Highlight(droppableElement.id, { delay :0, duration :0.25, startcolor :'#ff0000',
-                   * endcolor :'#ff0000' }); new Effect.Highlight(droppableElement.id, { delay :0.5, duration :0.25,
-                   * startcolor :'#ff0000', endcolor :'#ff0000' });
-                   */
-               }
-
+            // if between columns (ArrayDesigns), do not allow
+            if ( target.attr( 'arrayDesign' ) != source.attr( 'arrayDesign' ) ) {
+               return;
             }
-         } );
-   }
+
+            // deserialize the JSON object ; this is the data that will be used on the server.
+            var materialString = $( 'input#assayToMaterialMap' ).val();
+            var materialMap = Ext.util.JSON.decode( materialString ); // map of bioassay id to biomaterial id
+
+            var targetBioMaterial = target.attr( 'material' );
+            var sourceBioMaterial = source.attr( 'material' );
+            console.log( "dropped " + sourceBioMaterial + ' on ' + targetBioMaterial );
+
+            // write the new values into the materialMap
+            materialMap[target.attr( 'assay' )] = sourceBioMaterial;
+            materialMap[source.attr( 'assay' )] = targetBioMaterial;
+
+            target.attr( 'material', sourceBioMaterial );
+            source.attr( 'material', targetBioMaterial );
+
+            // debugger;
+            console.log( 'Bioassay ' + target.attr( 'assay' ) + " will be associated with "
+               + materialMap[target.attr( 'assay' )] + " and in the html it is " + target.attr( 'material' ) );
+
+            console.log( 'Bioassay ' + source.attr( 'assay' ) + " will be associated with "
+               + materialMap[source.attr( 'assay' )] + " and in the html it is " + source.attr( 'material' ) );
+
+            // swap the dom items
+            // put the target where the source was.
+            source.swap( target );
+
+            // put in the right place.
+            source.position( {
+               of : $( this ),
+               my : 'left top',
+               at : 'left top'
+            } );
+
+            // reserialize the JSON object
+            $( 'input#assayToMaterialMap' ).val( Ext.util.JSON.encode( materialMap ) );
+
+         }
+      } );
 } );

@@ -152,7 +152,7 @@
 			<value>expressionExperiment</value>
 		</property>
 		<property name="commandClass">
-			<value>ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditCommand
+			<value>ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject
 			</value>
 		</property>
 		<property name="formView">
