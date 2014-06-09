@@ -44,10 +44,9 @@ Gemma.GeneDetails = Ext
                      + homologue.taxonCommonName
                      + "]</a>&nbsp;&nbsp;&nbsp;";
                }
+            } else {
+               homologueStr = "None defined"; // or if not available...
             }
-
-            homologueStr = "None defined"; // or if not available...
-
             return homologueStr;
          },
 
@@ -208,7 +207,6 @@ Gemma.GeneDetails = Ext
                         + "onClick='Ext.getCmp(&#39;" + this.id + "&#39;).changeTab(&#39;coex&#39;)'>",
                      listeners : {
                         'afterrender' : function( c ) {
-
                            /*
                             * Compute cumulative counts
                             */
