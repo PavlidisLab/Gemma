@@ -1899,7 +1899,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 g2gs.add( g2gvo );
             }
 
-            if ( !quick ) {
+            if ( !quick && !g2gs.isEmpty() ) {
+
                 timer.reset();
                 timer.start();
 
@@ -1909,6 +1910,9 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                     log.debug( "Query genes only,fetch tested-in details" + r.size() + " results took "
                             + timer.getTime() + "ms" );
                 }
+
+                timer.reset();
+                timer.start();
             }
 
             /*

@@ -76,24 +76,14 @@ public class CoexpressionSearchController {
         }
     }
 
-    private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY = 500;
-
-    private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = 200;
-
-    private static final int DEFAULT_MAX_GENES_PER_QUERY = 500;
+    private static final int DEFAULT_MAX_GENES_PER_MY_GENES_ONLY = 500;
 
     private static final int DEFAULT_MAX_RESULTS = 200;
 
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
-    private static final int MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY = Settings.getInt(
-            "gemma.coexpressionSearch.maxGenesPerCoexLargeQuery", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY );
-
-    private static final int MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY = Settings.getInt(
-            "gemma.coexpressionSearch.maxGenesPerCoexVisQuery", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY );
-
-    private static final int MAX_GENES_PER_QUERY = Settings.getInt( "gemma.coexpressionSearch.maxGenesPerQuery",
-            DEFAULT_MAX_GENES_PER_QUERY );
+    private static final int MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY = Settings.getInt(
+            "gemma.coexpressionSearch.maxGenesForQueryGenesOnly", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY );
 
     private static final int MAX_RESULTS_PER_GENE = Settings.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
             DEFAULT_MAX_RESULTS );
@@ -157,8 +147,9 @@ public class CoexpressionSearchController {
             }
         }
 
-        if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-            result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY + " genes" );
+        if ( searchOptions.getGeneIds().size() > MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY ) {
+            result.setErrorState( "Too many genes selected, please limit searches to "
+                    + MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY + " genes" );
             return result;
         }
 
@@ -309,7 +300,7 @@ public class CoexpressionSearchController {
     }
 
     /**
-     * Trim the gene ids used for the query.
+     * Adjust the settings based on how many genes there are?
      * 
      * @param searchOptions
      * @param queryGeneIds
@@ -319,17 +310,17 @@ public class CoexpressionSearchController {
         /*
          * TODO: if there is only one experiment set, do a 'my genes only' query.
          */
-
-        if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
-            // this will be a 'my genes only' vis query since queryGeneIds !=null
-            searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) );
-        } else if ( searchOptions.getQueryGenesOnly() ) {
-            // this will be the case where the user selects over 20 genes
-            searchOptions
-                    .setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY ) );
-        } else {
-            searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_QUERY ) );
-        }
+        //
+        // if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
+        // // this will be a 'my genes only' vis query since queryGeneIds !=null
+        // searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) );
+        // } else if ( searchOptions.getQueryGenesOnly() ) {
+        // // this will be the case where the user selects over 20 genes
+        // searchOptions
+        // .setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY ) );
+        // } else {
+        // searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_QUERY ) );
+        // }
     }
 
     /**

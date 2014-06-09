@@ -55,6 +55,8 @@ import ubic.gemma.util.EntityUtils;
 @Lazy
 public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearchService {
 
+    private static final int THRESHOLD_TRIGGER_QUERYGENESONLY = 200;
+
     private static Log log = LogFactory.getLog( GeneCoexpressionSearchServiceImpl.class.getName() );
 
     @Autowired
@@ -171,7 +173,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
      * @param inputEeIds
      * @param genes
      * @param stringency if set to 1, may be adjusted
-     * @param maxResults per gene, not including the query genes themselves.
+     * @param maxResults per gene, not including the query genes themselves. Ignored if this is 'querygenesonly'
      * @param queryGenesOnly
      * @param quick
      * @return CoexpressionMetaValueObject, in which the results are already populated and sorted.
@@ -202,10 +204,15 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         // Note: auto-choose stringency on client size not always giving something reasonable. Also: not clear we want
         // to do this auto-adjust for 'query genes only'.
         // if ( stringency == 1 )
-        stringency = chooseStringency( eeIds.size() );
+        stringency = chooseStringency( eeIds.size(), genes.size() );
         log.info( "Stringency set to " + stringency + " based on number of experiments queried" );
 
+        if ( genes.size() > THRESHOLD_TRIGGER_QUERYGENESONLY ) {
+            queryGenesOnly = true;
+        }
+
         if ( queryGenesOnly ) {
+            // note that maxResults is ignored.
             if ( genes.size() < 2 ) {
                 throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
             }
@@ -350,34 +357,55 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
      * @param numExperimentsQueried
      * @return
      */
-    private Integer chooseStringency( int numExperimentsQueried ) {
+    private Integer chooseStringency( int numExperimentsQueried, int numGenesQueried ) {
         // this is completely made up...
+
+        int baseline = 1;
+
+        if ( numGenesQueried < 100 ) {
+            baseline = 1;
+        } else if ( numGenesQueried < 200 ) {
+            baseline = 2;
+        } else if ( numGenesQueried < 325 ) {
+            baseline = 4;
+        } else if ( numGenesQueried < 500 ) {
+            // semi-based on assumption that we aren't going to allow more than 500
+            baseline = 6;
+        } else {
+            // just in case...
+            baseline = 8;
+        }
+
+        if ( baseline > numExperimentsQueried ) {
+            return numExperimentsQueried;
+        }
+
         if ( numExperimentsQueried < 5 ) {
             return Math.min( numExperimentsQueried, 2 );
         } else if ( numExperimentsQueried < 20 ) {
-            return 3;
+            return 3 + baseline;
         } else if ( numExperimentsQueried < 50 ) {
-            return 4;
+            return 4 + baseline;
         } else if ( numExperimentsQueried < 100 ) {
-            return 6;
+            return 6 + baseline;
         } else if ( numExperimentsQueried < 200 ) {
-            return 8;
+            return 8 + baseline;
         } else if ( numExperimentsQueried < 300 ) {
-            return 10;
+            return 10 + baseline;
         } else if ( numExperimentsQueried < 400 ) {
-            return 15;
+            return 15 + baseline;
         } else if ( numExperimentsQueried < 600 ) {
-            return 20;
+            return 20 + baseline;
         } else if ( numExperimentsQueried < 800 ) {
-            return 25;
+            return 25 + baseline;
         } else if ( numExperimentsQueried < 1000 ) {
-            return 35;
+            return 35 + baseline;
         } else if ( numExperimentsQueried < 1200 ) {
-            return 45;
+            return 45 + baseline;
         } else if ( numExperimentsQueried < 1500 ) {
-            return 55;
+            return 55 + baseline;
         }
-        return 65;
+        return 65 + baseline;
     }
 
     /**
