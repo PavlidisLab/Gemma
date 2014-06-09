@@ -42,8 +42,8 @@ Gemma.CoexpressionGridLight = Ext.extend( Ext.grid.GridPanel, {
             id : "id"
          }, Gemma.CoexpressionGridRecordConstructor ),
          sortInfo : {
-            field : 'posSupp',
-            direction : 'DESC'
+            field : 'sortKey',
+            direction : 'ASC'
          }
       } );
 
@@ -66,7 +66,7 @@ Gemma.CoexpressionGridLight = Ext.extend( Ext.grid.GridPanel, {
          }, {
             id : 'support',
             header : "Support",
-            dataIndex : "supportKey",
+            dataIndex : "sortKey",
             width : 70,
             renderer : this.supportStyler.createDelegate( this ),
             tooltip : Gemma.HelpText.WidgetDefaults.CoexpressionGrid.supportColumnTT,

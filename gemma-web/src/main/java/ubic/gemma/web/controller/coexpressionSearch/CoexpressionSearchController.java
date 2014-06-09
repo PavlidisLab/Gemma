@@ -50,6 +50,7 @@ import ubic.gemma.util.Settings;
 
 /**
  * @author luke
+ * @author paul
  * @version $Id$
  */
 @Controller
@@ -323,13 +324,13 @@ public class CoexpressionSearchController {
         // }
     }
 
-    /**
-     * @param geneIds
-     * @param limit
-     * @return
-     */
-    private List<Long> trimGeneIds( Collection<Long> geneIds, int limit ) {
-        return new ArrayList<Long>( geneIds ).subList( 0, Math.min( geneIds.size(), limit ) );
-    }
+    // /**
+    // * @param geneIds
+    // * @param limit
+    // * @return
+    // */
+    // private List<Long> trimGeneIds( Collection<Long> geneIds, int limit ) {
+    // return new ArrayList<Long>( geneIds ).subList( 0, Math.min( geneIds.size(), limit ) );
+    // }
 
 }

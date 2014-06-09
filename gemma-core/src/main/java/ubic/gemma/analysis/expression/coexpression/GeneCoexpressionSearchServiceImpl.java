@@ -204,12 +204,17 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         // Note: auto-choose stringency on client size not always giving something reasonable. Also: not clear we want
         // to do this auto-adjust for 'query genes only'.
         // if ( stringency == 1 )
-        stringency = chooseStringency( eeIds.size(), genes.size() );
-        log.info( "Stringency set to " + stringency + " based on number of experiments queried" );
 
         if ( genes.size() > THRESHOLD_TRIGGER_QUERYGENESONLY ) {
+            if ( !queryGenesOnly ) {
+                log.info( "Switching to 'query genes only'" );
+            }
             queryGenesOnly = true;
         }
+
+        // FIXME we are ignoring the input stringency entirely
+        stringency = chooseStringency( queryGenesOnly, eeIds.size(), genes.size() );
+        log.info( "Stringency set to " + stringency + " based on number of experiments queried" );
 
         if ( queryGenesOnly ) {
             // note that maxResults is ignored.
@@ -354,11 +359,12 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     /**
      * If the user has not set a stringency higher than 1, we set it for them.
      * 
+     * @param queryGenesOnly
      * @param numExperimentsQueried
      * @return
      */
-    private Integer chooseStringency( int numExperimentsQueried, int numGenesQueried ) {
-        // this is completely made up...
+    private Integer chooseStringency( boolean queryGenesOnly, int numExperimentsQueried, int numGenesQueried ) {
+        // this is completely made up...purely based on manual testing.
 
         int baseline = 1;
 
@@ -379,6 +385,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         if ( baseline > numExperimentsQueried ) {
             return numExperimentsQueried;
         }
+
+        if ( queryGenesOnly ) baseline--;
 
         if ( numExperimentsQueried < 5 ) {
             return Math.min( numExperimentsQueried, 2 );

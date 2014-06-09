@@ -54,7 +54,9 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private Integer queryGeneNodeDegree = 0;
     private Double queryGeneNodeDegreeRank = 0.0;
 
-    // ?
+    /*
+     * Used for client-side sorting. See CoexpressionGrid and CoexpressionGridLight.jsF
+     */
     private String sortKey = null;
 
     private Collection<Long> supportingExperiments = null;
