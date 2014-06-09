@@ -19,13 +19,13 @@ Ext.namespace( 'Gemma' );
  * Instantiates the core cytoscape
  * 
  * @param {Object}
- *           visualization the cy object (dom reference)
+ *           cy the cy object (dom reference)
  * @param {Array}
  *           graphData
  * @param {Function}
  *           readyFunction
  * @param {Object}
- *           ownerRef - CytoscapeJSDisplay
+ *           window - CytoscapeJSDisplay
  * 
  * From the cytoscape.js docs:
  * <p>
@@ -37,9 +37,9 @@ Ext.namespace( 'Gemma' );
  * an element's weight to gradients between blue and red for weights between 0 and 100.
  * 
  */
-Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, readyFunction, ownerRef ) {
+Gemma.CytoscapeJSCoexGraphInitializer = function( cy, graphData, readyFunction, window ) {
 
-   visualization.cytoscape( {
+   cy.cytoscape( {
 
       container : document.getElementById( 'cy' ),
 
@@ -140,14 +140,38 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
       elements : graphData,
 
       ready : function() {
-         ownerRef.cy = this;
-         readyFunction( ownerRef );
+         window.cy = this;
+         var cy = this;
+
+         //         
+         // geneid: 7677700
+         // id: "HTA2"
+         // name: "HTA2"
+         // ncbiId: 852283
+         // nodeDegree: 0.2506
+         // nodeDegreeColor: "#222222"
+         // officialName: "Hta2p"
+         // queryflag: 0
+
+         /*
+          * To create tooltips for all of the nodes... see https://github.com/cytoscape/cytoscape.js-qtip and
+          * http://jsbin.com/riqiyike/1/edit
+          */
+         cy.nodes().each( function() {
+            console.log( this );
+            this.qtip( {
+               content : this.data( 'officialName' )
+            } );
+         } );
+
+         readyFunction( window );
+
       }
    } );
 
    // http://plugins.jquery.com/cytoscape.js-panzoom/
    // the default values of each option are outlined below:
-   visualization.cytoscapePanzoom( {
+   cy.cytoscapePanzoom( {
       zoomFactor : 0.1, // zoom factor per zoom tick
       zoomDelay : 45, // how many ms between zoom ticks
       minZoom : 0.1, // min zoom level
@@ -174,7 +198,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( visualization, graphData, read
    // /*
    // *
    // */
-   // visualization.cytoscapeCxtmenu( {
+   // cy.cytoscapeCxtmenu( {
    // menuRadius : 40, // the radius of the circular menu in pixels
    // selector : 'node', // nodes matching this Cytoscape.js selector will trigger cxtmenus
    // commands : [ // an array of commands to list in the menu
