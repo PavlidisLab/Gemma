@@ -27,7 +27,7 @@ import ubic.gemma.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
- * Scans GEO for experiments that are not GEO.
+ * Scans GEO for experiments that are not in Gemma.
  * 
  * @author paul
  * @version $Id$
@@ -50,7 +50,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     protected Exception doWork( String[] args ) {
         super.processCommandLine( "foo", args );
 
-        Set<String> seen = new HashSet<String>();
+        Set<String> seen = new HashSet<>();
         GeoBrowserService gbs = this.getBean( GeoBrowserService.class );
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
@@ -91,6 +91,10 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                         continue;
                     }
 
+                    if ( ees.findByAccession( geoRecord.getGeoAccession() ) != null ) {
+                        continue;
+                    }
+
                     System.out.println( geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next()
                             + "\t" + geoRecord.getNumSamples() + "\t" + geoRecord.getTitle() + "\t"
                             + StringUtils.join( geoRecord.getCorrespondingExperiments(), "," ) + "\t"
@@ -105,5 +109,4 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
         }
         return null;
     }
-
 }
