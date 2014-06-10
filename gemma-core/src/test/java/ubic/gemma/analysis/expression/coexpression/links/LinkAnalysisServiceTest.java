@@ -284,8 +284,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
             }
         }
 
-        for ( Gene gene : geneService.loadAll() ) {
-            assert gene.getTaxon() != null;
+        for ( Gene gene : geneService.loadAll( mouse ) ) {
+
             Collection<CoexpressionValueObject> links = geneCoexpressionService.findCoexpressionRelationships( gene,
                     EntityUtils.getIds( ees ), 1, 0, false );
 
