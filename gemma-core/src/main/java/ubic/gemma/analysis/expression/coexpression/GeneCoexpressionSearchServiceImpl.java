@@ -214,6 +214,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         // FIXME we are ignoring the input stringency entirely
         stringency = chooseStringency( queryGenesOnly, eeIds.size(), genes.size() );
+        stringency -= 2; // for elodie.
+        if ( stringency < 1 ) stringency = 1;
         log.info( "Stringency set to " + stringency + " based on number of experiments queried" );
 
         if ( queryGenesOnly ) {
