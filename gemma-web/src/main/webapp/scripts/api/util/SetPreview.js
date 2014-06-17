@@ -196,9 +196,9 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             taxonId : this.taxonId
          } );
 
-         this.selectionEditor.loadMask = new Ext.LoadMask( this.selectionEditor.getEl(), {
-            msg : Gemma.StatusText.Loading.generic
-         } );
+         // this.selectionEditor.loadMask = new Ext.LoadMask( this.selectionEditor.getEl(), {
+         // msg : Gemma.StatusText.Loading.generic
+         // } );
 
          this.selectionEditorWindow.show();
 

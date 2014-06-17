@@ -129,7 +129,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
          }
 
          GenePickerController.getGenes( geneIds, {
-            callback : _loadGeneRecords.createDelegate( this ),
+            callback : this._loadGeneRecords.createDelegate( this ),
             errorHandler : Gemma.genericErrorHandler
          } );
       },
