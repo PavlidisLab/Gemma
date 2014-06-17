@@ -1,4 +1,3 @@
-
 /*
  * The Gemma project
  * 
@@ -37,7 +36,7 @@ Gemma.SessionGeneGroupStore = function( config ) {
       name : "name",
       type : "string",
       convert : function( v, rec ) {
-         if ( v.startsWith( "GO" ) ) {
+         if ( v.indexOf( "GO", 0 ) == 0 ) {
             return rec.description;
          }
          return v;
@@ -49,7 +48,7 @@ Gemma.SessionGeneGroupStore = function( config ) {
       name : "description",
       type : "string",
       convert : function( v, rec ) {
-         if ( rec.name.startsWith( "GO" ) ) {
+         if ( rec.name.indexOf( "GO", 0 ) == 0 ) {
             return rec.name;
          }
          return v;
