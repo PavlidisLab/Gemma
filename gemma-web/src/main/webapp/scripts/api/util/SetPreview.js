@@ -196,21 +196,18 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             taxonId : this.taxonId
          } );
 
-         // this.selectionEditor.loadMask = new Ext.LoadMask( this.selectionEditor.getEl(), {
-         // msg : Gemma.StatusText.Loading.generic
-         // } );
-
          this.selectionEditorWindow.show();
 
          if ( this.entityIds && this.entityIds.length > 0 ) {
-            console.log( "using the entityIds, should be using selectedSetValueObject" );
+            // console.log( "using the entityIds, should be using selectedSetValueObject" );
             this.selectionEditor.loadEntities( this.entityIds, function() {
-               this.selectionEditor.loadMask.hide();
+               if ( this.selectionEditor.loadMask ) {
+                  this.selectionEditor.loadMask.hide();
+               }
             }.createDelegate( this, [], false ) );
          } else if ( this.selectedSetValueObject ) {
 
-            // the id should be the real id of an entity in the database.
-
+            // the id should be the real id of an set entity in the database.
             this.selectionEditor.loadSetValueObject( this.selectedSetValueObject, function() {
                if ( this.selectionEditor.loadMask ) {
                   this.selectionEditor.loadMask.hide();
