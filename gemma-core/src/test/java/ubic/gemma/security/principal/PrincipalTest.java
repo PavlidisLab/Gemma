@@ -38,38 +38,59 @@ import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
- * Test that we can log users in
+ * Test that we can log users in, etc.
  * 
  * @author pavlidis
  * @version $Id$
  */
 public class PrincipalTest extends BaseSpringContextTest {
 
-    String pwd;
-
-    String username;
-
     @Autowired
-    UserManager userManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    private String pwd;
+
     @Autowired
-    private AuthenticationManager authenticationManager;
+    private UserManager userManager;
+
+    private String username;
+
+    private String email = "foo@foo.foo";
 
     @Before
     public void before() {
 
         pwd = randomName();
         username = randomName();
-
+        email = username + "@foo.foo";
         if ( !userManager.userExists( username ) ) {
 
             String encodedPassword = passwordEncoder.encodePassword( pwd, username );
-            UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, null, null, new Date() );
+            UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, true, null, email, null, new Date() );
             userManager.createUser( u );
         }
+    }
+
+    @Test
+    public final void testChangePassword() throws Exception {
+        String newpwd = randomName();
+        String encodedPassword = passwordEncoder.encodePassword( newpwd, username );
+
+        String token = userManager.changePasswordForUser( email, username, encodedPassword );
+
+        assertTrue( !userManager.loadUserByUsername( username ).isEnabled() );
+
+        /*
+         * User has to unlock the account, we mimic that:
+         */
+        assertTrue( userManager.validateSignupToken( username, token ) );
+
+        Authentication auth = new UsernamePasswordAuthenticationToken( username, newpwd );
+        Authentication authentication = ( ( ProviderManager ) authenticationManager ).authenticate( auth );
+        assertTrue( authentication.isAuthenticated() );
     }
 
     /**

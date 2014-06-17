@@ -1,5 +1,6 @@
 Ext.namespace( 'Gemma' );
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
 /**
  * 
  * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
@@ -58,11 +59,10 @@ Gemma.ExpressionExperimentDetails = Ext
                return "Unavailable"; // analysis not run.
             }
 
-            var downloadCoExpressionDataLink = String
-               .format(
-                  "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
-                     + "onClick='fetchCoExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp; </span>",
-                  ee.id );
+            var downloadCoExpressionDataLink = String.format(
+               "<span style='cursor:pointer'  ext:qtip='Download all coexpression  data in a tab delimited format'  "
+                  + "onClick='fetchCoExpressionData({0})' > &nbsp; <i class='fa fa-download'></i>  &nbsp; </span>",
+               ee.id );
             var count;
 
             return ee.coexpressionLinkCount + "&nbsp;" + downloadCoExpressionDataLink;

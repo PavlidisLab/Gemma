@@ -35,9 +35,9 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     private static final long serialVersionUID = -3484291071757959936L;
 
     /** Added field for the Candidate Gene Management System */
-    private Collection<EvidenceValueObject> evidence = new HashSet<EvidenceValueObject>();
+    private Collection<EvidenceValueObject> evidence = new HashSet<>();
 
-    private Set<String> phenotypesValueUri = new HashSet<String>();
+    private Set<String> phenotypesValueUri = new HashSet<>();
 
     public GeneEvidenceValueObject() {
         super();
@@ -59,7 +59,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     /** Given a geneVO finds all valueRI of phenotypes for that gene */
     public Set<String> findAllPhenotpyesOnGene() {
 
-        Set<String> allPhenotypesOnGene = new HashSet<String>();
+        Set<String> allPhenotypesOnGene = new HashSet<>();
 
         for ( EvidenceValueObject evidenceVO : this.evidence ) {
             for ( CharacteristicValueObject chaVO : evidenceVO.getPhenotypes() ) {

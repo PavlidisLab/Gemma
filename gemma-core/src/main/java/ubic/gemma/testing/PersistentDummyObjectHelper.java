@@ -462,10 +462,14 @@ public class PersistentDummyObjectHelper {
         return ( ArrayDesign ) persisterHelper.persist( ad );
     }
 
+    public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
+        return this.getTestPersistentBasicExpressionExperiment( null );
+    }
+
     /**
      * @return A lighter-weight EE, with no data, and the ADs have no sequences.
      */
-    public ExpressionExperiment getTestPersistentBasicExpressionExperiment() {
+    public ExpressionExperiment getTestPersistentBasicExpressionExperiment( ArrayDesign arrayDesign ) {
         ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
@@ -474,23 +478,28 @@ public class PersistentDummyObjectHelper {
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
-        ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
-        ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
-
         Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
         ExperimentalDesign ed = getExperimentalDesign( allFactorValues );
         ee.setExperimentalDesign( ed );
         ee.setOwner( this.getTestPersistentContact() );
 
-        Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+        Collection<BioAssay> bioAssays = new HashSet<>();
         Collection<BioMaterial> bioMaterials = getBioMaterials( allFactorValues );
-        Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
-        Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
-        bioAssays.addAll( bioAssaysA );
-        bioAssays.addAll( bioAssaysB );
-        ee.setBioAssays( bioAssays );
 
-        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
+        if ( arrayDesign != null ) {
+            bioAssays = getBioAssays( bioMaterials, arrayDesign );
+        } else {
+            ArrayDesign adA = this.getTestPersistentArrayDesign( 0, false, false );
+            ArrayDesign adB = this.getTestPersistentArrayDesign( 0, false, false );
+
+            Collection<BioAssay> bioAssaysA = getBioAssays( bioMaterials, adA );
+            Collection<BioAssay> bioAssaysB = getBioAssays( bioMaterials, adB );
+            bioAssays.addAll( bioAssaysA );
+            bioAssays.addAll( bioAssaysB );
+        }
+        ee.getBioAssays().addAll( bioAssays );
+
+        Collection<QuantitationType> quantitationTypes = new HashSet<>();
         for ( int quantitationTypeNum = 0; quantitationTypeNum < NUM_QUANTITATION_TYPES; quantitationTypeNum++ ) {
             QuantitationType q = getTestNonPersistentQuantitationType();
             if ( quantitationTypes.size() == 0 ) {
@@ -842,7 +851,7 @@ public class PersistentDummyObjectHelper {
      * @return Collection
      */
     private List<BioAssay> getBioAssays( Collection<BioMaterial> bioMaterials, ArrayDesign ad ) {
-        List<BioAssay> baCol = new ArrayList<BioAssay>();
+        List<BioAssay> baCol = new ArrayList<>();
         for ( BioMaterial bm : bioMaterials ) {
             BioAssay ba = this.getTestNonPersistentBioAssay( ad, bm );
             bm.getBioAssaysUsedIn().add( ba );
@@ -859,7 +868,7 @@ public class PersistentDummyObjectHelper {
 
         Iterator<FactorValue> iter = allFactorValues.iterator();
 
-        Collection<BioMaterial> baCol = new HashSet<BioMaterial>();
+        Collection<BioMaterial> baCol = new HashSet<>();
         // one biomaterial for each set of bioassays
         for ( int j = 0; j < NUM_BIOMATERIALS; j++ ) {
             BioMaterial bm = this.getTestNonPersistentBioMaterial();

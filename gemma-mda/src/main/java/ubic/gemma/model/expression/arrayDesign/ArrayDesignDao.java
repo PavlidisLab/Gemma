@@ -260,7 +260,7 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
      * @param arrayDesign
-     * @return how many experiments use this platform (not including experiment subsets)
+     * @return how many experiments use this platform (not including experiment subsets), security filtered
      */
     public int numExperiments( ArrayDesign arrayDesign );
 

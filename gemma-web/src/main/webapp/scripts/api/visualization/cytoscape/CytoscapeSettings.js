@@ -55,10 +55,11 @@ Gemma.CytoscapeSettings = {
    maxGeneIdsPerCoexVisQuery : 200,
 
    // inoperative in cytoscape.js as of 2.2
-   nodeTooltipText : "${id} (${officialName})<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
+   // nodeTooltipText : "${id} (${officialName})<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
 
    // inoperative in cytoscape.js as of 2.2
-   edgeTooltipText : "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
+   // edgeTooltipText : "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative
+   // Support:${negativesupport}",
 
    // thresholds e.g. dark colour is >dark value and <moderate value
    // high values mean high node degree.

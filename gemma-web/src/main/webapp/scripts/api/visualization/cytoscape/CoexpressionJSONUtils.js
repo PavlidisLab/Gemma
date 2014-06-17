@@ -48,6 +48,8 @@ Gemma.CoexpressionJSONUtils.constructJSONGraphData = function( currentQueryGeneI
       if ( qgr == null )
          qgr = 0.5;
 
+      // TODO show number of links, not just the rank. Problem: nodes don't have a fixed node degree.
+
       if ( !graphNodeIds[r.foundGene.id] ) {
 
          var isQueryGene = currentQueryGeneIds.indexOf( r.foundGene.id ) !== -1;

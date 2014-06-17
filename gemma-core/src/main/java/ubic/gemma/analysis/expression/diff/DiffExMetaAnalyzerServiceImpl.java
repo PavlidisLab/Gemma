@@ -100,7 +100,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         /*
          * Second pass. Organize the results by gene
          */
-        Collection<DifferentialExpressionAnalysisResult> res2set = new HashSet<DifferentialExpressionAnalysisResult>();
+        Collection<DifferentialExpressionAnalysisResult> res2set = new HashSet<>();
         Map<Gene, Collection<DifferentialExpressionAnalysisResult>> gene2result = organizeResultsByGene(
                 updatedResultSets, res2set );
 

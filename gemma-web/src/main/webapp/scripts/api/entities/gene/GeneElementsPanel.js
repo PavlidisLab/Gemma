@@ -20,7 +20,7 @@ Gemma.GeneElementsPanel = Ext.extend( Ext.Panel, {
       } );
 
       Ext.apply( this, {
-         items : [ sdp, new Gemma.ProbeGrid( {
+         items : [ sdp, new Gemma.PlatformElementGrid( {
             geneId : this.geneId,
             height : 400,
             width : 600,

@@ -5,21 +5,37 @@
 <head>
 <title><fmt:message key="compositeSequence.title" /> ${ compositeSequence.name}</title>
 <jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/probe.grid.js' />
-
+<%-- deprecated. We should replace this with something tidier --%>
 <script type="text/javascript" type="text/javascript">
-   Ext.onReady( Gemma.ProbeBrowser.app.initOneDetail, Gemma.ProbeBrowser.app );
+   Ext.onReady( function() {
+      Ext.state.Manager.setProvider( new Ext.state.CookieProvider() );
+      Ext.QuickTips.init();
+
+      var csid = Ext.get( "cs" ) ? Ext.get( "cs" ).getValue() : null;
+      this.detailsGrid = new Gemma.GenomeAlignmentsGrid( {
+         renderTo : "probe-details",
+         height : 100,
+         width : 620
+      } );
+
+      this.detailsGrid.getStore().load( {
+         params : [ {
+            id : csid
+         } ]
+      } );
+
+   } );
 </script>
 </head>
-<body>
-	<h2>
+<body style="padding: 20px; margin: 20px;">
+	<h2 style="margin: 10px;">
 		<fmt:message key="compositeSequence.title" />
 		: ${ compositeSequence.name} on <a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }">
 			${compositeSequence.arrayDesign.shortName} </a> [${ compositeSequence.arrayDesign.name}]
 
 	</h2>
 
-	<table>
+	<table style="margin: 20px;">
 		<tr>
 			<td valign="top"><b> <fmt:message key="compositeSequence.description" /> <a class="helpLink" href="#"
 					onClick="showHelpTip(event, 'Description for the probe, usually provided by the manufacturer. It might not match the sequence annotation!'); return false"><img
@@ -99,9 +115,7 @@
 	</table>
 
 
-
-
-	<h3>Alignment information</h3>
-	<div id="probe-details"></div>
+	<h3 style="padding: 5px;">Alignment information</h3>
+	<div style="padding: 10px;" id="probe-details"></div>
 	<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
 </body>

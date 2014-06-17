@@ -111,7 +111,7 @@ public interface UserService {
     public Collection<UserGroup> findGroupsForUser( User user );
 
     /**
-     * A list of groups available (will be security-filtered)...might need to allow anonymous.
+     * A list of groups available to the current user (will be security-filtered)...might need to allow anonymous.
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<UserGroup> listAvailableGroups();

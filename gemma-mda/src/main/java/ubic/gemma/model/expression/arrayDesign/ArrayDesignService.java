@@ -69,7 +69,8 @@ public interface ArrayDesignService {
     public ArrayDesign create( ArrayDesign arrayDesign );
 
     /**
-     * delete sequence alignment results associated with the bioSequences for this array design.
+     * delete sequence alignment results associated with the bioSequences for this array design. This can indirectly
+     * affect other platforms that use the same sequences.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void deleteAlignmentData( ArrayDesign arrayDesign );
@@ -360,7 +361,7 @@ public interface ArrayDesignService {
 
     /**
      * @param arrayDesign
-     * @return how many experiments use this platform (not including experiment subsets)
+     * @return how many experiments use this platform (not including experiment subsets) security filtered
      */
     public int numExperiments( ArrayDesign arrayDesign );
 

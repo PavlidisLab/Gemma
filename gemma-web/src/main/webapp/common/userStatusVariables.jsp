@@ -31,5 +31,5 @@
 
 <%-- dump some other useful settings --%>
 <input type="hidden" id="coexpressionSearch.maxGenesPerQuery" value='${appConfig["gemma.coexpressionSearch.maxGenesPerQuery"]}' />
-<input type="hidden" id="coexpressionSearch.maxGenesPerCoexVisQuery" value='${appConfig["gemma.coexpressionSearch.maxGenesPerCoexVisQuery"]}' />
+<input type="hidden" id="coexpressionSearch.maxGenesPerCoexVisQuery" value='${appConfig["gemma.coexpressionSearch.maxGenesForQueryGenesOnly"]}' />
 <input type="hidden" id="coexpressionSearch.maxResultsPerQueryGene" value='${appConfig["gemma.coexpressionSearch.maxResultsPerQueryGene"]}' />

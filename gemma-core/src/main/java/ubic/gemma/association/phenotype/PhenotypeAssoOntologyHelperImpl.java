@@ -92,8 +92,22 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
     @Override
     public boolean areOntologiesAllLoaded() {
         /*
-         * FIXME: if these ontologies are not configured, we will never be ready. Check for valid configuration.
+         * if these ontologies are not configured, we will never be ready. Check for valid configuration.
          */
+        if ( !this.ontologyService.getDiseaseOntologyService().isEnabled() ) {
+            log.warn( "DO is not enabled" );
+            return false;
+        }
+
+        if ( !this.ontologyService.getHumanPhenotypeOntologyService().isEnabled() ) {
+            log.warn( "HPO" );
+            return false;
+        }
+
+        if ( !this.ontologyService.getMammalianPhenotypeOntologyService().isEnabled() ) {
+            log.warn( "MPO is not enabled" );
+            return false;
+        }
 
         return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
                 && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService

@@ -346,7 +346,7 @@ public class DifferentialExpressionSearchController {
         }
 
         log.info( "Got genes" );
-        // fixme why not just pass in the eeset and geneset (security filtering could happen there)
+        // FIXME why not just pass in the eeset and geneset (security filtering could happen there)
         final DifferentialExpressionSearchTaskCommand taskCommand = new DifferentialExpressionSearchTaskCommand( genes,
                 experiments, gsvo.getName(), eevo.getName() );
 

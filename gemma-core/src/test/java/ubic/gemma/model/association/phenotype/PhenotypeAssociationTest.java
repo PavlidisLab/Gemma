@@ -18,8 +18,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import gemma.gsec.SecurityService;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -31,6 +33,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
@@ -55,6 +58,9 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.security.authentication.UserDetailsImpl;
+import ubic.gemma.security.authentication.UserManager;
+import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -100,6 +106,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void setup() throws Exception {
 
         if ( !dosLoaded ) {
+            // fails if you have DO loaded
             os.getDiseaseOntologyService().loadTermsInNameSpace(
                     this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
@@ -114,6 +121,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() throws Exception {
+        this.runAsAdmin();
         Collection<PhenotypeAssociation> toRemove = new HashSet<>();
         for ( Gene g : this.geneService.loadAll() ) {
 
@@ -132,6 +140,25 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     }
 
+    // copied from AclAdviceTest
+    private void makeUser( String username ) {
+        try {
+            this.userManager.loadUserByUsername( username );
+        } catch ( UsernameNotFoundException e ) {
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+        }
+    }
+
+    @Autowired
+    private UserManager userManager;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private SecurityService securityService;
+
     @Test
     public void testFindBibliographicReference() {
         assertNotNull( this.phenotypeAssociationManagerService.findBibliographicReference( "1", null ) );
@@ -140,7 +167,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testFindCandidateGenes() {
 
-        Set<String> phenotypesValuesUri = new HashSet<String>();
+        Set<String> phenotypesValuesUri = new HashSet<>();
         phenotypesValuesUri.add( TEST_PHENOTYPE_URI );
 
         Collection<GeneEvidenceValueObject> geneValueObjects = this.phenotypeAssociationManagerService
@@ -150,6 +177,38 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertEquals( 1, geneValueObjects.size() );
 
         assertTrue( geneValueObjects.iterator().next().getTaxonId() != null );
+
+        // test other scenarios.
+        this.runAsAnonymous();
+        geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes( phenotypesValuesUri, null );
+        assertEquals( 1, geneValueObjects.size() );
+
+        // user creates evidence
+        String userName = RandomStringUtils.randomAlphabetic( 10 );
+        this.makeUser( userName );
+        this.runAsUser( userName );
+        String testuri = "http://purl.obolibrary.org/obo/DOID_14566";
+        createLiteratureEvidence( this.geneNCBI, testuri );
+
+        phenotypesValuesUri.add( "http://purl.obolibrary.org/obo/DOID_14566" );
+
+        // user can see their own data and public data
+        geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes( phenotypesValuesUri, null );
+        assertEquals( 1, geneValueObjects.size() );
+        assertEquals( 2, geneValueObjects.iterator().next().getPhenotypesValueUri().size() );
+
+        // anonymous can't see the user's data
+        this.runAsAnonymous();
+        geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes( phenotypesValuesUri, null );
+        assertEquals( 1, geneValueObjects.size() );
+        assertEquals( 1, geneValueObjects.iterator().next().getPhenotypesValueUri().size() );
+
+        // admin can see everything
+        this.runAsAdmin();
+        geneValueObjects = this.phenotypeAssociationManagerService.findCandidateGenes( phenotypesValuesUri, null );
+        assertEquals( 1, geneValueObjects.size() );
+        assertEquals( 2, geneValueObjects.iterator().next().getPhenotypesValueUri().size() );
+
     }
 
     @Test
@@ -265,6 +324,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         Collection<EvidenceValueObject> evidenceVO = this.phenotypeAssociationManagerService.findEvidenceByFilters(
                 this.humanTaxon.getId(), 10, null );
         assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
+
+        this.runAsAnonymous();
+        evidenceVO = this.phenotypeAssociationManagerService.findEvidenceByFilters( this.humanTaxon.getId(), 10, null );
+        assertTrue( evidenceVO.isEmpty() );
     }
 
     @Test

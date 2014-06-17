@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
@@ -178,9 +179,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
-
         return this.getExpressionExperimentSetDao().getExperimentValueObjectsInSet( id );
-
     }
 
     /**
@@ -227,7 +226,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.util.Collection)
+     * @see ExpressionExperimentSetService#load(java.util.Collection)
      */
     @Override
     @Transactional(readOnly = true)
@@ -256,7 +255,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadMySets()
+     * @see ExpressionExperimentSetService#loadMySets()
      */
     @Override
     @Transactional(readOnly = true)
@@ -297,7 +296,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#thaw(ubic.gemma.model.analysis.expression
+     * ExpressionExperimentSetService#thaw(ubic.gemma.model.analysis.expression
      * .ExpressionExperimentSet)
      */
     @Override
@@ -307,7 +306,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ExpressionExperimentSet)
      */
     @Override
     @Transactional
@@ -500,19 +499,19 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ExpressionExperimentSet)
      */
     @Override
-    protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleCreate(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
+    protected ExpressionExperimentSet handleCreate(
+            ExpressionExperimentSet expressionExperimentSet ) {
         return this.getExpressionExperimentSetDao().create( expressionExperimentSet );
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#delete(ExpressionExperimentSet)
      */
     @Override
-    protected void handleDelete( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
+    protected void handleDelete( ExpressionExperimentSet expressionExperimentSet ) {
         this.getExpressionExperimentSetDao().remove( expressionExperimentSet );
     }
 
@@ -530,7 +529,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
      */
     @Override
-    protected ubic.gemma.model.analysis.expression.ExpressionExperimentSet handleLoad( java.lang.Long id ) {
+    protected ExpressionExperimentSet handleLoad( java.lang.Long id ) {
         return this.getExpressionExperimentSetDao().load( id );
     }
 
@@ -544,22 +543,21 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(User)
      */
     @Override
-    protected java.util.Collection<ExpressionExperimentSet> handleLoadUserSets(
-            ubic.gemma.model.common.auditAndSecurity.User user ) {
-        // @todo implement protected java.util.Collection
-        // handleLoadUserSets(ubic.gemma.model.common.auditAndSecurity.User user)
+    protected java.util.Collection<ExpressionExperimentSet> handleLoadUserSets( User user ) {
+        // TODO implement this
+        // handleLoadUserSets(User user)
         throw new java.lang.UnsupportedOperationException(
-                "ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.handleLoadUserSets(ubic.gemma.model.common.auditAndSecurity.User user) Not implemented!" );
+                "ExpressionExperimentSetService.handleLoadUserSets(User user) Not implemented!" );
     }
 
     /**
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#update(ExpressionExperimentSet)
      */
     @Override
-    protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
+    protected void handleUpdate( ExpressionExperimentSet expressionExperimentSet ) {
 
         if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
             throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );

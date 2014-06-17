@@ -515,7 +515,16 @@ Gemma.CoexpressionGrid = Ext
             var fnd = data['foundGeneNodeDegree'];
             qnd = qnd ? qnd : "~1"; // exact value is missing - out of date information
             fnd = fnd ? fnd : "~1"; // exact value is missing - out of date information
-            return "<b>" + qnd + "</b>, " + fnd;
+
+            var qndr = data['queryGeneNodeDegreeRank'];
+            var fndr = data['foundGeneNodeDegreeRank'];
+
+            qndr = qndr ? qndr : "?";
+
+            fndr = fndr ? fndr : "?";
+
+            return "<span title='Rank=" + parseFloat( qndr ).toFixed( 2 ) + "'><b>" + qnd
+               + "</b></span>,<span title='Rank=" + parseFloat( fndr ).toFixed( 2 ) + "'>" + fnd + "</span>";
          },
 
          /**

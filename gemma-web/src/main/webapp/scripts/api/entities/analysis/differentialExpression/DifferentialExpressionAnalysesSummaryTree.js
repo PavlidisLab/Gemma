@@ -297,7 +297,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             // prepare download link
             return String
                .format(
-                  "<span style='cursor:pointer' ext:qtip='Download all differential expression data for this analysis in a tab-delimited  format' onClick='fetchDiffExpressionData({0})' > &nbsp; <img src='/Gemma/images/download.gif'/> &nbsp;  </span>",
+                  "<span class='link' ext:qtip='Download all differential expression data "
+                     + "for this analysis in a tab-delimited  format'"
+                     + " onClick='fetchDiffExpressionData({0})' > <i class='fa fa-download fa-lg' style='color:grey'></i></span>",
                   analysis.id );
          },
          getANOVAtypeText : function( numberOfFactors ) {
@@ -474,9 +476,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext
             /* provide link for visualization. */
             linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\'' + eeID + '\',\''
                + resultSet.resultSetId + '\',\'' + escape( factor )
-               + '\')" ext:qtip="Click to visualize differentially expressed probes for: ' + escape( factor )
-               + ' (FDR threshold=' + resultSet.threshold
-               + ')">&nbsp;<img src="/Gemma/images/icons/heatmapdiff.png">&nbsp;</span>';
+               + '\')" ext:qtip="View top differentially expressed genes for: ' + escape( factor ) + ' (FDR threshold='
+               + resultSet.threshold + ')">&nbsp;<img src="/Gemma/images/icons/heatmapdiff.png">&nbsp;</span>';
 
             var pValueDistImageSize = 16;
             var strippedFactorName = Ext.util.Format.stripTags( factor );

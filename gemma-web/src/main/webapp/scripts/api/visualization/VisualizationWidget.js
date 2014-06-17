@@ -154,6 +154,7 @@ Gemma.prepareProfiles = function( data ) {
             }
          }
       } else {
+         // FIXME this is an old-style page, we should make it a pop-up or improve it
          orderedGeneLinksArr.push( "<a href='/Gemma/compositeSequence/show.html?id=" + probeId
             + "' target='_blank' ext:qtip= '" + qtip + "'>Unmapped</a>" );
          orderedGeneNamesArr.push( "" );
@@ -1067,7 +1068,10 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
             items : [ browserWarning, '->', {
                xtype : 'button',
                ref : 'downloadDataBtn',
+               // border : true,
                icon : '/Gemma/images/download.gif',
+               // iconCls : 'fa fa-download fa-lg', // uses extension.
+               // glyph : 'xf0192FontAwesome', // ext 4
                cls : 'x-btn-text-icon',
                hidden : this.downloadLink === undefined,
                disabled : true, // enabled after
@@ -1316,7 +1320,7 @@ Gemma.sortByImportance = function( a, b ) {
    }
 
    if ( (!a.genes || a.genes.length < 1) && (!b.genes || b.genes.length < 1) ) {
-      return a.labelID > b.labelID;
+      return a.labelID > b.labelID ? -1 : 1;
    }
 
    if ( !a.genes || a.genes.length < 1 ) {
@@ -1331,7 +1335,7 @@ Gemma.sortByImportance = function( a, b ) {
    } else if ( a.genes[0].name < b.genes[0].name ) {
       return -1;
    } else {
-      return a.labelID > b.labelID;
+      return a.labelID > b.labelID ? -1 : 1;
    }
 
 };

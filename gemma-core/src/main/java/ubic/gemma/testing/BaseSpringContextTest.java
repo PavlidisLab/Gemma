@@ -346,6 +346,13 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
         return testHelper.getTestPersistentBasicExpressionExperiment();
     }
 
+    /**
+     * @return EE with no data; just bioassays, biomaterials, quantitation types and provided arrayDesign
+     */
+    protected ExpressionExperiment getTestPersistentBasicExpressionExperiment( ArrayDesign arrayDesign ) {
+        return testHelper.getTestPersistentBasicExpressionExperiment( arrayDesign );
+    }
+
     protected BibliographicReference getTestPersistentBibliographicReference( String accession ) {
         return testHelper.getTestPersistentBibliographicReference( accession );
     }

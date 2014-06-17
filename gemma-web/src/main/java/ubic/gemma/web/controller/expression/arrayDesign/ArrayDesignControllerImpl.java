@@ -77,6 +77,7 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.tasks.AbstractTask;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -741,13 +742,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
                     "message", "Platform with id=" + id + " not found" );
         }
-
+        // seems inefficient? but need security filtering.
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
-        Collection<Long> eeIds = new ArrayList<Long>();
-        for ( ExpressionExperiment object : ees ) {
-            eeIds.add( object.getId() );
-        }
-        String ids = StringUtils.join( eeIds.toArray(), "," );
+
+        String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
         return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
                 + ids ) );
     }

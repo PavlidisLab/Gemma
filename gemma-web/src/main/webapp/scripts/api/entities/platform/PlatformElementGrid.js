@@ -2,10 +2,10 @@ Ext.namespace( 'Gemma' );
 
 /**
  * 
- * @class Gemma.ProbeGrid
+ * @class Gemma.PlatformElementGrid
  * @extends Ext.grid.GridPanel
  */
-Gemma.ProbeGrid = Ext
+Gemma.PlatformElementGrid = Ext
    .extend(
       Ext.grid.GridPanel,
       {
@@ -246,7 +246,7 @@ Gemma.ProbeGrid = Ext
                } );
             }
 
-            Gemma.ProbeGrid.superclass.initComponent.call( this );
+            Gemma.PlatformElementGrid.superclass.initComponent.call( this );
 
             this.getStore().on( 'load', function( d ) {
                this.fireEvent( 'select', d[0] );
@@ -347,4 +347,4 @@ Gemma.ProbeGrid = Ext
 
       } );
 
-Ext.reg( 'probegrid', Gemma.ProbeGrid );
+Ext.reg( 'probegrid', Gemma.PlatformElementGrid );

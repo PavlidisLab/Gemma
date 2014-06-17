@@ -482,7 +482,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * 
      * @param phenptypeQuery
      * @param taxon can be null
+     * @deprecated not used
      */
+    @Deprecated
     @Override
     public Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon ) {
         Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<Taxon>();
@@ -494,7 +496,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             taxaForPhenotypeAssoc.add( taxon );
         }
 
-        // TODO FIX THIS SO GENES ARE RETURNED DIRECTLY (or fix caller to use gene ids)
+        // FIX THIS SO GENES ARE RETURNED DIRECTLY (or fix caller to use gene ids)
         for ( Taxon taxonForPA : taxaForPhenotypeAssoc ) {
             for ( GeneSetValueObject geneSet : geneSetSearch.findByPhenotypeName( phenptypeQuery, taxonForPA ) ) {
                 // don't bother adding empty groups

@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.apps.Blat;
 import ubic.gemma.apps.ShellDelegatingBlat;
 import ubic.gemma.externalDb.GoldenPathQuery;
@@ -387,12 +388,18 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      * @return
      */
     private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
+
+        Collection<Integer> seen = new HashSet<>();
+        int duplicates = 0;
         for ( BlatResult br : brs ) {
-            
-            /*
-             * FIXME are we getting duplicates?
-             */
-            
+
+            Integer hash = ProbeMapUtils.hashBlatResult( br );
+            if ( seen.contains( hash ) ) {
+                duplicates++;
+                continue;
+            }
+            seen.add( hash );
+
             assert br.getQuerySequence() != null;
             assert br.getQuerySequence().getName() != null;
             Taxon taxon = br.getQuerySequence().getTaxon();
@@ -418,6 +425,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             }
 
         }
+
+        if ( duplicates > 0 ) {
+            log.info( duplicates + " duplicate BLAT hits skipped" );
+        }
+
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
 

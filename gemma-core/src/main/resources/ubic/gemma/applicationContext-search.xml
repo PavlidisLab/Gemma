@@ -19,9 +19,7 @@
 		</property>
 		<property name="entitiesIndexer">
 			<bean class="org.compass.gps.device.hibernate.indexer.ScrollableHibernateIndexEntitiesIndexer">
-				<property name="performOrderById">
-					<value>false</value>
-				</property>
+				<!-- <property name="performOrderById"> <value>false</value> </property> -->
 			</bean>
 		</property>
 		<property name="parallelIndexExecutor">

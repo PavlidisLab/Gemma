@@ -18,16 +18,22 @@
  */
 package ubic.gemma.util;
 
+import gemma.gsec.model.Securable;
+import gemma.gsec.util.SecurityUtil;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.LockOptions;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -38,7 +44,7 @@ import org.hibernate.proxy.HibernateProxy;
 public class EntityUtils {
 
     /**
-     * Put the given entity into the Session, with LockMode.NONE
+     * Expert only. Put the given entity into the Session, with LockMode.NONE
      * <p>
      * Based on idea from {@link https://forum.hibernate.org/viewtopic.php?p=2284826#p2284826}
      * 
@@ -163,7 +169,8 @@ public class EntityUtils {
     }
 
     /**
-     * Obtain the implementation for a proxy. If target is not an instanceof HibernateProxy, target is returned.
+     * Expert only. Must be called within a session? Not sure why this is necessary. Obtain the implementation for a
+     * proxy. If target is not an instanceof HibernateProxy, target is returned.
      * 
      * @param target The object to be unproxied.
      * @return the underlying implementation.
@@ -182,6 +189,129 @@ public class EntityUtils {
      */
     public static boolean isProxy( Object target ) {
         return target instanceof HibernateProxy;
+    }
+
+    /**
+     * Expert use only. Used to expose some ACL information to the DAO layer (normally this happens in an interceptor).
+     * 
+     * @param securedclass Securable type
+     * @param ids
+     * @param groups
+     * @param showOnlyEditable
+     * @param showPublic also show public items (won't work if showOnlyEditable is true)
+     * @param sess
+     * @return filtered IDs, at the very least limited to those that are readable by the current user
+     */
+    public static Collection<Long> securityFilterIds( Class<? extends Securable> securedclass, Collection<Long> ids,
+            boolean showOnlyEditable, boolean showPublic, Session sess ) {
+
+        if ( ids.isEmpty() ) return ids;
+        if ( SecurityUtil.isUserAdmin() ) {
+            return ids;
+        }
+
+        /*
+         * Find groups user is a member of
+         */
+
+        String userName = SecurityUtil.getCurrentUsername();
+
+        boolean isAnonymous = SecurityUtil.isUserAnonymous();
+
+        if ( isAnonymous && ( showOnlyEditable || !showPublic ) ) {
+            return new HashSet<Long>();
+        }
+
+        String queryString = "select aoi.OBJECT_ID";
+        queryString += " from ACLOBJECTIDENTITY aoi";
+        queryString += " join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID ";
+        queryString += " join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
+        queryString += " where aoi.OBJECT_ID in (:ids)";
+        queryString += " and aoi.OBJECT_CLASS = :clazz and ";
+        queryString += addGroupAndUserNameRestriction( showOnlyEditable, showPublic );
+
+        // will be empty if anonymous
+        Collection<String> groups = sess
+                .createQuery(
+                        "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
+                .setParameter( "user", userName ).list();
+
+        // System.err.println( queryString.replace( ":ids", StringUtils.join( ids, "," ) )
+        // .replace( ":clazz", "'" + securedclass.getName() + "'" )
+        // .replace( ":groups", StringUtils.join( groups, "," ) ).replace( ":userName", "'" + userName + "'" ) );
+
+        Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedclass.getName() )
+                .setParameterList( "ids", ids );
+
+        if ( queryString.contains( ":groups" ) ) {
+            query.setParameterList( "groups", groups );
+        }
+
+        if ( queryString.contains( ":userName" ) ) {
+            query.setParameter( "userName", userName );
+        }
+
+        List<BigInteger> r = query.list();
+        Set<Long> rl = new HashSet<>();
+        for ( BigInteger bi : r ) {
+            rl.add( bi.longValue() );
+        }
+
+        if ( !ids.containsAll( rl ) ) {
+            // really an assertion, but being extra-careful
+            throw new SecurityException( "Security filter failure" );
+        }
+
+        return rl;
+    }
+
+    /**
+     * Have to add 'and' to start of this if it's a later clause
+     * 
+     * @param groups gruops this user belongs to (empty/ignored if anonymous)
+     * @param showOnlyEditable only show those the user has access to edit
+     * @param showPublic also show public items (wont work if showOnlyEditable is true)
+     * @author nicolas with fixes to generalize by paul, same code appears in the PhenotypeAssociationDaoImpl
+     */
+    private static String addGroupAndUserNameRestriction( boolean showOnlyEditable, boolean showPublic ) {
+
+        String sqlQuery = "";
+
+        if ( !SecurityUtil.isUserAnonymous() ) {
+
+            if ( showPublic && !showOnlyEditable ) {
+                sqlQuery += "  ((sid.PRINCIPAL = :userName";
+            } else {
+                sqlQuery += "  (sid.PRINCIPAL = :userName";
+            }
+
+            // if ( !groups.isEmpty() ) { // is it possible to be empty? If they are non-anonymous it will not be, there
+            // // will at least be GROUP_USER? Or that doesn't count?
+            sqlQuery += " or (ace.SID_FK in (";
+            // SUBSELECT
+            sqlQuery += " select sid.ID from USER_GROUP ug ";
+            sqlQuery += " join GROUP_AUTHORITY ga on ug.ID = ga.GROUP_FK ";
+            sqlQuery += " join ACLSID sid on sid.GRANTED_AUTHORITY=CONCAT('GROUP_', ga.AUTHORITY) ";
+            sqlQuery += " where ug.name in (:groups) ";
+            if ( showOnlyEditable ) {
+                sqlQuery += ") and ace.MASK = 2) "; // 2 = read-writable
+            } else {
+                sqlQuery += ") and (ace.MASK = 1 or ace.MASK = 2)) "; // 1 = read only
+            }
+            // }
+            sqlQuery += ") ";
+
+            if ( showPublic && !showOnlyEditable ) {
+                // publicly readable data.
+                sqlQuery += "or (ace.SID_FK = 4 and ace.MASK = 1)) "; // 4 =IS_AUTHENTICATED_ANONYMOUSLY
+            }
+
+        } else if ( showPublic && !showOnlyEditable ) {
+            // publicly readable data
+            sqlQuery += " (ace.SID_FK = 4 and ace.MASK = 1) "; // 4 = IS_AUTHENTICATED_ANONYMOUSLY
+        }
+
+        return sqlQuery;
     }
 
 }

@@ -263,7 +263,7 @@ public class UserManagerImpl implements UserManager {
     public List<String> findAllGroups() {
         Collection<UserGroup> groups = userService.listAvailableGroups();
 
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for ( UserGroup group : groups ) {
             result.add( group.getName() );
         }
@@ -330,7 +330,7 @@ public class UserManagerImpl implements UserManager {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
     public Collection<String> findGroupsForUser( String userName ) {
 
-        Collection<String> result = new HashSet<String>();
+        Collection<String> result = new HashSet<>();
 
         if ( !loggedIn() ) {
             return result;

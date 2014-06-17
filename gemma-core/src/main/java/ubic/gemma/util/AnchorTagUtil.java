@@ -77,8 +77,4 @@ public class AnchorTagUtil {
         return buf.toString();
     }
 
-    public static String getProbeLink( Long probeId, String link ) {
-        // FIXME this isn't the greatest page - it's kind of old-style.
-        return getLink( String.format( "/Gemma/compositeSequence/show.html?id=%d", probeId ), link, "" );
-    }
 }

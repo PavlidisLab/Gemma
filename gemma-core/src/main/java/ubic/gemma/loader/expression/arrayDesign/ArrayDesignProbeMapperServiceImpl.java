@@ -437,15 +437,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( db, blatResults, config );
 
-        // if ( results.isEmpty() ) {
-        // log.info( "No mappings for " + compositeSequence + " (" + blatResults.size() + " raw BLAT results)" );
-        // } else {
-        // assert results.size() == 1;
-        // Collection<BlatAssociation> hits = results.values().iterator().next();
-        // // if ( log.isDebugEnabled() )
-        // log.info( hits.size() + " mappings for " + compositeSequence + " (" + blatResults.size()
-        // + " raw BLAT results)" );
-        // }
         return results;
     }
 

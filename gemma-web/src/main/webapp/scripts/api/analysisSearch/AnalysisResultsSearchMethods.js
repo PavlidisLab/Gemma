@@ -7,7 +7,7 @@ Gemma.MIN_STRINGENCY = 1;
 
 Ext.onReady( function() {
    Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY = Ext.get( "coexpressionSearch.maxGenesPerQuery" ) ? Ext.get(
-      "coexpressionSearch.maxGenesPerQuery" ).getValue() : 500;
+      "coexpressionSearch.maxGenesPerQuery" ).getValue() : 125;
 } );
 
 // max suggested number of elements to use for a diff ex viz query

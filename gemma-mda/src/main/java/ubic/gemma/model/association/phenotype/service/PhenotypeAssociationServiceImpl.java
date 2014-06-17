@@ -135,10 +135,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUris, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
-            Collection<Long> externalDatabaseIds ) {
-        return this.phenotypeAssociationDao.findGenesWithPhenotypes( phenotypesValueUris, taxon, userName, groups,
-                isAdmin, showOnlyEditable, externalDatabaseIds );
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
+        return this.phenotypeAssociationDao.findGenesWithPhenotypes( phenotypesValueUris, taxon, showOnlyEditable,
+                externalDatabaseIds );
     }
 
     /** find all PhenotypeAssociation for a specific gene id */
@@ -188,7 +187,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     @Transactional(readOnly = true)
     public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit ) {
-        return this.phenotypeAssociationDao.findPrivateEvidenceId( userName, groups, taxonId, limit );
+        return this.phenotypeAssociationDao.findPrivateEvidenceId( taxonId, limit );
     }
 
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
@@ -197,8 +196,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
-        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
-                showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
+        return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable,
+                externalDatabaseIds, noElectronicAnnotation );
     }
 
     /** find all public phenotypes associated with genes on a specific taxon and containing the valuesUri */
@@ -207,8 +206,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
-        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri, userName, groups,
-                showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
+        return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable,
+                externalDatabaseIds, noElectronicAnnotation );
     }
 
     /** load an evidence given an ID */

@@ -5,8 +5,8 @@ excanvas.js
 typeface.js
 excanvas-text.js
 faces/
-jquery.qtip-1.0.0-rc3.min.js
+jquery.qtip.js
 jquery-ui-1.10.4.custom.js
 jquery.sparkline.js
-jShowOff/
+jquery.jshowoff.js
 cytoscapejs/

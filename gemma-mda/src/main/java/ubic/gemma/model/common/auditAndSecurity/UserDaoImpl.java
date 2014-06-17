@@ -212,6 +212,9 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getEmail() ).executeUpdate();
 
+        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
+                .setParameter( "id", user.getId() ).setParameter( "a", user.getEnabled() ? 1 : 0 ).executeUpdate();
+
         // / this.getSessionFactory().getCurrentSession().update( user ); // no SQL gets fired.
     }
 

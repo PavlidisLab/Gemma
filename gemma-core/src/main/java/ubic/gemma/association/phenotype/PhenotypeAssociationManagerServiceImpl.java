@@ -120,7 +120,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private static final int MAX_PHENOTYPES_FROM_ONTOLOGY = 100;
 
     @Autowired
-    private PhenotypeAssociationService associationService;
+    private PhenotypeAssociationService phenoAssocService;
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
@@ -188,7 +188,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             BibliographicReferenceValueObject bibliographicReferenceVO = new BibliographicReferenceValueObject(
                     bibliographicReference );
 
-            Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                     .findPhenotypesForBibliographicReference( pubMedId );
 
             Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
@@ -241,23 +241,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
-        Set<String> usedPhenotypes = this.associationService.loadAllUsedPhenotypeUris();
+        Set<String> usedPhenotypes = this.phenoAssocService.loadAllUsedPhenotypeUris();
         Map<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypeValueUris,
                 usedPhenotypes );
 
         Set<String> possibleChildrenPhenotypes = findAllPossibleChildren( phenotypesWithChildren );
 
-        String userName = "";
-        Collection<String> groups = new HashSet<String>();
-
-        if ( SecurityUtil.isUserLoggedIn() ) {
-
-            userName = this.userManager.getCurrentUsername();
-            groups = this.userManager.findAllGroups();
-        }
-
-        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = this.associationService.findGenesWithPhenotypes(
-                possibleChildrenPhenotypes, taxon, userName, groups, SecurityUtil.isUserAdmin(), false, null );
+        Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = this.phenoAssocService.findGenesWithPhenotypes(
+                possibleChildrenPhenotypes, taxon, false, null );
 
         return filterGenesWithPhenotypes( geneEvidenceValueObjects, phenotypesWithChildren );
     }
@@ -292,7 +283,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
         }
 
-        Set<String> usedPhenotypes = this.associationService.loadAllUsedPhenotypeUris();
+        Set<String> usedPhenotypes = this.phenoAssocService.loadAllUsedPhenotypeUris();
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
         Map<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypesValuesUri,
@@ -300,17 +291,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Set<String> possibleChildrenPhenotypes = findAllPossibleChildren( phenotypesWithChildren );
 
-        String userName = "";
-        Collection<String> groups = new HashSet<String>();
-
-        if ( SecurityUtil.isUserLoggedIn() ) {
-            userName = this.userManager.getCurrentUsername();
-            groups = this.userManager.findAllGroups();
-        }
-
-        Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.associationService
-                .findGenesWithPhenotypes( possibleChildrenPhenotypes, taxon, userName, groups,
-                        SecurityUtil.isUserAdmin(), showOnlyEditable, externalDatabaseIds );
+        Collection<GeneEvidenceValueObject> genesPhenotypeHelperObject = this.phenoAssocService
+                .findGenesWithPhenotypes( possibleChildrenPhenotypes, taxon, showOnlyEditable, externalDatabaseIds );
 
         return filterGenesWithPhenotypes( genesPhenotypeHelperObject, phenotypesWithChildren );
     }
@@ -327,7 +309,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         OntologyTerm ontologyTermFound = this.ontologyHelper.findOntologyTermByUri( phenotype );
         if ( ontologyTermFound == null ) throw new IllegalArgumentException( "No term found for URI: " + phenotype );
 
-        return this.associationService.findGenesForPhenotype( ontologyTermFound, taxonId, includeIEA );
+        return this.phenoAssocService.findGenesForPhenotype( ontologyTermFound, taxonId, includeIEA );
 
     }
 
@@ -345,18 +327,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         }
 
-        Set<String> usedPhenotypes = this.associationService.loadAllUsedPhenotypeUris();
+        Set<String> usedPhenotypes = this.phenoAssocService.loadAllUsedPhenotypeUris();
         Map<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotype( phenotypeUris, usedPhenotypes );
 
         Map<String, Collection<? extends GeneValueObject>> results = new HashMap<>();
-
-        String userName = "";
-        Collection<String> groups = new HashSet<>();
-        if ( SecurityUtil.isUserLoggedIn() ) {
-            userName = this.userManager.getCurrentUsername();
-            groups = this.userManager.findAllGroups();
-        }
-        boolean userAdmin = SecurityUtil.isUserAdmin();
 
         /*
          * FIXME if this can be done 'in bulk' it would be faster ...
@@ -364,8 +338,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( Entry<String, Set<String>> el : phenotypesWithChildren.entrySet() ) {
             String queryPhenotype = el.getKey();
 
-            Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = this.associationService
-                    .findGenesWithPhenotypes( phenotypesWithChildren.keySet(), taxon, userName, groups, userAdmin, false, null );
+            Collection<GeneEvidenceValueObject> geneEvidenceValueObjects = this.phenoAssocService
+                    .findGenesWithPhenotypes( phenotypesWithChildren.keySet(), taxon, false, null );
 
             results.put( queryPhenotype, geneEvidenceValueObjects );
 
@@ -394,17 +368,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             if ( userName == null ) {
                 if ( SecurityUtil.isUserAdmin() ) {
-                    paIds = this.associationService.findPrivateEvidenceId( null, null, taxonId, limit );
+                    paIds = this.phenoAssocService.findPrivateEvidenceId( null, null, taxonId, limit );
                 } else {
-                    paIds = this.associationService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
+                    paIds = this.phenoAssocService.findPrivateEvidenceId( this.userManager.getCurrentUsername(),
                             this.userManager.findAllGroups(), taxonId, limit );
                 }
             } else {
-                paIds = this.associationService.findPrivateEvidenceId( userName, this.userManager.findAllGroups(),
+                paIds = this.phenoAssocService.findPrivateEvidenceId( userName, this.userManager.findAllGroups(),
                         taxonId, limit );
             }
 
-            Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                     .findPhenotypeAssociationWithIds( paIds );
 
             evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
@@ -425,7 +399,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId ) {
 
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findPhenotypeAssociationForGeneId( geneId );
 
         Collection<EvidenceValueObject> evidenceValueObjects = this.convert2ValueObjects( phenotypeAssociations );
@@ -454,7 +428,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             externalDatabaseIds = evidenceFilter.getExternalDatabaseIds();
         }
 
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findPhenotypeAssociationForGeneIdAndDatabases( geneId, externalDatabaseIds );
 
         if ( evidenceFilter != null && evidenceFilter.isShowOnlyEditable() ) {
@@ -466,7 +440,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // add all homologue evidence
         evidenceValueObjects.addAll( findHomologueEvidence( geneId, evidenceFilter ) );
 
-        flagEvidence( evidenceValueObjects, phenotypesValuesUri, this.associationService.loadAllUsedPhenotypeUris() );
+        flagEvidence( evidenceValueObjects, phenotypesValuesUri, this.phenoAssocService.loadAllUsedPhenotypeUris() );
 
         return evidenceValueObjects;
     }
@@ -481,7 +455,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI ) {
 
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findPhenotypeAssociationForGeneNCBI( geneNCBI );
 
         return this.convert2ValueObjects( phenotypeAssociations );
@@ -490,7 +464,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** return the list of the owners that have evidence in the system */
     @Override
     public Collection<String> findEvidenceOwners() {
-        return this.associationService.findEvidenceOwners();
+        return this.phenoAssocService.findEvidenceOwners();
     }
 
     /**
@@ -500,7 +474,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<CharacteristicValueObject> findExperimentCategory() {
-        return this.associationService.findEvidenceCategoryTerms();
+        return this.phenoAssocService.findEvidenceCategoryTerms();
     }
 
     /**
@@ -528,7 +502,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<ExternalDatabaseValueObject> findExternalDatabasesWithEvidence() {
 
         Collection<ExternalDatabaseValueObject> exDatabases = ExternalDatabaseValueObject
-                .fromEntity( this.associationService.findExternalDatabasesWithEvidence() );
+                .fromEntity( this.phenoAssocService.findExternalDatabasesWithEvidence() );
 
         // id of databases we want to exclude in the filter
         String excludedDefaultDatabases = Settings.getString( "gemma.neurocarta.exluded_database_id" );
@@ -618,7 +592,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         assert id != null;
 
-        PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
+        PhenotypeAssociation phenotypeAssociation = this.phenoAssocService.load( id );
 
         if ( phenotypeAssociation == null ) {
             return null;
@@ -636,7 +610,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes() {
-        return this.associationService.loadAllNeurocartaPhenotypes();
+        return this.phenoAssocService.loadAllNeurocartaPhenotypes();
     }
 
     /**
@@ -675,7 +649,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName,
             Integer limit ) {
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findEvidencesWithExternalDatabaseName( externalDatabaseName, limit );
 
         return this.convert2ValueObjects( phenotypeAssociations );
@@ -692,7 +666,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public DiffExpressionEvidenceValueObject loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId ) {
 
-        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.associationService
+        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenoAssocService
                 .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId, 1L );
 
         if ( !differentialExpressionEvidence.isEmpty() ) {
@@ -709,7 +683,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     @Transactional(readOnly = true)
     public Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName() {
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findEvidencesWithoutExternalDatabaseName();
 
         return this.convert2ValueObjects( phenotypeAssociations );
@@ -726,13 +700,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
 
         // find statistics the external databases sources, each file download path depends on its name
-        externalDatabaseStatisticsValueObjects.addAll( this.associationService
+        externalDatabaseStatisticsValueObjects.addAll( this.phenoAssocService
                 .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ) );
         // manual curation and give path to download the file
-        externalDatabaseStatisticsValueObjects.add( this.associationService
+        externalDatabaseStatisticsValueObjects.add( this.phenoAssocService
                 .loadStatisticsOnManualCuration( PhenotypeAssociationConstants.MANUAL_CURATION_FILE_LOCATION ) );
         // total
-        externalDatabaseStatisticsValueObjects.add( this.associationService
+        externalDatabaseStatisticsValueObjects.add( this.phenoAssocService
                 .loadStatisticsOnAllEvidence( PhenotypeAssociationConstants.ALL_PHENOCARTA_ANNOTATIONS_FILE_LOCATION ) );
 
         return externalDatabaseStatisticsValueObjects;
@@ -756,7 +730,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .load( geneDifferentialExpressionMetaAnalysisId );
 
         // check that no evidence already exists with that metaAnalysis
-        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.associationService
+        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenoAssocService
                 .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId, 1L );
 
         if ( !differentialExpressionEvidence.isEmpty() ) {
@@ -836,7 +810,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         assert !phenotypeAssociation.getPhenotypes().isEmpty();
 
-        phenotypeAssociation = this.associationService.create( phenotypeAssociation );
+        phenotypeAssociation = this.phenoAssocService.create( phenotypeAssociation );
 
         // updates the gene in the cache FIXME is this the right way to enforce this?
         /*
@@ -862,7 +836,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
-        PhenotypeAssociation evidence = this.associationService.load( id );
+        PhenotypeAssociation evidence = this.phenoAssocService.load( id );
 
         if ( evidence != null ) {
 
@@ -870,7 +844,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 this.databaseEntryDao.remove( evidence.getEvidenceSource().getId() );
             }
 
-            this.associationService.remove( evidence );
+            this.phenoAssocService.remove( evidence );
 
         } else {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -891,7 +865,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
 
         // checking if there is something to delete
-        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.associationService
+        Collection<DifferentialExpressionEvidence> differentialExpressionEvidence = this.phenoAssocService
                 .loadEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId, null );
         if ( differentialExpressionEvidence.isEmpty() ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -900,7 +874,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         for ( DifferentialExpressionEvidence diffExpressionEvidence : differentialExpressionEvidence ) {
-            this.associationService.remove( diffExpressionEvidence );
+            this.phenoAssocService.remove( diffExpressionEvidence );
         }
 
         return validateEvidenceValueObject;
@@ -974,7 +948,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // all phenotypes currently in the database
-        Set<String> allPhenotypesInDatabase = this.associationService.loadAllUsedPhenotypeUris();
+        Set<String> allPhenotypesInDatabase = this.phenoAssocService.loadAllUsedPhenotypeUris();
         if ( allPhenotypesInDatabase.isEmpty() ) {
             return orderedPhenotypesFromOntology;
         }
@@ -996,7 +970,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
              * This is just for the case where ontology isn't loaded; so we can still get results. But that means only
              * results are terms that are already used in a phenotype.
              */
-            Collection<PhenotypeValueObject> allNeurocartaPhenotypes = this.associationService
+            Collection<PhenotypeValueObject> allNeurocartaPhenotypes = this.phenoAssocService
                     .loadAllNeurocartaPhenotypes();
             for ( PhenotypeValueObject pvo : allNeurocartaPhenotypes ) {
 
@@ -1122,7 +1096,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return validateEvidenceValueObject;
         }
 
-        PhenotypeAssociation phenotypeAssociation = this.associationService.load( modifedEvidenceValueObject.getId() );
+        PhenotypeAssociation phenotypeAssociation = this.phenoAssocService.load( modifedEvidenceValueObject.getId() );
 
         if ( phenotypeAssociation == null ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -1153,7 +1127,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.phenotypeAssoManagerServiceHelper
                 .populateModifiedValues( modifedEvidenceValueObject, phenotypeAssociation );
 
-        this.associationService.update( phenotypeAssociation );
+        this.phenoAssocService.update( phenotypeAssociation );
 
         return validateEvidenceValueObject;
     }
@@ -1254,9 +1228,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // this one is a special case, not actually linked to an external database
                 if ( externalDatabaseValueObject.getName().equalsIgnoreCase(
                         PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
-                    phenotypeAssociations = this.associationService.findEvidencesWithoutExternalDatabaseName();
+                    phenotypeAssociations = this.phenoAssocService.findEvidencesWithoutExternalDatabaseName();
                 } else {
-                    phenotypeAssociations = this.associationService.findEvidencesWithExternalDatabaseName(
+                    phenotypeAssociations = this.phenoAssocService.findEvidencesWithExternalDatabaseName(
                             externalDatabaseValueObject.getName(), null );
                 }
 
@@ -1439,7 +1413,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     geneDiffExMetaAnalysisSummaryValueObject );
 
             // set the count, how many evidences where created from the specific meta analysis
-            diffExpressionEvidenceValueObject.setNumEvidenceFromSameMetaAnalysis( this.associationService
+            diffExpressionEvidenceValueObject.setNumEvidenceFromSameMetaAnalysis( this.phenoAssocService
                     .countEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysis
                             .getId() ) );
         }
@@ -1513,7 +1487,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             // rule to determine if its an update
             if ( evidence.getId() != null ) {
 
-                PhenotypeAssociation phenotypeAssociation = this.associationService.load( evidence.getId() );
+                PhenotypeAssociation phenotypeAssociation = this.phenoAssocService.load( evidence.getId() );
 
                 if ( phenotypeAssociation == null ) {
                     validateEvidenceValueObject = new ValidateEvidenceValueObject();
@@ -1610,7 +1584,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** Checks to see if the evidence is already in the database */
     private EvidenceValueObject evidenceAlreadyInDatabase( EvidenceValueObject evidence ) {
 
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.phenoAssocService
                 .findPhenotypeAssociationForGeneNCBI( evidence.getGeneNCBI(), evidence.getPhenotypesValueUri() );
 
         Collection<EvidenceValueObject> evidenceValueObjects = convert2ValueObjects( phenotypeAssociations );
@@ -1678,7 +1652,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesVO;
     }
 
-    /** filter evidence by owned by user or shared write access */
+    /**
+     * filter evidence by owned by user or shared write access
+     */
     private Collection<PhenotypeAssociation> filterPhenotypeAssociationsMyAnnotation(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
@@ -1744,32 +1720,30 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             // show only my annotation was chosen
             if ( showOnlyEditable ) {
                 // show public owned by the user
-                publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
+                publicPhenotypesGenesAssociations = this.phenoAssocService.findPublicPhenotypesGenesAssociations(
                         taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
 
                 // show all private owned by the user or shared by a group
-                privatePhenotypesGenesAssociations = this.associationService.findPrivatePhenotypesGenesAssociations(
+                privatePhenotypesGenesAssociations = this.phenoAssocService.findPrivatePhenotypesGenesAssociations(
                         taxon, null, userName, groups, showOnlyEditable, externalDatabaseIds, noElectronicAnnotation );
             } else {
                 // logged in, but not filtered. all public evidences
-                publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations(
+                publicPhenotypesGenesAssociations = this.phenoAssocService.findPublicPhenotypesGenesAssociations(
                         taxon, null, null, groups, false, externalDatabaseIds, noElectronicAnnotation );
 
                 if ( isAdmin ) {
                     // show all private since admin
-                    privatePhenotypesGenesAssociations = this.associationService
-                            .findPrivatePhenotypesGenesAssociations( taxon, null, null, null, false,
-                                    externalDatabaseIds, noElectronicAnnotation );
+                    privatePhenotypesGenesAssociations = this.phenoAssocService.findPrivatePhenotypesGenesAssociations(
+                            taxon, null, null, null, false, externalDatabaseIds, noElectronicAnnotation );
                 } else {
                     // show all private owned by the user or shared by a group
-                    privatePhenotypesGenesAssociations = this.associationService
-                            .findPrivatePhenotypesGenesAssociations( taxon, null, userName, groups, false,
-                                    externalDatabaseIds, noElectronicAnnotation );
+                    privatePhenotypesGenesAssociations = this.phenoAssocService.findPrivatePhenotypesGenesAssociations(
+                            taxon, null, userName, groups, false, externalDatabaseIds, noElectronicAnnotation );
                 }
             }
         } else if ( !showOnlyEditable ) {
             // anonymous user
-            publicPhenotypesGenesAssociations = this.associationService.findPublicPhenotypesGenesAssociations( taxon,
+            publicPhenotypesGenesAssociations = this.phenoAssocService.findPublicPhenotypesGenesAssociations( taxon,
                     null, null, null, false, externalDatabaseIds, noElectronicAnnotation );
         }
 
@@ -1976,7 +1950,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<PhenotypeAssociation> homologuePhenotypeAssociations = new HashSet<PhenotypeAssociation>();
 
         for ( Gene homologue : homologues ) {
-            Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.associationService
+            Collection<PhenotypeAssociation> currHomologuePhenotypeAssociations = this.phenoAssocService
                     .findPhenotypeAssociationForGeneIdAndDatabases( homologue.getId(), externalDatabaseIDs );
             homologuePhenotypeAssociations.addAll( currHomologuePhenotypeAssociations );
         }
@@ -2043,7 +2017,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> phenotypesFound = new HashSet<CharacteristicValueObject>();
 
         // Phenotype ---> Genes
-        Map<String, Set<Integer>> publicPhenotypesGenesAssociations = this.associationService
+        Map<String, Set<Integer>> publicPhenotypesGenesAssociations = this.phenoAssocService
                 .findPublicPhenotypesGenesAssociations( taxon, phenotypesFoundAndChildren, null, null, false, null,
                         false );
 

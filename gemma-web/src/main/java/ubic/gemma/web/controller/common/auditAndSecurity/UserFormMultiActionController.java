@@ -74,8 +74,6 @@ public class UserFormMultiActionController extends BaseController {
     public void editUser( HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         String email = request.getParameter( "email" );
-        // String firstname = request.getParameter( "firstname" );
-        // String lastname = request.getParameter( "lastname" );
         String password = request.getParameter( "password" );
         String passwordConfirm = request.getParameter( "passwordConfirm" );
         String oldPassword = request.getParameter( "oldpassword" );
@@ -258,9 +256,8 @@ public class UserFormMultiActionController extends BaseController {
         mailMessage.setFrom( Settings.getAdminEmailAddress() );
         mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
         try {
-            Map<String, Object> model = new HashMap<String, Object>();
+            Map<String, Object> model = new HashMap<>();
             model.put( "username", username );
-
             model.put( "password", password );
 
             /*
@@ -280,7 +277,7 @@ public class UserFormMultiActionController extends BaseController {
             saveMessage( request,
                     getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
         } catch ( Exception e ) {
-            log.error( "Couldn't send email to " + email, e );
+            throw new RuntimeException( "Couldn't send password change confirmation email to " + email, e );
         }
 
     }

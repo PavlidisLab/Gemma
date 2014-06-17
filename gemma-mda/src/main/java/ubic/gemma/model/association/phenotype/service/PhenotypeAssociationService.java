@@ -56,8 +56,7 @@ public interface PhenotypeAssociationService {
      * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
     public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
-            Collection<Long> externalDatabaseIds );
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /**
      * @param phenotype

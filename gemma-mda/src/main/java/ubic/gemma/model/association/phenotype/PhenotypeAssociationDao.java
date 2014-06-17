@@ -65,8 +65,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
     public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
-            Collection<Long> externalDatabaseIds );
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
     /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
@@ -103,37 +102,31 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
     /** find private evidence id that the user can modifiable or own */
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit );
+    public Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit );
 
     /**
      * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
      * 
      * @param taxon
      * @param valuesUri
-     * @param userName
-     * @param groups
      * @param showOnlyEditable
      * @param externalDatabaseIds
      * @return
      */
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
-            boolean noElectronicAnnotation );
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
     /**
      * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
      * 
      * @param taxon
      * @param valuesUri
-     * @param userName
-     * @param groups
      * @param showOnlyEditable
      * @param externalDatabaseIds
      * @return
      */
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
-            boolean noElectronicAnnotation );
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
     public Collection<String> loadAllDescription();
 

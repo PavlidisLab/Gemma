@@ -188,7 +188,8 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long groupId, final Integer limit ) {
 
-        // FIXME inefficient....difficult to get a subset efficiently with security filtering
+        // FIXME inefficient....difficult to get a subset efficiently with security filtering; could use
+        // EntityUtils.securityfilter
         Collection<ExpressionExperimentValueObject> experimentInSet = expressionExperimentSetService
                 .getExperimentValueObjectsInSet( groupId );
 

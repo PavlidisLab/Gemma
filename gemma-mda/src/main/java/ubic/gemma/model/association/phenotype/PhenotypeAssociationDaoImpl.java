@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import gemma.gsec.util.SecurityUtil;
+
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -72,6 +74,34 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
         super( PhenotypeAssociation.class );
         super.setSessionFactory( sessionFactory );
+    }
+
+    /**
+     * @param sqlQuery
+     * @param queryObject
+     */
+    public void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return;
+        }
+
+        String userName = SecurityUtil.getCurrentUsername();
+
+        // if user is member of any groups.
+        if ( sqlQuery.contains( ":groups" ) ) {
+            Collection<String> groups = this
+                    .getSessionFactory()
+                    .getCurrentSession()
+                    .createQuery(
+                            "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
+                    .setParameter( "user", userName ).list();
+            queryObject.setParameterList( "groups", groups );
+        }
+
+        if ( sqlQuery.contains( ":userName" ) ) {
+            queryObject.setParameter( "userName", userName );
+        }
+
     }
 
     @Override
@@ -190,7 +220,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Session sess = this.getSessionFactory().getCurrentSession();
 
-        String q = "select distinct ph.gene, p.valueUri, p.evidenceCode from PhenotypeAssociation ph join ph.phenotypes p where p.valueUri in (:t)";
+        String q = "select distinct ph.gene, p.valueUri, p.evidenceCode "
+                + " from PhenotypeAssociation ph join ph.phenotypes p where p.valueUri in (:t)";
 
         Query query = sess.createQuery( q );
 
@@ -229,48 +260,54 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return result;
     }
 
-    /*
-     * find Genes link to a phenotype taking into account private and public evidence Here on the case : 1- Admin 2-
-     * user not logged in 3- user logged in only showing what he has read acces 4- user logged in only showing what he
-     * has write access (non-Javadoc)
+    /**
+     * Key method: find Genes link to a phenotype taking into account private and public evidence Here on the cases :
+     * <ul>
+     * <li>1- Admin - can see anything
+     * <li>2- user not logged in - only public data
+     * <li>3- user logged in only showing what he has read access - public, shared + owned
+     * <li>4- user logged in only showing what he has write access - owned.
+     * </ul>
      * 
      * @see ubic.gemma.model.association.phenotype.PhenotypeAssociationDao#findGeneWithPhenotypes
      */
     @Override
-    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
-            String userName, Collection<String> groups, boolean isAdmin, boolean showOnlyEditable,
-            Collection<Long> externalDatabaseIds ) {
+    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypeUris, Taxon taxon,
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds ) {
 
-        Map<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
-
-        if ( phenotypesValueUri.isEmpty() ) {
-            return genesWithPhenotypes.values();
+        if ( phenotypeUris.isEmpty() ) {
+            return new HashSet<>();
         }
 
-        String sqlSelectQuery = "select distinct CHROMOSOME_FEATURE.ID as gid, CHROMOSOME_FEATURE.NCBI_GENE_ID, CHROMOSOME_FEATURE.OFFICIAL_NAME, "
-                + "CHROMOSOME_FEATURE.OFFICIAL_SYMBOL, tax.ID as taxonid, tax.COMMON_NAME, CHARACTERISTIC.VALUE_URI ";
-        /*
-         * 0: gene id 1: ncbi id 2: name 3: symbol 4: taxon id 5: taxon name 6: characteristic value URI
-         */
+        // build query.
+        // base query; 0: gene id 1: ncbi id 2: name 3: symbol 4: taxon id 5: taxon name 6: characteristic value URI
+        String sqlSelectQuery = "select distinct gene.ID as gid, gene.NCBI_GENE_ID, gene.OFFICIAL_NAME, "
+                + "gene.OFFICIAL_SYMBOL, tax.ID as taxonid, tax.COMMON_NAME, charac.VALUE_URI ";
 
-        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false );
+        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false, false );
 
-        sqlQuery += addValuesUriToQuery( "and", phenotypesValueUri );
+        sqlQuery += addValuesUriToQuery( SecurityUtil.isUserAdmin() ? "" : "and", phenotypeUris );
 
-        // admin can see all there is no specific condition on security
-
-        if ( !isAdmin ) {
-            sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, true );
+        if ( !SecurityUtil.isUserAdmin() ) {
+            if ( !sqlQuery.trim().endsWith( "where" ) ) {
+                sqlQuery += " and ";
+            }
+            sqlQuery += addGroupAndUserNameRestriction( showOnlyEditable, true );
         }
-
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
-        // log.info( sqlQuery );
+        // create query and set parameters.
+        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        queryObject.setParameterList( "valueUris", phenotypeUris );
 
-        populateGenesWithPhenotypes( sqlQuery, genesWithPhenotypes );
+        if ( sqlQuery.contains( ":taxonId" ) ) {
+            queryObject.setParameter( "taxonId", taxon.getId() );
+        }
+        addUserAndGroupParameters( sqlQuery, queryObject );
 
-        return genesWithPhenotypes.values();
+        return populateGenesWithPhenotypes( queryObject );
+
     }
 
     @Override
@@ -289,8 +326,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String findByExternalDatabase = "";
         boolean excludeManualCuration = false;
         boolean excludeExternalDatabase = false;
-        Collection<PhenotypeAssociation> manualCuration = new HashSet<PhenotypeAssociation>();
-        Collection<PhenotypeAssociation> evidenceWithSource = new HashSet<PhenotypeAssociation>();
+        Collection<PhenotypeAssociation> manualCuration = new HashSet<>();
+        Collection<PhenotypeAssociation> evidenceWithSource = new HashSet<>();
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
             String ids = "";
@@ -372,18 +409,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     /** find PhenotypeAssociations associated with a BibliographicReference */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select phe from PhenotypeAssociation as phe join phe.phenotypeAssociationPublications as pub join pub.citation as c join c.pubAccession as acc where acc.accession=:pubMedID",
-                        "pubMedID", pubMedID );
+        return this.getHibernateTemplate().findByNamedParam(
+                "select phe from PhenotypeAssociation as phe join phe.phenotypeAssociationPublications as pub "
+                        + "join pub.citation as c join c.pubAccession as acc where acc.accession=:pubMedID",
+                "pubMedID", pubMedID );
     }
 
     /**
-     * find private evidence id that the user can modifiable or own
+     * find private evidence id that the user can modifiy
      */
     @Override
-    public Set<Long> findPrivateEvidenceId( String userName, Collection<String> groups, Long taxonId, Integer limit ) {
+    public Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit ) {
 
         String limitAbs = "";
         String orderBy = "";
@@ -396,23 +432,34 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             limitAbs = "limit " + limit;
         }
 
-        Set<Long> ids = new HashSet<Long>();
+        Set<Long> ids = new HashSet<>();
 
-        String sqlQuery = "select distinct PHENOTYPE_ASSOCIATION.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
+        String sqlQuery = "select distinct phen.ID ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false, true );
 
-        // if admin
-        if ( userName != null ) {
-            sqlQuery += addGroupAndUserNameRestriction( userName, groups, true, false );
+        if ( !SecurityUtil.isUserAdmin() ) { // admins have no restrictions.
+            if ( !sqlQuery.trim().endsWith( "where" ) ) {
+                sqlQuery += " AND ";
+            }
+            sqlQuery += addGroupAndUserNameRestriction( true, false );
         }
 
         if ( taxonId != null ) {
-            sqlQuery += "and tax.ID = " + taxonId + " ";
+            if ( !sqlQuery.trim().endsWith( "where" ) ) {
+                sqlQuery += " AND ";
+            }
+            sqlQuery += " tax.ID = :taxonId ";
         }
 
         sqlQuery += orderBy + limitAbs;
 
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+
+        if ( taxonId != null ) {
+            queryObject.setParameter( "taxonId", taxonId );
+        }
+
+        addUserAndGroupParameters( sqlQuery, queryObject );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
@@ -428,25 +475,25 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
     @Override
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
-            boolean noElectronicAnnotation ) {
-
-        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
 
         /*
          * At this level of the application, we can't access acls. The reason for this so we don't get uneven page
          * numbers. ACESID 4 is anonymous; MASK=1 is read.
          */
-        String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
-        sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
-        sqlQuery += "and PHENOTYPE_ASSOCIATION.ID "
-                + "not in "
-                + "(select PHENOTYPE_ASSOCIATION.ID from CHARACTERISTIC"
-                + " inner join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID "
-                + "inner join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.ID = PHENOTYPE_ASSOCIATION.GENE_FK "
-                + "inner join TAXON tax on tax.ID = CHROMOSOME_FEATURE.TAXON_FK "
-                + "inner join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.ID = aoi.OBJECT_ID "
+        String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true, false );
+        if ( !sqlQuery.trim().endsWith( "where" ) ) {
+            sqlQuery += " and ";
+        }
+        sqlQuery += addGroupAndUserNameRestriction( showOnlyEditable, false );
+        sqlQuery += "and phen.ID not in "
+                + "(select phen.ID from CHARACTERISTIC as charac "
+                + " inner join PHENOTYPE_ASSOCIATION as phen on charac.PHENOTYPE_ASSOCIATION_FK = phen.ID "
+                + "inner join CHROMOSOME_FEATURE as gene on gene.ID = phen.GENE_FK "
+                + "inner join TAXON tax on tax.ID = gene.TAXON_FK "
+                // ACL
+                + "inner join ACLOBJECTIDENTITY aoi on phen.ID = aoi.OBJECT_ID "
                 + "inner join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID "
                 + "inner join ACLSID sid on sid.ID = aoi.OWNER_SID_FK where ace.MASK = 1 and ace.SID_FK = 4 "
                 + "and aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE + ") ";
@@ -458,9 +505,19 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += addNoIEAEvidenceCodeQuery();
         }
 
-        populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
+        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
-        return phenotypesGenesAssociations;
+        if ( sqlQuery.contains( ":valueUris" ) ) {
+            queryObject.setParameterList( "valueUris", valuesUri );
+        }
+
+        if ( sqlQuery.contains( ":taxonId" ) ) {
+            queryObject.setParameter( "taxonId", taxon.getId() );
+        }
+
+        addUserAndGroupParameters( sqlQuery, queryObject );
+        return populateGenesAssociations( queryObject );
+
     }
 
     /*
@@ -474,16 +531,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
-            String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
-            boolean noElectronicAnnotation ) {
+            boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
 
-        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
-
-        String sqlQuery = "select CHROMOSOME_FEATURE.NCBI_GENE_ID, CHARACTERISTIC.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
+        String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true, false );
 
         // rule to find public: anonymous, READ.
-        sqlQuery += "and ace.MASK = 1 and ace.SID_FK = 4 ";
+        if ( !sqlQuery.trim().endsWith( "where" ) ) {
+            sqlQuery += " and ";
+        }
+        sqlQuery += " ace.MASK = 1 and ace.SID_FK = 4 ";
         sqlQuery += addTaxonToQuery( "and", taxon );
         sqlQuery += addValuesUriToQuery( "and", valuesUri );
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
@@ -493,15 +550,28 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
 
         if ( showOnlyEditable ) {
-            sqlQuery += "and PHENOTYPE_ASSOCIATION.ID in ( select PHENOTYPE_ASSOCIATION.ID ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
-            sqlQuery += addGroupAndUserNameRestriction( userName, groups, showOnlyEditable, false );
+            sqlQuery += "and phen.ID in ( select phen.ID ";
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false, false );
+            if ( !sqlQuery.trim().endsWith( "where" ) ) {
+                sqlQuery += " and ";
+            }
+            sqlQuery += addGroupAndUserNameRestriction( showOnlyEditable, false );
             sqlQuery += ") ";
         }
 
-        populateGenesAssociations( sqlQuery, phenotypesGenesAssociations );
+        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
-        return phenotypesGenesAssociations;
+        if ( sqlQuery.contains( ":valueUris" ) ) {
+            queryObject.setParameterList( "valueUris", valuesUri );
+        }
+
+        if ( sqlQuery.contains( ":taxonId" ) ) {
+            queryObject.setParameter( "taxonId", taxon.getId() );
+        }
+
+        addUserAndGroupParameters( sqlQuery, queryObject );
+        return populateGenesAssociations( queryObject );
+
     }
 
     @Override
@@ -517,6 +587,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return ( PhenotypeAssociation ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" ).setParameter( "id", id )
                 .uniqueResult();
+    }
+
+    @Override
+    public Collection<String> loadAllDescription() {
+        return this.getHibernateTemplate().find( "select distinct p.description from PhenotypeAssociation as p " );
     }
 
     /**
@@ -551,13 +626,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return new HashSet<String>( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" )
                 .setCacheable( true ).setCacheRegion( null ).list() );
-    }
-
-    @Override
-    public Collection<String> loadAllDescription() {
-
-        return this.getHibernateTemplate().find( "select distinct p.description from PhenotypeAssociation as p " );
-
     }
 
     /**
@@ -597,9 +665,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c" )
                 .iterator().next();
 
-        Collection<String> publications = this
-                .getHibernateTemplate()
-                .find( "select distinct phe.citation.pubAccession.accession from PhenotypeAssociation as p join p.phenotypeAssociationPublications as phe" );
+        Collection<String> publications = this.getHibernateTemplate().find(
+                "select distinct phe.citation.pubAccession.accession from PhenotypeAssociation as p"
+                        + " join p.phenotypeAssociationPublications as phe" );
 
         Long numPublications = new Long( publications.size() );
 
@@ -666,7 +734,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return externalDatabasesStatistics.values();
     }
 
-    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
+    /** find statistics for manual curation (numGene, numPhenotypes, etc.) */
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile ) {
 
@@ -709,6 +777,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return externalDatabaseStatisticsValueObject;
     }
 
+    @Override
+    /** remove a PhenotypeAssociationPublication **/
+    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
+        this.getHibernateTemplate().bulkUpdate( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?",
+                phenotypeAssociationPublicationId );
+    }
+
     /**
      * @param keyWord
      * @param externalDatabaseIds
@@ -734,18 +809,17 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             }
 
             listIds = StringUtils.removeEnd( listIds, "," );
-
+            // SLIGHTLY UNSAFE USE PARAMETER
             if ( excludeManualCuration && excludeExternalDatabase ) {
                 externalDatabaseSqlQuery = keyWord
-                        + " PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK in (SELECT id FROM DATABASE_ENTRY dbe where dbe.EXTERNAL_DATABASE_FK not in ("
+                        + " phen.EVIDENCE_SOURCE_FK in (SELECT id FROM DATABASE_ENTRY dbe where dbe.EXTERNAL_DATABASE_FK not in ("
                         + listIds + ")) ";
             } else if ( excludeExternalDatabase ) {
-                externalDatabaseSqlQuery = keyWord
-                        + " (PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK is null or PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK "
+                externalDatabaseSqlQuery = keyWord + " (phen.EVIDENCE_SOURCE_FK is null or phen.EVIDENCE_SOURCE_FK "
                         + "not in (SELECT id FROM DATABASE_ENTRY dbe where dbe.EXTERNAL_DATABASE_FK in (" + listIds
                         + "))) ";
             } else if ( excludeManualCuration ) {
-                externalDatabaseSqlQuery = keyWord + " PHENOTYPE_ASSOCIATION.EVIDENCE_SOURCE_FK is not null";
+                externalDatabaseSqlQuery = keyWord + " phen.EVIDENCE_SOURCE_FK is not null";
             }
 
         }
@@ -753,48 +827,50 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
-    /**
-     * rules to find private evidence
-     * 
-     * @param showOnlyEditable show only what the user have write access
-     * @param showPublic also show public evidence (wont work if showOnlyEditable is true)
-     */
-    private String addGroupAndUserNameRestriction( String userName, Collection<String> groups,
-            boolean showOnlyEditable, boolean showPublic ) {
+    // same code is in EntityUtils
+    private String addGroupAndUserNameRestriction( boolean showOnlyEditable, boolean showPublic ) {
 
         String sqlQuery = "";
 
-        if ( userName != null && !userName.isEmpty() ) {
+        if ( !SecurityUtil.isUserAnonymous() ) {
 
             if ( showPublic && !showOnlyEditable ) {
-                sqlQuery += "and ((sid.PRINCIPAL = '" + userName + "' ";
+                sqlQuery += "  ((sid.PRINCIPAL = :userName";
             } else {
-                sqlQuery += "and (sid.PRINCIPAL = '" + userName + "' ";
+                sqlQuery += "  (sid.PRINCIPAL = :userName";
             }
 
-            if ( groups != null && !groups.isEmpty() ) {
-                // find what acl group the user is in
-                sqlQuery += "or (ace.SID_FK in (";
-                sqlQuery += "select sid.ID from USER_GROUP ug ";
-                sqlQuery += "join GROUP_AUTHORITY on ug.ID = GROUP_AUTHORITY.GROUP_FK ";
-                sqlQuery += "join ACLSID sid on sid.GRANTED_AUTHORITY=CONCAT('GROUP_', GROUP_AUTHORITY.AUTHORITY) ";
-                sqlQuery += "where ug.name in(" + groupToSql( groups ) + ") ";
-                if ( showOnlyEditable ) {
-                    sqlQuery += ") and ace.MASK = 2) ";
-                } else {
-                    sqlQuery += ") and (ace.MASK = 1 or ace.MASK = 2)) ";
-                }
+            // if ( !groups.isEmpty() ) { // is it possible to be empty? If they are non-anonymous it will not be, there
+            // // will at least be GROUP_USER? Or that doesn't count?
+            sqlQuery += " or (ace.SID_FK in (";
+            // SUBSELECT
+            sqlQuery += " select sid.ID from USER_GROUP ug ";
+            sqlQuery += " join GROUP_AUTHORITY ga on ug.ID = ga.GROUP_FK ";
+            sqlQuery += " join ACLSID sid on sid.GRANTED_AUTHORITY=CONCAT('GROUP_', ga.AUTHORITY) ";
+            sqlQuery += " where ug.name in (:groups) ";
+            if ( showOnlyEditable ) {
+                sqlQuery += ") and ace.MASK = 2) "; // 2 = read-writable
+            } else {
+                sqlQuery += ") and (ace.MASK = 1 or ace.MASK = 2)) "; // 1 = read only
             }
+            // }
             sqlQuery += ") ";
 
             if ( showPublic && !showOnlyEditable ) {
-                sqlQuery += "or (ace.SID_FK = 4 and ace.MASK = 1)) ";
+                // publicly readable data.
+                sqlQuery += "or (ace.SID_FK = 4 and ace.MASK = 1)) "; // 4 =IS_AUTHENTICATED_ANONYMOUSLY
             }
+
         } else if ( showPublic && !showOnlyEditable ) {
-            sqlQuery += "and (ace.SID_FK = 4 and ace.MASK = 1) ";
+            // publicly readable data
+            sqlQuery += " (ace.SID_FK = 4 and ace.MASK = 1) "; // 4 = IS_AUTHENTICATED_ANONYMOUSLY
         }
 
         return sqlQuery;
+    }
+
+    private String addNoIEAEvidenceCodeQuery() {
+        return " and phen.EVIDENCE_CODE != 'IEA'";
     }
 
     /**
@@ -804,75 +880,65 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     private String addTaxonToQuery( String keyWord, Taxon taxon ) {
         String taxonSqlQuery = "";
-
         if ( taxon != null && taxon.getId() != null && !taxon.getId().equals( 0 ) ) {
-            taxonSqlQuery = keyWord + " tax.ID = " + taxon.getId() + " ";
+            taxonSqlQuery = keyWord + " tax.ID = :taxonId ";
         }
         return taxonSqlQuery;
     }
 
     /**
-     * @param keyWord
+     * Add IN clause for contstraint on valueuris.
+     * 
+     * @param keyWord either 'and' or '' depending on whether this is the first clause...
      * @param valuesUri
      * @return
      */
-    private String addValuesUriToQuery( String keyWord, Set<String> valuesUri ) {
+    private String addValuesUriToQuery( String keyWord, Set<String> valuesUris ) {
 
         String query = "";
-
-        if ( valuesUri != null && !valuesUri.isEmpty() ) {
-            query = keyWord + " CHARACTERISTIC.VALUE_URI in(";
-
-            for ( String value : valuesUri ) {
-                query += "'" + value + "',";
-            }
-            query = query.substring( 0, query.length() - 1 ) + ") ";
+        if ( valuesUris != null && !valuesUris.isEmpty() ) {
+            query = keyWord + " charac.VALUE_URI in (:valueUris) ";
         }
         return query;
     }
 
-    /** basic sql command to deal with security */
-    private String getPhenotypesGenesAssociationsBeginQuery( boolean addStatus ) {
+    /**
+     * basic sql command to deal with security; adds the where clause; delcare aliases charac, phen and gene; ace, aoi,
+     * sid
+     */
+    private String getPhenotypesGenesAssociationsBeginQuery( boolean force, boolean addStatus ) {
         String queryString = "";
 
-        queryString += "from CHARACTERISTIC ";
-        queryString += "join PHENOTYPE_ASSOCIATION on CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK = PHENOTYPE_ASSOCIATION.ID ";
+        queryString += "from CHARACTERISTIC as charac ";
+        queryString += "join PHENOTYPE_ASSOCIATION as phen on charac.PHENOTYPE_ASSOCIATION_FK = phen.ID ";
         if ( addStatus ) {
-            queryString += "join STATUS on STATUS.ID = PHENOTYPE_ASSOCIATION.STATUS_FK ";
+            queryString += "join STATUS as stat on stat.ID = phen.STATUS_FK "; // what good does this do?
         }
-        queryString += "join CHROMOSOME_FEATURE on CHROMOSOME_FEATURE.id = PHENOTYPE_ASSOCIATION.GENE_FK ";
-        queryString += "join TAXON tax on tax.ID = CHROMOSOME_FEATURE.TAXON_FK ";
-        queryString += "join ACLOBJECTIDENTITY aoi on PHENOTYPE_ASSOCIATION.id = aoi.OBJECT_ID ";
-        queryString += "join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID ";
-        queryString += "join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
-        queryString += "where aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE;
+        queryString += "join CHROMOSOME_FEATURE as gene on gene.id = phen.GENE_FK ";
+        queryString += "join TAXON tax on tax.ID = gene.TAXON_FK ";
+
+        if ( SecurityUtil.isUserAdmin() && !force ) {
+            // no constraint needed.
+            queryString += " where ";
+        } else {
+            // See entityutils for a generalization of this.
+            // / non-admin user, need to add constraint on permissions.
+            queryString += "join ACLOBJECTIDENTITY aoi on phen.ID = aoi.OBJECT_ID ";
+            queryString += "join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID ";
+            queryString += "join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
+            queryString += "where aoi.OBJECT_CLASS IN " + DISCRIMINATOR_CLAUSE;
+        }
 
         return queryString;
     }
 
     /**
-     * @param groups
+     * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
+     * 
      * @return
      */
-    private String groupToSql( Collection<String> groups ) {
-
-        String sqlGroup = "";
-
-        if ( groups != null && !groups.isEmpty() ) {
-
-            for ( String group : groups ) {
-                sqlGroup += "'" + group + "',";
-            }
-            sqlGroup = sqlGroup.substring( 0, sqlGroup.length() - 1 );
-        }
-        return sqlGroup;
-    }
-
-    /** execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes */
-    private void populateGenesAssociations( String sqlQuery, Map<String, Set<Integer>> phenotypesGenesAssociations ) {
-
-        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
-
+    private Map<String, Set<Integer>> populateGenesAssociations( SQLQuery queryObject ) {
+        Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
 
@@ -882,24 +948,27 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( phenotypesGenesAssociations.containsKey( valueUri ) ) {
                 phenotypesGenesAssociations.get( valueUri ).add( geneNcbiId );
             } else {
-                Set<Integer> genesNCBI = new HashSet<Integer>();
+                Set<Integer> genesNCBI = new HashSet<>();
                 genesNCBI.add( geneNcbiId );
                 phenotypesGenesAssociations.put( valueUri, genesNCBI );
             }
         }
         results.close();
+        return phenotypesGenesAssociations;
     }
 
     /**
      * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
      * 
-     * @param sqlQuery
-     * @param genesWithPhenotypes
+     * @param queryObject
+     * @return
      */
-    private void populateGenesWithPhenotypes( String sqlQuery, Map<Long, GeneEvidenceValueObject> genesWithPhenotypes ) {
+    private Collection<GeneEvidenceValueObject> populateGenesWithPhenotypes( SQLQuery queryObject ) {
         StopWatch sw = new StopWatch();
         sw.start();
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+
+        // we accumulate the phenotypes for a gene in one VO
+        Map<Long, GeneEvidenceValueObject> genesWithPhenotypes = new HashMap<>();
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
@@ -931,16 +1000,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( sw.getTime() > 500 ) {
             log.info( "Get " + genesWithPhenotypes.size() + " genes with phenotypes: " + sw.getTime() + "ms" );
         }
-    }
 
-    @Override
-    /** remove a PhenotypeAssociationPublication **/
-    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
-        this.getHibernateTemplate().bulkUpdate( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?",
-                phenotypeAssociationPublicationId );
-    }
-
-    private String addNoIEAEvidenceCodeQuery() {
-        return " and PHENOTYPE_ASSOCIATION.EVIDENCE_CODE != 'IEA'";
+        return genesWithPhenotypes.values();
     }
 }

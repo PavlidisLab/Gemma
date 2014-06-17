@@ -52,8 +52,10 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.EntityUtils;
@@ -800,12 +802,23 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numExperiments(ubic.gemma.model.expression.arrayDesign
+     * .ArrayDesign)
+     */
     @Override
     public int numExperiments( ArrayDesign arrayDesign ) {
-        final String queryString = "select count(distinct ee)  from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad";
-        return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ad", arrayDesign ).uniqueResult() ).intValue();
+        final String queryString = "select distinct ee.id  from   "
+                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad";
+        Collection<Long> ids = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "ad", arrayDesign ).list();
+
+        if ( ids.isEmpty() ) return 0;
+        return EntityUtils.securityFilterIds( ExpressionExperimentImpl.class, ids, false, true,
+                this.getSessionFactory().getCurrentSession() ).size();
     }
 
     /**
@@ -1069,14 +1082,17 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         deleteGeneProductAssociations( arrayDesign );
 
         // Note attempts to do this with bulk updates were unsuccessful due to the need for joins.
-        final String queryString = "select br from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+        final String queryString = "select br from ArrayDesignImpl ad join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
                 + "where br.querySequence = bs and ad=:arrayDesign";
-        List<?> toDelete = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
+        List<BlatResult> toDelete = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
+
         log.info( "Deleting " + toDelete + " alignments for sequences on " + arrayDesign
                 + " (will affect other designs that use any of the same sequences)" );
 
-        getHibernateTemplate().deleteAll( toDelete );
+        for ( BlatResult r : toDelete ) {
+            this.getSessionFactory().getCurrentSession().delete( r );
+        }
 
     }
 
@@ -1088,14 +1104,16 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
                 .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
 
-        // this query is polymorphic, id gets the annotation associations
+        // this query is polymorphic, id gets the annotation associations?
         final String queryString = "select ba from CompositeSequenceImpl  cs "
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProduct ba "
                 + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
         List<?> blatAssociations = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
         if ( !blatAssociations.isEmpty() ) {
-            getHibernateTemplate().deleteAll( blatAssociations );
-            log.info( "Done deleting " + blatAssociations.size() + " Associations for " + arrayDesign );
+            for ( Object r : blatAssociations ) {
+                this.getSessionFactory().getCurrentSession().delete( r );
+            }
+            log.info( "Done deleting " + blatAssociations.size() + " blat associations for " + arrayDesign );
         }
 
         this.getSessionFactory().getCurrentSession().flush();
@@ -1103,12 +1121,16 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         final String annotationAssociationQueryString = "select ba from CompositeSequenceImpl cs "
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
-        List<?> annotAssociations = getHibernateTemplate().findByNamedParam( annotationAssociationQueryString,
-                "arrayDesign", arrayDesign );
+        List<AnnotationAssociation> annotAssociations = getHibernateTemplate().findByNamedParam(
+                annotationAssociationQueryString, "arrayDesign", arrayDesign );
 
         if ( !annotAssociations.isEmpty() ) {
-            getHibernateTemplate().deleteAll( annotAssociations );
-            log.info( "Deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+
+            for ( AnnotationAssociation r : annotAssociations ) {
+                this.getSessionFactory().getCurrentSession().delete( r );
+            }
+            log.info( "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+
         }
     }
 

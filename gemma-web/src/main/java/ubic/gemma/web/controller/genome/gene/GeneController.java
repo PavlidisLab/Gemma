@@ -47,7 +47,6 @@ import ubic.gemma.image.aba.Image;
 import ubic.gemma.image.aba.ImageSeries;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
@@ -56,7 +55,6 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.image.aba.ImageValueObject;
 import ubic.gemma.web.view.TextView;
 
@@ -240,41 +238,41 @@ public class GeneController extends BaseController {
         return mav;
     }
 
-    /**
-     * Used to display the probe browser, when starting by gene.
-     * 
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
-    @RequestMapping("/showCompositeSequences.html")
-    public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
-
-        // gene id.
-        Long id = Long.parseLong( request.getParameter( "id" ) );
-        GeneValueObject gene = geneService.loadValueObject( id );
-        if ( gene == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene with id: " + request.getParameter( "id" ) } );
-            StringBuffer requestURL = request.getRequestURL();
-            log.info( requestURL );
-            return new ModelAndView( WebConstants.HOME_PAGE );
-        }
-        Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
-
-        ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
-        mav.addObject( "numCompositeSequences", compositeSequences.size() );
-
-        StringBuilder buf = new StringBuilder();
-        for ( CompositeSequence sequence : compositeSequences ) {
-            buf.append( sequence.getId() );
-            buf.append( "," );
-        }
-        mav.addObject( "compositeSequenceIdList", buf.toString().replaceAll( ",$", "" ) );
-
-        mav.addObject( "gene", gene );
-
-        return mav;
-    }
+    // /**
+    // * Used to display the probe browser, when starting by gene.
+    // *
+    // * @param request
+    // * @param response
+    // * @return ModelAndView
+    // */
+    // @RequestMapping("/showCompositeSequences.html")
+    // public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
+    //
+    // // gene id.
+    // Long id = Long.parseLong( request.getParameter( "id" ) );
+    // GeneValueObject gene = geneService.loadValueObject( id );
+    // if ( gene == null ) {
+    // addMessage( request, "object.notfound", new Object[] { "Gene with id: " + request.getParameter( "id" ) } );
+    // StringBuffer requestURL = request.getRequestURL();
+    // log.info( requestURL );
+    // return new ModelAndView( WebConstants.HOME_PAGE );
+    // }
+    // Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
+    //
+    // ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
+    // mav.addObject( "numCompositeSequences", compositeSequences.size() );
+    //
+    // StringBuilder buf = new StringBuilder();
+    // for ( CompositeSequence sequence : compositeSequences ) {
+    // buf.append( sequence.getId() );
+    // buf.append( "," );
+    // }
+    // mav.addObject( "compositeSequenceIdList", buf.toString().replaceAll( ",$", "" ) );
+    //
+    // mav.addObject( "gene", gene );
+    //
+    // return mav;
+    // }
 
     /**
      * @param request

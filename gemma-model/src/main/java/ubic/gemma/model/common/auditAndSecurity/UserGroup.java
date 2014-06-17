@@ -23,6 +23,7 @@ import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.User;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * An organized group of researchers with an identifiable leader and group members.
@@ -46,9 +47,9 @@ public abstract class UserGroup extends ubic.gemma.model.common.Auditable implem
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5795744069086222179L;
-    private Collection<User> groupMembers = new java.util.HashSet<>();
+    private Collection<User> groupMembers = new HashSet<>();
 
-    private Collection<GroupAuthority> authorities = new java.util.HashSet<GroupAuthority>();
+    private Collection<GroupAuthority> authorities = new HashSet<GroupAuthority>();
 
     /**
      * No-arg constructor added to satisfy javabean contract

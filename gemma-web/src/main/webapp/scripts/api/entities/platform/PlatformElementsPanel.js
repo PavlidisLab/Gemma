@@ -28,7 +28,7 @@ Gemma.PlatformElementsPanel = Ext
                   {
                      items : [
                               sdp,
-                              new Gemma.ProbeGrid( {
+                              new Gemma.PlatformElementGrid( {
                                  arrayDesignId : this.platformId,
                                  height : 400,
                                  width : 600,

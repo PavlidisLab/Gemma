@@ -167,6 +167,78 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     }
 
+    @Test
+    public void testNumExperiments() {
+
+        this.runAsAdmin();
+        ArrayDesign ad = super.getTestPersistentArrayDesign( 10, true );
+        ExpressionExperiment ee = super.getTestPersistentBasicExpressionExperiment( ad );
+
+        securityService.makePrivate( ee );
+
+        ExpressionExperiment ee2 = super.getTestPersistentBasicExpressionExperiment( ad );
+
+        securityService.makePublic( ee2 );
+
+        // admin can see everything
+        assertEquals( 2, arrayDesignService.getExpressionExperiments( ad ).size() );
+
+        // anonymous can only see the public set
+        this.runAsAnonymous();
+        assertEquals( 1, arrayDesignService.numExperiments( ad ) );
+
+        // make the other data set public too...
+        this.runAsAdmin();
+        securityService.makePublic( ee );
+
+        // anonymous can see both
+        this.runAsAnonymous();
+        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+
+        // logged-in user can also see both
+        String user = RandomStringUtils.randomAlphabetic( 10 );
+        makeUser( user );
+        this.runAsUser( user );
+        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+
+        // make data set private
+        this.runAsAdmin();
+        securityService.makePrivate( ee );
+        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+
+        // user can't see data set that is now private
+        this.runAsUser( user );
+        assertEquals( 1, arrayDesignService.numExperiments( ad ) );
+
+        // make the data set owned by user; now they can see both that one and the public one
+        this.runAsAdmin();
+        securityService.setOwner( ee, user );
+        this.runAsUser( user );
+        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+
+        // anonymous can only see the public one.
+        this.runAsAnonymous();
+        assertEquals( 1, arrayDesignService.numExperiments( ad ) );
+
+        // create a new user group, add user to it, make ee2 private to group
+        this.runAsAdmin();
+        String group = RandomStringUtils.randomAlphabetic( 10 );
+        securityService.createGroup( group );
+        securityService.addUserToGroup( user, group );
+        securityService.makeReadableByGroup( ee2, group );
+        securityService.makePrivate( ee2 );
+        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+
+        // anonymous can't see private groups
+        this.runAsAnonymous();
+        assertEquals( 0, arrayDesignService.numExperiments( ad ) );
+
+        // user can view experiment he owns as well as one shared with him
+        this.runAsUser( user );
+        assertEquals( 2, arrayDesignService.numExperiments( ad ) );
+
+    }
+
     private void makeUser( String username ) {
         try {
             this.userManager.loadUserByUsername( username );

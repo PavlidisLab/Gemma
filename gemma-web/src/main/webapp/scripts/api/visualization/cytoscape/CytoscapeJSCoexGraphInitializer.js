@@ -160,7 +160,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( cy, graphData, readyFunction, 
          cy.nodes().each( function() {
             console.log( this );
             this.qtip( {
-               content : this.data( 'officialName' )
+               content : this.data( 'officialName' ) + "<br>Node degree rank=" + this.data( 'nodeDegree' )
             } );
          } );
 

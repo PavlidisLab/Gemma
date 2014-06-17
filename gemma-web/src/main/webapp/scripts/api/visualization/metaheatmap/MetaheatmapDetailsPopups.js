@@ -7,8 +7,7 @@ Gemma.MetaVisualizationPopups.cascadeLayoutCounter = 0;
 Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function( geneName, geneId ) {
 
    GenePickerController.getGenes( [ geneId ], function( genes ) {
-      var i;
-      for (i = 0; i < genes.length; i++) { // should only be one
+      for (var i = 0; i < genes.length; i++) { // should only be one!
          var gene = genes[i];
          var popup = new Ext.Window( {
             width : 600,
@@ -23,9 +22,7 @@ Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function( geneName, geneId ) 
                + 'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids='
                + gene.ncbiId + '">' + '<img alt="NCBI Gene Link" src="/Gemma/images/logo/ncbi.gif"/> </a>' + '<br>'
                + '<b>Description:</b> ' + gene.description + '<br>'
-               + '<a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id=' + gene.id + '">Probes</a>'
-               + '<br>' + '<br><a target="_blank" href="/Gemma/gene/showGene.html?id=' + gene.id
-               + '">More about this gene</a>'
+               + '<br><a target="_blank" href="/Gemma/gene/showGene.html?id=' + gene.id + '">More about this gene</a>'
          } );
       }
       popup.show();
