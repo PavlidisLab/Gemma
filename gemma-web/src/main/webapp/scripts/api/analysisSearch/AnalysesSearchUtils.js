@@ -91,66 +91,44 @@ Gemma.AnalysesSearchUtils = {
 
    /**
     * @static
-    * @param {GeneSetValueObject[]}
-    *           valueObjects
+    * @param {GeneSetValueObject ]}
+    *           valueObject
     * @param {Number}
     *           max
-    * @returns {Array} a subset of the param list of valueObjects, with one set potentially trimmed
+    * @returns {Object} a subset
     */
-   trimGeneValueObjects : function( valueObjects, max ) {
-      var runningCount = 0;
-      var trimmedValueObjects = [];
-      for (var i = 0; i < valueObjects.length; i++) {
-         var valObj = valueObjects[i];
-         if ( valObj.geneIds && (runningCount + valObj.geneIds.length) < max ) {
-            runningCount += valObj.geneIds.length;
-            trimmedValueObjects.push( valObj );
-         } else if ( valObj.geneIds ) {
-            var trimmedIds = valObj.geneIds.slice( 0, (max - runningCount) );
-            // clone the object so you don't effect the original
-            var trimmedValObj = Object.clone( valObj );
-            trimmedValObj.geneIds = trimmedIds;
-            trimmedValObj.id = null;
-            trimmedValObj.name = "Trimmed " + valObj.name;
-            trimmedValObj.description = "Trimmed " + valObj.name + " for search";
-            trimmedValObj.modified = true;
-            trimmedValueObjects.push( trimmedValObj );
-            return trimmedValueObjects;
-         }
-      }
-      return trimmedValueObjects;
+   trimGeneValueObject : function( valObj, max ) {
+      var trimmedIds = valObj.geneIds.slice( 0, max );
+      // clone the object so you don't effect the original
+      var trimmedValObj = jQuery.extend( {}, valObj );
+      trimmedValObj.geneIds = trimmedIds;
+      trimmedValObj.id = null;
+      trimmedValObj.name = "Trimmed " + valObj.name;
+      trimmedValObj.description = "Trimmed " + valObj.name + " for search";
+      trimmedValObj.modified = true;
+      return trimmedValueObj;
+
    },
 
    /**
     * @static
-    * @param {Object}
-    *           valueObjects
+    * @param {ExpressionExperimentValueObject}
+    *           valueObject
     * @param {Number}
     *           max
-    * @return {Array} a subset of the param list of valueObjects, with one set potentially trimmed
+    * @return {Object} a subset
     */
-   trimExperimentValObjs : function( valueObjects, max ) {
-      var runningCount = 0;
-      var trimmedValueObjects = [];
-      for (var i = 0; i < valueObjects.length; i++) {
-         var valObj = valueObjects[i];
-         if ( valObj.expressionExperimentIds && (runningCount + valObj.expressionExperimentIds.length) < max ) {
-            runningCount += valObj.expressionExperimentIds.length;
-            trimmedValueObjects.push( valObj );
-         } else if ( valObj.expressionExperimentIds ) {
-            var trimmedIds = valObj.expressionExperimentIds.slice( 0, (max - runningCount) );
-            // clone the object so you don't affect the original
-            var trimmedValObj = Object.clone( valObj );
-            trimmedValObj.expressionExperimentIds = trimmedIds;
-            trimmedValObj.id = null;
-            trimmedValObj.name = "Trimmed " + valObj.name;
-            trimmedValObj.description = "Trimmed " + valObj.name + " for search";
-            trimmedValObj.modified = true;
-            trimmedValueObjects.push( trimmedValObj );
-            return trimmedValueObjects;
-         }
-      }
-      return trimmedValueObjects;
+   trimExperimentValObj : function( valObj, max ) {
+      var trimmedIds = valObj.expressionExperimentIds.slice( 0, max );
+      // clone the object so you don't affect the original
+      var trimmedValObj = jQuery.extend( {}, valObj );
+      trimmedValObj.expressionExperimentIds = trimmedIds;
+      trimmedValObj.id = null;
+      trimmedValObj.name = "Trimmed " + valObj.name;
+      trimmedValObj.description = "Trimmed " + valObj.name + " for search";
+      trimmedValObj.modified = true;
+      return trimmedValObj;
+
    },
 
    /**
@@ -185,32 +163,32 @@ Gemma.AnalysesSearchUtils = {
     * @static
     * @param maxNumGenes
     * @param geneCount
-    * @param geneSetValueObjects
+    * @param geneSetValueObject
     * @param maxNumExperiments
     * @param experimentCount
-    * @param experimentSetValueObjects
+    * @param experimentSetValueObject
     * @param handlerScope
     * @returns {Ext.Window}
     * @memberOf Gemma.AnalysesSearchUtils
     */
-   showTrimInputDialogWindow : function( maxNumGenes, geneCount, geneSetValueObjects, maxNumExperiments,
-      experimentCount, experimentSetValueObjects, handlerScope ) {
+   showTrimInputDialogWindow : function( maxNumGenes, geneCount, geneSetValueObject, maxNumExperiments,
+      experimentCount, experimentSetValueObject, handlerScope ) {
       var handlers = {
          trim : function() {
             if ( geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY ) {
-               geneSetValueObjects = Gemma.AnalysesSearchUtils.trimGeneValueObjects( geneSetValueObjects,
+               geneSetValueObject = Gemma.AnalysesSearchUtils.trimGeneValueObject( geneSetValueObject,
                   Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY );
             }
             if ( experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY ) {
-               experimentSetValueObjects = Gemma.AnalysesSearchUtils.trimExperimentValObjs( experimentSetValueObjects,
+               experimentSetValueObject = Gemma.AnalysesSearchUtils.trimExperimentValObj( experimentSetValueObject,
                   Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY );
             }
 
-            this.startDifferentialExpressionSearch( geneSetValueObjects, experimentSetValueObjects );
+            this.startDifferentialExpressionSearch( geneSetValueObject, experimentSetValueObject );
             trimWindow.close();
          },
          notrim : function() {
-            this.startDifferentialExpressionSearch( geneSetValueObjects, experimentSetValueObjects );
+            this.startDifferentialExpressionSearch( geneSetValueObject, experimentSetValueObject );
             trimWindow.close();
          },
          cancel : function() {

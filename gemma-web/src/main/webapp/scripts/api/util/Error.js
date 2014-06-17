@@ -7,10 +7,15 @@ Gemma.genericErrorHandler = function( err, exception ) {
    if ( err.stack ) {
       console.log( err.stack );
       Ext.Msg.alert( "Generic error handler", err + "\n" + err.stack );
-   } else {
-      console.log( exception.stack );
+   } else if ( exception.stackTrace ) {
+      console.log( exception.stackTrace );
 
-      Ext.Msg.alert( "Generic error handler", err + "\n" + (exception ? exception.stack : 'No details') );
+      Ext.Msg.alert( "Generic error handler", err + "\n" + (exception ? exception.stackTrace : 'No details') );
+
+   } else {
+      console.log( exception );
+
+      Ext.Msg.alert( "Generic error handler", err + "\n" + (exception ? exception : 'No details') );
 
    }
 };
