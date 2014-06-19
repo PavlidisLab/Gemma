@@ -4,7 +4,7 @@ package ubic.gemma.script.example
 import ubic.gemma.script.framework.SpringSupport
 import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
 
-# Tool for downloading coexpression links. See Bug 4158.
+// Tool for downloading coexpression links. See Bug 4158.
 def cli = new CliBuilder(usage : 'groovy CoexSearch [opts] -tgoesr')
 cli.o(argName: 'file name', longOpt: 'outFile', required: true, args: 1, 'Output results to this file')
 cli.t(argName: 'common name', longOpt: 'taxon', required: true, args: 1, 'Taxon of genes to fetch')
