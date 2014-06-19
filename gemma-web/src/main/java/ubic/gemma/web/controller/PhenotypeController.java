@@ -14,6 +14,8 @@
  */
 package ubic.gemma.web.controller;
 
+import gemma.gsec.authentication.UserManager;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,7 +45,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatis
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
 import ubic.gemma.web.remote.EntityDelegator;

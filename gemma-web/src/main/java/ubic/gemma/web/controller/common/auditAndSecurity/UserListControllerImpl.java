@@ -18,6 +18,9 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -33,9 +36,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
 
 /**
  * For display and editing of users. Note: do not use parameterized collections as parameters for ajax methods in this

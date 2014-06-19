@@ -21,8 +21,9 @@ package ubic.gemma.web.controller.security;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
 import gemma.gsec.SecurityService;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 
 import java.util.Date;
 
@@ -33,8 +34,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject;

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import gemma.gsec.authentication.UserManager;
+
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,7 +40,6 @@ import ubic.gemma.model.BaseValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
 
 /**

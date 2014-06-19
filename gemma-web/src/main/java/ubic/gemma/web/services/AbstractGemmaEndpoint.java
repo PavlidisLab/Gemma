@@ -19,6 +19,8 @@
 
 package ubic.gemma.web.services;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -43,7 +45,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.util.Settings;
 
 /**
