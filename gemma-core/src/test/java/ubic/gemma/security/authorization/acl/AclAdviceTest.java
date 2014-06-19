@@ -25,6 +25,9 @@ import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.acl.domain.AclService;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.authentication.UserService;
 
 import java.util.Date;
 
@@ -52,9 +55,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -100,7 +100,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     public void testSecuredNotChild() throws Exception {
         String groupName = randomName();
         securityService.createGroup( groupName );
-        UserGroup g = userService.findGroupByName( groupName );
+        UserGroup g = ( UserGroup ) userService.findGroupByName( groupName );
         aclTestUtils.checkHasAcl( g );
         aclTestUtils.checkHasAces( g );
         userService.delete( g );

@@ -18,6 +18,7 @@
  */
 package ubic.gemma.security.audit;
 
+import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
 import gemma.gsec.util.CrudUtils;
 import gemma.gsec.util.CrudUtilsImpl;
@@ -52,7 +53,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
 import ubic.gemma.util.ReflectionUtil;
 import ubic.gemma.util.Settings;

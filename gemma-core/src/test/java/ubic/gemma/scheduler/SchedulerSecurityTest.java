@@ -18,6 +18,8 @@
  */
 package ubic.gemma.scheduler;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
+
 import java.lang.reflect.InvocationTargetException;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -26,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.security.authentication.ManualAuthenticationService;
 import ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean;
 import ubic.gemma.testing.BaseSpringContextTest;
 

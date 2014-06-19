@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import gemma.gsec.authentication.UserManager;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

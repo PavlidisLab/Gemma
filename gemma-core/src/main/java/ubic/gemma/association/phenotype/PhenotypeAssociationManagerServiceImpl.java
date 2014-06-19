@@ -20,6 +20,7 @@ package ubic.gemma.association.phenotype;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclPrincipalSid;
+import gemma.gsec.authentication.UserManager;
 import gemma.gsec.util.SecurityUtil;
 
 import java.io.BufferedWriter;
@@ -102,7 +103,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueO
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 

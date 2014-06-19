@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.experiment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import gemma.gsec.authentication.UserManager;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,7 +37,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.EntityUtils;
 

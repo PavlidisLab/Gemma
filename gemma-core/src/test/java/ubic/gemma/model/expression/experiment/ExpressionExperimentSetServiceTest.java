@@ -22,6 +22,7 @@ package ubic.gemma.model.expression.experiment;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import gemma.gsec.authentication.UserManager;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -39,7 +40,6 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

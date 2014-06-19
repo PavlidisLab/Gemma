@@ -19,6 +19,7 @@
 package ubic.gemma.testing;
 
 import gemma.gsec.AuthorityConstants;
+import gemma.gsec.authentication.UserManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,7 +73,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.CompassUtils;
 
 /**

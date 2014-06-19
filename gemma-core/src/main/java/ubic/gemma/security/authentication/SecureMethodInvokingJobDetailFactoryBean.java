@@ -18,6 +18,9 @@
  */
 package ubic.gemma.security.authentication;
 
+import gemma.gsec.authentication.ManualAuthenticationService;
+import gemma.gsec.authentication.UserManager;
+
 import java.lang.reflect.InvocationTargetException;
 
 import org.slf4j.Logger;

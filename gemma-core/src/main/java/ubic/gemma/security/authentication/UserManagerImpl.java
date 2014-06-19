@@ -19,6 +19,10 @@
 package ubic.gemma.security.authentication;
 
 import gemma.gsec.AuthorityConstants;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserExistsException;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.authentication.UserService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,10 +55,9 @@ import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.auditAndSecurity.UserExistsException;
-import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
+import gemma.gsec.model.UserGroup;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
@@ -113,8 +116,8 @@ public class UserManagerImpl implements UserManager {
 
     @Override
     public void addUserToGroup( String username, String groupName ) {
-        ubic.gemma.model.common.auditAndSecurity.User u = loadUser( username );
-        ubic.gemma.model.common.auditAndSecurity.UserGroup g = loadGroup( groupName );
+        User u = loadUser( username );
+        UserGroup g = loadGroup( groupName );
         userService.addUserToGroup( g, u );
     }
 
@@ -136,7 +139,7 @@ public class UserManagerImpl implements UserManager {
 
         logger.debug( "Changing password for user '" + username + "'" );
 
-        ubic.gemma.model.common.auditAndSecurity.User u = loadUser( username );
+        User u = loadUser( username );
         u.setPassword( newPassword );
         userService.update( u );
 
@@ -159,7 +162,7 @@ public class UserManagerImpl implements UserManager {
                     + "for current user." );
         }
 
-        ubic.gemma.model.common.auditAndSecurity.User u = userService.findByEmail( email );
+        User u = userService.findByEmail( email );
 
         if ( u == null ) {
             throw new UsernameNotFoundException( "No user found for that email address." );
@@ -639,8 +642,8 @@ public class UserManagerImpl implements UserManager {
      * @param groupName
      * @return
      */
-    private ubic.gemma.model.common.auditAndSecurity.UserGroup loadGroup( String groupName ) {
-        ubic.gemma.model.common.auditAndSecurity.UserGroup group = userService.findGroupByName( groupName );
+    private UserGroup loadGroup( String groupName ) {
+        UserGroup group = userService.findGroupByName( groupName );
 
         if ( group == null ) {
             throw new UsernameNotFoundException( "Group could not be read" );
@@ -653,8 +656,8 @@ public class UserManagerImpl implements UserManager {
      * @param username
      * @return
      */
-    private ubic.gemma.model.common.auditAndSecurity.User loadUser( String username ) {
-        ubic.gemma.model.common.auditAndSecurity.User user = userService.findByUserName( username );
+    private User loadUser( String username ) {
+        User user = userService.findByUserName( username );
         if ( user == null ) {
             throw new UsernameNotFoundException( "User with name " + username + " could not be loaded" );
         }

@@ -19,6 +19,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
@@ -38,8 +40,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.job.executor.common.ExecutingTask;
 import ubic.gemma.job.executor.common.ProgressUpdateAppender;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.Task;
 import ubic.gemma.testing.BaseSpringContextTest;

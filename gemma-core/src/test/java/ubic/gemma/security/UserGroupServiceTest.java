@@ -23,6 +23,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import gemma.gsec.AuthorityConstants;
 import gemma.gsec.SecurityService;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.authentication.UserService;
 import gemma.gsec.model.UserGroup;
 
 import java.util.ArrayList;
@@ -38,9 +41,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

@@ -21,6 +21,8 @@ package ubic.gemma.security.authorization.acl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import gemma.gsec.SecurityService;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 
 import java.util.Collection;
 import java.util.Date;
@@ -39,8 +41,6 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

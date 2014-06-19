@@ -22,6 +22,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.authentication.UserService;
 
 import java.util.Collection;
 import java.util.Date;
@@ -53,9 +56,6 @@ import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.security.authentication.UserDetailsImpl;
-import ubic.gemma.security.authentication.UserManager;
-import ubic.gemma.security.authentication.UserService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -220,7 +220,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         UserDetailsImpl u = new UserDetailsImpl( encodedPassword, USERNAME, true, null, null, null, new Date() );
         userManager.createUser( u );
 
-        User user = userService.findByUserName( USERNAME );
+        User user = ( User ) userService.findByUserName( USERNAME );
 
         List<AuditEvent> events = auditTrailService.getEvents( user );
 
