@@ -54,13 +54,13 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     private static Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );
 
     @Autowired
+    private CoexpressionDao coexpressionDao;
+
+    @Autowired
     private CoexpressionQueryQueue coexpressionQueryQueue;
 
     @Autowired
     private ExpressionExperimentDao experimentDao;
-
-    @Autowired
-    private CoexpressionDao coexpressionDao;
 
     @Autowired
     private CoexpressionNodeDegreeDao geneCoexpressionNodeDegreeDao;
@@ -277,30 +277,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
         int count = 0;
         for ( Gene g : this.geneDao.loadKnownGenes( t ) ) {
-            GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );
-
-            /*
-             * Positive
-             */
-            Long id = updatedVO.getGeneId();
-            for ( int i = 0; i < updatedVO.asIntArrayPos().length; i++ ) {
-                if ( !forRanksPos.containsKey( i ) ) {
-                    forRanksPos.put( i, new HashMap<Long, Integer>() );
-                }
-                // note this is the cumulative value.
-                forRanksPos.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i, true ) );
-            }
-
-            /*
-             * Negative
-             */
-            for ( int i = 0; i < updatedVO.asIntArrayNeg().length; i++ ) {
-                if ( !forRanksNeg.containsKey( i ) ) {
-                    forRanksNeg.put( i, new HashMap<Long, Integer>() );
-                }
-                // note this is the cumulative value.
-                forRanksNeg.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i, false ) );
-            }
+            updateNodeDegree( g, forRanksPos, forRanksNeg );
 
             if ( ++count % 1000 == 0 ) {
                 log.info( "Updated node degree for " + count + " genes; last was " + g + " ..." );
@@ -313,10 +290,16 @@ public class CoexpressionServiceImpl implements CoexpressionService {
          * Update the ranks. Each entry in the resulting map (key = gene id) is a list of the ranks at each support
          * threshold. So it means the rank "at or above" that level of support.
          */
-        Map<Long, List<Double>> relRanksPerGenePos = computeReleativeRanks( forRanksPos );
-        Map<Long, List<Double>> relRanksPerGeneNeg = computeReleativeRanks( forRanksNeg );
+        Map<Long, List<Double>> relRanksPerGenePos = computeRelativeRanks( forRanksPos );
+        Map<Long, List<Double>> relRanksPerGeneNeg = computeRelativeRanks( forRanksNeg );
 
         this.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
+
+    }
+
+    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePos,
+            Map<Long, List<Double>> relRanksPerGeneNeg ) {
+        this.coexpressionDao.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
 
     }
 
@@ -324,8 +307,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      * @param forRanks
      * @return
      */
-    public Map<Long, List<Double>> computeReleativeRanks( TreeMap<Integer, Map<Long, Integer>> forRanks ) {
-        Map<Long, List<Double>> relRanksPerGenePos = new HashMap<>();
+    private Map<Long, List<Double>> computeRelativeRanks( TreeMap<Integer, Map<Long, Integer>> forRanks ) {
+        Map<Long, List<Double>> relRanks = new HashMap<>();
         for ( Integer support : forRanks.keySet() ) {
 
             // low ranks = low node degree = good.
@@ -336,17 +319,16 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
             for ( Long g : rt.keySet() ) {
                 double relRank = rt.get( g ) / max;
-                // rt.put( g, relRank );
 
-                if ( !relRanksPerGenePos.containsKey( g ) ) {
-                    relRanksPerGenePos.put( g, new ArrayList<Double>() );
+                if ( !relRanks.containsKey( g ) ) {
+                    relRanks.put( g, new ArrayList<Double>() );
                 }
 
-                relRanksPerGenePos.get( g ).add( relRank );
-
+                // the ranks are in order.
+                relRanks.get( g ).add( relRank );
             }
         }
-        return relRanksPerGenePos;
+        return relRanks;
     }
 
     /**
@@ -378,10 +360,39 @@ public class CoexpressionServiceImpl implements CoexpressionService {
         return this.coexpressionDao.updateNodeDegree( gene, nd );
     }
 
-    public void updateRelativeNodeDegrees( Map<Long, List<Double>> relRanksPerGenePos,
-            Map<Long, List<Double>> relRanksPerGeneNeg ) {
-        this.coexpressionDao.updateRelativeNodeDegrees( relRanksPerGenePos, relRanksPerGeneNeg );
+    /**
+     * @param g
+     * @param forRanksPos
+     * @param forRanksNeg
+     */
+    private void updateNodeDegree( Gene g, TreeMap<Integer, Map<Long, Integer>> forRanksPos,
+            TreeMap<Integer, Map<Long, Integer>> forRanksNeg ) {
+        GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );
 
+        /*
+         * Positive
+         */
+        Long id = updatedVO.getGeneId();
+        for ( Integer i = 0; i < updatedVO.asIntArrayPos().length; i++ ) {
+            if ( !forRanksPos.containsKey( i ) ) {
+                forRanksPos.put( i, new HashMap<Long, Integer>() );
+            }
+            // note this is the cumulative value.
+            assert !forRanksPos.get( i ).containsKey( id );
+            forRanksPos.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i, true ) );
+        }
+
+        /*
+         * Negative
+         */
+        for ( Integer i = 0; i < updatedVO.asIntArrayNeg().length; i++ ) {
+            if ( !forRanksNeg.containsKey( i ) ) {
+                forRanksNeg.put( i, new HashMap<Long, Integer>() );
+            }
+            // note this is the cumulative value.
+            assert !forRanksNeg.get( i ).containsKey( id );
+            forRanksNeg.get( i ).put( id, updatedVO.getLinksWithMinimumSupport( i, false ) );
+        }
     }
 
 }

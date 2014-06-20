@@ -79,28 +79,42 @@ public class GeneCoexpressionNodeDegreeValueObject {
         return toPrimitive( list );
     }
 
+    /**
+     * counts at each level of support, starting from 0 (which will be 0), up to the maximum support.
+     * 
+     * @return
+     */
     public int[] asIntArrayNeg() {
         IntArrayList list = new IntArrayList();
         if ( nodeDegreesNeg.isEmpty() ) return toPrimitive( list );
-        list.setSize( Math.max( list.size(), nodeDegreesNeg.lastKey() + 1 ) );
-        for ( Integer s : nodeDegreesNeg.keySet() ) {
-            list.set( s, nodeDegreesNeg.get( s ) );
+        Integer maxSupport = nodeDegreesNeg.lastKey();
+        list.setSize( maxSupport + 1 );
+        for ( Integer s = 0; s <= maxSupport; s++ ) {
+            if ( nodeDegreesNeg.containsKey( s ) ) {
+                list.set( s, nodeDegreesNeg.get( s ) );
+            } else {
+                list.set( s, 0 );
+            }
         }
-
         return toPrimitive( list );
     }
 
     /**
-     * counts at each level of support, starting from 0 (which will be 0)
+     * counts at each level of support, starting from 0 (which will be 0), up to the maximum support.
      * 
      * @return
      */
     public int[] asIntArrayPos() {
         IntArrayList list = new IntArrayList();
         if ( nodeDegreesPos.isEmpty() ) return toPrimitive( list );
-        list.setSize( Math.max( list.size(), nodeDegreesPos.lastKey() + 1 ) );
-        for ( Integer s : nodeDegreesPos.keySet() ) {
-            list.set( s, nodeDegreesPos.get( s ) );
+        Integer maxSupport = nodeDegreesPos.lastKey();
+        list.setSize( maxSupport + 1 );
+        for ( Integer s = 0; s <= maxSupport; s++ ) {
+            if ( nodeDegreesPos.containsKey( s ) ) {
+                list.set( s, nodeDegreesPos.get( s ) );
+            } else {
+                list.set( s, 0 );
+            }
         }
 
         return toPrimitive( list );
@@ -152,11 +166,13 @@ public class GeneCoexpressionNodeDegreeValueObject {
         int sum = 0;
 
         if ( positive ) {
-            for ( int i = support; i <= getMaxSupportPos(); i++ ) {
+            int maxSupportPos = getMaxSupportPos();
+            for ( Integer i = support; i <= maxSupportPos; i++ ) {
                 sum += nodeDegreesPos.containsKey( i ) ? nodeDegreesPos.get( i ) : 0;
             }
         } else {
-            for ( int i = support; i <= getMaxSupportNeg(); i++ ) {
+            int maxSupportNeg = getMaxSupportNeg();
+            for ( Integer i = support; i <= maxSupportNeg; i++ ) {
                 sum += nodeDegreesNeg.containsKey( i ) ? nodeDegreesNeg.get( i ) : 0;
             }
         }
