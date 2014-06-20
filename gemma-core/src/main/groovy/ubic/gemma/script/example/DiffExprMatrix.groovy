@@ -128,7 +128,7 @@ for (gene in genes) {
         if (outputDirection) {
             val = de.direction;
         } else if(outputCorrectedPval) {
-            val = de.correctedP;
+            val = de.corrP;
         } else {
             val = de.p;
         }
