@@ -23,6 +23,9 @@ import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserExistsException;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.authentication.UserService;
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
+import gemma.gsec.model.UserGroup;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,7 +44,6 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -55,10 +57,6 @@ import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-import gemma.gsec.model.UserGroup;
-
 /**
  * Implementation for Spring Security, plus some other handy methods.
  * 
@@ -70,9 +68,6 @@ import gemma.gsec.model.UserGroup;
 public class UserManagerImpl implements UserManager {
 
     protected final Log logger = LogFactory.getLog( getClass() );
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     /**
      * 
@@ -135,7 +130,7 @@ public class UserManagerImpl implements UserManager {
 
         String username = currentAuthentication.getName();
 
-        reauthenticate( username, oldPassword );
+        // reauthenticate( username, oldPassword );
 
         logger.debug( "Changing password for user '" + username + "'" );
 
@@ -452,13 +447,15 @@ public class UserManagerImpl implements UserManager {
     @Override
     public void reauthenticate( String username, String password ) {
         // If an authentication manager has been set, re-authenticate the user with the supplied password.
-        if ( authenticationManager != null ) {
-            logger.debug( "Reauthenticating user '" + username + "' for password change request." );
-
-            authenticationManager.authenticate( new UsernamePasswordAuthenticationToken( username, password ) );
-        } else {
-            logger.debug( "No authentication manager set. Password won't be re-checked." );
-        }
+        /*
+         * if ( authenticationManager != null ) { logger.debug( "Reauthenticating user '" + username +
+         * "' for password change request." );
+         * 
+         * authenticationManager.authenticate( new UsernamePasswordAuthenticationToken( username, password ) ); } else {
+         * logger.debug( "No authentication manager set. Password won't be re-checked." ); }
+         */
+        // Warning: Autowiring AuthenticationManager here can cause a circular reference error
+        logger.warn( "No authentication manager set. Password won't be re-checked." );
     }
 
     @Override
