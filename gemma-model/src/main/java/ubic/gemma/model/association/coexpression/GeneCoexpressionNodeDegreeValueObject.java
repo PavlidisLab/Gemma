@@ -52,7 +52,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     public GeneCoexpressionNodeDegreeValueObject( GeneCoexpressionNodeDegree entity ) {
         this.geneId = entity.getGeneId();
         initLinkCounts( entity.getLinkCountsPositive(), true );
-        initLinkCounts( entity.getLinkCountsNegative(), true );
+        initLinkCounts( entity.getLinkCountsNegative(), false );
         initRelRanks( entity.getRelativeLinkRanksPositive(), true );
         initRelRanks( entity.getRelativeLinkRanksNegative(), false );
     }
@@ -237,7 +237,7 @@ public class GeneCoexpressionNodeDegreeValueObject {
     @Override
     public String toString() {
         return "NodeDegree [geneId=" + geneId + ", nodeDegreesPos=" + StringUtils.join( nodeDegreesPos.values(), " " )
-                + ", nodeDegreesPos=" + StringUtils.join( nodeDegreesPos.values(), " " ) + "]";
+                + ", nodeDegreesNeg=" + StringUtils.join( nodeDegreesNeg.values(), " " ) + "]";
     }
 
     /**
