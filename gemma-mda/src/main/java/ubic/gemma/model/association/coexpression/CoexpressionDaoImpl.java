@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -960,6 +961,11 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         GeneCoexpressionNodeDegree entity = gcndvo.toEntity();
         nd.setLinkCountsPositive( entity.getLinkCountsPositive() );
         nd.setLinkCountsNegative( entity.getLinkCountsNegative() );
+
+        if ( log.isDebugEnabled() )
+            log.debug( "gene=" + g.getId() + " pos="
+                    + StringUtils.join( ArrayUtils.toObject( nd.getLinkCountsPositive() ), " " ) + " neg="
+                    + StringUtils.join( ArrayUtils.toObject( nd.getLinkCountsNegative() ), " " ) );
 
         sess.update( nd );
 

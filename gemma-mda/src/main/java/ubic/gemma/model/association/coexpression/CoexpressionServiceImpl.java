@@ -369,6 +369,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             TreeMap<Integer, Map<Long, Integer>> forRanksNeg ) {
         GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );
 
+        if ( log.isDebugEnabled() ) log.debug( updatedVO.toString() );
+
         /*
          * Positive
          */
