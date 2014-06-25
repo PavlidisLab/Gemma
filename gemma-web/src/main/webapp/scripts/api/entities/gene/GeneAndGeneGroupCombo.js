@@ -42,7 +42,7 @@ Gemma.GeneAndGeneGroupComboRecord = Ext.data.Record.create( [ {
 }, {
    name : "comboText",
    type : "string",
-   convert : function( v, record ) {
+   convert : function(v, record) {
       if ( record.resultValueObject instanceof GOGroupValueObject ) {
          return record.name + ": " + record.description;
       } else {
@@ -107,7 +107,7 @@ Gemma.GeneAndGeneGroupCombo = Ext
          queryDelay : 800, // default = 500 for mode=remote
 
          listeners : {
-            specialkey : function( formField, e ) {
+            specialkey : function(formField, e) {
                // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
                // e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
                if ( e.getKey() === e.TAB || e.getKey() === e.RIGHT || e.getKey() === e.DOWN ) {
@@ -122,7 +122,7 @@ Gemma.GeneAndGeneGroupCombo = Ext
                   this.collapse();
                }
             },
-            beforequery : function( qe ) {
+            beforequery : function(qe) {
                delete qe.combo.lastQuery;
             }
          },
@@ -168,7 +168,7 @@ Gemma.GeneAndGeneGroupCombo = Ext
           * @return {}
           * @memberOf Gemma.GeneAndGeneGroupCombo
           */
-         getParams : function( query ) {
+         getParams : function(query) {
             return [ query, this.getTaxonId() ];
          },
 
@@ -211,7 +211,7 @@ Gemma.GeneAndGeneGroupCombo = Ext
             Ext.apply( this, {
                // format fields to show in combo, only show size in brakets if the entry is a group
                tpl : new Ext.XTemplate( '<tpl for=".">' + '{[ this.renderItem(values) ]}' + '</tpl>', {
-                  renderItem : function( values ) {
+                  renderItem : function(values) {
                      if ( values.resultValueObject instanceof DatabaseBackedGeneSetValueObject ) {
                         if ( values.userOwned ) {
                            return userOwnedDbGeneSetTpl.apply( values );
@@ -246,6 +246,8 @@ Gemma.GeneAndGeneGroupCombo = Ext
 
             Gemma.GeneAndGeneGroupCombo.superclass.initComponent.call( this );
 
+            this.on( 'select', this.setGeneGroup, this );
+
             /***********************************************************************************************************
              * *** start of query queue fix
              * 
@@ -253,14 +255,14 @@ Gemma.GeneAndGeneGroupCombo = Ext
              * back. This code causes 'old' results to be rejected if the query has changed in the meantime.
              */
             // enableKeyEvents config required
-            this.on( 'keypress', function( textfield, eventObj ) {
+            this.on( 'keypress', function(textfield, eventObj) {
                // this is set to true when query returns
                this.displayingComboValueToQueryMatch = false;
             } );
 
             this.getStore().on(
                'load',
-               function( store, records, options ) {
+               function(store, records, options) {
                   var query = (options.params) ? options.params[0] : null;
                   // if the query for which the store is returning is not the same as the last query made with the combo
                   // clear these results and add the previous query's results
@@ -312,7 +314,7 @@ Gemma.GeneAndGeneGroupCombo = Ext
             /**
              * Don't fire right away
              */
-            this.on( 'focus', function( field ) {
+            this.on( 'focus', function(field) {
                // if the text field is blank, show the available groups
                setTimeout( function() {
                   if ( this.getValue() === '' ) {
@@ -334,11 +336,29 @@ Gemma.GeneAndGeneGroupCombo = Ext
             }
          },
 
+         getGeneGroup : function() {
+            if ( this.getRawValue() === '' ) {
+               return null;
+            }
+            return this.selectedGeneGroup;
+         },
+
+         setGeneGroup : function(combo, geneGroup, index) {
+            // this.reset();
+            this.selectedGeneGroup = geneGroup.data;
+            this.tooltip = new Ext.ToolTip( {
+               target : this.getEl(),
+               html : String.format( '{0} ({1})', this.selectedGeneGroup.name, this.selectedGeneGroup.description )
+            } );
+            this.lastQuery = null;
+
+         },
+
          getTaxonId : function() {
             return this.taxonId;
          },
 
-         setTaxonId : function( taxonId ) {
+         setTaxonId : function(taxonId) {
             this.taxonId = taxonId;
          }
 
