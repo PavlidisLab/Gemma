@@ -70,11 +70,11 @@ if (geneSymbols != null && geneSymbols.size() > 0) {
     genes = geneSymbols.collect { geneService.findByOfficialSymbol(it, taxon) };
     genes = genes.findAll { it != null };
 } else {
-    System.out.println "${new Date()}: Loading all known $taxonName genes...";
+    System.out.println "${new Date()}: Loading all known $taxonName genes ...";
     //genes = geneService.loadKnownGenes(taxon);
     genes = geneService.getGenesByTaxon(taxon);
 }
-System.out.println "${new Date()}: Loaded ${genes.size()} $taxonName genes (${genes[1..3]}, ...).";
+System.out.println "${new Date()}: Loaded ${genes.size()} $taxonName genes ...";
 
 // load experiment list or everything for a given taxon
 if (eeNames != null && eeNames.size() > 0) {
@@ -115,7 +115,8 @@ fOut = new BufferedWriter(new PrintWriter(outFile));
 
 // header
 count = 1;
-fOut << "Gene\t${ees*.id.collect{"EEID." + it}.join('\t')}\n"
+fOut << "Gene\t${ees*.shortName.collect{it}.join('\t')}\n"
+//fOut << "Gene\t${ees*.id.collect{"EEID." + it}.join('\t')}\n"
 for (gene in rankMatrix.getRowNames()) {
     line = "${gene.officialSymbol}";
     for (ee in ees) {

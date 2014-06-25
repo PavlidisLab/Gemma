@@ -36,7 +36,7 @@ taxon = taxonService.findByCommonName(taxonName);
  * Load genes
  */
 genes = geneService.getGenesByTaxon(taxon);
-System.out.println "${new Date()}: Loaded ${genes.size()} $taxonName genes (${genes[1..3]}, ...).";
+System.out.println "${new Date()}: Loaded ${genes.size()} $taxonName genes ...).";
 f = opts.getOptionValue("o") + "-geneMetaData.txt"
 println "${new Date()}: Writing results to $f";
 //println "Only genes with an ENSEMBL_ID will be written"
