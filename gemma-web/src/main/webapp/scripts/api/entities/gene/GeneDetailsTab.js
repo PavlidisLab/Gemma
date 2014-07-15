@@ -400,7 +400,7 @@ Gemma.GeneDetails = Ext
                                                        items : this.renderNodeDegree( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'Phenotypes&nbsp; <i id="phenotypeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                       fieldLabel : 'Phenotypes&nbsp(DGA-filtered)&nbsp; <i id="phenotypeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderPhenotypes( geneDetails ),
                                                        hidden : !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
                                                           || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)

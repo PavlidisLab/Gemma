@@ -24,6 +24,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.SortedSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -53,6 +55,7 @@ import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.image.aba.ImageValueObject;
@@ -141,8 +144,22 @@ public class GeneController extends BaseController {
      * @param geneId
      * @return
      */
-    public GeneValueObject loadGeneDetails( Long geneId ) {
-        return geneCoreService.loadGeneDetails( geneId );
+    public GeneValueObject loadGeneDetails( Long geneId ) {    	
+        //return geneCoreService.loadGeneDetails( geneId );
+    	GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
+    	String thisTaxon = gvo.getTaxonCommonName();
+    	Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService.findEvidenceByGeneId(
+                geneId, new HashSet<String>(), new EvidenceFilter( gvo.getTaxonId(), false, null ) );
+    	Iterator<EvidenceValueObject> iter = collEVO.iterator();
+    	Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<CharacteristicValueObject>();
+    	while(iter.hasNext())
+    	{
+    	    EvidenceValueObject evo = iter.next();
+    	    if(!evo.isHomologueEvidence())
+    	        collFilteredDVO.addAll(evo.getPhenotypes());
+    	}
+    	gvo.setPhenotypes(collFilteredDVO);
+        return gvo;
     }
 
     /**
