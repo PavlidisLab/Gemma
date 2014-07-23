@@ -18,11 +18,28 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.*;
+import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
+import org.hibernate.SQLQuery;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.DoubleType;
@@ -47,18 +64,6 @@ import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 import ubic.gemma.util.TaskCancelledException;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
 
 /**
  * This is a key class for queries to retrieve differential expression results (as well as standard CRUD aspects of
@@ -242,6 +247,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             ExpressionExperimentValueObject ee = new ExpressionExperimentValueObject( ( ExpressionExperiment ) oa[0] );
             DifferentialExpressionValueObject probeResult = new DifferentialExpressionValueObject(
                     ( DifferentialExpressionAnalysisResult ) oa[1] );
+            probeResult.setExpressionExperiment( ee );
 
             if ( !results.containsKey( ee ) ) {
                 results.put( ee, new ArrayList<DifferentialExpressionValueObject>() );
