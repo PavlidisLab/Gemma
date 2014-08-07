@@ -14,6 +14,8 @@
  */
 package ubic.gemma.apps;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.MakePublicEvent;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import gemma.gsec.SecurityService;
 
 /**
@@ -34,10 +36,12 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
         super.processCommandLine( "Delete experiments", args );
 
         SecurityService securityService = this.getBean( SecurityService.class );
+        for ( BioAssaySet ee : this.expressionExperiments ) {
+            securityService.makePublic( ee );
+            this.auditTrailService.addUpdateEvent( ee, MakePublicEvent.class, "Made public from command line", null );
 
-        securityService.makePublic( this.expressionExperiments );
+        }
 
         return null;
     }
-
 }
