@@ -349,7 +349,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * @return
      */
     private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids ) {
-        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentSetValueObject>();
+        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<>();
         Query queryObject = this.getLoadValueObjectsQueryString( ids );
         List<?> list = queryObject.list();
         for ( Object object : list ) {
@@ -390,8 +390,12 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * @param vo
      */
     private void pouplateAnalysisInformation( Collection<ExpressionExperimentSetValueObject> vo ) {
+        if ( vo.isEmpty() ) {
+            return;
+        }
 
         Map<Long, ExpressionExperimentSetValueObject> idMap = EntityUtils.getIdMap( vo );
+
         StopWatch timer = new StopWatch();
         timer.start();
         List<Object[]> withCoex = this

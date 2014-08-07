@@ -26,10 +26,10 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
         implements BioAssayOutlierProcessingTask {
 
     @Autowired
-    BioAssayService bioAssayService;
+    private BioAssayService bioAssayService;
 
     @Autowired
-    OutlierFlaggingService sampleRemoveService;
+    private OutlierFlaggingService sampleRemoveService;
 
     @Override
     public TaskResult execute() {
