@@ -12,8 +12,14 @@ Gemma.DatasetSearchToolBar = Ext.extend( Ext.Toolbar, {
    initComponent : function() {
       Gemma.DatasetSearchToolBar.superclass.initComponent.call( this );
       this.addEvents( "after.tbsearch" );
+      Gemma.EVENTBUS.on( 'taxonchanged', this.setTaxon, this );
    },
 
+   /**
+    * @private
+    * @param taxon
+    *           (ID?)
+    */
    setTaxon : function( taxon ) {
       this.taxonCombo.setValue( taxon );
       this.eeSearchField.setTaxon( taxon );

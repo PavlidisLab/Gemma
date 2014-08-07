@@ -23,6 +23,8 @@ Gemma.DatasetSearchField = function( config ) {
       this.disable();
    } );
 
+   Gemma.EVENTBUS.on( 'taxonchanged', this.setTaxon, this );
+
    this.on( 'aftersearch', function( field, results ) {
       if ( this.loadMask ) {
          this.loadMask.hide();
@@ -104,6 +106,11 @@ Ext.extend( Gemma.DatasetSearchField, Ext.form.TriggerField, {
       return this.eeIds;
    },
 
+   /**
+    * @private
+    * @param taxon
+    *           ID or object
+    */
    setTaxon : function( taxon ) {
       if ( taxon === undefined ) {
          return;

@@ -1,7 +1,8 @@
 ;
 (function( $, $$ ) {
 
-   function generateOpts( qtip, passedOpts ) {
+   function generateOpts( target, passedOpts ) {
+      var qtip = target.scratch().qtip;
       var opts = $.extend( {}, passedOpts );
 
       if ( !opts.id ) {
@@ -40,6 +41,21 @@
          opts.hide.event = 'unfocus';
       }
 
+      var content;
+      if ( opts.content ) {
+         if ( $$.is.fn( opts.content ) ) {
+            content = opts.content;
+         } else if ( opts.content.text && $$.is.fn( opts.content.text ) ) {
+            content = opts.content.text;
+         }
+
+         if ( content ) {
+            opts.content = function( event, api ) {
+               return content.apply( target, [ event, api ] );
+            };
+         }
+      }
+
       return opts;
    }
 
@@ -72,14 +88,18 @@
       eles.each( function( i, ele ) {
          var scratch = ele.scratch();
          var qtip = scratch.qtip = scratch.qtip || {};
-         var opts = generateOpts( qtip, passedOpts );
+         var opts = generateOpts( ele, passedOpts );
 
          // call qtip on dummy dom ele
          qtip.$domEle.qtip( opts );
          var qtipApi = qtip.$domEle.qtip( 'api' );
 
          var updatePosition = function( e ) {
-            var pos = ele.renderedPosition() || e.cyRenderedPosition;
+            var pos = ele.renderedPosition() || (e ? e.cyRenderedPosition : undefined);
+            if ( !pos || pos.x == null ) {
+               return;
+            }
+
             var cOff = container.getBoundingClientRect();
             var w = ele.isNode() ? ele.renderedWidth() : 0;
             var h = ele.isNode() ? ele.renderedHeight() : 0;
@@ -89,8 +109,8 @@
                zIndex : '-1',
                width : w + 'px',
                height : h + 'px',
-               left : cOff.left + pos.x + window.scrollX - w / 2,
-               top : cOff.top + pos.y + window.scrollY - h / 2
+               left : cOff.left + pos.x + window.pageXOffset - w / 2,
+               top : cOff.top + pos.y + window.pageYOffset - h / 2
             } );
          };
          updatePosition();
@@ -132,7 +152,7 @@
 
       var scratch = cy.scratch();
       var qtip = scratch.qtip = scratch.qtip || {};
-      var opts = generateOpts( qtip, passedOpts );
+      var opts = generateOpts( cy, passedOpts );
 
       // call qtip on dummy dom ele
       qtip.$domEle.qtip( opts );
@@ -145,8 +165,8 @@
          qtip.$domEle.css( {
             position : 'absolute',
             zIndex : '-1',
-            left : cOff.left + pos.x + window.scrollX,
-            top : cOff.top + pos.y + window.scrollY
+            left : cOff.left + pos.x + window.pageXOffset,
+            top : cOff.top + pos.y + window.pageYOffset
          } );
       };
 

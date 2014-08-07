@@ -221,7 +221,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         }
 
         if ( timer.getTime() > 100 ) {
-            log.info( "Caching " + r.size() + " results took: " + timer.getTime() + "ms" );
+            log.debug( "Caching " + r.size() + " results took: " + timer.getTime() + "ms" );
         }
 
     }

@@ -442,6 +442,10 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             tooltipText : Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.instructions
          } );
 
+         Gemma.EVENTBUS.on( 'taxonchanged', function( taxonId ) {
+            this.preview.setTaxonId( taxonId );
+         }, this );
+
          Ext.apply( this, {
             width : 335,
             frame : false,

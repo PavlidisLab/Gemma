@@ -46,7 +46,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
             modifiable : true,
             userCanWrite : true,
             expressionExperimentIds : [],
-            numExperiments : 0,
+            size : 0,
             isPublic : args.isPublic,
             taxonName : args.taxon.get( 'commonName' ),
             taxonId : args.taxon.get( 'id' )
@@ -309,7 +309,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend( Ext.Toolbar, {
          description : rec.get( "description" ),
          modifiable : true,
          expressionExperimentIds : rec.get( "expressionExperimentIds" ),
-         numExperiments : rec.get( "numExperiments" ),
+         size : rec.get( "size" ),
          taxonId : rec.get( "taxonId" ),
          taxonName : rec.get( "taxonName" )
       } );
@@ -400,7 +400,7 @@ Gemma.DatasetGroupGridPanel = Ext
                           {
                              header : "Size",
                              tooltip : 'How many datasets make up this group',
-                             dataIndex : "numExperiments",
+                             dataIndex : "size",
                              sortable : true,
                              editable : false,
                              // width : 60,
@@ -535,7 +535,7 @@ Gemma.DatasetGroupGridPanel = Ext
                ids.push( rec.get( "id" ) );
             } );
             rec.set( "expressionExperimentIds", ids );
-            rec.set( "numExperiments", ids.length );
+            rec.set( "size", ids.length );
 
             this.fireEvent( "dirty", rec );
          }

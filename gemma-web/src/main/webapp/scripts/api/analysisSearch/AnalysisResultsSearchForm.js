@@ -218,7 +218,7 @@ Gemma.AnalysisResultsSearchForm = Ext
                singleExperimentSet.expressionExperimentIds = [ ee.id ];
                singleExperimentSet.name = ee.shortName;
                singleExperimentSet.description = ee.name;
-               singleExperimentSet.size = ee.numExperiments;
+               singleExperimentSet.size = 1;
                singleExperimentSet.taxonName = ee.taxon;
                singleExperimentSet.taxonId = ee.taxonId;
                singleExperimentSet.modified = false;
@@ -662,6 +662,7 @@ Gemma.AnalysisResultsSearchForm = Ext
             if ( taxonId && this.getTaxonId() && (this.getTaxonId() === taxonId) ) {
                return;
             }
+
             // if the 'new' and 'old' taxa are different, reset the gene preview and
             // filter the geneCombo FIXME what if the taxonName is missing
             else if ( taxonId ) {
@@ -671,7 +672,8 @@ Gemma.AnalysisResultsSearchForm = Ext
                }
             }
 
-            this.fireEvent( "taxonchanged", taxonId );
+            // this.fireEvent( "taxonchanged", taxonId );
+            Gemma.EVENTBUS.fireEvent( 'taxonchanged', taxonId );
          },
 
          // collapse all gene and experiment previews

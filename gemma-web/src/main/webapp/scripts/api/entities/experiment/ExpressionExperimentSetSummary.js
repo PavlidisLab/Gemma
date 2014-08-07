@@ -53,7 +53,7 @@ Gemma.ExpressionExperimentSetSummary = Ext
             return statusString;
          },
          renderNumber : function( e ) {
-            var numString = "" + e.numExperiments;
+            var numString = "" + e.size;
             return numString;
          },
 

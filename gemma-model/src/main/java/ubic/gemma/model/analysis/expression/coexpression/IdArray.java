@@ -19,7 +19,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
@@ -115,6 +117,19 @@ public abstract class IdArray implements Serializable {
     }
 
     /**
+     * @param other
+     * @return datasets IDs it has in common with this, as a set
+     */
+    public Set<Long> andSet( IdArray other ) {
+        Set<Long> result = new HashSet<>();
+        EWAHCompressedBitmap aab = data.and( other.data );
+        for ( int i : aab.toArray() ) {
+            result.add( new Long( i ) );
+        }
+        return result;
+    }
+
+    /**
      * @return
      */
     public byte[] getBytes() {
@@ -127,6 +142,21 @@ public abstract class IdArray implements Serializable {
     public Collection<Long> getIds() {
 
         List<Long> result = new ArrayList<>();
+
+        int[] array = data.toArray();
+        for ( int i : array ) {
+            result.add( new Long( i ) );
+        }
+        return result;
+
+    }
+
+    /**
+     * @return set representation
+     */
+    public Set<Long> getIdsSet() {
+
+        Set<Long> result = new HashSet<>();
 
         int[] array = data.toArray();
         for ( int i : array ) {

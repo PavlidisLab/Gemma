@@ -820,7 +820,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             editedGroup.description = this.newGroupDescription;
             editedGroup.expressionExperimentIds = this.getEEIds();
             editedGroup.taxonId = this.taxonId;
-            editedGroup.numExperiments = this.getEEIds().length;
+            editedGroup.size = this.getEEIds().length;
             editedGroup.modified = true;
             editedGroup.isPublic = false;
             editedGroup.numWithCoexpressionAnalysis = -1; // TODO
@@ -850,7 +850,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             editedGroup.name = this.newGroupName;
             editedGroup.description = this.newGroupDescription;
             editedGroup.expressionExperimentIds = this.getEEIds();
-            editedGroup.numExperiments = this.getEEIds().length;
+            editedGroup.size = this.getEEIds().length;
             editedGroup.isPublic = this.newGroupPublik;
             editedGroup.taxonId = (this.newGroupTaxon) ? this.newGroupTaxon.id : this.taxonId;
             editedGroup.numWithCoexpressionAnalysis = -1; // TODO
@@ -880,6 +880,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          },
 
          updateDatabase : function() {
+            debugger;
             var id = this.getSelectedExperimentSet().id;
             var eeIds = this.getEEIds();
 

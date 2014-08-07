@@ -165,7 +165,7 @@ public class CoexpressionSearchCommand {
     public String toString() {
         return "Genes=" + StringUtils.abbreviate( StringUtils.join( getGeneIds(), "," ), 100 ) + " EESet="
                 + this.getEeSetId() + " QueryGenesOnly=" + this.getQueryGenesOnly() + " tax=" + getTaxonId()
-                + " Stringency=" + stringency + " ees="
+                + ( stringency > 1 ? " Stringency=" + stringency : "" ) + " ees="
                 + StringUtils.abbreviate( StringUtils.join( getEeIds(), "," ), 100 );
     }
 

@@ -23,7 +23,7 @@ Gemma.DatasetGroupStore = function( config ) {
       name : "description",
       type : "string"
    }, {
-      name : "numExperiments",
+      name : "size", // was: numExperiments
       type : "int"
    }, {
       name : "expressionExperimentIds"

@@ -135,7 +135,7 @@ Gemma.ExperimentSetPreview = Ext
                   + ' usable of '
                   + size
                   + (this.hideUnanalyzedDatasets ? '<br><span style="font-size:smaller">Unanalyzed experiments hidden</span>'
-                     : '') );
+                     : '') ); // NOTE at the moment this refers to those lacking both Coex and Diff analyses
 
          },
 
@@ -175,7 +175,7 @@ Gemma.ExperimentSetPreview = Ext
             editedGroup.expressionExperimentIds = allIds;
             editedGroup.taxonId = record.get( 'taxonId' );
             editedGroup.taxonName = record.get( 'taxonName' );
-            editedGroup.numExperiments = editedGroup.expressionExperimentIds.length;
+            editedGroup.size = editedGroup.expressionExperimentIds.length;
             editedGroup.modified = true;
             editedGroup.isPublic = false;
 

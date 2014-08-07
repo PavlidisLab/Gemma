@@ -266,6 +266,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    },
 
    /**
+    * Used when extending queries in the visualization.
     * 
     * @param geneIds
     * @param queryGenesOnly

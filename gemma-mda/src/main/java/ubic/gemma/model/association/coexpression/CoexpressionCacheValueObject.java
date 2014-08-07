@@ -15,6 +15,7 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * Used to cache results; these objects are unmodifiable, and contains the coexpression data for one query gene and one
@@ -40,7 +41,7 @@ public class CoexpressionCacheValueObject implements Serializable {
     private final boolean positiveCorrelation;
 
     private Long supportDetailsId;
-    private Long[] supportingDatasets = null;
+    private Collection<Long> supportingDatasets = null;
     private CompressedLongSet testedInDatasets = null;
 
     /**
@@ -56,7 +57,7 @@ public class CoexpressionCacheValueObject implements Serializable {
         this.queryGene = vo.getQueryGeneId();
         this.support = vo.getNumDatasetsSupporting();
         this.supportDetailsId = vo.getSupportDetailsId();
-        this.supportingDatasets = vo.getSupportingDatasets().toArray( new Long[] {} );
+        this.supportingDatasets = vo.getSupportingDatasets();
         this.testedInDatasets = new CompressedLongSet( vo.getTestedInDatasets() );
 
         this.queryGeneSymbol = vo.getQueryGeneSymbol();
@@ -67,7 +68,7 @@ public class CoexpressionCacheValueObject implements Serializable {
 
     public CoexpressionValueObject toModifiable() {
         return new CoexpressionValueObject( coexpGene, coexGeneSymbol, positiveCorrelation, queryGene, queryGeneSymbol,
-                support, supportDetailsId, this.supportingDatasets, this.testedInDatasets.getValues() );
+                support, supportDetailsId, this.supportingDatasets, this.testedInDatasets.toSet() );
     }
 
 }

@@ -857,7 +857,7 @@ Gemma.SearchGrid = Ext.extend( Ext.grid.GridPanel, {
          } );
       } else if ( clazz === "ExpressionExperimentSetValueObject" ) {
          return "<a href=\"" + Gemma.LinkRoots.expressionExperimentSetPage + data.id + "\">" + data.name
-            + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.numExperiments + ")";
+            + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.size + ")";
       } else if ( clazz === "GeneSetValueObject" || clazz === "DatabaseBackedGeneSetValueObject" ) {
          return "<a href=\"" + Gemma.LinkRoots.geneSetPage + data.id + "\">" + data.name
             + "</a><span style='color:grey'> " + data.taxonName + "</span> (" + data.size + ")";

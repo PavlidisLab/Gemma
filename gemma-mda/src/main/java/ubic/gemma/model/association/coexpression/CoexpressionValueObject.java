@@ -98,7 +98,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         positiveCorrelation = g2g.isPositiveCorrelation();
 
         if ( g2g.getSupportDetails() != null ) {
-            this.supportingDatasets = new HashSet<>( g2g.getSupportDetails().getIds() );
+            this.supportingDatasets = g2g.getSupportDetails().getIdsSet();
             support = this.supportingDatasets.size();
             supportDetailsId = g2g.getSupportDetails().getId();
         } else if ( g2g.getNumDatasetsSupporting() != null ) {
@@ -119,14 +119,14 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * @param supportingDatasets
      */
     protected CoexpressionValueObject( Long queryGeneId, Long coexGeneId, Boolean positiveCorrelation, Integer support,
-            Long supportDetailsId, Long[] supportingDatasets ) {
+            Long supportDetailsId, Set<Long> supportingDatasets ) {
         super();
         this.coexGeneId = coexGeneId;
         this.positiveCorrelation = positiveCorrelation;
         this.queryGeneId = queryGeneId;
         this.support = support;
         this.supportDetailsId = supportDetailsId;
-        this.supportingDatasets = new HashSet<>( Arrays.asList( supportingDatasets ) );
+        this.supportingDatasets = supportingDatasets;
     }
 
     /**
@@ -142,7 +142,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      */
     protected CoexpressionValueObject( Long coexGeneId, String coexGeneSymbol, boolean positiveCorrelation,
             Long queryGeneId, String queryGeneSymbol, Integer support, Long supportDetailsId,
-            Long[] supportingDatasets, Long[] testedInDatasets ) {
+            Collection<Long> supportingDatasets, Collection<Long> testedInDatasets ) {
         super();
         this.coexGeneId = coexGeneId;
         this.coexGeneSymbol = coexGeneSymbol;
@@ -151,8 +151,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.queryGeneSymbol = queryGeneSymbol;
         this.support = support;
         this.supportDetailsId = supportDetailsId;
-        this.supportingDatasets = new HashSet<>( Arrays.asList( supportingDatasets ) );
-        this.testedInDatasets = new HashSet<>( Arrays.asList( testedInDatasets ) );
+        this.supportingDatasets = ( Set<Long> ) supportingDatasets;
+        this.testedInDatasets = ( Set<Long> ) testedInDatasets;
     }
 
     /**
@@ -177,8 +177,8 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
         this.queryGeneSymbol = queryGeneSymbol;
         this.support = support;
         this.supportDetailsId = supportDetailsId;
-        this.supportingDatasets = new HashSet<>( supportingDatasets );
-        this.testedInDatasets = new HashSet<>( testedInDatasets );
+        this.supportingDatasets = supportingDatasets;
+        this.testedInDatasets = testedInDatasets;
     }
 
     /*
@@ -330,18 +330,19 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
      * 
      * @param ids
      */
-    void setSupportingDatasets( Collection<Long> ids ) {
+    void setSupportingDatasets( Set<Long> ids ) {
         assert ids != null && !ids.isEmpty();
-        this.supportingDatasets = new HashSet<>( ids );
+        this.supportingDatasets = ids;
     }
 
     /**
      * @param ids
      */
-    void setTestedInDatasets( Collection<Long> ids ) {
+    void setTestedInDatasets( Set<Long> ids ) {
         assert ids != null && !ids.isEmpty();
         assert this.testedInDatasets == null || this.testedInDatasets.isEmpty();
-        this.testedInDatasets = new HashSet<>( ids );
+
+        this.testedInDatasets = ids;
     }
 
     /**

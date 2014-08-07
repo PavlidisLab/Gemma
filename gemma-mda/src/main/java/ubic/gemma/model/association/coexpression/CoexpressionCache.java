@@ -32,7 +32,7 @@ public interface CoexpressionCache {
      * The stringency used to query when populatin the cache. This can't be too low or the cache gets gigantic; if
      * someone is querying for data from a single dataset, they would use experiment-first mode.
      */
-    public static final int CACHE_QUERY_STRINGENCY = 3;
+    public static final int CACHE_QUERY_STRINGENCY = 5;
 
     /**
      * @param geneId

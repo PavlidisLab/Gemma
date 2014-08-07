@@ -258,8 +258,10 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
       }
 
       // Set up the taxon displayed.
+      Gemma.EVENTBUS.fireEvent( 'taxonchanged', record.get( 'taxonId' ) ); // OK?
+
       if ( this.sourceDatasetsGrid ) {
-         this.sourceDatasetsGrid.getTopToolbar().setTaxon( record.get( "taxonId" ) );
+         this.sourceDatasetsGrid.getTopToolbar().setTaxon( record.get( "taxonId" ) ); // get rid of this?
          this.sourceDatasetsGrid.getTopToolbar().taxonCombo.disable();
       }
    },

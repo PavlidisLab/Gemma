@@ -117,7 +117,7 @@ Gemma.DatasetGroupCombo = Ext
             }
 
             this.tpl = new Ext.XTemplate(
-               '<tpl for="."><div ext:qtip="{description} ({numExperiments} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>' );
+               '<tpl for="."><div ext:qtip="{description} ({size} members)" class="x-combo-list-item">{name}{[ values.taxon ? " (" + values.taxon.scientificName + ")" : "" ]}</div></tpl>' );
             this.tpl.compile();
 
             Gemma.DatasetGroupCombo.superclass.initComponent.call( this );
@@ -132,7 +132,7 @@ Gemma.DatasetGroupCombo = Ext
                         id : '-1',
                         name : 'All Experiments',
                         description : 'All expression experiments in the database.',
-                        numExperiments : -10,
+                        size : -10,
                         userCanWrite : false
                      }, 0 );
                      this.insert( 0, allExperimentsRecord );

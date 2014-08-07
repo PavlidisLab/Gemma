@@ -20,7 +20,9 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,12 +40,12 @@ public class CompressedLongSet {
     private EWAHCompressedBitmap data;
 
     /**
-     * @param testedInDatasets
+     * @param longs
      */
-    public CompressedLongSet( Set<Long> testedInDatasets ) {
-        List<Long> v = new ArrayList<>( testedInDatasets );
+    public CompressedLongSet( Set<Long> longs ) {
+        List<Long> v = new ArrayList<>( longs );
         Collections.sort( v );
-        data = new EWAHCompressedBitmap( testedInDatasets.size() );
+        data = new EWAHCompressedBitmap( longs.size() );
 
         for ( Long l : v ) {
             if ( l > Integer.MAX_VALUE ) {
@@ -66,6 +68,18 @@ public class CompressedLongSet {
         for ( Integer i : positions ) {
             result[k] = i.longValue();
             k++;
+        }
+        return result;
+    }
+
+    /**
+     * @return set representation
+     */
+    public Collection<Long> toSet() {
+        List<Integer> positions = data.getPositions();
+        Set<Long> result = new HashSet<Long>();
+        for ( Integer i : positions ) {
+            result.add( i.longValue() );
         }
         return result;
     }

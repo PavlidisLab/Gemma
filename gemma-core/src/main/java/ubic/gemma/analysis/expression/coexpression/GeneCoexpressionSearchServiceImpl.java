@@ -214,9 +214,10 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         // FIXME we are ignoring the input stringency entirely
         stringency = chooseStringency( queryGenesOnly, eeIds.size(), genes.size() );
-        stringency -= 2; // for elodie.
-        if ( stringency < 1 ) stringency = 1;
-        log.info( "Stringency set to " + stringency + " based on number of experiments queried" );
+        assert stringency > 0;
+        assert stringency >= 2 || eeIds.size() == 1;
+
+        log.info( "Stringency set to " + stringency + " based on number of experiments queried (" + eeIds.size() + ")" );
 
         if ( queryGenesOnly ) {
             // note that maxResults is ignored.
@@ -257,8 +258,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
             result.getSummaries().put( queryGene, summary );
 
-            if ( ++k % 20 == 0 ) {
-                log.info( "Processed results for " + k + " queries..." );
+            if ( ++k % 100 == 0 ) {
+                log.info( "Processed results for " + k + " query genes ..." );
             }
 
         }
@@ -367,6 +368,14 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
      */
     private Integer chooseStringency( boolean queryGenesOnly, int numExperimentsQueried, int numGenesQueried ) {
         // this is completely made up...purely based on manual testing.
+
+        double geneSlope = 0.008;
+        double geneMinimum = 1 - ( queryGenesOnly ? 1 : 0 );
+
+        double expSlope = 0.03;
+        double expMinimum = 2;
+
+        // int stringency = geneMinimum + geneSlope*numGenesQueried +
 
         int baseline = 1;
 

@@ -1112,7 +1112,8 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend( Gemma.GeneGrid, {
       this.getTopToolbar().taxonCombo.reset();
       this.getTopToolbar().geneCombo.reset();
       this.getTopToolbar().taxonCombo.setDisabled( false );
-      this.fireEvent( "taxonchanged", null );
+      // this.fireEvent( "taxonchanged", null );
+      Gemma.EVENTBUS.fireEvent( 'taxonchanged', null );
       this.loadGenes( [] );
       this.currentGroupSize = 0;
    },

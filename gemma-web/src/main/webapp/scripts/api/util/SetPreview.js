@@ -79,8 +79,10 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
             cn : msg
          } );
       },
+
       /**
        * Set the taxon id for the preview and selection editor
+       * 
        * 
        * @private
        * @param {Number}
@@ -315,6 +317,10 @@ Gemma.SetPreview = Ext.extend( Ext.Panel,
          Ext.apply( this, {
             items : itemsForCmp
          } );
+
+         Gemma.EVENTBUS.on( 'taxonchanged', function( taxonId ) {
+            this.setTaxonId( taxonId );
+         }, this );
 
          Gemma.SetPreview.superclass.initComponent.call( this );
 

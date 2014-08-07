@@ -107,6 +107,10 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
          tpl : tmpl
       } );
 
+      Gemma.EVENTBUS.on( 'taxonchanged', function() {
+         this.setTaxonById( taxonId );
+      }, this );
+
       Gemma.TaxonCombo.superclass.initComponent.call( this );
 
       if ( this.allTaxa ) {
@@ -146,7 +150,7 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
    },
 
    /**
-    * To allow setting programmatically.
+    * To allow setting programmatically.. Do not fire the taxonchanged event, but do fire the select event.
     * 
     * @param {}
     *           taxon
@@ -162,8 +166,9 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
    },
 
    /**
-    * To allow setting programmatically.
+    * To allow setting programmatically. Do not fire the taxonchanged event, but do fire the select event.
     * 
+    * @private
     * @param {}
     *           taxon
     */
@@ -176,7 +181,8 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
    },
 
    /**
-    * returns complete taxon object that matches the common name given if successful. Else return -1.
+    * returns complete taxon object that matches the common name given if successful. Else return -1.. Do not fire the
+    * taxonchanged event, but do fire the select event.
     * 
     * @param {commonName}
     *           the common name of the taxon

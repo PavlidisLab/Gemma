@@ -165,7 +165,7 @@ Gemma.GeneGrid = Ext.extend( Ext.grid.GridPanel,
             }
          }, this );
 
-         // See http://www.extjs.com/learn/Tutorial:RelayEvents
+         // See http://www.extjs.com/learn/Tutorial:RelayEvents // FIXME use EVENTBUS
          this.relayEvents( this.getTopToolbar(), [ 'ready', 'taxonchanged' ] );
 
          if ( this.genes ) {
@@ -400,7 +400,8 @@ Gemma.GeneChooserToolBar = Ext.extend( Ext.Toolbar, {
 
       this.taxonCombo.setTaxon( taxon );
 
-      this.fireEvent( "taxonchanged", taxon );
+      Gemma.EVENTBUS.fireEvent( 'taxonchanged', taxon.id );
+      // this.fireEvent( "taxonchanged", taxon );
    },
 
    getTaxon : function() {

@@ -80,8 +80,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
       }
 
       /**
-       * Verify that experiments and genes are not empty. If there are too many experiments or genes, warn the user and
-       * offer to trim the sets.
+       * Verify that experiments and genes are not empty (though we may allow this). If there are too many experiments
+       * or genes, warn the user and offer to trim the sets.
        */
 
       // Check if counts exceed maximums
@@ -98,6 +98,10 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
          // skip trimming
          this.startDifferentialExpressionSearch( geneSetValueObject, experimentSetValueObject );
       }
+
+      /*
+       * FIXME what if they are empty.
+       */
    },
 
    /**

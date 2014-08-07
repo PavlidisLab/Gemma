@@ -29,6 +29,9 @@ Gemma.AnalysesSearchUtils = {
     * @return {Array}
     */
    getExperimentIds : function( experimentSetValueObject ) {
+      if ( !experimentSetValueObject ) {
+         return [];
+      }
       var eeIds = [];
       var vo = experimentSetValueObject;
       if ( vo instanceof ExpressionExperimentValueObject ) {
@@ -86,6 +89,9 @@ Gemma.AnalysesSearchUtils = {
     * @returns
     */
    getExperimentCount : function( experimentSetValueObject ) {
+      if ( !experimentSetValueObject ) {
+         return -1;
+      }
       return experimentSetValueObject.size;
    },
 

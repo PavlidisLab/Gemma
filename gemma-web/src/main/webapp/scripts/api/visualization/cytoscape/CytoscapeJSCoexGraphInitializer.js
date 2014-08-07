@@ -158,7 +158,7 @@ Gemma.CytoscapeJSCoexGraphInitializer = function( cy, graphData, readyFunction, 
           * http://jsbin.com/riqiyike/1/edit
           */
          cy.nodes().each( function() {
-            console.log( this );
+            // console.log( this );
             this.qtip( {
                content : this.data( 'officialName' ) + "<br>Node degree rank=" + this.data( 'nodeDegree' )
             } );
