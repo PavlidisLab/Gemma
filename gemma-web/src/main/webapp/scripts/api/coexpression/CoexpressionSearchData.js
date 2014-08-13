@@ -10,10 +10,11 @@ Ext.namespace( 'Gemma' );
  */
 Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 
-   // The original query
-   searchCommandUsed : {}, // type CoexpressionSearchCommand
+   // The original query, which could include gene ids, a gene set, experiment set, etc.
+   searchCommandUsed : {}, // type CoexpressionSearchCommand. It gets set
 
-   // CoexpressionMetaValueObject; also contains a copy of the command, whic his the original used.
+   // CoexpressionMetaValueObject; also contains a copy of the command, which is the original used. It also has the
+   // query gene ids.
    searchResults : {},
 
    // CoexpressionMetaValueObject, which might be filtered different for the graph view.
@@ -21,8 +22,9 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 
    cytoscapeResultsUpToDate : false,
 
-   coexSearchTimeout : 420000, // ms
+   coexSearchTimeout : 420000, // ms - is this necessary?
 
+   // ???
    allGeneIdsSet : [],
 
    /**
@@ -168,8 +170,20 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
       return this.stringency;
    },
 
+   /**
+    * 
+    * 
+    * @returns
+    */
    getQueryGeneIds : function() {
-      return this.searchCommandUsed.geneIds;
+      // This might be empty if the query was a gene set
+      // return this.searchCommandUsed.geneIds;
+
+      var res = [];
+      this.searchResults.queryGenes.forEach( function( gene ) {
+         res.push( gene.id );
+      } );
+      return res;
    },
 
    getQueryGenes : function() {
@@ -179,10 +193,6 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    getTaxonId : function() {
       return this.searchCommandUsed.taxonId;
    },
-
-   // setSearchCommand: function (searchCommand) {
-   // this.searchCommandUsed = searchCommand;
-   // },
 
    /**
     * Does the search using CoexpressionSearchController.doSearchQuickComplete; fires events to notify state e.g. when
@@ -199,7 +209,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          this.stringency = newStringency;
          this.fireEvent( 'search-started' );
          this.cytoscapeSearchResults = this.searchResults;
-         this.searchCommandUsed.stringency = newStringency;
+         this.searchCommandUsed.stringency = newStringency; // FIXME WHY ARE WE CHANGING THIS?
          this.cytoscapeResultsUpToDate = true;
 
          /*
@@ -207,13 +217,13 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
           */
          this.fireEvent( 'complete-search-results-ready', this.searchResults, {
             geneIds : this.searchCommandUsed.geneIds,
-            eeIds : this.searchCommandUsed.eeIds,
+            eeIds : this.searchCommandUsed.eeIds, // IS THIS AVAILABLE?
             stringency : newStringency,
             useMyDatasets : false,
             queryGenesOnly : true,
             taxonId : this.searchCommandUsed.taxonId,
-            eeSetName : null,
-            eeSetId : null
+            eeSetName : this.searchCommandUsed.eeSetName,
+            eeSetId : this.searchCommandUsed.eeSetId
          } );
          this.fireEvent( 'aftersearch' );
          return;
@@ -227,29 +237,30 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 
       var coexpressionSearchCommand = {
          geneIds : geneIdsSubset,
-         eeIds : this.searchCommandUsed.eeIds,
+         eeIds : this.searchCommandUsed.eeIds, // IS THIS AVAILABLE?
          stringency : searchStringency,
          useMyDatasets : false,
          queryGenesOnly : true,
          taxonId : this.searchCommandUsed.taxonId,
-         eeSetName : null,
-         eeSetId : null
+         eeSetName : this.searchCommandUsed.eeSetName,
+         eeSetId : this.searchCommandUsed.eeSetId
       };
 
       if ( geneIdsSubset.length < 2 ) {
          // There is a bug where if you can get a gene back in results but if you search for it by itself there are
-         // no results(PPP2R1A human)
+         // no results(PPP2R1A human) (WHAT IS THIS BUG??)
          this.cytoscapeSearchResults.results = [];
          this.fireEvent( 'complete-search-results-ready', this.cytoscapeSearchResults, coexpressionSearchCommand );
+
+         alert( "Error, there were no genes, this is a bug" );
+
          return;
       }
-
-      this.fireEvent( 'search-started' );
 
       /*
        * Do a search that fills in the edges among the genes already found.
        */
-      CoexpressionSearchController.doSearchQuickComplete( coexpressionSearchCommand, this.searchCommandUsed.geneIds, {
+      CoexpressionSearchController.doSearchQuickComplete( coexpressionSearchCommand, this.getQueryGeneIds(), {
          callback : function( results ) {
             this.cytoscapeSearchResults = results;
             this.searchCommandUsed.stringency = searchStringency;
@@ -263,6 +274,8 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          }.createDelegate( this ),
          timeout : this.coexSearchTimeout
       } );
+
+      this.fireEvent( 'search-started' );
    },
 
    /**
@@ -275,20 +288,19 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
       var coexpressionSearchCommand = {
          geneIds : geneIds,
          eeIds : this.searchCommandUsed.eeIds,
-         stringency : Gemma.MIN_STRINGENCY,
-         useMyDatasets : false,
+         stringency : this.searchCommandUsed.stringency,
+         useMyDatasets : this.searchCommandUsed.useMyDatasets,
          queryGenesOnly : queryGenesOnly,
          taxonId : this.searchCommandUsed.taxonId,
-         eeSetName : null,
-         eeSetId : null
+         eeSetName : this.searchCommandUsed.eeSetName,
+         eeSetId : this.searchCommandUsed.eeSetId
       };
       this.search( coexpressionSearchCommand );
    },
 
    reset : function() {
-
       this.searchResults = {};
-      this.allGeneIdsSet = [];
+      this.allGeneIdsSet = []; // what is this for?
       this.cytoscapeSearchResults = {};
    },
 
@@ -298,7 +310,9 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
     * @param searchCommand
     */
    search : function( searchCommand ) {
-      this.searchCommandUsed = searchCommand;
+      this.searchCommandUsed = searchCommand; // this is the only place this gets set. If Sets were used, the ids will
+      // not be here.
+      console.log( this.searchCommandUsed );
       var ref = this;
       ref.fireEvent( 'search-started' );
       CoexpressionSearchController.doBackgroundCoexSearch( searchCommand, {

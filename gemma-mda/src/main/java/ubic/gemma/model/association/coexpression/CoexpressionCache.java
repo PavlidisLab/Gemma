@@ -32,7 +32,7 @@ public interface CoexpressionCache {
      * The stringency used to query when populatin the cache. This can't be too low or the cache gets gigantic; if
      * someone is querying for data from a single dataset, they would use experiment-first mode.
      */
-    public static final int CACHE_QUERY_STRINGENCY = 5;
+    public static final int CACHE_QUERY_STRINGENCY = 4;
 
     /**
      * @param geneId
@@ -55,6 +55,11 @@ public interface CoexpressionCache {
      * @return results sorted in descending order of support, or null if the gene was not in the cache
      */
     public abstract List<CoexpressionValueObject> get( Long g );
+
+    /**
+     * @return
+     */
+    public boolean isEnabled();
 
     /**
      * Bulk remove from cache.

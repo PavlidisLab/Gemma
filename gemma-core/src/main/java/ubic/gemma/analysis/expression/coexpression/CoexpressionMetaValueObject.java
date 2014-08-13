@@ -42,17 +42,12 @@ public class CoexpressionMetaValueObject {
     /**
      * The default maximum number of edges to send to the client.
      */
-    public static final int DEFAULT_MAX_EDGES_PER_GRAPH = 1000;
+    public static final int DEFAULT_MAX_EDGES_PER_GRAPH = 2000;
 
     private static Logger log = LoggerFactory.getLogger( CoexpressionMetaValueObject.class );
 
     /**
-     * The stringency actually used if the results were trimmed
-     */
-    private int trimStringency;
-
-    /**
-     * The stringency used in the initial query.
+     * The stringency used in the initial query and after 'global' trimming.
      */
     private int queryStringency;
 
@@ -62,12 +57,6 @@ public class CoexpressionMetaValueObject {
 
     public void setQueryStringency( int queryStringency ) {
         this.queryStringency = queryStringency;
-    }
-
-    private double[] degreeQuintiles = new double[5];
-
-    protected double[] getDegreeQuintiles() {
-        return degreeQuintiles;
     }
 
     /**
@@ -96,15 +85,16 @@ public class CoexpressionMetaValueObject {
     /**
      * if this was a "query genes only" search
      */
-    private boolean queryGenesOnly;
+    private boolean queryGenesOnly = false;
 
     /**
-     * Results for coexpression of the query gene with other genes (which could potentially include other query genes)
+     * Results for coexpression of the query gene with other 'found' genes (which could potentially include other query
+     * genes)
      */
     private List<CoexpressionValueObjectExt> results;
 
     /**
-     * The original search settings.
+     * The original search settings. FIXME we should not modify this?
      */
     private CoexpressionSearchCommand searchSettings;
 
@@ -117,14 +107,15 @@ public class CoexpressionMetaValueObject {
         super();
     }
 
-    public int getTrimStringency() {
-        return trimStringency;
-    }
-
     public String getErrorState() {
         return errorState;
     }
 
+    /**
+     * How many edges total are we allowed to have in the graph? Above this, they can get trimmed.
+     * 
+     * @return
+     */
     public int getMaxEdges() {
         return maxEdges;
     }
@@ -151,8 +142,8 @@ public class CoexpressionMetaValueObject {
     }
 
     /**
-     * The original search settings from the client. Does not reflect any adjustments that might have been made to the
-     * stringency
+     * The original search settings from the client. FIXME ??? Does not reflect any adjustments that might have been
+     * made to the stringency
      * 
      * @return
      */
@@ -166,10 +157,6 @@ public class CoexpressionMetaValueObject {
 
     public boolean isQueryGenesOnly() {
         return queryGenesOnly;
-    }
-
-    public void setTrimStringency( int appliedStringency ) {
-        this.trimStringency = appliedStringency;
     }
 
     public void setErrorState( String errorState ) {
@@ -239,8 +226,10 @@ public class CoexpressionMetaValueObject {
 
     /**
      * This method just removes low stringency results until it goes below the limit, regardless of whether the genes
-     * involved were query genes or not. The other trim method only removes non-query gene edges, so it is suitable for
-     * large 'query genes only'.
+     * involved were query genes or not. This means, in effect, the original query could have been done at this higher
+     * stringency.
+     * <p>
+     * The other trim method only removes non-query gene edges, so it is suitable for large 'query genes only'.
      */
     public void trim() {
 
@@ -253,7 +242,7 @@ public class CoexpressionMetaValueObject {
 
         if ( geneResults.size() <= this.getMaxEdges() ) return;
 
-        int startStringency = this.getSearchSettings().getStringency();
+        int startStringency = this.queryStringency;
         int initialTrimStringency = startStringency;
 
         List<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<>();
@@ -279,10 +268,7 @@ public class CoexpressionMetaValueObject {
 
         Collections.sort( strippedGeneResults );
         this.setResults( strippedGeneResults );
-        this.setTrimStringency( initialTrimStringency );
-
-        // but this doesn't just deal with non-query gene edges.
-        // this.setNonQueryGeneTrimmedValue( trimStringency );
+        this.setQueryStringency( initialTrimStringency );
 
         if ( this.searchSettings != null ) this.searchSettings.setStringency( initialTrimStringency );
 
@@ -290,180 +276,179 @@ public class CoexpressionMetaValueObject {
 
     }
 
+    // /**
+    // * Reduce the size of the graph by preferentially removing links that don't involve the given genes. Used when
+    // * running "query genes only" searches.
+    // * <p>
+    // * FIXME I don't see the main point of this.
+    // *
+    // * @param queryGeneIds
+    // */
+    // public void trim( Set<Long> queryGeneIds ) {
+    //
+    // // sorted in decreasing order of support.
+    // List<CoexpressionValueObjectExt> geneResults = this.getResults();
+    //
+    // if ( geneResults.size() <= this.getMaxEdges() ) return;
+    //
+    // int startStringency = this.getSearchSettings().getStringency();
+    //
+    // /*
+    // * Pick stringency that doesn't go over the limit.
+    // */
+    // CountingMap<Integer> supportDistribution = CoexpressionUtils.getSupportDistribution( geneResults );
+    // int initialTrimStringency = findTrimStringency( startStringency, supportDistribution );
+    //
+    // // Map<Long, Integer> nodeDegreeDistribution = CoexpressionUtils.getNodeDegreeDistribution( geneResults );
+    //
+    // List<Integer> supports = new ArrayList<>( supportDistribution.keySet() );
+    // Collections.sort( supports );
+    //
+    // /*
+    // * haircut
+    // */
+    // // if ( geneResults.size() > this.getMaxEdges() ) {
+    // // Set<Long> singletons = getGenesWithNodeDegree( nodeDegreeDistribution, 1 );
+    // //
+    // // /*
+    // // * from the lowest stringency up
+    // // *
+    // // * FIXME involvement of query genes might not be a good criterion.
+    // // */
+    // // int tc = 0;
+    // // int supportToTrim = supports.get( 0 );
+    // // for ( int i = 0; i < supports.size(); i++ ) {
+    // //
+    // // supportToTrim = supports.get( i );
+    // //
+    // // for ( Iterator<CoexpressionValueObjectExt> iterator = geneResults.iterator(); iterator.hasNext(); ) {
+    // // CoexpressionValueObjectExt cvoe = iterator.next();
+    // // if ( cvoe.getSupport() > supportToTrim ) continue;
+    // // if ( cvoe.involvesAny( queryGeneIds ) ) continue;
+    // // if ( cvoe.involvesAny( singletons ) ) {
+    // // iterator.remove();
+    // // tc++;
+    // // }
+    // // }
+    // //
+    // // if ( geneResults.size() < this.getMaxEdges() ) break;
+    // // }
+    // //
+    // // if ( tc > 0 ) {
+    // // log.info( "Trimmed " + tc + " singletons at " + supportToTrim );
+    // // }
+    // //
+    // // if ( supportToTrim > startStringency ) {
+    // // trimStringency = supportToTrim;
+    // // }
+    // // }
+    //
+    // if ( initialTrimStringency > startStringency ) {
+    // log.info( "Trim stringency will be " + initialTrimStringency + ", instead of " + startStringency );
+    // } else {
+    // // no trimming will happen, so we can bail. But we shouldn't get here.
+    // // assert geneResults.size() <= this.getMaxEdges();
+    // log.info( "No trimming required: " + geneResults.size() + " results." );
+    // return;
+    // }
+    //
+    // /*
+    // * Now trim.
+    // */
+    // // for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+    // //
+    // // if ( cvoe.getSupport() < trimStringency ) continue;
+    // //
+    // // Long g1 = cvoe.getQueryGene().getId();
+    // // Long g2 = cvoe.getFoundGene().getId();
+    // // boolean f = queryGeneIds.contains( g2 );
+    // // boolean q = queryGeneIds.contains( g1 );
+    // //
+    // // if ( f || q ) {
+    // // strippedGeneResults.add( cvoe );
+    // //
+    // // // get the non-query genes.
+    // // if ( !f ) geneIds.add( g1 );
+    // // if ( !q ) geneIds.add( g2 );
+    // //
+    // // } else {
+    // // maybe.add( cvoe );
+    // // }
+    // //
+    // // }
+    //
+    // /*
+    // * First pass: Favor links that involve the query genes, until we hit the limit.
+    // */
+    // List<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<>();
+    // Set<Long> geneIds = new HashSet<>();
+    // Collection<CoexpressionValueObjectExt> maybe = new HashSet<>();
+    // // int trimStringency = startStringency;
+    // for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+    //
+    // Long g1 = cvoe.getQueryGene().getId();
+    // Long g2 = cvoe.getFoundGene().getId();
+    // boolean f = queryGeneIds.contains( g2 );
+    // boolean q = queryGeneIds.contains( g1 );
+    //
+    // if ( f || q ) {
+    // // always keep the links that involve query genes.
+    // strippedGeneResults.add( cvoe );
+    //
+    // /*
+    // * Keep the gene as one to add more links to if it's above the trimStringency.
+    // */
+    // if ( f && q ) {
+    // geneIds.add( g1 );
+    // geneIds.add( g2 );
+    // } else if ( f ) {
+    // geneIds.add( g1 );
+    // if ( cvoe.getSupport() >= initialTrimStringency ) {
+    // geneIds.add( g2 );
+    // }
+    // } else if ( q ) {
+    // geneIds.add( g2 );
+    // if ( cvoe.getSupport() >= initialTrimStringency ) {
+    // geneIds.add( g1 );
+    // }
+    // }
+    // } else {
+    // maybe.add( cvoe );
+    // }
+    //
+    // // check if we identified the stringency threshold we want to use; we only set this once. Say the start
+    // // stringency is 2. If we end up with enough results at stringency 10, we get the rest of the results for
+    // // that stringency, but no more.
+    // if ( initialTrimStringency == startStringency && strippedGeneResults.size() >= this.getMaxEdges() ) {
+    // initialTrimStringency = cvoe.getSupport();
+    // log.info( "Trim stringency raised to " + initialTrimStringency );
+    // }
+    // }
+    //
+    // /*
+    // * Retain links that involve the genes included above, at the trim stringency.
+    // */
+    // for ( CoexpressionValueObjectExt cvoe : maybe ) {
+    // if ( cvoe.getSupport() >= initialTrimStringency && geneIds.contains( cvoe.getFoundGene().getId() )
+    // && geneIds.contains( cvoe.getQueryGene().getId() ) ) {
+    // strippedGeneResults.add( cvoe );
+    // }
+    // }
+    //
+    // log.info( "Original results size: " + this.getResults().size() + " trimmed size: " + strippedGeneResults.size()
+    // + "  Total results removed: " + ( this.getResults().size() - strippedGeneResults.size() ) );
+    //
+    // Collections.sort( strippedGeneResults );
+    // this.setResults( strippedGeneResults );
+    // // this.setTrimStringency( initialTrimStringency );
+    //
+    // trimUnusedSummaries();
+    // }
+
     /**
-     * Reduce the size of the graph by removing links that don't involve the given genes. Used when running
-     * "query genes only" searches.
-     * 
-     * @param queryGeneIds
-     */
-    public void trim( Set<Long> queryGeneIds ) {
-
-        // sorted in decreasing order of support.
-        List<CoexpressionValueObjectExt> geneResults = this.getResults();
-
-        if ( geneResults.size() <= this.getMaxEdges() ) return;
-
-        int startStringency = this.getSearchSettings().getStringency();
-
-        /*
-         * Pick stringency that doesn't go over the limit.
-         */
-        CountingMap<Integer> supportDistribution = CoexpressionUtils.getSupportDistribution( geneResults );
-        int initialTrimStringency = findTrimStringency( startStringency, supportDistribution );
-
-        // Map<Long, Integer> nodeDegreeDistribution = CoexpressionUtils.getNodeDegreeDistribution( geneResults );
-
-        List<Integer> supports = new ArrayList<>( supportDistribution.keySet() );
-        Collections.sort( supports );
-
-        /*
-         * haircut
-         */
-        // if ( geneResults.size() > this.getMaxEdges() ) {
-        // Set<Long> singletons = getGenesWithNodeDegree( nodeDegreeDistribution, 1 );
-        //
-        // /*
-        // * from the lowest stringency up
-        // *
-        // * FIXME involvement of query genes might not be a good criterion.
-        // */
-        // int tc = 0;
-        // int supportToTrim = supports.get( 0 );
-        // for ( int i = 0; i < supports.size(); i++ ) {
-        //
-        // supportToTrim = supports.get( i );
-        //
-        // for ( Iterator<CoexpressionValueObjectExt> iterator = geneResults.iterator(); iterator.hasNext(); ) {
-        // CoexpressionValueObjectExt cvoe = iterator.next();
-        // if ( cvoe.getSupport() > supportToTrim ) continue;
-        // if ( cvoe.involvesAny( queryGeneIds ) ) continue;
-        // if ( cvoe.involvesAny( singletons ) ) {
-        // iterator.remove();
-        // tc++;
-        // }
-        // }
-        //
-        // if ( geneResults.size() < this.getMaxEdges() ) break;
-        // }
-        //
-        // if ( tc > 0 ) {
-        // log.info( "Trimmed " + tc + " singletons at " + supportToTrim );
-        // }
-        //
-        // if ( supportToTrim > startStringency ) {
-        // trimStringency = supportToTrim;
-        // }
-        // }
-
-        if ( initialTrimStringency > startStringency ) {
-            log.info( "Trim stringency will be " + initialTrimStringency + ", instead of " + startStringency );
-        } else {
-            // no trimming will happen, so we can bail. But we shouldn't get here.
-            // assert geneResults.size() <= this.getMaxEdges();
-            log.info( "No trimming required: " + geneResults.size() + " results." );
-            return;
-        }
-
-        /*
-         * Now trim.
-         */
-        // for ( CoexpressionValueObjectExt cvoe : geneResults ) {
-        //
-        // if ( cvoe.getSupport() < trimStringency ) continue;
-        //
-        // Long g1 = cvoe.getQueryGene().getId();
-        // Long g2 = cvoe.getFoundGene().getId();
-        // boolean f = queryGeneIds.contains( g2 );
-        // boolean q = queryGeneIds.contains( g1 );
-        //
-        // if ( f || q ) {
-        // strippedGeneResults.add( cvoe );
-        //
-        // // get the non-query genes.
-        // if ( !f ) geneIds.add( g1 );
-        // if ( !q ) geneIds.add( g2 );
-        //
-        // } else {
-        // maybe.add( cvoe );
-        // }
-        //
-        // }
-
-        /*
-         * First pass: Favor links that involve the query genes, until we hit the limit.
-         */
-        List<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<>();
-        Set<Long> geneIds = new HashSet<>();
-        Collection<CoexpressionValueObjectExt> maybe = new HashSet<>();
-        // int trimStringency = startStringency;
-        for ( CoexpressionValueObjectExt cvoe : geneResults ) {
-
-            Long g1 = cvoe.getQueryGene().getId();
-            Long g2 = cvoe.getFoundGene().getId();
-            boolean f = queryGeneIds.contains( g2 );
-            boolean q = queryGeneIds.contains( g1 );
-
-            if ( f || q ) {
-                // always keep the links that involve query genes.
-                strippedGeneResults.add( cvoe );
-
-                /*
-                 * Keep the gene as one to add more links to if it's above the trimStringency.
-                 */
-                if ( f && q ) {
-                    geneIds.add( g1 );
-                    geneIds.add( g2 );
-                } else if ( f ) {
-                    geneIds.add( g1 );
-                    if ( cvoe.getSupport() >= initialTrimStringency ) {
-                        geneIds.add( g2 );
-                    }
-                } else if ( q ) {
-                    geneIds.add( g2 );
-                    if ( cvoe.getSupport() >= initialTrimStringency ) {
-                        geneIds.add( g1 );
-                    }
-                }
-            } else {
-                maybe.add( cvoe );
-            }
-
-            // check if we identified the stringency threshold we want to use; we only set this once. Say the start
-            // stringency is 2. If we end up with enough results at stringency 10, we get the rest of the results for
-            // that stringency, but no more.
-            if ( initialTrimStringency == startStringency && strippedGeneResults.size() >= this.getMaxEdges() ) {
-                initialTrimStringency = cvoe.getSupport();
-                log.info( "Trim stringency raised to " + initialTrimStringency );
-            }
-        }
-
-        /*
-         * Retain links that involve the genes included above, at the trim stringency.
-         */
-        for ( CoexpressionValueObjectExt cvoe : maybe ) {
-            if ( cvoe.getSupport() >= initialTrimStringency && geneIds.contains( cvoe.getFoundGene().getId() )
-                    && geneIds.contains( cvoe.getQueryGene().getId() ) ) {
-                strippedGeneResults.add( cvoe );
-            }
-        }
-
-        log.info( "Original results size: " + this.getResults().size() + " trimmed size: " + strippedGeneResults.size()
-                + "  Total results removed: " + ( this.getResults().size() - strippedGeneResults.size() ) );
-
-        Collections.sort( strippedGeneResults );
-        this.setResults( strippedGeneResults );
-        this.setTrimStringency( initialTrimStringency );
-
-        // but this doesn't just deal with non-query gene edges.
-        // this.setNonQueryGeneTrimmedValue( trimStringency );
-
-        trimUnusedSummaries();
-    }
-
-    /**
      * 
      */
-    public void trimUnusedSummaries() {
+    private void trimUnusedSummaries() {
         if ( summaries == null ) return;
 
         /*
@@ -486,38 +471,38 @@ public class CoexpressionMetaValueObject {
         }
     }
 
-    /**
-     * Find stringency that doesn't keep too many links.
-     * 
-     * @param startStringency
-     * @param stringencyDist
-     * @return
-     */
-    private int findTrimStringency( int startStringency, CountingMap<Integer> stringencyDist ) {
-        int initTrimStringency = startStringency;
-        List<Integer> s = new ArrayList<>( stringencyDist.keySet() );
-        Collections.sort( s );
-        int total = 0;
-        // double SLOP = 1.2; // let us go over the limit a little.
-        for ( int i = s.size() - 1; i >= 0; i-- ) {
-
-            int stringency = s.get( i );
-            int count = stringencyDist.get( stringency );
-
-            int oldtot = total;
-            total += count;
-            if ( log.isDebugEnabled() )
-                log.debug( "Testing number of edges at stringency " + stringency + " = " + total );
-
-            // if we're over, use the previous limit. Remember we're going to add more edges.
-            if ( oldtot > 0 && total > this.getMaxEdges() ) {
-                initTrimStringency = stringency + 1;
-                assert initTrimStringency >= startStringency;
-                break;
-            }
-
-        }
-        return initTrimStringency;
-    }
+    // /**
+    // * Find stringency that doesn't keep too many links.
+    // *
+    // * @param startStringency
+    // * @param stringencyDist
+    // * @return
+    // */
+    // private int findTrimStringency( int startStringency, CountingMap<Integer> stringencyDist ) {
+    // int initTrimStringency = startStringency;
+    // List<Integer> s = new ArrayList<>( stringencyDist.keySet() );
+    // Collections.sort( s );
+    // int total = 0;
+    // // double SLOP = 1.2; // let us go over the limit a little.
+    // for ( int i = s.size() - 1; i >= 0; i-- ) {
+    //
+    // int stringency = s.get( i );
+    // int count = stringencyDist.get( stringency );
+    //
+    // int oldtot = total;
+    // total += count;
+    // if ( log.isDebugEnabled() )
+    // log.debug( "Testing number of edges at stringency " + stringency + " = " + total );
+    //
+    // // if we're over, use the previous limit. Remember we're going to add more edges.
+    // if ( oldtot > 0 && total > this.getMaxEdges() ) {
+    // initTrimStringency = stringency + 1;
+    // assert initTrimStringency >= startStringency;
+    // break;
+    // }
+    //
+    // }
+    // return initTrimStringency;
+    // }
 
 }

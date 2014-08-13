@@ -117,7 +117,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
     @Autowired
     private EhCacheManagerFactoryBean cacheManagerFactory;
 
-    private AtomicBoolean enabled = new AtomicBoolean( true );
+    private AtomicBoolean enabled = new AtomicBoolean( Settings.getBoolean( "gemma.cache.gene2gene.enabled", true ) );
 
     /**
      * Initialize the cache; if it already exists it will not be recreated.
@@ -263,6 +263,16 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
             }
             return result;
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.CoexpressionCache#isEnabled()
+     */
+    @Override
+    public boolean isEnabled() {
+        return this.enabled.get();
     }
 
     /*

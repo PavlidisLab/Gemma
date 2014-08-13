@@ -49,4 +49,9 @@ public interface GeneTestedInCache {
      */
     public boolean contains( Long queryGeneId );
 
+    /**
+     * @param id
+     */
+    public void remove( Long id );
+
 }

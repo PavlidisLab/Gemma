@@ -55,7 +55,11 @@ import ubic.gemma.util.EntityUtils;
 @Lazy
 public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearchService {
 
-    private static final int THRESHOLD_TRIGGER_QUERYGENESONLY = 200;
+    /**
+     * If the query involves this many genes, we switch to looking only among the genes. The limit here is entirely
+     * driven by performance considerations: too many genes and we get too many results.
+     */
+    private static final int THRESHOLD_TRIGGER_QUERYGENESONLY = 50;
 
     private static Log log = LogFactory.getLog( GeneCoexpressionSearchServiceImpl.class.getName() );
 
@@ -131,7 +135,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
              * sanity check
              */
             if ( queryGenesOnly && !queryGeneIds.contains( cvo.getCoexGeneId() ) ) {
-                log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly" );
+                log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
+                        + cvo.getCoexGeneId() + " is not a query" );
                 continue;
             }
 
@@ -203,7 +208,6 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         // Note: auto-choose stringency on client size not always giving something reasonable. Also: not clear we want
         // to do this auto-adjust for 'query genes only'.
-        // if ( stringency == 1 )
 
         if ( genes.size() > THRESHOLD_TRIGGER_QUERYGENESONLY ) {
             if ( !queryGenesOnly ) {
@@ -212,12 +216,13 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             queryGenesOnly = true;
         }
 
-        // FIXME we are ignoring the input stringency entirely
+        // FIXME we are ignoring the input stringency entirely. Possibly if it is set >1, we should use it ...
         stringency = chooseStringency( queryGenesOnly, eeIds.size(), genes.size() );
         assert stringency > 0;
         assert stringency >= 2 || eeIds.size() == 1;
 
-        log.info( "Stringency set to " + stringency + " based on number of experiments queried (" + eeIds.size() + ")" );
+        log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
+                + ") and genes (" + genes.size() + ") queried" );
 
         if ( queryGenesOnly ) {
             // note that maxResults is ignored.
@@ -227,13 +232,15 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds, stringency,
                     quick );
         } else {
-
             allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
                     maxResults, quick );
         }
 
         result.setQueryStringency( stringency );
+        result.setQueryGenesOnly( queryGenesOnly );
+
         Set<Long> queryGeneIds = allCoexpressions.keySet();
+        assert genes.containsAll( queryGeneIds );
         Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( geneService.loadValueObjects( queryGeneIds ) );
 
         int k = 0;
@@ -242,7 +249,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             Collection<CoexpressionValueObject> coexpressions = allCoexpressions.get( queryGene );
 
             List<CoexpressionValueObjectExt> results = addExtCoexpressionValueObjects( idMap.get( queryGene ),
-                    coexpressions, stringency, queryGenesOnly, queryGeneIds );
+                    coexpressions, stringency, queryGenesOnly, genes );
 
             // test for bug 4036
             // for ( CoexpressionValueObjectExt cvo : results ) {
@@ -266,18 +273,26 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         Collections.sort( result.getResults() );
 
+        // FIXME we might want to suppress this in some situations
+        result.trim();
+
         populateNodeDegrees( result );
+
+        // if ( searchOptions.isUseMyDatasets() ) {
+        // addMyDataFlag( result, myEE );
+        // }
 
         return result;
     }
 
     /**
+     * Populate node degree. Note that this ignores the datasets that were used in the query - the statistics are for
+     * 'all' data sets.
+     * 
      * @param result
      */
     public void populateNodeDegrees( CoexpressionMetaValueObject result ) {
-        /*
-         * Populate node degree
-         */
+
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -289,6 +304,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = coexpressionService
                 .getNodeDegrees( allUsedGenes );
+
         for ( CoexpressionValueObjectExt coex : result.getResults() ) {
 
             // if node degree info is out of date.
@@ -296,8 +312,6 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                     || !nodeDegrees.containsKey( coex.getFoundGene().getId() ) ) {
                 continue;
             }
-
-            //
 
             GeneCoexpressionNodeDegreeValueObject queryGeneNodeDegree = nodeDegrees.get( coex.getQueryGene().getId() );
             GeneCoexpressionNodeDegreeValueObject foundGeneNodeDegree = nodeDegrees.get( coex.getFoundGene().getId() );
@@ -360,38 +374,39 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     }
 
     /**
-     * If the user has not set a stringency higher than 1, we set it for them.
+     * Use some rough heuristics (based on manual testing) to choose an initial stringency for queries. This value could
+     * get adjusted upwards during postprocessing to limit the result set sizes. But this should be set as high as
+     * possible to speed up the first stages.
      * 
      * @param queryGenesOnly
      * @param numExperimentsQueried
      * @return
      */
     private Integer chooseStringency( boolean queryGenesOnly, int numExperimentsQueried, int numGenesQueried ) {
-        // this is completely made up...purely based on manual testing.
 
-        double geneSlope = 0.008;
+        /*
+         * 0.01 means if we assay 800 genes the stringency will be increased by 8.
+         */
+        double geneSlope = 0.01;
+
+        /*
+         * If we're doing queryGeneOnly, we can leave the stringency a little lower.
+         */
         double geneMinimum = 1 - ( queryGenesOnly ? 1 : 0 );
 
-        double expSlope = 0.03;
+        /*
+         * 0.05 means that we increase the stringency by 1 for every 20 data sets.
+         */
+        double expSlope = 0.05;
+
         double expMinimum = 2;
 
-        // int stringency = geneMinimum + geneSlope*numGenesQueried +
-
-        int baseline = 1;
-
-        if ( numGenesQueried < 100 ) {
-            baseline = 1;
-        } else if ( numGenesQueried < 200 ) {
-            baseline = 2;
-        } else if ( numGenesQueried < 325 ) {
-            baseline = 4;
-        } else if ( numGenesQueried < 500 ) {
-            // semi-based on assumption that we aren't going to allow more than 500
-            baseline = 6;
-        } else {
-            // just in case...
-            baseline = 8;
+        if ( numExperimentsQueried < 5 ) {
+            return ( int ) Math.min( numExperimentsQueried, expMinimum );
         }
+
+        // choose initial level based on the number of genes selected
+        int baseline = ( int ) ( Math.ceil( geneMinimum + geneSlope * numGenesQueried ) );
 
         if ( baseline > numExperimentsQueried ) {
             return numExperimentsQueried;
@@ -399,32 +414,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         if ( queryGenesOnly ) baseline--;
 
-        if ( numExperimentsQueried < 5 ) {
-            return Math.min( numExperimentsQueried, 2 );
-        } else if ( numExperimentsQueried < 20 ) {
-            return 3 + baseline;
-        } else if ( numExperimentsQueried < 50 ) {
-            return 4 + baseline;
-        } else if ( numExperimentsQueried < 100 ) {
-            return 6 + baseline;
-        } else if ( numExperimentsQueried < 200 ) {
-            return 8 + baseline;
-        } else if ( numExperimentsQueried < 300 ) {
-            return 10 + baseline;
-        } else if ( numExperimentsQueried < 400 ) {
-            return 15 + baseline;
-        } else if ( numExperimentsQueried < 600 ) {
-            return 20 + baseline;
-        } else if ( numExperimentsQueried < 800 ) {
-            return 25 + baseline;
-        } else if ( numExperimentsQueried < 1000 ) {
-            return 35 + baseline;
-        } else if ( numExperimentsQueried < 1200 ) {
-            return 45 + baseline;
-        } else if ( numExperimentsQueried < 1500 ) {
-            return 55 + baseline;
-        }
-        return 65 + baseline;
+        return ( int ) ( Math.ceil( baseline + expSlope * numExperimentsQueried ) );
     }
 
     /**

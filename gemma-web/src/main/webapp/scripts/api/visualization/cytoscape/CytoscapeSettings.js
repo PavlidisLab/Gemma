@@ -49,11 +49,6 @@ Gemma.CytoscapeSettings = {
 
    selectionGlowColor : "#CC9C00", // gold
 
-   /*
-    * This is the few values here that is not for style, has nothing to do with visualization per se - consider moving.
-    */
-   maxGeneIdsPerCoexVisQuery : 200,
-
    // inoperative in cytoscape.js as of 2.2
    // nodeTooltipText : "${id} (${officialName})<br/>Specificity:${nodeDegreeBin}<br/>NCBI Id:${ncbiId}<br/>",
 

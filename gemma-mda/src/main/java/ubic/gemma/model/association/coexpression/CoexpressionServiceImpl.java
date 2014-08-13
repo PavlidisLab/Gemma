@@ -60,6 +60,9 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     private CoexpressionQueryQueue coexpressionQueryQueue;
 
     @Autowired
+    private CoexpressionCache coexpressionCache;
+
+    @Autowired
     private ExpressionExperimentDao experimentDao;
 
     @Autowired
@@ -339,6 +342,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      */
     private void possiblyAddToCacheQueue( Taxon t, Map<Long, List<CoexpressionValueObject>> links ) {
 
+        if ( !coexpressionCache.isEnabled() ) return;
+
         Set<Long> toQueue = new HashSet<>();
         for ( Long id : links.keySet() ) {
             for ( CoexpressionValueObject link : links.get( id ) ) {
@@ -350,6 +355,7 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             }
         }
         if ( !toQueue.isEmpty() ) {
+            log.info( "Queuing " + toQueue.size() + " genes for coexpression cache warm" );
             coexpressionQueryQueue.addToFullQueryQueue( toQueue, CoexpressionQueryUtils.getGeneLinkClassName( t ) );
         }
 

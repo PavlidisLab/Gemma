@@ -16,7 +16,7 @@
 Ext.namespace( 'Gemma' );
 
 /**
- * Panel to hold the CytoscapeJSDisplay, with the toolbar at the bottom.
+ * Panel to hold the CytoscapeJSDisplay, with the toolbar at the bottom. This is used as a tab in the results display
  */
 Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel,
    {
@@ -165,7 +165,7 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel,
             cytoscapeSearchCommand ) {
 
             // FIXME this method needs to be revised/simplifed
-
+            debugger;
             if ( this.coexpressionSearchData.getQueryGeneIds().length < 2 ) {
                this.coexDisplaySettings.setQueryGenesOnly( false );
                this.controlBar.disableQueryGenesOnlyCheckBox( true );
@@ -242,7 +242,6 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel,
        * 
        */
       onPanelActivation : function() {
-
          if ( this.coexpressionSearchData.searchCommandUsed.queryGenesOnly
             && !this.coexpressionSearchData.cytoscapeResultsUpToDate ) {
             this.searchForCytoscapeData();

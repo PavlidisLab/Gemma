@@ -185,4 +185,14 @@ public class GeneTestedInCacheImpl implements InitializingBean, GeneTestedInCach
 
         return null;
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.association.coexpression.GeneTestedInCache#remove(java.lang.Long)
+     */
+    @Override
+    public void remove( Long id ) {
+        if ( cache.isKeyInCache( id ) ) this.cache.remove( id );
+    }
 }

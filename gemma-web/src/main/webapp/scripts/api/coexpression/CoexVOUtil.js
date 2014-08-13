@@ -83,7 +83,11 @@ Gemma.CoexVOUtil = {
    },
 
    /**
-    * Cut the data provided down to a subset, such that approximately resultsSizeLimit edges are retained. The logic is:
+    * 
+    * 
+    * <p>
+    * Here wecut the data provided down to a subset, such that approximately resultsSizeLimit edges are retained. The
+    * logic is:
     * <ol>
     * <li>Links that involve the query genes are examined first. We select such links until we reach resultsSizeLimit.
     * The stringency at which this occurs is the trimStringency. We then take more such links for that stringency.
@@ -93,7 +97,8 @@ Gemma.CoexVOUtil = {
     * 
     * @static
     * @param {Array}
-    *           results CoexpressionValueObjectExts
+    *           results CoexpressionValueObjectExts The input here is the "querygenesonly" results for the genes which
+    *           appear in the user's original query.
     * @param {Array}
     *           currentQueryGeneIds
     * @param {integer}
@@ -189,6 +194,7 @@ Gemma.CoexVOUtil = {
       var returnObject = {};
       returnObject.geneResults = trimmedGeneResults;
       returnObject.trimStringency = trimStringency;
+      debugger;
       return returnObject;
 
    },

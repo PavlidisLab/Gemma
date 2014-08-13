@@ -133,12 +133,17 @@ Gemma.CytoscapePanelUtil.getCoexVizCommandFromCoexGridCommand = function( csc ) 
 };
 
 /**
+ * When we go from the table view to the visualization, we need to collect the genes to query - not just the query genes
+ * but the found genes.
  * 
+ * @param {}
+ *           searchResults.
  */
 Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function( searchResults ) {
-   function meetsStringency( coexPair, stringency ) {
-      return coexPair.posSupp >= stringency || coexPair.negSupp >= stringency;
-   }
+
+   // function meetsStringency( coexPair, stringency ) {
+   // return coexPair.posSupp >= stringency || coexPair.negSupp >= stringency;
+   // }
 
    function absent( element, array ) {
       return array.indexOf( element ) === -1;
@@ -149,29 +154,42 @@ Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function( searchR
 
    // Genes to get complete results for.
    var geneIds = [];
-   // coexpressionSearchData.cytoscapeCoexCommand.geneIds = [];
 
    var qlength = originalQueryGeneIds.length;
-   var resultsPerQueryGene = Gemma.CytoscapeSettings.maxGeneIdsPerCoexVisQuery / qlength;
 
-   var queryGeneCountHash = {};
+   // var resultsPerQueryGene = Gemma.CytoscapeSettings.maxGeneIdsPerCoexVisQuery / qlength;
 
+   // var queryGeneCountHash = {};
+
+   // always keep the query genes
    for (var i = 0; i < qlength; i++) {
       geneIds.push( originalQueryGeneIds[i] );
-      queryGeneCountHash[originalQueryGeneIds[i]] = 0;
+      // queryGeneCountHash[originalQueryGeneIds[i]] = 0;
    }
 
+   // decide whether to add the 'found gene'.
    // This needs to take in account the stringency of the forthcoming cytoscape query
    // so that nodes that are connected at lower stringency to the query gene are not included
    // only add to cytoscapeCoexCommand.geneIds if current query gene has room in its 'resultsPerQueryGeneCount' entry
-   for (i = 0; i < originalCoexpressionPairs.length; i++) {
-      if ( meetsStringency( originalCoexpressionPairs[i], searchResults.getResultsStringency() )
-         && absent( originalCoexpressionPairs[i].foundGene.id, geneIds )
-         && queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] < resultsPerQueryGene ) {
+   for (var i = 0; i < originalCoexpressionPairs.length; i++) {
+      var coexpPair = originalCoexpressionPairs[i];
 
-         geneIds.push( originalCoexpressionPairs[i].foundGene.id );
-         queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] = queryGeneCountHash[originalCoexpressionPairs[i].queryGene.id] + 1;
+      var nodeDegreeRank = coexpPair.foundGeneNodeDegreeRank;
 
+      /*
+       * Removing genes is confusing ... but it must be done. However, we should do this based on specificity. Found
+       * genes that have low relative specificity (e.g., >0.9) should be culled. But we shouldn't use stringency or
+       * number of edges to do this (though there will likely be a relationship). Perhaps such 'non-specific' links
+       * should be removed from the results in the first place... that might be less confusing for users.
+       */
+      if ( /*
+             * meetsStringency( coexpPair, searchResults.getResultsStringency() ) &&
+             */absent( coexpPair.foundGene.id, geneIds ) && nodeDegreeRank < 0.8
+      /* && queryGeneCountHash[coexpPair.queryGene.id] < resultsPerQueryGene */) {
+
+         geneIds.push( coexpPair.foundGene.id );
+
+         // queryGeneCountHash[coexpPair.queryGene.id] = queryGeneCountHash[coexpPair.queryGene.id] + 1;
       }
    }
 

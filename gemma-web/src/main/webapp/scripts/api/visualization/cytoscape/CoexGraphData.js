@@ -71,37 +71,36 @@ Gemma.CoexGraphData = function( coexpressionSearchData, cytoscapeCoexCommand ) {
    /*
     * Establish the data for the different graph sizes.
     */
-   if ( this.mediumGraphMaxSize > this.originalResults.geneResults.length ) {
-      this.graphDataMedium = this.originalResults;
-   } else {
-      this.graphDataMedium = this.getTrimmedGraphData( this.mediumGraphMaxSize );
-      if ( this.graphDataMedium && this.graphDataMedium.geneResults.length < this.originalResults.geneResults.length ) {
-         this.mediumGraphDataEnabled = true;
-         this.largeGraphDataEnabled = true;
-      }
-   }
-
-   if ( this.graphDataMedium && this.smallGraphMaxSize > this.graphDataMedium.geneResults.length ) {
-      this.graphDataSmall = this.graphDataMedium;
-   } else {
-      this.graphDataSmall = this.getTrimmedGraphData( this.smallGraphMaxSize );
-      if ( this.graphDataMedium && this.graphDataSmall.geneResults.length < this.graphDataMedium.geneResults.length ) {
-         this.smallGraphDataEnabled = true;
-         this.mediumGraphDataEnabled = true;
-      }
-   }
-
+   // if ( this.mediumGraphMaxSize > this.originalResults.geneResults.length ) {
+   // this.graphDataMedium = this.originalResults;
+   // } else {
+   // this.graphDataMedium = this.getTrimmedGraphData( this.mediumGraphMaxSize );
+   // if ( this.graphDataMedium && this.graphDataMedium.geneResults.length < this.originalResults.geneResults.length ) {
+   // this.mediumGraphDataEnabled = true;
+   // this.largeGraphDataEnabled = true;
+   // }
+   // }
+   //
+   // if ( this.graphDataMedium && this.smallGraphMaxSize > this.graphDataMedium.geneResults.length ) {
+   // this.graphDataSmall = this.graphDataMedium;
+   // } else {
+   // this.graphDataSmall = this.getTrimmedGraphData( this.smallGraphMaxSize );
+   // if ( this.graphDataMedium && this.graphDataSmall.geneResults.length < this.graphDataMedium.geneResults.length ) {
+   // this.smallGraphDataEnabled = true;
+   // this.mediumGraphDataEnabled = true;
+   // }
+   // }
    this.getGraphData = function( graphSize ) {
 
-      if ( !graphSize ) {
-         graphSize = this.defaultSize;
-      }
-
-      if ( graphSize === "medium" ) {
-         return this.graphDataMedium;
-      } else if ( graphSize === "small" ) {
-         return this.graphDataSmall;
-      }
+      // if ( !graphSize ) {
+      // graphSize = this.defaultSize;
+      // }
+      //
+      // if ( graphSize === "medium" ) {
+      // return this.graphDataMedium;
+      // } else if ( graphSize === "small" ) {
+      // return this.graphDataSmall;
+      // }
 
       return this.originalResults;
 

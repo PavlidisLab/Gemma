@@ -159,40 +159,20 @@ public class CoexpressionSearchController {
             return result;
         }
 
-        Collection<Long> eeIds = new HashSet<>();
-        Long eeSetId = null;
-        if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
-            // security filter.
-            eeIds = EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
-        } else if ( searchOptions.getEeSetId() != null ) {
-            eeSetId = searchOptions.getEeSetId();
-        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
-            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
-                    .getEeSetName() );
-            if ( eeSets.size() == 1 ) {
-                eeSetId = eeSets.iterator().next().getId();
-            } else {
-                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
-                return result;
-            }
-        }
-
-        /*
-         * Got an ee set.
-         */
-        if ( eeSetId != null ) {
-            eeIds = EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
-        }
-
         // Add the user's datasets to the selected datasets
         if ( searchOptions.isUseMyDatasets() ) {
             myEE = expressionExperimentService.loadMyExpressionExperiments();
-            if ( myEE != null && !myEE.isEmpty() ) {
-                for ( ExpressionExperiment ee : myEE ) {
-                    eeIds.add( ee.getId() );
-                }
-            } else
-                log.info( "No user data to add" );
+
+        }
+
+        Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
+
+        if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
+
+        if ( myEE != null && !myEE.isEmpty() ) {
+            eeIds.addAll( EntityUtils.getIds( myEE ) );
+        } else {
+            log.info( "No user data to add" );
         }
 
         if ( eeIds.isEmpty() ) {
@@ -201,22 +181,10 @@ public class CoexpressionSearchController {
             searchOptions.setEeIds( eeIds );
         }
 
-        restrictSearchOptionsQueryGenes( searchOptions );
         log.info( "Starting coexpression search: " + searchOptions );
 
         result = geneCoexpressionService.coexpressionSearch( searchOptions.getEeIds(), searchOptions.getGeneIds(),
                 searchOptions.getStringency(), MAX_RESULTS_PER_GENE, searchOptions.getQueryGenesOnly() );
-
-        // FIXME This is ugly - we need to consolidate some of this.
-        if ( result.getTrimStringency() > searchOptions.getStringency() ) {
-            searchOptions.setStringency( result.getTrimStringency() );
-        }
-        result.setSearchSettings( searchOptions );
-        result.trim();
-
-        if ( searchOptions.isUseMyDatasets() ) {
-            addMyDataFlag( result, myEE );
-        }
 
         // make sure to create an empty list instead of null for front-end
         if ( result.getResults() == null ) {
@@ -231,6 +199,39 @@ public class CoexpressionSearchController {
 
         return result;
 
+    }
+
+    /**
+     * @param searchOptions
+     * @param result
+     * @return
+     */
+    public Collection<Long> chooseExperimentsToQuery( CoexpressionSearchCommand searchOptions,
+            CoexpressionMetaValueObject result ) {
+        Collection<Long> eeIds = new HashSet<>();
+        Long eeSetId = null;
+        if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
+            // security filter.
+            eeIds = EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
+        } else if ( searchOptions.getEeSetId() != null ) {
+            eeSetId = searchOptions.getEeSetId();
+        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
+            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
+                    .getEeSetName() );
+            if ( eeSets.size() == 1 ) {
+                eeSetId = eeSets.iterator().next().getId();
+            } else {
+                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
+            }
+        }
+
+        /*
+         * Got an ee set.
+         */
+        if ( eeSetId != null ) {
+            eeIds = EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
+        }
+        return eeIds;
     }
 
     /**
@@ -250,19 +251,42 @@ public class CoexpressionSearchController {
         assert queryGeneIds != null && !queryGeneIds.isEmpty();
         assert searchOptions.getQueryGenesOnly();
 
-        restrictSearchOptionsQueryGenes( searchOptions );
+        Collection<ExpressionExperiment> myEE = null;
+        // Add the user's datasets to the selected datasets
+        if ( searchOptions.isUseMyDatasets() ) {
+            myEE = expressionExperimentService.loadMyExpressionExperiments();
+        }
+
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
+        Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
+
+        if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
+
+        if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
+
+        if ( myEE != null && !myEE.isEmpty() ) {
+            eeIds.addAll( EntityUtils.getIds( myEE ) );
+        } else {
+            log.info( "No user data to add" );
+        }
+
+        if ( eeIds.isEmpty() ) {
+            // search all available experiments.
+        } else {
+            searchOptions.setEeIds( eeIds );
+        }
 
         StopWatch timer = new StopWatch();
         timer.start();
 
         log.info( "=== Graph-completion coexpression search for " + searchOptions.getGeneIds().size()
-                + " genes, stringency=" + searchOptions.getStringency() + " eeset=" + searchOptions.getEeSetId() );
+                + " genes, stringency=" + searchOptions.getStringency() + " eeset=" + searchOptions.getEeIds().size() );
 
-        CoexpressionMetaValueObject result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(),
-                searchOptions.getGeneIds(), searchOptions.getStringency(), MAX_RESULTS_PER_GENE, true );
+        result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(), searchOptions.getGeneIds(),
+                searchOptions.getStringency(), MAX_RESULTS_PER_GENE, true );
 
         result.setSearchSettings( searchOptions );
-        result.trim( new HashSet<>( queryGeneIds ) );
+        // result.trim( new HashSet<>( queryGeneIds ) );
 
         if ( result.getResults() == null || result.getResults().isEmpty() ) {
             result.setErrorState( NOTHING_FOUND_MESSAGE );
@@ -299,38 +323,5 @@ public class CoexpressionSearchController {
         }
 
     }
-
-    /**
-     * Adjust the settings based on how many genes there are?
-     * 
-     * @param searchOptions
-     * @param queryGeneIds
-     */
-    private void restrictSearchOptionsQueryGenes( CoexpressionSearchCommand searchOptions ) {
-
-        /*
-         * TODO: if there is only one experiment set, do a 'my genes only' query.
-         */
-        //
-        // if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) {
-        // // this will be a 'my genes only' vis query since queryGeneIds !=null
-        // searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_VIS_QUERY ) );
-        // } else if ( searchOptions.getQueryGenesOnly() ) {
-        // // this will be the case where the user selects over 20 genes
-        // searchOptions
-        // .setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_MY_GENES_ONLY_LARGE_QUERY ) );
-        // } else {
-        // searchOptions.setGeneIds( trimGeneIds( searchOptions.getGeneIds(), MAX_GENES_PER_QUERY ) );
-        // }
-    }
-
-    // /**
-    // * @param geneIds
-    // * @param limit
-    // * @return
-    // */
-    // private List<Long> trimGeneIds( Collection<Long> geneIds, int limit ) {
-    // return new ArrayList<Long>( geneIds ).subList( 0, Math.min( geneIds.size(), limit ) );
-    // }
 
 }

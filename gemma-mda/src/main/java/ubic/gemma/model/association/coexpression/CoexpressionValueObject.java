@@ -19,9 +19,7 @@
 
 package ubic.gemma.model.association.coexpression;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,6 +28,9 @@ import org.apache.commons.lang3.StringUtils;
  * Lightweight/convenient object for manipulating coexpression for a pair of genes. Importantly, this does not
  * necessarily reflect the coexpression data in the database: it may have been filtered in accordance to the query
  * settings in terms of the data sets searched and the maximum number of results.
+ * <p>
+ * Note that hashCode and equals do not use the ID of the coexpression; they only use the genes (ignoring which is query
+ * vs. found) and the sign, since those are in effect unique in the system.
  * 
  * @author Paul
  * @version $Id$
@@ -270,9 +271,16 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( coexGeneId == null ) ? 0 : coexGeneId.hashCode() );
         result = prime * result + ( positiveCorrelation ? 1231 : 1237 );
-        result = prime * result + ( ( queryGeneId == null ) ? 0 : queryGeneId.hashCode() );
+
+        if ( coexGeneId < queryGeneId ) {
+            result = prime * result + coexGeneId.hashCode();
+            result = prime * result + queryGeneId.hashCode();
+        } else {
+            result = prime * result + queryGeneId.hashCode();
+            result = prime * result + coexGeneId.hashCode();
+        }
+
         return result;
     }
 
