@@ -153,9 +153,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // if >1 result, add a group whose members are all experiments returned from search
 
-        // if an experiment was returned by both experiment and experiment set search, don't count it twice
-        // (managed by set)
-        Set<Long> eeIds = new HashSet<>();
         Map<Long, Set<Long>> eeIdsByTaxonId = new HashMap<>();
 
         // add every individual experiment to the set, grouped by taxon and also altogether.
@@ -174,7 +171,6 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
             ExpressionExperimentValueObject eevo = ( ExpressionExperimentValueObject ) srdo.getResultValueObject();
             eeIdsByTaxonId.get( taxId ).add( eevo.getId() );
-            eeIds.add( eevo.getId() );
         }
 
         // if there's a group, get the number of members
@@ -186,13 +182,12 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
                     .getResultValueObject();
 
             /*
-             * Small problem: this is not security-filtered. See bug 3385; if the set is public, but some of the
-             * experiments in the set are not, the ID will be included.
+             * This is security filtered.
              */
             Collection<Long> ids = EntityUtils.getIds( expressionExperimentSetService
                     .getExperimentValueObjectsInSet( set.getId() ) );
-            // get the ids of the experiment members
-            eeIds.addAll( ids );
+
+            set.setSize( ids.size() ); // to account for security filtering.
 
             if ( !eeIdsByTaxonId.containsKey( set.getTaxonId() ) ) {
                 eeIdsByTaxonId.put( set.getTaxonId(), new HashSet<Long>() );
@@ -215,6 +210,9 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
                 int numWithDifferentialExpressionAnalysis = differentialExpressionAnalysisService
                         .getExperimentsWithAnalysis( entry.getValue() ).size();
+                
+                assert numWithDifferentialExpressionAnalysis <= entry.getValue().size();
+
                 int numWithCoexpressionAnalysis = coexpressionAnalysisService.getExperimentsWithAnalysis(
                         entry.getValue() ).size();
 
@@ -297,10 +295,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
      * @return
      */
     private List<SearchResultDisplayObject> getExpressionExperimentSetResults( Map<Class<?>, List<SearchResult>> results ) {
-        List<SearchResultDisplayObject> experimentSets = new ArrayList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
-            List<Long> eeSetIds = new ArrayList<Long>();
+            List<Long> eeSetIds = new ArrayList<>();
             for ( SearchResult sr : results.get( ExpressionExperimentSet.class ) ) {
                 eeSetIds.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ).getId() );
             }
@@ -310,6 +308,13 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
             }
 
             for ( ExpressionExperimentSetValueObject eesvo : expressionExperimentSetService.loadValueObjects( eeSetIds ) ) {
+                //
+                // if ( !SecurityUtil.isUserAdmin() ) {
+                // // have to security filter to get the accurate size. This is a performance hit so we don't do it.
+                // eesvo.setSize( expressionExperimentSetService.getExperimentValueObjectsInSet( eesvo.getId() )
+                // .size() );
+                // }
+
                 experimentSets.add( new SearchResultDisplayObject( eesvo ) );
             }
         }
@@ -344,22 +349,30 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
         boolean taxonLimited = taxonId != null;
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<>();
 
         // These are widely considered to be the most important results and
         // therefore need to be at the top
-        List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> masterResults = new LinkedList<>();
 
         Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
                 .loadAllExperimentSetValueObjects();
 
         for ( ExpressionExperimentSetValueObject evo : evos ) {
-            SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
 
             if ( taxonLimited && !evo.getTaxonId().equals( taxonId ) ) {
                 continue;
             }
-            // could be spoofed by other users 'Master sets'
+
+            // if ( !SecurityUtil.isUserAdmin() ) {
+            // // have to security filter the experiments in the set to get the accurate size. This is a performance
+            // // hit so we are not doing it here.
+            // evo.setSize( expressionExperimentSetService.getExperimentValueObjectsInSet( evo.getId() ).size() );
+            // }
+
+            SearchResultDisplayObject srdvo = new SearchResultDisplayObject( evo );
+
+            // FIXME: could be spoofed by other users 'Master sets'
             if ( evo.getName().startsWith( arbitraryMasterSetPrefix ) ) {
                 masterResults.add( srdvo );
             } else {
