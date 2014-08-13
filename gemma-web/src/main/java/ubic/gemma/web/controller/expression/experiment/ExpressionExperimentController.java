@@ -1262,7 +1262,8 @@ public class ExpressionExperimentController {
 
         /*
          * Remove experiments that are irrelevant. Unfortunately this doesn't deal with the contents of sets FIXME the
-         * ids of sets are not filled in here anyway.
+         * ids of sets are not filled in here anyway, but the sizes are not accurate if there are private data in the
+         * set and the user is not an admin.
          */
         // Collection<Long> eeIds = new HashSet<>();
         // for ( SearchResultDisplayObject r : displayResults ) {

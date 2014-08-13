@@ -107,6 +107,8 @@ Gemma.ExperimentSetPreview = Ext
             }
 
             // if an experiment group page exists for this set, make title a link
+
+            // note that normally the ids are not filled in, so we just use the size.
             var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.expressionExperimentIds.length;
 
             var numWithCoex = selectedSet.numWithCoexpressionAnalysis;
@@ -126,16 +128,19 @@ Gemma.ExperimentSetPreview = Ext
                usableSize = numWithDiffex;
             }
 
-            this.previewContent
-               .setTitle( '<span style="font-size:1.2em">'
-                  + name
-                  + '</span> &nbsp;&nbsp;<span style="font-weight:normal">'
-                  + usableSize
-                  + (usableSize > 1 ? " experiments" : " experiment ")
-                  + ' usable of '
-                  + size
-                  + (this.hideUnanalyzedDatasets ? '<br><span style="font-size:smaller">Unanalyzed experiments hidden</span>'
-                     : '') ); // NOTE at the moment this refers to those lacking both Coex and Diff analyses
+            if ( usableSize > size ) {
+               // BUG
+            }
+
+            this.previewContent.setTitle( '<span style="font-size:1.2em">' + name
+               + '</span><br /><span style="font-weight:normal">' + usableSize
+               + (usableSize > 1 ? " experiments" : " experiment ") + ' of ' + size + ' have '
+               + (this.mode == 'coex' ? 'co' : 'diff. ') + 'expression available' );
+            // + (this.hideUnanalyzedDatasets ? '<br><span style="font-size:smaller">Unanalyzed experiments
+            // hidden</span>'
+            // : '') ); // NOTE this refers to those lacking both Coex and Diff analyses. The notice might be confusing,
+            // not
+            // necessary?
 
          },
 

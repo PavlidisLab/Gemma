@@ -177,13 +177,13 @@ public class ExpressionExperimentSetController extends BaseController {
         if ( vo == null ) {
             throw new IllegalArgumentException( "No such set with id=" + id );
         }
-        // FIXME this is a bit inefficient...could have an ID-filtering interceptor.
+        // FIXME this is a bit inefficient, for security filtering ... could have an ID-filtering interceptor.
         return EntityUtils.getIds( expressionExperimentSetService.getExperimentValueObjectsInSet( id ) );
     }
 
     /**
      * @param groupId
-     * @param limit
+     * @param limit to return only up to a given number of experiments, e.g. for a preview of the set.
      * @return
      */
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long groupId, final Integer limit ) {

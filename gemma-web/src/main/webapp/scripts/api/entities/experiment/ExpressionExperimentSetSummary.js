@@ -2,11 +2,9 @@ Ext.namespace( 'Gemma' );
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 /**
  * 
- * Panel containing the most interesting info about an experiment. Used as one tab of the EE page
+ * Panel containing the most interesting info about an experiment set.
  * 
- * pass in the ee details obj as experimentDetails
  * 
- * @class Gemma.ExpressionExperimentDetails
  * @extends Ext.Panel
  * 
  */

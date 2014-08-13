@@ -374,7 +374,13 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
             v.setDescription( ( String ) res[2] );
             v.setTaxonName( ( String ) res[3] );
             v.setTaxonId( ( Long ) res[4] );
+
+            /*
+             * FIXME this is not adequate because these are not security filtered, so the count could be too high for
+             * the current user. We can avoid a lot of problems by not putting private data sets in public EE sets.
+             */
             v.setSize( ( ( Long ) res[5] ).intValue() );
+
             vo.put( eeId, v );
 
         }
@@ -412,17 +418,23 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
             idMap.get( id ).setNumWithCoexpressionAnalysis( c );
         }
 
+        /*
+         * We're counting the number of data sets that have analyses, not the number of analyses (since a data set can
+         * have more than one)
+         */
         List<Object[]> withDiffEx = this
                 .getSessionFactory()
                 .getCurrentSession()
                 .createQuery(
-                        "select e.id, count(an) from ExpressionExperimentSetImpl e, DifferentialExpressionAnalysisImpl an join e.experiments ea "
+                        "select e.id, count(distinct an.experimentAnalyzed) "
+                                + "from ExpressionExperimentSetImpl e, DifferentialExpressionAnalysisImpl an join e.experiments ea "
                                 + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
 
         for ( Object[] oa : withDiffEx ) {
             Long id = ( Long ) oa[0];
             Integer c = ( ( Long ) oa[1] ).intValue();
+            assert c <= idMap.get( id ).getSize();
             idMap.get( id ).setNumWithDifferentialExpressionAnalysis( c );
         }
 

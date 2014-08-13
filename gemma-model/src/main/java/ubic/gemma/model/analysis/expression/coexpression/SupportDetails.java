@@ -32,6 +32,15 @@ public abstract class SupportDetails extends IdArray {
     private Long secondGeneId = null;
     private Boolean isPositive = null;
 
+    /*
+     * Note that making the firstGene persistent will not help much in queries because the support details is used by
+     * two links in the LINK tables - the genea-geneb and geneb-genea versions. Thus we fetch SupportDetails using a
+     * join (seems slower) or by a direct query for the support details ids. We would have to store both gene ids, and
+     * store the supportdetails in 'both directions', in which case we might as well store it in the LINK table in the
+     * first place. In terms of performance it is not clear what would be best (and it's a huge effort to test this
+     * properly). See CoexpressionDaoImpl for details -- PP
+     */
+
     /**
      * Note that the gene information and isPositive is only used for bookkeeping during creation; it is not part of the
      * persistent entity.

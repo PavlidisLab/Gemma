@@ -195,8 +195,7 @@ public class EntityUtils {
      * Expert use only. Used to expose some ACL information to the DAO layer (normally this happens in an interceptor).
      * 
      * @param securedclass Securable type
-     * @param ids
-     * @param groups
+     * @param ids to be filtered
      * @param showOnlyEditable
      * @param showPublic also show public items (won't work if showOnlyEditable is true)
      * @param sess

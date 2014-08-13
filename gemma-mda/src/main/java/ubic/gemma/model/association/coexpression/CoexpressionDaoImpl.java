@@ -1952,7 +1952,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                             new Object[] { queryGeneBatch, genes, stringency } );
 
             if ( timer.getTime() > 5000 ) {
-                log.info( "Slow query: " + firstQueryString + " took " + timer.getTime() + "ms ("
+                log.debug( "Slow query: " + firstQueryString + " took " + timer.getTime() + "ms ("
                         + queryGeneBatch.size() + " query gene batch, " + genes.size() + " target genes), Stringency="
                         + stringency );
             }
@@ -1989,7 +1989,6 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
          * all the genes are guaranteed to be in the query list.
          */
         for ( CoexpressionValueObject g2g : g2gs ) {
-
             if ( !results.containsKey( g2g.getQueryGeneId() ) ) {
                 results.put( g2g.getQueryGeneId(), new ArrayList<CoexpressionValueObject>() );
             }

@@ -41,6 +41,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          enableSaveOnlyAfterModification : false, // if save button is show, leave it disabled until an experiment is
          // added
          // or removed
+
          /**
           * Set the expressionExperimentSetValueObject. (does not display the eesvo, use loadExperimentSet(eesvo) to do
           * that)
@@ -129,7 +130,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   for (var i = 0; i < ees.length; ++i) {
                      eeData.push( [ ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount,
                                    ees[i].bioAssayCount, ees[i].hasCoexpressionAnalysis,
-                                   ees[i].hasDifferentialExpressionAnalysis ] );
+                                   ees[i].hasDifferentialExpressionAnalysis, ees[i].isPublic ] );
                      if ( taxonId != ees[i].taxonId ) {
                         var taxonId = -1;
                      }
@@ -229,7 +230,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                } )
             } );
 
-            // FIXME add column showing qc status
+            // FIXME add column showing qc status; and one for security status.
             var columns = [];
             if ( this.sortableColumnsView ) {
                Ext.apply( this, {
@@ -269,6 +270,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   sortable : true,
                   width : 150
                } );
+
+               if ( Gemma.SecurityManager.isLoggedIn() ) {
+                  columns.push( {
+                     id : 'isPublic',
+                     header : "Public?",
+                     dataIndex : "isPublic",
+                     sortable : true,
+                     width : 150
+                  } );
+               }
+
             } else {
                columns
                   .push( {
@@ -276,7 +288,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                      header : "Dataset",
                      dataIndex : "shortName",
                      renderer : function( value, metadata, record, row, col, ds ) {
-                        // FIXME hide unanalyzed experiments.
                         return String
                            .format(
                               "<a style='cursor:pointer;' target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
@@ -411,6 +422,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                      type : "boolean"
                   }, {
                      name : "hasDifferentialExpressionAnalysis",
+                     type : "boolean"
+                  }, {
+                     name : "isPublic",
                      type : "boolean"
                   } ],
                   sortInfo : {
