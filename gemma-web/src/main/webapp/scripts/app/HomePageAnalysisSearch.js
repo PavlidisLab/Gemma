@@ -145,13 +145,19 @@ Ext
 
       /**
        * Code executes before coexpression query is fired off.
+       * 
+       * @param panel
+       * @param {CoexpressionSearchCommand}
+       *           searchCommend
+       * @param {boolean}
+       *           showTutorial
        */
       searchForm.on( "coexpression_search_query_ready", function( panel, searchCommand, showTutorial ) {
          coexpressionSearchResultsPanel.showCoexTutorial = showTutorial;
 
          var coexDisplaySettings = new Gemma.CoexpressionDisplaySettings();
          coexDisplaySettings.setStringency( searchCommand.stringency );
-       //  coexpressionSearchData.setSearchCommand( searchCommand ); // done on server.
+         // coexpressionSearchData.setSearchCommand( searchCommand ); // done on server.
 
          /**
           * 

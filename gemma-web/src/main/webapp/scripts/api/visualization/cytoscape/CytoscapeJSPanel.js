@@ -159,13 +159,13 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel,
          }, this );
 
          /*
-          * Event handler: when the search results are ready.
+          * Event handler: when the search results are ready. SearchResults is
           */
          this.coexpressionSearchData.on( 'complete-search-results-ready', function( searchResults,
             cytoscapeSearchCommand ) {
 
             // FIXME this method needs to be revised/simplifed
-            debugger;
+            // debugger;
             if ( this.coexpressionSearchData.getQueryGeneIds().length < 2 ) {
                this.coexDisplaySettings.setQueryGenesOnly( false );
                this.controlBar.disableQueryGenesOnlyCheckBox( true );

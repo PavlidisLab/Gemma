@@ -94,7 +94,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                // FIXME save this round-trip, just get the experiments immediately.
                ExpressionExperimentSetController.getExperimentIdsInSet( eesvo.id, {
                   callback : function( expIds ) {
-                     eesvo.experimentIds = expIds;
+                     eesvo.expressionExperimentIds = expIds;
                      this.loadExperiments( expIds, callback, args );
                   }.createDelegate( this )
                } );

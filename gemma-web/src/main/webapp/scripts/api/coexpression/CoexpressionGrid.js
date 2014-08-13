@@ -225,6 +225,9 @@ Gemma.CoexpressionGrid = Ext
                   var numDatasets = coexpressionGrid.coexpressionSearchData.getNumberOfDatasetsUsable();
                   var initialStringency = coexpressionGrid.coexpressionSearchData.getQueryStringency();
 
+                  // this might have been set on the server.
+                  var queryGenesOnly = coexpressionGrid.coexpressionSearchData.searchResults.queryGenesOnly;
+
                   // Lower stringency until results are visible. FIXME this won't do anything to go _down_
                   // var displayStringency = Gemma.CoexVOUtil.findMaximalStringencyToApply( resultsData,
                   // initialStringency
@@ -238,6 +241,7 @@ Gemma.CoexpressionGrid = Ext
 
                   // should cause the spinner to update
                   coexpressionGrid.coexDisplaySettings.setStringency( displayStringency );
+                  coexpressionGrid.coexDisplaySettings.setQueryGenesOnly( queryGenesOnly );
 
                   var bbarText = coexpressionGrid.getBottomToolbar().getComponent( 'bbarStatus' );
                   // if ( displayStringency > Gemma.MIN_STRINGENCY ) {
