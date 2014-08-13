@@ -96,7 +96,7 @@ public class UserFormMultiActionController extends BaseController {
                 throw new RuntimeException( "You must be logged in to edit your profile." );
             }
 
-            userManager.reauthenticate( originalUserName, oldPassword );
+            // userManager.reauthenticate( originalUserName, oldPassword ); // not necessary.
 
             UserDetailsImpl user = ( UserDetailsImpl ) userManager.loadUserByUsername( username );
 
