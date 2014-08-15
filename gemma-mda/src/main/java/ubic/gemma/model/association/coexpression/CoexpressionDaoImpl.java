@@ -1900,26 +1900,31 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         // Batch by genes - but we might need to batch from experiments if there are a lot (but we wouldn't use this
         // method if that was the case, typically)
+
+        Query q = this
+                .getSessionFactory()
+                .getCurrentSession()
+                .createQuery(
+                        "select linkId from "
+                                + CoexpressionQueryUtils.getExperimentLinkClassName( t )
+                                + " where experiment.id in (:ees) and firstGene in (:genes) and secondGene in (:genes2)" )
+                .setParameterList( "genes2", genes ).setParameterList( "ees", bas );
+
         List<Long> links = new ArrayList<>();
         BatchIterator<Long> it = BatchIterator.batches( genes, 32 /* FIXME CONSTANT */);
         for ( ; it.hasNext(); ) {
             StopWatch timer = new StopWatch();
             timer.start();
-            Query q = this
-                    .getSessionFactory()
-                    .getCurrentSession()
-                    .createQuery(
-                            "select linkId from "
-                                    + CoexpressionQueryUtils.getExperimentLinkClassName( t )
-                                    + " where experiment.id in (:ees) and firstGene in (:genes) and secondGene in (:genes2)" )
-                    .setParameterList( "ees", bas ).setParameterList( "genes", it.next() )
-                    .setParameterList( "genes2", genes );
+            q.setParameterList( "genes", it.next() );
             List<Long> r = q.list();
             links.addAll( r );
             if ( timer.getTime() > 1000 ) {
-                log.debug( "Experiment-first query-gene-only batch: " + timer.getTime() + "ms for " + r.size() );
+                log.debug( "Experiment-first query-gene-only batch: " + timer.getTime() + "ms for " + r.size()
+                        + " links" );
             }
         }
+
+        // note that many of the links we found will still get thrown out if stringency << bas.size().
 
         /*
          * Track the support for the links seen as we go over this in experiment-major mode.
