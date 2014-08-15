@@ -104,6 +104,9 @@ public class CoexpressionSearchController {
     private GeneCoexpressionSearchService geneCoexpressionService;
 
     @Autowired
+    private GeneSetService geneSetService;
+
+    @Autowired
     private SearchService searchService;
 
     @Autowired
@@ -120,9 +123,6 @@ public class CoexpressionSearchController {
         CoexpressionSearchTask job = new CoexpressionSearchTask( options );
         return taskRunningService.submitLocalTask( job );
     }
-
-    @Autowired
-    private GeneSetService geneSetService;
 
     /**
      * Important entry point - called by the CoexpressionSearchTask
@@ -202,43 +202,10 @@ public class CoexpressionSearchController {
     }
 
     /**
-     * @param searchOptions
-     * @param result
-     * @return
-     */
-    public Collection<Long> chooseExperimentsToQuery( CoexpressionSearchCommand searchOptions,
-            CoexpressionMetaValueObject result ) {
-        Collection<Long> eeIds = new HashSet<>();
-        Long eeSetId = null;
-        if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
-            // security filter.
-            eeIds = EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
-        } else if ( searchOptions.getEeSetId() != null ) {
-            eeSetId = searchOptions.getEeSetId();
-        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
-            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
-                    .getEeSetName() );
-            if ( eeSets.size() == 1 ) {
-                eeSetId = eeSets.iterator().next().getId();
-            } else {
-                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
-            }
-        }
-
-        /*
-         * Got an ee set.
-         */
-        if ( eeSetId != null ) {
-            eeIds = EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
-        }
-        return eeIds;
-    }
-
-    /**
      * Do a search that fills in the edges among the genes already found. Maps to doSearchQuickComplete in javascript.
      * 
      * @param searchOptions
-     * @param queryGeneIds the genes which were used originally.
+     * @param queryGeneIds the genes which were used originally to start the search
      * @return
      */
     public CoexpressionMetaValueObject doSearchQuickComplete( CoexpressionSearchCommand searchOptions,
@@ -251,16 +218,15 @@ public class CoexpressionSearchController {
         assert queryGeneIds != null && !queryGeneIds.isEmpty();
         assert searchOptions.getQueryGenesOnly();
 
-        Collection<ExpressionExperiment> myEE = null;
         // Add the user's datasets to the selected datasets
+        Collection<ExpressionExperiment> myEE = null;
         if ( searchOptions.isUseMyDatasets() ) {
             myEE = expressionExperimentService.loadMyExpressionExperiments();
         }
 
         CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
-        Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
 
-        if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
+        Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
 
         if ( StringUtils.isNotBlank( result.getErrorState() ) ) return result;
 
@@ -279,11 +245,11 @@ public class CoexpressionSearchController {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        log.info( "=== Graph-completion coexpression search for " + searchOptions.getGeneIds().size()
-                + " genes, stringency=" + searchOptions.getStringency() + " eeset=" + searchOptions.getEeIds().size() );
+        log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes, stringency="
+                + searchOptions.getStringency() + " eeset=" + searchOptions.getEeIds().size() );
 
         result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(), searchOptions.getGeneIds(),
-                searchOptions.getStringency(), MAX_RESULTS_PER_GENE, true );
+                searchOptions.getStringency(), -1 /* no limit in this situation anyway */, true );
 
         result.setSearchSettings( searchOptions );
         // result.trim( new HashSet<>( queryGeneIds ) );
@@ -294,7 +260,7 @@ public class CoexpressionSearchController {
         }
 
         if ( timer.getTime() > 2000 ) {
-            log.info( "==== Search complete: " + result.getResults().size() + " hits" );
+            log.info( "Search complete: " + result.getResults().size() + " hits" );
         }
 
         return result;
@@ -321,6 +287,42 @@ public class CoexpressionSearchController {
                 }
             }
         }
+
+    }
+
+    /**
+     * Convert the search options to a set of experiment IDs (security-filtered)
+     * 
+     * @param searchOptions
+     * @param result only used to set error state
+     * @return
+     */
+    private Collection<Long> chooseExperimentsToQuery( CoexpressionSearchCommand searchOptions,
+            CoexpressionMetaValueObject result ) {
+
+        Long eeSetId = null;
+        if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
+            // security filter.
+            return EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
+        }
+
+        if ( searchOptions.getEeSetId() != null ) {
+            eeSetId = searchOptions.getEeSetId();
+        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
+            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
+                    .getEeSetName() );
+            if ( eeSets.size() == 1 ) {
+                eeSetId = eeSets.iterator().next().getId();
+            } else {
+                result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
+                return new HashSet<>();
+            }
+        }
+
+        assert eeSetId != null;
+
+        // security filter
+        return EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
 
     }
 

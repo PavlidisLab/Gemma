@@ -97,12 +97,12 @@ Gemma.CytoscapejsSettings = {
       name : 'arbor',
       liveUpdate : false,
       repulsion : 1000,
-      stiffness : 600,
+      stiffness : 300,
       maxSimulationTime : 4000,
       friction : 0.5,
       gravity : true,
-      fps : 12,
-      precision : 0.1,
+      fps : 55,
+      precision : 0.2,
       fit : true
    }
 

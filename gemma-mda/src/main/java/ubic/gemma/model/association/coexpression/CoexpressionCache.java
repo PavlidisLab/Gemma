@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.util.Settings;
+
 /**
  * Cache for coexpression results. Useful caching requires that the query be done at a suitably low stringency, defined
  * by CACHE_QUERY_STRINGENCY, against all data sets.
@@ -29,10 +31,11 @@ import java.util.Map;
 public interface CoexpressionCache {
 
     /**
-     * The stringency used to query when populatin the cache. This can't be too low or the cache gets gigantic; if
-     * someone is querying for data from a single dataset, they would use experiment-first mode.
+     * The stringency used to query when populating the cache. This can't be too low or the cache gets gigantic; if
+     * someone is querying for data from a single dataset, they would use experiment-first mode. FIXME we might need
+     * this to be organism-specific.
      */
-    public static final int CACHE_QUERY_STRINGENCY = 4;
+    public static final int CACHE_QUERY_STRINGENCY = Settings.getInt( "gemma.cache.gene2gene.stringencyThreshold", 5 );
 
     /**
      * @param geneId

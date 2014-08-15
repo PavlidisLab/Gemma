@@ -132,12 +132,21 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         for ( CoexpressionValueObject cvo : coexp ) {
 
             /*
-             * sanity check
+             * sanity check, this is sort of debug code. Each link has to contain at least one query gene.
              */
-            if ( queryGenesOnly && !queryGeneIds.contains( cvo.getCoexGeneId() ) ) {
-                log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
-                        + cvo.getCoexGeneId() + " is not a query" );
-                continue;
+            if ( queryGenesOnly ) {
+                if ( !queryGeneIds.contains( cvo.getCoexGeneId() ) ) {
+
+                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
+                            + cvo.getCoexGeneId() + " is not a query" );
+                    continue;
+                }
+
+                if ( !queryGeneIds.contains( cvo.getQueryGeneId() ) ) {
+                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
+                            + cvo.getQueryGeneId() + " is not a query" );
+                    continue;
+                }
             }
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
@@ -216,12 +225,12 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             queryGenesOnly = true;
         }
 
-        // FIXME we are ignoring the input stringency entirely. Possibly if it is set >1, we should use it ...
-        stringency = chooseStringency( queryGenesOnly, eeIds.size(), genes.size() );
+        stringency = Math.max( stringency, chooseStringency( queryGenesOnly, eeIds.size(), genes.size() ) );
+
         assert stringency > 0;
         assert stringency >= 2 || eeIds.size() == 1;
 
-        log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
+        log.debug( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
                 + ") and genes (" + genes.size() + ") queried" );
 
         if ( queryGenesOnly ) {

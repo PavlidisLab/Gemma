@@ -90,15 +90,16 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     /**
      * If there are more datasets than this specified, use a gene-specific query unless it's too few genes specified. If
      * there are just a few genes it's going to be faster to just get the data for the genes and filter by dataset. But
-     * for a large number of genes in a small number of datasets, going to the datasets first will be faster.
+     * for a large number of genes in a small number of datasets, going to the datasets first will be faster. Note that
+     * this really depends on how many data sets are available.
      */
-    private static final int MAX_DATASETS_FOR_DATASET_FIRST_QUERY = 20;
+    private static final int MAX_DATASETS_FOR_DATASET_FIRST_QUERY = 50;
 
     /**
      * If no genes are specified, find results common to the given data sets, but only if there aren't too many data
      * sets.
      */
-    private static final int MAX_DATASETS_FOR_DATASET_ONLY_QUERY = 10;
+    private static final int MAX_DATASETS_FOR_DATASET_ONLY_QUERY = 20;
 
     /**
      * If there are fewer genes than this specified, use an experiment-specific query if there aren't too many datasets
@@ -106,6 +107,13 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      * by dataset.
      */
     private static final int MIN_GENES_FOR_DATASET_FIRST_QUERY = 10;
+
+    /**
+     * If the stringency is less than this, we will usually want to use a dataset-first query unless the number of
+     * datasets is quite large. Note that this setting should depend on how many datasets are in the system in the first
+     * place, and is thus species-specific. So this is just a temporary measure.
+     */
+    private static final int MIN_STRINGENCY_FOR_GENE_FIRST_QUERY = 6;
 
     @Autowired
     private CoexpressionCache gene2GeneCoexpressionCache;
@@ -641,8 +649,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             throw new IllegalArgumentException( "Stringency is larger than the number of data sets" );
         }
 
-        Map<Long, List<CoexpressionValueObject>> rawResults = new HashMap<>();
-        Collection<Long> genesNeeded = checkCacheForInterGeneLinks( genes, rawResults, stringency );
+        Map<Long, List<CoexpressionValueObject>> results = new HashMap<>();
+        Collection<Long> genesNeeded = checkCacheForInterGeneLinks( genes, results, stringency );
 
         if ( !genesNeeded.isEmpty() ) { // something wasn't in the cache.
             Map<Long, List<CoexpressionValueObject>> dbResults;
@@ -657,41 +665,13 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
              * the queue for cache warm.
              */
 
-            rawResults.putAll( dbResults );
+            results.putAll( dbResults );
 
         }
 
-        Map<Long, List<CoexpressionValueObject>> finalResults = new HashMap<>();
+        trimAndFinishResults( results, bas, stringency, 0 );
 
-        /*
-         * Filter to remove results which don't involve the data sets we are using.
-         */
-        for ( Long gene : rawResults.keySet() ) {
-            Collection<CoexpressionValueObject> links = rawResults.get( gene );
-            for ( CoexpressionValueObject link : links ) {
-                Set<Long> supportingDatasets = link.getSupportingDatasets();
-                int supp = 0;
-                for ( Long sds : supportingDatasets ) {
-                    if ( bas.contains( sds ) ) {
-                        supp++;
-                    }
-                }
-                if ( supp >= stringency ) {
-
-                    if ( !finalResults.containsKey( gene ) ) {
-                        finalResults.put( gene, new ArrayList<CoexpressionValueObject>() );
-                    }
-
-                    finalResults.get( gene ).add( link );
-
-                }
-            }
-
-        }
-
-        trimAndFinishResults( finalResults, bas, stringency, 0 );
-
-        return finalResults;
+        return results;
 
     }
 
@@ -1136,6 +1116,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     private Collection<Long> checkCacheForInterGeneLinks( Collection<Long> genes,
             Map<Long, List<CoexpressionValueObject>> results, int stringency ) {
 
+        // is the cache going to help?
         if ( stringency < CoexpressionCache.CACHE_QUERY_STRINGENCY ) return genes;
 
         Collection<Long> genesNeeded = new HashSet<>();
@@ -1284,6 +1265,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 throw new IllegalArgumentException( "Links should not be unsupported: " + g2g );
             }
 
+            Long queryGeneId = g2g.getFirstGene();
+
+            if ( geneIds != null && !geneIds.contains( queryGeneId ) ) {
+                continue;
+            }
+
             NonPersistentNonOrderedCoexpLink seen = new NonPersistentNonOrderedCoexpLink( g2g );
 
             /*
@@ -1296,7 +1283,6 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
             allSeen.add( seen );
 
-            Long queryGeneId = g2g.getFirstGene();
             if ( !results.containsKey( queryGeneId ) ) {
                 results.put( queryGeneId, new ArrayList<CoexpressionValueObject>() );
             }
@@ -1458,6 +1444,13 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     private Map<Long, List<CoexpressionValueObject>> getCoexpressionFromCacheOrDb( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
 
+        /*
+         * If the stringency is too low (relative to the total number of datasets analyzed in the system), we end up
+         * getting tons of data from the LINK table that then gets thrown out at the SUPPORT_DETAILS phase. Because the
+         * stringency is largely set based on the number of data sets (genes too, but a lesser extent), this is partly
+         * accounted for. But we should check both since the stringency can bee too low.
+         */
+
         assert !bas.isEmpty();
 
         Map<Long, List<CoexpressionValueObject>> results = null;
@@ -1487,6 +1480,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
             results = getCoexpressionFromCacheOrDbViaExperiments( t, genes, bas, stringency, quick );
 
+            // FIXME use MIN_STRINGENCY_FOR_GENE_FIRST_QUERY
         } else if ( !genes.isEmpty() ) {
             /*
              * Gene-major mode: get all the results for the genes; filter for data sets selection separately.
@@ -1542,23 +1536,41 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
         /*
          * Get all the data for all the experiments queried, constrained to involve the genes in question.
          * 
-         * FIXME: does this use the index? We might need to revise this to iterate over experiments?
+         * This uses the ECL1EFK index, which is of (experiment, gene1, gene2). Note that if there are a lot of genes
+         * this can get slow ...
          */
         Query q = this
                 .getSessionFactory()
                 .getCurrentSession()
                 .createQuery(
                         " from " + CoexpressionQueryUtils.getExperimentLinkClassName( t )
-                                + " where experiment.id in (:ees) and firstGene in (:genes)" )
-                .setParameterList( "ees", bas ).setParameterList( "genes", genesNeeded );
-        List<ExperimentCoexpressionLink> links = q.list();
+                                + " where experiment.id in (:ees) and firstGene in (:genes)" );
+
+        // May need to batch over genes...
+        BatchIterator<Long> it = BatchIterator.batches( bas, 8 /* FIXME CONSTANT */);
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        List<ExperimentCoexpressionLink> links = new ArrayList<>();
+        for ( ; it.hasNext(); ) {
+            q.setParameterList( "ees", it.next() ).setParameterList( "genes", genesNeeded );
+            links.addAll( q.list() );
+        }
+
+        if ( timer.getTime() > 2000 ) {
+            log.info( "Query for coexp for : " + genes.size() + " genes " + " in " + bas.size() + " experiments: "
+                    + timer.getTime() + "ms" );
+        }
 
         /*
-         * Track the support for the links seen as we go over this in experiment-major mode.
+         * Track the support for the links among the queried data sets as we go over this in experiment-major mode.
          */
         CountingMap<Long> supportCounts = new CountingMap<>();
         List<Long> keepers = new ArrayList<>();
         for ( ExperimentCoexpressionLink link : links ) {
+
+            assert genes.contains( link.getFirstGene() );
+
             if ( supportCounts.increment( link.getLinkId() ) >= stringency ) {
                 keepers.add( link.getLinkId() ); // TODO: duplicates?
             }
@@ -1568,7 +1580,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             return new HashMap<>();
         }
 
-        return loadAndConvertLinks( t, keepers, quick );
+        return loadAndConvertLinks( t, keepers, genes, quick );
     }
 
     /**
@@ -1699,7 +1711,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             return new HashMap<>();
         }
 
-        return loadAndConvertLinks( t, new ArrayList<>( keepers ), quick );
+        return loadAndConvertLinks( t, new ArrayList<>( keepers ), null, quick );
 
     }
 
@@ -1768,17 +1780,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         StopWatch timer = new StopWatch();
         timer.start();
-        String sqlQuery1 = "select ID, POSITIVE, SUPPORT, FIRST_GENE_FK, SECOND_GENE_FK, SUPPORT_DETAILS_FK from "
-                + CoexpressionQueryUtils.getGeneLinkTableName( t ) + " where FIRST_GENE_FK in (:genes) and SUPPORT>=:s";
-
-        Session sess = this.getSessionFactory().getCurrentSession();
-        SQLQuery query1 = sess.createSQLQuery( sqlQuery1 );
-
-        query1.setParameterList( "genes", geneIds.toArray() );
-        query1.setParameter( "s", Math.max( 1, stringency ) );
-
-        // This is actually pretty fast.
-        List<Object[]> q1results = query1.list();
+        List<Object[]> q1results = getRawCoexpressionFromDbViaGenes( geneIds, t, stringency );
 
         log.debug( q1results.size() + " raw coexpression results for " + geneIds.size() + " genes at support>="
                 + stringency + " " + timer.getTime() + "ms" );
@@ -1814,7 +1816,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 // Note: should never be empty
                 String sqlQuery2 = "select ID,BYTES from " + CoexpressionQueryUtils.getSupportDetailsTableName( t )
                         + " where ID in (:ids)";
-                SQLQuery query2 = sess.createSQLQuery( sqlQuery2 );
+                SQLQuery query2 = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery2 );
 
                 query2.setParameterList( "ids", supportDetailsIds.toArray() );
 
@@ -1862,11 +1864,32 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     }
 
     /**
+     * @param geneIds
+     * @param t
+     * @param stringency
+     * @return
+     */
+    public List<Object[]> getRawCoexpressionFromDbViaGenes( Collection<Long> geneIds, Taxon t, int stringency ) {
+        String sqlQuery1 = "select ID, POSITIVE, SUPPORT, FIRST_GENE_FK, SECOND_GENE_FK, SUPPORT_DETAILS_FK from "
+                + CoexpressionQueryUtils.getGeneLinkTableName( t ) + " where FIRST_GENE_FK in (:genes) and SUPPORT>=:s";
+
+        Session sess = this.getSessionFactory().getCurrentSession();
+        SQLQuery query1 = sess.createSQLQuery( sqlQuery1 );
+
+        query1.setParameterList( "genes", geneIds.toArray() );
+        query1.setParameter( "s", Math.max( 1, stringency ) );
+
+        // This is actually pretty fast.
+        List<Object[]> q1results = query1.list();
+        return q1results;
+    }
+
+    /**
      * Find links among the given genes in the given experiments, querying the experiment-level table. Does not check
      * the cache.
      * 
      * @param taxon
-     * @param genes not too few
+     * @param genes
      * @param bas not too many
      * @param stringency
      * @param quick
@@ -1875,16 +1898,28 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     private Map<Long, List<CoexpressionValueObject>> getInterCoexpressionFromDbViaExperiments( Taxon t,
             Collection<Long> genes, Collection<Long> bas, int stringency, boolean quick ) {
 
-        // TODO if number of genes or experiments is large, break into batches? See the gene-wise method.
-
-        Query q = this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "select linkId from " + CoexpressionQueryUtils.getExperimentLinkClassName( t )
-                                + " where experiment.id in (:ees) and firstGene in (:genes) and secondGene in (:genes)" )
-                .setParameterList( "ees", bas ).setParameterList( "genes", genes );
-        List<Long> links = q.list();
+        // Batch by genes - but we might need to batch from experiments if there are a lot (but we wouldn't use this
+        // method if that was the case, typically)
+        List<Long> links = new ArrayList<>();
+        BatchIterator<Long> it = BatchIterator.batches( genes, 32 /* FIXME CONSTANT */);
+        for ( ; it.hasNext(); ) {
+            StopWatch timer = new StopWatch();
+            timer.start();
+            Query q = this
+                    .getSessionFactory()
+                    .getCurrentSession()
+                    .createQuery(
+                            "select linkId from "
+                                    + CoexpressionQueryUtils.getExperimentLinkClassName( t )
+                                    + " where experiment.id in (:ees) and firstGene in (:genes) and secondGene in (:genes2)" )
+                    .setParameterList( "ees", bas ).setParameterList( "genes", it.next() )
+                    .setParameterList( "genes2", genes );
+            List<Long> r = q.list();
+            links.addAll( r );
+            if ( timer.getTime() > 1000 ) {
+                log.debug( "Experiment-first query-gene-only batch: " + timer.getTime() + "ms for " + r.size() );
+            }
+        }
 
         /*
          * Track the support for the links seen as we go over this in experiment-major mode.
@@ -1903,7 +1938,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             return new HashMap<>();
         }
 
-        return loadAndConvertLinks( t, new ArrayList<>( keepers ), quick );
+        return loadAndConvertLinks( t, new ArrayList<>( keepers ), genes, quick );
     }
 
     /**
@@ -2029,10 +2064,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      * 
      * @param t
      * @param linkIds to fetch; should be unique!
+     * @param queryGenes can be null if was unconstrained
      * @param quick if true, the 'testedin' details will be populated.
      * @return
      */
-    private Map<Long, List<CoexpressionValueObject>> loadAndConvertLinks( Taxon t, List<Long> linkIds, boolean quick ) {
+    private Map<Long, List<CoexpressionValueObject>> loadAndConvertLinks( Taxon t, List<Long> linkIds,
+            Collection<Long> queryGenes, boolean quick ) {
 
         assert !linkIds.isEmpty();
 
@@ -2047,8 +2084,12 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                                 + " g2g join fetch g2g.supportDetails where g2g.id in (:ids)" );
 
         int BATCH_SIZE = 1024;
-        BatchIterator<Long> idBatches = BatchIterator.batches( linkIds, BATCH_SIZE );
         Collections.sort( linkIds ); // more efficient querying.
+
+        BatchIterator<Long> idBatches = BatchIterator.batches( linkIds, BATCH_SIZE );
+
+        StopWatch timer = new StopWatch();
+        timer.start();
         List<Gene2GeneCoexpression> rawResults = new ArrayList<>();
         for ( ; idBatches.hasNext(); ) {
             rawResults.addAll( q.setParameterList( "ids", idBatches.next() ).list() );
@@ -2063,10 +2104,14 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                     + " results" );
         }
 
-        // genes were not specified
-        Map<Long, List<CoexpressionValueObject>> results = convertToValueObjects( rawResults, null );
+        if ( timer.getTime() > 2000 ) {
+            log.info( "Load and convert " + rawResults.size() + " links: " + timer.getTime() + "ms" );
+        }
+
+        Map<Long, List<CoexpressionValueObject>> results = convertToValueObjects( rawResults, queryGenes );
         for ( Long g : results.keySet() ) {
             if ( !quick ) {
+                assert queryGenes == null || queryGenes.contains( g );
                 populateTestedInDetails( results.get( g ) );
             }
         }
@@ -2119,7 +2164,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             }
         }
 
-        log.debug( gctim.size() + "/" + ( genes.size() + gctim.size() ) + " genes had cached tested-ins" );
+        // log.debug( gctim.size() + "/" + ( genes.size() + gctim.size() ) + " genes had cached tested-ins" );
 
         if ( !genes.isEmpty() ) {
             // fetch the GeneCoexpressionTestedIn information for those genes which were not cached.
