@@ -246,7 +246,8 @@ public class CoexpressionSearchController {
         timer.start();
 
         log.info( "Coexpression search for " + searchOptions.getGeneIds().size() + " genes, stringency="
-                + searchOptions.getStringency() + " eeset=" + searchOptions.getEeIds().size() );
+                + searchOptions.getStringency()
+                + ( searchOptions.getEeIds() != null ? ( " ees=" + searchOptions.getEeIds().size() ) : " All ees" ) );
 
         result = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(), searchOptions.getGeneIds(),
                 searchOptions.getStringency(), -1 /* no limit in this situation anyway */, true );
@@ -319,7 +320,7 @@ public class CoexpressionSearchController {
             }
         }
 
-        assert eeSetId != null;
+        if ( eeSetId == null ) return new HashSet<>();
 
         // security filter
         return EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
