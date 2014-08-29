@@ -181,9 +181,16 @@ public class GeneTestedInCacheImpl implements InitializingBean, GeneTestedInCach
      */
     @Override
     public GeneCoexpressionTestedIn get( Long geneId ) {
-        if ( cache.isKeyInCache( geneId ) ) return ( GeneCoexpressionTestedIn ) cache.get( geneId ).getObjectValue();
+        if ( cache == null ) return null;
+        if ( geneId == null ) return null;
 
-        return null;
+        Element o = cache.get( geneId );
+
+        if ( o == null ) return null;
+        assert o.getObjectValue() != null;
+
+        return ( GeneCoexpressionTestedIn ) o.getObjectValue();
+
     }
 
     /*
