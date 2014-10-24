@@ -286,7 +286,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
 
             response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
-            response.setContentType( "application/octet-stream" );
+            response.setContentType( "application/x-gzip" );
 
             try (OutputStream outputStream = response.getOutputStream();) {
 

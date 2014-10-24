@@ -64,7 +64,7 @@ public class DownloadBinaryFileView extends AbstractView {
             throw new IOException( "Cannot read from " + filePath );
         }
         response.addHeader( "Content-disposition", "attachment; filename=" + f.getName() );
-        response.setContentType( "application/octet-stream" );
+        response.setContentType( "application/x-gzip" );
 
         response.setContentLength( ( int ) f.length() );
 
