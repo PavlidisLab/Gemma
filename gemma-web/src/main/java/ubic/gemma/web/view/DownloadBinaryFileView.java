@@ -23,13 +23,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.servlet.view.AbstractView;
 
 /**
@@ -63,33 +63,14 @@ public class DownloadBinaryFileView extends AbstractView {
         if ( !f.canRead() ) {
             throw new IOException( "Cannot read from " + filePath );
         }
-        response.addHeader( "Content-disposition", "attachment; filename=" + f.getName() );
-        response.setContentType( "application/x-gzip" );
 
+        // response.setContentType( "application/octet-stream" ); // see Bug4206
         response.setContentLength( ( int ) f.length() );
+        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
 
-        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
-
-            writeToClient( response, reader, f );
-
-            response.getOutputStream().flush();
-        }
-    }
-
-    /**
-     * @param response
-     * @param reader
-     * @param f
-     */
-    private void writeToClient( HttpServletResponse response, InputStream reader, File f ) throws IOException {
-        assert reader != null;
-        try (OutputStream outputStream = response.getOutputStream();) {
-            byte[] buf = new byte[1024];
-            int len;
-            while ( ( len = reader.read( buf ) ) > 0 ) {
-                outputStream.write( buf, 0, len );
-            }
-        }
+        InputStream reader = new BufferedInputStream( new FileInputStream( f ) );
+        FileCopyUtils.copy( reader, response.getOutputStream() );
+        response.flushBuffer();
     }
 
 }

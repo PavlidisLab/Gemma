@@ -19,15 +19,22 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
@@ -42,7 +49,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.Settings;
-import ubic.gemma.web.view.DownloadBinaryFileView;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
@@ -272,8 +278,8 @@ public class ExpressionExperimentDataFetchController {
 
     }
 
-    public static final String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
-            + "dataFiles" + File.separatorChar;
+    public static final String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles"
+            + File.separatorChar;
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -291,17 +297,28 @@ public class ExpressionExperimentDataFetchController {
      * @param file
      * @return
      */
-    @RequestMapping(value = "/getData.html", method = RequestMethod.GET)
-    public ModelAndView downloadFile( String file ) {
+    @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+
+        String file = request.getParameter( "file" );
 
         if ( StringUtils.isBlank( file ) ) {
             throw new IllegalArgumentException( "The file name cannot be blank" );
         }
 
-        ModelAndView mav = new ModelAndView( new DownloadBinaryFileView() );
         String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
-        mav.addObject( DownloadBinaryFileView.PATH_PARAM, fullFilePath );
-        return mav;
+        File f = new File( fullFilePath );
+
+        if ( !f.canRead() ) {
+            throw new IOException( "Cannot read from " + fullFilePath );
+        }
+
+        // response.setContentType( "application/octet-stream" ); // see Bug4206
+        response.setContentLength( ( int ) f.length() );
+        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
+
+        FileCopyUtils.copy( new FileInputStream( f ), response.getOutputStream() );
+        response.flushBuffer();
     }
 
     /**

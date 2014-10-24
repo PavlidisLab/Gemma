@@ -46,6 +46,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -253,7 +254,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     }
 
     @Override
-    @RequestMapping("/downloadAnnotationFile.html")
+    @RequestMapping(value = "/downloadAnnotationFile.html", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ModelAndView downloadAnnotationFile( HttpServletRequest request, HttpServletResponse response ) {
 
         String arrayDesignIdStr = request.getParameter( "id" );
@@ -286,7 +287,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
 
             response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
-            response.setContentType( "application/x-gzip" );
+            response.setContentLength( ( int ) f.length() );
+            // response.setContentType( "application/x-gzip" ); // see Bug4206
 
             try (OutputStream outputStream = response.getOutputStream();) {
 
