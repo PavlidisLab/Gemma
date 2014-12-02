@@ -220,21 +220,20 @@ public class ProbeMapperImpl implements ProbeMapper {
                 if ( log.isDebugEnabled() )
                     log.debug( "Skipped " + skipped + "/" + blatResults.size()
                             + " individual blat results that didn't meet criteria" );
-            } else {
-                String queryName = sequence.getName();
-                assert StringUtils.isNotBlank( queryName );
-                if ( !allRes.containsKey( queryName ) ) {
-                    allRes.put( queryName, blatAssociationsForSequence );
-                }
-                allRes.get( queryName ).addAll( blatAssociationsForSequence );
-
-                // if ( log.isDebugEnabled() ) {
-                // log.info( blatAssociationsForSequence.size() + " associations for " + sequence
-                // + " after redundancy reduction and score filtering; "
-                // + ( scored - blatAssociationsForSequence.size() ) + " not used" );
-                // }
-
             }
+
+            String queryName = sequence.getName();
+            assert StringUtils.isNotBlank( queryName );
+            if ( !allRes.containsKey( queryName ) ) {
+                allRes.put( queryName, blatAssociationsForSequence );
+            }
+            allRes.get( queryName ).addAll( blatAssociationsForSequence );
+
+            // if ( log.isDebugEnabled() ) {
+            // log.info( blatAssociationsForSequence.size() + " associations for " + sequence
+            // + " after redundancy reduction and score filtering; "
+            // + ( scored - blatAssociationsForSequence.size() ) + " not used" );
+            // }
 
         } // end of iteration over sequences
 
