@@ -854,7 +854,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.description.AnnotationValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.DesignMatrixRowValueObject" />
-		<dwr:convert type="bean" class="ubic.gemma.security.authentication.LoginDetailsValueObject" />
+		<dwr:convert type="bean" class="gemma.gsec.authentication.LoginDetailsValueObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMaterialValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.bioAssay.BioAssayValueObject" />
