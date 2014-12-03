@@ -126,7 +126,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             // Symbol
             // LocusTag
             // Synonyms
-            // dbXrefs
+            // dbXrefs, separated by |
             // chromosome
             // map_location
             // description
@@ -153,7 +153,19 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                     String dbXr = dbXRefs[i];
                     String[] dbF = StringUtils.split( dbXr, ':' );
                     if ( dbF.length != 2 ) {
-                        throw new FileFormatException( "Expected 2 fields, got " + dbF.length + " from '" + dbXr + "'" );
+                        /*
+                         * Annoyingly, HGCN identifiers now have the format HGCN:X where X is an integer. This is
+                         * apparent from downloading files from HGCN (http://www.genenames.org/cgi-bin/statistics).
+                         * 
+                         * Therefore we have a special case.
+                         */
+                        if ( dbF.length == 3 && dbF[1].equals( "HGCN" ) ) {
+                            dbF[1] = dbF[1] + ":" + dbF[2];
+                        } else {
+                            // we're very stringent to avoid data corruption.
+                            throw new FileFormatException( "Expected 2 fields, got " + dbF.length + " from '" + dbXr
+                                    + "'" );
+                        }
                     }
                     geneInfo.addToDbXRefs( dbF[0], dbF[1] );
                 }
@@ -168,6 +180,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
             geneInfo.setNomenclatureStatus( fields[12].equals( "-" ) ? NomenclatureStatus.UNKNOWN : fields[11]
                     .equals( "O" ) ? NomenclatureStatus.OFFICIAL : NomenclatureStatus.INTERIM );
             // ignore 14th field for now - it stores alternate protein names
+            // ignore 15th, modification date
         } catch ( NumberFormatException e ) {
             throw new FileFormatException( e );
         }
