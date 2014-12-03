@@ -152,7 +152,7 @@ public class GeneOntologyServiceTest {
         String id = "GO:0000332";
         OntologyTerm termForId = gos.getTermForId( id );
         assertNotNull( termForId );
-        Collection<OntologyTerm> terms = gos.getAllParents( termForId );
+        Collection<OntologyTerm> terms = gos.getAllParents( termForId, true );
 
         for ( OntologyTerm term : terms ) {
             log.info( term );
