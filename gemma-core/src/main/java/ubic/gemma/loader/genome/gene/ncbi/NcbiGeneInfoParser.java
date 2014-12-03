@@ -155,11 +155,12 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
                     if ( dbF.length != 2 ) {
                         /*
                          * Annoyingly, HGCN identifiers now have the format HGNC:X where X is an integer. This is
-                         * apparent from downloading files from HGCN (http://www.genenames.org/cgi-bin/statistics).
+                         * apparent from downloading files from HGCN (http://www.genenames.org/cgi-bin/statistics). Same
+                         * situation for MGI
                          * 
                          * Therefore we have a special case.
                          */
-                        if ( dbF.length == 3 && dbF[1].equals( "HGNC" ) ) {
+                        if ( dbF.length == 3 && ( dbF[1].equals( "HGNC" ) || dbF[1].equals( "MGI" ) ) ) {
                             dbF[1] = dbF[1] + ":" + dbF[2];
                         } else {
                             // we're very stringent to avoid data corruption.
