@@ -154,12 +154,11 @@ public abstract class Chromosome implements java.io.Serializable {
         int hashCode = 0;
 
         assert this.getName() != null;
-        assert this.getTaxon() != null;
 
         hashCode = 29
                 * hashCode
-                + ( this.getId() == null ? this.getName().hashCode() + this.getTaxon().hashCode() : this.getId()
-                        .hashCode() );
+                + ( this.getId() == null ? this.getName().hashCode()
+                        + ( this.getTaxon() != null ? this.getTaxon().hashCode() : 0 ) : this.getId().hashCode() );
 
         return hashCode;
     }
