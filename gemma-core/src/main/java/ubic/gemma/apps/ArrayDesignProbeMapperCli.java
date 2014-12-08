@@ -35,6 +35,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 
 /**
@@ -110,15 +111,20 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
      */
     private void batchRun( final Date skipIfLastRunLaterThan ) {
         Collection<ArrayDesign> allArrayDesigns;
+
         if ( this.taxon != null ) {
             allArrayDesigns = arrayDesignService.findByTaxon( this.taxon );
         } else {
             allArrayDesigns = arrayDesignService.loadAll();
         }
 
+        final Map<Long, AuditEvent> troubled = arrayDesignService.getLastTroubleEvent( EntityUtils
+                .getIds( allArrayDesigns ) );
+
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        // split over multiple threads so we can multiplex. Put the array designs in a queue.
+        // split over multiple threads so we can multiplex. Put the array designs in a queue. WARNING this does not work
+        // correctly because of sharing of entities between platform. You will get hibernate errors.
 
         /*
          * Here is our task runner.
@@ -143,6 +149,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
 
             void consume( ArrayDesign x ) {
+
+                if ( troubled.containsKey( x.getId() ) ) {
+                    log.warn( "Skipping troubled platform: " + x );
+                    errorObjects.add( x + ": " + "Skipped because it is troubled; run in non-batch-mode" );
+                    return;
+                }
 
                 /*
                  * Note that if the array design has multiple taxa, analysis will be run on all of the sequences, not
@@ -282,6 +294,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             log.warn( design + " is subsumed or merged into another design, it will not be run." );
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        if ( design.getTechnologyType().equals( TechnologyType.NONE ) ) {
+            log.warn( design + " is not a microarray platform, it will not be run" );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is not a microarray platform." );
             return;
         }
 
@@ -441,7 +460,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         allowSubsumedOrMerged = true;
 
         if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignsToProcess.isEmpty() ) {
-            log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
+            log.warn( "*** Running mapping for all " + taxon.getCommonName()
+                    + " Array designs, troubled platforms may be skipped *** " );
         }
 
         if ( !this.arrayDesignsToProcess.isEmpty() ) {
@@ -536,7 +556,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 arrayDesignProbeMapperService.printResult( probe, col );
 
             }
-
         }
     }
 
@@ -559,11 +578,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
+         * (FIXME: this is a duplicate check)
          */
         if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE )
                 || !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE )
                         || arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) || arrayDesign
                         .getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) ) {
+            log.info( "Skipping because it is not a microarray platform" );
             return false;
         }
 
