@@ -153,7 +153,7 @@ public abstract class Chromosome implements java.io.Serializable {
     public int hashCode() {
         int hashCode = 0;
 
-        assert this.getName() != null;
+        assert this.getId() != null || this.getName() != null;
 
         hashCode = 29
                 * hashCode
