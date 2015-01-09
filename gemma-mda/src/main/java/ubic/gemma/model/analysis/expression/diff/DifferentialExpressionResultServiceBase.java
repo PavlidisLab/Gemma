@@ -77,6 +77,15 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
     }
 
     /**
+     * @see DifferentialExpressionResultService.DifferentialExpressionResultService#thawWithoutContrasts(ExpressionAnalysisResultSet)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
+        return this.getExpressionAnalysisResultSetDao().thawWithoutContrasts( resultSet );
+    }
+
+    /**
      * Gets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
      */
     protected DifferentialExpressionResultDao getDifferentialExpressionResultDao() {

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -43,5 +42,11 @@ public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalys
      * @return
      */
     public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
+    /**
+     * @param resultSet Thaws without including contasts
+     * @return
+     */
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
 }

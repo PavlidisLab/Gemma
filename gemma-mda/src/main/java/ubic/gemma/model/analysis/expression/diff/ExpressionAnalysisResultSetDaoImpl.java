@@ -103,6 +103,31 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
     }
 
+    /**
+     * @see ExpressionAnalysisResultSetDao#thawWithoutContrasts(ExpressionAnalysisResultSet)
+     */
+    @Override
+    public ExpressionAnalysisResultSet thawWithoutContrasts( final ExpressionAnalysisResultSet resultSet ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        this.thawLite( resultSet );
+
+        List<ExpressionAnalysisResultSet> res = this.getHibernateTemplate().findByNamedParam(
+                "select r from ExpressionAnalysisResultSetImpl r left join fetch r.results res "
+                        + " left outer join fetch res.probe "
+                        + "inner join fetch r.experimentalFactors ef inner join fetch ef.factorValues "
+                        + "where r = :rs ", "rs", resultSet );
+
+        if ( timer.getTime() > 1000 ) {
+            Log.info( "Thaw resultset: " + timer.getTime() + "ms" );
+        }
+
+        assert !res.isEmpty();
+
+        return res.get( 0 );
+
+    }
+
     /*
      * (non-Javadoc)
      * 

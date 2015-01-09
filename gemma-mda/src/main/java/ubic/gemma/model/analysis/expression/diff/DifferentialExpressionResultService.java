@@ -18,6 +18,10 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.basecode.math.distribution.Histogram;
@@ -25,10 +29,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Main entry point to retrieve differential expression data.
@@ -191,6 +191,14 @@ public interface DifferentialExpressionResultService {
     public void thaw( DifferentialExpressionAnalysisResult result );
 
     public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
+
+    /**
+     * Thaws the ExpressionAnalysisResultSet without including contrasts.
+     * 
+     * @param resultSet
+     * @return
+     */
+    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
     /**
      * Does not thaw the collection of probes (just the factor information)
