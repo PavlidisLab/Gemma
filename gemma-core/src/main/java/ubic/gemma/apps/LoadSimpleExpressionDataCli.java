@@ -19,10 +19,20 @@
 
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
+
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -36,10 +46,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import java.io.*;
-import java.util.Collection;
-import java.util.HashSet;
 
 /**
  * Command Line tools for loading the expression experiment in flat files
@@ -202,15 +208,14 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
             ad.setPrimaryTaxon( metaData.getTaxon() );
             ads.add( ad );
             metaData.setProbeIdsAreImageClones( true );
+        } else if ( StringUtils.isNotBlank( fields[ARRAYDESIGNNAMEI] ) ) {
+            // allow for the case where there is an additional new array design to be added.
+            ArrayDesign ad = getNewArrayDesignFromName( fields );
+            ad.setTechnologyType( techType );
+            ad.setPrimaryTaxon( metaData.getTaxon() );
+            ads.add( ad );
         } else {
             String allADs[] = fields[AD_SHORT_NAME_I].split( "\\+" );
-
-            // allow for the case where there is an additional new array design to be added.
-            if ( StringUtils.isNotBlank( fields[ARRAYDESIGNNAMEI] ) ) {
-                ArrayDesign ad = getNewArrayDesignFromName( fields );
-                ad.setTechnologyType( techType );
-                ads.add( ad );
-            }
 
             for ( i = 0; i < allADs.length; i++ ) {
                 ArrayDesign ad = adService.findByShortName( allADs[i] );
@@ -257,14 +262,12 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
      * @param metaData
      */
     private void configureTaxon( String[] fields, SimpleExpressionExperimentMetaData metaData ) {
-        Taxon taxon = Taxon.Factory.newInstance();
-        taxon.setScientificName( fields[SPECIESI] );
-        Taxon existing = taxonService.find( taxon );
+        Taxon existing = taxonService.findByCommonName( fields[SPECIESI] );
         if ( existing == null ) {
             throw new IllegalArgumentException( "There is no taxon with scientific name " + fields[SPECIESI]
                     + " in the system; please add it first before loading data." );
         }
-        metaData.setTaxon( taxon );
+        metaData.setTaxon( existing );
     }
 
     /**
@@ -309,9 +312,9 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
         metaData.setShortName( shortName );
         metaData.setDescription( fields[DESCRIPTIONI] );
 
-        configureArrayDesigns( fields, metaData );
-
         configureTaxon( fields, metaData );
+
+        configureArrayDesigns( fields, metaData );
 
         try (InputStream data = new FileInputStream( new File( this.dirName, fields[DATAFILEI] ) );) {
 
