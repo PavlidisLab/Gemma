@@ -30,9 +30,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -1215,7 +1219,22 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = findExternalDatabasesWithEvidence();
 
             for ( ExternalDatabaseValueObject externalDatabaseValueObject : externalDatabaseValueObjects ) {
-
+                
+                File thisFile = new File(datasetsFolderPath
+                        + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv");
+                
+                boolean currDBFoundinExtDBs = false;
+                Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
+                ExternalDatabaseStatisticsValueObject dbFromColln = null;
+                while(!currDBFoundinExtDBs && iter.hasNext())
+                {
+                    dbFromColln = iter.next();
+                    if(dbFromColln.getName().equals( externalDatabaseValueObject.getName() ))
+                        currDBFoundinExtDBs = true;
+                }               
+                                
+                if(dbFromColln.getLastUpdateDate().getTime()>thisFile.lastModified())
+                {
                 fileWriterDataSource = new BufferedWriter( new FileWriter( datasetsFolderPath
                         + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv" ) );
 
@@ -1301,8 +1320,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     fileWriterDataSource.write( evidenceLine );
                     fileWriterAllEvidence.write( evidenceLine );
                 }
-                fileWriterDataSource.close();
-            }
+                fileWriterDataSource.close();// finish writing one given data src file
+            }// old: finish loop of writing all ext data src files
+        }//new: finish loop of writing all ext data src files, including checking modified times 
             fileWriterAllEvidence.close();
 
             // LatestEvidenceExport ---> points to the latest dump

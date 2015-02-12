@@ -64,7 +64,7 @@
 			<ref bean="neurocartaJobDetail" />
 		</property>
 		<property name="cronExpression">
-			<value>0 30 2 1 * ?</value><!-- monthly at 2:30 -->
+			<value>0 30 2 * * ?</value><!-- was monthly at 2:30> 0 30 2 1 * ?<, now daily at 2:30 -->
 		</property>
 	</bean>
 	<bean id="whatsNewTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
