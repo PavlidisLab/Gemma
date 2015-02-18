@@ -16,8 +16,10 @@ package ubic.gemma.web.services.rest;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -35,7 +37,9 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
@@ -136,5 +140,24 @@ public class PhenotypeWebService {
             @QueryParam("showOnlyEditable") boolean showOnlyEditable ) {
         return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
                 showOnlyEditable ) );
+    }
+    
+    @GET
+    @Path("/find-all-dumps")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<DumpsValueObject> findAllDumps() {
+        
+        Collection<DumpsValueObject> json = new TreeSet<DumpsValueObject>();
+        Iterator<ExternalDatabaseStatisticsValueObject> iter = phenotypeAssociationManagerService.loadNeurocartaStatistics().iterator();
+        ExternalDatabaseStatisticsValueObject dbFromColln = null;
+        DumpsValueObject currObj;
+        while(iter.hasNext())
+        {
+            dbFromColln = iter.next();
+            currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), dbFromColln.getLastUpdateDate().toString() );
+            json.add( currObj );
+        }              
+
+        return json;
     }
 }
