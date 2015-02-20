@@ -117,6 +117,7 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.doublealgo.Formatter;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.jet.stat.Descriptive;
 
 //
 /**
@@ -1159,9 +1160,11 @@ public class ExpressionExperimentQCController extends BaseController {
         final int TRANSLUCENT = 50;
         final int OPAQUE = 255;
 
-        // Set maximum plot range to Y_MAX - YSCALE * OFFSET to cut down on excess white space
+        // Set maximum plot range to Y_MAX + YRANGE * OFFSET to leave some extra white space
         final double OFFSET_FACTOR = 0.05f;
-        final double Y_SCALE = 10f;
+
+        // MV plot filtering
+        final double zScoreMax = 2;
 
         // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
         final int MAX_IMAGE_SIZE_PX = 5;
@@ -1170,8 +1173,11 @@ public class ExpressionExperimentQCController extends BaseController {
             return false;
         }
 
+        // filter out extreme outliers by using a z-score cutoff, specially useful for GeneSpring data, e.g. GSE27262
+        MeanVarianceRelation filteredMvr = removeMVOutliers( mvr, zScoreMax );
+
         // get data points
-        XYSeriesCollection collection = getMeanVariance( mvr );
+        XYSeriesCollection collection = getMeanVariance( filteredMvr );
 
         if ( collection.getSeries().size() == 0 ) {
             return false;
@@ -1187,7 +1193,7 @@ public class ExpressionExperimentQCController extends BaseController {
         int alpha = collection.getSeries( 0 ).getItemCount() > THRESHOLD ? TRANSLUCENT : OPAQUE;
         renderer.setSeriesPaint( 0, new Color( 0, 0, 0, alpha ) );
         renderer.setSeriesPaint( 1, Color.red );
-        renderer.setSeriesStroke( 1, new BasicStroke( 4 ) );
+        renderer.setSeriesStroke( 1, new BasicStroke( 1 ) );
         renderer.setSeriesShape( 0, new Ellipse2D.Double( 4, 4, 4, 4 ) );
         renderer.setSeriesShapesFilled( 0, false );
         renderer.setSeriesLinesVisible( 0, false );
@@ -1201,11 +1207,14 @@ public class ExpressionExperimentQCController extends BaseController {
 
         // adjust the chart domain and ranges
         double yRange = collection.getSeries( 0 ).getMaxY() - collection.getSeries( 0 ).getMinY();
-        double offset = ( yRange ) * OFFSET_FACTOR;
-        double newYMin = collection.getSeries( 0 ).getMinY() - offset;
-        double newYMax = collection.getSeries( 0 ).getMaxY() - Y_SCALE * offset; // cut off excess space at the top
-        double newXMin = collection.getSeries( 0 ).getMinX() - offset;
-        double newXMax = collection.getSeries( 0 ).getMaxX() + offset;
+        double xRange = collection.getSeries( 0 ).getMaxX() - collection.getSeries( 0 ).getMinX();
+        double ybuffer = ( yRange ) * OFFSET_FACTOR;
+        double xbuffer = ( xRange ) * OFFSET_FACTOR;
+        double newYMin = collection.getSeries( 0 ).getMinY() - ybuffer;
+        double newYMax = collection.getSeries( 0 ).getMaxY() + ybuffer;
+        double newXMin = collection.getSeries( 0 ).getMinX() - xbuffer;
+        double newXMax = collection.getSeries( 0 ).getMaxX() + xbuffer;
+
         ValueAxis yAxis = new NumberAxis( "Variance" );
         yAxis.setRange( newYMin, newYMax );
         ValueAxis xAxis = new NumberAxis( "Mean" );
@@ -1218,6 +1227,68 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
 
         return true;
+    }
+
+    /**
+     * Remove outliers from the MeanVarianceRelation by removing those points which have: (zscore(mean) > zscoreMax ||
+     * zscore(variance) > zscoreMax)
+     * 
+     * @param mvr
+     * @return
+     */
+    private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
+        MeanVarianceRelation ret = MeanVarianceRelation.Factory.newInstance();
+        ByteArrayConverter bac = new ByteArrayConverter();
+
+        DoubleArrayList vars = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getVariances() ) );
+        DoubleArrayList means = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getMeans() ) );
+        DoubleArrayList lowessXs = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getLowessX() ) );
+        DoubleArrayList lowessYs = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getLowessY() ) );
+
+        DoubleArrayList filteredMeans = new DoubleArrayList();
+        DoubleArrayList filteredVars = new DoubleArrayList();
+        DoubleArrayList filteredLowessX = new DoubleArrayList();
+        DoubleArrayList filteredLowessY = new DoubleArrayList();
+
+        DoubleArrayList zVars = zscore( vars );
+        DoubleArrayList zMeans = zscore( means );
+        for ( int i = 0; i < zMeans.size(); i++ ) {
+
+            if ( Math.abs( zMeans.getQuick( i ) ) > zscoreMax || Math.abs( zVars.getQuick( i ) ) > zscoreMax ) {
+                continue;
+            }
+
+            filteredMeans.add( means.getQuick( i ) );
+            filteredVars.add( vars.getQuick( i ) );
+            filteredLowessX.add( lowessXs.getQuick( i ) );
+            filteredLowessY.add( lowessYs.getQuick( i ) );
+        }
+
+        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
+                + zscoreMax + ". Max lowessX,Y is (" + Descriptive.max( filteredLowessX ) + ","
+                + Descriptive.max( filteredLowessY ) + "). Max mean,variance is ( " + Descriptive.max( filteredMeans )
+                + "," + Descriptive.max( filteredVars ) + ")." );
+
+        ret.setLowessY( bac.doubleArrayToBytes( filteredLowessY ) );
+        ret.setLowessX( bac.doubleArrayToBytes( filteredLowessX ) );
+        ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
+        ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
+
+        return ret;
+    }
+
+    /**
+     * @return zscores
+     */
+    private DoubleArrayList zscore( DoubleArrayList d ) {
+        DoubleArrayList z = new DoubleArrayList();
+        double mean = Descriptive.mean( d );
+        double sd = Descriptive.standardDeviation( Descriptive.variance( d.size(), Descriptive.sum( d ),
+                Descriptive.sumOfSquares( d ) ) );
+        for ( int i = 0; i < d.size(); i++ ) {
+            z.add( Math.abs( d.getQuick( i ) - mean ) / sd );
+        }
+        return z;
     }
 
     /**
