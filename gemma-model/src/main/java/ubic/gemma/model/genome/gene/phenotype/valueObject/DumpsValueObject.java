@@ -28,10 +28,53 @@ public class DumpsValueObject {
     
     public DumpsValueObject(String paramName, String paramUrl, String paramLastModified)
     {
+        super();
         name = paramName;
         url = paramUrl;
         lastModified = paramLastModified;
     }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        DumpsValueObject other = ( DumpsValueObject ) obj;
+        if ( name == null ) {
+            if ( other.getName()!= null ) return false;
+        } else if ( !name.equals( other.getName() ) ) return false;
+        if ( url == null ) {
+            if ( other.getUrl() != null ) return false;
+        } else if ( !url.equals( other.getUrl() ) ) return false;
+        return true;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public String getModified() {
+        return lastModified;
+    }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        result = prime * result + ( ( url == null ) ? 0 : url.hashCode() );
+        result = prime * result + ( ( lastModified == null ) ? 0 : lastModified.hashCode() );
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "DumpsVO [name=" + name + " : " + url + lastModified + "]";
+    }    
     
     public void setName(String paramName)
     {
@@ -41,5 +84,10 @@ public class DumpsValueObject {
     public void setUrl(String paramUrl)
     {
         url = paramUrl;
-    }    
+    }
+
+    public void setModified(String paramModified)
+    {
+        lastModified = paramModified;
+    }
 }

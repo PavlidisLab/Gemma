@@ -149,12 +149,12 @@ public class PhenotypeWebService {
         
         Collection<DumpsValueObject> json = new HashSet<DumpsValueObject>();
         Iterator<ExternalDatabaseStatisticsValueObject> iter = phenotypeAssociationManagerService.loadNeurocartaStatistics().iterator();
-        ExternalDatabaseStatisticsValueObject dbFromColln = null;
-        DumpsValueObject currObj;
+        ExternalDatabaseStatisticsValueObject dbFromColln = null;        
         while(iter.hasNext())
         {
             dbFromColln = iter.next();
-            currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), dbFromColln.getLastUpdateDate().toString() );
+            DumpsValueObject currObj;
+            currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
             json.add( currObj );
         }              
 
