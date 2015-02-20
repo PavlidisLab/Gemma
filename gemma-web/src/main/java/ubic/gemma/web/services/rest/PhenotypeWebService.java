@@ -147,7 +147,7 @@ public class PhenotypeWebService {
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<DumpsValueObject> findAllDumps() {
         
-        Collection<DumpsValueObject> json = new TreeSet<DumpsValueObject>();
+        Collection<DumpsValueObject> json = new HashSet<DumpsValueObject>();
         Iterator<ExternalDatabaseStatisticsValueObject> iter = phenotypeAssociationManagerService.loadNeurocartaStatistics().iterator();
         ExternalDatabaseStatisticsValueObject dbFromColln = null;
         DumpsValueObject currObj;
