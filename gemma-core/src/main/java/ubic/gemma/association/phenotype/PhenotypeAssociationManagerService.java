@@ -199,7 +199,7 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @return A collection of objects with information about external data sources in Phenocarta
      */
-    public abstract Collection<DumpsValueObject> helpFindAllDumps();
+    public abstract Collection<ExternalDatabaseStatisticsValueObject> helpFindAllDumps();
     
     /**
      * This method can be used if we want to reimport data from a specific external Database

@@ -651,21 +651,24 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @return A collection of objects with information about external data sources in Phenocarta
      */    
-    public Collection<DumpsValueObject> helpFindAllDumps() {
+    public Collection<ExternalDatabaseStatisticsValueObject> helpFindAllDumps() {
 
         Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();        
         //Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
         //ExternalDatabaseStatisticsValueObject dbFromColln = null;        
         //while(iter.hasNext())
         //{
+        Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
+        externalDatabaseStatisticsValueObjects.addAll( this.phenoAssocService
+        .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ));        
             //dbFromColln = iter.next();
-            DumpsValueObject currObj;
+            //DumpsValueObject currObj;
             //currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
-            currObj = new DumpsValueObject( "test", "test", "test" );
-            dumpsValueObjects.add( currObj );
+            //currObj = new DumpsValueObject( "test", "test", "test" );
+            //dumpsValueObjects.add( currObj );
         //}              
 
-        return dumpsValueObjects;        
+        return externalDatabaseStatisticsValueObjects;        
     }    
     
     /**

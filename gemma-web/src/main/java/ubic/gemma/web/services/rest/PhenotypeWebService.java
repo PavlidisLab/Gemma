@@ -145,7 +145,7 @@ public class PhenotypeWebService {
     @GET
     @Path("/find-all-dumps")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<DumpsValueObject> findAllDumps() {
+    public Collection<ExternalDatabaseStatisticsValueObject> findAllDumps() {
         
         return this.phenotypeAssociationManagerService.helpFindAllDumps();
     }
