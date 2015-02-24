@@ -654,15 +654,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<DumpsValueObject> helpFindAllDumps() {
 
         Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();        
-        Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
-        ExternalDatabaseStatisticsValueObject dbFromColln = null;        
-        while(iter.hasNext())
-        {
-            dbFromColln = iter.next();
+        //Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
+        //ExternalDatabaseStatisticsValueObject dbFromColln = null;        
+        //while(iter.hasNext())
+        //{
+            //dbFromColln = iter.next();
             DumpsValueObject currObj;
-            currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
+            //currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
+            currObj = new DumpsValueObject( "test", "test", "test" );
             dumpsValueObjects.add( currObj );
-        }              
+        //}              
 
         return dumpsValueObjects;        
     }    
