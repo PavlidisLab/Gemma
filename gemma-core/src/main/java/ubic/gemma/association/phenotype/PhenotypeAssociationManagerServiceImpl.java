@@ -91,6 +91,7 @@ import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSecurityValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
@@ -644,6 +645,28 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return simpleTreeValueObjects;
     }
 
+    /**
+     * This method returns information about external data sources from Phenocarta, including URLs and
+     * timestamps of the most recent update dates/times.     
+     * 
+     * @return A collection of objects with information about external data sources in Phenocarta
+     */    
+    public Collection<DumpsValueObject> helpFindAllDumps() {
+
+        Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();        
+        Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
+        ExternalDatabaseStatisticsValueObject dbFromColln = null;        
+        while(iter.hasNext())
+        {
+            dbFromColln = iter.next();
+            DumpsValueObject currObj;
+            currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
+            dumpsValueObjects.add( currObj );
+        }              
+
+        return dumpsValueObjects;        
+    }    
+    
     /**
      * this method can be used if we want to reimport data from a specific external Database
      * 

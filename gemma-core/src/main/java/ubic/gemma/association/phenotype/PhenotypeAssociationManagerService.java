@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -192,6 +193,14 @@ public interface PhenotypeAssociationManagerService {
      */
     public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
+    /**
+     * This method returns information about external data sources from Phenocarta, including URLs and
+     * timestamps of the most recent update dates/times.     
+     * 
+     * @return A collection of objects with information about external data sources in Phenocarta
+     */
+    public abstract Collection<DumpsValueObject> helpFindAllDumps();
+    
     /**
      * This method can be used if we want to reimport data from a specific external Database
      * 
