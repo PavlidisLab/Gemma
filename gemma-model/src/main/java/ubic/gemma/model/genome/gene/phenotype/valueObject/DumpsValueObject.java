@@ -25,6 +25,14 @@ public class DumpsValueObject {
     private String name;
     private String url;
     private String lastModified;
+
+    public DumpsValueObject()
+    {
+        super();
+        name = "";
+        url = "";
+        lastModified = "";        
+    }
     
     public DumpsValueObject(String paramName, String paramUrl, String paramLastModified)
     {

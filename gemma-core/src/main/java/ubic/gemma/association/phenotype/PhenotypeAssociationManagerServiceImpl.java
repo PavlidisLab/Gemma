@@ -651,7 +651,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @return A collection of objects with information about external data sources in Phenocarta
      */    
-    public Collection<ExternalDatabaseStatisticsValueObject> helpFindAllDumps() {
+    public Collection<DumpsValueObject> helpFindAllDumps() {
 
         Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();        
         //Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
@@ -660,7 +660,20 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         //{
         Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
         externalDatabaseStatisticsValueObjects.addAll( this.phenoAssocService
-        .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ));        
+        .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ));
+        Iterator<ExternalDatabaseStatisticsValueObject> iter = externalDatabaseStatisticsValueObjects.iterator();
+        while(iter.hasNext())
+        {
+            ExternalDatabaseStatisticsValueObject currObj = iter.next();
+            DumpsValueObject currDumpsObj = new DumpsValueObject();
+            if(currObj.getName()!=null && !currObj.getName().equals( "" ))
+                currDumpsObj.setName( currObj.getName() );
+            if(currObj.getPathToDownloadFile()!=null && !currObj.getPathToDownloadFile().equals( "" ))
+                currDumpsObj.setUrl( currObj.getPathToDownloadFile() );
+            if(currObj.getLastUpdateDate()!=null && !currObj.getLastUpdateDate().toString().equals( "" ))
+                currDumpsObj.setModified( currObj.getLastUpdateDate().toString());
+            dumpsValueObjects.add( currDumpsObj );                
+        }
             //dbFromColln = iter.next();
             //DumpsValueObject currObj;
             //currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
@@ -668,7 +681,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             //dumpsValueObjects.add( currObj );
         //}              
 
-        return externalDatabaseStatisticsValueObjects;        
+        return dumpsValueObjects;        
     }    
     
     /**
