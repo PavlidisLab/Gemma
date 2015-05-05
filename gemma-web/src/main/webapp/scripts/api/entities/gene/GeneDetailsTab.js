@@ -50,6 +50,11 @@ Gemma.GeneDetails = Ext
             return homologueStr;
          },
 
+         /**
+          * 
+          * @param geneSets
+          * @returns {Array}
+          */
          renderGeneSets : function( geneSets ) {
             var geneSetLinks = [];
             if ( geneSets != null && geneSets.length > 0 ) {
@@ -173,21 +178,25 @@ Gemma.GeneDetails = Ext
           * @memberOf Gemma.GeneDetailsTab
           */
          renderAssociatedExperiments : function( ncbiId, count ) {
-            return new Ext.Panel( {
-               border : false,
-               html : (count > 0 ? '<a href="/Gemma/searcher.html?query=http://purl.org/commons/record/ncbi_gene/'
-                  + ncbiId + '&scope=E">' + count + '</a>' : "No studies known to be about this gene"),
-               listeners : {
-                  'afterrender' : function( c ) {
-                     jQuery( "#studiesHelp" ).qtip( {
-                        content : Gemma.HelpText.WidgetDefaults.GeneDetails.assocExpTT,
-                        style : {
-                           name : 'cream'
-                        }
-                     } );
+            return new Ext.Panel(
+               {
+                  border : false,
+                  // html : (count > 0 ? '<a href="/Gemma/searcher.html?query=http://purl.org/commons/record/ncbi_gene/'
+                  // + ncbiId + '&scope=E">' + count + '</a>' : "No studies known to manipulate this gene"),
+                  html : (count > 0 ? '<a href="/Gemma/searcher.html?query=http://purl.org/commons/record/ncbi_gene/'
+                     + ncbiId + '&scope=E">' + count + '</a>'
+                     : ('None; <a href="/Gemma/searcher.html?query=http://purl.org/commons/record/ncbi_gene/">' + 2 + ' on mouse homologue')),
+                  listeners : {
+                     'afterrender' : function( c ) {
+                        jQuery( "#studiesHelp" ).qtip( {
+                           content : Gemma.HelpText.WidgetDefaults.GeneDetails.assocExpTT,
+                           style : {
+                              name : 'cream'
+                           }
+                        } );
+                     }
                   }
-               }
-            } );
+               } );
          },
 
          renderNodeDegree : function( geneDetails ) {
@@ -195,7 +204,7 @@ Gemma.GeneDetails = Ext
             /*
              * TODO: positive and negative; Show relation of this to other genes using the relative ranks
              */
-            console.log( geneDetails );
+            // console.log( geneDetails );
             if ( geneDetails.nodeDegreesPos && geneDetails.nodeDegreesPos.length > 1 ) {
                // Note: we need a panel here so we can pick up the rendering event so jquery can do its work.
                return new Ext.Panel(
@@ -361,7 +370,7 @@ Gemma.GeneDetails = Ext
                                         },
                                         {
                                            layout : 'form',
-                                           labelWidth : 140,
+                                           labelWidth : 100,
                                            labelAlign : 'right',
                                            labelSeparator : ':',
                                            labelStyle : 'font-weight:bold;',
@@ -388,19 +397,20 @@ Gemma.GeneDetails = Ext
                                                     {
                                                        fieldLabel : 'Gene Groups',
                                                        html : this.renderGeneSets( geneDetails.geneSets ).join( ', ' )
+                                                    // FIXME keep from being too long.
                                                     },
                                                     {
-                                                       fieldLabel : 'Multifunc.'
+                                                       fieldLabel : 'Functions'
                                                           + '&nbsp;<i id="multifuncHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderMultifunctionality( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'Coexp. deg'
-                                                          + '&nbsp<i id="nodeDegreeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                       fieldLabel : 'Coexpression'
+                                                          + '&nbsp;<i id="nodeDegreeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderNodeDegree( geneDetails )
                                                     },
                                                     {
-                                                       fieldLabel : 'Phenotypes&nbsp(DGA-filtered)&nbsp; <i id="phenotypeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                       fieldLabel : 'Phenotypes &nbsp;<i id="phenotypeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderPhenotypes( geneDetails ),
                                                        hidden : !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
                                                           || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
@@ -410,6 +420,7 @@ Gemma.GeneDetails = Ext
                                                           + '&nbsp;<i id="studiesHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
                                                        items : this.renderAssociatedExperiments( geneDetails.ncbiId,
                                                           geneDetails.associatedExperimentCount )
+                                                    // FIXME add experiments about homologues
                                                     },
                                                     {
                                                        fieldLabel : 'Elements'
