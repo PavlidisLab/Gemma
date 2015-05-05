@@ -2620,7 +2620,8 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
     }
 
     /**
-     * Update the index about which genes have links.
+     * Update the index about which genes have links. FIXME this may be unnecessary; it is purely used as an
+     * optimization for data analysis, and once the database is well-populated it doesn't do much.
      * 
      * @param coexpressions
      */
