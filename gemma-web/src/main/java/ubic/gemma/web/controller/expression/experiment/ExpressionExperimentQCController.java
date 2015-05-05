@@ -1359,7 +1359,7 @@ public class ExpressionExperimentQCController extends BaseController {
             /*
              * Hue is straightforward; brightness is set medium to make it muted; saturation we vary from high to low.
              */
-            float saturationDrop = ( float ) Math.min( 1.0, i * 0.8f / MAX_COMP );
+            float saturationDrop = ( float ) Math.min( 1.0, i * 1.3f / MAX_COMP );
             renderer.setSeriesPaint( i, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
 
         }

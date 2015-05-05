@@ -30,31 +30,37 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Add (or possibly replace) the data associated with an experiment. Cases include Affymetrix exon arrays, RNA-seq
- * data.+
+ * Add (or possibly replace) the data associated with an affymetrix data set, going back to the CEL files. Can handle
+ * exon or 3' arrays. data.+
  * 
  * @author paul
  * @version $Id$
  */
-public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI {
+public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
+    private static final String CDF_FILE_OPT = "cdfFile";
 
     /**
      * @param args
      */
     public static void main( String[] args ) {
-        AffyExonArrayDataAddCli c = new AffyExonArrayDataAddCli();
+        AffyDataFromCelCli c = new AffyDataFromCelCli();
         c.doWork( args );
     }
 
     private String aptFile = null;
+
+    // /space/grp/databases/arrays/cdfs...
+    private String cdfFile = null;
 
     @Override
     protected void buildOptions() {
         super.buildOptions();
         super.addOption( APT_FILE_OPT, true,
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
+        super.addOption( CDF_FILE_OPT, true,
+                "CDF file for Affy 3' arrays; otherwise will try to find automatically using the value of affy.power.tools.cdf.path" );
 
     }
 
@@ -65,7 +71,7 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
      */
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "AffyExonArrayDataAdd", args );
+        super.processCommandLine( "AffyArrayDataAdd", args );
 
         DataUpdater serv = getBean( DataUpdater.class );
 
@@ -87,7 +93,13 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
                 if ( ad.getName().toLowerCase().contains( "exon" ) ) {
                     log.info( "Loading data from " + aptFile );
                     serv.addAffyExonArrayData( thawedEe, aptFile );
+                } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && ad.getName().toLowerCase().contains( "affy" ) ) {
+                    log.info( thawedEe + " looks like a affy 3-prime array" );
+                    serv.reprocessAffyThreePrimeArrayData( thawedEe, cdfFile );
                     this.successObjects.add( thawedEe.toString() );
+                    this.successObjects.add( thawedEe.toString() );
+
                 } else {
                     throw new IllegalArgumentException( "Option -aptfile only valid if you are using an exon array." );
                 }
@@ -116,6 +128,11 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
                     log.info( thawedEe + " looks like affy exon array" );
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
+                } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && ad.getName().toLowerCase().contains( "affy" ) ) {
+                    log.info( thawedEe + " looks like a affy 3-prime array" );
+                    serv.reprocessAffyThreePrimeArrayData( thawedEe, cdfFile );
+                    this.successObjects.add( thawedEe.toString() );
                 } else {
                     throw new IllegalStateException( "This CLI can only deal with exon arrays" );
 
@@ -136,6 +153,9 @@ public class AffyExonArrayDataAddCli extends ExpressionExperimentManipulatingCLI
         super.processOptions();
         if ( hasOption( APT_FILE_OPT ) ) {
             this.aptFile = getOptionValue( APT_FILE_OPT );
+        }
+        if ( hasOption( CDF_FILE_OPT ) ) {
+            this.cdfFile = getOptionValue( CDF_FILE_OPT );
         }
     }
 

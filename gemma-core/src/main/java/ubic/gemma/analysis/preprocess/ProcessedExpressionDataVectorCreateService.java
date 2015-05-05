@@ -14,6 +14,9 @@
  */
 package ubic.gemma.analysis.preprocess;
 
+import java.util.Collection;
+
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -21,6 +24,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public interface ProcessedExpressionDataVectorCreateService {
+
+    /**
+     * Like computeProcessedExpressionData, but when the vectors are supplied.
+     * 
+     * @param ee
+     * @param vecs
+     */
+    public abstract void createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> vecs );
 
     /**
      * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary

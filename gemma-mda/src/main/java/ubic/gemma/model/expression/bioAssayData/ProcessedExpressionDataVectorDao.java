@@ -129,4 +129,14 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
 
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
+    /**
+     * When the processed data is being computed separately.
+     * 
+     * @param ee
+     * @param data
+     * @return
+     */
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> data );
+
 }

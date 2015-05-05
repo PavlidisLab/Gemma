@@ -39,4 +39,15 @@ public interface PreprocessorService {
     public abstract ExpressionExperiment process( ExpressionExperiment ee, boolean light )
             throws PreprocessingException;
 
+    /**
+     * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
+     * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
+     * course) the processed data are already available.
+     * 
+     * @param ee
+     * @return
+     * @throws PreprocessingException
+     */
+    public abstract ExpressionExperiment batchCorrect( ExpressionExperiment ee ) throws PreprocessingException;
+
 }

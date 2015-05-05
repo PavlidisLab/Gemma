@@ -127,6 +127,7 @@ public class LinkAnalysis {
      * include operations such as:
      * <ul>
      * <li>Imputing missing values
+     * <li>Batch correction (if not already done)
      * <li>Collapsing rows that map to the same gene (e.g., by averaging or picking the "best" row)
      * </ul>
      */

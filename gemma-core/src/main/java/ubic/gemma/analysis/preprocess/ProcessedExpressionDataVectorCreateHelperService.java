@@ -28,18 +28,17 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
 
     /**
      * @param ee
+     * @param vecs
+     * @return
+     */
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> vecs );
+
+    /**
+     * @param ee
      * @return updated ee
      */
     public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
-
-    /**
-     * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
-     * provided, ranks will not be computable.
-     * 
-     * @param ee
-     * @return updated experiment.
-     */
-    public ExpressionExperiment updateRanks( ExpressionExperiment ee );
 
     /**
      * @param ee
@@ -53,4 +52,13 @@ public interface ProcessedExpressionDataVectorCreateHelperService {
      * @param eeId
      */
     public void reorderByDesign( Long eeId );
+
+    /**
+     * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
+     * provided, ranks will not be computable.
+     * 
+     * @param ee
+     * @return updated experiment.
+     */
+    public ExpressionExperiment updateRanks( ExpressionExperiment ee );
 }

@@ -24,13 +24,15 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
       }, {
          name : "description"
       }, {
+         name : "isRecomputedFromRawData"
+      }, {
+         name : "isBatchCorrected"
+      }, {
          name : "generalType"
       }, {
          name : "isBackground"
       }, {
          name : "isBackgroundSubtracted"
-      }, {
-         name : "isBatchCorrected"
       }, {
          name : "isMaskPreferred"
       }, {
@@ -76,6 +78,18 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          tooltip : "Description",
          dataIndex : 'description',
          width : 200
+      }, {
+         id : 'isRecomput',
+         header : "Recompu?",
+         tooltip : 'Is recomputed from raw data?',
+         dataIndex : 'isRecomputedFromRawData',
+         width : 40
+      }, {
+         id : 'isbatchcorr',
+         header : "Batch corr?",
+         tooltip : "Is batch corrected?",
+         dataIndex : 'isBatchCorrected',
+         width : 80
       }, {
          id : 'ispref',
          header : "Pref?",
@@ -126,8 +140,7 @@ Gemma.ExpressionExperimentQuantitationTypeGrid = Ext.extend( Ext.grid.GridPanel,
          tooltip : "Scale",
          dataIndex : 'scale'
       } /*
-          * ,{ id: 'isbatchcorr', header: "Is Batch Corrected", dataIndex: 'isBatchCorrected', sortable: true },{ id:
-          * 'ismaskpref', header: "Is Mask Preferred", dataIndex: 'isMaskPreferred', sortable: true },
+          * ,{ id: 'ismaskpref', header: "Is Mask Preferred", dataIndex: 'isMaskPreferred', sortable: true },
           */]
    } ),
 

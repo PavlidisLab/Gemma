@@ -109,6 +109,26 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         return ee;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService#addProcessedDataVectors(ubic.
+     * gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
+     */
+    @Override
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> vecs ) {
+        ee = processedDataService.createProcessedDataVectors( ee, vecs );
+        ee = this.eeService.thawLite( ee );
+
+        assert ee.getNumberOfDataVectors() != null;
+
+        audit( ee, "" );
+
+        return ee;
+    }
+
     /**
      * Computes expression intensities depending on which ArrayDesign TechnologyType is used.
      * 

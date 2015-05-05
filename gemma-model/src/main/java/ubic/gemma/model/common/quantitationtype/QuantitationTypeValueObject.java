@@ -71,6 +71,8 @@ public class QuantitationTypeValueObject implements Serializable {
 
     private boolean isRatio;
 
+    private boolean isRecomputedFromRawData = false;
+
     private String name;
 
     private String representation;
@@ -107,6 +109,7 @@ public class QuantitationTypeValueObject implements Serializable {
         this.setRepresentation( qt.getRepresentation().toString() );
         this.setScale( qt.getScale().toString() );
         this.setType( qt.getType().toString() );
+        this.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
     }
 
     public String getDescription() {
@@ -197,6 +200,13 @@ public class QuantitationTypeValueObject implements Serializable {
         return this.type;
     }
 
+    /**
+     * @return the isRecomputedFromRawData
+     */
+    public boolean getIsRecomputedFromRawData() {
+        return isRecomputedFromRawData;
+    }
+
     public void setDescription( String description ) {
         this.description = description;
     }
@@ -239,6 +249,13 @@ public class QuantitationTypeValueObject implements Serializable {
 
     public void setName( String name ) {
         this.name = name;
+    }
+
+    /**
+     * @param isRecomputedFromRawData the isRecomputedFromRawData to set
+     */
+    public void setIsRecomputedFromRawData( boolean isRecomputedFromRawData ) {
+        this.isRecomputedFromRawData = isRecomputedFromRawData;
     }
 
     public void setRepresentation( String representation ) {

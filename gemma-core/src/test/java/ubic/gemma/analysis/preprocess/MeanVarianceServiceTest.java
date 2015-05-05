@@ -245,6 +245,9 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             qt.setIsBackground( false );
             qt.setGeneralType( GeneralType.QUANTITATIVE );
             qt.setType( StandardQuantitationType.AMOUNT );
+            qt.setIsBackgroundSubtracted( false );
+            qt.setIsBatchCorrected( false );
+            qt.setIsRecomputedFromRawData( false );
             quantitationTypeService.create( qt );
         } else {
             qt = qtList.iterator().next();

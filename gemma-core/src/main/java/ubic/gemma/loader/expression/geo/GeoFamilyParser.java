@@ -1593,12 +1593,18 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Sample_library_selection" ) ) {
             // e.g. 'cDNA', 'other'
         } else if ( startsWithIgnoreCase( line, "!Sample_library_source" ) ) {
-            // e.g. 'transcriptomic'
+            // see http://www.ncbi.nlm.nih.gov/geo/info/soft-seq.html
+            // e.g. 'transcriptomic' - if not skip? GENOMIC, OTHER
         } else if ( startsWithIgnoreCase( line, "!Sample_library_strategy" ) ) {
             // e.g. 'RNA-seq'
-            if ( value.equals( "RNA-seq" ) ) {
-                sampleSet( currentSampleAccession, "mightNotHaveDataInFile", true );
-            }
+            // if ( value.equals( "RNA-seq" ) ) { // NOTE this doesn't match the strings used and there are other
+            // possibilities. Probably if
+            // library_strategy is here at all this should be true?
+            sampleSet( currentSampleAccession, "mightNotHaveDataInFile", true );
+            // }
+
+            // FIXME sampleSet(currentSampleAccession, "libraryStrategy", /* parse */);
+
         } else if ( startsWithIgnoreCase( line, "!Sample_anchor" ) ) {
             // e.g. NlaIII for SAGE
         } else if ( startsWithIgnoreCase( line, "!Sample_tag_length" ) ) {

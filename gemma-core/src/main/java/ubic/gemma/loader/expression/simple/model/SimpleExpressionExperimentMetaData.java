@@ -46,56 +46,58 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
      */
     private static final long serialVersionUID = 1L;
 
-    private String name;
+    // for Ajax
+    Collection<Long> arrayDesignIds;
 
-    private String shortName;
+    Collection<ArrayDesign> arrayDesigns;
+
+    Taxon taxon;
+
+    Long taxonId;
 
     private String description;
 
-    /**
-     * The person who loaded this data.
-     */
-    private Contact user;
-
-    private String quantitationTypeName;
-
-    private String quantitationTypeDescription;
+    private String experimentalDesignDescription = "No information available";
 
     private String experimentalDesignName = "Unknown";
 
-    private String experimentalDesignDescription = "No information available";
-
-    private ScaleType scale;
+    private DatabaseEntry externalReference;
 
     private GeneralType generalType;
 
-    private StandardQuantitationType type;
-
-    private Boolean isRatio = Boolean.FALSE;
+    private Boolean isBatchCorrected = Boolean.FALSE;
 
     private Boolean isMaskedPreferred = Boolean.FALSE;
 
-    private DatabaseEntry externalReference;
+    private Boolean isRatio = Boolean.FALSE;
 
-    private String sourceUrl;
+    private String name;
 
     private boolean probeIdsAreImageClones;
-
-    private TechnologyType technologyType;
 
     /**
      * Publication reference.
      */
     private Integer pubMedId = null;
 
-    Collection<ArrayDesign> arrayDesigns;
+    private String quantitationTypeDescription;
 
-    // for Ajax
-    Collection<Long> arrayDesignIds;
+    private String quantitationTypeName;
 
-    Taxon taxon;
+    private ScaleType scale;
 
-    Long taxonId;
+    private String shortName;
+
+    private String sourceUrl;
+
+    private TechnologyType technologyType;
+
+    private StandardQuantitationType type;
+
+    /**
+     * The person who loaded this data.
+     */
+    private Contact user;
 
     public SimpleExpressionExperimentMetaData() {
         super();
@@ -138,6 +140,13 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
      */
     public GeneralType getGeneralType() {
         return this.generalType;
+    }
+
+    /**
+     * @return the isBatchCorrected
+     */
+    public Boolean getIsBatchCorrected() {
+        return isBatchCorrected;
     }
 
     public Boolean getIsMaskedPreferred() {
@@ -261,6 +270,13 @@ public class SimpleExpressionExperimentMetaData extends TaskCommand {
      */
     public void setGeneralType( GeneralType generalType ) {
         this.generalType = generalType;
+    }
+
+    /**
+     * @param isBatchCorrected the isBatchCorrected to set
+     */
+    public void setIsBatchCorrected( Boolean isBatchCorrected ) {
+        this.isBatchCorrected = isBatchCorrected;
     }
 
     public void setIsMaskedPreferred( Boolean isMaskedPreferred ) {

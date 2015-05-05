@@ -50,5 +50,9 @@
       <property name="isBatchCorrected" type="java.lang.Boolean">
          <column name="IS_BATCH_CORRECTED" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
+       <property name="isRecomputedFromRawData" type="java.lang.Boolean">
+         <column name="IS_RECOMPUTED_FROM_RAW_DATA" not-null="false" unique="false" sql-type="TINYINT"/>
+      </property>
+       
    </class>
 </hibernate-mapping>

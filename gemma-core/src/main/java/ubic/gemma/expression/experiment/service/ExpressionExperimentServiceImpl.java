@@ -639,12 +639,25 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
+
+        BatchEffectDetails details = new BatchEffectDetails();
+
+        details.setDataWasBatchCorrected( false );
+        for ( QuantitationType qt : this.expressionExperimentDao.getQuantitationTypes( ee ) ) {
+            if ( qt.getIsMaskedPreferred() && qt.getIsBatchCorrected() ) {
+                details.setDataWasBatchCorrected( true );
+                details.setHasBatchInformation( true );
+            }
+
+        }
+
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                details.setHasBatchInformation( true );
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
                 if ( svd == null ) break;
                 double minp = 1.0;
-                BatchEffectDetails details = new BatchEffectDetails();
+
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
 
@@ -660,7 +673,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                 return details;
             }
         }
-        return null;
+        return details;
     }
 
     /*

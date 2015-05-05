@@ -26,6 +26,10 @@ public class BatchEffectDetails {
 
     private double componentVarianceProportion;
 
+    private boolean hasBatchInformation = false;
+     
+    private boolean dataWasBatchCorrected = false;
+
     private double pvalue;
 
     public Integer getComponent() {
@@ -34,6 +38,10 @@ public class BatchEffectDetails {
 
     public double getComponentVarianceProportion() {
         return componentVarianceProportion;
+    }
+
+    public boolean getDataWasBatchCorrected() {
+        return this.dataWasBatchCorrected;
     }
 
     public double getPvalue() {
@@ -48,6 +56,14 @@ public class BatchEffectDetails {
         this.componentVarianceProportion = compomentVarianceProportion;
     }
 
+    /**
+     * @param b
+     */
+    public void setDataWasBatchCorrected( boolean b ) {
+        this.dataWasBatchCorrected = b;
+
+    }
+
     public void setPvalue( double pvalue ) {
         this.pvalue = pvalue;
     }
@@ -56,6 +72,20 @@ public class BatchEffectDetails {
     public String toString() {
         return String.format( "BatchEffectDetails [pvalue=%.2g, component=%d, varFraction=%.2f]", pvalue, component,
                 componentVarianceProportion );
+    }
+
+    /**
+     * @return the hasBatchInformation
+     */
+    public boolean isHasBatchInformation() {
+        return hasBatchInformation;
+    }
+
+    /**
+     * @param hasBatchInformation the hasBatchInformation to set
+     */
+    public void setHasBatchInformation( boolean hasBatchInformation ) {
+        this.hasBatchInformation = hasBatchInformation;
     }
 
 }

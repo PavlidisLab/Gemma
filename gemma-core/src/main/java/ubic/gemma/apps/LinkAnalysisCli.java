@@ -603,8 +603,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         qtype.setType( StandardQuantitationType.AMOUNT );// this shouldn't get used, just filled in to keep everybody
         // happy.
         qtype.setIsMaskedPreferred( true );
-
-        qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
+         qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
         qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
         return qtype;
     }

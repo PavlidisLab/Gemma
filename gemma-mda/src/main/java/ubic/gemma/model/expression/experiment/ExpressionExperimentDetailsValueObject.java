@@ -32,13 +32,13 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private static final long serialVersionUID = -1219449523930648392L;
 
-    private java.lang.String description;
+    private String description;
 
-    private java.lang.String secondaryAccession;
+    private String secondaryAccession;
 
-    private java.lang.String secondaryExternalDatabase;
+    private String secondaryExternalDatabase;
 
-    private java.lang.String secondaryExternalUri;
+    private String secondaryExternalUri;
 
     private CitationValueObject primaryCitation;
 
@@ -61,6 +61,12 @@ public class ExpressionExperimentDetailsValueObject extends
     private String lastArrayDesignUpdateDate;
 
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
+
+    private boolean reprocessedFromRawData;
+
+    public boolean getReprocessedFromRawData() {
+        return reprocessedFromRawData;
+    }
 
     public Boolean getHasMultipleTechnologyTypes() {
         return hasMultipleTechnologyTypes;
@@ -93,7 +99,7 @@ public class ExpressionExperimentDetailsValueObject extends
     /**
      * 
      */
-    public java.lang.String getDescription() {
+    public String getDescription() {
         return this.description;
     }
 
@@ -107,21 +113,21 @@ public class ExpressionExperimentDetailsValueObject extends
      * be a link to the ArrayExpress version.
      * </p>
      */
-    public java.lang.String getSecondaryAccession() {
+    public String getSecondaryAccession() {
         return this.secondaryAccession;
     }
 
     /**
      * 
      */
-    public java.lang.String getSecondaryExternalDatabase() {
+    public String getSecondaryExternalDatabase() {
         return this.secondaryExternalDatabase;
     }
 
     /**
      * 
      */
-    public java.lang.String getSecondaryExternalUri() {
+    public String getSecondaryExternalUri() {
         return this.secondaryExternalUri;
     }
 
@@ -129,7 +135,7 @@ public class ExpressionExperimentDetailsValueObject extends
         this.arrayDesigns = arrayDesigns;
     }
 
-    public void setDescription( java.lang.String description ) {
+    public void setDescription( String description ) {
         this.description = description;
     }
 
@@ -137,15 +143,15 @@ public class ExpressionExperimentDetailsValueObject extends
         this.primaryCitation = primaryCitation;
     }
 
-    public void setSecondaryAccession( java.lang.String secondaryAccession ) {
+    public void setSecondaryAccession( String secondaryAccession ) {
         this.secondaryAccession = secondaryAccession;
     }
 
-    public void setSecondaryExternalDatabase( java.lang.String secondaryExternalDatabase ) {
+    public void setSecondaryExternalDatabase( String secondaryExternalDatabase ) {
         this.secondaryExternalDatabase = secondaryExternalDatabase;
     }
 
-    public void setSecondaryExternalUri( java.lang.String secondaryExternalUri ) {
+    public void setSecondaryExternalUri( String secondaryExternalUri ) {
         this.secondaryExternalUri = secondaryExternalUri;
     }
 
@@ -171,6 +177,10 @@ public class ExpressionExperimentDetailsValueObject extends
 
     public void setHasBatchInformation( boolean hasBatchInformation ) {
         this.hasBatchInformation = hasBatchInformation;
+    }
+
+    public void setReprocessedFromRawData( boolean reprocessedFromRawData ) {
+        this.reprocessedFromRawData = reprocessedFromRawData;
     }
 
     public String getBatchConfound() {

@@ -89,6 +89,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     private PreprocessorService preprocessorService;
     private QuantitationTypeService quantitationTypeService;
 
+    @SuppressWarnings("deprecation")
     public ExpressionExperimentFormController() {
         /*
          * if true, reuses the same command object across the edit-submit-process (get-post-process).
@@ -447,6 +448,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     boolean isPreferred = qType.getIsPreferred();
                     boolean isMaskedPreferred = qType.getIsMaskedPreferred();
                     boolean isRatio = qType.getIsRatio();
+                    boolean isRecomputedFromRawDAta = qType.getIsRecomputedFromRawData();
+                    boolean isBatchCorrected = qType.getIsBatchCorrected();
 
                     String newName = newQtype.getName();
                     String newDescription = newQtype.getDescription();
@@ -461,6 +464,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     boolean newIsmaskedPreferred = newQtype.getIsMaskedPreferred();
                     boolean newisRatio = newQtype.getIsRatio();
 
+                    boolean newIsBatchCorrected = newQtype.getIsBatchCorrected();
+                    boolean newIsRecomputedFromRawData = newQtype.getIsRecomputedFromRawData();
+
                     // make it a copy.
                     revisedType.setIsBackgroundSubtracted( newisBkgSub );
                     revisedType.setIsBackground( newisBkg );
@@ -474,6 +480,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     revisedType.setDescription( scrub( newDescription ) );
                     revisedType.setName( scrub( newName ) );
                     revisedType.setIsNormalized( newisNormalized );
+                    revisedType.setIsBatchCorrected( newIsBatchCorrected );
+                    revisedType.setIsRecomputedFromRawData( newIsRecomputedFromRawData );
 
                     qType.setIsBackgroundSubtracted( newisBkgSub );
                     qType.setIsBackground( newisBkg );
@@ -487,6 +495,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     qType.setDescription( scrub( newDescription ) );
                     qType.setName( scrub( newName ) );
                     qType.setIsNormalized( newisNormalized );
+                    qType.setIsBatchCorrected( newIsBatchCorrected );
+                    qType.setIsRecomputedFromRawData( newIsRecomputedFromRawData );
 
                     if ( newName != null && ( oldName == null || !oldName.equals( newName ) ) ) {
                         dirty = true;
@@ -528,6 +538,14 @@ public class ExpressionExperimentFormController extends BaseFormController {
                     }
 
                     if ( isRatio != newisRatio ) {
+                        dirty = true;
+                    }
+
+                    if ( isBatchCorrected != newIsBatchCorrected ) {
+                        dirty = true;
+                    }
+
+                    if ( isRecomputedFromRawDAta != newIsRecomputedFromRawData ) {
                         dirty = true;
                     }
 

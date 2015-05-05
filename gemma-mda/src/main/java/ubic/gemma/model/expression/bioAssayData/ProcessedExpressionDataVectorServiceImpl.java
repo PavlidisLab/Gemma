@@ -48,6 +48,21 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#createProcessedDataVectors(ubic
+     * .gemma .model.expression.experiment.ExpressionExperiment, java.util.Collection)
+     */
+    @Override
+    @Transactional
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> vecs ) {
+        return this.getProcessedExpressionDataVectorDao().createProcessedDataVectors( ee, vecs );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataArrays(java.util
      * .Collection, java.util.Collection)
      */

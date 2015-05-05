@@ -32,8 +32,8 @@ public abstract class QuantitationType extends Describable {
         /**
          * Constructs a new instance of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
          */
-        public static ubic.gemma.model.common.quantitationtype.QuantitationType newInstance() {
-            return new ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl();
+        public static QuantitationType newInstance() {
+            return new QuantitationTypeImpl();
         }
 
     }
@@ -42,27 +42,29 @@ public abstract class QuantitationType extends Describable {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -9139594736279728431L;
+    private GeneralType generalType;
+
     private Boolean isBackground;
-
-    private ubic.gemma.model.common.quantitationtype.PrimitiveType representation;
-
-    private ubic.gemma.model.common.quantitationtype.GeneralType generalType;
-
-    private ubic.gemma.model.common.quantitationtype.StandardQuantitationType type;
-
-    private ubic.gemma.model.common.quantitationtype.ScaleType scale;
-
-    private Boolean isPreferred;
-
-    private Boolean isNormalized;
 
     private Boolean isBackgroundSubtracted;
 
-    private Boolean isRatio;
+    private Boolean isBatchCorrected = false;;
 
     private Boolean isMaskedPreferred;
 
-    private Boolean isBatchCorrected;
+    private Boolean isNormalized;
+
+    private Boolean isPreferred;
+
+    private Boolean isRatio;
+
+    private Boolean isRecomputedFromRawData = false;
+
+    private PrimitiveType representation;
+
+    private ScaleType scale;
+
+    private StandardQuantitationType type;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -75,7 +77,7 @@ public abstract class QuantitationType extends Describable {
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.GeneralType getGeneralType() {
+    public GeneralType getGeneralType() {
         return this.generalType;
     }
 
@@ -134,27 +136,34 @@ public abstract class QuantitationType extends Describable {
     }
 
     /**
+     * @return the isRecomputedFromRawData
+     */
+    public Boolean getIsRecomputedFromRawData() {
+        return isRecomputedFromRawData;
+    }
+
+    /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.PrimitiveType getRepresentation() {
+    public PrimitiveType getRepresentation() {
         return this.representation;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.ScaleType getScale() {
+    public ScaleType getScale() {
         return this.scale;
     }
 
     /**
      * 
      */
-    public ubic.gemma.model.common.quantitationtype.StandardQuantitationType getType() {
+    public StandardQuantitationType getType() {
         return this.type;
     }
 
-    public void setGeneralType( ubic.gemma.model.common.quantitationtype.GeneralType generalType ) {
+    public void setGeneralType( GeneralType generalType ) {
         this.generalType = generalType;
     }
 
@@ -186,15 +195,22 @@ public abstract class QuantitationType extends Describable {
         this.isRatio = isRatio;
     }
 
-    public void setRepresentation( ubic.gemma.model.common.quantitationtype.PrimitiveType representation ) {
+    /**
+     * @param isRecomputedFromRawData the isRecomputedFromRawData to set
+     */
+    public void setIsRecomputedFromRawData( Boolean isRecomputedFromRawData ) {
+        this.isRecomputedFromRawData = isRecomputedFromRawData;
+    }
+
+    public void setRepresentation( PrimitiveType representation ) {
         this.representation = representation;
     }
 
-    public void setScale( ubic.gemma.model.common.quantitationtype.ScaleType scale ) {
+    public void setScale( ScaleType scale ) {
         this.scale = scale;
     }
 
-    public void setType( ubic.gemma.model.common.quantitationtype.StandardQuantitationType type ) {
+    public void setType( StandardQuantitationType type ) {
         this.type = type;
     }
 

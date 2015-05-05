@@ -338,7 +338,7 @@ public class AffyPowerToolsProbesetSummarize {
                 matrix = matrix.subsetColumns( columnsToKeep );
             }
 
-            return convertDesignElementDataVectors( ee, bad, targetPlatform, makeExonArrayQuantiationType(), matrix );
+            return convertDesignElementDataVectors( ee, bad, targetPlatform, makeAffyQuantitationType(), matrix );
         }
     }
 
@@ -462,8 +462,12 @@ public class AffyPowerToolsProbesetSummarize {
             // probably won't work ...
             cdfName = shortName + ".cdf";
         }
-
-        String cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
+        String cdfFullPath = null;
+        if ( !cdfName.contains( cdfPath ) ) {
+            cdfFullPath = cdfPath + File.separator + cdfName; // might be .cdf or .cdf.gz
+        } else {
+            cdfFullPath = cdfName;
+        }
         checkFileReadable( cdfFullPath );
 
         /*
@@ -550,7 +554,7 @@ public class AffyPowerToolsProbesetSummarize {
     /**
      * @return
      */
-    private QuantitationType makeExonArrayQuantiationType() {
+    private QuantitationType makeAffyQuantitationType() {
         QuantitationType result = QuantitationType.Factory.newInstance();
 
         result.setGeneralType( GeneralType.QUANTITATIVE );
@@ -565,6 +569,7 @@ public class AffyPowerToolsProbesetSummarize {
         result.setIsMaskedPreferred( false ); // this is raw data.
         result.setScale( ScaleType.LOG2 );
         result.setIsRatio( false );
+        result.setIsRecomputedFromRawData( true );
 
         return result;
     }

@@ -428,6 +428,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         result.setScale( metaData.getScale() == null ? ScaleType.LINEAR : metaData.getScale() );
         result.setIsRatio( metaData.getIsRatio() );
 
+        result.setIsBatchCorrected( false ); // FIXME perhaps let user enter this value.
+        result.setIsRecomputedFromRawData( false );
+
         return result;
     }
 

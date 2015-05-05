@@ -127,6 +127,10 @@ Gemma.ExpressionExperimentDetails = Ext
                   + ee.troubleDetails + '"/>';
             }
 
+            result = result + (ee.reprocessedFromRawData ? "Reprocessed from raw data." : "Data are from source.")
+               + "&nbsp;";
+            result = result + (ee.batchEffect != null ? ee.batchEffect : ""); // string description.
+
             if ( ee.hasMultiplePreferredQuantitationTypes ) {
                result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' + 'title="'
                   + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes

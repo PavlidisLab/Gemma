@@ -14,15 +14,19 @@
  */
 package ubic.gemma.loader.expression.geo;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -34,6 +38,7 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.util.ConfigUtils;
 import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
@@ -64,6 +69,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.Settings;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -75,6 +81,16 @@ import cern.colt.list.DoubleArrayList;
  */
 @Component
 public class DataUpdater {
+
+    /**
+     * 
+     */
+    private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.cdfs.properties";
+
+    /**
+     * 
+     */
+    private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
     private static Log log = LogFactory.getLog( DataUpdater.class );
 
@@ -112,19 +128,6 @@ public class DataUpdater {
             throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
         }
         return addAffyExonArrayData( ee, ads.iterator().next() );
-    }
-
-    /**
-     * @param ee
-     * @param cdfFile
-     * @return
-     */
-    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName ) {
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" ); // TODO
-        }
-        return reprocessAffyThreePrimeArrayData( ee, cdfFileName, ads.iterator().next() );
     }
 
     /**
@@ -168,39 +171,6 @@ public class DataUpdater {
         }
 
         audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + targetPlatform, true );
-
-        postprocess( ee );
-        return ee;
-    }
-
-    /**
-     * @param ee
-     * @param cdfFile
-     * @param ad
-     * @return
-     */
-    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName,
-            ArrayDesign ad ) {
-        RawDataFetcher f = new RawDataFetcher();
-        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
-
-        if ( files.isEmpty() ) {
-            throw new RuntimeException( "Data was apparently not available" );
-        }
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
-
-        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
-
-        Collection<RawExpressionDataVector> vectors = apt.processThreeprimeArrayData( ee, cdfFileName, ad, files );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "No vectors were returned for " + ee );
-        }
-
-        ee = experimentService.replaceVectors( ee, ad, vectors );
-
-        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + ad, true );
 
         postprocess( ee );
         return ee;
@@ -316,67 +286,6 @@ public class DataUpdater {
     }
 
     /**
-     * @param ee
-     * @param countMatrix
-     * @param allowMissingSamples
-     * @return
-     */
-    private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
-            DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
-        if ( ee.getBioAssays().size() > countMatrix.columns() ) {
-            if ( allowMissingSamples ) {
-
-                Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
-                List<BioAssay> usedBioAssays = new ArrayList<BioAssay>();
-                List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
-                for ( String colName : countMatrix.getColNames() ) {
-                    BioMaterial bm = bmMap.get( colName );
-                    if ( bm == null ) {
-                        throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
-                    }
-                    newColNames.add( bm );
-                    usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
-                }
-
-                assert usedBioAssays.size() == countMatrix.columns();
-
-                Collection<BioAssay> toRemove = new HashSet<BioAssay>();
-                for ( BioAssay ba : ee.getBioAssays() ) {
-                    if ( !usedBioAssays.contains( ba ) ) {
-                        toRemove.add( ba );
-                        log.info( "Will remove unused bioassay from experiment: " + ba );
-                    }
-                }
-
-                if ( !toRemove.isEmpty() ) {
-                    ee.getBioAssays().removeAll( toRemove );
-                    experimentService.update( ee );
-                    ee = experimentService.load( ee.getId() );
-                    ee = experimentService.thawLite( ee );
-
-                    if ( ee.getBioAssays().size() != countMatrix.columns() ) {
-                        throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
-                    }
-
-                    // this should already be done...
-                    for ( BioAssay b : toRemove ) {
-                        bioAssayService.remove( b );
-                    }
-
-                }
-
-            } else {
-                throw new IllegalArgumentException( "Too little data provided: The experiment has "
-                        + ee.getBioAssays().size() + " samples but the data has " + countMatrix.columns() + " columns." );
-            }
-        } else if ( ee.getBioAssays().size() < countMatrix.columns() ) {
-            throw new IllegalArgumentException( "Extra data provided: The experiment has " + ee.getBioAssays().size()
-                    + " samples but the data has " + countMatrix.columns() + " columns." );
-        }
-        return ee;
-    }
-
-    /**
      * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
      * the data quantitationtype is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
@@ -461,23 +370,8 @@ public class DataUpdater {
     }
 
     /**
-     * @param ee
-     * @return
-     */
-    private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
-        // several transactions
-        try {
-            ee = preprocessorService.process( ee );
-            assert ee.getNumberOfDataVectors() != null;
-        } catch ( PreprocessingException e ) {
-            log.error( "Error during postprocessing", e );
-        }
-        return ee;
-    }
-
-    /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
-     * quantitation type.
+     * quantitation type. Note that this replaces the "raw" data.
      * <p>
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
@@ -553,6 +447,61 @@ public class DataUpdater {
     }
 
     /**
+     * This replaces the existing raw data with the CEL file data.
+     * 
+     * @param ee
+     * @param cdfFile
+     * @return
+     */
+    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName ) {
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" ); // TODO
+        }
+        return reprocessAffyThreePrimeArrayData( ee, cdfFileName, ads.iterator().next() );
+    }
+
+    /**
+     * This replaces the existing raw data with the CEL file data.
+     * 
+     * @param ee
+     * @param cdfFile
+     * @param ad
+     * @return
+     */
+    public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName,
+            ArrayDesign ad ) {
+
+        if ( cdfFileName == null ) {
+            cdfFileName = this.findCdf( ad ).getAbsolutePath();
+        }
+
+        RawDataFetcher f = new RawDataFetcher();
+        Collection<LocalFile> files = f.fetch( ee.getAccession().getAccession() );
+
+        if ( files.isEmpty() ) {
+            throw new RuntimeException( "Data was apparently not available" );
+        }
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
+
+        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+
+        Collection<RawExpressionDataVector> vectors = apt.processThreeprimeArrayData( ee, cdfFileName, ad, files );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
+        }
+
+        ee = experimentService.replaceVectors( ee, ad, vectors );
+
+        audit( ee, "Data vector computation from CEL files using AffyPowerTools for " + ad, true );
+
+        postprocess( ee );
+        return ee;
+    }
+
+    /**
      * @param ee
      * @param countEEMatrix
      * @param readLength
@@ -591,6 +540,146 @@ public class DataUpdater {
         }
 
         auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
+     * @param ee
+     * @param countMatrix
+     * @param allowMissingSamples
+     * @return
+     */
+    private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
+            DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
+        if ( ee.getBioAssays().size() > countMatrix.columns() ) {
+            if ( allowMissingSamples ) {
+
+                Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
+                List<BioAssay> usedBioAssays = new ArrayList<BioAssay>();
+                List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
+                for ( String colName : countMatrix.getColNames() ) {
+                    BioMaterial bm = bmMap.get( colName );
+                    if ( bm == null ) {
+                        throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName );
+                    }
+                    newColNames.add( bm );
+                    usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
+                }
+
+                assert usedBioAssays.size() == countMatrix.columns();
+
+                Collection<BioAssay> toRemove = new HashSet<BioAssay>();
+                for ( BioAssay ba : ee.getBioAssays() ) {
+                    if ( !usedBioAssays.contains( ba ) ) {
+                        toRemove.add( ba );
+                        log.info( "Will remove unused bioassay from experiment: " + ba );
+                    }
+                }
+
+                if ( !toRemove.isEmpty() ) {
+                    ee.getBioAssays().removeAll( toRemove );
+                    experimentService.update( ee );
+                    ee = experimentService.load( ee.getId() );
+                    ee = experimentService.thawLite( ee );
+
+                    if ( ee.getBioAssays().size() != countMatrix.columns() ) {
+                        throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
+                    }
+
+                    // this should already be done...
+                    for ( BioAssay b : toRemove ) {
+                        bioAssayService.remove( b );
+                    }
+
+                }
+
+            } else {
+                throw new IllegalArgumentException( "Too little data provided: The experiment has "
+                        + ee.getBioAssays().size() + " samples but the data has " + countMatrix.columns() + " columns." );
+            }
+        } else if ( ee.getBioAssays().size() < countMatrix.columns() ) {
+            throw new IllegalArgumentException( "Extra data provided: The experiment has " + ee.getBioAssays().size()
+                    + " samples but the data has " + countMatrix.columns() + " columns." );
+        }
+        return ee;
+    }
+
+    /**
+     * @param ad
+     * @return
+     */
+    private File findCdf( ArrayDesign ad ) {
+        String affyCdfs = Settings.getString( AFFY_POWER_TOOLS_CDF_PATH );
+
+        Map<String, String> cdfNames = loadCdfNames();
+
+        String shortName = ad.getShortName();
+        String cdfName = cdfNames.get( shortName );
+        if ( cdfName == null ) {
+            throw new IllegalArgumentException( "No CDF could be located for " + ad
+                    + ", please provide correct affy.power.tools.cdf.path "
+                    + "and a valid affy.cdfs.properties file in your classpath, " + "or specify via the -cdf option" );
+        }
+
+        File f = new File( affyCdfs + File.separatorChar + cdfName );
+        return f;
+    }
+
+    /**
+     * @return
+     */
+    private Map<String, String> loadCdfNames() {
+        try {
+            PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CDFS_PROPERTIES_FILE_NAME );
+            Map<String, String> result = new HashMap<>();
+
+            for ( Iterator<String> it = pc.getKeys(); it.hasNext(); ) {
+                String k = it.next();
+                result.put( k, pc.getString( k ) );
+            }
+            return result;
+
+        } catch ( ConfigurationException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @param ee
+     * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
+     */
+    private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
+        Map<String, BioMaterial> bmMap = new HashMap<>();
+
+        Collection<BioAssay> bioAssays = ee.getBioAssays();
+        for ( BioAssay bioAssay : bioAssays ) {
+
+            BioMaterial bm = bioAssay.getSampleUsed();
+            if ( bmMap.containsKey( bm.getName() ) ) {
+                // this might not actually be an error - but just in case...
+                throw new IllegalStateException( "Two biomaterials from the same experiment with the same name " );
+            }
+
+            bmMap.put( bm.getName(), bm );
+
+            if ( bioAssay.getAccession() != null ) {
+                // e.g. GSM123455
+                String accession = bioAssay.getAccession().getAccession();
+                if ( bmMap.containsKey( accession ) ) {
+                    throw new IllegalStateException( "Two bioassays with the same accession" );
+                }
+                bmMap.put( accession, bm );
+            }
+
+            // I think it will always be null, if it is from GEO anyway.
+            if ( bm.getExternalAccession() != null ) {
+                if ( bmMap.containsKey( bm.getExternalAccession().getAccession() ) ) {
+                    throw new IllegalStateException( "Two biomaterials with the same accession" );
+                }
+                bmMap.put( bm.getExternalAccession().getAccession(), bm );
+            }
+
+        }
+        return bmMap;
     }
 
     /**
@@ -717,45 +806,6 @@ public class DataUpdater {
     }
 
     /**
-     * @param ee
-     * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
-     */
-    private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
-        Map<String, BioMaterial> bmMap = new HashMap<String, BioMaterial>();
-
-        Collection<BioAssay> bioAssays = ee.getBioAssays();
-        for ( BioAssay bioAssay : bioAssays ) {
-
-            BioMaterial bm = bioAssay.getSampleUsed();
-            if ( bmMap.containsKey( bm.getName() ) ) {
-                // this might not actually be an error - but just in case...
-                throw new IllegalStateException( "Two biomaterials from the same experiment with the same name " );
-            }
-
-            bmMap.put( bm.getName(), bm );
-
-            if ( bioAssay.getAccession() != null ) {
-                // e.g. GSM123455
-                String accession = bioAssay.getAccession().getAccession();
-                if ( bmMap.containsKey( accession ) ) {
-                    throw new IllegalStateException( "Two bioassays with the same accession" );
-                }
-                bmMap.put( accession, bm );
-            }
-
-            // I think it will always be null, if it is from GEO anyway.
-            if ( bm.getExternalAccession() != null ) {
-                if ( bmMap.containsKey( bm.getExternalAccession().getAccession() ) ) {
-                    throw new IllegalStateException( "Two biomaterials with the same accession" );
-                }
-                bmMap.put( bm.getExternalAccession().getAccession(), bm );
-            }
-
-        }
-        return bmMap;
-    }
-
-    /**
      * @param targetArrayDesign
      * @param rawMatrix
      * @return matrix with row names fixed up. ColumnNames still need to be done.
@@ -763,14 +813,14 @@ public class DataUpdater {
     private DoubleMatrix<CompositeSequence, BioMaterial> matchElementsToRowNames( ArrayDesign targetArrayDesign,
             DoubleMatrix<String, String> rawMatrix ) {
 
-        Map<String, CompositeSequence> pnmap = new HashMap<String, CompositeSequence>();
+        Map<String, CompositeSequence> pnmap = new HashMap<>();
 
         for ( CompositeSequence cs : targetArrayDesign.getCompositeSequences() ) {
             pnmap.put( cs.getName(), cs );
         }
         int failedMatch = 0;
         int timesWarned = 0;
-        List<CompositeSequence> newRowNames = new ArrayList<CompositeSequence>();
+        List<CompositeSequence> newRowNames = new ArrayList<>();
         List<String> usableRowNames = new ArrayList<String>();
         assert !rawMatrix.getRowNames().isEmpty();
         for ( String rowName : rawMatrix.getRowNames() ) {
@@ -801,10 +851,10 @@ public class DataUpdater {
             log.warn( failedMatch + "/" + rawMatrix.rows()
                     + " elements could not be matched to the platform. Lines that did not match will be ignored." );
             DoubleMatrix<String, String> useableData = rawMatrix.subsetRows( usableRowNames );
-            finalMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( useableData.getRawMatrix() );
+            finalMatrix = new DenseDoubleMatrix<>( useableData.getRawMatrix() );
 
         } else {
-            finalMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rawMatrix.getRawMatrix() );
+            finalMatrix = new DenseDoubleMatrix<>( rawMatrix.getRawMatrix() );
 
         }
         finalMatrix.setRowNames( newRowNames );
@@ -813,6 +863,21 @@ public class DataUpdater {
         }
 
         return finalMatrix; // not actually final.
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
+        // several transactions
+        try {
+            ee = preprocessorService.process( ee );
+            assert ee.getNumberOfDataVectors() != null;
+        } catch ( PreprocessingException e ) {
+            log.error( "Error during postprocessing", e );
+        }
+        return ee;
     }
 
     /**

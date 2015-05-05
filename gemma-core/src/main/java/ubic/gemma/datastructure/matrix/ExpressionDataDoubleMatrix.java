@@ -316,6 +316,38 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         return matrix.columns();
     }
 
+    /**
+     * Convert this to a collection of vectors.
+     * 
+     * @return
+     */
+    public Collection<ProcessedExpressionDataVector> toProcessedDataVectors() {
+        Collection<ProcessedExpressionDataVector> result = new ArrayList<>();
+        QuantitationType qt = this.getQuantitationTypes().iterator().next();
+
+        ByteArrayConverter bac = new ByteArrayConverter();
+        if ( this.getQuantitationTypes().size() > 1 ) {
+            throw new UnsupportedOperationException( "Cannot convert matrix that has more than one quantitation type" );
+        }
+
+        for ( int i = 0; i < this.rows(); i++ ) {
+
+            Double[] data = this.getRow( i );
+
+            ProcessedExpressionDataVector v = ProcessedExpressionDataVector.Factory.newInstance();
+            v.setBioAssayDimension( this.getBestBioAssayDimension() );
+            v.setDesignElement( this.getRowNames().get( i ) );
+            v.setQuantitationType( qt );
+            v.setData( bac.doubleArrayToBytes( data ) );
+            v.setExpressionExperiment( this.expressionExperiment );
+            // we don't fill in the ranks because we only have the mean value here.
+
+            result.add( v );
+        }
+
+        return result;
+    }
+
     /*
      * (non-Javadoc)
      * 

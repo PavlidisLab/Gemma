@@ -431,6 +431,8 @@ public class DataUpdaterTest extends AbstractGeoServiceTest {
         qt.setIsBatchCorrected( false );
         qt.setType( StandardQuantitationType.AMOUNT );
         qt.setRepresentation( PrimitiveType.DOUBLE );
+        qt.setIsBatchCorrected( false );
+        qt.setIsRecomputedFromRawData( true );
         return qt;
     }
 }

@@ -18,17 +18,19 @@
  */
 package ubic.gemma.apps;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.PreprocessingException;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Prepare the "processed" expression data vectors. This also computes the ranks (replaces the old DEDVRank stuff0.
+ * Prepare the "processed" expression data vectors, and can also do batch correction.F
  * 
  * @author xwan, paul
  * @version $Id$
@@ -55,16 +57,18 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         }
     }
 
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private PreprocessorService preprocessorService;
+    private boolean batchCorrect = false;
 
     @Override
     public String getShortDesc() {
-        return "Updates the 'processed expression data', including computing the 'ranks' for each expression vector.";
+        return "Performs preprocessing and can do batch correction (ComBat)";
     }
 
     /**
      * 
      */
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
 
@@ -72,6 +76,10 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
         super.addForceOption();
         addDateOption();
+
+        Option outputFileOption = OptionBuilder.withDescription( "Attempt to batch-correct the data" )
+                .withLongOpt( "batchcorr" ).create( 'b' );
+        addOption( outputFileOption );
     }
 
     /**
@@ -102,9 +110,13 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     @Override
     protected void processOptions() {
         super.processOptions();
-        processedExpressionDataVectorCreateService = this.getBean( ProcessedExpressionDataVectorCreateService.class );
+        preprocessorService = this.getBean( PreprocessorService.class );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         eeService = this.getBean( ExpressionExperimentService.class );
+
+        if ( hasOption( 'b' ) ) {
+            this.batchCorrect = true;
+        }
     }
 
     /**
@@ -119,15 +131,18 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         }
         try {
             ee = eeService.thawLite( ee );
-            boolean needToRun = needToRun( ee, ProcessedVectorComputationEvent.class );
 
-            if ( !needToRun && !force ) {
-                log.info( "No need to run " + ee + "(use 'force' to override)" );
-                return;
+            if ( this.batchCorrect ) {
+                this.preprocessorService.batchCorrect( ee );
+            } else {
+                this.preprocessorService.process( ee );
             }
-            this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
             // Note tha auditing is done by the service.
             successObjects.add( ee.toString() );
+
+        } catch ( PreprocessingException e ) {
+            errorObjects.add( ee + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
         } catch ( Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );

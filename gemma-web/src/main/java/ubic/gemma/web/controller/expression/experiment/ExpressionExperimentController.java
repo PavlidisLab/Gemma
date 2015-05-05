@@ -965,18 +965,23 @@ public class ExpressionExperimentController {
         getReportData( initialResults );
 
         /*
-         * Check for multiple "preferred" qts.
+         * Check for multiple "preferred" qts and reprocessing.
          */
+        boolean dataReprocessedFromRaw = false;
         int countPreferred = 0;
         for ( QuantitationType qt : quantitationTypes ) {
             if ( qt.getIsPreferred() ) {
                 countPreferred++;
+            }
+            if ( qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+                dataReprocessedFromRaw = true;
             }
         }
 
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
         finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
+        finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
 
         Collection<TechnologyType> techTypes = new HashSet<>();
         for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
@@ -1790,7 +1795,9 @@ public class ExpressionExperimentController {
         if ( batchEffectDetails == null ) {
             result = "";
         } else {
-            if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_PVALTHRESHOLD ) {
+            if ( batchEffectDetails.getDataWasBatchCorrected() ) {
+                result = "Data has been batch-corrected";
+            } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_PVALTHRESHOLD ) {
                 result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() )
                         + "); p=" + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
             }

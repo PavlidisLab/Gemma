@@ -24,13 +24,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -55,7 +61,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * <li>(Re)normalization
  * <li>Getting information on batches
  * <li>Outlier detection
- * <li>Batch correction
+ * <li>Batch correction -- shoud be done after the experimental design is done, and after batch info has been obtained,
+ * and after outliers have been removed.
  * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a big problem]
  * <li>Populating the experimental design (guesses)?
  * <li>Autotagger .
@@ -75,10 +82,22 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private ExpressionDataFileService dataFileService;
 
     @Autowired
+    private DataUpdater dataUpdater;
+
+    @Autowired
+    private ProcessedExpressionDataVectorService dataVectorService;
+
+    @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
+    private ExpressionExperimentBatchCorrectionService expressionExperimentBatchCorrectionService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private MeanVarianceService meanVarianceService;
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
@@ -87,13 +106,88 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     @Autowired
-    private MeanVarianceService meanVarianceService;
-
-    @Autowired
     private SVDServiceHelper svdService;
 
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.analysis.preprocess.PreprocessorService#batchCorrect(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
+     */
+    @Override
+    public ExpressionExperiment batchCorrect( ExpressionExperiment ee ) throws PreprocessingException {
+
+        /*
+         * This leaves the raw data alone; it updates the processed data.
+         */
+
+        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new PreprocessingException( "Can only batch-correct data for an experiment that uses one platform; "
+                    + "you must switch/merge first." );
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        boolean correctable = expressionExperimentBatchCorrectionService.checkCorrectability( ee );
+
+        if ( !correctable ) {
+            throw new PreprocessingException( ee.getShortName()
+                    + " could not be batch-corrected (either no batch information, or invalid design)" );
+        }
+
+        try {
+
+            Collection<ProcessedExpressionDataVector> vecs = dataVectorService.getProcessedDataVectors( ee );
+
+            if ( vecs == null || vecs.isEmpty() ) {
+                this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+                vecs = dataVectorService.getProcessedDataVectors( ee );
+            }
+
+            assert vecs != null;
+
+            dataVectorService.thaw( vecs );
+
+            // batch correction starts from the raw data, so this is irrelevant.
+            // if ( vecs.iterator().next().getQuantitationType().getIsBatchCorrected() != null
+            // && vecs.iterator().next().getQuantitationType().getIsBatchCorrected() ) {
+            // throw new PreprocessingException( ee.getShortName()
+            // + " could not be batch-corrected (data already batch-corrected)" );
+            // }
+
+            ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
+                    .comBat( new ExpressionDataDoubleMatrix( vecs ) );
+
+            if ( correctedData == null || correctedData.rows() != vecs.size() ) {
+                throw new PreprocessingException( ee.getShortName()
+                        + " could not be batch-corrected (matrix returned by ComBat had wrong number of rows)" );
+            }
+
+            Collection<QuantitationType> qts = correctedData.getQuantitationTypes();
+            assert !qts.isEmpty();
+
+            if ( qts.size() > 1 ) {
+                throw new IllegalArgumentException( "Only support a single quantitation type" );
+            }
+
+            QuantitationType batchCorrectedQt = qts.iterator().next();
+            assert batchCorrectedQt.getIsBatchCorrected();
+
+            // Convert to vectors
+            Collection<ProcessedExpressionDataVector> newVecs = new HashSet<>( correctedData.toProcessedDataVectors() );
+            processedExpressionDataVectorCreateService.createProcessedDataVectors( ee, newVecs );
+
+            removeInvalidatedData( ee );
+            return processExceptForVectorCreate( ee );
+
+        } catch ( Exception e ) {
+            throw new PreprocessingException( e );
+        }
+    }
 
     /*
      * (non-Javadoc)
@@ -111,40 +205,48 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             processForMissingValues( ee );
             processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-            // // refresh into context.
-            ee = expressionExperimentService.thawLite( ee );
-
-            assert ee.getNumberOfDataVectors() != null;
-
-            /*
-             * Redo any old diff ex analyses
-             */
-            Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
-                    .findByInvestigation( ee );
-
-            if ( !oldAnalyses.isEmpty() ) {
-
-                log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
-                Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
-                for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-                    try {
-                        results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
-                    } catch ( Exception e ) {
-                        log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
-                    }
-                }
-
-            }
-            processForSampleCorrelation( ee );
-            processForMeanVarianceRelation( ee );
-            processForPca( ee );
-
-            expressionExperimentService.update( ee );
-            assert ee.getNumberOfDataVectors() != null;
-            return ee;
+            return processExceptForVectorCreate( ee );
         } catch ( Exception e ) {
             throw new PreprocessingException( e );
         }
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    public ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ) {
+        // // refresh into context.
+        ee = expressionExperimentService.thawLite( ee );
+
+        assert ee.getNumberOfDataVectors() != null;
+
+        /*
+         * Redo any old diff ex analyses
+         */
+        Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
+                .findByInvestigation( ee );
+
+        if ( !oldAnalyses.isEmpty() ) {
+
+            log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
+            Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
+            for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
+                try {
+                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                } catch ( Exception e ) {
+                    log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
+                }
+            }
+        }
+
+        processForSampleCorrelation( ee );
+        processForMeanVarianceRelation( ee );
+        processForPca( ee );
+
+        expressionExperimentService.update( ee );
+        assert ee.getNumberOfDataVectors() != null;
+        return ee;
     }
 
     /*

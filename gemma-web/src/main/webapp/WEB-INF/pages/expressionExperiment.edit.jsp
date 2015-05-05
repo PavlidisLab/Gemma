@@ -37,6 +37,8 @@
 					<th>Name</th>
 					<th>Desc</th>
 					<th>Pref?</th>
+					<th>Recom?</th>
+					<th>Batch?</th>
 					<th>Ratio?</th>
 					<th>Bkg?</th>
 					<th>BkgSub?</th>
@@ -59,6 +61,16 @@
 										value="<c:out value="${status.value}"/>" />
 								</spring:bind></td>
 							<td><spring:bind path="isPreferred">
+									<input id="preferredCheckbox" type="checkbox" name="${status.expression}"
+										<c:if test="${status.value == true}">checked="checked"</c:if> />
+									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+								</spring:bind></td>
+							<td><spring:bind path="isRecomputedFromRawData">
+									<input id="preferredCheckbox" type="checkbox" name="${status.expression}"
+										<c:if test="${status.value == true}">checked="checked"</c:if> />
+									<input type="hidden" name="_<c:out value="${status.expression}"/>">
+								</spring:bind></td>
+							<td><spring:bind path="isBatchCorrected">
 									<input id="preferredCheckbox" type="checkbox" name="${status.expression}"
 										<c:if test="${status.value == true}">checked="checked"</c:if> />
 									<input type="hidden" name="_<c:out value="${status.expression}"/>">

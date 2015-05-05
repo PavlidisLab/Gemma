@@ -190,6 +190,51 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
+     * .model.expression.experiment.ExpressionExperiment, java.util.Collection)
+     */
+    @Override
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> data ) {
+        if ( ee == null ) {
+            throw new IllegalStateException( "ExpressionExperiment cannot be null" );
+        }
+
+        ExpressionExperiment expressionExperiment = getHibernateTemplate().get( ExpressionExperimentImpl.class,
+                ee.getId() );
+
+        assert expressionExperiment != null;
+
+        removeProcessedDataVectors( expressionExperiment );
+
+        Hibernate.initialize( expressionExperiment );
+        Hibernate.initialize( expressionExperiment.getQuantitationTypes() );
+
+        expressionExperiment.setProcessedExpressionDataVectors( data );
+
+        QuantitationType qt = null;
+        for ( ProcessedExpressionDataVector v : data ) {
+            qt = v.getQuantitationType();
+            break; // assumes all are same.
+        }
+
+        this.getHibernateTemplate().saveOrUpdate( qt );
+        expressionExperiment.getQuantitationTypes().add( data.iterator().next().getQuantitationType() );
+        expressionExperiment.setNumberOfDataVectors( expressionExperiment.getProcessedExpressionDataVectors().size() );
+
+        this.getHibernateTemplate().update( expressionExperiment );
+        assert expressionExperiment.getNumberOfDataVectors() != null;
+
+        this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
+
+        return expressionExperiment;
+
+    }
+
     @Override
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) {
@@ -810,7 +855,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param matrix
      * @param vectors
      */
-    private void doQuantileNormaliztion( DoubleMatrix<CompositeSequence, Integer> matrix,
+    private void doQuantileNormalization( DoubleMatrix<CompositeSequence, Integer> matrix,
             Map<CompositeSequence, DoubleVectorValueObject> vectors ) {
 
         MatrixNormalizer<CompositeSequence, Integer> normalizer = new MatrixNormalizer<CompositeSequence, Integer>();
@@ -971,8 +1016,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         present.setIsMaskedPreferred( true );
         present.setIsBackgroundSubtracted( preferredQt.getIsBackgroundSubtracted() );
 
-        // FIXME. We might want to renormalize the data, so set this appropriately (that is, only to avoid
-        // renormalization?) Or add a new field.
+        present.setIsBatchCorrected( preferredQt.getIsBatchCorrected() );
+        present.setIsRecomputedFromRawData( preferredQt.getIsRecomputedFromRawData() );
 
         present.setIsNormalized( preferredQt.getIsNormalized() );
 
@@ -1349,7 +1394,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             i++;
         }
 
-        doQuantileNormaliztion( mat, vectors );
+        doQuantileNormalization( mat, vectors );
 
         assert mat.rows() == vectors.size();
 

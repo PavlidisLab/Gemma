@@ -503,6 +503,9 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         present.setIsNormalized( false );
         present.setIsRatio( false );
         present.setType( StandardQuantitationType.PRESENTABSENT );
+        present.setIsBatchCorrected( false );
+        present.setIsRecomputedFromRawData( false );
+
         return this.quantitationTypeService.create( present );
     }
 

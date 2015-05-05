@@ -39,8 +39,16 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     private static final long serialVersionUID = -8820012224856178673L;
 
-    // SAGE items.
+    // SAGE item
     private String anchor;
+
+    // Sequencing items
+    private String libraryStrategy;
+
+    public enum LibraryStrategy {
+        OTHER, RNASEQ
+    }
+
     private List<GeoChannel> channels;
     private String dataProcessing = "";
     private String description = "";

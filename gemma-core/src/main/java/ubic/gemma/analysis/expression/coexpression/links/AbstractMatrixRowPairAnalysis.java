@@ -567,7 +567,8 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     /**
      * Determine if the probes at this location in the matrix assay any of the same gene(s). This has nothing to do with
-     * whether the probes are specific.
+     * whether the probes are specific, though non-specific probes (which hit more than one gene) are more likely to be
+     * affected by this.
      * <p>
      * FIXME this is going to be slow? We call it for every cell.
      * 
@@ -583,6 +584,33 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
         Collection<Gene> genesA = this.probeToGeneMap.get( itemA.getDesignElement() );
         Collection<Gene> genesB = this.probeToGeneMap.get( itemB.getDesignElement() );
+
+        // nonspecific probe  TEST CODE
+//        if ( itemA.getDesignElement().getName().equals( "8179731" ) ) {
+//            for ( Gene g : genesB ) {
+//                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
+//                    log.info( "NOOOOO" );
+//                }
+//            }
+//        }
+//        
+//
+//        if ( itemA.getDesignElement().getName().equals( "8124911" ) ) {
+//            for ( Gene g : genesB ) {
+//                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
+//                    log.info( "yay" );
+//                }
+//            }
+//        }
+//        
+//        if ( itemA.getDesignElement().getName().equals( "8178498" ) ) {
+//            for ( Gene g : genesB ) {
+//                if ( g.getOfficialSymbol().equals( "HLA-H" ) ) {
+//                    log.info( "yay" );
+//                }
+//            }
+//        }
+
 
         return CollectionUtils.containsAny( genesA, genesB );
     }

@@ -35,6 +35,15 @@ import ubic.gemma.model.genome.Gene;
  */
 public interface ProcessedExpressionDataVectorService {
 
+    /**
+     * @param ee
+     * @param vecs
+     * @return
+     */
+    @Secured({ "GROUP_USER" })
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+            Collection<ProcessedExpressionDataVector> vecs );
+
     @Secured({ "GROUP_ADMIN" })
     public void clearCache();
 
@@ -85,6 +94,15 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences );
+
+    /**
+     * @param analyzedSet
+     * @param probes
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
+            Collection<Long> probes );
 
     /**
      * @param expressionExperiment
@@ -145,14 +163,5 @@ public interface ProcessedExpressionDataVectorService {
      */
     @Secured({ "GROUP_USER" })
     public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
-
-    /**
-     * @param analyzedSet
-     * @param probes
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
-            Collection<Long> probes );
 
 }
