@@ -233,16 +233,20 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         log.debug( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
                 + ") and genes (" + genes.size() + ") queried" );
 
-        if ( queryGenesOnly ) {
-            // note that maxResults is ignored.
-            if ( genes.size() < 2 ) {
-                throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
+        // HACK drop the stringency until we get some results.
+        while ( allCoexpressions.isEmpty() && stringency > 0 ) {
+            if ( queryGenesOnly ) {
+                // note that maxResults is ignored.
+                if ( genes.size() < 2 ) {
+                    throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
+                }
+                allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds,
+                        stringency, quick );
+            } else {
+                allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
+                        maxResults, quick );
             }
-            allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds, stringency,
-                    quick );
-        } else {
-            allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
-                    maxResults, quick );
+            stringency -= 4; // step size completely made up.
         }
 
         result.setQueryStringency( stringency );
