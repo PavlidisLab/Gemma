@@ -1201,8 +1201,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         // to attach to session correctly.
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
 
-        // remove old vectors.
-        Collection<QuantitationType> qtsToRemove = new HashSet<QuantitationType>();
+        // remove old vectors. FIXME are we sure we want to do this?
+        Collection<QuantitationType> qtsToRemove = new HashSet<>();
         for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
             qtsToRemove.add( oldvec.getQuantitationType() );
         }
