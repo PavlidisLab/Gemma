@@ -35,6 +35,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisS
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -184,7 +185,11 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             Collection<ProcessedExpressionDataVector> newVecs = new HashSet<>( correctedData.toProcessedDataVectors() );
             processedExpressionDataVectorCreateService.createProcessedDataVectors( ee, newVecs );
 
-            AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
+            /*
+             * FIXME this is temporarily a generic event switch it once code is synced with production.
+             */
+        //    AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
+            AuditEventType eventType = DataReplacedEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType, "ComBat batch correction" );
 
             removeInvalidatedData( ee );
