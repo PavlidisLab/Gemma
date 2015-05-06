@@ -693,6 +693,7 @@ public class DataUpdater {
         countqt.setDescription( "Read counts for gene model" );
         countqt.setIsBackgroundSubtracted( false );
         countqt.setIsNormalized( false );
+        countqt.setIsRecomputedFromRawData( true ); // assume this is true...
         return countqt;
     }
 
@@ -775,6 +776,7 @@ public class DataUpdater {
         rpkmqt.setDescription( "Reads (or fragments) per kb of gene model per million reads" );
         rpkmqt.setIsBackgroundSubtracted( false );
         rpkmqt.setIsNormalized( true );
+        rpkmqt.setIsRecomputedFromRawData( true ); // assume this is true...
         return rpkmqt;
     }
 
