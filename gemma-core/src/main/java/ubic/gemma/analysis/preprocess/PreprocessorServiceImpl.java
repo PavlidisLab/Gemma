@@ -161,7 +161,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
             ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
                     .comBat( new ExpressionDataDoubleMatrix( vecs ) );
-            
+
             /*
              * FIXME: this produces two plots that can be used as diagnostics, we could link them into this.
              */
@@ -188,7 +188,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             /*
              * FIXME this is temporarily a generic event switch it once code is synced with production.
              */
-        //    AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
+            // AuditEventType eventType = BatchCorrectionEvent.Factory.newInstance();
             AuditEventType eventType = DataReplacedEvent.Factory.newInstance();
             auditTrailService.addUpdateEvent( ee, eventType, "ComBat batch correction" );
 

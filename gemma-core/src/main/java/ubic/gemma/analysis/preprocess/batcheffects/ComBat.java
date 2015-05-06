@@ -86,7 +86,7 @@ public class ComBat<R, C> {
 
     private LinkedHashMap<String, Collection<C>> batches;
 
-    private HashMap<String, Map<C, Integer>> originalLocationsInMatrix;
+    private Map<String, Map<C, Integer>> originalLocationsInMatrix;
 
     private int numSamples;
 

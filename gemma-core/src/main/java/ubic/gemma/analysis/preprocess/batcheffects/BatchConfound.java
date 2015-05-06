@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -26,7 +27,6 @@ import org.apache.commons.math3.stat.inference.ChiSquareTest;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
-
 import ubic.basecode.math.KruskalWallis;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -124,7 +124,7 @@ public class BatchConfound {
             }
         }
 
-        HashSet<BatchConfoundValueObject> result = new HashSet<BatchConfoundValueObject>();
+        Set<BatchConfoundValueObject> result = new HashSet<>();
         if ( batchFactor == null ) {
             return result;
         }

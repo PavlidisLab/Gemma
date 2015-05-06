@@ -129,12 +129,13 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         Collection<BatchConfoundValueObject> test = BatchConfound.test( ee );
 
         for ( BatchConfoundValueObject batchConfoundValueObject : test ) {
-            if ( batchConfoundValueObject.getP() < 0.01 ) {
-                // log.info( "Batch confound detected: " + ee );
+            if ( batchConfoundValueObject.getP() < 1e-4 ) {
+                log.info( "Batch confound detected: " + ee + "p=" + batchConfoundValueObject.getP() );
                 /*
-                 * How bad is it ... note that if it is really bad we won't be able to correct so will get an exception
-                 * later.
+                 * How bad is it ... note that if it is really bad but miss it here, we won't be able to correct so will
+                 * get an exception later.
                  */
+                return false;
             }
         }
 
