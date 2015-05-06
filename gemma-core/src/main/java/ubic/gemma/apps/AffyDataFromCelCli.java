@@ -135,7 +135,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     this.successObjects.add( thawedEe.toString() );
                 } else {
                     throw new IllegalStateException( "This CLI can only deal with exon arrays" );
-
                 }
             } catch ( Exception e ) {
                 log.error( e, e );
