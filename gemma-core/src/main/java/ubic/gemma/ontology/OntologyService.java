@@ -21,6 +21,7 @@ import org.springframework.beans.factory.InitializingBean;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.basecode.ontology.providers.CellLineOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
@@ -42,20 +43,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
  * @version $Id$
  */
 public interface OntologyService extends InitializingBean {
-
-    /**
-     * Given a search string will first look through the characterisc database for any entries that have a match. If a
-     * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
-     * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
-     * match the search term exactly
-     * 
-     * @param givenQueryString
-     * @param categoryUri
-     * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant.
-     * @return
-     */
-    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString,
-            String categoryUri, Taxon taxon );
 
     /**
      * Using the ontology and values in the database, for a search searchQuery given by the client give an ordered list
@@ -89,9 +76,28 @@ public interface OntologyService extends InitializingBean {
     public abstract Collection<OntologyTerm> findTerms( String search );
 
     /**
+     * Given a search string will first look through the characterisc database for any entries that have a match. If a
+     * ontologyTermURI is given it will add all the individuals from that URI that match the search term criteria to the
+     * returned list also. Then will search the loaded ontologies for OntologyResources (Terms and Individuals) that
+     * match the search term exactly
+     * 
+     * @param givenQueryString
+     * @param categoryUri
+     * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant.
+     * @return
+     */
+    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString,
+            String categoryUri, Taxon taxon );
+
+    /**
      * @return terms which are allowed for use in the Category of a Characteristic
      */
     public abstract Collection<OntologyTerm> getCategoryTerms();
+
+    /**
+     * @return the cellLineOntologyService
+     */
+    public abstract CellLineOntologyService getCellLineOntologyService();
 
     /**
      * @return the chebiOntologyService

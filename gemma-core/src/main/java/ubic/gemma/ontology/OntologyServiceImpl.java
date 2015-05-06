@@ -46,6 +46,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
+import ubic.basecode.ontology.providers.CellLineOntologyService;
 import ubic.basecode.ontology.providers.CellTypeOntologyService;
 import ubic.basecode.ontology.providers.ChebiOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
@@ -207,8 +208,9 @@ public class OntologyServiceImpl implements OntologyService {
     @Autowired
     private BioMaterialService bioMaterialService;
 
-    private CellTypeOntologyService cellTypeOntologyService = new CellTypeOntologyService();
+    private CellLineOntologyService cellLineOntologyService = new CellLineOntologyService();
 
+    private CellTypeOntologyService cellTypeOntologyService = new CellTypeOntologyService();
     @Autowired
     private CharacteristicService characteristicService;
     private ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
@@ -223,6 +225,7 @@ public class OntologyServiceImpl implements OntologyService {
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
     private MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
+
     private NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
 
     private ObiService obiService = new ObiService();
@@ -250,102 +253,11 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.mouseDevelopmentOntologyService );
         this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.sequenceOntologyService );
+        this.ontologyServices.add( this.cellLineOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( false );
         }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.ontology.OntologyService#findExactTerm(java.lang.String, java.lang.String,
-     * ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, String categoryUri,
-            Taxon taxon ) {
-
-        if ( StringUtils.isBlank( givenQueryString ) ) return null;
-
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
-        if ( StringUtils.isBlank( queryString ) ) {
-            log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
-            return new HashSet<>();
-        }
-
-        if ( log.isDebugEnabled() ) {
-            log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
-        }
-
-        Collection<? extends OntologyResource> results = new HashSet<>();
-        Collection<CharacteristicValueObject> searchResults = new HashSet<>();
-
-        Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
-
-        // this should be very fast.
-        Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
-
-        /*
-         * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
-         * is always ignored; remove duplicates.)
-         */
-        for ( Characteristic characteristic : foundChars ) {
-            // count up number of usages; see bug 3897
-            String key = foundValueKey( characteristic );
-            if ( previouslyUsedInSystem.containsKey( key ) ) {
-                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
-                continue;
-            }
-            // log.info( "saw " + key + " (" + key + ")" );
-            CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
-            vo.setAlreadyPresentInDatabase( true );
-            vo.incrementOccurrenceCount();
-            previouslyUsedInSystem.put( key, vo );
-        }
-
-        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
-            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
-                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
-
-        // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
-        // that's probably all we are returning (?)
-        searchForGenes( queryString, categoryUri, taxon, searchResults );
-
-        for ( AbstractOntologyService serv : this.ontologyServices ) {
-            if ( !serv.isOntologyLoaded() ) continue;
-            results = serv.findResources( queryString );
-
-            if ( results.isEmpty() ) continue;
-            if ( log.isDebugEnabled() )
-                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
-                        + watch.getTime() + " ms" );
-            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter( results,
-                    queryString ) ) );
-
-            if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
-                break;
-            }
-        }
-
-        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
-        if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
-            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter(
-                    geneOntologyService.findTerm( queryString ), queryString ) ) );
-        }
-
-        // Sort the results rather elaborately.
-        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString );
-
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
-        }
-
-        return sortedResults;
 
     }
 
@@ -495,6 +407,98 @@ public class OntologyServiceImpl implements OntologyService {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.ontology.OntologyService#findExactTerm(java.lang.String, java.lang.String,
+     * ubic.gemma.model.genome.Taxon)
+     */
+    @Override
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, String categoryUri,
+            Taxon taxon ) {
+
+        if ( StringUtils.isBlank( givenQueryString ) ) return null;
+
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        String queryString = OntologySearch.stripInvalidCharacters( givenQueryString );
+        if ( StringUtils.isBlank( queryString ) ) {
+            log.warn( "The query was not valid (ended up being empty): " + givenQueryString );
+            return new HashSet<>();
+        }
+
+        if ( log.isDebugEnabled() ) {
+            log.debug( "starting findExactTerm for " + queryString + ". Timing information begins from here" );
+        }
+
+        Collection<? extends OntologyResource> results = new HashSet<>();
+        Collection<CharacteristicValueObject> searchResults = new HashSet<>();
+
+        Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
+
+        // this should be very fast.
+        Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
+
+        /*
+         * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
+         * is always ignored; remove duplicates.)
+         */
+        for ( Characteristic characteristic : foundChars ) {
+            // count up number of usages; see bug 3897
+            String key = foundValueKey( characteristic );
+            if ( previouslyUsedInSystem.containsKey( key ) ) {
+                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
+                continue;
+            }
+            // log.info( "saw " + key + " (" + key + ")" );
+            CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
+            vo.setAlreadyPresentInDatabase( true );
+            vo.incrementOccurrenceCount();
+            previouslyUsedInSystem.put( key, vo );
+        }
+
+        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
+            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
+
+        // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
+        // that's probably all we are returning (?)
+        searchForGenes( queryString, categoryUri, taxon, searchResults );
+
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            if ( !serv.isOntologyLoaded() ) continue;
+            results = serv.findResources( queryString );
+
+            if ( results.isEmpty() ) continue;
+            if ( log.isDebugEnabled() )
+                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
+                        + watch.getTime() + " ms" );
+            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter( results,
+                    queryString ) ) );
+
+            if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
+                break;
+            }
+        }
+
+        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
+        if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
+            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter(
+                    geneOntologyService.findTerm( queryString ), queryString ) ) );
+        }
+
+        // Sort the results rather elaborately.
+        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString );
+
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
+        }
+
+        return sortedResults;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.OntologyService#getCategoryTerms()
      */
     @Override
@@ -515,6 +519,11 @@ public class OntologyServiceImpl implements OntologyService {
         }
         return categoryterms;
 
+    }
+
+    @Override
+    public CellLineOntologyService getCellLineOntologyService() {
+        return cellLineOntologyService;
     }
 
     /*
