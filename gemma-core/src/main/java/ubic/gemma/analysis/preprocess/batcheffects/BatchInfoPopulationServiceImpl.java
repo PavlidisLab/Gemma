@@ -78,9 +78,8 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
 
         if ( c != null && c instanceof VocabCharacteristic ) {
             VocabCharacteristic v = ( VocabCharacteristic ) c;
-            if ( v.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
+            if ( v.getCategory() != null && v.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
                 isBatchFactor = true;
-
             }
         } else if ( looksLikeBatch ) {
             isBatchFactor = true;
