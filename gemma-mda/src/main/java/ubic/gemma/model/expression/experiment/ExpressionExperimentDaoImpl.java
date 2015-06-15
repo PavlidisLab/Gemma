@@ -1439,7 +1439,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         Map<Taxon, Long> taxonCount = new LinkedHashMap<Taxon, Long>();
-        String queryString = "select t, count(distinct ee) from ExpressionExperimentImpl "
+        String queryString = "select t, count(ee) from ExpressionExperimentImpl "
                 + "ee inner join ee.bioAssays as ba inner join ba.sampleUsed su "
                 + "inner join su.sourceTaxon t group by t order by t.scientificName ";
 

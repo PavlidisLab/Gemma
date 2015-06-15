@@ -4,6 +4,7 @@ alter table BIO_SEQUENCE add index name (NAME);
 alter table ALTERNATE_NAME add index name (NAME);
 alter table INVESTIGATION add index name (NAME);
 alter table INVESTIGATION add INDEX shortname (SHORT_NAME);
+alter table INVESTIGATION add INDEX class (class);
 alter table DATABASE_ENTRY add index acc_ex (ACCESSION, EXTERNAL_DATABASE_FK);
 alter table CHROMOSOME_FEATURE add index symbol_tax (OFFICIAL_SYMBOL, TAXON_FK);
 alter table CHROMOSOME_FEATURE add index ncbigeneid (NCBI_GENE_ID);
