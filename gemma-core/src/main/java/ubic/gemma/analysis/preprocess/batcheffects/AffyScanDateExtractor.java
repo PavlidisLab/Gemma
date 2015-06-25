@@ -20,6 +20,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,10 +58,11 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
     public Date extract( InputStream is ) {
 
         try (DataInputStream str = new DataInputStream( is )) {
+
             BufferedReader reader = null;
             Date date = null;
 
-            int magic = readByteLittleEndian( str );
+            int magic = readByte( str );
             if ( magic == 64 ) {
 
                 int version = readIntLittleEndian( str );
@@ -65,11 +72,11 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                 }
 
-                log.debug( readShortLittleEndian( str ) ); // numrows
-                log.debug( readShortLittleEndian( str ) ); // numcols
+                log.debug( readShort( str ) ); // numrows
+                log.debug( readShort( str ) ); // numcols
                 log.debug( readIntLittleEndian( str ) ); // numcells
 
-                int headerLen = readShortLittleEndian( str );
+                int headerLen = readShort( str );
 
                 if ( headerLen == 0 ) {
                     // throw new IllegalStateException( "Zero header length read" );
@@ -95,35 +102,33 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
             } else if ( magic == 59 ) {
 
                 // Command Console format
-                int version = readUnsignedByteLittleEndian( str );
+                int version = readUnsignedByte( str );
                 if ( version != 1 ) {
+                    // this is fixed to 1 according to affy docs.
                     throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                 }
-                log.debug( readIntLittleEndian( str ) ); // number of data groups
-                log.debug( readIntLittleEndian( str ) ); // file position of first group
-                String datatypeIdentifier = readGCOSString( str );
+                @SuppressWarnings("unused")
+                int numDataGroups = readIntBigEndian( str ); // number of data groups, usually = 1. Each data group
+                                                             // contains another header, with different name/value/type
+                                                             // triples.
+                @SuppressWarnings("unused")
+                int filePosOfFirstGroup = readIntBigEndian( str ); // file position of first data group.
 
-                log.debug( datatypeIdentifier );
+                date = parseGenericCCHeader( str );
 
-                String guid = readGCOSString( str );
+                // need to find number of parent file headers and then read array of generic file headers
 
-                log.debug( guid );
+                if ( date == null ) {
+                    /*
+                     * Look in the parentheader
+                     */
 
-                reader = new BufferedReader( new InputStreamReader( is, "UTF-16BE" ) );
-                String line = null;
-                int count = 0;
-                while ( ( line = reader.readLine() ) != null ) {
-                    log.debug( line );
-                    if ( line.contains( "affymetrix-scan-date" ) ) {
-                        date = parseISO8601( line );
-                    }
-                    if ( date != null || ++count > 100 ) {
-                        reader.close();
-                        break;
-                    }
+                    date = parseGenericCCHeader( str );
                 }
 
-                log.debug( date );
+                // $dataHeader$parents[[1]]$parameters$`affymetrix-scan-date`
+
+                // also $dataHeader$parents[[1]]$parameters$`affymetrix-Fluidics-HybDate`
 
             } else {
 
@@ -138,7 +143,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                     if ( line.startsWith( "DatHeader" ) ) {
                         date = parseStandardFormat( line );
                     }
-                    if ( date != null || ++count > 100 ) {
+                    if ( date != null || ++count > 100 ) { // don't read too much.
                         reader.close();
                         break;
                     }
@@ -174,18 +179,165 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
         }
     }
 
-    private String readGCOSString( DataInputStream str ) throws IOException {
-        int fieldLength = readIntLittleEndian( str );
-        StringBuilder buf = new StringBuilder();
-        for ( int i = 0; i < fieldLength; i++ ) {
-            if ( str.available() == 0 ) throw new IOException( "Reached end of file without string end" );
-            buf.append( new String( new byte[] { str.readByte() }, "US-ASCII" ) );
+    /**
+     * @param str
+     * @param date
+     * @return
+     * @throws IOException
+     * @throws UnsupportedEncodingException
+     */
+    public Date parseGenericCCHeader( DataInputStream str ) throws IOException, UnsupportedEncodingException {
+        /*
+         * FIXME store values in an object. All I need right now is the date, though.
+         */
+
+        /*
+         * acquisition data, intensity data etc. Usually "intensity data" for the first header.
+         */
+        String datatypeIdentifier = readString( str );
+
+        log.debug( datatypeIdentifier );
+
+        String guid = readString( str );
+
+        log.debug( guid );
+
+        String createDate = readUnicodeString( str ); // blank?
+        String locale = readUnicodeString( str ); // e.g. en-US
+        int numKeyValuePairs = readIntBigEndian( str ); // e.g. 55
+        Date result = null;
+        for ( int i = 0; i < numKeyValuePairs; i++ ) {
+            String name = readUnicodeString( str );
+            byte[] value = readBytes( str );
+            String type = readUnicodeString( str );
+
+            Object v = null;
+
+            // log.info( ">>>>" + type + "<<<<<" );
+
+            if ( type.equals( "text/x-calvin-float" ) ) {
+                FloatBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asFloatBuffer();
+                float[] array = new float[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+            } else if ( type.equals( "text/plain" ) ) {
+                v = new String( value, "US-ASCII" );
+                System.err.println( name + " " + v + " " + type );
+
+                if ( name.equals( "affymetrix-scan-date" ) ) {
+                    return parseISO8601( ( String ) v );
+                }
+            } else if ( type.equals( "text/ascii" ) ) {
+                // Undocumented, but needed.
+                v = new String( value, "US-ASCII" );
+                System.err.println( name + " " + v + " " + type );
+
+                if ( name.equals( "affymetrix-scan-date" ) ) {
+                    result = parseISO8601( ( String ) v );
+                }
+
+                if ( name.equals( "affymetrix-Fluidics-HybDate" ) ) {
+                    // result = parseISO8601( ( String ) v );
+                }
+            } else if ( type.equals( "text-x-calvin-unsigned-integer-8" ) ) {
+                ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
+                short[] array = new short[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+
+            } else if ( type.equals( "text/x-calvin-integer-16" ) ) {
+                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer(); // wrong?
+                int[] array = new int[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+            } else if ( type.equals( "text/x-calvin-integer-32" ) ) {
+                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
+                int[] array = new int[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+
+            } else if ( type.equals( "text/x-calvin-unsigned-integer-8" ) ) {
+                ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
+                short[] array = new short[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+
+            } else if ( type.equals( "text/x-calvin-unsigned-integer-16" ) ) {
+                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();// wrong?
+                int[] array = new int[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+
+            } else if ( type.equals( "text/x-calvin-unsigned-integer-32" ) ) {
+                IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
+                int[] array = new int[intBuf.remaining()];
+                intBuf.get( array );
+                v = array;
+                System.err.println( name + " " + array[0] + " " + type );
+
+            } else {
+                v = "IDUNNO";
+                System.err.println( name + " " + v + " " + type );
+                // throw new IOException( "Unknown mime type:" + type );
+            }
+
         }
-        String field = buf.toString();
-        return field;
+
+        int numParentHeaders = this.readIntBigEndian( str );
+
+        return result;
+
     }
 
     /**
+     * 8 bit signed integral number
+     * 
+     * @param dis
+     * @return
+     * @throws IOException
+     */
+    private int readByte( DataInputStream dis ) throws IOException {
+        return dis.readByte();
+    }
+
+    /**
+     * The data is stored as a int, then the array of bytes.
+     * 
+     * @param str
+     * @return
+     * @throws IOException
+     */
+    private byte[] readBytes( DataInputStream str ) throws IOException {
+        int fieldLength = readIntBigEndian( str );
+
+        byte[] result = new byte[fieldLength];
+        for ( int i = 0; i < fieldLength; i++ ) {
+            if ( str.available() == 0 ) throw new IOException( "Reached end of file without string end" );
+            result[i] = str.readByte();
+        }
+
+        return result;
+    }
+
+    private int readIntBigEndian( DataInputStream dis ) throws IOException {
+        byte[] buf = new byte[4];
+
+        for ( int i = 0; i < buf.length; i++ ) {
+            buf[i] = dis.readByte();
+        }
+
+        return ByteBuffer.wrap( buf ).order( ByteOrder.BIG_ENDIAN ).getInt();
+    }
+
+    /**
+     * 32 bit signed integral number
+     * 
      * @param dis
      * @return
      * @throws IOException
@@ -194,16 +346,57 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
         return dis.readInt();
     }
 
-    private int readByteLittleEndian( DataInputStream dis ) throws IOException {
-        return dis.readByte();
-    }
-
-    private int readUnsignedByteLittleEndian( DataInputStream dis ) throws IOException {
-        return dis.readUnsignedByte();
-    }
-
-    private int readShortLittleEndian( DataInputStream dis ) throws IOException {
+    private int readShort( DataInputStream dis ) throws IOException {
         return dis.readShort();
+    }
+
+    /**
+     * A 1 byte character string. A string object is stored as an INT (to store the string length) followed by the CHAR
+     * array (to store the string contents).
+     * 
+     * @param str
+     * @return
+     * @throws IOException
+     */
+    private String readString( DataInputStream str ) throws IOException {
+        int fieldLength = readIntBigEndian( str );
+        StringBuilder buf = new StringBuilder();
+        for ( int i = 0; i < fieldLength; i++ ) {
+            if ( str.available() == 0 ) throw new IOException( "Reached end of file without string end" );
+            buf.append( new String( new byte[] { str.readByte() } ) );
+        }
+        String field = buf.toString();
+        // log.info( "String length=" + fieldLength + " val=" + field );
+        return field;
+    }
+
+    /**
+     * A UNICODE string. A string object is stored as an INT (to store the string length) followed by the WCHAR array
+     * (to store the string contents).
+     * (http://media.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html)
+     * 
+     * @param str
+     * @return
+     * @throws IOException
+     */
+    private String readUnicodeString( DataInputStream str ) throws IOException {
+        int fieldLength = readIntBigEndian( str );
+
+        // log.info( fieldLength );
+
+        byte[] buf = new byte[fieldLength * 2];
+
+        // StringBuilder buf = new StringBuilder();
+        for ( int i = 0; i < fieldLength * 2; i++ ) {
+            buf[i] = str.readByte();
+        }
+
+        String field = new String( buf, "UTF-16" );
+        return field;
+    }
+
+    private int readUnsignedByte( DataInputStream dis ) throws IOException {
+        return dis.readUnsignedByte();
     }
 
 }

@@ -14,10 +14,7 @@
  */
 package ubic.gemma.analysis.preprocess.batcheffects;
 
-import java.util.Collection;
-
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
