@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import ubic.basecode.util.FileTools;
 
@@ -49,8 +51,16 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
                 if ( line.matches( GENEPIX_DATETIME_HEADER_REGEXP ) ) {
                     date = parseGenePixDateTime( line );
                 }
-                if ( date == null ) date = parseISO8601( line );
+                if ( date == null ) {
+                    Pattern regex = Pattern.compile( ".+?([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}).+" );
 
+                    Matcher matcher = regex.matcher( line );
+                    if ( matcher.matches() ) {
+                        String tok = matcher.group( 1 );
+
+                        date = parseISO8601( tok );
+                    }
+                }
                 if ( date == null ) date = parseStandardFormat( line );
 
                 if ( date == null ) date = parseLongFormat( line );

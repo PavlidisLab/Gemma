@@ -86,18 +86,18 @@ public class AffyScanDateExtractorTest {
         assertEquals( expected, actual );
     }
 
-    // @Test
-    // public void testExtractInputStreamCommandConsole() throws Exception {
-    // InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
-    // "/data/loader/expression/geo/GSM1389719_A742_138.CEL.gz" ) );
-    // AffyScanDateExtractor extractor = new AffyScanDateExtractor();
-    //
-    // Date actual = extractor.extract( is );
-    //
-    // DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
-    // Date expected = formatter.parse( "03/28/12 01:38:47" );
-    //
-    // assertEquals( expected, actual );
-    // }
+//    @Test
+//    public void testExtractInputStreamCommandConsole() throws Exception {
+//        InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
+//                "/data/loader/expression/geo/GSM1389719_A742_138.CEL.gz" ) );
+//        AffyScanDateExtractor extractor = new AffyScanDateExtractor();
+//
+//        Date actual = extractor.extract( is );
+//
+//        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+//        Date expected = formatter.parse( "03/28/12 01:38:47" );
+//
+//        assertEquals( expected, actual );
+//    }
 
 }

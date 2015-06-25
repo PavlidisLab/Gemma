@@ -202,7 +202,9 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
         log.debug( guid );
 
+        @SuppressWarnings("unused")
         String createDate = readUnicodeString( str ); // blank?
+        @SuppressWarnings("unused")
         String locale = readUnicodeString( str ); // e.g. en-US
         int numKeyValuePairs = readIntBigEndian( str ); // e.g. 55
         Date result = null;
@@ -220,21 +222,22 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                 float[] array = new float[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
             } else if ( type.equals( "text/plain" ) ) {
                 v = new String( value, "US-ASCII" );
-                System.err.println( name + " " + v + " " + type );
+                // System.err.println( name + " " + v + " " + type );
 
                 if ( name.equals( "affymetrix-scan-date" ) ) {
-                    return parseISO8601( ( String ) v );
+
+                    return parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
                 }
             } else if ( type.equals( "text/ascii" ) ) {
                 // Undocumented, but needed.
                 v = new String( value, "US-ASCII" );
-                System.err.println( name + " " + v + " " + type );
+                // System.err.println( name + " " + v + " " + type );
 
                 if ( name.equals( "affymetrix-scan-date" ) ) {
-                    result = parseISO8601( ( String ) v );
+                    return parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
                 }
 
                 if ( name.equals( "affymetrix-Fluidics-HybDate" ) ) {
@@ -245,50 +248,51 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                 short[] array = new short[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
 
             } else if ( type.equals( "text/x-calvin-integer-16" ) ) {
                 IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer(); // wrong?
                 int[] array = new int[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
             } else if ( type.equals( "text/x-calvin-integer-32" ) ) {
                 IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
                 int[] array = new int[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
 
             } else if ( type.equals( "text/x-calvin-unsigned-integer-8" ) ) {
                 ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
                 short[] array = new short[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
 
             } else if ( type.equals( "text/x-calvin-unsigned-integer-16" ) ) {
                 IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();// wrong?
                 int[] array = new int[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
 
             } else if ( type.equals( "text/x-calvin-unsigned-integer-32" ) ) {
                 IntBuffer intBuf = ByteBuffer.wrap( value ).order( ByteOrder.BIG_ENDIAN ).asIntBuffer();
                 int[] array = new int[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " " + array[0] + " " + type );
 
             } else {
-                v = "IDUNNO";
-                System.err.println( name + " " + v + " " + type );
-                // throw new IOException( "Unknown mime type:" + type );
+                // v = "IDUNNO";
+                // System.err.println( name + " " + v + " " + type );
+                throw new IOException( "Unknown mime type:" + type );
             }
 
         }
 
+        @SuppressWarnings("unused")
         int numParentHeaders = this.readIntBigEndian( str );
 
         return result;
