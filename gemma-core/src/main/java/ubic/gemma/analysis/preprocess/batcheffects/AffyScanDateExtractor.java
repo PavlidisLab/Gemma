@@ -223,26 +223,21 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                 intBuf.get( array );
                 v = array;
                 // System.err.println( name + " " + array[0] + " " + type );
-            } else if ( type.equals( "text/plain" ) ) {
+            } else if ( type.equals( "text/plain" ) || type.equals( "text/ascii" ) ) {
+                // text/ascii is undocumented, but needed.
                 v = new String( value, "US-ASCII" );
                 // System.err.println( name + " " + v + " " + type );
 
                 if ( name.equals( "affymetrix-scan-date" ) ) {
-
-                    return parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
-                }
-            } else if ( type.equals( "text/ascii" ) ) {
-                // Undocumented, but needed.
-                v = new String( value, "US-ASCII" );
-                // System.err.println( name + " " + v + " " + type );
-
-                if ( name.equals( "affymetrix-scan-date" ) ) {
-                    return parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
+                    result = parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
+                    log.info( "Scan date = " + v );
                 }
 
-                if ( name.equals( "affymetrix-Fluidics-HybDate" ) ) {
-                    // result = parseISO8601( ( String ) v );
+                if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
+                    // We don't use this but I'm curious to start looking at it.
+                    log.info( "Hyb start date = " + v );
                 }
+
             } else if ( type.equals( "text-x-calvin-unsigned-integer-8" ) ) {
                 ShortBuffer intBuf = ByteBuffer.wrap( value ).asShortBuffer();
                 short[] array = new short[intBuf.remaining()];
@@ -282,11 +277,9 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                 int[] array = new int[intBuf.remaining()];
                 intBuf.get( array );
                 v = array;
-                // System.err.println( name + " " + array[0] + " " + type );
+                // System.err.println( name + " = " + array[0] + " " + type );
 
             } else {
-                // v = "IDUNNO";
-                // System.err.println( name + " " + v + " " + type );
                 throw new IOException( "Unknown mime type:" + type );
             }
 
@@ -294,6 +287,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
         @SuppressWarnings("unused")
         int numParentHeaders = this.readIntBigEndian( str );
+        // log.info( numParentHeaders + " parent headers" );
 
         return result;
 
