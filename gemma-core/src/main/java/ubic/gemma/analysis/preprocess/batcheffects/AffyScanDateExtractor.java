@@ -230,12 +230,12 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
                 if ( name.equals( "affymetrix-scan-date" ) ) {
                     result = parseISO8601( new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
-                    log.info( "Scan date = " + v );
+                    log.info( "Scan date = " + result );
                 }
 
                 if ( name.equals( "affymetrix-Hyb-Start-Time" ) ) {
                     // We don't use this but I'm curious to start looking at it.
-                    log.info( "Hyb start date = " + v );
+                    log.info( "Hyb start date = " + new String( ( ( String ) v ).getBytes(), "UTF-16" ) );
                 }
 
             } else if ( type.equals( "text-x-calvin-unsigned-integer-8" ) ) {
