@@ -35,21 +35,21 @@ import ubic.gemma.loader.protein.StringProteinInteractionEvidenceCodeEnum;
 public class StringProteinProteinInteraction implements Serializable {
     private static final long serialVersionUID = -859220901359582113L;
 
-    private String protein1 = null;
-    private String protein2 = null;
-    private Integer ncbiTaxonId = 0;
-
-    /** Combined score of the interacton any value below 04. is considered a low confidence interaction */
-    private Double combined_score = 0.0;
-
-    /** Map of the enum evidence value and the score for that particular evidence */
-    private Map<StringProteinInteractionEvidenceCodeEnum, Integer> mapEvidenceCodeScores = null;
-
     /**
      * Evidence vectorbit representing neighborhood, geneFusion, cooccurence, coexpression, experimental, database and
      * textmining A 0 represents no evidence and 1 evidence
      */
     byte[] evidenceVector = new byte[] { 0, 0, 0, 0, 0, 0, 0 };
+
+    /** Combined score of the interacton any value below 04. is considered a low confidence interaction */
+    private Double combined_score = 0.0;
+    /** Map of the enum evidence value and the score for that particular evidence */
+    private Map<StringProteinInteractionEvidenceCodeEnum, Integer> mapEvidenceCodeScores = null;
+    private Integer ncbiTaxonId = 0;
+
+    private String protein1 = null;
+
+    private String protein2 = null;
 
     /**
      * Constructor these two fields should not be null as they are used to establish equality.
@@ -192,6 +192,11 @@ public class StringProteinProteinInteraction implements Serializable {
      */
     public void setProtein2( String protein2 ) {
         this.protein2 = protein2;
+    }
+
+    @Override
+    public String toString() {
+        return "StringProteinProteinInteraction [protein1=" + protein1 + ", protein2=" + protein2 + "]";
     }
 
 }

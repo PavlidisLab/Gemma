@@ -90,7 +90,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         String ensemblProteinId = fields[3].trim();
 
         if ( StringUtils.isBlank( ensemblProteinId ) ) {
-            log.warn( "Blank protein id for line: " + StringUtils.join( fields, " " ) );
+            if ( log.isDebugEnabled() ) log.debug( "Blank protein id for line: " + StringUtils.join( fields, " " ) );
             return null;
         }
 
