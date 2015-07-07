@@ -125,7 +125,8 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         genesRat.add( geneRatThree );
 
         genesRat.add( makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "123445" ) );
-
+        genesRat.add( makeGene( rat, "FOO2", "85494" ) );
+        genesRat.add( makeGene( rat, "FOO3", "252899" ) );
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
                 .newInstance( geneRatOne, geneRatThree, null, null, null );
 
@@ -143,12 +144,17 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         Gene geneZebraOne = makeGene( zebraFish, "zgc.153184", "751652" );
         Gene geneZebraTwo = makeGene( zebraFish, "appl1", "571540" );
         Gene geneZebraThree = makeGene( zebraFish, "LOC568371", "568371" );
+        Gene geneZebraFour = makeGene( zebraFish, "TESTGENE", "30425" );
+        Gene geneZebraFive = makeGene( zebraFish, "TESTGENE2", "503936" );
+
         genesZebra.add( makeGene( zebraFish, "FOO1", "562059" ) );
 
         genesZebra.add( geneZebraOne );
 
         genesZebra.add( geneZebraTwo );
         genesZebra.add( geneZebraThree );
+        genesZebra.add( geneZebraFour );
+        genesZebra.add( geneZebraFive );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
                 .newInstance( geneZebraOne, geneZebraThree, null, null, null );
@@ -214,7 +220,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                 new File( fileNameBiomartZebraURL.getFile() ), taxaZebraFish );
 
         Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
-        assertEquals( 3, associations.size() );
+        assertEquals( 2, associations.size() );
 
         for ( Gene gene : genesZebra ) {
             Collection<Gene2GeneProteinAssociation> interactionsForGene = this.gene2GeneProteinAssociationService
@@ -224,10 +230,10 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
                 assertEquals( 2, interactionsForGene.size() );
             }
             if ( gene.getName().equals( "appl1" ) ) {
-                assertEquals( 2, interactionsForGene.size() );
+                assertEquals( 1, interactionsForGene.size() );
             }
             if ( gene.getName().equals( "LOC568371" ) ) {
-                assertEquals( 2, interactionsForGene.size() );
+                assertEquals( 1, interactionsForGene.size() );
             }
         }
 
@@ -265,7 +271,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
         Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
 
-        assertEquals( 4, associations.size() );
+        assertEquals( 6, associations.size() );
 
         for ( Gene2GeneProteinAssociation association : associations ) {
             gene2GeneProteinAssociationService.thaw( association );
@@ -281,7 +287,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
             }
 
         }
-        assertEquals( "Wrong number of rat PPIs", 1, counterAssociationsSavedRat );
+        assertEquals( "Wrong number of rat PPIs", 3, counterAssociationsSavedRat );
         assertEquals( "Wrong number of fish PPIs", 3, counterAssociationsSavedZebra );
 
     }
