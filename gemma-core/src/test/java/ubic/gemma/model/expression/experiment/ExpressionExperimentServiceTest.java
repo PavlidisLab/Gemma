@@ -160,7 +160,11 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Test
     public final void testGetPerTaxonCount() {
         Map<Taxon, Long> counts = expressionExperimentService.getPerTaxonCount();
+        long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) ).longValue();
         assertNotNull( counts );
+        expressionExperimentService.delete( ee );
+        counts = expressionExperimentService.getPerTaxonCount();
+        assertEquals( oldCount - 1, counts.get( taxonService.findByCommonName( "mouse" ) ).longValue() );
     }
 
     @Test
