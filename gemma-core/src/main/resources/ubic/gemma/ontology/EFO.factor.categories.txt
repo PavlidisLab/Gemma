@@ -1,54 +1,60 @@
 # Terms usable as 'categories' in Gemma Characteristics.
 # $Id$
-# 
+# See bug 4272 for discussion of deprecated terms
+# Usable for all places we use categories:
 http://purl.obolibrary.org/obo/CHEBI_23367	molecular entity
 http://purl.obolibrary.org/obo/OBI_0000181	population
-http://purl.obolibrary.org/obo/OBI_0000272	protocol
-http://purl.obolibrary.org/obo/OBI_0100051	specimen
-http://purl.obolibrary.org/obo/OBI_0302893	storage
-http://purl.obolibrary.org/obo/UO_0000003	time unit
-http://purl.obolibrary.org/obo/UO_0000005	temperature unit
-http://purl.obolibrary.org/obo/UO_0000006	substance unit
-http://purl.obolibrary.org/obo/UO_0000051	concentration unit
-http://purl.obolibrary.org/obo/UO_0000127	radiation unit
-http://purl.obolibrary.org/obo/CHEBI_33284	nutrients
-http://purl.org/obo/owl/SO#SO_0001023	allele
-http://purl.org/obo/owl/SO#SO_0001024	haplotype
-http://www.ebi.ac.uk/efo/EFO_0000246	age
-http://www.ebi.ac.uk/efo/EFO_0000273	atmosphere
 http://www.ebi.ac.uk/efo/EFO_0000322	cell line
 http://www.ebi.ac.uk/efo/EFO_0000324	cell type
 http://www.ebi.ac.uk/efo/EFO_0000352	clinical history
 http://www.ebi.ac.uk/efo/EFO_0000399	developmental stage
 http://www.ebi.ac.uk/efo/EFO_0000408	disease
 http://www.ebi.ac.uk/efo/EFO_0000410	disease staging
-http://www.ebi.ac.uk/efo/EFO_0000428	dose
 http://www.ebi.ac.uk/efo/EFO_0000434	ecotype
 http://www.ebi.ac.uk/efo/EFO_0000470	environmental stress
-http://www.ebi.ac.uk/efo/EFO_0000507	generation
 http://www.ebi.ac.uk/efo/EFO_0000510	genetic modification
 http://www.ebi.ac.uk/efo/EFO_0000513	genotype
 http://www.ebi.ac.uk/efo/EFO_0000523	growth condition
-http://www.ebi.ac.uk/efo/EFO_0000542	individual
-http://www.ebi.ac.uk/efo/EFO_0000562	labelling
-http://www.ebi.ac.uk/efo/EFO_0000568	light
 http://www.ebi.ac.uk/efo/EFO_0000635	organism part
 http://www.ebi.ac.uk/efo/EFO_0000651	phenotype
-http://www.ebi.ac.uk/efo/EFO_0000659	ploidy
 http://www.ebi.ac.uk/efo/EFO_0000695	sex
-http://www.ebi.ac.uk/efo/EFO_0000724	timepoint
 http://www.ebi.ac.uk/efo/EFO_0000727	treatment
-http://www.ebi.ac.uk/efo/EFO_0001426	study design
-http://www.ebi.ac.uk/efo/EFO_0001444	measurement
 http://www.ebi.ac.uk/efo/EFO_0001702	temperature
-http://www.ebi.ac.uk/efo/EFO_0002571	medical procedure
-http://www.ebi.ac.uk/efo/EFO_0002694	experimental process
-http://www.ebi.ac.uk/efo/EFO_0004425	initial time point
 http://www.ebi.ac.uk/efo/EFO_0004444	environmental history
-http://www.ebi.ac.uk/efo/EFO_0005067	block
 http://www.ebi.ac.uk/efo/EFO_0005135	strain
-http://www.ebi.ac.uk/efo/EFO_0000683	replicate
 http://www.ebi.ac.uk/efo/EFO_0002755	diet
-http://purl.obolibrary.org/obo/GO_0008150	biological process
 http://purl.obolibrary.org/obo/GO_0007610	behavior
-http://www.ebi.ac.uk/efo/EFO_0000688	sampling site
+http://www.ebi.ac.uk/efo/EFO_0002571	medical procedure
+# OK for EFC and EFV but not EEtag
+http://www.ebi.ac.uk/efo/EFO_0005067	block
+http://www.ebi.ac.uk/efo/EFO_0000246	age
+http://www.ebi.ac.uk/efo/EFO_0000507	generation
+http://www.ebi.ac.uk/efo/EFO_0000542	individual
+http://www.ebi.ac.uk/efo/EFO_0000428	dose
+# OK for EFV only
+http://www.ebi.ac.uk/efo/EFO_0004425	initial time point
+# OK for EFC and EFV
+http://purl.obolibrary.org/obo/GO_0008150	biological process
+http://www.ebi.ac.uk/efo/EFO_0000724	timepoint
+# OK for EEtag only
+http://www.ebi.ac.uk/efo/EFO_0001426	study design
+# Never to use any more for ee tags, factors, factor values.
+#http://www.ebi.ac.uk/efo/EFO_0000688	sampling site
+#http://purl.obolibrary.org/obo/OBI_0000272	protocol
+#http://purl.obolibrary.org/obo/OBI_0100051	specimen
+#http://purl.obolibrary.org/obo/OBI_0302893	storage
+#http://purl.obolibrary.org/obo/UO_0000003	time unit
+#http://purl.obolibrary.org/obo/UO_0000005	temperature unit
+#http://purl.obolibrary.org/obo/UO_0000006	substance unit
+#http://purl.obolibrary.org/obo/UO_0000051	concentration unit
+#http://purl.obolibrary.org/obo/UO_0000127	radiation unit
+#http://purl.obolibrary.org/obo/CHEBI_33284	nutrients
+#http://purl.org/obo/owl/SO#SO_0001023	allele
+#http://purl.org/obo/owl/SO#SO_0001024	haplotype
+#http://www.ebi.ac.uk/efo/EFO_0000683	replicate
+#http://www.ebi.ac.uk/efo/EFO_0000562	labelling
+#http://www.ebi.ac.uk/efo/EFO_0000568	light
+#http://www.ebi.ac.uk/efo/EFO_0000273	atmosphere
+#http://www.ebi.ac.uk/efo/EFO_0000659	ploidy
+#http://www.ebi.ac.uk/efo/EFO_0001444	measurement
+#http://www.ebi.ac.uk/efo/EFO_0002694	experimental process
