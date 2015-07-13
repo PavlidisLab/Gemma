@@ -27,6 +27,9 @@
 		<property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
 			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
 		</property>
+		<property name="relationship" type="java.lang.String">
+			<column name="RELATIONSHIP" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
+		</property>		
 		<property name="evidenceCode" type="ubic.gemma.model.association.GOEvidenceCodeEnum">
 			<column name="EVIDENCE_CODE" not-null="false" unique="false"
 				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
