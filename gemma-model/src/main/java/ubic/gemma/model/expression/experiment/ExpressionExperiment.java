@@ -49,29 +49,31 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
 
     }
 
-    private String source;
-
-    private String shortName;
-
-    private Integer numberOfSamples;
-
-    private Integer numberOfDataVectors;
-
-    private Collection<QuantitationType> quantitationTypes = new HashSet<>();
-
     private DatabaseEntry accession;
-
-    private ExperimentalDesign experimentalDesign;
-
-    private LocalFile rawDataFile;
 
     private Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
+    private ExperimentalDesign experimentalDesign;
+
+    private Geeq geeq;
+
     private MeanVarianceRelation meanVarianceRelation;
+
+    private Integer numberOfDataVectors;
+
+    private Integer numberOfSamples;
+
+    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
+
+    private Collection<QuantitationType> quantitationTypes = new HashSet<>();
+
+    private LocalFile rawDataFile;
 
     private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
 
-    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
+    private String shortName;
+
+    private String source;
 
     /**
      * 
@@ -93,6 +95,10 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
      */
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
+    }
+
+    public Geeq getGeeq() {
+        return geeq;
     }
 
     /**
@@ -169,6 +175,10 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
 
     public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
         this.experimentalDesign = experimentalDesign;
+    }
+
+    public void setGeeq( Geeq geeq ) {
+        this.geeq = geeq;
     }
 
     public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {

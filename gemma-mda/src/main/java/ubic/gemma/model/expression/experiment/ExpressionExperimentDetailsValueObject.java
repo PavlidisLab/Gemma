@@ -62,6 +62,10 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
+    /*
+     * TODO: add Geeq. Either just the scores, or a Geeq value object?
+     */
+
     private boolean reprocessedFromRawData;
 
     public boolean getReprocessedFromRawData() {

@@ -21,6 +21,7 @@ package ubic.gemma.web.controller.expression.bioAssay;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -44,6 +45,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTaskCommand;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -86,42 +88,22 @@ public class BioAssayController {
         ee = eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
 
-        for ( BioAssay assay : ee.getBioAssays() ) {
-
-            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
-
-            result.add( bioAssayValueObject );
-        }
-
-        log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
-
-        return result;
-    }
-
-    /**
-     * @param eeId
-     * @return
-     */
-    public Collection<BioAssayValueObject> getIdentifiedOutliers( Long eeId ) {
-        if ( eeId == null ) {
-            log.warn( "No id!" );
-            return null;
-        }
-
-        ExpressionExperiment ee = eeService.load( eeId );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + eeId );
-            return null;
-        }
-        ee = eeService.thawLite( ee );
-        Collection<BioAssayValueObject> result = new HashSet<>();
+        // this used to be in a separate method.
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
 
-        for ( OutlierDetails details : outliers ) {
-            BioAssay bioAssay = details.getBioAssay();
-            bioAssayService.thaw( bioAssay );
-            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( bioAssay );
+        Map<Long, OutlierDetails> outlierMap = EntityUtils.getIdMap( outliers, "bioAssayId" );
+
+        for ( BioAssay assay : ee.getBioAssays() ) {
+
+            OutlierDetails d = outlierMap.get( assay.getId() );
+
+            BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
+
+            if ( d != null ) {
+                bioAssayValueObject.setPredictedOutlier( true );
+            }
+
             result.add( bioAssayValueObject );
         }
 
@@ -129,6 +111,39 @@ public class BioAssayController {
 
         return result;
     }
+
+    // /**
+    // * @param eeId
+    // * @return
+    // * @deprecated
+    // */
+    // public Collection<BioAssayValueObject> getIdentifiedOutliers( Long eeId ) {
+    // if ( eeId == null ) {
+    // log.warn( "No id!" );
+    // return null;
+    // }
+    //
+    // ExpressionExperiment ee = eeService.load( eeId );
+    // if ( ee == null ) {
+    // log.warn( "Could not load experiment with id " + eeId );
+    // return null;
+    // }
+    // ee = eeService.thawLite( ee );
+    // Collection<BioAssayValueObject> result = new HashSet<>();
+    // DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
+    // Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
+    //
+    // for ( OutlierDetails details : outliers ) {
+    // BioAssay bioAssay = details.getBioAssay();
+    // bioAssayService.thaw( bioAssay );
+    // BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( bioAssay );
+    // result.add( bioAssayValueObject );
+    // }
+    //
+    // log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
+    //
+    // return result;
+    // }
 
     /**
      * AJAX

@@ -61,8 +61,8 @@ public class OutlierDetails {
             return Double.compare( o1.getThirdQuartile(), o2.getThirdQuartile() );
         }
     };
-
     private BioAssay bioAssay;
+    private Long bioAssayId;
 
     private double firstQuartile = Double.MIN_VALUE;
 
@@ -77,6 +77,7 @@ public class OutlierDetails {
     public OutlierDetails( BioAssay bioAssay ) {
         super();
         this.bioAssay = bioAssay;
+        this.bioAssayId = bioAssay.getId();
     }
 
     /**
@@ -88,6 +89,8 @@ public class OutlierDetails {
     public OutlierDetails( BioAssay bioAssay, double medianCorrelation ) {
         super();
         this.bioAssay = bioAssay;
+        this.bioAssayId = bioAssay.getId();
+
         this.median = medianCorrelation;
     }
 
@@ -99,6 +102,8 @@ public class OutlierDetails {
     public OutlierDetails( BioAssay bioAssay, double score, double thresholdCorrelation ) {
         super();
         this.bioAssay = bioAssay;
+        this.bioAssayId = bioAssay.getId();
+
         this.score = score;
         this.thresholdCorrelation = thresholdCorrelation;
     }
@@ -117,6 +122,10 @@ public class OutlierDetails {
 
     public BioAssay getBioAssay() {
         return bioAssay;
+    }
+
+    public Long getBioAssayId() {
+        return bioAssayId;
     }
 
     public double getFirstQuartile() {

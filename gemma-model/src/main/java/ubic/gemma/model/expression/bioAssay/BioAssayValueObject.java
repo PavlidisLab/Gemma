@@ -48,7 +48,11 @@ public class BioAssayValueObject implements Serializable {
 
     private String name = "";
 
+    // if it was removed as an outlier
     private Boolean outlier = false;
+
+    // if our algorithm says it might be an outlier.
+    private Boolean predictedOutlier = false;
 
     private Date processingDate;
 
@@ -59,6 +63,9 @@ public class BioAssayValueObject implements Serializable {
     private Integer sequenceReadCount;
 
     private Integer sequenceReadLength;
+
+    // to hold state change, initialized as this.outlier
+    private Boolean userFlaggedOutlier = false;
 
     public BioAssayValueObject() {
 
@@ -96,6 +103,8 @@ public class BioAssayValueObject implements Serializable {
         if ( bioAssay.getIsOutlier() != null ) {
             this.outlier = bioAssay.getIsOutlier();
         }
+
+        this.userFlaggedOutlier = this.outlier;
     }
 
     @Override
@@ -134,6 +143,10 @@ public class BioAssayValueObject implements Serializable {
         return name;
     }
 
+    public Boolean getPredictedOutlier() {
+        return predictedOutlier;
+    }
+
     public Date getProcessingDate() {
         return processingDate;
     }
@@ -152,6 +165,10 @@ public class BioAssayValueObject implements Serializable {
 
     public Integer getSequenceReadLength() {
         return sequenceReadLength;
+    }
+
+    public Boolean getUserFlaggedOutlier() {
+        return userFlaggedOutlier;
     }
 
     @Override
@@ -193,6 +210,10 @@ public class BioAssayValueObject implements Serializable {
         this.outlier = outlier;
     }
 
+    public void setPredictedOutlier( Boolean predictedOutlier ) {
+        this.predictedOutlier = predictedOutlier;
+    }
+
     public void setProcessingDate( Date processingDate ) {
         this.processingDate = processingDate;
     }
@@ -211,6 +232,10 @@ public class BioAssayValueObject implements Serializable {
 
     public void setSequenceReadLength( Integer sequenceReadLength ) {
         this.sequenceReadLength = sequenceReadLength;
+    }
+
+    public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
+        this.userFlaggedOutlier = userFlaggedOutlier;
     }
 
     @Override

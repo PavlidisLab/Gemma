@@ -35,7 +35,7 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
     public TaskResult execute() {
         Collection<BioAssay> bioAssays = bioAssayService.load( taskCommand.getBioAssayIds() );
         if ( bioAssays.isEmpty() ) {
-            throw new RuntimeException( "did not find bioAssays" );
+            throw new RuntimeException( "Could not locate the bioassays" );
         }
 
         if ( taskCommand.isRevert() ) {

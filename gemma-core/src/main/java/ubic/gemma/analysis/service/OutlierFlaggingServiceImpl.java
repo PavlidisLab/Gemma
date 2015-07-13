@@ -72,18 +72,24 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
      * ubic.gemma.analysis.service.SampleRemoveService#unmarkAsMissing(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
     @Override
-  public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
+    public void unmarkAsMissing( Collection<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() ) return;
 
+        boolean hasReversions = false;
         for ( BioAssay bioAssay : bioAssays ) {
 
-            if ( bioAssay.getIsOutlier() != null && !bioAssay.getIsOutlier() ) {
-                throw new IllegalArgumentException( "Sample is not already marked as an outlier, can't revert." );
+            if ( !bioAssay.getIsOutlier() ) {
+                continue;
             }
 
             // Rather long transaction.
+            hasReversions = true;
             bioAssay.setIsOutlier( false );
             bioAssayService.update( bioAssay );
+        }
+
+        if ( !hasReversions ) {
+            return;
         }
 
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
@@ -111,10 +117,19 @@ public class OutlierFlaggingServiceImpl extends ExpressionExperimentVectorManipu
 
         if ( bioAssays == null || bioAssays.size() == 0 ) return;
 
+        boolean hasNewOutliers = false;
         for ( BioAssay ba : bioAssays ) {
+            if ( ba.getIsOutlier() ) {
+                continue;
+            }
+            hasNewOutliers = true;
             ba.setIsOutlier( true );
             bioAssayService.update( ba );
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );
+        }
+
+        if ( !hasNewOutliers ) {
+            return;
         }
         ExpressionExperiment expExp = expressionExperimentService.findByBioAssay( bioAssays.iterator().next() );
         auditTrailService.addUpdateEvent( expExp, SampleRemovalEvent.Factory.newInstance(), bioAssays.size()

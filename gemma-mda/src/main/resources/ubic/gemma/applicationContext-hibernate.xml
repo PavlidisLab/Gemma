@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- $Id$ -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:p="http://www.springframework.org/schema/p"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
@@ -94,6 +93,7 @@
 				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/expression/experiment/Geeq.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/arrayDesign/AlternateName.hbm.xml</value>
@@ -175,11 +175,9 @@
 		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
 	</bean>
 
-  <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager"
-        p:cache-manager-ref="ehcache" />
-        
-    <bean id="ehcache"
-        class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"
-        p:config-location="classpath:${gemma.ehcache.configfile.name}" p:shared="true"/>
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" p:cache-manager-ref="ehcache" />
+
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" p:config-location="classpath:${gemma.ehcache.configfile.name}"
+		p:shared="true" />
 
 </beans>

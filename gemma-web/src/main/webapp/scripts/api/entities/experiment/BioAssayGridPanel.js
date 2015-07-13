@@ -16,12 +16,10 @@ Gemma.BioAssayGrid = Ext
          defaults : {
             autoScroll : true
          },
-
+         detectedOutlierIds : [],
          height : 500,
          width : 800,
          autoScroll : true,
-
-         detectedOutlierIds : null,
 
          autoExpandColumn : 'description',
 
@@ -37,11 +35,38 @@ Gemma.BioAssayGrid = Ext
          }, {
             name : "outlier",
             type : "boolean"
+         }, {
+            name : "userFlaggedOutlier",
+            type : "boolean"
+         }, {
+            name : "predictedOutlier",
+            type : "boolean"
          } ] ),
 
          initComponent : function() {
 
             Ext.apply( this, {
+               tbar : new Ext.Toolbar( {
+                  items : [ {
+                     xtype : 'button',
+                     text : 'Save outlier changes',
+                     id : 'bioassay-outlier-save-button',
+                     handler : function( b, e ) {
+
+                        // FIXME set this up so we can revert outliers as well.
+                        var outliers = [];
+                        this.store.each( function( record, id ) {
+                           if ( record.get( 'userFlaggedOutlier' ) ) {
+                              outliers.push( record.get( 'id' ) );
+                           }
+                        } );
+
+                        if ( outliers.length > 0 ) {
+                           Ext.getCmp( 'eemanager' ).markOutlierBioAssays( outliers );
+                        }
+                     }.createDelegate( this )
+                  } ]
+               } ),
                store : new Ext.data.Store( {
                   proxy : new Ext.data.DWRProxy( {
                      apiActionToHandlerMap : {
@@ -87,31 +112,31 @@ Gemma.BioAssayGrid = Ext
                } ]
             } );
 
-            var isAdmin = (Ext.get( 'hasAdmin' )) ? Ext.get( 'hasAdmin' ).getValue() : false;
+            var isAdmin = Gemma.SecurityManager.isAdmin();
 
             if ( isAdmin ) {
-               this.columns.push( {
-                  header : "Remove as outlier",
-                  dataIndex : "id",
-                  renderer : this.outlierRemoveRender,
-
+               /*
+                * CheckColumn::onMouseDown() sets the outlier status in the record.
+                */
+               outlierChx = new Ext.ux.grid.CheckColumn( {
+                  header : "Mark outlier",
+                  dataIndex : 'userFlaggedOutlier',
+                  tooltip : 'Check to indicate this sample is an outlier',
                   width : 0.15
                } );
+
+               this.columns.push( {
+                  header : "Is outlier",
+                  dataIndex : "id",
+                  renderer : this.isOutlierRender,
+                  width : 0.15
+               } );
+
+               this.columns.push( outlierChx );
+               this.plugins = [ outlierChx ]; // needed to allow editing.
             }
 
             var me = this;
-
-            this.detectedOutlierIds = [];
-
-            BioAssayController.getIdentifiedOutliers( me.eeId, {
-               callback : function( data ) {
-                  for (var i = 0; i < data.length; i++) {
-                     me.detectedOutlierIds.push( data[i].id );
-                  }
-                  me.getStore().reload();
-               }.createDelegate( this ),
-               errorHandler : Gemma.genericErrorHandler
-            } );
 
             Gemma.BioAssayGrid.superclass.initComponent.call( this );
 
@@ -131,33 +156,32 @@ Gemma.BioAssayGrid = Ext
           * @memberOf Gemma.BioAssayGrid
           */
          nameRenderer : function( value, metadata, record, row, col, ds ) {
-
-            return "<a   style='cursor:pointer' href=\"/Gemma/bioAssay/showBioAssay.html?id=" + record.get( 'id' )
-               + "\">" + record.get( 'name' ) + "</a>";
+            return "<a  title=\"Show details of this bioassay\" style='cursor:pointer' href=\"/Gemma/bioAssay/showBioAssay.html?id="
+               + record.get( 'id' ) + "\">" + record.get( 'name' ) + "</a>";
          },
 
          descRenderer : function( value, metadata, record, row, col, ds ) {
-
             var color = 'black';
-            if ( this.detectedOutlierIds.indexOf( record.get( 'id' ) ) != -1 ) {
-               color = 'red';
-               metadata.attr = 'ext:qtip="' + 'Identified outlier' + '"';
-            }
-
-            return "<font color='" + color + "'>" + record.get( 'name' ) + "</font>";
-         },
-
-         outlierRemoveRender : function( value, metadata, record, row, col, ds ) {
 
             if ( record.get( 'outlier' ) ) {
-               return "<span style='cursor:pointer' class=\"link\" onClick=\"Ext.getCmp('eemanager').unmarkOutlierBioAssay("
-                  + record.get( 'id' )
-                  + ")\"><img   style='cursor:pointer' title=\"Click to unmark as an outlier\" src=\"/Gemma/images/icons/stop.png\"/></span>";
+               color = 'red';
+               return " <font color='" + color + "'>Removed as an outlier;" + record.get( 'name' ) + "</font>";
             }
 
-            return "<span class=\"link\" onClick=\"Ext.getCmp('eemanager').markOutlierBioAssay("
-               + record.get( 'id' )
-               + ")\"><img   style='cursor:pointer' title=\"Click to mark as an outlier\" src=\"/Gemma/images/icons/ok.png\"/></span>";
+            if ( record.get( 'predictedOutlier' ) ) {
+               color = 'red';
+               return "<font color='" + color + "'>Predicted outlier; " + record.get( 'name' ) + "</font>";
+            }
+
+            return record.get( 'name' );
+
+         },
+
+         isOutlierRender : function( value, metadata, record, row, col, ds ) {
+            if ( record.get( 'outlier' ) ) {
+               return "<img title=\"Is an outlier\" src=\"/Gemma/images/icons/stop.png\"/>";
+            }
+            return "";
          },
 
       } );
