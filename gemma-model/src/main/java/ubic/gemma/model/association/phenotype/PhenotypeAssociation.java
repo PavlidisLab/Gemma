@@ -30,6 +30,7 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * Represents abstract evidence for the association of a gene with a phenotype.
+ * @version $Id$
  */
 public abstract class PhenotypeAssociation extends Auditable implements gemma.gsec.model.Securable {
 
@@ -60,6 +61,8 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     private PhenotypeMappingType mappingType;
 
     private String originalPhenotype;
+    
+    private String relationship; // information for a gene-disease relationship 
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -165,6 +168,10 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     public void setPhenotypes( Collection<Characteristic> phenotypes ) {
         this.phenotypes = phenotypes;
     }
+    
+    public void setRelationship(String relationship) {
+        this.relationship = relationship;
+    }
 
     public void setScore( String score ) {
         this.score = score;
@@ -197,6 +204,10 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
 
     public String getOriginalPhenotype() {
         return originalPhenotype;
+    }
+    
+    public String getRelationship() {
+        return relationship;
     }
 
     public void setOriginalPhenotype( String originalPhenotype ) {
