@@ -230,11 +230,12 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         assert stringency > 0;
         assert stringency >= 2 || eeIds.size() == 1;
 
-        log.debug( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
+        log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
                 + ") and genes (" + genes.size() + ") queried" );
 
         // HACK drop the stringency until we get some results.
-        while ( allCoexpressions.isEmpty() && stringency > 0 ) {
+        int stepSize = 3;
+        while ( true ) {
             if ( queryGenesOnly ) {
                 // note that maxResults is ignored.
                 if ( genes.size() < 2 ) {
@@ -246,8 +247,17 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                 allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
                         maxResults, quick );
             }
-            stringency -= 4; // step size completely made up.
+            if ( allCoexpressions.isEmpty() && stringency > 1 ) {
+                stringency -= stepSize; // step size completely made up.
+                stringency = Math.max( 1, stringency );
+                log.info( "No results, requerying with stringeny=" + stringency );
+            } else {
+                // no results.
+                break;
+            }
         }
+
+        log.info( "Final actual stringency used was " + stringency );
 
         result.setQueryStringency( stringency );
         result.setQueryGenesOnly( queryGenesOnly );
@@ -290,7 +300,6 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         result.trim();
 
         populateNodeDegrees( result );
-
         // if ( searchOptions.isUseMyDatasets() ) {
         // addMyDataFlag( result, myEE );
         // }
