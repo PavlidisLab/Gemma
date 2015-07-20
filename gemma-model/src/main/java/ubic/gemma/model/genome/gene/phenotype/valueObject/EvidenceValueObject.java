@@ -62,6 +62,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
     private String geneOfficialSymbol = "";
     private String geneOfficialName = "";
     private String taxonCommonName = "";
+    private String relationship = "";
     private boolean isHomologueEvidence = false;
 
     private boolean containQueryPhenotype = false;
@@ -99,6 +100,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
         this.taxonCommonName = phenotypeAssociation.getGene().getTaxon().getCommonName();
         this.originalPhenotype = phenotypeAssociation.getOriginalPhenotype();
+        this.relationship = phenotypeAssociation.getRelationship();
 
         if ( phenotypeAssociation.getMappingType() != null ) {
             this.phenotypeMapping = phenotypeAssociation.getMappingType().getValue();
@@ -283,6 +285,10 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
 
     public String getTaxonCommonName() {
         return this.taxonCommonName;
+    }
+    
+    public String getRelationship() {
+        return this.relationship;
     }
 
     @Override
@@ -503,6 +509,10 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
 
     public void setPhenotypeMapping( String phenotypeMapping ) {
         this.phenotypeMapping = phenotypeMapping;
+    }
+    
+    public void setRelationship( String relationship) {
+        this.relationship = relationship;
     }
 
     public PhenotypeMappingType findPhenotypeMappingAsEnum() {
