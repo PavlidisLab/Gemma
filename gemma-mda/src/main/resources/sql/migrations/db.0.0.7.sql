@@ -1,4 +1,6 @@
 
--- Changes for keeping track of original phenotype and way the evidence was mapped
+-- Changes for keeping track of original phenotype, the way the evidence was mapped, and gene-disease
+-- relationship information.
 ALTER TABLE PHENOTYPE_ASSOCIATION ADD MAPPING_TYPE VARCHAR(255) DEFAULT NULL AFTER EVIDENCE_CODE;
 ALTER TABLE PHENOTYPE_ASSOCIATION ADD ORIGINAL_PHENOTYPE VARCHAR(255) DEFAULT NULL AFTER MAPPING_TYPE;
+ALTER TABLE PHENOTYPE_ASSOCIATION ADD RELATIONSHIP VARCHAR (255) AFTER DESCRIPTION;
