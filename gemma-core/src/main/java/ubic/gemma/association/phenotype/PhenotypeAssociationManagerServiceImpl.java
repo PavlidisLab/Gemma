@@ -1252,7 +1252,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // header of file
             String header = disclaimer
-                    + "Data Source\tGene NCBI\tGene Symbol\tTaxon\tPhenotype Names\tPhenotype URIs\tPubmeds\tWeb Link\tIs Negative\tNote\n";
+                    + "Data Source\tGene NCBI\tGene Symbol\tTaxon\tPhenotype Names\tRelationship\tPhenotype URIs\tPubmeds\tWeb Link\tIs Negative\tNote\n";
             fileWriterAllEvidence.write( header );
 
             // lets get all external databases linked to evidence, we will create a file for each
@@ -1312,6 +1312,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             pubmeds = pubmeds + pubId;
                         }
                     }
+                    
+                    String relationship = "";
+                    relationship = phenotypeAssociation.getRelationship();
 
                     String phenotypes = "";
 
@@ -1354,6 +1357,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                             + phenotypeAssociation.getGene().getOfficialSymbol() + "\t"
                             + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
                             + StringUtils.removeEnd( phenotypes, ";" ) + "\t"
+                            + relationship + "\t" // relationship information
                             + StringUtils.removeEnd( phenotypesUri, ";" ) + "\t" + StringUtils.removeEnd( pubmeds, ";" )
                             + "\t" + webLink + "\t" + isNegative + "\t" + description + "\n";
 
