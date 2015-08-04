@@ -685,8 +685,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                dataIndex : 'relationship',
                                width : 0.35,
                                renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
-                                   var linkOutHtml = '';
-                                   linkOutHtml = record.data.relationship;
+                                   var relationshipHtml = '';
+                                   relationshipHtml = 'genetic association';
                                    return '<span style="white-space: normal;">' + linkOutHtml + '</span>';
                                 },
                                 sortable : true
