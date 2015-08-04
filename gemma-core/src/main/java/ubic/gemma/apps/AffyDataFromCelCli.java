@@ -24,6 +24,7 @@ import java.util.Collection;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.expression.geo.DataUpdater;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -31,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Add (or possibly replace) the data associated with an affymetrix data set, going back to the CEL files. Can handle
- * exon or 3' arrays. data.+
+ * exon or 3' arrays. data.
  * 
  * @author paul
  * @version $Id$
@@ -61,6 +62,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
         super.addOption( CDF_FILE_OPT, true,
                 "CDF file for Affy 3' arrays; otherwise will try to find automatically using the value of affy.power.tools.cdf.path" );
+        super.addForceOption();
 
     }
 
@@ -112,12 +114,22 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
         for ( BioAssaySet ee : this.expressionExperiments ) {
             try {
+                /*
+                 * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
+                 */
+                if ( super.auditEventService.hasEvent( ee, DataReplacedEventImpl.class ) && !this.force ) {
+                    log.warn( ee + ": Already has a DataReplacedEvent, skipping (use 'force' to override')" );
+                    this.errorObjects.add( ee + ": Already has a DataReplacedEvent" );
+                    continue;
+                }
+
                 ExpressionExperiment thawedEe = this.eeService.thawLite( ( ExpressionExperiment ) ee );
 
                 Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
                 if ( arrayDesignsUsed.size() > 1 ) {
                     log.warn( "Cannot update data for experiment that uses multiple platforms" );
+                    this.errorObjects.add( ee + ": Cannot update data for experiment that uses multiple platforms" );
                     continue;
                 }
 
@@ -134,7 +146,8 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     serv.reprocessAffyThreePrimeArrayData( thawedEe, cdfFile );
                     this.successObjects.add( thawedEe.toString() );
                 } else {
-                    throw new IllegalStateException( "This CLI can only deal with exon arrays" );
+                    throw new IllegalStateException(
+                            "This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
                 }
             } catch ( Exception e ) {
                 log.error( e, e );
@@ -156,6 +169,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( CDF_FILE_OPT ) ) {
             this.cdfFile = getOptionValue( CDF_FILE_OPT );
         }
+
     }
 
 }
