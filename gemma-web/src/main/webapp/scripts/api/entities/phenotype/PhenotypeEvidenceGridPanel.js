@@ -403,6 +403,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                   'evidenceSource',
                                   'isNegativeEvidence',
                                   'lastUpdated',
+                                  'relationship',
                                   'phenotypes',
                                   'containQueryPhenotype',
                                   'scoreValueObject.strength',
@@ -678,6 +679,17 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                                  ds.sort( 'containQueryPhenotype', 'DESC' );
                               }
 
+                           },
+                           {
+                               header : "Relationship",
+                               dataIndex : 'relationship',
+                               width : 0.35,
+                               renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
+                                   var linkOutHtml = '';
+                                   linkOutHtml = record.data.relationship;
+                                   return '<span style="white-space: normal;">' + linkOutHtml + '</span>';
+                                },
+                                sortable : true
                            },
                            {
                               header : "Type",
