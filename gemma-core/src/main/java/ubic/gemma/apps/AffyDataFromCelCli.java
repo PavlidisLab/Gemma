@@ -146,7 +146,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
                 if ( arrayDesignsUsed.size() > 1 ) {
-                    log.warn( "Cannot update data for experiment that uses multiple platforms" );
+                    log.warn( ee + ": Cannot update data for experiment that uses multiple platforms" );
                     this.errorObjects.add( ee + ": Cannot update data for experiment that uses multiple platforms" );
                     continue;
                 }
@@ -158,19 +158,23 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                     log.info( thawedEe + " looks like affy exon array" );
                     serv.addAffyExonArrayData( thawedEe );
                     this.successObjects.add( thawedEe.toString() );
+                    log.info( "Successfully processed: " + thawedEe );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
                         && ad.getName().toLowerCase().contains( "affy" ) ) {
                     log.info( thawedEe + " looks like a affy 3-prime array" );
                     serv.reprocessAffyThreePrimeArrayData( thawedEe, cdfFile );
                     this.successObjects.add( thawedEe.toString() );
+                    log.info( "Successfully processed: " + thawedEe );
                 } else {
-                    throw new IllegalStateException(
-                            "This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
+                    log.warn( ee + ": This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
+                    this.errorObjects.add( ee
+                            + ": This CLI can only deal with Affymetrix platforms (exon or 3' probe designs)" );
                 }
             } catch ( Exception e ) {
                 log.error( e, e );
                 this.errorObjects.add( ee + " " + e.getLocalizedMessage() );
             }
+
         }
 
         super.summarizeProcessing();
