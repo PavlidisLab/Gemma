@@ -434,6 +434,94 @@ public class OntologyServiceImpl implements OntologyService {
 
         Map<String, CharacteristicValueObject> previouslyUsedInSystem = new HashMap<>();
 
+        countOccurrences( queryString, previouslyUsedInSystem );
+
+        // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
+        // that's probably all we are returning (?)
+        searchForGenes( queryString, categoryUri, taxon, searchResults );
+
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            if ( !serv.isOntologyLoaded() ) continue;
+            results = serv.findResources( queryString );
+
+            if ( results.isEmpty() ) continue;
+            if ( log.isDebugEnabled() )
+                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
+                        + watch.getTime() + " ms" );
+            searchResults.addAll( CharacteristicValueObject
+                    .characteristic2CharacteristicVO( termsToCharacteristics( results ) ) );
+
+            if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
+                break;
+            }
+        }
+
+        countOccurrences( searchResults, previouslyUsedInSystem );
+
+        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
+        if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
+            searchResults.addAll( CharacteristicValueObject
+                    .characteristic2CharacteristicVO( termsToCharacteristics( geneOntologyService
+                            .findTerm( queryString ) ) ) );
+        }
+
+        // Sort the results rather elaborately.
+        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString );
+
+        if ( watch.getTime() > 1000 ) {
+            log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
+        }
+
+        return sortedResults;
+
+    }
+
+    /**
+     * @param searchResults
+     * @param previouslyUsedInSystem
+     */
+    public void countOccurrences( Collection<CharacteristicValueObject> searchResults,
+            Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Set<String> uris = new HashSet<>();
+        for ( CharacteristicValueObject cvo : searchResults ) {
+            uris.add( cvo.getValueUri() );
+        }
+
+        Collection<Characteristic> existingCharacteristicsUsingTheseTerms = characteristicService.findByUri( uris );
+        for ( Characteristic c : existingCharacteristicsUsingTheseTerms ) {
+            // count up number of usages; see bug 3897
+            String key = foundValueKey( c );
+            if ( previouslyUsedInSystem.containsKey( key ) ) {
+                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
+                continue;
+            }
+            log.info( "saw " + key + " (" + key + ")" );
+            CharacteristicValueObject vo = new CharacteristicValueObject( c );
+            vo.setCategory( null );
+            vo.setCategoryUri( null ); // to avoid us counting separately by category.
+            vo.setAlreadyPresentInDatabase( true );
+            vo.incrementOccurrenceCount();
+            previouslyUsedInSystem.put( key, vo );
+        }
+        // ///
+
+        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
+            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of "
+                    + existingCharacteristicsUsingTheseTerms.size() );
+    }
+
+    /**
+     * @param queryString
+     * @param previouslyUsedInSystem
+     * @return
+     */
+    private void countOccurrences( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
         // this should be very fast.
         Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
@@ -448,8 +536,10 @@ public class OntologyServiceImpl implements OntologyService {
                 previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
                 continue;
             }
-            // log.info( "saw " + key + " (" + key + ")" );
+            log.info( "saw " + key + " (" + key + ") for " + characteristic );
             CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
+            vo.setCategory( null );
+            vo.setCategoryUri( null ); // to avoid us counting separately by category.
             vo.setAlreadyPresentInDatabase( true );
             vo.incrementOccurrenceCount();
             previouslyUsedInSystem.put( key, vo );
@@ -458,41 +548,6 @@ public class OntologyServiceImpl implements OntologyService {
         if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
             log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
                     + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
-
-        // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
-        // that's probably all we are returning (?)
-        searchForGenes( queryString, categoryUri, taxon, searchResults );
-
-        for ( AbstractOntologyService serv : this.ontologyServices ) {
-            if ( !serv.isOntologyLoaded() ) continue;
-            results = serv.findResources( queryString );
-
-            if ( results.isEmpty() ) continue;
-            if ( log.isDebugEnabled() )
-                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
-                        + watch.getTime() + " ms" );
-            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter( results,
-                    queryString ) ) );
-
-            if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
-                break;
-            }
-        }
-
-        // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
-        if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
-            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( filter(
-                    geneOntologyService.findTerm( queryString ), queryString ) ) );
-        }
-
-        // Sort the results rather elaborately.
-        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString );
-
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
-        }
-
-        return sortedResults;
 
     }
 
@@ -822,47 +877,45 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * Given a collection of ontology terms will filter out all the terms that don't have the filter term in their
-     * label.
+     ** Convert raw ontology resources into VocabCharacteristics.
      * 
      * @param terms
      * @param filterTerm
      * @return
      */
-    private Collection<VocabCharacteristic> filter( final Collection<? extends OntologyResource> terms,
-            final String filter ) {
+    private Collection<VocabCharacteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
 
-        Collection<VocabCharacteristic> filtered = new HashSet<>();
+        Collection<VocabCharacteristic> results = new HashSet<>();
 
-        if ( ( terms == null ) || ( terms.isEmpty() ) ) return filtered;
-
-        String caseInsensitiveFilter = filter.toLowerCase().trim();
+        if ( ( terms == null ) || ( terms.isEmpty() ) ) return results;
 
         for ( OntologyResource res : terms ) {
-            if ( StringUtils.isNotEmpty( res.getLabel() )
-                    && res.getLabel().toLowerCase().indexOf( caseInsensitiveFilter ) > -1 ) {
-                VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-                if ( res instanceof OntologyTerm ) {
-                    OntologyTerm term = ( OntologyTerm ) res;
-                    vc.setValue( term.getTerm() );
-                    vc.setValueUri( term.getUri() );
-                    vc.setDescription( term.getComment() );
-                } else if ( res instanceof OntologyIndividual ) {
-                    OntologyIndividual indi = ( OntologyIndividual ) res;
-                    vc.setValue( indi.getLabel() );
-                    vc.setValueUri( indi.getUri() );
-                    vc.setDescription( "Individual" );
-                } else {
-                    log.warn( "What is it? " + res );
-                    continue;
-                }
 
-                filtered.add( vc );
+            if ( res == null ) continue;
+
+            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            if ( res instanceof OntologyTerm ) {
+                OntologyTerm term = ( OntologyTerm ) res;
+                vc.setValue( term.getTerm() );
+                vc.setValueUri( term.getUri() );
+                vc.setDescription( term.getComment() );
+            } else if ( res instanceof OntologyIndividual ) {
+                OntologyIndividual indi = ( OntologyIndividual ) res;
+                vc.setValue( indi.getLabel() );
+                vc.setValueUri( indi.getUri() );
+                vc.setDescription( "Individual" );
+            } else {
+                log.warn( "What is it? " + res );
+                continue;
             }
-        }
-        log.debug( "returning " + filtered.size() + " terms after filter" );
 
-        return filtered;
+            if ( vc.getValue() == null ) continue;
+            results.add( vc );
+
+        }
+        log.debug( "returning " + results.size() + " terms after filter" );
+
+        return results;
     }
 
     /** given a collection of characteristics add them to the correct List */
@@ -909,14 +962,19 @@ public class OntologyServiceImpl implements OntologyService {
      * @return
      */
     private String foundValueKey( Characteristic c ) {
-        if ( c instanceof VocabCharacteristic && ( ( VocabCharacteristic ) c ).getValueUri() != null ) {
+        if ( c instanceof VocabCharacteristic
+                && ( StringUtils.isNotBlank( ( ( VocabCharacteristic ) c ).getValueUri() ) ) ) {
             return ( ( VocabCharacteristic ) c ).getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
     }
 
+    /**
+     * @param c
+     * @return
+     */
     private String foundValueKey( CharacteristicValueObject c ) {
-        if ( c.getValueUri() != null && c.getValueUri() != null ) {
+        if ( c.getValueUri() != null && StringUtils.isNotBlank( c.getValueUri() ) ) {
             return c.getValueUri().toLowerCase();
         }
         return c.getValue().toLowerCase();
