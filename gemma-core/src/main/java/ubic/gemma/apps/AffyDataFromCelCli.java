@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -54,6 +55,23 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     // /space/grp/databases/arrays/cdfs...
     private String cdfFile = null;
+
+    /**
+     * @param ee
+     */
+    public boolean checkForAlreadyDone( BioAssaySet ee ) {
+        for ( QuantitationType qt : eeService.getQuantitationTypes( ( ExpressionExperiment ) ee ) ) {
+            if ( qt.getIsMaskedPreferred() && qt.getIsRecomputedFromRawData() ) {
+                return true;
+            }
+        }
+
+        if ( super.auditEventService.hasEvent( ee, DataReplacedEventImpl.class ) ) {
+            return true;
+        }
+
+        return false;
+    }
 
     @Override
     protected void buildOptions() {
@@ -117,9 +135,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
                 /*
                  * if the audit trail already has a DataReplacedEvent, skip it, unless --force.
                  */
-                if ( super.auditEventService.hasEvent( ee, DataReplacedEventImpl.class ) && !this.force ) {
-                    log.warn( ee + ": Already has a DataReplacedEvent, skipping (use 'force' to override')" );
-                    this.errorObjects.add( ee + ": Already has a DataReplacedEvent" );
+                if ( !force && checkForAlreadyDone( ee ) ) {
+                    log.warn( ee + ": Already has been recomputed from raw data, skipping (use 'force' to override')" );
+                    this.errorObjects.add( ee + ": Already has been computed from raw data" );
                     continue;
                 }
 
