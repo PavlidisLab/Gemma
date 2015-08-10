@@ -143,6 +143,10 @@ public class ExpressionDataMatrixColumnSort {
 
         for ( ExperimentalFactor factor : factors ) {
 
+            if ( factor.getFactorValues().isEmpty() ) {
+                throw new IllegalStateException( "Factor has no factor values: " + factor );
+            }
+
             if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
                 // then there is no baseline, but we'll take the minimum value.
                 TreeMap<Double, FactorValue> sortedVals = new TreeMap<>();
@@ -214,7 +218,10 @@ public class ExpressionDataMatrixColumnSort {
                         arbitraryBaselineFV = factor.getFactorValues().iterator().next();
                     }
 
-                    assert arbitraryBaselineFV != null;
+                    if ( arbitraryBaselineFV == null ) {
+                        throw new IllegalStateException( "No baseline could be identified for factor:  " + factor
+                                + " has " + factor.getFactorValues().size() + " factor values" );
+                    }
                     log.info( "Falling back on choosing baseline arbitrarily: " + arbitraryBaselineFV );
                     result.put( factor, arbitraryBaselineFV );
                 }
