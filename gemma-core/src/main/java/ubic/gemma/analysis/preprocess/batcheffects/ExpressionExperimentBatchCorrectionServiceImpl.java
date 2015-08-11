@@ -120,9 +120,17 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
      */
     @Override
     public boolean checkCorrectability( ExpressionExperiment ee ) {
+
+        for ( QuantitationType qt : expressionExperimentService.getQuantitationTypes( ee ) ) {
+            if ( qt.getIsBatchCorrected() ) {
+                log.warn( "Experiment already has a batch-corrected quantitation type: " + ee + ": " + qt );
+                return false;
+            }
+        }
+
         ExperimentalFactor batch = getBatchFactor( ee );
         if ( batch == null ) {
-            log.warn( "No batch factor found" );
+            log.warn( "No batch factor found: " + ee );
             return false;
         }
 
@@ -140,7 +148,8 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
         }
 
         /*
-         * Make sure we have at least two samples per batch.
+         * Make sure we have at least two samples per batch. This generally won't happen if batches were defined by
+         * Gemma.
          */
 
         Map<Long, Integer> batches = new HashMap<>();
@@ -153,21 +162,18 @@ public class ExpressionExperimentBatchCorrectionServiceImpl implements Expressio
                 if ( fv.getExperimentalFactor().equals( batch ) ) {
                     Long batchId = fv.getId();
                     if ( !batches.containsKey( batchId ) ) batches.put( batchId, 0 );
-
                     batches.put( batchId, batches.get( batchId ) + 1 );
-
                 }
             }
-
         }
-
         /*
          * consider merging batches. - we already do this when we create the batch factor, so in general batches should
-         * always have at least 2 samples.
+         * always have at least 2 samples
          */
-
         for ( Long batchId : batches.keySet() ) {
             if ( batches.get( batchId ) < 2 ) {
+                log.info( "Batch with only one sample detected, correction not possible: " + ee + ", batchId="
+                        + batchId );
                 return false;
             }
         }

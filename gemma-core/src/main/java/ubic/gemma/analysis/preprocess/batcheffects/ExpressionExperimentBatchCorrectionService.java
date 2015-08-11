@@ -30,7 +30,8 @@ public interface ExpressionExperimentBatchCorrectionService {
     public abstract void checkBatchEffectSeverity( ExpressionExperiment ee );
 
     /**
-     * Is there a confound problem? Do we have at least two samples per batch?
+     * Has it already been batch corrected? Is there a Batch factor provided? Is there a confound problem? Do we have at
+     * least two samples per batch?
      * 
      * @param ee
      */
