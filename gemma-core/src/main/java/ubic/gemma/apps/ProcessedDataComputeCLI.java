@@ -138,8 +138,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
                 this.preprocessorService.process( ee );
             }
             // Note tha auditing is done by the service.
-            successObjects.add( ee.toString() );
-
+            successObjects.add( ee );
+            log.info( "Successfully processed: " + ee );
         } catch ( PreprocessingException e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
