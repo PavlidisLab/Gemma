@@ -142,8 +142,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         boolean correctable = expressionExperimentBatchCorrectionService.checkCorrectability( ee );
 
         if ( !correctable ) {
+            // throwing exception kind of annoying but not a big deal.
             throw new PreprocessingException( ee.getShortName()
-                    + " could not be batch-corrected (either no batch information, or invalid design)" );
+                    + " could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
         }
 
         try {
