@@ -127,7 +127,8 @@ Gemma.ExpressionExperimentDetails = Ext
                   + ee.troubleDetails + '"/>';
             }
 
-            result = result + (ee.reprocessedFromRawData ? "Reprocessed from raw data." : "Data are from source.")
+            result = result
+               + (ee.reprocessedFromRawData ? "Reprocessed from raw data by Gemma." : "Data are from external source.")
                + "&nbsp;";
             result = result + (ee.batchEffect != null ? ee.batchEffect : ""); // string description.
 
