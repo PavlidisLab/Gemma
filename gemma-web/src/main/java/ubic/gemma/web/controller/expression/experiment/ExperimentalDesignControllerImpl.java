@@ -46,6 +46,8 @@ import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
+//import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+//import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -101,6 +103,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Autowired
     private SecurityService securityService;
 
+//    @Autowired
+//    private AuditTrailService auditTrailService;
+
     /*
      * (non-Javadoc)
      * 
@@ -132,9 +137,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
             // as a fail safe.
-
             experimentalDesignImporter.importDesign( ee, is );
+//            this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+//                    "ExperimentalDesign imported from file", null );
             this.experimentReportService.evictFromCache( ee.getId() );
+
         } catch ( IOException e ) {
             throw new RuntimeException( "Failed to import the design: " + e.getMessage() );
         }
@@ -170,6 +177,9 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         experimentalDesignService.update( ed );
 
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
+
+//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+//                "ExperimentalFactor added: " + efvo.getName(), efvo.toString() );
         this.experimentReportService.evictFromCache( ee.getId() );
 
     }
@@ -212,6 +222,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ef.getExperimentalDesign() );
 
+        // this is just a placeholder factor value; use has to edit it.
         expressionExperimentService.addFactorValue( ee, fv );
     }
 
@@ -238,6 +249,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         fv.getCharacteristics().add( c );
 
         factorValueService.update( fv );
+
+        ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+//                "FactorValue characteristic added to: " + fv, c.toString() );
+        this.experimentReportService.evictFromCache( ee.getId() );
     }
 
     /*
@@ -307,6 +323,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( Long fvId : fvCol ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fvId );
+//            this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "FactorValue deleted: " + fvId,
+//                    null );
             this.experimentReportService.evictFromCache( ee.getId() );
         }
 
@@ -486,6 +504,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         ee = expressionExperimentService.thawLite( ee );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
+        mnv.addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() );
         mnv.addObject( "hasPopulatedDesign", ee.getExperimentalDesign().getExperimentalFactors().size() > 0 );
         mnv.addObject( "experimentalDesign", ee.getExperimentalDesign() );
         mnv.addObject( "expressionExperiment", ee );
@@ -549,7 +568,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             }
         }
-
+//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "BioMaterials updated ("
+//                + bmvos.length + " items)", StringUtils.join( bmvos, "\n" ) );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
@@ -623,6 +643,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         ExperimentalFactor ef = experimentalFactorService.load( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
+//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "ExperimentalFactors updated",
+//                StringUtils.join( efvos, "\n" ) );
         if ( ee == null ) throw new IllegalArgumentException( "No experiment for factor: " + ef );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
@@ -713,6 +735,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         FactorValue fv = this.factorValueService.load( fvvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
+//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+//                "FactorValue characteristics updated", StringUtils.join( fvvos, "\n" ) );
         this.experimentReportService.evictFromCache( ee.getId() );
 
     }
@@ -756,6 +780,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
 
             if ( ee != null ) {
+//                this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+//                        "ExperimentalFactor deleted: " + ef.getName(), ef.toString() );
                 this.experimentReportService.evictFromCache( ee.getId() );
             }
         }
