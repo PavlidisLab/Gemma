@@ -613,6 +613,7 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend( Ext.Toolbar, {
 
       this.factorValueCombo = new Gemma.FactorValueCombo( {
          id : 'fv-char-toolbar-fvcombo',
+         taxonId : this.taxonId,
          disabled : this.experimentalFactor.id >= 0 ? false : true,
          efId : this.experimentalFactor.id >= 0 ? this.experimentalFactor.id : null
       } );
@@ -635,7 +636,8 @@ Gemma.FactorValueCharacteristicToolbar = Ext.extend( Ext.Toolbar, {
       }.createDelegate( this ) );
 
       this.charCombo = new Gemma.CharacteristicCombo( {
-         disabled : true
+         disabled : true,
+         taxonId : this.taxonId
       } );
 
       this.createButton = new Ext.Toolbar.Button( {

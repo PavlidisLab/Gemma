@@ -90,7 +90,7 @@ Ext.onReady( function() {
    var eeId = Ext.get( "expressionExperimentID" ).getValue();
    var edId = Ext.get( "experimentalDesignID" ).getValue();
    var editable = Ext.get( 'currentUserCanEdit' ).getValue() === 'true';
-
+   var taxonId = Ext.get( 'taxonId' ).getValue();
    /*
     * TODO: load up the Category terms, experimental design and factor values ahead of time. We end up doing it about 4
     * times each. Create the panel in the callback.
@@ -118,7 +118,8 @@ Ext.onReady( function() {
       split : true,
       edId : edId,
       height : 470,
-      editable : editable
+      editable : editable,
+      taxonId : taxonId
    } );
 
    var efPanel = new Ext.Panel( {
