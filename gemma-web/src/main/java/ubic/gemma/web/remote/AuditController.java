@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.remote;
 
+import java.awt.Desktop.Action;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
@@ -104,7 +106,7 @@ public class AuditController {
      * @return
      */
     public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
-        Collection<AuditEventValueObject> result = new HashSet<AuditEventValueObject>();
+        Collection<AuditEventValueObject> result = new HashSet<>();
 
         Auditable entity = getAuditable( e );
 
@@ -116,6 +118,11 @@ public class AuditController {
         Collection<AuditEvent> events = auditEventService.getEvents( entity );
         for ( AuditEvent ev : events ) {
             if ( ev == null ) continue;
+            /*
+             * Hide generic update events.
+             */
+            if ( ev.getAction().equals( AuditAction.UPDATE ) && ev.getEventType() == null ) continue;
+
             result.add( new AuditEventValueObject( ev ) );
         }
 
