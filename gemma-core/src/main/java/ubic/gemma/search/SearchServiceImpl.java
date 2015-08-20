@@ -1567,12 +1567,12 @@ public class SearchServiceImpl implements SearchService {
         // search' situations. If we do wildcards on very short queries we get too many results.
         Collection<Gene> geneSet = new HashSet<Gene>();
         if ( searchString.length() <= 2 ) {
-            // case 0: user entered a very short string. We search only for exact matches.
+            // case 0: we got no result syet, or user entered a very short string. We search only for exact matches.
             geneSet.addAll( geneService.findByOfficialSymbolInexact( exactString ) );
-        } else if ( searchString.length() > 2 && inexactString.endsWith( "%" ) ) {
-            // case 1: user asked for wildcard. We allow this on strings of length 3 or more.
+        } else if ( inexactString.endsWith( "%" ) ) {
+            // case 1: user explicitly asked for wildcard. We allow this on strings of length 3 or more.
             geneSet.addAll( geneService.findByOfficialSymbolInexact( inexactString ) );
-        } else if ( searchString.length() > 3 && searchString.length() < 6 ) {
+        } else if ( searchString.length() > 3 ) {
             // case 2: user did not ask for a wildcard, but we add it anyway, if the string is 4 or 5 characters.
             if ( !inexactString.endsWith( "%" ) ) {
                 inexactString = inexactString + "%";
@@ -2392,6 +2392,15 @@ public class SearchServiceImpl implements SearchService {
 
         }
 
+        List<SearchResult> rawResults = new ArrayList<>();
+
+        // do gene first first before we munge the query too much.
+        Collection<SearchResult> genes = null;
+        if ( settings.getSearchGenes() ) {
+            genes = geneSearch( settings, webSpeedSearch );
+            accreteResults( rawResults, genes );
+        }
+
         String[] searchTerms = searchString.split( "\\s+" );
 
         // some strings of size 1 cause lucene to barf and they were slipping through in multi-term queries, get rid of
@@ -2413,17 +2422,9 @@ public class SearchServiceImpl implements SearchService {
             return new HashMap<Class<?>, List<SearchResult>>();
         }
 
-        List<SearchResult> rawResults = new ArrayList<SearchResult>();
-
         if ( settings.getSearchExperiments() ) {
             Collection<SearchResult> foundEEs = expressionExperimentSearch( settings );
             rawResults.addAll( foundEEs );
-        }
-
-        Collection<SearchResult> genes = null;
-        if ( settings.getSearchGenes() ) {
-            genes = geneSearch( settings, webSpeedSearch );
-            accreteResults( rawResults, genes );
         }
 
         // SearchSettings persistent entity does not contain a usePhenotypes property that these logic requires
