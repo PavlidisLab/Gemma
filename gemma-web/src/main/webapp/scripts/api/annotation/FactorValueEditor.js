@@ -122,6 +122,7 @@ Gemma.FactorValueGrid = Ext
                termKey : "factorvalue"
             } );
             var categoryEditor = new Ext.grid.GridEditor( this.categoryCombo );
+            // when user selects a category from the combo.
             this.categoryCombo.on( "select", function( combo, record, index ) {
                categoryEditor.completeEdit();
             } );
@@ -130,8 +131,8 @@ Gemma.FactorValueGrid = Ext
                lazyRender : true,
                taxonId : this.taxonId
             } );
-
             var valueEditor = new Ext.grid.GridEditor( this.valueCombo );
+            // when user selects an item from the search results.
             this.valueCombo.on( "select", function( combo, record, index ) {
                valueEditor.completeEdit();
             } );
@@ -169,7 +170,7 @@ Gemma.FactorValueGrid = Ext
                experimentalDesign : this.experimentalDesign
             } );
 
-            var FACTOR_VALUE_COLUMN = 0;
+            var FACTOR_VALUE_COLUMN = 0; // The id.
             var CATEGORY_COLUMN = 1;
             var VALUE_COLUMN = 2;
             this.autoExpandColumn = VALUE_COLUMN;

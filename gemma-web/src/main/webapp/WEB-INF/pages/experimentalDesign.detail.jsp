@@ -15,7 +15,7 @@
 
 <input type="hidden" id="expressionExperimentID" value="${expressionExperiment.id}" />
 <input type="hidden" id="taxonId" value="${taxonId}" />
-2c
+
 <input type="hidden" id="experimentalDesignID" value="${experimentalDesign.id}" />
 <input type="hidden" id="currentUserCanEdit" value="${currentUserCanEdit}" />
 

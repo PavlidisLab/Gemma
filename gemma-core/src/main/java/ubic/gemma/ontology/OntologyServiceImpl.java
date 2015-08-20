@@ -497,7 +497,7 @@ public class OntologyServiceImpl implements OntologyService {
                 previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
                 continue;
             }
-            log.info( "saw " + key + " (" + key + ")" );
+            if ( log.isDebugEnabled() ) log.debug( "saw " + key + " (" + key + ")" );
             CharacteristicValueObject vo = new CharacteristicValueObject( c );
             vo.setCategory( null );
             vo.setCategoryUri( null ); // to avoid us counting separately by category.
@@ -1076,28 +1076,30 @@ public class OntologyServiceImpl implements OntologyService {
      */
     private void searchForGenes( String queryString, String categoryUri, Taxon taxon,
             Collection<CharacteristicValueObject> searchResults ) {
-        if ( categoryUri == null ) return;
+        // if ( categoryUri == null ) return;
+        //
+        // // genotype, genetic modification, molecular entity.
+        // if ( categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000510" )
+        // || categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000513" )
+        // || categoryUri.equals( "http://purl.org/obo/owl/CHEBI#CHEBI_23367" ) ) {
 
-        // genotype, genetic modification, molecular entity.
-        if ( categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000510" )
-                || categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000513" )
-                || categoryUri.equals( "http://purl.org/obo/owl/CHEBI#CHEBI_23367" ) ) {
+        if ( taxon == null ) return;
 
-            SearchSettings ss = SearchSettings.Factory.newInstance();
-            ss.setQuery( queryString );
-            ss.noSearches();
-            ss.setTaxon( taxon );
-            ss.setSearchGenes( true );
-            Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true, false );
+        SearchSettings ss = SearchSettings.Factory.newInstance();
+        ss.setQuery( queryString );
+        ss.noSearches();
+        ss.setTaxon( taxon );
+        ss.setSearchGenes( true );
+        Map<Class<?>, List<SearchResult>> geneResults = this.searchService.search( ss, true, false );
 
-            if ( geneResults.containsKey( Gene.class ) ) {
-                for ( SearchResult sr : geneResults.get( Gene.class ) ) {
-                    Gene g = ( Gene ) sr.getResultObject();
-                    log.debug( "Search for " + queryString + " returned: " + g );
-                    searchResults.add( new CharacteristicValueObject( gene2Characteristic( g ) ) );
-                }
+        if ( geneResults.containsKey( Gene.class ) ) {
+            for ( SearchResult sr : geneResults.get( Gene.class ) ) {
+                Gene g = ( Gene ) sr.getResultObject();
+                if ( log.isDebugEnabled() ) log.debug( "Search for " + queryString + " returned: " + g );
+                searchResults.add( new CharacteristicValueObject( gene2Characteristic( g ) ) );
             }
         }
+        // }
     }
 
     /**
