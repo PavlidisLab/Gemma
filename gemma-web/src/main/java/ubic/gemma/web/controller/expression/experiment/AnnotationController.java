@@ -122,7 +122,7 @@ public class AnnotationController {
      * AJAX. Find terms for tagging, etc.
      * 
      * @param givenQueryString
-     * @param categoryUri
+     * @param categoryUri Currently not used as it is not always set properly.
      * @param taxonId
      * @return
      */

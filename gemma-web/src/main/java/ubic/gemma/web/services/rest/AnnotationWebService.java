@@ -58,7 +58,7 @@ public class AnnotationWebService {
      * cost: slightly slower system startup).
      * 
      * @param givenQueryString
-     * @param categoryUri
+     * @param categoryUri Currently not used, generally.
      * @param taxonId
      * @return
      */
