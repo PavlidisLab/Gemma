@@ -82,12 +82,11 @@ public interface OntologyService extends InitializingBean {
      * match the search term exactly
      * 
      * @param givenQueryString
-     * @param categoryUri
-     * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant.
+     * @param taxon Only used if we're going to search for genes or taxon is otherwise relevant; if null, restriction is
+     *        not used.
      * @return
      */
-    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString,
-            String categoryUri, Taxon taxon );
+    public abstract Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon );
 
     /**
      * @return terms which are allowed for use in the Category of a Characteristic

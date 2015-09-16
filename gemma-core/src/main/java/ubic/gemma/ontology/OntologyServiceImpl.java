@@ -411,8 +411,7 @@ public class OntologyServiceImpl implements OntologyService {
      * ubic.gemma.model.genome.Taxon)
      */
     @Override
-    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, String categoryUri,
-            Taxon taxon ) {
+    public Collection<CharacteristicValueObject> findTermsInexact( String givenQueryString, Taxon taxon ) {
 
         if ( StringUtils.isBlank( givenQueryString ) ) return null;
 
@@ -438,7 +437,7 @@ public class OntologyServiceImpl implements OntologyService {
 
         // FIXME these are not going in the right order. But that's usually okay because if we are returning genes,
         // that's probably all we are returning (?)
-        searchForGenes( queryString, categoryUri, taxon, searchResults );
+        searchForGenes( queryString, taxon, searchResults );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             if ( !serv.isOntologyLoaded() ) continue;
@@ -1070,12 +1069,10 @@ public class OntologyServiceImpl implements OntologyService {
      * Look for genes, but only for certain categoriUris (genotype, etc.)
      * 
      * @param queryString
-     * @param categoryUri if null, this method doesn't do anything.
      * @param taxon okay if null, but then all matches returned.
      * @param searchResults added to this
      */
-    private void searchForGenes( String queryString, String categoryUri, Taxon taxon,
-            Collection<CharacteristicValueObject> searchResults ) {
+    private void searchForGenes( String queryString, Taxon taxon, Collection<CharacteristicValueObject> searchResults ) {
         // if ( categoryUri == null ) return;
         //
         // // genotype, genetic modification, molecular entity.
@@ -1083,7 +1080,7 @@ public class OntologyServiceImpl implements OntologyService {
         // || categoryUri.equals( "http://www.ebi.ac.uk/efo/EFO_0000513" )
         // || categoryUri.equals( "http://purl.org/obo/owl/CHEBI#CHEBI_23367" ) ) {
 
-        if ( taxon == null ) return;
+        // f if ( taxon == null ) return;
 
         SearchSettings ss = SearchSettings.Factory.newInstance();
         ss.setQuery( queryString );

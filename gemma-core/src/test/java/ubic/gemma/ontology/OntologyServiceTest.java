@@ -51,7 +51,7 @@ public class OntologyServiceTest extends BaseSpringContextTest {
         os.getDiseaseOntologyService().loadTermsInNameSpace(
                 this.getClass().getResourceAsStream( "/data/loader/ontology/dotest.owl.xml" ) );
 
-        Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null, null );
+        Collection<CharacteristicValueObject> name = os.findTermsInexact( "diarrhea", null );
 
         assertTrue( name.size() > 0 );
 
