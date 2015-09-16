@@ -22,8 +22,8 @@ AnnotationController._path = '/Gemma/dwr';
 AnnotationController.autoTag = function( p0, callback ) {
    dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'autoTag', p0, callback );
 };
-AnnotationController.findTerm = function( p0, p1, p2, callback ) {
-   dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'findTerm', p0, p1, p2, callback );
+AnnotationController.findTerm = function( p0, p1, callback ) {
+   dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'findTerm', p0, p1, callback );
 };
 AnnotationController.createExperimentTag = function( p0, p1, callback ) {
    dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'createExperimentTag', p0, p1, callback );

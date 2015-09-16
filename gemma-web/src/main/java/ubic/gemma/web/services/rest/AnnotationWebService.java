@@ -58,15 +58,14 @@ public class AnnotationWebService {
      * cost: slightly slower system startup).
      * 
      * @param givenQueryString
-     * @param categoryUri Currently not used, generally.
-     * @param taxonId
+     * @param taxonId can be null
      * @return
      */
     @GET
     @Path("/findTerm")
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<CharacteristicValueObject> findTerm( @QueryParam("query") String givenQueryString,
-            @QueryParam("category") String categoryUri, @QueryParam("taxonId") Long taxonId ) {
+            @QueryParam("taxonId") Long taxonId ) {
         if ( StringUtils.isBlank( givenQueryString ) ) {
             return new HashSet<CharacteristicValueObject>();
         }
@@ -74,6 +73,6 @@ public class AnnotationWebService {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
         }
-        return ontologyService.findTermsInexact( givenQueryString, categoryUri, taxon );
+        return ontologyService.findTermsInexact( givenQueryString, taxon );
     }
 }

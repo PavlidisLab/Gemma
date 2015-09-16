@@ -71,7 +71,7 @@ Gemma.CharacteristicCombo = Ext
                               // This is only used when directly calling 'load', which is not
                               // usual but can be used for tests.
                               // NOTE decided not to pass this.taxonId.
-                              return [ request.params[0], this.characteristic.categoryUri, null ];
+                              return [ request.params[0], null ];
                            }.createDelegate( this )
                         }
                      }

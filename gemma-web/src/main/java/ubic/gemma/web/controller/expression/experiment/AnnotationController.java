@@ -123,10 +123,11 @@ public class AnnotationController {
      * 
      * @param givenQueryString
      * @param categoryUri Currently not used as it is not always set properly.
-     * @param taxonId
+     * @param taxonId only used for genes, but generally this restriction is problematic for factorvalues, which is an
+     *        important use case.
      * @return
      */
-    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, String categoryUri, Long taxonId ) {
+    public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) {
         if ( StringUtils.isBlank( givenQueryString ) ) {
             return new HashSet<CharacteristicValueObject>();
         }
@@ -134,7 +135,7 @@ public class AnnotationController {
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
         }
-        return ontologyService.findTermsInexact( givenQueryString, categoryUri, taxon );
+        return ontologyService.findTermsInexact( givenQueryString, taxon );
     }
 
     /**
