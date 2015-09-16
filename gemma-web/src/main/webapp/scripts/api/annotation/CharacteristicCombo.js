@@ -70,7 +70,8 @@ Gemma.CharacteristicCombo = Ext
                            getDwrArgsFunction : function( request ) {
                               // This is only used when directly calling 'load', which is not
                               // usual but can be used for tests.
-                              return [ request.params[0], this.characteristic.categoryUri, this.taxonId ];
+                              // NOTE decided not to pass this.taxonId.
+                              return [ request.params[0], this.characteristic.categoryUri, null ];
                            }.createDelegate( this )
                         }
                      }
