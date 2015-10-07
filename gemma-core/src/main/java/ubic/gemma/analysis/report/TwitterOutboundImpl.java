@@ -64,7 +64,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
     private static Log log = LogFactory.getLog( TwitterOutboundImpl.class.getName() );
 
     /**
-     * 
+     * FIXME this shortener no longer works.
      */
     private static final String SHORTENER = "http://to.ly/api.php?json=0&longurl=";
 
@@ -244,7 +244,8 @@ public class TwitterOutboundImpl implements TwitterOutbound {
     }
 
     private String formExperimentUrl( ExpressionExperiment ee ) {
-        return shortenUrl( EXPERIMENT_URL_BASE + ee.getId() );
+        // return shortenUrl( EXPERIMENT_URL_BASE + ee.getId() );
+        return EXPERIMENT_URL_BASE + ee.getId();
     }
 
     private String shortenUrl( String url ) {
