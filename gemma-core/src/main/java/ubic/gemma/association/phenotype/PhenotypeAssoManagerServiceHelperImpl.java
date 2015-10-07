@@ -231,6 +231,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
         phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phe.setGene( this.geneService.findByNCBIId( evidenceValueObject.getGeneNCBI() ) );
+        phe.setRelationship( evidenceValueObject.getRelationship() );
 
         if ( evidenceValueObject.getPhenotypeAssPubVO() != null
                 && evidenceValueObject.getPhenotypeAssPubVO().size() != 0 ) {
