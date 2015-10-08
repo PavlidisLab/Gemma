@@ -61,13 +61,13 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         String[] args = new String[8];
         // user
         args[0] = "-u";
-        args[1] = "administrator";
+        args[1] = "userhere";
         // password
         args[2] = "-p";
-        args[3] = "administrator";
+        args[3] = "";
         // the path of the file
         args[4] = "-f";
-        args[5] = "/home/nicolas/workspace/Gemma/gemma-core/src/main/resources/neurocarta/finalResults.tsv";
+        args[5] = "pathhere";
         // create the evidence in the database, can be set to false for testing
         args[6] = "-c";
         args[7] = "true";
@@ -124,7 +124,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
             // make sure all pubmed exists
             if ( !this.errorMessage.isEmpty() ) {
-
+                System.out.println( errorMessage );
                 this.writeAllExceptions();
 
                 this.logFileWriter.close();
@@ -155,7 +155,9 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                         }
                     } catch ( RuntimeException ex1 ) {
                         log.error( ExceptionUtils.getStackTrace( ex1 ) );
+                        System.out.println( ex1.getMessage() );
                         this.writeError( "RuntimeException trying to make evidence again 1: " + e.getGeneNCBI() );
+                        System.out.println( e.toString() );
 
                         try {
                             // something is wrong with the pubmed api, wait it out
@@ -299,6 +301,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         String databaseID = tokens[this.mapColumns.get( "DatabaseLink" )].trim();
 
         String originalPhenotype = tokens[this.mapColumns.get( "OriginalPhenotype" )].trim();
+        System.out.println( "original phenotype is: " + originalPhenotype );
         String phenotypeMapping = tokens[this.mapColumns.get( "PhenotypeMapping" )].trim();
 
         verifyMappingType( phenotypeMapping );
@@ -317,6 +320,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         evidence.setIsNegativeEvidence( isNegativeEvidence );
         evidence.setOriginalPhenotype( originalPhenotype );
         evidence.setPhenotypeMapping( phenotypeMapping );
+        evidence.setRelationship( "gene-disease association" ); // ***have to change this per data src
 
         if ( this.mapColumns.get( "Score" ) != null && this.mapColumns.get( "ScoreType" ) != null
                 && this.mapColumns.get( "Strength" ) != null ) {
@@ -469,16 +473,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         // we cannot find the specific phenotype given
         if ( ot == null ) {
-            writeError( "phenotype not found in disease, hp and mp Ontology : " + phenotypeToSearch );
-            return null;
+            // ***flawed writeError( "phenotype not found in disease, hp and mp Ontology : " + phenotypeToSearch );
+            // return null;
         }
 
         // check for obsolete terms
-        if ( ot.isTermObsolete() ) {
-            writeError( "TERM IS OBSOLETE: " + ot.getLabel() + " " + ot.getUri() );
-        }
+        // if ( ot.isTermObsolete() ) {
+        // writeError( "TERM IS OBSOLETE: " + ot.getLabel() + " " + ot.getUri() );
+        // }
 
-        return ot.getUri();
+        return phenotypeToSearch;// /***testing...ot.getUri();
     }
 
     /**
@@ -488,6 +492,8 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
      * @throws Exception
      */
     private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
+
+        System.out.println( "Problem: gene id " + geneId + " gene name: " + geneName );
 
         Gene g = this.geneService.findByNCBIId( new Integer( geneId ) );
 
@@ -839,18 +845,22 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                     evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
                 } else if ( evidenceCode.equalsIgnoreCase( "IEP" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.setRelationship( "altered expression association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "IGI" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
                 } else if ( evidenceCode.equalsIgnoreCase( "IED" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
                 } else if ( evidenceCode.equalsIgnoreCase( "IAGP" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.setRelationship( "genetic association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "QTM" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
                 } else if ( evidenceCode.equalsIgnoreCase( "IPM" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.setRelationship( "genetic association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "IMP" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.setRelationship( "mutation association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "IDA" ) ) {
                     evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
                 }
