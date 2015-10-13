@@ -1880,7 +1880,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<>();
 
             for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-                findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
+                if(tc!=null)
+                    findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
             }
             treesPhenotypes = finalTreesWithRoots;
         }
