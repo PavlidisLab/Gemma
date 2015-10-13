@@ -1836,7 +1836,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             } else {
                 try {
                     // find the ontology term using the valueURI
-                    OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
+                    OntologyTerm ontologyTerm = null;
+                    if(this.ontologyHelper.findOntologyTermByUri( valueUri )!=null) // should prevent exception
+                    {
+                        ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
 
                     // we don't show obsolete terms
                     if ( ontologyTerm.isTermObsolete() ) {
@@ -1859,6 +1862,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
 
                     }
+                }
 
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
