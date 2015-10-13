@@ -2075,7 +2075,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         } else {
             // found a root, no more parents
-            finalTreesWithRoots.add( tc );
+            if(tc!=null)
+                finalTreesWithRoots.add( tc );
         }
     }
 
