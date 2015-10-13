@@ -72,6 +72,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.ontology.providers.GemmaOntologyService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -219,11 +220,13 @@ public class OntologyServiceImpl implements OntologyService {
     private ExpressionExperimentService eeService;
     private ExperimentalFactorOntologyService experimentalFactorOntologyService = new ExperimentalFactorOntologyService();
     private FMAOntologyService fmaOntologyService = new FMAOntologyService();
+    private GemmaOntologyService gemmaOntologyService = new GemmaOntologyService();
     @Autowired
     private GeneOntologyService geneOntologyService;
     private HumanDevelopmentOntologyService humanDevelopmentOntologyService = new HumanDevelopmentOntologyService();
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = new HumanPhenotypeOntologyService();
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = new MammalianPhenotypeOntologyService();
+
     private MouseDevelopmentOntologyService mouseDevelopmentOntologyService = new MouseDevelopmentOntologyService();
 
     private NIFSTDOntologyService nifstdOntologyService = new NIFSTDOntologyService();
@@ -241,6 +244,7 @@ public class OntologyServiceImpl implements OntologyService {
     public void afterPropertiesSet() {
 
         // We search in this order.
+        this.ontologyServices.add( this.gemmaOntologyService );
         this.ontologyServices.add( this.experimentalFactorOntologyService );
         this.ontologyServices.add( this.obiService );
         this.ontologyServices.add( this.nifstdOntologyService );
@@ -259,6 +263,43 @@ public class OntologyServiceImpl implements OntologyService {
             serv.startInitializationThread( false );
         }
 
+    }
+
+    /**
+     * @param searchResults
+     * @param previouslyUsedInSystem
+     */
+    public void countOccurrences( Collection<CharacteristicValueObject> searchResults,
+            Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+        Set<String> uris = new HashSet<>();
+        for ( CharacteristicValueObject cvo : searchResults ) {
+            uris.add( cvo.getValueUri() );
+        }
+
+        Collection<Characteristic> existingCharacteristicsUsingTheseTerms = characteristicService.findByUri( uris );
+        for ( Characteristic c : existingCharacteristicsUsingTheseTerms ) {
+            // count up number of usages; see bug 3897
+            String key = foundValueKey( c );
+            if ( previouslyUsedInSystem.containsKey( key ) ) {
+                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
+                continue;
+            }
+            if ( log.isDebugEnabled() ) log.debug( "saw " + key + " (" + key + ")" );
+            CharacteristicValueObject vo = new CharacteristicValueObject( c );
+            vo.setCategory( null );
+            vo.setCategoryUri( null ); // to avoid us counting separately by category.
+            vo.setAlreadyPresentInDatabase( true );
+            vo.incrementOccurrenceCount();
+            previouslyUsedInSystem.put( key, vo );
+        }
+        // ///
+
+        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
+            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of "
+                    + existingCharacteristicsUsingTheseTerms.size() );
     }
 
     /**
@@ -472,81 +513,6 @@ public class OntologyServiceImpl implements OntologyService {
         }
 
         return sortedResults;
-
-    }
-
-    /**
-     * @param searchResults
-     * @param previouslyUsedInSystem
-     */
-    public void countOccurrences( Collection<CharacteristicValueObject> searchResults,
-            Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-        Set<String> uris = new HashSet<>();
-        for ( CharacteristicValueObject cvo : searchResults ) {
-            uris.add( cvo.getValueUri() );
-        }
-
-        Collection<Characteristic> existingCharacteristicsUsingTheseTerms = characteristicService.findByUri( uris );
-        for ( Characteristic c : existingCharacteristicsUsingTheseTerms ) {
-            // count up number of usages; see bug 3897
-            String key = foundValueKey( c );
-            if ( previouslyUsedInSystem.containsKey( key ) ) {
-                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
-                continue;
-            }
-            if ( log.isDebugEnabled() ) log.debug( "saw " + key + " (" + key + ")" );
-            CharacteristicValueObject vo = new CharacteristicValueObject( c );
-            vo.setCategory( null );
-            vo.setCategoryUri( null ); // to avoid us counting separately by category.
-            vo.setAlreadyPresentInDatabase( true );
-            vo.incrementOccurrenceCount();
-            previouslyUsedInSystem.put( key, vo );
-        }
-        // ///
-
-        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
-            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
-                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of "
-                    + existingCharacteristicsUsingTheseTerms.size() );
-    }
-
-    /**
-     * @param queryString
-     * @param previouslyUsedInSystem
-     * @return
-     */
-    private void countOccurrences( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
-        StopWatch watch = new StopWatch();
-        watch.start();
-
-        // this should be very fast.
-        Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
-
-        /*
-         * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
-         * is always ignored; remove duplicates.)
-         */
-        for ( Characteristic characteristic : foundChars ) {
-            // count up number of usages; see bug 3897
-            String key = foundValueKey( characteristic );
-            if ( previouslyUsedInSystem.containsKey( key ) ) {
-                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
-                continue;
-            }
-            log.info( "saw " + key + " (" + key + ") for " + characteristic );
-            CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
-            vo.setCategory( null );
-            vo.setCategoryUri( null ); // to avoid us counting separately by category.
-            vo.setAlreadyPresentInDatabase( true );
-            vo.incrementOccurrenceCount();
-            previouslyUsedInSystem.put( key, vo );
-        }
-
-        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
-            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
-                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
 
     }
 
@@ -876,45 +842,41 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     ** Convert raw ontology resources into VocabCharacteristics.
-     * 
-     * @param terms
-     * @param filterTerm
+     * @param queryString
+     * @param previouslyUsedInSystem
      * @return
      */
-    private Collection<VocabCharacteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
+    private void countOccurrences( String queryString, Map<String, CharacteristicValueObject> previouslyUsedInSystem ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
 
-        Collection<VocabCharacteristic> results = new HashSet<>();
+        // this should be very fast.
+        Collection<Characteristic> foundChars = characteristicService.findByValue( queryString );
 
-        if ( ( terms == null ) || ( terms.isEmpty() ) ) return results;
-
-        for ( OntologyResource res : terms ) {
-
-            if ( res == null ) continue;
-
-            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-            if ( res instanceof OntologyTerm ) {
-                OntologyTerm term = ( OntologyTerm ) res;
-                vc.setValue( term.getTerm() );
-                vc.setValueUri( term.getUri() );
-                vc.setDescription( term.getComment() );
-            } else if ( res instanceof OntologyIndividual ) {
-                OntologyIndividual indi = ( OntologyIndividual ) res;
-                vc.setValue( indi.getLabel() );
-                vc.setValueUri( indi.getUri() );
-                vc.setDescription( "Individual" );
-            } else {
-                log.warn( "What is it? " + res );
+        /*
+         * Want to flag in the web interface that these are already used by Gemma (also ignore capitalization; category
+         * is always ignored; remove duplicates.)
+         */
+        for ( Characteristic characteristic : foundChars ) {
+            // count up number of usages; see bug 3897
+            String key = foundValueKey( characteristic );
+            if ( previouslyUsedInSystem.containsKey( key ) ) {
+                previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
                 continue;
             }
-
-            if ( vc.getValue() == null ) continue;
-            results.add( vc );
-
+            log.info( "saw " + key + " (" + key + ") for " + characteristic );
+            CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
+            vo.setCategory( null );
+            vo.setCategoryUri( null ); // to avoid us counting separately by category.
+            vo.setAlreadyPresentInDatabase( true );
+            vo.incrementOccurrenceCount();
+            previouslyUsedInSystem.put( key, vo );
         }
-        log.debug( "returning " + results.size() + " terms after filter" );
 
-        return results;
+        if ( log.isDebugEnabled() || ( watch.getTime() > 100 && previouslyUsedInSystem.size() > 0 ) )
+            log.info( "found " + previouslyUsedInSystem.size() + " matching characteristics used in the database"
+                    + " in " + watch.getTime() + " ms " + " Filtered from initial set of " + foundChars.size() );
+
     }
 
     /** given a collection of characteristics add them to the correct List */
@@ -1163,6 +1125,48 @@ public class OntologyServiceImpl implements OntologyService {
         sortedTerms.addAll( sortedResultsBottom );
 
         return sortedTerms;
+    }
+
+    /**
+     ** Convert raw ontology resources into VocabCharacteristics.
+     * 
+     * @param terms
+     * @param filterTerm
+     * @return
+     */
+    private Collection<VocabCharacteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
+
+        Collection<VocabCharacteristic> results = new HashSet<>();
+
+        if ( ( terms == null ) || ( terms.isEmpty() ) ) return results;
+
+        for ( OntologyResource res : terms ) {
+
+            if ( res == null ) continue;
+
+            VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
+            if ( res instanceof OntologyTerm ) {
+                OntologyTerm term = ( OntologyTerm ) res;
+                vc.setValue( term.getTerm() );
+                vc.setValueUri( term.getUri() );
+                vc.setDescription( term.getComment() );
+            } else if ( res instanceof OntologyIndividual ) {
+                OntologyIndividual indi = ( OntologyIndividual ) res;
+                vc.setValue( indi.getLabel() );
+                vc.setValueUri( indi.getUri() );
+                vc.setDescription( "Individual" );
+            } else {
+                log.warn( "What is it? " + res );
+                continue;
+            }
+
+            if ( vc.getValue() == null ) continue;
+            results.add( vc );
+
+        }
+        log.debug( "returning " + results.size() + " terms after filter" );
+
+        return results;
     }
 
 }
