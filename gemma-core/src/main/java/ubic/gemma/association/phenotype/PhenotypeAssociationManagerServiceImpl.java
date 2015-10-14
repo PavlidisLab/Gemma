@@ -1824,7 +1824,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // represents each phenotype and children found in the Ontology, TreeSet used to order trees [why do we need a
         // TreeSet? Can't we just sort at the end?]
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
-
+        OntologyTerm ontologyTerm = null;
         // creates the tree structure
         for ( String valueUri : allPhenotypesGenesAssociations ) {
 
@@ -1836,7 +1836,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             } else {
                 try {
                     // find the ontology term using the valueURI
-                    OntologyTerm ontologyTerm = null;
+                    
                     if(this.ontologyHelper.findOntologyTermByUri( valueUri )!=null) // should prevent exception
                     {
                         ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
@@ -2075,7 +2075,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         } else {
             // found a root, no more parents
-            if(tc!=null)
+            if(tc!=null && ontologyTerm!=null)
                 finalTreesWithRoots.add( tc );
         }
     }
