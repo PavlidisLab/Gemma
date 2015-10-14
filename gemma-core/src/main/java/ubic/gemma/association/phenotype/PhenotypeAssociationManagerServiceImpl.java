@@ -2046,6 +2046,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
+        
+        if(
+        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/HP_0007053") &&
+        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/HP_0008671") &&
+        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_544") &&
+        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_0050552"))
+        {
 
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
 
@@ -2078,6 +2085,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if(tc!=null && ontologyTerm!=null)
                 finalTreesWithRoots.add( tc );
         }
+    }
     }
 
     /** For a given Ontology Term, count the occurence of the term + children in the database */
