@@ -2056,7 +2056,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/HP_0007053") &&
         !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/HP_0008671") &&
         !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_544") &&
-        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_0050552"))
+        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_0050552") &&
+        tc.getValue()!=null && !tc.getValue().equals( "" ))
         {
 
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
@@ -2087,7 +2088,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         } else {
             // found a root, no more parents
-            if(tc!=null && ontologyTerm!=null)
+            if(tc!=null && tc.getValue()!=null && !tc.getValue().equals( "" ) && ontologyTerm!=null)
                 finalTreesWithRoots.add( tc );
         }
     }
