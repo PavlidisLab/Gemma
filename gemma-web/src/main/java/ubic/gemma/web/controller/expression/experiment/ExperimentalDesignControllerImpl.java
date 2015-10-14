@@ -103,8 +103,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Autowired
     private SecurityService securityService;
 
-//    @Autowired
-//    private AuditTrailService auditTrailService;
+    // @Autowired
+    // private AuditTrailService auditTrailService;
 
     /*
      * (non-Javadoc)
@@ -138,8 +138,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             // So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
             // as a fail safe.
             experimentalDesignImporter.importDesign( ee, is );
-//            this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-//                    "ExperimentalDesign imported from file", null );
+            // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+            // "ExperimentalDesign imported from file", null );
             this.experimentReportService.evictFromCache( ee.getId() );
 
         } catch ( IOException e ) {
@@ -178,8 +178,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( ed );
 
-//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-//                "ExperimentalFactor added: " + efvo.getName(), efvo.toString() );
+        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+        // "ExperimentalFactor added: " + efvo.getName(), efvo.toString() );
         this.experimentReportService.evictFromCache( ee.getId() );
 
     }
@@ -251,8 +251,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         factorValueService.update( fv );
 
         ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-//                "FactorValue characteristic added to: " + fv, c.toString() );
+        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+        // "FactorValue characteristic added to: " + fv, c.toString() );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
@@ -323,8 +323,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         for ( Long fvId : fvCol ) {
             ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fvId );
-//            this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "FactorValue deleted: " + fvId,
-//                    null );
+            // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "FactorValue deleted: " + fvId,
+            // null );
             this.experimentReportService.evictFromCache( ee.getId() );
         }
 
@@ -348,6 +348,20 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();
             BioMaterialValueObject bmvo = new BioMaterialValueObject( sample, assay );
+            // hack to allow prettier display of the data.
+            String[] chars = bmvo.getCharacteristics().split( BioMaterialValueObject.CHARACTERISTIC_DELIMITER );
+            Arrays.sort( chars );
+            for ( int i = 0; i < chars.length; i++ ) {
+                String c = chars[i];
+
+                c = c.replaceAll( "(category|value)Uri=(null|http://.+?)(\\s|$)", "" ).replaceAll( "Category = ", "" )
+                        .replaceAll( "Value ", "" );
+                chars[i] = c;
+
+            }
+
+            bmvo.setCharacteristics( StringUtils.join( chars, "<br/>" ) );
+
             result.add( bmvo );
         }
 
@@ -568,8 +582,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
             }
         }
-//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "BioMaterials updated ("
-//                + bmvos.length + " items)", StringUtils.join( bmvos, "\n" ) );
+        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "BioMaterials updated ("
+        // + bmvos.length + " items)", StringUtils.join( bmvos, "\n" ) );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
@@ -643,8 +657,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         ExperimentalFactor ef = experimentalFactorService.load( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "ExperimentalFactors updated",
-//                StringUtils.join( efvos, "\n" ) );
+        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "ExperimentalFactors updated",
+        // StringUtils.join( efvos, "\n" ) );
         if ( ee == null ) throw new IllegalArgumentException( "No experiment for factor: " + ef );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
@@ -735,8 +749,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         FactorValue fv = this.factorValueService.load( fvvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactorValue( fv );
-//        this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-//                "FactorValue characteristics updated", StringUtils.join( fvvos, "\n" ) );
+        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+        // "FactorValue characteristics updated", StringUtils.join( fvvos, "\n" ) );
         this.experimentReportService.evictFromCache( ee.getId() );
 
     }
@@ -780,8 +794,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
 
             if ( ee != null ) {
-//                this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-//                        "ExperimentalFactor deleted: " + ef.getName(), ef.toString() );
+                // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
+                // "ExperimentalFactor deleted: " + ef.getName(), ef.toString() );
                 this.experimentReportService.evictFromCache( ee.getId() );
             }
         }

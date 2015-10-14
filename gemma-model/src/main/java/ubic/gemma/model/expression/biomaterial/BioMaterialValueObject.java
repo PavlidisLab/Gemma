@@ -39,6 +39,7 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
  */
 public class BioMaterialValueObject implements Serializable {
 
+    public static final String CHARACTERISTIC_DELIMITER = "::::";
     private String assayDescription;
     private String assayName;
     private Collection<BioAssayValueObject> bioAssays = new HashSet<>();
@@ -230,7 +231,7 @@ public class BioMaterialValueObject implements Serializable {
      * @return
      */
     private String getCharacteristicString( Collection<Characteristic> characters ) {
-        return StringUtils.join( characters, "," );
+        return StringUtils.join( characters, CHARACTERISTIC_DELIMITER );
     }
 
     /**

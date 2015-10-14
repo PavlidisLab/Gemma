@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.description;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
@@ -57,6 +58,9 @@ public class CharacteristicImpl extends Characteristic {
 
     @Override
     public String toString() {
+        if (StringUtils.isBlank( this.getCategory())) {
+            return "[No category] Value = " + this.getValue();
+        }
         return "Category = " + this.getCategory() + " Value = " + this.getValue();
     }
 
