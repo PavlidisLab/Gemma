@@ -92,7 +92,7 @@ public class BioAssayController {
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
 
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getIdMap( outliers, "bioAssayId" );
+        Map<Long, OutlierDetails> outlierMap = EntityUtils.getIdMap( outliers, "getBioAssayId" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 

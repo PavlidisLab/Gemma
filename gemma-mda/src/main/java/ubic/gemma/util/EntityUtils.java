@@ -111,14 +111,14 @@ public class EntityUtils {
 
     /**
      * @param list
-     * @param fieldName e.g. "id"
+     * @param methodName accessor e.g. "getId"
      * @return
      */
-    public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities, String fieldName ) {
+    public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities, String methodName ) {
         Map<Long, T> result = new HashMap<Long, T>();
 
         for ( T object : entities ) {
-            result.put( getId( object, fieldName ), object );
+            result.put( getId( object, methodName ), object );
         }
 
         return result;
