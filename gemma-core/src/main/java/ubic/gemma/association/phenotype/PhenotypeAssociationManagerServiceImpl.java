@@ -1836,7 +1836,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             } else {
                 try {
                     // find the ontology term using the valueURI
-                    
+                    if(
+                            !valueUri.equals( "http://purl.obolibrary.org/obo/HP_0007053") &&
+                            !valueUri.equals( "http://purl.obolibrary.org/obo/HP_0008671") &&
+                            !valueUri.equals( "http://purl.obolibrary.org/obo/DOID_544") &&
+                            !valueUri.equals( "http://purl.obolibrary.org/obo/DOID_0050552"))
+                    {
                     if(this.ontologyHelper.findOntologyTermByUri( valueUri )!=null) // should prevent exception
                     {
                         ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
@@ -1863,7 +1868,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     }
                 }
-
+                }
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
                         log.warn( "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: "
