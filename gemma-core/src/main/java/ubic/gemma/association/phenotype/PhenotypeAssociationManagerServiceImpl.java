@@ -1824,7 +1824,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // represents each phenotype and children found in the Ontology, TreeSet used to order trees [why do we need a
         // TreeSet? Can't we just sort at the end?]
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
-        OntologyTerm ontologyTerm = null;
+        
         // creates the tree structure
         for ( String valueUri : allPhenotypesGenesAssociations ) {
 
@@ -1836,16 +1836,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             } else {
                 try {
                     // find the ontology term using the valueURI
-                    if(
-                            !valueUri.equals( "http://purl.obolibrary.org/obo/HP_0007053") &&
-                            !valueUri.equals( "http://purl.obolibrary.org/obo/HP_0008671") &&
-                            !valueUri.equals( "http://purl.obolibrary.org/obo/DOID_544") &&
-                            !valueUri.equals( "http://purl.obolibrary.org/obo/DOID_0050552"))
-                    {
-                    if(this.ontologyHelper.findOntologyTermByUri( valueUri )!=null) // should prevent exception
-                    {
-                        ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
-
+                    OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
+                    
                     // we don't show obsolete terms
                     if ( ontologyTerm.isTermObsolete() ) {
                         log.error( "A valueUri found in the database is obsolete: " + valueUri );
@@ -1866,9 +1858,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         }
                         if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
 
-                    }
-                }
-                }
+                    }                
+                
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
                         log.warn( "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: "
@@ -1884,9 +1875,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( withParentTerms ) {
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<>();
 
-            for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-                if(tc!=null)
-                    findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
+            for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {                
+                findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
             }
             treesPhenotypes = finalTreesWithRoots;
         }
@@ -2051,14 +2041,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private void findParentRoot( TreeCharacteristicValueObject tc,
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
-        
-        if(
-        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/HP_0007053") &&
-        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/HP_0008671") &&
-        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_544") &&
-        !tc.getValueUri().equals( "http://purl.obolibrary.org/obo/DOID_0050552") &&
-        tc.getValue()!=null && !tc.getValue().equals( "" ))
-        {
 
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
 
@@ -2088,10 +2070,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         } else {
             // found a root, no more parents
-            if(tc!=null && tc.getValue()!=null && !tc.getValue().equals( "" ) && ontologyTerm!=null)
+            if(tc!=null && tc.getValue()!=null && !tc.getValue().equals( "" ))
                 finalTreesWithRoots.add( tc );
-        }
-    }
+        }    
     }
 
     /** For a given Ontology Term, count the occurence of the term + children in the database */
