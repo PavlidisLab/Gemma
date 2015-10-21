@@ -199,7 +199,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
             this.withinSetGeneCombo.reset();
             this.withinSetGeneCombo.blur();
 
-            Fthis.fireEvent( 'geneListModified', geneSet );
+            this.fireEvent( 'geneListModified', geneSet );
             this.fireEvent( 'doneModification' );
 
          }.createDelegate( this ) /* FIXME error handler */);
