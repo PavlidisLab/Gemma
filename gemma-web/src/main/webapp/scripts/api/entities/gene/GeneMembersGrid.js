@@ -690,7 +690,6 @@ Gemma.GeneMembersSaveGrid = Ext
           * ExpressionExperimentMembersGrid.createDetails
           */
          createDetails : function() {
-
             // if name for new group wasn't passed from parent component, make one
             // up
             if ( !this.selectedGeneSetValueObject
@@ -963,14 +962,13 @@ Gemma.GeneMembersSaveGrid = Ext
             editedGroup.size = this.getGeneIds().length;
             editedGroup.modified = true;
             editedGroup.isPublic = false;
-
             GeneSetController.addSessionGroup( editedGroup, true, // returns datasets added
             function( geneSet ) {
                // should be at least one datasetSet
                if ( geneSet === null ) {
                   return;
                } else {
-                  this.fireEvent( 'geneListModified', geneSet );
+                  this.fireEvent( 'geneListModified', [ geneSet.id ], geneSet.geneIds );
                   this.fireEvent( 'doneModification' );
                }
             }.createDelegate( this ) );
