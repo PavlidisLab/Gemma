@@ -19,7 +19,7 @@ http://www.ebi.ac.uk/efo/EFO_0000635	organism part
 http://www.ebi.ac.uk/efo/EFO_0000651	phenotype
 # deprecated, see bug 4317 
 #http://www.ebi.ac.uk/efo/EFO_0000695	sex 
-http://purl.obolibrary.org/obo/PATO_0000047 biological sex
+http://purl.obolibrary.org/obo/PATO_0000047	biological sex
 http://www.ebi.ac.uk/efo/EFO_0000727	treatment
 http://www.ebi.ac.uk/efo/EFO_0001702	temperature
 http://www.ebi.ac.uk/efo/EFO_0004444	environmental history

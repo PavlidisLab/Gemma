@@ -1,5 +1,5 @@
 #$ Age : Category=age Type=Continuous
-#$ Sex : Category=sex Type=Categorical
+#$ Sex : Category=biological_sex Type=Categorical
 #$ Race : Category=phenotype Type=Categorical
 #$ Profile : Category=disease Type=Categorical
 #$ DSM IV Codes : Category=disease Type=Categorical
