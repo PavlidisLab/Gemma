@@ -2315,7 +2315,8 @@ public class GeoConverterImpl implements GeoConverter {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000428";
             term = "dose";
         } else if ( varType.equals( VariableType.gender ) ) {
-            uri = "http://www.ebi.ac.uk/efo/EFO_0000695";
+            // see bug 4317
+            uri = "http://purl.obolibrary.org/obo/PATO_0000047";
             term = "sex";
         } else if ( varType.equals( VariableType.genotypeOrVariation ) ) {
             uri = "http://www.ebi.ac.uk/efo/EFO_0000513";
