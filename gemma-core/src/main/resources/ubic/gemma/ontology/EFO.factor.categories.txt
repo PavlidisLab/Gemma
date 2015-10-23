@@ -33,6 +33,8 @@ http://www.ebi.ac.uk/efo/EFO_0000246	age
 http://www.ebi.ac.uk/efo/EFO_0000507	generation
 http://www.ebi.ac.uk/efo/EFO_0000542	individual
 http://www.ebi.ac.uk/efo/EFO_0000428	dose
+# see bug 4319
+http://www.ebi.ac.uk/efo/EFO_0005066	collection of material
 # OK for EFV only
 http://www.ebi.ac.uk/efo/EFO_0004425	initial time point
 # OK for EFC and EFV
