@@ -1164,7 +1164,7 @@ public class ExpressionExperimentQCController extends BaseController {
         final double OFFSET_FACTOR = 0.05f;
 
         // MV plot filtering
-        final double zScoreMax = 2;
+        final double ZSCORE_MAX = 2;
 
         // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
         final int MAX_IMAGE_SIZE_PX = 5;
@@ -1174,7 +1174,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         // filter out extreme outliers by using a z-score cutoff, specially useful for GeneSpring data, e.g. GSE27262
-        MeanVarianceRelation filteredMvr = removeMVOutliers( mvr, zScoreMax );
+        MeanVarianceRelation filteredMvr = removeMVOutliers( mvr, ZSCORE_MAX );
 
         // get data points
         XYSeriesCollection collection = getMeanVariance( filteredMvr );
@@ -1234,6 +1234,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * zscore(variance) > zscoreMax)
      * 
      * @param mvr
+     * @param zscoreMax
      * @return
      */
     private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
@@ -1258,6 +1259,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 continue;
             }
 
+            // AIOB error sometimes?
             filteredMeans.add( means.getQuick( i ) );
             filteredVars.add( vars.getQuick( i ) );
             filteredLowessX.add( lowessXs.getQuick( i ) );
@@ -1288,6 +1290,7 @@ public class ExpressionExperimentQCController extends BaseController {
         for ( int i = 0; i < d.size(); i++ ) {
             z.add( Math.abs( d.getQuick( i ) - mean ) / sd );
         }
+        assert z.size() == d.size();
         return z;
     }
 
