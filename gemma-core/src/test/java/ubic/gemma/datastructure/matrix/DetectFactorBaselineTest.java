@@ -18,6 +18,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import ubic.gemma.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -37,7 +38,7 @@ public class DetectFactorBaselineTest {
         c.setValue( "control_group" );
         fv.getCharacteristics().add( c );
 
-        boolean actual = ExpressionDataMatrixColumnSort.isBaselineCondition( fv );
+        boolean actual = BaselineSelection.isBaselineCondition( fv );
         assertTrue( actual );
 
     }
@@ -52,7 +53,7 @@ public class DetectFactorBaselineTest {
         c.setValueUri( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201" );
         fv.getCharacteristics().add( c );
 
-        boolean actual = ExpressionDataMatrixColumnSort.isBaselineCondition( fv );
+        boolean actual = BaselineSelection.isBaselineCondition( fv );
         assertTrue( actual );
 
     }
@@ -67,7 +68,7 @@ public class DetectFactorBaselineTest {
         c.setValueUri( "http://purl.org/obo/owl/CHEBI#CHEBI_16236" );
         fv.getCharacteristics().add( c );
 
-        boolean actual = ExpressionDataMatrixColumnSort.isBaselineCondition( fv );
+        boolean actual = BaselineSelection.isBaselineCondition( fv );
         assertTrue( !actual );
 
     }

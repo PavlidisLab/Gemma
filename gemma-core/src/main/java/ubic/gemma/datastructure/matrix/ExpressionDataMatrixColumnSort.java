@@ -31,14 +31,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.analysis.expression.diff.BaselineSelection;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -61,59 +59,8 @@ import ubic.gemma.util.EntityUtils;
  * @version $Id$
  */
 public class ExpressionDataMatrixColumnSort {
-    private static Collection<String> controlGroupTerms = new HashSet<String>();
 
     private static Log log = LogFactory.getLog( ExpressionDataMatrixColumnSort.class.getName() );
-
-    static {
-        /*
-         * Values or ontology terms we treat as 'baseline'. See also {@link
-         * http://www.chibi.ubc.ca/faculty/pavlidis/wiki
-         * /display/PavLab/Gemma+Curation+Guidelines#GemmaCurationGuidelines-BaselineFactor%2FControlGroup}
-         */
-        controlGroupTerms.add( "control group" );
-        controlGroupTerms.add( "control" );
-        controlGroupTerms.add( "normal" );
-        controlGroupTerms.add( "untreated" );
-        controlGroupTerms.add( "baseline" );
-        controlGroupTerms.add( "control_group" );
-        controlGroupTerms.add( "wild_type" );
-        controlGroupTerms.add( "wild type" );
-        controlGroupTerms.add( "wild type genotype" );
-        controlGroupTerms.add( "initial time point" );
-        controlGroupTerms.add( "reference_substance_role" );
-        controlGroupTerms.add( "reference_subject_role" );
-        controlGroupTerms.add( "baseline_participant_role" );
-        controlGroupTerms.add( "to_be_treated_with_placebo_role" );
-
-        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0100046".toLowerCase() ); // phosphate buffered
-                                                                                             // saline.
-        controlGroupTerms.add( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type".toLowerCase() );
-
-        controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
-                .toLowerCase() ); // control_group, old.
-
-        controlGroupTerms.add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2201"
-                .toLowerCase() ); // control_group, new version.(retired)
-
-        controlGroupTerms.add( "http://ontology.neuinfo.org/NIF/DigitalEntities/NIF-Investigation.owl#birnlex_2001"
-                .toLowerCase() ); // " normal control_group", (retired)
-
-        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000025".toLowerCase() );// - reference substance
-                                                                                            // role
-
-        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000220".toLowerCase() );// - reference subject role
-
-        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000825".toLowerCase() ); // - to be treated with
-                                                                                             // placebo
-
-        controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000143".toLowerCase() );// - baseline participant
-                                                                                            // role
-
-        controlGroupTerms.add( "http://www.ebi.ac.uk/efo/EFO_0005168".toLowerCase() ); // wild type genotype
-
-        controlGroupTerms.add( "http://www.ebi.ac.uk/efo/EFO_0004425".toLowerCase() ); // initial time point
-    }
 
     /**
      * Identify the FactorValue that should be treated as 'Baseline' for each of the given factors. This is done
@@ -185,7 +132,13 @@ public class ExpressionDataMatrixColumnSort {
                         continue;
                     }
 
-                    if ( isBaselineCondition( fv ) ) {
+                    if ( BaselineSelection.isForcedBaseline( fv ) ) {
+                        log.info( "Baseline chosen: " + fv );
+                        result.put( factor, fv );
+                        break;
+                    }
+
+                    if ( BaselineSelection.isBaselineCondition( fv ) ) {
                         if ( result.containsKey( factor ) ) {
                             log.warn( "A second potential baseline was found for " + factor + ": " + fv );
                             continue;
@@ -230,22 +183,6 @@ public class ExpressionDataMatrixColumnSort {
 
         return result;
 
-    }
-
-    /**
-     * @param fv
-     * @param samplesUsed
-     * @return true if the factorvalue is used by at least one of the samples.
-     */
-    private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
-        for ( BioMaterial bm : samplesUsed ) {
-            for ( FactorValue bfv : bm.getFactorValues() ) {
-                if ( fv.equals( bfv ) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**
@@ -651,46 +588,6 @@ public class ExpressionDataMatrixColumnSort {
     }
 
     /**
-     * @param factorValue
-     * @return
-     */
-    protected static boolean isBaselineCondition( FactorValue factorValue ) {
-
-        if ( factorValue.getIsBaseline() != null ) return factorValue.getIsBaseline();
-
-        // for backwards compatibility we check anyway
-
-        if ( factorValue.getMeasurement() != null ) {
-            return false;
-        } else if ( factorValue.getCharacteristics().isEmpty() ) {
-            /*
-             * Just use the value.
-             */
-            if ( StringUtils.isNotBlank( factorValue.getValue() )
-                    && controlGroupTerms.contains( factorValue.getValue().toLowerCase() ) ) {
-                return true;
-            }
-        } else {
-            for ( Characteristic c : factorValue.getCharacteristics() ) {
-                if ( c instanceof VocabCharacteristic ) {
-                    String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
-                    if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
-                        return true;
-                    }
-                    if ( StringUtils.isNotBlank( c.getValue() )
-                            && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
-                        return true;
-                    }
-                } else if ( StringUtils.isNotBlank( c.getValue() )
-                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
      * @param bms
      * @return
      */
@@ -1061,20 +958,6 @@ public class ExpressionDataMatrixColumnSort {
         return efs;
     }
 
-    private static boolean isBaselineConditionVO( FactorValueValueObject factorValue ) {
-        if ( factorValue.getIsBaseline() != null ) return factorValue.getIsBaseline();
-
-        // for backwards compatibility we check anyway
-
-        if ( factorValue.isMeasurement() ) {
-            return false;
-        } else if ( StringUtils.isNotBlank( factorValue.getValue() )
-                && controlGroupTerms.contains( factorValue.getValue().toLowerCase() ) ) {
-            return true;
-        }
-        return false;
-    }
-
     /**
      * @param ef
      * @param fv2bms map of factorValues to lists of biomaterials that have that factorValue.
@@ -1364,14 +1247,14 @@ public class ExpressionDataMatrixColumnSort {
         Collections.sort( factorValues, new Comparator<FactorValue>() {
             @Override
             public int compare( FactorValue o1, FactorValue o2 ) {
-                if ( isBaselineCondition( o1 ) ) {
+                if ( BaselineSelection.isBaselineCondition( o1 ) ) {
                     if ( o2.getIsBaseline() == null ) {
                         return -1;
-                    } else if ( isBaselineCondition( o2 ) ) {
+                    } else if ( BaselineSelection.isBaselineCondition( o2 ) ) {
                         return 0;
                     }
                     return -1;
-                } else if ( isBaselineCondition( o2 ) ) {
+                } else if ( BaselineSelection.isBaselineCondition( o2 ) ) {
                     return 1;
                 }
                 return 0;
@@ -1384,14 +1267,14 @@ public class ExpressionDataMatrixColumnSort {
         Collections.sort( factorValues, new Comparator<FactorValueValueObject>() {
             @Override
             public int compare( FactorValueValueObject o1, FactorValueValueObject o2 ) {
-                if ( isBaselineConditionVO( o1 ) ) {
+                if ( BaselineSelection.isBaselineConditionVO( o1 ) ) {
                     if ( o2.getIsBaseline() == null ) {
                         return -1;
-                    } else if ( isBaselineConditionVO( o2 ) ) {
+                    } else if ( BaselineSelection.isBaselineConditionVO( o2 ) ) {
                         return 0;
                     }
                     return -1;
-                } else if ( isBaselineConditionVO( o2 ) ) {
+                } else if ( BaselineSelection.isBaselineConditionVO( o2 ) ) {
                     return 1;
                 }
                 return 0;
@@ -1457,6 +1340,22 @@ public class ExpressionDataMatrixColumnSort {
                 }
             }
         } );
+    }
+
+    /**
+     * @param fv
+     * @param samplesUsed
+     * @return true if the factorvalue is used by at least one of the samples.
+     */
+    private static boolean used( FactorValue fv, List<BioMaterial> samplesUsed ) {
+        for ( BioMaterial bm : samplesUsed ) {
+            for ( FactorValue bfv : bm.getFactorValues() ) {
+                if ( fv.equals( bfv ) ) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }
