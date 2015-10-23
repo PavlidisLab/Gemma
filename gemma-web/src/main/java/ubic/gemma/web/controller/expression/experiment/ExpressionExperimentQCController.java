@@ -1253,13 +1253,16 @@ public class ExpressionExperimentQCController extends BaseController {
 
         DoubleArrayList zVars = zscore( vars );
         DoubleArrayList zMeans = zscore( means );
+
+        assert lowessXs.size() == zMeans.size(); // AIOB error sometimes for lowessXs?
+
+        // clip outliers
         for ( int i = 0; i < zMeans.size(); i++ ) {
 
             if ( Math.abs( zMeans.getQuick( i ) ) > zscoreMax || Math.abs( zVars.getQuick( i ) ) > zscoreMax ) {
                 continue;
             }
 
-            // AIOB error sometimes?
             filteredMeans.add( means.getQuick( i ) );
             filteredVars.add( vars.getQuick( i ) );
             filteredLowessX.add( lowessXs.getQuick( i ) );
