@@ -555,9 +555,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     @Override
     public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( eeId );
-        Collection<ExpressionExperimentValueObject> r = this.loadValueObjects( ids, false );
+        Collection<ExpressionExperimentValueObject> r = this.loadValueObjects( Collections.singleton( eeId ), false );
         if ( r.isEmpty() ) return null;
         return r.iterator().next();
     }
