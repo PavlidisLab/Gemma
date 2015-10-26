@@ -25,11 +25,6 @@ public abstract class ArrayDesignAnalysisEvent extends
         ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
 
     /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -484782966821410948L;
-
-    /**
      * No-arg constructor added to satisfy javabean contract
      * 
      * @author Paul

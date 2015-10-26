@@ -23,11 +23,6 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public abstract class AuditEventType implements java.io.Serializable {
 
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7974263914932224638L;
-
     final private Long id = null;
 
     /**
