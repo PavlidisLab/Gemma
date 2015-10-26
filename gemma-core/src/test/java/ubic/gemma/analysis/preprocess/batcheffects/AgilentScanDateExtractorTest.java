@@ -63,4 +63,18 @@ public class AgilentScanDateExtractorTest {
             assertEquals( expected, actual );
         }
     }
+    
+    @Test
+    public void testExtractAgilent2() throws Exception {
+        try (InputStream is = getClass().getResourceAsStream( "/data/loader/expression/rawdata/GSM1662306.agilent2.txt" );) {
+            AgilentScanDateExtractor extractor = new AgilentScanDateExtractor();
+
+            Date actual = extractor.extract( is );
+
+            DateFormat formatter = new SimpleDateFormat( "MM-dd-yyyy HH:mm:ss" );
+            Date expected = formatter.parse( "02-27-2014 09:32:52" );
+
+            assertEquals( expected, actual );
+        }
+    }
 }

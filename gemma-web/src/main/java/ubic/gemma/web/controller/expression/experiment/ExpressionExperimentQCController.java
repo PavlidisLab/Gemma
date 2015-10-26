@@ -71,6 +71,7 @@ import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.DefaultMultiValueCategoryDataset;
 import org.jfree.data.time.Hour;
+import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.DefaultXYDataset;
@@ -1077,6 +1078,8 @@ public class ExpressionExperimentQCController extends BaseController {
             List<Date> dates = svdo.getDates();
             if ( dates.isEmpty() ) break;
 
+            long secspan = ubic.basecode.util.DateUtil.numberOfSecondsBetweenDates( dates );
+
             if ( component >= MAX_COMP ) break;
             Double a = dateCorrelations.get( component );
 
@@ -1090,7 +1093,13 @@ public class ExpressionExperimentQCController extends BaseController {
                 TimeSeries series = new TimeSeries( "Dates vs. eigen" + ( component + 1 ) );
                 int i = 0;
                 for ( Date d : dates ) {
-                    series.addOrUpdate( new Hour( d ), eigenGene[i++] );
+                    // if span is less than an hour, retain the minute.
+                    if ( secspan < 60 * 60 ) {
+                        series.addOrUpdate( new Minute( d ), eigenGene[i++] );
+                    } else {
+                        series.addOrUpdate( new Hour( d ), eigenGene[i++] );
+                    }
+
                 }
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );

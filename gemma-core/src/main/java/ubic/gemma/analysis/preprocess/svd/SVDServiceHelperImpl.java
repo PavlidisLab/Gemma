@@ -380,10 +380,16 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
         if ( numWithDates > 2 ) {
             /*
-             * Get the dates in order, rounded to the nearest hour.
+             * Get the dates in order, - no rounding.
              */
             boolean initializingDates = svo.getDates().isEmpty();
             double[] dates = new double[svdBioMaterials.length];
+
+            /*
+             * If dates are all the same, skip.
+             */
+            Set<Date> uniqued = new HashSet<>();
+
             for ( int j = 0; j < svdBioMaterials.length; j++ ) {
 
                 Date date = bioMaterialDates.get( svdBioMaterials[j] );
@@ -391,10 +397,22 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
                     log.warn( "Incomplete date information, missing for biomaterial " + svdBioMaterials[j] );
                     dates[j] = Double.NaN;
                 } else {
-                    dates[j] = DateUtils.round( date, Calendar.MINUTE ).getTime(); // make int, cast to double
+                    Date roundDate = DateUtils.round( date, Calendar.MINUTE );
+                    uniqued.add( roundDate );
+                    dates[j] = roundDate.getTime(); // round to minute; make int, cast to
+                                                    // double
                 }
-                if ( initializingDates ) svo.getDates().add( date );
+
+                if ( initializingDates ) {
+                    svo.getDates().add( date );
+                }
             }
+
+            if ( uniqued.size() == 1 ) {
+                log.warn( "All scan dates the same, skipping data analysis" );
+                svo.getDates().clear();
+            }
+
             initializingDates = false;
 
             if ( eigenGene.size() != dates.length ) {

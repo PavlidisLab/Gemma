@@ -43,7 +43,7 @@ import ubic.basecode.util.FileTools;
  * <p>
  * format.
  * <li>Agilent scanner files. These start with "TYPE" Example: GSE14466. The second line is "FEPARAMS", the fourth
- * column is "Scan_date".
+ * column is "Scan_date". The data are in the third line.
  * </ul>
  * 
  * @author paul
@@ -72,7 +72,6 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
             if ( line.startsWith( "ATF" ) ) {
                 return extractGenePix( reader );
-
             } else if ( line.startsWith( "TYPE" ) ) {
                 line = reader.readLine();
                 if ( line.startsWith( "FEPARAMS" ) ) {
@@ -90,6 +89,7 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
                         throw new IllegalStateException( "Could not recognize the scan_date field" );
                     }
 
+                    // next line down has the data.
                     line = reader.readLine();
 
                     if ( !line.startsWith( "DATA" ) ) {
@@ -99,9 +99,11 @@ public class AgilentScanDateExtractor extends BaseScanDateExtractor {
                     fields = StringUtils.split( line, '\t' );
                     String date = fields[dateField];
 
+                    Date d = null;
+
                     DateFormat f = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss" ); // 10-18-2005 13:02:36
                     f.setLenient( true );
-                    Date d = f.parse( date );
+                    d = f.parse( date );
 
                     return d;
                 }
