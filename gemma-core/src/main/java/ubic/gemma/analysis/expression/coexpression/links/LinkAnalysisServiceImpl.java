@@ -516,15 +516,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         if ( config.isCheckForBatchEffect() ) {
             BatchEffectDetails batchEffect = eeService.getBatchEffect( ee );
 
+            if ( batchEffect.getDataWasBatchCorrected() ) {
+                log.info( "Data are batch-corrected" );
+                return;
+            }
+
             if ( !batchEffect.isHasBatchInformation() ) {
                 // we may change this behaviour...
                 throw new UnsuitableForAnalysisException( ee,
                         "No batch information available, out of an abundance of caution we are skipping" );
-            }
-
-            if ( batchEffect.getDataWasBatchCorrected() ) {
-                log.info( "Data are batch-corrected" );
-                return;
             }
 
             // FIXME might want to adjust this stringency.
