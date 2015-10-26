@@ -267,29 +267,30 @@ public class CoexpressionSearchController {
         return result;
     }
 
-    /**
-     * @param vo
-     * @param eesToFlag
-     */
-    private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
-
-        Collection<Long> eesToFlagIds = new ArrayList<Long>();
-        for ( ExpressionExperiment ee : eesToFlag ) {
-            eesToFlagIds.add( ee.getId() );
-        }
-
-        if ( vo == null || vo.getResults() == null || vo.getResults().isEmpty() ) return;
-
-        for ( CoexpressionValueObjectExt covo : vo.getResults() ) {
-            for ( Long eeToFlag : eesToFlagIds ) {
-                if ( covo.getSupportingExperiments().contains( eeToFlag ) ) {
-                    covo.setContainsMyData( true );
-                    break;
-                }
-            }
-        }
-
-    }
+    //
+    // /**
+    // * @param vo
+    // * @param eesToFlag
+    // */
+    // private void addMyDataFlag( CoexpressionMetaValueObject vo, Collection<ExpressionExperiment> eesToFlag ) {
+    //
+    // Collection<Long> eesToFlagIds = new ArrayList<Long>();
+    // for ( ExpressionExperiment ee : eesToFlag ) {
+    // eesToFlagIds.add( ee.getId() );
+    // }
+    //
+    // if ( vo == null || vo.getResults() == null || vo.getResults().isEmpty() ) return;
+    //
+    // for ( CoexpressionValueObjectExt covo : vo.getResults() ) {
+    // for ( Long eeToFlag : eesToFlagIds ) {
+    // if ( covo.getSupportingExperiments().contains( eeToFlag ) ) {
+    // covo.setContainsMyData( true );
+    // break;
+    // }
+    // }
+    // }
+    //
+    // }
 
     /**
      * Convert the search options to a set of experiment IDs (security-filtered)
