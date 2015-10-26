@@ -18,7 +18,7 @@
 						src="/Gemma/images/slideShow/humanOutline_35_3.png" /> <img style="position: absolute; top: 60px; left: 200px"
 						src="/Gemma/images/slideShow/mouseOutline65_simplified.png" /> <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
-					<td class="slideTextTD">Over <b>5000</b> curated expression studies
+					<td class="slideTextTD">Over <b>6000</b> curated expression studies
 					</td>
 				</tr>
 			</table>
