@@ -266,7 +266,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
             if ( vcFromClient != null && vcFromDatabase == null ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
-                vc.setValue( cFromDatabase.getValue() );
+                vc.setValue( StringUtils.strip( cFromDatabase.getValue() ) );
                 vc.setEvidenceCode( cFromDatabase.getEvidenceCode() );
                 vc.setDescription( cFromDatabase.getDescription() );
                 vc.setCategory( cFromDatabase.getCategory() );
@@ -282,8 +282,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 // don't copy AuditTrail or Status to avoid cascade error... vcFromDatabase.getAuditTrail()
                 cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance(
                         vcFromDatabase.getName(), vcFromDatabase.getDescription(), null, null,
-                        vcFromDatabase.getValue(), vcFromDatabase.getCategory(), vcFromDatabase.getCategoryUri(),
-                        vcFromDatabase.getEvidenceCode() ) );
+                        StringUtils.strip( vcFromDatabase.getValue() ), vcFromDatabase.getCategory(),
+                        vcFromDatabase.getCategoryUri(), vcFromDatabase.getEvidenceCode() ) );
                 removeFromParent( vcFromDatabase, parent );
                 characteristicService.delete( vcFromDatabase );
                 addToParent( cFromDatabase, parent );
