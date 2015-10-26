@@ -96,11 +96,9 @@ public class BioAssayController {
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 
-            OutlierDetails d = outlierMap.get( assay.getId() );
-
             BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( assay );
 
-            if ( d != null ) {
+            if ( outlierMap.containsKey( assay.getId() ) ) {
                 bioAssayValueObject.setPredictedOutlier( true );
             }
 
