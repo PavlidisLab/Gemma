@@ -29,7 +29,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.Settings;
 
@@ -47,19 +46,6 @@ public class CoexpressionMetaValueObject {
     private static Logger log = LoggerFactory.getLogger( CoexpressionMetaValueObject.class );
 
     /**
-     * The stringency used in the initial query and after 'global' trimming.
-     */
-    private int queryStringency;
-
-    public int getQueryStringency() {
-        return queryStringency;
-    }
-
-    public void setQueryStringency( int queryStringency ) {
-        this.queryStringency = queryStringency;
-    }
-
-    /**
      * Error message for the client.
      */
     private String errorState;
@@ -69,11 +55,6 @@ public class CoexpressionMetaValueObject {
      */
     private int maxEdges = Settings.getInt( "gemma.cytoscapeweb.maxEdges",
             CoexpressionMetaValueObject.DEFAULT_MAX_EDGES_PER_GRAPH );
-
-    /**
-     * This will be greater than zero if the data were trimmed prior to sending to the client.
-     */
-    // private int nonQueryGeneTrimmedValue = 0;
 
     /**
      * How many data sets were actually used in the query; that is, which had coexpression analysis done.
@@ -86,6 +67,16 @@ public class CoexpressionMetaValueObject {
      * if this was a "query genes only" search
      */
     private boolean queryGenesOnly = false;
+
+    /**
+     * This will be greater than zero if the data were trimmed prior to sending to the client.
+     */
+    // private int nonQueryGeneTrimmedValue = 0;
+
+    /**
+     * The stringency used in the initial query and after 'global' trimming.
+     */
+    private int queryStringency;
 
     /**
      * Results for coexpression of the query gene with other 'found' genes (which could potentially include other query
@@ -120,16 +111,20 @@ public class CoexpressionMetaValueObject {
         return maxEdges;
     }
 
-    // public int getNonQueryGeneTrimmedValue() {
-    // return nonQueryGeneTrimmedValue;
-    // }
-
     public int getNumDatasetsQueried() {
         return numDatasetsQueried;
     }
 
     public Collection<GeneValueObject> getQueryGenes() {
         return queryGenes;
+    }
+
+    // public int getNonQueryGeneTrimmedValue() {
+    // return nonQueryGeneTrimmedValue;
+    // }
+
+    public int getQueryStringency() {
+        return queryStringency;
     }
 
     /**
@@ -172,11 +167,6 @@ public class CoexpressionMetaValueObject {
         this.maxEdges = maxEdges;
     }
 
-    //
-    // public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
-    // this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
-    // }
-
     /**
      * @param numDatasetsQueried the number of data sets which were actually used in the query (a subset of those
      *        requested by the user if they didn't have coexpression analysis done)
@@ -185,12 +175,21 @@ public class CoexpressionMetaValueObject {
         this.numDatasetsQueried = numDatasetsQueried;
     }
 
+    //
+    // public void setNonQueryGeneTrimmedValue( int nonQueryGeneTrimmedValue ) {
+    // this.nonQueryGeneTrimmedValue = nonQueryGeneTrimmedValue;
+    // }
+
     public void setQueryGenes( Collection<GeneValueObject> queryGenes ) {
         this.queryGenes = queryGenes;
     }
 
     public void setQueryGenesOnly( boolean queryGenesOnly ) {
         this.queryGenesOnly = queryGenesOnly;
+    }
+
+    public void setQueryStringency( int queryStringency ) {
+        this.queryStringency = queryStringency;
     }
 
     /**
