@@ -70,6 +70,8 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
     @Transactional(readOnly = true)
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<Long> genes ) {
+         clearCache(); // uncomment for debugging TEMPORARY FIX FOR 4320
+
         return processedExpressionDataVectorDao.getProcessedDataArrays( expressionExperiments, genes );
     }
 
