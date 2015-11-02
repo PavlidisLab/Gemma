@@ -109,7 +109,7 @@ public class QuantitationTypeValueObject implements Serializable {
         this.setRepresentation( qt.getRepresentation().toString() );
         this.setScale( qt.getScale().toString() );
         this.setType( qt.getType().toString() );
-        this.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() );
+        this.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() != null && qt.getIsRecomputedFromRawData() );
     }
 
     public String getDescription() {
