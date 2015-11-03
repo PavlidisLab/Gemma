@@ -646,44 +646,44 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * This method returns information about external data sources from Phenocarta, including URLs and
-     * timestamps of the most recent update dates/times.     
+     * This method returns information about external data sources from Phenocarta, including URLs and timestamps of the
+     * most recent update dates/times.
      * 
      * @return A collection of objects with information about external data sources in Phenocarta
-     */    
+     */
     public Collection<DumpsValueObject> helpFindAllDumps() {
 
-        Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();        
-        //Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
-        //ExternalDatabaseStatisticsValueObject dbFromColln = null;        
-        //while(iter.hasNext())
-        //{
+        Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();
+        // Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
+        // ExternalDatabaseStatisticsValueObject dbFromColln = null;
+        // while(iter.hasNext())
+        // {
         Collection<ExternalDatabaseStatisticsValueObject> externalDatabaseStatisticsValueObjects = new TreeSet<ExternalDatabaseStatisticsValueObject>();
         externalDatabaseStatisticsValueObjects.addAll( this.phenoAssocService
-        .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ));
+                .loadStatisticsOnExternalDatabases( PhenotypeAssociationConstants.GEMMA_PHENOCARTA_HOST_URL_DATASETS ) );
         Iterator<ExternalDatabaseStatisticsValueObject> iter = externalDatabaseStatisticsValueObjects.iterator();
-        while(iter.hasNext())
-        {
+        while ( iter.hasNext() ) {
             ExternalDatabaseStatisticsValueObject currObj = iter.next();
             DumpsValueObject currDumpsObj = new DumpsValueObject();
-            if(currObj.getName()!=null && !currObj.getName().equals( "" ))
+            if ( currObj.getName() != null && !currObj.getName().equals( "" ) )
                 currDumpsObj.setName( currObj.getName() );
-            if(currObj.getPathToDownloadFile()!=null && !currObj.getPathToDownloadFile().equals( "" ))
+            if ( currObj.getPathToDownloadFile() != null && !currObj.getPathToDownloadFile().equals( "" ) )
                 currDumpsObj.setUrl( currObj.getPathToDownloadFile() );
-            if(currObj.getLastUpdateDate()!=null && !currObj.getLastUpdateDate().toString().equals( "" ))
-                currDumpsObj.setModified( currObj.getLastUpdateDate().toString());
-            dumpsValueObjects.add( currDumpsObj );                
+            if ( currObj.getLastUpdateDate() != null && !currObj.getLastUpdateDate().toString().equals( "" ) )
+                currDumpsObj.setModified( currObj.getLastUpdateDate().toString() );
+            dumpsValueObjects.add( currDumpsObj );
         }
-            //dbFromColln = iter.next();
-            //DumpsValueObject currObj;
-            //currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(), (dbFromColln.getLastUpdateDate()).toString() );
-            //currObj = new DumpsValueObject( "test", "test", "test" );
-            //dumpsValueObjects.add( currObj );
-        //}              
+        // dbFromColln = iter.next();
+        // DumpsValueObject currObj;
+        // currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(),
+        // (dbFromColln.getLastUpdateDate()).toString() );
+        // currObj = new DumpsValueObject( "test", "test", "test" );
+        // dumpsValueObjects.add( currObj );
+        // }
 
-        return dumpsValueObjects;        
-    }    
-    
+        return dumpsValueObjects;
+    }
+
     /**
      * this method can be used if we want to reimport data from a specific external Database
      * 
@@ -1259,114 +1259,115 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = findExternalDatabasesWithEvidence();
 
             for ( ExternalDatabaseValueObject externalDatabaseValueObject : externalDatabaseValueObjects ) {
-                
-                File thisFile = new File(datasetsFolderPath
-                        + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv");
-                
+
+                File thisFile = new File( datasetsFolderPath
+                        + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv" );
+
                 boolean currDBFoundinExtDBs = false;
                 Iterator<ExternalDatabaseStatisticsValueObject> iter = loadNeurocartaStatistics().iterator();
                 ExternalDatabaseStatisticsValueObject dbFromColln = null;
-                while(!currDBFoundinExtDBs && iter.hasNext())
-                {
+                while ( !currDBFoundinExtDBs && iter.hasNext() ) {
                     dbFromColln = iter.next();
-                    if(dbFromColln.getName().equals( externalDatabaseValueObject.getName() ))
+                    if ( dbFromColln.getName().equals( externalDatabaseValueObject.getName() ) )
                         currDBFoundinExtDBs = true;
-                }               
-                                
-                if(dbFromColln.getLastUpdateDate().getTime()>thisFile.lastModified())
-                {
-                fileWriterDataSource = new BufferedWriter( new FileWriter( datasetsFolderPath
-                        + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv" ) );
-
-                // header of file
-                fileWriterDataSource.write( header );
-
-                // not using value object to make it faster
-                Collection<PhenotypeAssociation> phenotypeAssociations = null;
-
-                // this one is a special case, not actually linked to an external database
-                if ( externalDatabaseValueObject.getName().equalsIgnoreCase(
-                        PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
-                    phenotypeAssociations = this.phenoAssocService.findEvidencesWithoutExternalDatabaseName();
-                } else {
-                    phenotypeAssociations = this.phenoAssocService.findEvidencesWithExternalDatabaseName(
-                            externalDatabaseValueObject.getName(), null );
                 }
 
-                for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
+                if ( dbFromColln.getLastUpdateDate().getTime() > thisFile.lastModified() ) {
+                    fileWriterDataSource = new BufferedWriter( new FileWriter( datasetsFolderPath
+                            + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv" ) );
 
-                    if ( i++ % 5000 == 0 ) {
-                        log.info( "Phenocarta dump of evidence at evidence number: " + i );
-                    }
+                    // header of file
+                    fileWriterDataSource.write( header );
 
-                    String pubmeds = "";
+                    // not using value object to make it faster
+                    Collection<PhenotypeAssociation> phenotypeAssociations = null;
 
-                    for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
-                            .getPhenotypeAssociationPublications() ) {
-                        String pubId = phenotypeAssociationPublication.getCitation().getPubAccession().getAccession()
-                                + ";";
-                        // primary should be order first
-                        if ( phenotypeAssociationPublication.getType().equals( PhenotypeAssPubValueObject.PRIMARY ) ) {
-                            pubmeds = pubId + pubmeds;
-                        } else {
-                            pubmeds = pubmeds + pubId;
-                        }
-                    }
-                    
-                    String relationship = "";
-                    relationship = phenotypeAssociation.getRelationship();
-
-                    String phenotypes = "";
-
-                    for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-                        phenotypes = phenotypes + cha.getValue() + ";";
-                    }
-
-                    String phenotypesUri = "";
-
-                    for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-                        phenotypesUri = phenotypesUri + ( ( VocabCharacteristic ) cha ).getValueUri() + ";";
-                    }
-
-                    // this should never happen
-                    if ( phenotypes.isEmpty() || phenotypesUri.isEmpty() ) {
-                        log.error( "Found an evidence without phenotypes : " + phenotypeAssociation.getId() );
-                    }
-
-                    String webLink = "";
-
-                    if ( phenotypeAssociation.getEvidenceSource() != null
-                            && phenotypeAssociation.getEvidenceSource().getExternalDatabase() != null ) {
-                        webLink = phenotypeAssociation.getEvidenceSource().getExternalDatabase().getWebUri()
-                                + phenotypeAssociation.getEvidenceSource().getAccession();
-                    }
-
-                    String isNegative = "";
-
-                    if ( phenotypeAssociation.getIsNegativeEvidence() ) {
-                        isNegative = "Yes";
+                    // this one is a special case, not actually linked to an external database
+                    if ( externalDatabaseValueObject.getName().equalsIgnoreCase(
+                            PhenotypeAssociationConstants.MANUAL_CURATION ) ) {
+                        phenotypeAssociations = this.phenoAssocService.findEvidencesWithoutExternalDatabaseName();
                     } else {
-                        isNegative = "No";
+                        phenotypeAssociations = this.phenoAssocService.findEvidencesWithExternalDatabaseName(
+                                externalDatabaseValueObject.getName(), null );
                     }
 
-                    String description = phenotypeAssociation.getDescription();
+                    for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 
-                    // represents 1 evidence
-                    String evidenceLine = externalDatabaseValueObject.getName() + "\t"
-                            + phenotypeAssociation.getGene().getNcbiGeneId() + "\t"
-                            + phenotypeAssociation.getGene().getOfficialSymbol() + "\t"
-                            + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
-                            + StringUtils.removeEnd( phenotypes, ";" ) + "\t"
-                            + relationship + "\t" // relationship information
-                            + StringUtils.removeEnd( phenotypesUri, ";" ) + "\t" + StringUtils.removeEnd( pubmeds, ";" )
-                            + "\t" + webLink + "\t" + isNegative + "\t" + description + "\n";
+                        if ( i++ % 5000 == 0 ) {
+                            log.info( "Phenocarta dump of evidence at evidence number: " + i );
+                        }
 
-                    fileWriterDataSource.write( evidenceLine );
-                    fileWriterAllEvidence.write( evidenceLine );
-                }
-                fileWriterDataSource.close();// finish writing one given data src file
-            }// old: finish loop of writing all ext data src files
-        }//new: finish loop of writing all ext data src files, including checking modified times 
+                        String pubmeds = "";
+
+                        for ( PhenotypeAssociationPublication phenotypeAssociationPublication : phenotypeAssociation
+                                .getPhenotypeAssociationPublications() ) {
+                            String pubId = phenotypeAssociationPublication.getCitation().getPubAccession()
+                                    .getAccession()
+                                    + ";";
+                            // primary should be order first
+                            if ( phenotypeAssociationPublication.getType().equals( PhenotypeAssPubValueObject.PRIMARY ) ) {
+                                pubmeds = pubId + pubmeds;
+                            } else {
+                                pubmeds = pubmeds + pubId;
+                            }
+                        }
+
+                        String relationship = "";
+                        relationship = phenotypeAssociation.getRelationship();
+
+                        String phenotypes = "";
+
+                        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+                            phenotypes = phenotypes + cha.getValue() + ";";
+                        }
+
+                        String phenotypesUri = "";
+
+                        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+                            phenotypesUri = phenotypesUri + ( ( VocabCharacteristic ) cha ).getValueUri() + ";";
+                        }
+
+                        // this should never happen
+                        if ( phenotypes.isEmpty() || phenotypesUri.isEmpty() ) {
+                            log.error( "Found an evidence without phenotypes : " + phenotypeAssociation.getId() );
+                        }
+
+                        String webLink = "";
+
+                        if ( phenotypeAssociation.getEvidenceSource() != null
+                                && phenotypeAssociation.getEvidenceSource().getExternalDatabase() != null ) {
+                            webLink = phenotypeAssociation.getEvidenceSource().getExternalDatabase().getWebUri()
+                                    + phenotypeAssociation.getEvidenceSource().getAccession();
+                        }
+
+                        String isNegative = "";
+
+                        if ( phenotypeAssociation.getIsNegativeEvidence() ) {
+                            isNegative = "Yes";
+                        } else {
+                            isNegative = "No";
+                        }
+
+                        String description = phenotypeAssociation.getDescription();
+
+                        // represents 1 evidence
+                        String evidenceLine = externalDatabaseValueObject.getName() + "\t"
+                                + phenotypeAssociation.getGene().getNcbiGeneId() + "\t"
+                                + phenotypeAssociation.getGene().getOfficialSymbol() + "\t"
+                                + phenotypeAssociation.getGene().getTaxon().getCommonName() + "\t"
+                                + StringUtils.removeEnd( phenotypes, ";" ) + "\t"
+                                + relationship
+                                + "\t" // relationship information
+                                + StringUtils.removeEnd( phenotypesUri, ";" ) + "\t"
+                                + StringUtils.removeEnd( pubmeds, ";" ) + "\t" + webLink + "\t" + isNegative + "\t"
+                                + description + "\n";
+
+                        fileWriterDataSource.write( evidenceLine );
+                        fileWriterAllEvidence.write( evidenceLine );
+                    }
+                    fileWriterDataSource.close();// finish writing one given data src file
+                }// old: finish loop of writing all ext data src files
+            }// new: finish loop of writing all ext data src files, including checking modified times
             fileWriterAllEvidence.close();
 
             // LatestEvidenceExport ---> points to the latest dump
@@ -1824,7 +1825,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // represents each phenotype and children found in the Ontology, TreeSet used to order trees [why do we need a
         // TreeSet? Can't we just sort at the end?]
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
-        
+
         // creates the tree structure
         for ( String valueUri : allPhenotypesGenesAssociations ) {
 
@@ -1837,7 +1838,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 try {
                     // find the ontology term using the valueURI
                     OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( valueUri );
-                    
+
                     // we don't show obsolete terms
                     if ( ontologyTerm.isTermObsolete() ) {
                         log.error( "A valueUri found in the database is obsolete: " + valueUri );
@@ -1858,8 +1859,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         }
                         if ( log.isDebugEnabled() ) log.debug( "Added: " + ontologyTerm );
 
-                    }                
-                
+                    }
+
                 } catch ( EntityNotFoundException entityNotFoundException ) {
                     if ( this.ontologyHelper.areOntologiesAllLoaded() ) {
                         log.warn( "A valueUri in the database was not found in the ontology; DB out of date?; valueUri: "
@@ -1875,7 +1876,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( withParentTerms ) {
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots = new TreeSet<>();
 
-            for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {                
+            for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
                 findParentRoot( tc, finalTreesWithRoots, phenotypeFoundInTree );
             }
             treesPhenotypes = finalTreesWithRoots;
@@ -2070,9 +2071,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         } else {
             // found a root, no more parents
-            if(tc!=null && tc.getValue()!=null && !tc.getValue().equals( "" ))
-                finalTreesWithRoots.add( tc );
-        }    
+            if ( tc != null && tc.getValue() != null && !tc.getValue().equals( "" ) ) finalTreesWithRoots.add( tc );
+        }
     }
 
     /** For a given Ontology Term, count the occurence of the term + children in the database */
