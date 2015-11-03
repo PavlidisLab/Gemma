@@ -497,7 +497,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
          fn : function( btn, text ) {
             if ( btn === 'yes' ) {
                Ext.getBody().mask();
-               BioAssayController.markOutlier( bioAssayId, {
+               BioAssayController.markOutlier( bioAssayIds, {
                   callback : function( taskId ) {
                      Ext.getBody().unmask();
                      var task = new Gemma.ObservableSubmittedTask( {
