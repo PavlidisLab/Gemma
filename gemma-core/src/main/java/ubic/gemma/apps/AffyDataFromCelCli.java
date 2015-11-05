@@ -77,9 +77,9 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     public String getShortDesc() {
         return "Reanalyze Affymetrix data from CEL files, if available; "
                 + "be sure to set the following in Gemma.properties (example settings shown):\n"
-                + "affy.power.tools.exec=/space/opt/bin/apt-probeset-summarize\n"
-                + "affy.power.tools.ref.path=/space/scratch/exonarrays\n"
-                + "affy.power.tools.cdf.path=/space/grp/databases/arrays/cdfs";
+                + " affy.power.tools.exec=/space/opt/bin/apt-probeset-summarize\n"
+                + " affy.power.tools.ref.path=/space/scratch/exonarrays\n"
+                + " affy.power.tools.cdf.path=/space/grp/databases/arrays/cdfs";
     }
 
     @Override

@@ -81,7 +81,7 @@ public class GemmaCLI {
             System.err.println( a + " : " + desc );
         }
         System.err
-                .println( "\nTo get help for a specific tool, use \n\njava -classpath /path/to/gemmaCLI.jar <classname> --help" );
+                .println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <classname> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
     }
 }
