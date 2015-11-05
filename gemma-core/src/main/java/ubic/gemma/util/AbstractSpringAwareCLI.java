@@ -68,7 +68,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     @Override
     public String getShortDesc() {
-        return "";
+        return "No description provided";
     }
 
     /**

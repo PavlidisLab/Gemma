@@ -469,8 +469,8 @@ public abstract class AbstractCLI {
      */
     protected void printHelp( String command ) {
         HelpFormatter h = new HelpFormatter();
-        h.setWidth( 120 );
-        h.printHelp( command + " [options]", HEADER, options, FOOTER );
+        h.setWidth( 150 );
+        h.printHelp( command + " [options]", this.getShortDesc() + "\n" + HEADER, options, FOOTER );
     }
 
     /**

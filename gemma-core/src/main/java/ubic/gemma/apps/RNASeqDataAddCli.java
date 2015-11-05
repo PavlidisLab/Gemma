@@ -34,8 +34,8 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String ALLOW_MISSING = "allowMissing";
     private static final String COUNT_FILE_OPT = "count";
-    private static final String RPKM_FILE_OPT = "rpkm";
     private static final String METADATAOPT = "rlen";
+    private static final String RPKM_FILE_OPT = "rpkm";
 
     /**
      * @param args
@@ -43,16 +43,20 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     public static void main( String[] args ) {
         RNASeqDataAddCli c = new RNASeqDataAddCli();
         c.doWork( args );
-
     }
 
     private boolean allowMissingSamples = false;
 
     private String countFile = null;
-    private String platformName = null;
+
     private boolean isPairedReads = false;
+    private String platformName = null;
     private Integer readLength = null;
     private String rpkmFile = null;
+    @Override
+    public String getShortDesc() {
+        return "Add expression quantifiation to an RNA-seq experiment";
+    }
 
     @Override
     protected void buildOptions() {
@@ -80,6 +84,10 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
         }
 
         ArrayDesign targetArrayDesign = locateArrayDesign( this.platformName );
+
+        if ( this.expressionExperiments.size() > 1 ) {
+            log.warn( "This CLI can only deal with one experiment at a time; only the first one will be processed" );
+        }
 
         ExpressionExperiment ee = ( ExpressionExperiment ) this.expressionExperiments.iterator().next();
 

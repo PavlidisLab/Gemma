@@ -41,7 +41,8 @@ public class GemmaCLI {
             "ubic.gemma.apps.ArrayDesignMergeCli", "ubic.gemma.apps.LinkAnalysisCli", "ubic.gemma.apps.LinkEvalCli",
             "ubic.gemma.apps.DifferentialExpressionAnalysisCli",
             "ubic.gemma.apps.ExpressionExperimentPlatformSwitchCli", "ubic.gemma.apps.ExpressionDataCorrMatCli",
-            "ubic.gemma.apps.ArrayDesignSubsumptionTesterCli" };
+            "ubic.gemma.apps.ArrayDesignSubsumptionTesterCli", "ubic.gemma.apps.RNASeqDataAddCli",
+            "ubic.gemma.apps.AffyDataFromCelCli" };
 
     /**
      * @param args

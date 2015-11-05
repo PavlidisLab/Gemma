@@ -74,6 +74,15 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
+    public String getShortDesc() {
+        return "Reanalyze Affymetrix data from CEL files, if available; "
+                + "be sure to set the following in Gemma.properties (example settings shown):\n"
+                + "affy.power.tools.exec=/space/opt/bin/apt-probeset-summarize\n"
+                + "affy.power.tools.ref.path=/space/scratch/exonarrays\n"
+                + "affy.power.tools.cdf.path=/space/grp/databases/arrays/cdfs";
+    }
+
+    @Override
     protected void buildOptions() {
         super.buildOptions();
         super.addOption( APT_FILE_OPT, true,
@@ -91,7 +100,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "AffyArrayDataAdd", args );
+        super.processCommandLine( "AffyDataFromCel", args );
 
         DataUpdater serv = getBean( DataUpdater.class );
 
