@@ -118,6 +118,9 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
+    private OutlierDetectionService outlierDetectionService;
+
     /*
      * (non-Javadoc)
      * 
@@ -143,8 +146,15 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         if ( !correctable ) {
             // throwing exception kind of annoying but not a big deal.
+            throw new PreprocessingException(
+                    ee.getShortName()
+                            + " could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
+        }
+
+        Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
+        if ( !outliers.isEmpty() ) {
             throw new PreprocessingException( ee.getShortName()
-                    + " could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
+                    + " could not be batch-corrected because it has outliers" );
         }
 
         try {
@@ -159,6 +169,10 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             assert vecs != null;
 
             dataVectorService.thaw( vecs );
+
+            /*
+             * FIXME perhaps here we should remove rows that are going to be problematic?
+             */
 
             ExpressionDataDoubleMatrix correctedData = expressionExperimentBatchCorrectionService
                     .comBat( new ExpressionDataDoubleMatrix( vecs ) );

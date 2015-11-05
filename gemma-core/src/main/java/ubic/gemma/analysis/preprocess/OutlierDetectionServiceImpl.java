@@ -51,25 +51,25 @@ import cern.colt.list.DoubleArrayList;
 @Component
 public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
+    private static final double DEFAULT_FRACTION = 0.90;
+
     private static final int DEFAULT_QUANTILE = 15;
 
-    private static final double DEFAULT_FRACTION = 0.90;
+    private static Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
 
     // Optional: the maximum fraction of samples that can be outliers
     @SuppressWarnings("unused")
     private static final double MAX_FRACTION_OUTLIERS = 0.3;
 
-    private static Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
-
-    private boolean testMode = false;
+    @Autowired
+    private ExpressionExperimentService eeService;
 
     // // For test purposes. Allows the printing of matrices based on residuals.
     // private boolean printMatrices = false;
 
-    private OutlierDetectionTestDetails testDetails;
-
+    // For working with filtered data
     @Autowired
-    private ExpressionExperimentService eeService;
+    private ExpressionDataMatrixService expressionDataMatrixService;
 
     @Autowired
     private DiffExAnalyzer lma;
@@ -78,14 +78,14 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    @Autowired
     private SVDServiceHelper svdService;
 
-    // For working with filtered data
-    @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
+    private OutlierDetectionTestDetails testDetails;
 
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+    private boolean testMode = false;
 
     /*
      * Calculate index (rank) of desired quantile using R's method #8
@@ -241,7 +241,9 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     }
 
-    /* Runs in testmode; returns OutlierDetectionTestDetails */
+    /*
+     * Runs in testmode; returns OutlierDetectionTestDetails
+     */
     @Override
     public OutlierDetectionTestDetails identifyOutliersByCombinedMethod( ExpressionExperiment ee ) {
 
@@ -278,7 +280,9 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return identifyOutliersByMedianCorrelation( ee, cormat );
     }
 
-    /*** Jenni's (almost) fool proof method for finding quantiles using R's method #8 ***/
+    /**
+     * Jenni's (almost) fool proof method for finding quantiles using R's method #8
+     */
     private double findValueAtDesiredQuantile( DoubleArrayList cors, int quantileThreshold ) {
 
         double lowerQuantileValue = Double.MIN_VALUE;
