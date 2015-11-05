@@ -177,6 +177,8 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         existingBibRef.setMeshTerms( fresh.getMeshTerms() );
         existingBibRef.setChemicals( fresh.getChemicals() );
         existingBibRef.setKeywords( fresh.getKeywords() );
+        existingBibRef.setPages( fresh.getPages() );
+        existingBibRef.setVolume( fresh.getVolume() );
 
         update( existingBibRef );
 

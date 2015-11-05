@@ -60,6 +60,25 @@ public class PubMedXMLFetcherTest {
         }
     }
 
+    @Test
+    public final void testRetrieveByHTTP2() {
+        try {
+            BibliographicReference br = pmf.retrieveByHTTP( 24850731 );
+
+            assertNotNull( br );
+
+            assertEquals(
+                    "Iwata-Yoshikawa, Naoko; Uda, Akihiko; Suzuki, Tadaki; Tsunetsugu-Yokota, Yasuko; Sato, Yuko; "
+                            + "Morikawa, Shigeru; Tashiro, Masato; Sata, Tetsutaro; Hasegawa, Hideki; Nagata, Noriyo",
+                    br.getAuthorList() );
+            assertEquals( "J Virol", br.getPublication() );
+
+        } catch ( RuntimeException e ) {
+            checkCause( e );
+            return;
+        }
+    }
+
     /**
      * 20301615 is a NCBI bookshelf article, not a paper
      * 

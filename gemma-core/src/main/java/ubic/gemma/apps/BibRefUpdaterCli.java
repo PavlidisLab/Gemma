@@ -49,6 +49,11 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
     }
 
+    @Override
+    public String getShortDesc() {
+        return ( "Refresh stored information on publications" );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -75,25 +80,34 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         Collection<Long> bibrefIds = new ArrayList<>();
         if ( this.hasOption( "pmids" ) ) {
             for ( String s : StringUtils.split( this.getOptionValue( "pmids" ), "," ) ) {
-                try {
-                    bibrefIds.add( Long.parseLong( s ) );
-                } catch ( NumberFormatException e ) {
-                    log.info( "Invalid PubMedID: " + s + ", must be an integer" );
+
+                BibliographicReference found = bibliographicReferenceService.findByExternalId( s );
+                if ( found == null ) {
+                    log.warn( "Did not find " + s );
+                    continue;
                 }
+                bibrefIds.add( found.getId() );
+
             }
+
         } else {
-            log.info( "Updating all bibrefs in the syste..." );
+            log.info( "Updating all bibrefs in the system ..." );
             bibrefIds = bibliographicReferenceService.listAll();
         }
         log.info( "There are " + bibrefIds.size() + " to update" );
         for ( Long id : bibrefIds ) {
             BibliographicReference bibref = bibliographicReferenceService.load( id );
+            if ( bibref == null ) {
+                log.info( "No reference with id=" + id );
+                continue;
+            }
             bibref = bibliographicReferenceService.thaw( bibref );
-            log.info( bibref );
             try {
-                bibliographicReferenceService.refresh( bibref.getPubAccession().getAccession() );
+                BibliographicReference updated = bibliographicReferenceService.refresh( bibref.getPubAccession()
+                        .getAccession() );
+                log.info( updated );
             } catch ( Exception e ) {
-                log.info( "Failed to upate: " + bibref + " (" + e.getMessage() + ")" );
+                log.info( "Failed to update: " + bibref + " (" + e.getMessage() + ")" );
             }
             try {
                 Thread.sleep( RandomUtils.nextInt( 1000 ) );
