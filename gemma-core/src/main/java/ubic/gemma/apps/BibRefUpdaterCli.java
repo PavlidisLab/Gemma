@@ -19,9 +19,11 @@
 
 package ubic.gemma.apps;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -55,6 +57,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions() {
         super.addUserNameAndPasswordOptions( true );
+        super.addOption( "pmids", "pmids", true, "Pubmed ids, comma-delimited; default is to do all in DB" );
     }
 
     /*
@@ -69,7 +72,19 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         BibliographicReferenceService bibliographicReferenceService = this
                 .getBean( BibliographicReferenceService.class );
 
-        Collection<Long> bibrefIds = bibliographicReferenceService.listAll();
+        Collection<Long> bibrefIds = new ArrayList<>();
+        if ( this.hasOption( "pmids" ) ) {
+            for ( String s : StringUtils.split( this.getOptionValue( "pmids" ), "," ) ) {
+                try {
+                    bibrefIds.add( Long.parseLong( s ) );
+                } catch ( NumberFormatException e ) {
+                    log.info( "Invalid PubMedID: " + s + ", must be an integer" );
+                }
+            }
+        } else {
+            log.info( "Updating all bibrefs in the syste..." );
+            bibrefIds = bibliographicReferenceService.listAll();
+        }
         log.info( "There are " + bibrefIds.size() + " to update" );
         for ( Long id : bibrefIds ) {
             BibliographicReference bibref = bibliographicReferenceService.load( id );
