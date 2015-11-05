@@ -51,7 +51,8 @@ public class GemmaCLI {
 
         System.err
                 .print( "You've evoked the Gemma CLI in a mode that doesn't do anything.\n"
-                        + "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath /path/to/gemmaCLI.jar <classname> [options]\n\n"
+                        + "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} <classname> [options]\n\n"
+                        + "You can use gemmaCli.sh as a shortcut\n\n"
                         + "Here is a list of the classnames for some available tools:\n\n" );
         Arrays.sort( apps );
         for ( String a : apps ) {
@@ -77,7 +78,7 @@ public class GemmaCLI {
                 e.printStackTrace();
             }
 
-            System.err.println( a + " :\t" + desc );
+            System.err.println( a + " : " + desc );
         }
         System.err
                 .println( "\nTo get help for a specific tool, use \n\njava -classpath /path/to/gemmaCLI.jar <classname> --help" );
