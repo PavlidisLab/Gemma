@@ -49,7 +49,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
      */
     public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
             Collection<? extends BioAssaySet> collection ) {
-        Collection<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
+        Collection<ExpressionExperimentValueObject> result = new ArrayList<>();
         for ( BioAssaySet ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }
@@ -62,7 +62,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
      */
     public static List<ExpressionExperimentValueObject> convert2ValueObjectsOrdered(
             List<ExpressionExperiment> collection ) {
-        List<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
+        List<ExpressionExperimentValueObject> result = new ArrayList<>();
         for ( BioAssaySet ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }
@@ -111,7 +111,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private Integer designElementDataVectorCount;
 
-    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<DifferentialExpressionAnalysisValueObject>();
+    private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
 
     private Long experimentalDesign;
 
@@ -150,8 +150,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     private Integer numAnnotations;
 
     private Integer numPopulatedFactors;
-
-    private String owner;
 
     private Long parentTaxonId;
 
@@ -217,8 +215,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
                 otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.getIsPublic(),
                 otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(), otherBean
-                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(), otherBean.getDateCreated(),
-                otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
+                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getDateCreated(), otherBean
+                        .getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
                         .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
                 otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(), otherBean
                         .getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(), otherBean
@@ -237,7 +235,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             String technologyType, boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
             Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
             boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
-            String investigators, String owner, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
+            String investigators, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
             String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
             Date dateLinkAnalysis, Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
             Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
@@ -274,7 +272,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.sourceExperiment = sourceExperiment;
         this.pubmedId = pubmedId;
         this.investigators = investigators;
-        this.owner = owner;
         this.dateCreated = dateCreated;
         this.troubled = troubleFlag;
         this.coexpressionLinkCount = coexpressionLinkCount;
@@ -350,7 +347,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             this.setSourceExperiment( otherBean.getSourceExperiment() );
             this.setPubmedId( otherBean.getPubmedId() );
             this.setInvestigators( otherBean.getInvestigators() );
-            this.setOwner( otherBean.getOwner() );
             this.setDateCreated( otherBean.getDateCreated() );
             this.setTroubled( otherBean.getTroubled() );
             this.setCoexpressionLinkCount( otherBean.getCoexpressionLinkCount() );
@@ -449,11 +445,9 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * <p>
-     * The date the array design associated with the experiment was last updated. If there are multiple array designs
-     * this should be the date of the most recent modification of any of them. This is used to help flag experiments
-     * that need re-analysis due to changes in the underlying array design(s)
-     * </p>
+     * The date the platform associated with the experiment was last updated. If there are multiple platforms this
+     * should be the date of the most recent modification of any of them. This is used to help flag experiments that
+     * need re-analysis due to changes in the underlying array design(s)
      */
     public Date getDateArrayDesignLastUpdated() {
         return this.dateArrayDesignLastUpdated;
@@ -464,9 +458,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * <p>
      * The date this object was generated.
-     * </p>
      */
     public Date getDateCached() {
         return this.dateCached;
@@ -567,9 +559,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * <p>
      * Used in display of gene-wise analysis results.
-     * </p>
      */
     public Boolean getHasProbeSpecificForQueryGene() {
         return this.hasProbeSpecificForQueryGene;
@@ -646,15 +636,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.numPopulatedFactors;
     }
 
-    /**
-     * <p>
-     * The user name of the experiment's owner, if any.
-     * </p>
-     */
-    public String getOwner() {
-        return this.owner;
-    }
-
     public Long getParentTaxonId() {
         return parentTaxonId;
     }
@@ -685,10 +666,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * <p>
      * Details of samples that were removed (or marked as outliers). This can happen multiple times in the life of a
      * data set, so this is a collection of AuditEvents.
-     * </p>
      */
     public Collection<AuditEventValueObject> getSampleRemovedFlags() {
         return this.sampleRemovedFlags;
@@ -953,10 +932,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
         this.numPopulatedFactors = numPopulatedFactors;
-    }
-
-    public void setOwner( String owner ) {
-        this.owner = owner;
     }
 
     public void setParentTaxonId( Long parentTaxonId ) {
