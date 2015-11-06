@@ -121,7 +121,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.EntityUtils;
-import ubic.gemma.util.ReflectionUtil;
 import ubic.gemma.util.Settings;
 
 /**
@@ -2217,22 +2216,16 @@ public class SearchServiceImpl implements SearchService {
         results.put( CharacteristicValueObject.class, new ArrayList<SearchResult>() );
 
         /*
-         * Get the top N results, overall (NOT within each class - experimental.)
+         * Get the top N results for each class.
          */
-        for ( int i = 0, limit = Math.min( rawResults.size(), settings.getMaxResults() ); i < limit; i++ ) {
+        for ( int i = 0, limit = rawResults.size(); i < limit; i++ ) {
             SearchResult sr = rawResults.get( i );
 
-            /*
-             * FIXME This is unpleasant and should be removed when BioSequences are correctly detached.
-             */
-            Class<? extends Object> resultClass = EntityUtils.getImplementationForProxy( sr.getResultObject() )
-                    .getClass();
-
-            resultClass = ReflectionUtil.getBaseForImpl( resultClass );
-
-            // Class<? extends Object> resultClass = sr.getResultClass();
-            assert results.containsKey( resultClass ) : "Unknown class " + resultClass;
-            results.get( resultClass ).add( sr );
+            Class<? extends Object> resultClass = sr.getResultClass();
+            List<SearchResult> resultsForClass = results.get( resultClass );
+            if ( resultsForClass != null && resultsForClass.size() < settings.getMaxResults() ) {
+                resultsForClass.add( sr );
+            }
         }
 
         if ( fillObjects ) {
