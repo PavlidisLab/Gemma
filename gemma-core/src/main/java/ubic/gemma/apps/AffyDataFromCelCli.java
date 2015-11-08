@@ -33,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Add (or possibly replace) the data associated with an affymetrix data set, going back to the CEL files. Can handle
- * exon or 3' arrays. data.
+ * exon or 3' arrays.
  * 
  * @author paul
  * @version $Id$
@@ -86,9 +86,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     protected void buildOptions() {
         super.buildOptions();
         super.addOption( APT_FILE_OPT, true,
-                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour" );
-        super.addOption( CDF_FILE_OPT, true,
-                "CDF file for Affy 3' arrays; otherwise will try to find automatically using the value of affy.power.tools.cdf.path" );
+                "File output from apt-probeset-summarize; use if you want to override usual GEO download behaviour; don't use with "
+                        + CDF_FILE_OPT );
+        super.addOption(
+                CDF_FILE_OPT,
+                true,
+                "CDF file for Affy 3' arrays; otherwise will try to find automatically using the value of affy.power.tools.cdf.path; don't use with "
+                        + APT_FILE_OPT );
         super.addForceOption();
 
     }
@@ -119,16 +123,13 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
             ArrayDesign ad = arrayDesignsUsed.iterator().next();
             try {
-                if ( ad.getName().toLowerCase().contains( "exon" ) ) {
-                    log.info( "Loading data from " + aptFile );
+                log.info( "Loading data from " + aptFile );
+                if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
+                        && ad.getName().toLowerCase().contains( "exon" ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
                         && ad.getName().toLowerCase().contains( "affy" ) ) {
-                    log.info( thawedEe + " looks like a affy 3-prime array" );
-                    serv.reprocessAffyThreePrimeArrayData( thawedEe, cdfFile );
-                    this.successObjects.add( thawedEe.toString() );
-                    this.successObjects.add( thawedEe.toString() );
-
+                    serv.addAffyData( thawedEe, aptFile );
                 } else {
                     throw new IllegalArgumentException( "Option -aptfile only valid if you are using an exon array." );
                 }

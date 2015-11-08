@@ -203,8 +203,7 @@ public class DataUpdater {
         ArrayDesign targetPlatform = prepareTargetPlatformForExonArrays( primaryTaxon );
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
-        Collection<RawExpressionDataVector> vectors = apt
-                .processExonArrayData( ee, pathToAptOutputFile, targetPlatform );
+        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, targetPlatform );
 
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
@@ -222,6 +221,39 @@ public class DataUpdater {
         audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + targetPlatform, true );
 
         postprocess( ee );
+
+    }
+
+    /**
+     * For 3' arrays.
+     * 
+     * @param ee
+     * @param pathToAptOutputFile
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws FileNotFoundException,
+            IOException {
+
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
+        }
+
+        ArrayDesign ad = ads.iterator().next();
+
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
+
+        Taxon primaryTaxon = ad.getPrimaryTaxon();
+
+        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+
+        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, ad );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
+        }
 
     }
 

@@ -143,7 +143,7 @@ public class AffyPowerToolsProbesetSummarize {
             String minutes = TimeUtil.getMinutesElapsed( overallWatch );
             log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
 
-            return processExonArrayData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
+            return processData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
 
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
@@ -215,7 +215,7 @@ public class AffyPowerToolsProbesetSummarize {
             String minutes = TimeUtil.getMinutesElapsed( overallWatch );
             log.info( "apt-probeset-summarize took a total of " + minutes + " minutes" );
 
-            return processExonArrayData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
+            return processData( ee, outputPath + File.separator + METHOD + ".summary.txt", targetPlatform );
 
         } catch ( InterruptedException e ) {
             throw new RuntimeException( e );
@@ -226,6 +226,8 @@ public class AffyPowerToolsProbesetSummarize {
     }
 
     /**
+     * For either 3' or Exon arrays.
+     * 
      * @param ee
      * @param aptOutputFileToRead
      * @param targetPlatform
@@ -233,8 +235,8 @@ public class AffyPowerToolsProbesetSummarize {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public Collection<RawExpressionDataVector> processExonArrayData( ExpressionExperiment ee,
-            String aptOutputFileToRead, ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
+    public Collection<RawExpressionDataVector> processData( ExpressionExperiment ee, String aptOutputFileToRead,
+            ArrayDesign targetPlatform ) throws IOException, FileNotFoundException {
 
         log.info( "Parsing " + aptOutputFileToRead );
 
