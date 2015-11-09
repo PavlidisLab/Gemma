@@ -245,8 +245,6 @@ public class DataUpdater {
         ad = arrayDesignService.thaw( ad );
         ee = experimentService.thawLite( ee );
 
-        Taxon primaryTaxon = ad.getPrimaryTaxon();
-
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
         Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, ad );
@@ -254,6 +252,12 @@ public class DataUpdater {
         if ( vectors.isEmpty() ) {
             throw new IllegalStateException( "No vectors were returned for " + ee );
         }
+
+        experimentService.replaceVectors( ee, ad, vectors );
+
+        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
+
+        postprocess( ee );
 
     }
 
