@@ -37,8 +37,9 @@ public class GemmaCLI {
             "ubic.gemma.apps.LoadExpressionDataCli", "ubic.gemma.apps.LoadSimpleExpressionDataCli",
             "ubic.gemma.apps.ArrayDesignBlatCli", "ubic.gemma.apps.ArrayDesignAnnotationFileCli",
             "ubic.gemma.apps.ProcessedDataComputeCLI", "ubic.gemma.apps.TwoChannelMissingValueCLI",
-            "ubic.gemma.apps.VectorMergingCli", "ubic.gemma.apps.ArrayDesignMergeCli",
-            "ubic.gemma.apps.LinkAnalysisCli", "ubic.gemma.apps.DifferentialExpressionAnalysisCli",
+            "ubic.gemma.apps.DeleteExperimentCli", "ubic.gemma.apps.VectorMergingCli",
+            "ubic.gemma.apps.ArrayDesignMergeCli", "ubic.gemma.apps.LinkAnalysisCli",
+            "ubic.gemma.apps.DifferentialExpressionAnalysisCli",
             "ubic.gemma.apps.ExpressionExperimentPlatformSwitchCli", "ubic.gemma.apps.ExpressionDataCorrMatCli",
             "ubic.gemma.apps.ArrayDesignSubsumptionTesterCli", "ubic.gemma.apps.RNASeqDataAddCli",
             "ubic.gemma.apps.AffyDataFromCelCli" };
@@ -80,8 +81,7 @@ public class GemmaCLI {
 
             System.err.println( a + " : " + desc );
         }
-        System.err
-                .println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <classname> --help" );
+        System.err.println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <classname> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
     }
 }

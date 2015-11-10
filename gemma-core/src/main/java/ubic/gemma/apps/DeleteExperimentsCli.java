@@ -32,9 +32,14 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     }
 
     @Override
+    public String getShortDesc() {
+        return "Delete experiment(s) from the system";
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
         this.force = true;
-        super.processCommandLine( "Delete experiments", args );
+        super.processCommandLine( "DeleteExperimentsCli", args );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             this.eeService.delete( ( ExpressionExperiment ) bas );
