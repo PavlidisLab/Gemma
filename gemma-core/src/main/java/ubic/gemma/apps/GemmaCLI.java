@@ -66,18 +66,20 @@ public class GemmaCLI {
                             .getBeanClassName() );
 
                     Object cliinstance = aclazz.newInstance();
+                    
                     Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
                     String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
+                    
                     Method method2 = aclazz.getMethod( "getShortDesc", new Class[] {} );
                     String desc = ( String ) method2.invoke( cliinstance, new Object[] {} );
-
+                    
                     Method method3 = aclazz.getMethod( "getCommandGroup", new Class[] {} );
                     CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
-                    // System.err.println( commandName + " - " + desc + " (" + c + ")" );
 
                     if ( !commands.containsKey( g ) ) {
                         commands.put( g, new TreeMap<String, String>() );
                     }
+
                     commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
 
                     commandClasses.put( commandName, aclazz );
@@ -85,7 +87,6 @@ public class GemmaCLI {
                     // OK, this can happen if we hit a non useful class.
                 }
             }
-
         } catch ( Exception e1 ) {
             System.err.println( "ERROR! Report to developers: " + e1.getMessage() );
             System.exit( 1 );
@@ -117,7 +118,6 @@ public class GemmaCLI {
                 }
             }
         }
-
     }
 
     /**
@@ -129,15 +129,17 @@ public class GemmaCLI {
         System.err
                 .print( "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} ubic.gemma.apps.GemmaCLI <commandName> [options]\n\n"
                         + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
-                        + "Here is a list of available commands:\n" );
+                        + "Here is a list of available commands, grouped by category:\n" );
 
         for ( CommandGroup cmdg : commands.keySet() ) {
             Map<String, String> commandsInGroup = commands.get( cmdg );
             if ( commandsInGroup == null || commandsInGroup.isEmpty() ) continue;
-            System.err.println( "\n-------- " + cmdg.toString() + "-----------" );
 
-            for ( String cmd : commandsInGroup.keySet() )
+            System.err.println( "\n---- " + cmdg.toString() + " ----" );
+
+            for ( String cmd : commandsInGroup.keySet() ) {
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
+            }
         }
         System.err.println( "\nTo get help for a specific tool, use \n\ngemmaCli.sh <commandName> --help" );
         System.err.print( "\n" + AbstractCLI.FOOTER + "\n=========================================\n" );
