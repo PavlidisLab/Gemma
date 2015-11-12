@@ -19,6 +19,7 @@ import java.util.Collection;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.util.AbstractCLIContextCLI;
@@ -42,12 +43,17 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
         args[1] = "administrator";
         // password
         args[2] = "-p";
-        args[3] = "administrator";
+        args[3] = "administrator"; // FIXME WTF??
         // what database name when want to delete
         args[4] = "-d";
         args[5] = "DGA";
 
         return args;
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PHENOTYPES;
     }
 
     public static void main( String[] args ) {
@@ -78,7 +84,7 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "EvidenceImporterCLI", args );
+        Exception err = processCommandLine( args );
 
         if ( err != null ) return err;
 
@@ -89,8 +95,8 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
         }
 
         Integer limit = 1000;
-        
-        log.info( "Loading "+limit+" evidence (this takes some time)" );
+
+        log.info( "Loading " + limit + " evidence (this takes some time)" );
 
         Collection<EvidenceValueObject> evidenceToDelete = this.phenotypeAssociationService
                 .loadEvidenceWithExternalDatabaseName( externalDatabaseName, limit );
@@ -125,6 +131,17 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     protected void processOptions() {
         super.processOptions();
         this.externalDatabaseName = new String( getOptionValue( 'd' ) );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

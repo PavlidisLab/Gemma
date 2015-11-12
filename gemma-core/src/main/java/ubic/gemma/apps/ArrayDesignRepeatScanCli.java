@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.sequence.RepeatScan;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -55,9 +56,22 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         }
 
     }
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
+    }
     BioSequenceService bsService;
     private String inputFileName;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "platformRepeatScan";
+    }
 
     @Override
     public String getShortDesc() {
@@ -75,7 +89,7 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception exception = processCommandLine( "repeatScan", args );
+        Exception exception = processCommandLine( args );
         if ( exception != null ) return exception;
 
         bsService = this.getBean( BioSequenceService.class );

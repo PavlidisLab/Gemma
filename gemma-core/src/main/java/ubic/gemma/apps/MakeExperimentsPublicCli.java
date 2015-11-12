@@ -31,9 +31,24 @@ public class MakeExperimentsPublicCli extends ExpressionExperimentManipulatingCL
         d.doWork( args );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "makePublic";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Make experiments public";
+    }
+
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "Delete experiments", args );
+        super.processCommandLine( args );
 
         SecurityService securityService = this.getBean( SecurityService.class );
         for ( BioAssaySet ee : this.expressionExperiments ) {

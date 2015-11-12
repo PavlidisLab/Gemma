@@ -26,6 +26,7 @@ import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
@@ -49,6 +50,19 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "updatePubMeds";
+    }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.METADATA;
+    }
     @Override
     public String getShortDesc() {
         return ( "Refresh stored information on publications" );
@@ -72,7 +86,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception ex = super.processCommandLine( "", args );
+        Exception ex = super.processCommandLine( args );
         if ( ex != null ) return ex;
         BibliographicReferenceService bibliographicReferenceService = this
                 .getBean( BibliographicReferenceService.class );

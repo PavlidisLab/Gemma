@@ -29,6 +29,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -36,7 +37,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 
 /**
  * Delete design elements (probes) that are invalid for one reason or another. The impetus for this was to delete probes
- * in the MG-U74 version 1 set, but this is of general use.
+ * in the MG-U74 version 1 set, but this is of general use. Probes to be removed are given in a file.
  * 
  * @author Paul
  * @version $Id$
@@ -55,11 +56,24 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         }
     }
 
-    private String file;
-
     private CompositeSequenceService compositeSequenceService;
 
     private DesignElementDataVectorService designElementDataVectorService;
+
+    private String file;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
+    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "deletePlatformElements";
+    }
 
     /*
      * (non-Javadoc)
@@ -71,7 +85,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
     protected void buildOptions() {
         super.buildOptions();
         Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "file" )
-                .withDescription( "File (tabbed) with probe ids in the first column" ).withLongOpt( "file" )
+                .withDescription( "File (tabbed) with element ids in the first column" ).withLongOpt( "file" )
                 .create( 'f' );
 
         addOption( fileOption );
@@ -85,7 +99,7 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Array design probe cleanup", args );
+        Exception err = processCommandLine( args );
 
         if ( err != null ) return err;
 

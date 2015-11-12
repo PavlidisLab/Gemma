@@ -24,6 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.externalDb.GoldenPathDumper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
@@ -41,7 +42,6 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  */
 @Deprecated
 public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
-
     public static void main( String[] args ) {
         GoldenPathBioSequenceLoaderCLI p = new GoldenPathBioSequenceLoaderCLI();
         try {
@@ -53,14 +53,26 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
     }
+    
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.DEPRECATED;
+    }
+    private BioSequenceService bioSequenceService;
 
     private ExternalDatabaseService externalDatabaseService;
-    private BioSequenceService bioSequenceService;
-    private TaxonService taxonService;
-    private String taxonName;
     private String fileArg;
-
     private int limitArg = -1;
+    private String taxonName;
+    private TaxonService taxonService;
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() { 
+        return null;
+    }
 
     public void load( String taxonCommonName, int limit ) {
 
@@ -122,7 +134,7 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
     @Override
     protected Exception doWork( String[] args ) {
         try {
-            Exception err = processCommandLine( "Seqref loader", args );
+            Exception err = processCommandLine( args );
             if ( err != null ) return err;
 
             if ( StringUtils.isNotBlank( fileArg ) ) {

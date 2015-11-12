@@ -103,7 +103,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "EvidenceImporterCLI", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         try {
@@ -915,6 +915,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH:mm" );
         Calendar cal = Calendar.getInstance();
         return dateFormat.format( cal.getTime() );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "evidenceImport";
     }
 
 }

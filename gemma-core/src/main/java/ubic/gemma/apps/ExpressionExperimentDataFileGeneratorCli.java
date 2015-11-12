@@ -53,11 +53,21 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         }
     }
 
-    private boolean force_write = false;
-
     ExpressionDataFileService expressionDataFileService;
 
     private String DESCRIPTION = "Generate Flat data files (diff expression, co-expression) for a given set of experiments";
+
+    private boolean force_write = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "generateDataFile";
+    }
 
     @Override
     public String getShortDesc() {
@@ -85,7 +95,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception exp = processCommandLine( DESCRIPTION, args );
+        Exception exp = processCommandLine( args );
         if ( exp != null ) {
             return exp;
         }
@@ -108,8 +118,8 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
 
         // Inner class for processing the experiments
         class Worker extends Thread {
-            BlockingQueue<BioAssaySet> q;
             SecurityContext context;
+            BlockingQueue<BioAssaySet> q;
 
             Worker( BlockingQueue<BioAssaySet> q, SecurityContext context ) {
                 this.context = context;

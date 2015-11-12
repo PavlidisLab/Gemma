@@ -92,17 +92,29 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    private LinkAnalysisService linkAnalysisService;
-
-    private FilterConfig filterConfig = new FilterConfig();
-
-    private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
+    private String analysisTaxon = null;
 
     private String dataFileName = null;
 
-    private String analysisTaxon = null;
+    private FilterConfig filterConfig = new FilterConfig();
+
+    private boolean initalizeFromOldData = false;
+
+    private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
+
+    private LinkAnalysisService linkAnalysisService;
 
     private boolean updateNodeDegree = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "coexpAnalyze";
+    }
 
     @Override
     public String getShortDesc() {
@@ -239,11 +251,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         addAutoOption();
     }
 
-    private boolean initalizeFromOldData = false;
-
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Link Analysis Data Loader", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             return err;
         }
@@ -367,17 +377,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
 
         return null;
-    }
-
-    /**
-     * 
-     */
-    private void loadTaxon() {
-        this.taxon = taxonService.findByCommonName( analysisTaxon );
-        if ( this.taxon == null || !this.taxon.getIsGenesUsable() ) {
-            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + taxon );
-        }
-        log.debug( taxon + "is used" );
     }
 
     @Override
@@ -562,6 +561,17 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     /**
+     * 
+     */
+    private void loadTaxon() {
+        this.taxon = taxonService.findByCommonName( analysisTaxon );
+        if ( this.taxon == null || !this.taxon.getIsGenesUsable() ) {
+            throw new IllegalArgumentException( "No such taxon or, does not have usable gene information: " + taxon );
+        }
+        log.debug( taxon + "is used" );
+    }
+
+    /**
      * @param arrayDesign
      * @param matrix
      * @return
@@ -603,7 +613,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         qtype.setType( StandardQuantitationType.AMOUNT );// this shouldn't get used, just filled in to keep everybody
         // happy.
         qtype.setIsMaskedPreferred( true );
-         qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
+        qtype.setScale( ScaleType.OTHER );// this shouldn't get used, just filled in to keep everybody happy.
         qtype.setIsRatio( false ); // this shouldn't get used, just filled in to keep everybody happy.
         return qtype;
     }

@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.analysis.report.DatabaseViewGenerator;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
@@ -44,11 +45,24 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
         o.doWork( args );
     }
 
-    private boolean generateDiffExpressionSummary = false;
     private boolean generateDatasetSummary = false;
+    private boolean generateDiffExpressionSummary = false;
     private boolean generateTissueSummary = false;
 
     private int limit = 0;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "dumpForNIF";
+    }
 
     /*
      * (non-Javadoc)
@@ -94,7 +108,7 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( "DatabaseViewGeneratorCLI", args );
+        Exception err = super.processCommandLine( args );
         if ( err != null ) return err;
 
         DatabaseViewGenerator v = getBean( DatabaseViewGenerator.class );

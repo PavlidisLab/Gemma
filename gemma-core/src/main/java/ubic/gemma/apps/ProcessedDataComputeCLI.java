@@ -24,6 +24,7 @@ import org.apache.commons.lang3.time.StopWatch;
 
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -56,9 +57,22 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             throw new RuntimeException( e );
         }
     }
-
-    private PreprocessorService preprocessorService;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
     private boolean batchCorrect = false;
+    private PreprocessorService preprocessorService;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "makeProcessedData";
+    }
 
     @Override
     public String getShortDesc() {
@@ -87,7 +101,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "processed expression data updater ", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             return err;
         }

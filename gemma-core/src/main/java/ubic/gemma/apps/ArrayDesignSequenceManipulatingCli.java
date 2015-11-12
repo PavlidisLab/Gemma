@@ -35,6 +35,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -51,16 +52,23 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
 
-    protected ArrayDesignService arrayDesignService;
-
-    protected UserManager userManager;
+    protected boolean allowSubsumedOrMerged = false;
 
     protected ArrayDesignReportService arrayDesignReportService;
 
+    protected ArrayDesignService arrayDesignService;
+
     protected Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<ArrayDesign>();
+
+    protected UserManager userManager;
 
     public ArrayDesignReportService getArrayDesignReportService() {
         return arrayDesignReportService;
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
     }
 
     public ArrayDesignService getArrayDesignService() {
@@ -88,59 +96,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         addAutoOption();
 
     }
-
-    /**
-     * Load expression experiments based on a list of short names or IDs in a file.
-     * 
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
-        Set<ArrayDesign> ees = new HashSet<ArrayDesign>();
-        for ( String eeName : readListFileToStrings( fileName ) ) {
-            ArrayDesign ee = arrayDesignService.findByShortName( eeName );
-            if ( ee == null ) {
-
-                try {
-                    Long id = Long.parseLong( eeName );
-                    ee = arrayDesignService.load( id );
-                    if ( ee == null ) {
-                        log.error( "No ArrayDesign " + eeName + " found" );
-                        continue;
-                    }
-                } catch ( NumberFormatException e ) {
-                    log.error( "No ArrayDesign " + eeName + " found" );
-                    continue;
-
-                }
-
-            }
-            ees.add( ee );
-        }
-        return ees;
-    }
-
-    /**
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    private Collection<String> readListFileToStrings( String fileName ) throws IOException {
-        Collection<String> eeNames = new HashSet<String>();
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) );) {
-            while ( in.ready() ) {
-                String eeName = in.readLine().trim();
-                if ( eeName.startsWith( "#" ) ) {
-                    continue;
-                }
-                eeNames.add( eeName );
-            }
-            return eeNames;
-        }
-    }
-
-    protected boolean allowSubsumedOrMerged = false;
 
     /**
      * @param arrayDesign
@@ -366,6 +321,57 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         }
         log.info( arrayDesign + " does not need an update" );
         return false;
+    }
+
+    /**
+     * Load expression experiments based on a list of short names or IDs in a file.
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
+        Set<ArrayDesign> ees = new HashSet<ArrayDesign>();
+        for ( String eeName : readListFileToStrings( fileName ) ) {
+            ArrayDesign ee = arrayDesignService.findByShortName( eeName );
+            if ( ee == null ) {
+
+                try {
+                    Long id = Long.parseLong( eeName );
+                    ee = arrayDesignService.load( id );
+                    if ( ee == null ) {
+                        log.error( "No ArrayDesign " + eeName + " found" );
+                        continue;
+                    }
+                } catch ( NumberFormatException e ) {
+                    log.error( "No ArrayDesign " + eeName + " found" );
+                    continue;
+
+                }
+
+            }
+            ees.add( ee );
+        }
+        return ees;
+    }
+
+    /**
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Collection<String> readListFileToStrings( String fileName ) throws IOException {
+        Collection<String> eeNames = new HashSet<String>();
+        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) );) {
+            while ( in.ready() ) {
+                String eeName = in.readLine().trim();
+                if ( eeName.startsWith( "#" ) ) {
+                    continue;
+                }
+                eeNames.add( eeName );
+            }
+            return eeNames;
+        }
     }
 
 }

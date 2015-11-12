@@ -42,6 +42,7 @@ import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
@@ -56,6 +57,16 @@ import ubic.gemma.util.Settings;
  * @version $Id$
  */
 public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends SymbolChangeAndLoggingAbstract {
+
+    @Override
+    public String getCommandName() {
+        return null;
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PHENOTYPES;
+    }
 
     protected AnnotatorClient anoClient = null;
 
@@ -124,7 +135,7 @@ public abstract class ExternalDatabaseEvidenceImporterAbstractCLI extends Symbol
     protected synchronized void loadServices( String[] args ) throws Exception {
 
         // this gets the context, so we can access beans
-        Exception err = processCommandLine( "ExternalDatabaseEvidenceImporterAbstractCLI", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) throw err;
 
         this.ontologyService = this.getBean( OntologyService.class );

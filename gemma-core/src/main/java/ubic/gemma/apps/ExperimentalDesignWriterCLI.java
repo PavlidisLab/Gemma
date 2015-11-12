@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.datastructure.matrix;
+package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,7 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -53,11 +53,21 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+       return "printExperimentalDesign"; 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
     public String getShortDesc() {
-        return "Prints experimental design to a file.";
+        return "Prints experimental design to a file in a R-friendly format";
     }
 
     /*
@@ -82,7 +92,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
      */
     @Override
     protected Exception doWork( String[] args ) {
-        processCommandLine( "experimentalDesignWriterCLI", args );
+        processCommandLine( args );
 
         for ( BioAssaySet ee : expressionExperiments ) {
 
@@ -116,5 +126,4 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
         super.processOptions();
         outFileName = getOptionValue( 'o' );
     }
-
 }

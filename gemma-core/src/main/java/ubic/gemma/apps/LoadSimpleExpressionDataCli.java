@@ -33,6 +33,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -54,13 +55,6 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  * @version $Id$
  */
 public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
-
-    private String fileName = null;
-    private String dirName = "./";
-    private SimpleExpressionDataLoaderService eeLoaderService = null;
-    private ArrayDesignService adService = null;
-    private TaxonService taxonService = null;
-    ExpressionExperimentService eeService;
     final static String SPLITCHAR = "\t{1}";
     final static int NAMEI = 0;
     final static int SHORTNAMEI = NAMEI + 1;
@@ -78,6 +72,16 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
     final static int TECHNOLOGYTYPEI = ARRAYDESIGNNAMEI + 1;
     // final static int IMAGECLONEI = QSCALEI + 1;
     final static int TOTALFIELDS = TECHNOLOGYTYPEI + 1;
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Load an experiment from a tab-delimited file instead of GEO";
+    }
 
     /**
      * @param args
@@ -97,6 +101,24 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
             log.fatal( e, e );
             throw new RuntimeException( e );
         }
+    }
+
+    private ExpressionExperimentService eeService;
+    private ArrayDesignService adService = null;
+    private String dirName = "./";
+    private SimpleExpressionDataLoaderService eeLoaderService = null;
+    private String fileName = null;
+
+    private TaxonService taxonService = null;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "addTSVData";
     }
 
     /*
@@ -124,7 +146,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Expression Data loader", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             return err;
         }

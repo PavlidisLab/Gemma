@@ -46,10 +46,25 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "detachSequences";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Remove all associations that a platform has with sequences, for cases where imported data had wrong associations.";
+    }
+
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "Array design sequence remover", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
             this.getArrayDesignService().removeBiologicalCharacteristics( arrayDesign );

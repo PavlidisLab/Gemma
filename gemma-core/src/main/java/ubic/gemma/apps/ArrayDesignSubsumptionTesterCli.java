@@ -44,6 +44,22 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
 
     private Collection<String> otherArrayDesignNames;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "platformSubsumptionTest";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Test two array designs to see if one subsumes the other (in terms of sequences analyzed)"
+                + ", and if so update their information";
+    }
+
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -58,7 +74,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "subsumption tester", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             bail( ErrorCode.INVALID_OPTION );
             return err;

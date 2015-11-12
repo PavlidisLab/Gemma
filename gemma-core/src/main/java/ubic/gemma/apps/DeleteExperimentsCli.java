@@ -31,6 +31,16 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         d.doWork( args );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "deleteExperiments";
+    }
+
     @Override
     public String getShortDesc() {
         return "Delete experiment(s) from the system";
@@ -39,7 +49,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected Exception doWork( String[] args ) {
         this.force = true;
-        super.processCommandLine( "DeleteExperimentsCli", args );
+        super.processCommandLine( args );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             this.eeService.delete( ( ExpressionExperiment ) bas );

@@ -19,10 +19,13 @@
 package ubic.gemma.loader.entrez.pubmed;
 
 import org.xml.sax.SAXException;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 import javax.xml.parsers.ParserConfigurationException;
+
 import java.io.IOException;
 import java.util.Collection;
 
@@ -35,10 +38,6 @@ import java.util.Collection;
 public class PubMedSearcher extends AbstractCLIContextCLI {
     static PubMedSearch pms = new PubMedSearch();
 
-    public PubMedSearcher() {
-        super();
-    }
-
     public static void main( String[] args ) {
         PubMedSearcher p = new PubMedSearcher();
         try {
@@ -48,10 +47,37 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         }
     }
 
+    public PubMedSearcher() {
+        super();
+    }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
+    @Override
+    public String getCommandName() {
+        return "pubmedSearchAndSave";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "perform pubmed searches from a list of terms, and persist the results in the database";
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
+     */
+    @Override
+    protected void buildOptions() {
+        addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
+    }
+
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "pubmed [options] searchterm1 searchterm2 ... searchtermN", args );
+        Exception err = processCommandLine( args );
 
         if ( err != null ) return err;
 
@@ -73,16 +99,6 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         }
         resetLogging();
         return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
-     */
-    @Override
-    protected void buildOptions() {
-        addOption( "d", "persist", false, "Persist the results. Otherwise just search." );
     }
 
 }

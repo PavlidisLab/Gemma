@@ -19,6 +19,7 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.analysis.preprocess.VectorMergingService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -42,6 +43,19 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private VectorMergingService mergingService;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "vectorMerge";
+    }
 
     @Override
     public String getShortDesc() {
@@ -56,7 +70,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( "Merge vectors across array designs", args );
+        Exception e = processCommandLine( args );
         if ( e != null ) {
             return e;
         }

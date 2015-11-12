@@ -57,6 +57,16 @@ public class MeshTermFetcherCli extends AbstractCLI {
     private String file;
     private boolean majorTopicsOnly = false;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "fetchMeshTerms";
+    }
+
     @Override
     public String getShortDesc() {
         return "Gets MESH headings for a set of pubmed ids";
@@ -75,7 +85,7 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        processCommandLine( "Load PubMed records", args );
+        processCommandLine( args );
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
 
         try {

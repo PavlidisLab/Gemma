@@ -51,10 +51,20 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         }
     }
 
-    ArrayDesignService arrayDesignService;
     String arrayDesignName = null;
+    ArrayDesignService arrayDesignService;
 
     ExpressionExperimentPlatformSwitchService serv;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "switchExperimentPlatform";
+    }
 
     @Override
     public String getShortDesc() {
@@ -79,7 +89,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception exp = processCommandLine( "Switch EE to merged or selected Array Design", args );
+        Exception exp = processCommandLine( args );
         if ( exp != null ) {
             return exp;
         }

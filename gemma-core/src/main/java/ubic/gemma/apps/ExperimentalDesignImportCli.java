@@ -22,6 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -47,11 +48,29 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
         }
         System.exit( 0 );
     }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+    private boolean dryRun = false;
 
     private ExpressionExperiment expressionExperiment;
     private InputStream inputStream;
 
-    private boolean dryRun = false;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "importDesign";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Import an experimental design";
+    }
 
     /*
      * (non-Javadoc)
@@ -88,7 +107,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( "experimentalDesignImport", args );
+        Exception e = processCommandLine( args );
         if ( e != null ) return e;
 
         // FIXME need to load other ontologies.

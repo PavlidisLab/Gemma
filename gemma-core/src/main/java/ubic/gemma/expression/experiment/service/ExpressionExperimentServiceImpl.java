@@ -1176,9 +1176,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         eeToUpdate.getRawExpressionDataVectors().removeAll( vecsToRemove );
+        log.info( "Removing unused quantitation type: " + qt );
         eeToUpdate.getQuantitationTypes().remove( qt );
-        // this.update( eeToUpdate ); // will flush.
-        // quantitationTypeDao.remove( qt );
         return vecsToRemove.size();
     }
 
@@ -1212,6 +1211,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         eeToUpdate.getRawExpressionDataVectors().clear();
 
         for ( QuantitationType oldqt : qtsToRemove ) {
+            log.info( "Removing unused quantitation type: " + oldqt );
             quantitationTypeDao.remove( oldqt );
         }
 

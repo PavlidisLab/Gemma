@@ -25,6 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.GffParser;
@@ -42,7 +43,6 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  */
 @Deprecated
 public class MirBaseLoader extends AbstractCLIContextCLI {
-
     public static void main( String[] args ) {
         MirBaseLoader p = new MirBaseLoader();
         try {
@@ -54,15 +54,25 @@ public class MirBaseLoader extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
     }
-
-    private Persister persisterHelper;
     private String fileName;
 
-    private TaxonService taxonService;
-
     private GeneService geneService;
+    private Persister persisterHelper;
 
     private String taxonName = null;
+
+    private TaxonService taxonService;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.DEPRECATED;
+    }
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() { 
+        return null;
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -81,7 +91,7 @@ public class MirBaseLoader extends AbstractCLIContextCLI {
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "Mir loader", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         try (InputStream gffFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( fileName )) {
             GffParser parser = new GffParser();

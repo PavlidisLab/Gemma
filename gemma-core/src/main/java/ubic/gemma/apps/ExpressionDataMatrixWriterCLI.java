@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -44,10 +45,28 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
             log.error( exc.getMessage() );
         }
     }
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
+     */
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+    private boolean filter = false;
+
+    private ExpressionDataFileService fs;
 
     private String outFileName = null;
 
-    private boolean filter = false;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "getDataMatrix";
+    }
 
     @Override
     public String getShortDesc() {
@@ -71,12 +90,10 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         addOption( filteredOption );
     }
 
-    private ExpressionDataFileService fs;
-
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "expressionDataMatrixWriterCLI", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         fs = this.getBean( ExpressionDataFileService.class );

@@ -56,15 +56,25 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
 
-    private String sequenceType;
-    private String sequenceFile;
     private boolean force = false;
-    private TaxonService taxonService;
+    private String idFile = null;
+    private String sequenceFile;
+    private String sequenceId = null;
+    private String sequenceType;
+
     private String taxonName = null;
 
-    private String idFile = null;
+    private TaxonService taxonService;
 
-    private String sequenceId = null;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "addPlatformSequences";
+    }
 
     @Override
     public String getShortDesc() {
@@ -127,7 +137,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     @Override
     protected Exception doWork( String[] args ) {
         try {
-            Exception err = processCommandLine( "Sequence associator", args );
+            Exception err = processCommandLine( args );
             if ( err != null ) return err;
 
             // this is kind of an oddball function of this tool.

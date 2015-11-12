@@ -17,12 +17,10 @@
  *
  */
 
-package ubic.gemma.analysis.preprocess.svd;
+package ubic.gemma.apps;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
-import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -33,28 +31,52 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
+    @Override
+    public String getShortDesc() {
+        return "Run PCA (using SVD) on data sets";
+    }
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        SVDCli s = new SVDCli();
+        Exception e = s.doWork( args );
+
+        if ( e != null ) {
+            log.error( e, e );
+        }
+        System.exit( 0 ); // dangling threads?
+
+    }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
     private boolean postAnalysisOnly = false;
 
-    @SuppressWarnings("static-access")
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "pca";
+    }
+
+    // @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
         super.addForceOption();
 
-        Option postanalyzeOnlyOpt = OptionBuilder
-                .withLongOpt( "post" )
-                .withDescription(
-                        "Don't perform SVD if possible, just update the statistics of comparisons with factors etc. Implies -force" )
-                .create();
-        super.addOption( postanalyzeOnlyOpt );
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( hasOption( "post" ) ) {
-            this.postAnalysisOnly = true;
-        }
+        // Option postanalyzeOnlyOpt = OptionBuilder
+        // .withLongOpt( "post" )
+        // .withDescription(
+        // "Don't perform SVD if possible, just update the statistics of comparisons with factors etc. Implies -force" )
+        // .create();
+        // super.addOption( postanalyzeOnlyOpt );
     }
 
     /*
@@ -64,7 +86,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = super.processCommandLine( "SVD", args );
+        Exception err = super.processCommandLine( args );
 
         if ( err != null ) return err;
 
@@ -80,11 +102,12 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "Processing: " + bas );
                 ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                if ( postAnalysisOnly ) {
-                    svdser.getSvdFactorAnalysis( ee.getId() );
-                } else {
-                    svdser.svd( ee.getId() );
-                }
+                // if ( postAnalysisOnly ) {
+                // /not stored in the database, so this is useless.
+                // svdser.getSvdFactorAnalysis( ee.getId() );
+                // } else {
+                svdser.svd( ee.getId() );
+                // }
                 this.successObjects.add( bas.toString() );
 
             } catch ( Exception e ) {
@@ -96,18 +119,12 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
         return null;
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        SVDCli s = new SVDCli();
-        Exception e = s.doWork( args );
-
-        if ( e != null ) {
-            log.error( e, e );
-        }
-        System.exit( 0 ); // dangling threads?
-
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        // if ( hasOption( "post" ) ) {
+        // this.postAnalysisOnly = true;
+        // }
     }
 
 }

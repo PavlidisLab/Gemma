@@ -19,6 +19,7 @@ import java.io.File;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.pazar.PazarLoader;
 import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.util.AbstractCLIContextCLI;
@@ -39,6 +40,24 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
 
     private File file = null;
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "loadPazar";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Loads Pazar records into the database";
+    }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
     @Override
     protected void buildOptions() {
         OptionBuilder.isRequired();
@@ -49,7 +68,7 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "Load Pazar data", args );
+        super.processCommandLine( args );
 
         TfGeneAssociationService tfs = this.getBean( TfGeneAssociationService.class );
         tfs.removeAll();

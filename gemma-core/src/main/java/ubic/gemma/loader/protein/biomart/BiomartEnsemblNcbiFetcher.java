@@ -116,6 +116,8 @@ public class BiomartEnsemblNcbiFetcher {
 
             return this.writeFile( EnsemblEntrezHGCNProteinMappingFile, headerForEnsemblEntrezHGCNProteinMapping,
                     biomartBufferedReader );
+        } catch ( Exception e ) {
+            throw new IOException( "Could not download: " + url, e );
         }
 
     }

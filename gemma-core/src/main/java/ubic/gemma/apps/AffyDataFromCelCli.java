@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -73,13 +74,19 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
         return false;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "affyFromCel";
+    }
+
     @Override
     public String getShortDesc() {
-        return "Reanalyze Affymetrix data from CEL files, if available; "
-                + "be sure to set the following in Gemma.properties (example settings shown):\n"
-                + " affy.power.tools.exec=/space/opt/bin/apt-probeset-summarize\n"
-                + " affy.power.tools.ref.path=/space/scratch/exonarrays\n"
-                + " affy.power.tools.cdf.path=/space/grp/databases/arrays/cdfs";
+        return "Reanalyze Affymetrix data from CEL files, if available; affy-power-tools must be configured.";
     }
 
     @Override
@@ -104,7 +111,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "AffyDataFromCel", args );
+        super.processCommandLine( args );
 
         DataUpdater serv = getBean( DataUpdater.class );
 
@@ -202,6 +209,16 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             this.cdfFile = getOptionValue( CDF_FILE_OPT );
         }
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
+     */
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
     }
 
 }

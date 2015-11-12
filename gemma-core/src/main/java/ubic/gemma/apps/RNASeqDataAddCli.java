@@ -19,6 +19,7 @@ import java.util.Collection;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -54,6 +55,20 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     private Integer readLength = null;
     private String rpkmFile = null;
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "rnaseqDataAdd";
+    }
+
+    @Override
     public String getShortDesc() {
         return "Add expression quantifiation to an RNA-seq experiment";
     }
@@ -75,7 +90,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "RNASeqDataAdd", args );
+        super.processCommandLine( args );
 
         DataUpdater serv = getBean( DataUpdater.class );
 

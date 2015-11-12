@@ -1,6 +1,8 @@
 package ubic.gemma.apps;
 
 import org.apache.commons.lang3.StringUtils;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -32,6 +34,24 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
     }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "viewExpDesigns";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Dump a view of experimental design(s)F";
+    }
 
     @Override
     protected void buildOptions() {
@@ -39,7 +59,7 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Experimental Design view ", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         ExperimentalDesignService eds = getBean( ExperimentalDesignService.class );

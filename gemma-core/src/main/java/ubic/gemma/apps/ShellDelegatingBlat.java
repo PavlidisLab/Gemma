@@ -66,14 +66,14 @@ public class ShellDelegatingBlat implements Blat {
         HUMAN, MOUSE, RAT
     }
 
+    private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
+
+    private static final Log log = LogFactory.getLog( ShellDelegatingBlat.class );
+
     /**
      * Minimum alignment length for retention.
      */
     private static final int MIN_SCORE = 16;
-
-    private static final int BLAT_UPDATE_INTERVAL_MS = 1000 * 30;
-
-    private static final Log log = LogFactory.getLog( ShellDelegatingBlat.class );
 
     private static String os = System.getProperty( "os.name" ).toLowerCase();
 
@@ -81,25 +81,6 @@ public class ShellDelegatingBlat implements Blat {
      * Strings of As or Ts at the start or end of a sequence longer than this will be stripped off prior to analysis.
      */
     private static final int POLY_AT_THRESHOLD = 5;
-
-    private static boolean hasNativeLibrary;
-
-    static {
-        if ( !os.toLowerCase().startsWith( "windows" ) ) {
-            try {
-                log.debug( "Loading gfClient library, looking in " + System.getProperty( "java.library.path" ) );
-                System.loadLibrary( "Blat" );
-                log.info( "Loaded Blat native library successfully" );
-                hasNativeLibrary = true;
-            } catch ( UnsatisfiedLinkError e ) {
-                log.warn( "Unable to locate the native Blat library. "
-                        + "This isn't a problem if you have the Blat binaries installed" );
-                hasNativeLibrary = false;
-            }
-        } else {
-            hasNativeLibrary = false;
-        }
-    }
 
     /**
      * @param taxon
@@ -141,23 +122,23 @@ public class ShellDelegatingBlat implements Blat {
     private String gfClientExe = "/cygdrive/c/cygwin/usr/local/bin/gfClient.exe";
     private String gfServerExe = "/cygdrive/c/cygwin/usr/local/bin/gfServer.exe";
     private String host = "localhost";
-    private String seqDir = "/";
+    private int humanSensitiveServerPort;
 
     private String humanSeqFiles;
-    private String ratSeqFiles;
-    private String mouseSeqFiles;
-
-    private Process serverProcess;
-
     private int humanServerPort;
+    private int mouseSensitiveServerPort;
+
+    private String mouseSeqFiles;
 
     private int mouseServerPort;
 
+    private int ratSensitiveServerPort;
+
+    private String ratSeqFiles;
+
     private int ratServerPort;
 
-    private int humanSensitiveServerPort;
-
-    private int mouseSensitiveServerPort;
+    private String seqDir = "/";
 
     // private String humanServerHost;
     //
@@ -165,7 +146,7 @@ public class ShellDelegatingBlat implements Blat {
     //
     // private String ratServerHost;
 
-    private int ratSensitiveServerPort;
+    private Process serverProcess;
 
     /**
      * Create a blat object with settings read from the config file.
@@ -619,7 +600,7 @@ public class ShellDelegatingBlat implements Blat {
      */
     private Collection<BlatResult> gfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
-        if ( hasNativeLibrary ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
+        // if ( hasNativeLibrary ) return jniGfClientCall( querySequenceFile, outputPath, portToUse );
 
         return execGfClient( querySequenceFile, outputPath, portToUse );
     }

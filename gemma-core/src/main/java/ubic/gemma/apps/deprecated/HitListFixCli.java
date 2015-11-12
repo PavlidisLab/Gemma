@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 @Deprecated
 public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
-
     /**
      * @param args
      */
@@ -49,6 +48,13 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
         HitListFixCli c = new HitListFixCli();
         c.doWork( args );
 
+    }
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() { 
+        return null;
     }
 
     /*
@@ -59,7 +65,7 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected Exception doWork( String[] args ) {
 
-        super.processCommandLine( "populate differential expression hit lists", args );
+        super.processCommandLine( args );
 
         DifferentialExpressionAnalyzerService diffXs = this.getBean( DifferentialExpressionAnalyzerService.class );
         DifferentialExpressionAnalysisService diffS = this.getBean( DifferentialExpressionAnalysisService.class );

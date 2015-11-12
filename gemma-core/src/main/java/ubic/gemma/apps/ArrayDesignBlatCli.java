@@ -32,6 +32,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.genome.BlatResultParser;
@@ -61,6 +62,13 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             throw new RuntimeException( e );
         }
     }
+    
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
+    }
+
+    Taxon taxon;
 
     private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
 
@@ -68,13 +76,21 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
 
-    private TaxonService taxonService;
+    private boolean sensitive = false;
 
     private String taxonName;
 
-    Taxon taxon;
+    private TaxonService taxonService;
 
-    private boolean sensitive = false;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "blatPlatform";
+    }
 
     @Override
     public String getShortDesc() {
@@ -160,9 +176,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine(
-                "Array design sequence BLAT - only works if server is already started or if a PSL file is provided!",
-                args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         final Date skipIfLastRunLaterThan = getLimitingDate();

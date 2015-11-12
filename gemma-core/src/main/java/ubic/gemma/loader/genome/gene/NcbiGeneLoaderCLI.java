@@ -21,6 +21,8 @@ package ubic.gemma.loader.genome.gene;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.genome.Taxon;
@@ -64,8 +66,13 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "NcbiGeneLoaderCLI", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         loader = new NcbiGeneLoader();
         TaxonService taxonService = this.getBean( TaxonService.class );
@@ -153,6 +160,21 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
         if ( hasOption( "nodownload" ) ) {
             this.skipDownload = true;
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "geneUpdate";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Load/update gene information";
     }
 
 }

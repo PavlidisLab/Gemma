@@ -21,6 +21,8 @@ package ubic.gemma.loader.genome.gene;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 import java.io.IOException;
@@ -33,6 +35,16 @@ import java.io.IOException;
  * @version $Id$
  */
 public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
+
+    @Override
+    public String getShortDesc() {
+        return "loading genes from a non-NCBI files; only used for species like salmon";
+    }
+
+    @Override
+    public String getCommandName() {
+        return "loadGenesFromFile";
+    }
 
     private ExternalFileGeneLoaderService loader;
     private String directGeneInputFileName = null;
@@ -54,7 +66,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "ExternalFileGeneLoader", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         processGeneList();
         return null;
@@ -69,13 +81,12 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     @Override
     protected void buildOptions() {
         Option directGene = OptionBuilder
-                .withDescription(
-                        "Import genes from a file rather than NCBI. You must provide the taxon option and gene file name including full path details" )
+                .withDescription( "Tab delimited format containing gene symbol, gene name, uniprot id in that order" )
                 .hasArg().withArgName( "file" ).create( "f" );
         addOption( directGene );
 
         Option taxonNameOption = OptionBuilder.hasArg()
-                .withDescription( "Taxon common name e.g. 'salmonoid' does not have to be a species " ).create( "t" );
+                .withDescription( "Taxon common name e.g. 'salmonoid'; does not have to be a species " ).create( "t" );
         addOption( taxonNameOption );
 
         requireLogin();
@@ -125,6 +136,11 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
 
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
     }
 
 }

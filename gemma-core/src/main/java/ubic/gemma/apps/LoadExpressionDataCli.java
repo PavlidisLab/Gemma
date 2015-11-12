@@ -31,6 +31,7 @@ import org.apache.commons.lang3.time.StopWatch;
 
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoService;
@@ -69,26 +70,41 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         }
     }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
+
     // Command line Options
     protected String accessionFile = null;
     protected String accessions = null;
-    protected boolean platformOnly = false;
+    protected String adName = "none";
     protected boolean doMatching = true;
     protected boolean force = false;
-    protected String adName = "none";
+    protected boolean platformOnly = false;
 
+    private boolean allowSubSeriesLoad = false;
+
+    private boolean allowSuperSeriesLoad = false;
     // Service Beans
     private ExpressionExperimentService eeService;
-
-    private boolean splitByPlatform = false;
-    private boolean allowSuperSeriesLoad = false;
-    private boolean allowSubSeriesLoad = false;
-    private boolean suppressPostProcessing = false;
     private PreprocessorService preprocessorService;
+    private boolean splitByPlatform = false;
+    private boolean suppressPostProcessing = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "addGEOData";
+    }
 
     @Override
     public String getShortDesc() {
-        return "Load data from GEO or ArrayExpress";
+        return "Load data from GEO";
     }
 
     /*
@@ -128,11 +144,11 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 .withLongOpt( "force" ).create( "force" );
         addOption( forceOption );
 
-        Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" )
-                .withDescription( "Specify the name or short name of the platform the experiment uses (AE only)" )
-                .withLongOpt( "array" ).create( 'a' );
+        // Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" )
+        // .withDescription( "Specify the name or short name of the platform the experiment uses (AE only)" )
+        // .withLongOpt( "array" ).create( 'a' );
 
-        addOption( arrayDesign );
+        // addOption( arrayDesign );
 
         addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
 
@@ -149,7 +165,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Expression Data loader", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             return err;
         }

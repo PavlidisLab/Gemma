@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
@@ -59,6 +60,11 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
         new LoadEvidenceForClassifier( args );
 
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
     }
 
     public LoadEvidenceForClassifier( String[] args ) throws Exception {
@@ -163,7 +169,7 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
     protected synchronized void loadServices( String[] args ) throws Exception {
 
         // this gets the context, so we can access beans
-        processCommandLine( "LoadEvidenceForClassifier", args );
+        processCommandLine( args );
 
         // add services if needed later
         this.bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
@@ -194,6 +200,16 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
         }
 
         return writeFolder;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "loadEvidenceForClassifier";
     }
 
 }

@@ -22,6 +22,7 @@ import ubic.GEOMMTx.ParentFinder;
 import ubic.GEOMMTx.evaluation.MakeHistogramData;
 import ubic.basecode.dataStructure.StringToStringSetMap;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -52,10 +53,13 @@ public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
         // * experiment tilte vrs shortname
 
     }
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.METADATA;
+    }
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "GEOMMTx ", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         StringToStringSetMap result = new StringToStringSetMap();
@@ -146,6 +150,15 @@ public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

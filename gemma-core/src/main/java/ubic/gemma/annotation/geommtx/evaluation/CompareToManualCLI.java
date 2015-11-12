@@ -46,6 +46,7 @@ import ubic.GEOMMTx.mappers.FMALiteMapper;
 import ubic.GEOMMTx.mappers.NIFSTDMapper;
 import ubic.GEOMMTx.util.SetupParameters;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -85,7 +86,10 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         }
         return result;
     }
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.METADATA;
+    }
     public static void main( String[] args ) {
         CompareToManualCLI p = new CompareToManualCLI();
 
@@ -431,7 +435,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         // System.out.println(ProjectRDFModelTools.getMentionCount(filename));
 
         long totaltime = System.currentTimeMillis();
-        Exception err = processCommandLine( "GEOMMTx ", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         // System.exit( 1 );
@@ -973,6 +977,15 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         } catch ( Exception e ) {
             e.printStackTrace();
         }
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

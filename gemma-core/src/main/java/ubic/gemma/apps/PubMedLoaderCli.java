@@ -23,6 +23,7 @@ import java.io.File;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.entrez.pubmed.PubMedService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
@@ -46,6 +47,19 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
     }
 
     private String directory;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "pubmedLoad";
+    }
 
     @Override
     public String getShortDesc() {
@@ -63,7 +77,7 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        processCommandLine( "Load PubMed records", args );
+        processCommandLine( args );
         PubMedService pms = this.getBean( PubMedService.class );
         pms.loadFromDirectory( new File( directory ) );
         return null;

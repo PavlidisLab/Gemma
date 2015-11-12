@@ -31,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -68,7 +69,10 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
             log.error( e, e );
         }
     }
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
     private DesignElementDataVectorService dedvs;
 
     private Collection<Double> extraMissingValueIndicators = new HashSet<Double>();
@@ -80,6 +84,16 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     private double s2n = TwoChannelMissingValues.DEFAULT_SIGNAL_TO_NOISE_THRESHOLD;
 
     private TwoChannelMissingValues tcmv;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "twoChannelMissingData";
+    }
 
     @Override
     public String getShortDesc() {
@@ -124,7 +138,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "Two-channel missing values", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         for ( BioAssaySet ee : expressionExperiments ) {
             if ( ee instanceof ExpressionExperiment ) {

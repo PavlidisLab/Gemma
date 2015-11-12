@@ -18,6 +18,7 @@
  */
 package ubic.gemma.apps;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.genome.taxon.TaxonFetcher;
 import ubic.gemma.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.model.common.description.LocalFile;
@@ -47,6 +48,24 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "loadTaxa";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Populate taxon tables";
+    }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#buildOptions()
      */
     @Override
@@ -62,7 +81,7 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     @Override
     protected Exception doWork( String[] args ) {
         try {
-            Exception err = processCommandLine( "Taxon loader", args );
+            Exception err = processCommandLine( args );
             if ( err != null ) return err;
             TaxonFetcher tf = new TaxonFetcher();
             Collection<LocalFile> files = tf.fetch();

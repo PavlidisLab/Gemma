@@ -81,6 +81,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private List<String> factorNames = new ArrayList<String>();
 
+    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
+
     private Long subsetFactorId;
 
     private String subsetFactorName;
@@ -92,7 +94,15 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     private AnalysisType type = null;
 
-    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "diffExAnalyze";
+    }
 
     /*
      * (non-Javadoc)
@@ -185,7 +195,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Differential Expression Analysis", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             return err;
         }

@@ -23,6 +23,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.CompassUtils;
 
@@ -52,17 +54,30 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
     }
-
-    private boolean indexEE = false;
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
+    }
     private boolean indexAD = false;
-    private boolean indexG = false;
     private boolean indexB = false;
+    private boolean indexEE = false;
+    private boolean indexG = false;
     private boolean indexP = false;
 
     private boolean indexQ = false;
 
     private boolean indexX = false;
     private boolean indexY = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "searchIndex";
+    }
 
     @Override
     public String getShortDesc() {
@@ -111,7 +126,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Index Gemma", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             return err;
         }
@@ -120,17 +135,17 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
              * These beans are defined in Spring XML.
              */
             if ( this.indexG ) {
-                rebuildIndex( this.getBean( "geneGps" , CompassGpsInterfaceDevice.class), "Gene index" );
+                rebuildIndex( this.getBean( "geneGps", CompassGpsInterfaceDevice.class ), "Gene index" );
             }
             if ( this.indexEE ) {
-                rebuildIndex( this.getBean( "expressionGps" , CompassGpsInterfaceDevice.class),
+                rebuildIndex( this.getBean( "expressionGps", CompassGpsInterfaceDevice.class ),
                         "Expression Experiment index" );
             }
             if ( this.indexAD ) {
                 rebuildIndex( this.getBean( "arrayGps", CompassGpsInterfaceDevice.class ), "Array Design index" );
             }
             if ( this.indexB ) {
-                rebuildIndex( this.getBean( "bibliographicGps" , CompassGpsInterfaceDevice.class),
+                rebuildIndex( this.getBean( "bibliographicGps", CompassGpsInterfaceDevice.class ),
                         "Bibliographic Reference Index" );
             }
             if ( this.indexP ) {
@@ -141,11 +156,12 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
             }
 
             if ( this.indexY ) {
-                rebuildIndex( this.getBean( "experimentSetGps" , CompassGpsInterfaceDevice.class), "Experiment set Index" );
+                rebuildIndex( this.getBean( "experimentSetGps", CompassGpsInterfaceDevice.class ),
+                        "Experiment set Index" );
             }
 
             if ( this.indexX ) {
-                rebuildIndex( this.getBean( "geneSetGps" , CompassGpsInterfaceDevice.class), "Gene set Index" );
+                rebuildIndex( this.getBean( "geneSetGps", CompassGpsInterfaceDevice.class ), "Gene set Index" );
             }
         } catch ( Exception e ) {
             log.error( e );

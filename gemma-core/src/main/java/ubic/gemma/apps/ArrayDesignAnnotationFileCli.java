@@ -39,6 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -56,7 +57,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
  * <p>
  * Given a batch file creates all the Annotation files for the AD's specified in the batch file
  * <p>
- * AGiven nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
+ * Given nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
  * 
  * @author klc
  * @version $Id$
@@ -77,18 +78,24 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    } /*
+       * (non-Javadoc)
+       * 
+       * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
+       */
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
     }
 
-    private ArrayDesignAnnotationService arrayDesignAnnotationService;
-
-    private CompositeSequenceService compositeSequenceService;
-
-    private GeneOntologyService goService;
+    @Override
+    public String getShortDesc() {
+        return "Generate annotation files for platforms.";
+    }
 
     // file info
     String batchFileName;
-
-    boolean processAllADs = false;
 
     String fileName = null;
 
@@ -97,13 +104,26 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      */
     boolean overWrite = false;
 
+    boolean processAllADs = false;
+
     OutputType type = OutputType.SHORT;
+
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
+
+    private CompositeSequenceService compositeSequenceService;
+
+    private boolean doAllTypes = false;
 
     private String geneFileName;
 
+    private GeneOntologyService goService;
+
     private String taxonName;
 
-    private boolean doAllTypes = false;
+    @Override
+    public String getCommandName() {
+        return "makePlatformAnnotFiles";
+    }
 
     /*
      * (non-Javadoc)
@@ -174,7 +194,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Array design probe ontology annotation ", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         try {

@@ -48,9 +48,6 @@ import cern.colt.Arrays;
  */
 public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManipulatingCLI {
 
-    private String pubmedIdFilename;
-    private Map<String, Integer> pubmedIds = new HashMap<>();
-
     public static void main( String[] args ) {
         ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
         try {
@@ -61,6 +58,24 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    private String pubmedIdFilename;
+    private Map<String, Integer> pubmedIds = new HashMap<>();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "pubmedAssociateToExperiments";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Set or update the primary publication for experiments";
     }
 
     @Override
@@ -80,7 +95,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Expression experiment bibref finder ", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
@@ -160,6 +175,23 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         return null;
     }
 
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( this.hasOption( "pmidFile" ) ) {
+            this.pubmedIdFilename = this.getOptionValue( "pmidFile" );
+            try {
+                this.pubmedIds = parsePubmedIdFile( this.pubmedIdFilename );
+            } catch ( FileNotFoundException e ) {
+                log.error( e.getMessage() );
+                e.printStackTrace();
+            } catch ( IOException e ) {
+                log.error( e.getMessage() );
+                e.printStackTrace();
+            }
+        }
+    }
+
     /**
      * Reads pubmedID and experiment short name from the file and stores it in a HashMap<eeShortName, pubmedId>. E.g.
      * 22438826 GSE27715 22340501 GSE35802
@@ -185,22 +217,5 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
         log.info( "Read " + ids.size() + " entries from " + filename );
 
         return ids;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        if ( this.hasOption( "pmidFile" ) ) {
-            this.pubmedIdFilename = this.getOptionValue( "pmidFile" );
-            try {
-                this.pubmedIds = parsePubmedIdFile( this.pubmedIdFilename );
-            } catch ( FileNotFoundException e ) {
-                log.error( e.getMessage() );
-                e.printStackTrace();
-            } catch ( IOException e ) {
-                log.error( e.getMessage() );
-                e.printStackTrace();
-            }
-        }
     }
 }

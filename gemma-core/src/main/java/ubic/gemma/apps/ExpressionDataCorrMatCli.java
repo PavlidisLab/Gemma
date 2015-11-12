@@ -41,9 +41,19 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "corrMat";
+    }
+
     @Override
     public String getShortDesc() {
-        return "Create visualizations of the sample correlation matrices for expression experiments";
+        return "Create or update sample correlation matrices for expression experiments";
     }
 
     @Override
@@ -54,7 +64,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
 
     @Override
     protected Exception doWork( String[] args ) {
-        this.processCommandLine( "corrMat", args );
+        this.processCommandLine( args );
 
         for ( BioAssaySet ee : expressionExperiments ) {
             try {

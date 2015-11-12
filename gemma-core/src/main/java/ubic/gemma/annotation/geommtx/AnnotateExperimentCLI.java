@@ -19,6 +19,7 @@
 package ubic.gemma.annotation.geommtx;
 
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,7 +58,7 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "Expression experiment annotator pipeline", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
 
         long time = System.currentTimeMillis();
@@ -110,4 +111,20 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
         log.info( " **** MMTx ready ***" );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "autoTagExperiments";
+    }
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
+     */
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
 }

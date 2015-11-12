@@ -49,12 +49,22 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
         b.doWork( args );
     }
 
-    private HashSet<ArrayDesign> otherArrayDesigns;
-    private String newShortName;
-    private String newName;
-    private ArrayDesignMergeService arrayDesignMergeService;
-
     private ArrayDesign arrayDesign;
+    private ArrayDesignMergeService arrayDesignMergeService;
+    private String newName;
+    private String newShortName;
+
+    private HashSet<ArrayDesign> otherArrayDesigns;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "mergePlatforms";
+    }
 
     @Override
     public String getShortDesc() {
@@ -95,7 +105,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected Exception doWork( String[] args ) {
 
-        Exception err = processCommandLine( "subsumption tester", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) {
             bail( ErrorCode.INVALID_OPTION );
             return err;

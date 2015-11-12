@@ -22,6 +22,8 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.protein.StringProteinInteractionLoader;
@@ -61,26 +63,10 @@ import java.util.Collection;
  * @version $Id$
  */
 public class StringProteinLoadCli extends AbstractCLIContextCLI {
-
-    TaxonService taxonService = null;
-    GeneService geneService = null;
-    ExternalDatabaseService externalDatabaseService = null;
-
-    /** Taxon name of which to process protein protein interactions for */
-    private String taxonName = null;
-
-    /**
-     * Name of remote stringProteinProteinFileName to fetch if not supplied then fetch file as specified in properties
-     * file
-     */
-    private String stringProteinProteinFileNameRemote = null;
-
-    /** Name of local stringProteinProteinFileName to process which avoids fetching file from string site */
-    private File stringProteinProteinFileNameLocal = null;
-
-    /** Name of local biomart file to process if null then biomart files are retrieved from biomart service */
-    private File biomartFileName = null;
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
     /**
      * Main method
      * 
@@ -94,28 +80,39 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
         }
     }
 
+    ExternalDatabaseService externalDatabaseService = null;
+    GeneService geneService = null;
+
+    TaxonService taxonService = null;
+
+    /** Name of local biomart file to process if null then biomart files are retrieved from biomart service */
+    private File biomartFileName = null;
+
+    /** Name of local stringProteinProteinFileName to process which avoids fetching file from string site */
+    private File stringProteinProteinFileNameLocal = null;
+
     /**
-     * Main doWork method validates input and calls the loader
+     * Name of remote stringProteinProteinFileName to fetch if not supplied then fetch file as specified in properties
+     * file
+     */
+    private String stringProteinProteinFileNameRemote = null;
+
+    /** Taxon name of which to process protein protein interactions for */
+    private String taxonName = null;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
-    protected Exception doWork( String[] args ) {
-        // should at least have login info
-        Exception err = processCommandLine( "Import of proteins from STRING", args );
-        if ( err != null ) return err;
-        // call the loader
-        try {
-            this.loadProteinProteinInteractions();
-        } catch ( IOException e ) {
-            return err;
-        }
-
-        return null;
-
+    public String getCommandName() {
+        return "updatePPIs";
     }
 
     @Override
     public String getShortDesc() {
-        return "Loads protein protein interaction data into gemma";
+        return "Loads protein protein interaction data";
     }
 
     /**
@@ -179,6 +176,63 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
     }
 
     /**
+     * Main doWork method validates input and calls the loader
+     */
+    @Override
+    protected Exception doWork( String[] args ) {
+        // should at least have login info
+        Exception err = processCommandLine( args );
+        if ( err != null ) return err;
+        // call the loader
+        try {
+            this.loadProteinProteinInteractions();
+        } catch ( IOException e ) {
+            return err;
+        }
+
+        return null;
+
+    }
+
+    /**
+     * If a taxon is supplied on the command line then process protein interactions for that taxon. If no taxon is
+     * supplied then create a list of valid taxon to process from those stored in gemma: Criteria are does this taxon
+     * have usable genes and is it a species.
+     * 
+     * @return Collection of Taxa to process
+     */
+    protected Collection<Taxon> getValidTaxon() {
+        Taxon taxon = null;
+        this.taxonService = this.getBean( TaxonService.class );
+        Collection<Taxon> taxa = new ArrayList<Taxon>();
+
+        if ( taxonName != null || StringUtils.isNotBlank( taxonName ) ) {
+            taxon = taxonService.findByCommonName( taxonName );
+
+            if ( taxon == null || !( taxon.getIsSpecies() ) || !( taxon.getIsGenesUsable() ) ) {
+                throw new IllegalArgumentException( "The taxon common name supplied: " + taxonName
+                        + " Either does not match anything in GEMMA, or is not a species or does have usable genes" );
+            }
+            taxa.add( taxon );
+        } else {
+            for ( Taxon taxonGemma : this.taxonService.loadAll() ) {
+                // only those taxon that are species and have usable genes should be processed
+                if ( taxonGemma != null && taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable()
+                        && ( taxonGemma.getCommonName() != null ) && !( taxonGemma.getCommonName().isEmpty() ) ) {
+                    taxa.add( taxonGemma );
+                }
+            }
+
+            if ( taxa.isEmpty() ) {
+                throw new RuntimeException(
+                        "There are no valid taxa in GEMMA to process. Valid taxon are those that are species and have usable genes." );
+            }
+            log.info( "Processing " + taxa.size() + "taxa " );
+        }
+        return taxa;
+    }
+
+    /**
      * Validate input parameters. If a biomart file is provided then a taxon should be provided. If a
      * stringProteinProteinFileName is provided then the isStringFileRemote should be set to indicate whether the named
      * file is remote or local (The file is big so to save time good to use a current up to date copy). If local files
@@ -226,44 +280,6 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
         }
         // only authenticated users run this code
         requireLogin();
-    }
-
-    /**
-     * If a taxon is supplied on the command line then process protein interactions for that taxon. If no taxon is
-     * supplied then create a list of valid taxon to process from those stored in gemma: Criteria are does this taxon
-     * have usable genes and is it a species.
-     * 
-     * @return Collection of Taxa to process
-     */
-    protected Collection<Taxon> getValidTaxon() {
-        Taxon taxon = null;
-        this.taxonService = this.getBean( TaxonService.class );
-        Collection<Taxon> taxa = new ArrayList<Taxon>();
-
-        if ( taxonName != null || StringUtils.isNotBlank( taxonName ) ) {
-            taxon = taxonService.findByCommonName( taxonName );
-
-            if ( taxon == null || !( taxon.getIsSpecies() ) || !( taxon.getIsGenesUsable() ) ) {
-                throw new IllegalArgumentException( "The taxon common name supplied: " + taxonName
-                        + " Either does not match anything in GEMMA, or is not a species or does have usable genes" );
-            }
-            taxa.add( taxon );
-        } else {
-            for ( Taxon taxonGemma : this.taxonService.loadAll() ) {
-                // only those taxon that are species and have usable genes should be processed
-                if ( taxonGemma != null && taxonGemma.getIsSpecies() && taxonGemma.getIsGenesUsable()
-                        && ( taxonGemma.getCommonName() != null ) && !( taxonGemma.getCommonName().isEmpty() ) ) {
-                    taxa.add( taxonGemma );
-                }
-            }
-
-            if ( taxa.isEmpty() ) {
-                throw new RuntimeException(
-                        "There are no valid taxa in GEMMA to process. Valid taxon are those that are species and have usable genes." );
-            }
-            log.info( "Processing " + taxa.size() + "taxa " );
-        }
-        return taxa;
     }
 
 }

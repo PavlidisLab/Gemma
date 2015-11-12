@@ -34,6 +34,7 @@ import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -69,6 +70,11 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
     protected String inputFile = "";
     protected BufferedReader br = null;
     protected boolean createInDatabase = false;
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PHENOTYPES;
+    }
 
     protected final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
     protected final String LITERATURE_EVIDENCE = "LITERATURE";

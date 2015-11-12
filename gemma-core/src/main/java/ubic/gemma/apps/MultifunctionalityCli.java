@@ -16,7 +16,9 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.analysis.service.GeneMultifunctionalityPopulationService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.AbstractCLIContextCLI;
@@ -27,7 +29,35 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  */
 public class MultifunctionalityCli extends AbstractCLIContextCLI {
 
+    public static void main( String[] args ) {
+        MultifunctionalityCli c = new MultifunctionalityCli();
+        Exception e = c.doWork( args );
+        if ( e != null ) {
+            log.fatal( e );
+        }
+    }
+
     private Taxon taxon;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "updateMultifunc";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Update or create gene multifunctionality metrics";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -40,7 +70,7 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "Populate multifunctionality", args );
+        super.processCommandLine( args );
 
         GeneMultifunctionalityPopulationService gfs = this.getBean( GeneMultifunctionalityPopulationService.class );
 
@@ -64,14 +94,6 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
             if ( taxon == null ) {
                 log.error( "ERROR: Cannot find taxon " + taxonName );
             }
-        }
-    }
-
-    public static void main( String[] args ) {
-        MultifunctionalityCli c = new MultifunctionalityCli();
-        Exception e = c.doWork( args );
-        if ( e != null ) {
-            log.fatal( e );
         }
     }
 

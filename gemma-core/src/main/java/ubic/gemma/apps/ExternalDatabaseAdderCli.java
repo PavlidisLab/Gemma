@@ -19,6 +19,7 @@
 
 package ubic.gemma.apps;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
 import ubic.gemma.model.common.description.DatabaseType;
@@ -51,13 +52,33 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.SYSTEM;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "addExternalDatabase";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.";
+    }
+
+    @Override
     protected void buildOptions() {
     }
 
     @Override
     protected Exception doWork( String[] args ) {
         try {
-            Exception err = processCommandLine( "One-off External database adder", args );
+            Exception err = processCommandLine( args );
             if ( err != null ) return err;
 
             ContactService contactService = this.getBean( ContactService.class );
@@ -72,15 +93,18 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
             // toAdd.setType( DatabaseType.SEQUENCE );
             // toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
 
-            Contact c = Contact.Factory.newInstance();
-            c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
-            c = contactService.findOrCreate( c );
-            toAdd.setDatabaseSupplier( c );
-            toAdd.setDescription( "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "
-                    + "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University." );
-            toAdd.setName( "OMIM" );
-            toAdd.setType( DatabaseType.OTHER );
-            toAdd.setWebUri( "http://omim.org/" );
+            // Contact c = Contact.Factory.newInstance();
+            // c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
+            // c = contactService.findOrCreate( c );
+            // toAdd.setDatabaseSupplier( c );
+            // toAdd.setDescription(
+            // "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "
+            // +
+            // "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University."
+            // );
+            // toAdd.setName( "OMIM" );
+            // toAdd.setType( DatabaseType.OTHER );
+            // toAdd.setWebUri( "http://omim.org/" );
 
             ExternalDatabaseService eds = this.getBean( ExternalDatabaseService.class );
 

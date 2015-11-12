@@ -81,7 +81,7 @@ public abstract class AbstractCLI {
 
     private static final char VERBOSITY_OPTION = 'v';
     private static final String HEADER = "Options:";
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2014 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
     private static final int DEFAULT_PORT = 3306;
     private static int DEFAULT_VERBOSITY = 4; // info.
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
@@ -241,6 +241,13 @@ public abstract class AbstractCLI {
     }
 
     public abstract String getShortDesc();
+
+    /**
+     * A short memorable name for the command that can be used to locate this class.
+     * 
+     * @return name; if null, this will not be available as a shortcut command.
+     */
+    public abstract String getCommandName();
 
     public boolean hasOption( char opt ) {
         return commandLine.hasOption( opt );
@@ -465,12 +472,11 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param command The name of the command as used at the command line.
-     */
-    protected void printHelp( String command ) {
+      */
+    protected void printHelp() {
         HelpFormatter h = new HelpFormatter();
         h.setWidth( 150 );
-        h.printHelp( command + " [options]", this.getShortDesc() + "\n" + HEADER, options, FOOTER );
+        h.printHelp( getCommandName() + " [options]", this.getShortDesc() + "\n" + HEADER, options, FOOTER );
     }
 
     /**
@@ -481,13 +487,13 @@ public abstract class AbstractCLI {
      * @return Exception; null if nothing went wrong.
      * @throws ParseException
      */
-    protected final Exception processCommandLine( String commandName, String[] args ) {
+    protected final Exception processCommandLine( String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
         System.err.println( "Gemma version " + Settings.getAppVersion() );
 
         if ( args == null ) {
-            printHelp( commandName );
+            printHelp();
             return new Exception( "No arguments" );
         }
 
@@ -506,7 +512,7 @@ public abstract class AbstractCLI {
                 e.printStackTrace();
             }
 
-            printHelp( commandName );
+            printHelp();
 
             if ( log.isDebugEnabled() ) {
                 log.debug( e );
@@ -517,7 +523,7 @@ public abstract class AbstractCLI {
 
         /* INTERROGATION STAGE */
         if ( commandLine.hasOption( 'h' ) ) {
-            printHelp( commandName );
+            printHelp();
             return new Exception( "Help selected" );
         }
 

@@ -202,7 +202,10 @@ public class NCBIGene2GOAssociationLoader {
         return ( Gene2GOAssociation ) persisterHelper.persist( entity );
     }
 
-    protected void load( LocalFile ncbiFile ) {
+    /**
+     * @param ncbiFile
+     */
+    public void load( LocalFile ncbiFile ) {
 
         try (InputStream inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile()
                 .getAbsolutePath() );) {

@@ -20,6 +20,7 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -44,11 +45,31 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "orderVectorsByDesign";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Experimental: reorder the vectors by experimental design, to save computation later.";
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.MISC;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "OrderVectorsByDesign", args );
+        super.processCommandLine( args );
         ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService = getBean( ProcessedExpressionDataVectorCreateService.class );
 
         for ( BioAssaySet ee : this.expressionExperiments ) {

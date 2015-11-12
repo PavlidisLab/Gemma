@@ -23,6 +23,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
+
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -70,24 +72,27 @@ import java.util.Set;
  * @version $Id$
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.EXPERIMENT;
+    }
     protected ExpressionExperimentService eeService;
+
+    protected Collection<BioAssaySet> excludeExperiments;
+
+    protected Set<BioAssaySet> expressionExperiments = new HashSet<BioAssaySet>();
+
+    protected ExpressionExperimentSet expressionExperimentSet;
+
+    protected boolean force = false;
 
     protected GeneService geneService;
 
     protected SearchService searchService;
 
-    protected TaxonService taxonService;
-
     protected Taxon taxon = null;
 
-    protected Set<BioAssaySet> expressionExperiments = new HashSet<BioAssaySet>();
-
-    protected Collection<BioAssaySet> excludeExperiments;
-
-    protected boolean force = false;
-
-    protected ExpressionExperimentSet expressionExperimentSet;
+    protected TaxonService taxonService;
 
     protected void addForceOption() {
         this.addForceOption( null );

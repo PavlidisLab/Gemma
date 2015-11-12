@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.loader.expression.geo.service;
+package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -22,8 +22,10 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
@@ -43,12 +45,32 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     }
 
     @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "listGEOData";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Grab information on GEO data sets not yet in the system";
+    }
+
+    @Override
     protected void buildOptions() {
     }
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "foo", args );
+        super.processCommandLine( args );
 
         Set<String> seen = new HashSet<>();
         GeoBrowserService gbs = this.getBean( GeoBrowserService.class );

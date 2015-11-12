@@ -82,7 +82,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception commandArgumentErrors = processCommandLine( this.getClass().getName(), args );
+        Exception commandArgumentErrors = processCommandLine( args );
         if ( commandArgumentErrors != null ) {
             return commandArgumentErrors;
         }
@@ -127,5 +127,15 @@ public class WorkerCLI extends AbstractSpringAwareCLI {
         Runtime.getRuntime().addShutdownHook( shutdownHook );
 
         taskRunningService = ctx.getBean( RemoteTaskRunningService.class );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "startWorker";
     }
 }

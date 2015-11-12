@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
@@ -68,19 +69,39 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     private AnnotationAssociationService annotationAssociationService;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
+    private ArrayDesignReportService arrayDesignReportService;
     private ArrayDesignService arrayDesignService;
     private BioSequenceService bioSequenceService;
     private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
-    private ArrayDesignReportService arrayDesignReportService;
     private GeneService geneService;
 
     private Taxon taxon = null;
 
     private TaxonService taxonService;
 
-    private boolean useNCBIIds = false;
     private boolean useEnsemblIds = false;
+    private boolean useNCBIIds = false;
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "genericPlatform";
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Update or create a 'platform' based on the genes for the organism";
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -99,7 +120,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     @Override
     protected Exception doWork( String[] args ) {
-        super.processCommandLine( "Update or create a 'platform' based on the genes for the organism", args );
+        super.processCommandLine( args );
 
         ExternalDatabase genbank = externalDatabaseService.find( "Genbank" );
         ExternalDatabase ensembl = externalDatabaseService.find( "Ensembl" );

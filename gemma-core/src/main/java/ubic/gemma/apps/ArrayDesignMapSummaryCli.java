@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapSummary;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -44,6 +45,18 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
         }
     }
 
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
     /*
      * (non-Javadoc)
      * 
@@ -51,7 +64,7 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception err = processCommandLine( "Array design mapping summary", args );
+        Exception err = processCommandLine( args );
         if ( err != null ) return err;
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 

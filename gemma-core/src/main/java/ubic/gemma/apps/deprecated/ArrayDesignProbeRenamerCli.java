@@ -26,6 +26,7 @@ import java.io.InputStream;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.apps.ArrayDesignSequenceManipulatingCli;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeRenamingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -51,8 +52,19 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
             log.fatal( e, e );
         }
     }
-
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PLATFORM;
+    }
     private String fileName;
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() { 
+        return null;
+    }
 
     @SuppressWarnings("static-access")
     @Override
@@ -65,7 +77,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
 
     @Override
     protected Exception doWork( String[] args ) {
-        Exception e = processCommandLine( "replace array design probe names", args );
+        Exception e = processCommandLine( args );
         if ( e != null ) {
             return e;
         }
