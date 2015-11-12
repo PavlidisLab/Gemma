@@ -23,7 +23,7 @@ import gemma.gsec.model.Securable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * 
+ * @author Patrick
  */
 public abstract class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.model.SecuredChild {
 
