@@ -18,13 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.URL;
-import java.util.Enumeration;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
@@ -138,7 +133,7 @@ public class GemmaCLI {
 
         for ( CommandGroup cmdg : commands.keySet() ) {
             Map<String, String> commandsInGroup = commands.get( cmdg );
-            if ( commandsInGroup.isEmpty() ) continue;
+            if ( commandsInGroup == null || commandsInGroup.isEmpty() ) continue;
             System.err.println( "\n-------- " + cmdg.toString() + "-----------" );
 
             for ( String cmd : commandsInGroup.keySet() )
