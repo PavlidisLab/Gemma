@@ -25,7 +25,13 @@ import java.net.URL;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
+
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.core.type.filter.RegexPatternTypeFilter;
 
 import ubic.gemma.util.AbstractCLI;
 
@@ -53,46 +59,41 @@ public class GemmaCLI {
         Map<String, Class<? extends AbstractCLI>> commandClasses = new TreeMap<>();
         try {
 
-            Enumeration<URL> resources = Thread.currentThread().getContextClassLoader()
-                    .getResources( "ubic/gemma/apps" );
-            while ( resources.hasMoreElements() ) {
-                URL url = resources.nextElement();
-                try (InputStream is = ( InputStream ) url.getContent()) {
+            final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
+                    false );
+            provider.addIncludeFilter( new RegexPatternTypeFilter( Pattern.compile( ".*" ) ) );
 
-                    try (Scanner s = new Scanner( is ).useDelimiter( "\\n" )) {
-                        while ( s.hasNext() ) {
-                            String c = s.next().replace( ".class", "" );
-                            String clazzName = "ubic.gemma.apps." + c;
-                            try {
+            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.apps" );
 
-                                Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class
-                                        .forName( clazzName );
-                                Object cliinstance = aclazz.newInstance();
-                                Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
-                                String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
-                                Method method2 = aclazz.getMethod( "getShortDesc", new Class[] {} );
-                                String desc = ( String ) method2.invoke( cliinstance, new Object[] {} );
+            for ( BeanDefinition bean : classes ) {
+                try {
+                    Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class.forName( bean
+                            .getBeanClassName() );
 
-                                Method method3 = aclazz.getMethod( "getCommandGroup", new Class[] {} );
-                                CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
-                                // System.err.println( commandName + " - " + desc + " (" + c + ")" );
+                    Object cliinstance = aclazz.newInstance();
+                    Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
+                    String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
+                    Method method2 = aclazz.getMethod( "getShortDesc", new Class[] {} );
+                    String desc = ( String ) method2.invoke( cliinstance, new Object[] {} );
 
-                                if ( !commands.containsKey( g ) ) {
-                                    commands.put( g, new TreeMap<String, String>() );
-                                }
-                                commands.get( g ).put( commandName, desc + " (" + c + ")" );
+                    Method method3 = aclazz.getMethod( "getCommandGroup", new Class[] {} );
+                    CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
+                    // System.err.println( commandName + " - " + desc + " (" + c + ")" );
 
-                                commandClasses.put( commandName, aclazz );
-                            } catch ( Exception e ) {
-                                // OK, this can happen if we hit a non useful class.
-                            }
-                        }
+                    if ( !commands.containsKey( g ) ) {
+                        commands.put( g, new TreeMap<String, String>() );
                     }
+                    commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
+
+                    commandClasses.put( commandName, aclazz );
+                } catch ( Exception e ) {
+                    // OK, this can happen if we hit a non useful class.
                 }
             }
 
-        } catch ( IOException e1 ) {
+        } catch ( Exception e1 ) {
             System.err.println( "ERROR! Report to developers: " + e1.getMessage() );
+            System.exit( 1 );
         }
 
         if ( args.length == 0 ) {
@@ -103,6 +104,7 @@ public class GemmaCLI {
                 System.err.println( "Unrecognized command: " + commandRequested );
                 printHelp( commands );
                 System.err.println( "Unrecognized command: " + commandRequested );
+                System.exit( 1 );
             } else {
                 try {
                     Class<?> c = commandClasses.get( commandRequested );
@@ -111,10 +113,12 @@ public class GemmaCLI {
                     method.invoke( null, ( Object ) args );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error! Report to developers: " + e.getMessage() );
+
                     throw new RuntimeException( e );
                 } finally {
                     System.err.println( "========= Gemma CLI run complete with method=" + commandRequested
                             + "============" );
+                    System.exit( 0 );
                 }
             }
         }
@@ -129,11 +133,14 @@ public class GemmaCLI {
 
         System.err
                 .print( "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} ubic.gemma.apps.GemmaCLI <commandName> [options]\n\n"
-                        + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n" + "Here is a list of available commands:\n" );
+                        + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
+                        + "Here is a list of available commands:\n" );
 
         for ( CommandGroup cmdg : commands.keySet() ) {
-            System.err.println( "\n-------- " + cmdg.toString() + "-----------" );
             Map<String, String> commandsInGroup = commands.get( cmdg );
+            if ( commandsInGroup.isEmpty() ) continue;
+            System.err.println( "\n-------- " + cmdg.toString() + "-----------" );
+
             for ( String cmd : commandsInGroup.keySet() )
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
         }
