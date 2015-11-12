@@ -18,10 +18,19 @@
  */
 package ubic.gemma.model.common.search;
 
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.Taxon;
+
 /**
  * 
  */
 public abstract class SearchSettings implements java.io.Serializable {
+
+    /**
+     * How many results per result type are allowed. This implies that if you search for multiple types of things, you
+     * can get more than this.
+     */
+    private static final int DEFAULT_MAX_RESULTS_PER_RESULT_TYPE = 500;
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.search.SearchSettings}.
@@ -33,7 +42,6 @@ public abstract class SearchSettings implements java.io.Serializable {
         public static SearchSettings newInstance() {
             return new SearchSettingsImpl();
         }
-
     }
 
     /**
@@ -44,7 +52,7 @@ public abstract class SearchSettings implements java.io.Serializable {
 
     private String termUri;
 
-    private Integer maxResults = Integer.valueOf( 500 );
+    private Integer maxResults = Integer.valueOf( DEFAULT_MAX_RESULTS_PER_RESULT_TYPE );
 
     private Boolean searchExperiments = Boolean.valueOf( true );
 
@@ -74,9 +82,9 @@ public abstract class SearchSettings implements java.io.Serializable {
 
     private Long id;
 
-    private ubic.gemma.model.genome.Taxon taxon;
+    private Taxon taxon;
 
-    private ubic.gemma.model.expression.arrayDesign.ArrayDesign platformConstraint;
+    private ArrayDesign platformConstraint;
 
     /**
      * No-arg constructor added to satisfy javabean contract
