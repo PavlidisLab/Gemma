@@ -56,7 +56,6 @@ public class GemmaCLI {
         /*
          * Build a map from command names to classes.
          */
-        // using a treemap fails...
         Map<CommandGroup, Map<String, String>> commands = new HashMap<>();
         Map<String, Class<? extends AbstractCLI>> commandClasses = new HashMap<>();
         try {
@@ -76,6 +75,9 @@ public class GemmaCLI {
 
                     Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
                     String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
+                    if ( commandName == null ) {
+                        continue;
+                    }
 
                     Method method2 = aclazz.getMethod( "getShortDesc", new Class[] {} );
                     String desc = ( String ) method2.invoke( cliinstance, new Object[] {} );
@@ -138,13 +140,14 @@ public class GemmaCLI {
                 + "Here is a list of available commands, grouped by category:\n" );
 
         for ( CommandGroup cmdg : CommandGroup.values() ) {
+            if ( cmdg.equals( CommandGroup.DEPRECATED ) ) continue;
             if ( !commands.containsKey( cmdg ) ) continue;
             Map<String, String> commandsInGroup = commands.get( cmdg );
             if ( commandsInGroup.isEmpty() ) continue;
 
             System.err.println( "\n---- " + cmdg.toString() + " ----" );
             List<String> cg = new ArrayList<>( commandsInGroup.keySet() );
-       //     Collections.sort( cg );
+            // Collections.sort( cg );
             for ( String cmd : cg ) {
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }

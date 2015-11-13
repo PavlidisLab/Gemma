@@ -53,11 +53,12 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
             throw new RuntimeException( e );
         }
     }
-    
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.DEPRECATED;
     }
+
     private BioSequenceService bioSequenceService;
 
     private ExternalDatabaseService externalDatabaseService;
@@ -66,12 +67,14 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
     private String taxonName;
     private TaxonService taxonService;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
-    public String getCommandName() { 
-        return null;
+    public String getCommandName() {
+        return "goldenPathSequenceLoad";
     }
 
     public void load( String taxonCommonName, int limit ) {

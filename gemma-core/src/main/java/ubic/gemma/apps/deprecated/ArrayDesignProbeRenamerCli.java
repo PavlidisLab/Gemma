@@ -52,18 +52,22 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
             log.fatal( e, e );
         }
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
+
     private String fileName;
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
-    public String getCommandName() { 
-        return null;
+    public String getCommandName() {
+        return "probeRename";
     }
 
     @SuppressWarnings("static-access")

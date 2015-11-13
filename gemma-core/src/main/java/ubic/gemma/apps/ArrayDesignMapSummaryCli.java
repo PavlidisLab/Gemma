@@ -45,18 +45,21 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
-        // TODO Auto-generated method stub
-        return null;
+        return "platformMapSummary";
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.ANALYSIS;
     }
+
     /*
      * (non-Javadoc)
      * 

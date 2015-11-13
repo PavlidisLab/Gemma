@@ -25,6 +25,7 @@ import java.util.Map;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -49,12 +50,25 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
         c.doWork( args );
 
     }
-    /* (non-Javadoc)
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.DEPRECATED;
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "redo some analyses";
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
-    public String getCommandName() { 
-        return null;
+    public String getCommandName() {
+        return "hitlistFix";
     }
 
     /*
