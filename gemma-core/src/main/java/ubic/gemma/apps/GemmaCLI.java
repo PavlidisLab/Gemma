@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+//import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -84,7 +84,7 @@ public class GemmaCLI {
                     CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
 
                     if ( !commands.containsKey( g ) ) {
-                        commands.put( g, new TreeMap<String, String>() );
+                        commands.put( g, new HashMap<String, String>() );
                     }
 
                     commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
