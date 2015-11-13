@@ -19,6 +19,10 @@
 package ubic.gemma.apps;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -31,15 +35,17 @@ import org.springframework.core.type.filter.RegexPatternTypeFilter;
 import ubic.gemma.util.AbstractCLI;
 
 /**
- * Generic command line information for Gemma. This doesn't do anything but print some help.
+ * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
+ * when given no arguments.
  * 
  * @author paul
  * @version $Id$
  */
 public class GemmaCLI {
 
+    // order here is significant.
     public static enum CommandGroup {
-        EXPERIMENT, PLATFORM, MISC, ANALYSIS, DEPRECATED, METADATA, PHENOTYPES, SYSTEM
+        EXPERIMENT, PLATFORM, ANALYSIS, METADATA, PHENOTYPES, SYSTEM, MISC, DEPRECATED
     };
 
     /**
@@ -50,8 +56,9 @@ public class GemmaCLI {
         /*
          * Build a map from command names to classes.
          */
-        Map<CommandGroup, Map<String, String>> commands = new TreeMap<>();
-        Map<String, Class<? extends AbstractCLI>> commandClasses = new TreeMap<>();
+        // using a treemap fails...
+        Map<CommandGroup, Map<String, String>> commands = new HashMap<>();
+        Map<String, Class<? extends AbstractCLI>> commandClasses = new HashMap<>();
         try {
 
             final ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(
@@ -66,13 +73,13 @@ public class GemmaCLI {
                             .getBeanClassName() );
 
                     Object cliinstance = aclazz.newInstance();
-                    
+
                     Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
                     String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
-                    
+
                     Method method2 = aclazz.getMethod( "getShortDesc", new Class[] {} );
                     String desc = ( String ) method2.invoke( cliinstance, new Object[] {} );
-                    
+
                     Method method3 = aclazz.getMethod( "getCommandGroup", new Class[] {} );
                     CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
 
@@ -109,7 +116,6 @@ public class GemmaCLI {
                     method.invoke( null, ( Object ) args );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error! Report to developers: " + e.getMessage() );
-
                     throw new RuntimeException( e );
                 } finally {
                     System.err.println( "========= Gemma CLI run complete with method=" + commandRequested
@@ -126,18 +132,20 @@ public class GemmaCLI {
     public static void printHelp( Map<CommandGroup, Map<String, String>> commands ) {
         System.err.println( "============ Gemma command line tools ============" );
 
-        System.err
-                .print( "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} ubic.gemma.apps.GemmaCLI <commandName> [options]\n\n"
-                        + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
-                        + "Here is a list of available commands, grouped by category:\n" );
+        System.err.print( "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} "
+                + "ubic.gemma.apps.GemmaCLI <commandName> [options]\n\n"
+                + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
+                + "Here is a list of available commands, grouped by category:\n" );
 
-        for ( CommandGroup cmdg : commands.keySet() ) {
+        for ( CommandGroup cmdg : CommandGroup.values() ) {
+            if ( !commands.containsKey( cmdg ) ) continue;
             Map<String, String> commandsInGroup = commands.get( cmdg );
-            if ( commandsInGroup == null || commandsInGroup.isEmpty() ) continue;
+            if ( commandsInGroup.isEmpty() ) continue;
 
             System.err.println( "\n---- " + cmdg.toString() + " ----" );
-
-            for ( String cmd : commandsInGroup.keySet() ) {
+            List<String> cg = new ArrayList<>( commandsInGroup.keySet() );
+            Collections.sort( cg );
+            for ( String cmd : cg ) {
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }
         }

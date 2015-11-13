@@ -21,7 +21,7 @@ package ubic.gemma.session;
 import java.util.Collection;
 
 /**
- * TODO Document M
+ * TODO Document FIXME should be in util or web package?
  * 
  * @author ?
  * @version $Id$

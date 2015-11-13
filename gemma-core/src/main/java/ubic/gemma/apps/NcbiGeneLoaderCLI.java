@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.loader.genome.gene;
+package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;

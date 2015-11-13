@@ -17,12 +17,13 @@
  *
  */
 
-package ubic.gemma.loader.genome.gene;
+package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
 import java.io.IOException;
