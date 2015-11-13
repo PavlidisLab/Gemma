@@ -144,7 +144,7 @@ public class GemmaCLI {
 
             System.err.println( "\n---- " + cmdg.toString() + " ----" );
             List<String> cg = new ArrayList<>( commandsInGroup.keySet() );
-            Collections.sort( cg );
+       //     Collections.sort( cg );
             for ( String cmd : cg ) {
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }
