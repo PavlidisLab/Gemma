@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 //import java.util.TreeMap;
 import java.util.regex.Pattern;
 
@@ -64,7 +65,9 @@ public class GemmaCLI {
                     false );
             provider.addIncludeFilter( new RegexPatternTypeFilter( Pattern.compile( ".*" ) ) );
 
+            // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
             final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.apps" );
+            classes.addAll( provider.findCandidateComponents( "ubic.gemma.loader.association.phenotype" ) );
 
             for ( BeanDefinition bean : classes ) {
                 try {
@@ -86,7 +89,7 @@ public class GemmaCLI {
                     CommandGroup g = ( CommandGroup ) method3.invoke( cliinstance, new Object[] {} );
 
                     if ( !commands.containsKey( g ) ) {
-                        commands.put( g, new HashMap<String, String>() );
+                        commands.put( g, new TreeMap<String, String>() );
                     }
 
                     commands.get( g ).put( commandName, desc + " (" + bean.getBeanClassName() + ")" );
@@ -146,9 +149,7 @@ public class GemmaCLI {
             if ( commandsInGroup.isEmpty() ) continue;
 
             System.err.println( "\n---- " + cmdg.toString() + " ----" );
-            List<String> cg = new ArrayList<>( commandsInGroup.keySet() );
-            // Collections.sort( cg );
-            for ( String cmd : cg ) {
+            for ( String cmd : commandsInGroup.keySet() ) {
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }
         }

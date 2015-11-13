@@ -115,6 +115,22 @@ public class NCBIGene2GOAssociationLoader {
         }
     }
 
+    /**
+     * @param ncbiFile
+     */
+    public void load( LocalFile ncbiFile ) {
+
+        try (InputStream inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile()
+                .getAbsolutePath() );) {
+            load( inputStream );
+
+        } catch ( IOException e ) {
+            log.error( e, e );
+            throw new RuntimeException( e );
+        }
+
+    }
+
     public void setParser( NCBIGene2GOAssociationParser parser ) {
         this.parser = parser;
     }
@@ -200,22 +216,6 @@ public class NCBIGene2GOAssociationLoader {
         assert entity.getGene() != null;
         assert entity.getOntologyEntry() != null;
         return ( Gene2GOAssociation ) persisterHelper.persist( entity );
-    }
-
-    /**
-     * @param ncbiFile
-     */
-    public void load( LocalFile ncbiFile ) {
-
-        try (InputStream inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile()
-                .getAbsolutePath() );) {
-            load( inputStream );
-
-        } catch ( IOException e ) {
-            log.error( e, e );
-            throw new RuntimeException( e );
-        }
-
     }
 
     private void setCount( int count ) {

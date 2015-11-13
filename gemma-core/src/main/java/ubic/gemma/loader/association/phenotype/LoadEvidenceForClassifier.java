@@ -40,21 +40,6 @@ import ubic.gemma.util.Settings;
  */
 public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
-    // the services that will be needed
-    BibliographicReferenceService bibliographicReferenceService = null;
-
-    // a monthly dump of all evidence, takes too long to all, use files auto-generated
-    private String evidenceDumpPath = File.separator + "neurocarta" + File.separator + "classifier" + File.separator
-            + "AllPhenocartaAnnotations.tsv";
-    // these are all evidence that were used in the training set, exclude those ones to not give false results
-    private String trainingSetPath = File.separator + "neurocarta" + File.separator + "classifier" + File.separator
-            + "trainingSet.tsv";
-
-    // comes from the excluded set
-    private Set<String> excludedPubmed = new HashSet<>();
-
-    private BufferedWriter writer = null;
-
     @SuppressWarnings("unused")
     public static void main( String[] args ) throws Exception {
 
@@ -62,10 +47,20 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
     }
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
-    }
+    // the services that will be needed
+    BibliographicReferenceService bibliographicReferenceService = null;
+    // a monthly dump of all evidence, takes too long to all, use files auto-generated
+    private String evidenceDumpPath = File.separator + "neurocarta" + File.separator + "classifier" + File.separator
+            + "AllPhenocartaAnnotations.tsv";
+
+    // comes from the excluded set
+    private Set<String> excludedPubmed = new HashSet<>();
+
+    // these are all evidence that were used in the training set, exclude those ones to not give false results
+    private String trainingSetPath = File.separator + "neurocarta" + File.separator + "classifier" + File.separator
+            + "trainingSet.tsv";
+
+    private BufferedWriter writer = null;
 
     public LoadEvidenceForClassifier( String[] args ) throws Exception {
 
@@ -79,6 +74,58 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
         loadTrainingSetUsed();
 
         findEvidence();
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.ANALYSIS;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "loadEvidenceForClassifier";
+    }
+
+    @Override
+    protected void buildOptions() {
+    }
+
+    // creates the folder where the output files will be put, use this one if file is too big
+    protected String createWriteFolderIfDoesntExist( String name ) throws Exception {
+
+        // where to put the final results
+        String writeFolder = Settings.getString( "gemma.appdata.home" ) + File.separator + name;
+
+        File folder = new File( writeFolder );
+        folder.mkdir();
+
+        if ( !folder.exists() ) {
+            throw new Exception( "having trouble to create a folder" );
+        }
+
+        return writeFolder;
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    // load all needed services
+    protected synchronized void loadServices( String[] args ) throws Exception {
+
+        // this gets the context, so we can access beans
+        processCommandLine( args );
+
+        // add services if needed later
+        this.bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
+
     }
 
     private void findEvidence() throws FileNotFoundException, IOException {
@@ -163,53 +210,6 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
             excludedPubmed.add( line.split( "\t" )[0] );
         }
 
-    }
-
-    // load all needed services
-    protected synchronized void loadServices( String[] args ) throws Exception {
-
-        // this gets the context, so we can access beans
-        processCommandLine( args );
-
-        // add services if needed later
-        this.bibliographicReferenceService = this.getBean( BibliographicReferenceService.class );
-
-    }
-
-    @Override
-    protected void buildOptions() {
-    }
-
-    @Override
-    protected Exception doWork( String[] args ) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    // creates the folder where the output files will be put, use this one if file is too big
-    protected String createWriteFolderIfDoesntExist( String name ) throws Exception {
-
-        // where to put the final results
-        String writeFolder = Settings.getString( "gemma.appdata.home" ) + File.separator + name;
-
-        File folder = new File( writeFolder );
-        folder.mkdir();
-
-        if ( !folder.exists() ) {
-            throw new Exception( "having trouble to create a folder" );
-        }
-
-        return writeFolder;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        return "loadEvidenceForClassifier";
     }
 
 }

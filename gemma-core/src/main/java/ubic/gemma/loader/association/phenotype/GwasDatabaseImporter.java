@@ -24,37 +24,37 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     // name of the external database
     public static final String GWAS = "GWAS_Catalog";
 
+    public static final String GWAS_FILE = "gwascatalog.txt";
     // path of file to download
     public static final String GWAS_URL_PATH = "http://www.genome.gov/admin/";
-    public static final String GWAS_FILE = "gwascatalog.txt";
 
-    // names and positions of the headers, this will be check with the file to verify all headers
-    protected static final String PUBMED_ID = "PUBMEDID";
-    protected static final Integer PUBMED_ID_INDEX = 1;
+    protected static final String CONTEXT = "Context";
+    protected static final Integer CONTEXT_INDEX = 24;
     protected static final String DISEASE_TRAIT = "Disease/Trait";
     protected static final Integer DISEASE_TRAIT_INDEX = 7;
     protected static final String INITIAL_SAMPLE_SIZE = "Initial Sample Size";
     protected static final Integer INITIAL_SAMPLE_SIZE_INDEX = 8;
+    protected static final String MAPPED_GENE = "Mapped_gene";
+    protected static final Integer MAPPED_GENE_INDEX = 14;
+    protected static final String OR_OR_BETA = "OR or beta";
+    protected static final Integer OR_OR_BETA_INDEX = 30;
+    protected static final String P_VALUE = "p-Value";
+    protected static final Integer P_VALUE_INDEX = 27;
+    protected static final String PLATFORM = "Platform [SNPs passing QC]";
+    protected static final Integer PLATFORM_INDEX = 32;
+    // names and positions of the headers, this will be check with the file to verify all headers
+    protected static final String PUBMED_ID = "PUBMEDID";
+    protected static final Integer PUBMED_ID_INDEX = 1;
     protected static final String REPLICATION_SAMPLE_SIZE = "Replication Sample Size";
     protected static final Integer REPLICATION_SAMPLE_SIZE_INDEX = 9;
     protected static final String REPORTED_GENES = "Reported Gene(s)";
     protected static final Integer REPORTED_GENES_INDEX = 13;
-    protected static final String MAPPED_GENE = "Mapped_gene";
-    protected static final Integer MAPPED_GENE_INDEX = 14;
-    protected static final String STRONGEST_SNP = "Strongest SNP-Risk Allele";
-    protected static final Integer STRONGEST_SNP_INDEX = 20;
-    protected static final String SNPS = "SNPs";
-    protected static final Integer SNPS_INDEX = 21;
-    protected static final String CONTEXT = "Context";
-    protected static final Integer CONTEXT_INDEX = 24;
     protected static final String RISK_ALLELE_FREQUENCY = "Risk Allele Frequency";
     protected static final Integer RISK_ALLELE_FREQUENCY_INDEX = 26;
-    protected static final String P_VALUE = "p-Value";
-    protected static final Integer P_VALUE_INDEX = 27;
-    protected static final String OR_OR_BETA = "OR or beta";
-    protected static final Integer OR_OR_BETA_INDEX = 30;
-    protected static final String PLATFORM = "Platform [SNPs passing QC]";
-    protected static final Integer PLATFORM_INDEX = 32;
+    protected static final String SNPS = "SNPs";
+    protected static final Integer SNPS_INDEX = 21;
+    protected static final String STRONGEST_SNP = "Strongest SNP-Risk Allele";
+    protected static final Integer STRONGEST_SNP_INDEX = 20;
 
     public static void main( String[] args ) throws Exception {
 
@@ -68,6 +68,43 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
         // process the gwas file
         importEvidence.processGwasFile( gwasFile );
+    }
+
+    public GwasDatabaseImporter( String[] args ) throws Exception {
+        super( args );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "gwasImport";
+    }
+
+    private void checkHeader( String valueFile, String valueExpected ) throws Exception {
+
+        if ( !valueFile.equalsIgnoreCase( valueExpected ) ) {
+            throw new Exception( "Wrong header found in file, expected: " + valueExpected + "  found:" + valueFile );
+        }
+    }
+
+    // the rules to choose the gene symbol
+    private String findGeneSymbol( String reportedGene, String mappedGene ) throws Exception {
+
+        // TODO
+        String geneSymbol = null;
+
+        if ( !reportedGene.isEmpty() && !mappedGene.isEmpty() ) {
+
+            if ( reportedGene.equalsIgnoreCase( mappedGene ) ) {
+                geneSymbol = reportedGene;
+            }
+        }
+
+        return geneSymbol;
     }
 
     // process the gwas file, line by line
@@ -119,20 +156,18 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         }
     }
 
-    // the rules to choose the gene symbol
-    private String findGeneSymbol( String reportedGene, String mappedGene ) throws Exception {
+    @SuppressWarnings("unused")
+    private String removeParentheses( String txt ) {
 
-        // TODO
-        String geneSymbol = null;
+        int index1 = txt.indexOf( "(" );
+        int index2 = txt.indexOf( ")" );
 
-        if ( !reportedGene.isEmpty() && !mappedGene.isEmpty() ) {
+        if ( index1 != -1 && index2 != -1 ) {
 
-            if ( reportedGene.equalsIgnoreCase( mappedGene ) ) {
-                geneSymbol = reportedGene;
-            }
+            return txt.substring( 0, index1 ) + txt.substring( index2 + 1, txt.length() );
+
         }
-
-        return geneSymbol;
+        return txt;
     }
 
     private void verifyHeaders( String[] headers ) throws Exception {
@@ -149,31 +184,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         checkHeader( headers[P_VALUE_INDEX], P_VALUE );
         checkHeader( headers[OR_OR_BETA_INDEX], OR_OR_BETA );
         checkHeader( headers[PLATFORM_INDEX], PLATFORM );
-    }
-
-    private void checkHeader( String valueFile, String valueExpected ) throws Exception {
-
-        if ( !valueFile.equalsIgnoreCase( valueExpected ) ) {
-            throw new Exception( "Wrong header found in file, expected: " + valueExpected + "  found:" + valueFile );
-        }
-    }
-
-    public GwasDatabaseImporter( String[] args ) throws Exception {
-        super( args );
-    }
-
-    @SuppressWarnings("unused")
-    private String removeParentheses( String txt ) {
-
-        int index1 = txt.indexOf( "(" );
-        int index2 = txt.indexOf( ")" );
-
-        if ( index1 != -1 && index2 != -1 ) {
-
-            return txt.substring( 0, index1 ) + txt.substring( index2 + 1, txt.length() );
-
-        }
-        return txt;
     }
 
 }

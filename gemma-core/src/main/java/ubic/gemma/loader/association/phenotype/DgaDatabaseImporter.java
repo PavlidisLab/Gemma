@@ -15,14 +15,19 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     // to find to file go to : http://dga.nubic.northwestern.edu/pages/download.php
 
+    public static final String DGA_FILE_NAME = "IDMappings.rdf";
+
     // name of the external database
     private static final String DGA = "DGA";
 
-    public static final String DGA_FILE_NAME = "IDMappings.rdf";
-
-    private File dgaFile = null;
+    public static void main( String[] args ) throws Exception {
+        @SuppressWarnings("unused")
+        DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
+    }
 
     private HashMap<String, HashSet<OntologyTerm>> commonLines = new HashMap<String, HashSet<OntologyTerm>>();
+
+    private File dgaFile = null;
 
     private HashSet<String> linesToExclude = new HashSet<String>();
 
@@ -33,9 +38,59 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         processDGAFile();
     }
 
-    public static void main( String[] args ) throws Exception {
-        @SuppressWarnings("unused")
-        DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "dgaImport";
+    }
+
+    /* this importer cannot automatically download files it expects the files to already be there */
+    private void checkForDGAFile() throws Exception {
+
+        writeFolder = WRITE_FOLDER + File.separator + DGA;
+
+        File folder = new File( writeFolder );
+
+        if ( !folder.exists() ) {
+            throw new Exception( "cannot find the DGA Folder" + folder.getAbsolutePath() );
+        }
+
+        // file expected
+        dgaFile = new File( writeFolder + File.separator + DGA_FILE_NAME );
+        if ( !dgaFile.exists() ) {
+            throw new Exception( "cannot find file: " + dgaFile.getAbsolutePath() );
+        }
+    }
+
+    private int findHowManyParents( OntologyTerm o, int increment ) {
+
+        if ( o.getParents( true ).size() != 0 ) {
+            return findHowManyParents( o.getParents( true ).iterator().next(), ++increment );
+        }
+
+        return increment;
+    }
+
+    // find string between first > and <
+    private String findStringBetweenSpecialCharacter( String line ) {
+        String newLine = line.substring( line.indexOf( ">" ) + 1, line.length() );
+        if ( newLine.indexOf( "<" ) != -1 ) {
+            newLine = newLine.substring( 0, newLine.indexOf( "<" ) );
+        }
+        return newLine;
+    }
+
+    private String findStringBetweenSpecialCharacter( String line, String keyword ) throws Exception {
+
+        if ( line.indexOf( keyword ) == -1 ) {
+            throw new Exception( keyword + " not found in File ??? " + line );
+        }
+
+        return findStringBetweenSpecialCharacter( line );
     }
 
     // extra step to take out redundant terms, if a child term is more specific dont keep the parent, if 2 lines share
@@ -106,22 +161,12 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
     }
 
-    /* this importer cannot automatically download files it expects the files to already be there */
-    private void checkForDGAFile() throws Exception {
+    private boolean lineToExclude( String key ) {
 
-        writeFolder = WRITE_FOLDER + File.separator + DGA;
-
-        File folder = new File( writeFolder );
-
-        if ( !folder.exists() ) {
-            throw new Exception( "cannot find the DGA Folder" + folder.getAbsolutePath() );
+        if ( linesToExclude.contains( key ) ) {
+            return true;
         }
-
-        // file expected
-        dgaFile = new File( writeFolder + File.separator + DGA_FILE_NAME );
-        if ( !dgaFile.exists() ) {
-            throw new Exception( "cannot find file: " + dgaFile.getAbsolutePath() );
-        }
+        return false;
     }
 
     private void processDGAFile() throws Exception {
@@ -202,41 +247,6 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
             dgaReader.close();
             outFinalResults.close();
         }
-    }
-
-    // find string between first > and <
-    private String findStringBetweenSpecialCharacter( String line ) {
-        String newLine = line.substring( line.indexOf( ">" ) + 1, line.length() );
-        if ( newLine.indexOf( "<" ) != -1 ) {
-            newLine = newLine.substring( 0, newLine.indexOf( "<" ) );
-        }
-        return newLine;
-    }
-
-    private String findStringBetweenSpecialCharacter( String line, String keyword ) throws Exception {
-
-        if ( line.indexOf( keyword ) == -1 ) {
-            throw new Exception( keyword + " not found in File ??? " + line );
-        }
-
-        return findStringBetweenSpecialCharacter( line );
-    }
-
-    private int findHowManyParents( OntologyTerm o, int increment ) {
-
-        if ( o.getParents( true ).size() != 0 ) {
-            return findHowManyParents( o.getParents( true ).iterator().next(), ++increment );
-        }
-
-        return increment;
-    }
-
-    private boolean lineToExclude( String key ) {
-
-        if ( linesToExclude.contains( key ) ) {
-            return true;
-        }
-        return false;
     }
 
 }

@@ -35,39 +35,44 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
  */
 public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
-    // name of the external database
-    public static final String SFARI = "SFARI";
-    // messy file, need to be corrected each time not a real csv file, some conflicts with extra character "
-    private File autismGeneDataset = null;
-    private File geneScore = null;
-
-    // there are found using the score file
-    // ****************************************************************************************
-    public static String GENE_SYMBOL_SCORE_HEADER = "Gene Symbol";
-    public static String SCORE_HEADER = "Score";
-    public static String SCORE_DETAILS_HEADER = "Score Details";
     public static String DESCRIPTION_SCORE_HEADER = "Evidence";
+    public static String ENTREZ_GENE_ID_HEADER = "Entrez GeneID";
+    public static String EVIDENCE_OF_SUPPORT_HEADER = "Evidence of Support";
 
-    // gene Id ---> score
-    private Map<String, ScoreValueObject> gene2Score = new HashMap<>();
-    // gene Id ---> description
-    private Map<String, String> gene2Description = new HashMap<>();
     // ****************************************************************************************
     // the gene file
     // DEFNIFE COLUMNS NAMES AS THEY APPEAR IN FILE
     public static String GENE_SYMBOL_HEADER = "Gene Symbol";
-    public static String ENTREZ_GENE_ID_HEADER = "Entrez GeneID";
-    public static String SUPPORT_FOR_AUTISM_HEADER = "Support for Autism";
-    public static String EVIDENCE_OF_SUPPORT_HEADER = "Evidence of Support";
-    public static String POSITIVE_REFERENCE_HEADER = "Positive Reference";
-    public static String NEGATIVE_REFERENCE_HEADER = "Negative Reference";
-    // there is a mistake here but the mistake in in the file Primay should be Primary
-    public static String PRIMARY_REFERENCE_HEADER = "Primay Reference";
+    // there are found using the score file
+    // ****************************************************************************************
+    public static String GENE_SYMBOL_SCORE_HEADER = "Gene Symbol";
     public static String MOST_CITED_HEADER = "Most cited";
     public static String MOST_RECENT_HEADER = "Most Recent";
+
+    public static String NEGATIVE_REFERENCE_HEADER = "Negative Reference";
+    public static String POSITIVE_REFERENCE_HEADER = "Positive Reference";
+    // there is a mistake here but the mistake in in the file Primay should be Primary
+    public static String PRIMARY_REFERENCE_HEADER = "Primay Reference";
+    public static String SCORE_DETAILS_HEADER = "Score Details";
+    public static String SCORE_HEADER = "Score";
+    // name of the external database
+    public static final String SFARI = "SFARI";
+    public static String SUPPORT_FOR_AUTISM_HEADER = "Support for Autism";
     public static String SUPPORTING_HEADER = "Supporting";
+    public static void main( String[] args ) throws Exception {
+        @SuppressWarnings("unused")
+        SfariDatabaseImporter importEvidence = new SfariDatabaseImporter( args );
+    }
+    // messy file, need to be corrected each time not a real csv file, some conflicts with extra character "
+    private File autismGeneDataset = null;
+    // gene Id ---> description
+    private Map<String, String> gene2Description = new HashMap<>();
+    // gene Id ---> score
+    private Map<String, ScoreValueObject> gene2Score = new HashMap<>();
 
     // ****************************************************************************************
+
+    private File geneScore = null;
 
     public SfariDatabaseImporter( String[] args ) throws Exception {
         super( args );
@@ -77,85 +82,61 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         processSfariGeneFile();
     }
 
-    public static void main( String[] args ) throws Exception {
-        @SuppressWarnings("unused")
-        SfariDatabaseImporter importEvidence = new SfariDatabaseImporter( args );
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "sfariImport";
     }
 
-    private void processSfariScoreFile() throws Exception {
+    private void addAllPubmed( String linePubmedIds, Set<String> mySet ) throws Exception {
 
-        @SuppressWarnings("resource")
-        BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) );
+        String[] pubmedIds = linePubmedIds.split( "," );
 
-        // read headers
-        String headersScore = StringUtil.cvs2tsv( brGeneScore.readLine() );
+        for ( int i = 0; i < pubmedIds.length; i++ ) {
 
-        String[] headersTokens = headersScore.split( "\t" );
+            if ( !pubmedIds[i].trim().equalsIgnoreCase( "" ) ) {
 
-        ArrayList<String> headersSet = new ArrayList<String>();
+                Integer pubM = new Integer( pubmedIds[i].trim() );
 
-        for ( String token : headersTokens ) {
-            headersSet.add( token.trim() );
-        }
+                if ( pubM < 1000 ) {
+                    throw new Exception( "Why pubM < 1000" );
+                }
 
-        if ( !headersSet.contains( GENE_SYMBOL_SCORE_HEADER ) || !headersSet.contains( SCORE_HEADER )
-                || !headersSet.contains( SCORE_DETAILS_HEADER ) || !headersSet.contains( DESCRIPTION_SCORE_HEADER ) ) {
-            throw new Exception( "Some headers not find" );
-        }
+                if ( mySet.contains( pubmedIds[i].trim() ) ) {
+                    log.error( "SAME FOUND ***" + pubmedIds[i].trim() );
+                    System.exit( -1 );
+                }
 
-        Integer geneSymbolIndex = headersSet.indexOf( GENE_SYMBOL_SCORE_HEADER );
-        Integer scoreIndex = headersSet.indexOf( SCORE_HEADER );
-        Integer scoreDetailsIndex = headersSet.indexOf( SCORE_DETAILS_HEADER );
-        Integer descriptionScoreIndex = headersSet.indexOf( DESCRIPTION_SCORE_HEADER );
-
-        String line = "";
-        int lineNumer = 1;
-
-        while ( ( line = brGeneScore.readLine() ) != null ) {
-
-            line = StringUtil.cvs2tsv( line );
-
-            String[] lineTokens = line.split( "\t" );
-
-            log.info( "Reading Score file line: " + lineNumer++ );
-
-            // getting out the info for 1 line
-            String geneSymbol = lineTokens[geneSymbolIndex];
-            String scoreDetails = lineTokens[scoreDetailsIndex];
-            String score = lineTokens[scoreIndex];
-            String description = lineTokens[descriptionScoreIndex];
-
-            Double strength = 0D;
-
-            if ( score.equalsIgnoreCase( "S" ) ) {
-                score = scoreDetails;
+                mySet.add( pubmedIds[i].trim() );
             }
+        }
+    }
 
-            if ( score.equalsIgnoreCase( "1S" ) || score.equalsIgnoreCase( "1" ) ) {
-                strength = 1D;
-            } else if ( score.equalsIgnoreCase( "2S" ) || score.equalsIgnoreCase( "2" ) ) {
-                strength = 0.8D;
-            } else if ( score.equalsIgnoreCase( "3S" ) || score.equalsIgnoreCase( "3" ) ) {
-                strength = 0.6D;
-            } else if ( score.equalsIgnoreCase( "4S" ) || score.equalsIgnoreCase( "4" ) ) {
-                strength = 0.4D;
-            } else if ( score.equalsIgnoreCase( "5S" ) || score.equalsIgnoreCase( "5" ) ) {
-                strength = 0.2D;
-            } else if ( score.equalsIgnoreCase( "6S" ) || score.equalsIgnoreCase( "6" ) ) {
-                strength = 0D;
-            } else if ( score.equalsIgnoreCase( "S" ) ) {
-                strength = 0D;
-            } else {
-                throw new Exception( "Score: " + score );
+    private void checkForSfariFiles() throws Exception {
 
-            }
+        writeFolder = WRITE_FOLDER + File.separator + SFARI;
 
-            ScoreValueObject s = new ScoreValueObject( strength, score, "SFARIGeneScore" );
-            gene2Score.put( geneSymbol, s );
-            gene2Description.put( geneSymbol, description );
+        File folder = new File( writeFolder );
+
+        if ( !folder.exists() ) {
+            throw new Exception( "cannot find the SFARI Folder" + folder.getAbsolutePath() );
         }
 
-        brGeneScore.close();
+        // first file expected
+        autismGeneDataset = new File( writeFolder + File.separator + "autism-gene-dataset.csv" );
+        if ( !autismGeneDataset.exists() ) {
+            throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
+        }
+
+        // second file expected
+        geneScore = new File( writeFolder + File.separator + "gene-score.csv" );
+        if ( !geneScore.exists() ) {
+            throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
+        }
     }
 
     private void processSfariGeneFile() throws Exception {
@@ -246,6 +227,96 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         }
     }
 
+    private void processSfariScoreFile() throws Exception {
+
+        @SuppressWarnings("resource")
+        BufferedReader brGeneScore = new BufferedReader( new FileReader( geneScore ) );
+
+        // read headers
+        String headersScore = StringUtil.cvs2tsv( brGeneScore.readLine() );
+
+        String[] headersTokens = headersScore.split( "\t" );
+
+        ArrayList<String> headersSet = new ArrayList<String>();
+
+        for ( String token : headersTokens ) {
+            headersSet.add( token.trim() );
+        }
+
+        if ( !headersSet.contains( GENE_SYMBOL_SCORE_HEADER ) || !headersSet.contains( SCORE_HEADER )
+                || !headersSet.contains( SCORE_DETAILS_HEADER ) || !headersSet.contains( DESCRIPTION_SCORE_HEADER ) ) {
+            throw new Exception( "Some headers not find" );
+        }
+
+        Integer geneSymbolIndex = headersSet.indexOf( GENE_SYMBOL_SCORE_HEADER );
+        Integer scoreIndex = headersSet.indexOf( SCORE_HEADER );
+        Integer scoreDetailsIndex = headersSet.indexOf( SCORE_DETAILS_HEADER );
+        Integer descriptionScoreIndex = headersSet.indexOf( DESCRIPTION_SCORE_HEADER );
+
+        String line = "";
+        int lineNumer = 1;
+
+        while ( ( line = brGeneScore.readLine() ) != null ) {
+
+            line = StringUtil.cvs2tsv( line );
+
+            String[] lineTokens = line.split( "\t" );
+
+            log.info( "Reading Score file line: " + lineNumer++ );
+
+            // getting out the info for 1 line
+            String geneSymbol = lineTokens[geneSymbolIndex];
+            String scoreDetails = lineTokens[scoreDetailsIndex];
+            String score = lineTokens[scoreIndex];
+            String description = lineTokens[descriptionScoreIndex];
+
+            Double strength = 0D;
+
+            if ( score.equalsIgnoreCase( "S" ) ) {
+                score = scoreDetails;
+            }
+
+            if ( score.equalsIgnoreCase( "1S" ) || score.equalsIgnoreCase( "1" ) ) {
+                strength = 1D;
+            } else if ( score.equalsIgnoreCase( "2S" ) || score.equalsIgnoreCase( "2" ) ) {
+                strength = 0.8D;
+            } else if ( score.equalsIgnoreCase( "3S" ) || score.equalsIgnoreCase( "3" ) ) {
+                strength = 0.6D;
+            } else if ( score.equalsIgnoreCase( "4S" ) || score.equalsIgnoreCase( "4" ) ) {
+                strength = 0.4D;
+            } else if ( score.equalsIgnoreCase( "5S" ) || score.equalsIgnoreCase( "5" ) ) {
+                strength = 0.2D;
+            } else if ( score.equalsIgnoreCase( "6S" ) || score.equalsIgnoreCase( "6" ) ) {
+                strength = 0D;
+            } else if ( score.equalsIgnoreCase( "S" ) ) {
+                strength = 0D;
+            } else {
+                throw new Exception( "Score: " + score );
+
+            }
+
+            ScoreValueObject s = new ScoreValueObject( strength, score, "SFARIGeneScore" );
+            gene2Score.put( geneSymbol, s );
+            gene2Description.put( geneSymbol, description );
+        }
+
+        brGeneScore.close();
+    }
+
+    private String treatSpecialCases( String geneSymbol, String nbciID ) {
+
+        if ( geneSymbol.equalsIgnoreCase( "ATP2B2" ) && nbciID.equalsIgnoreCase( "108733" ) ) {
+
+            return "491";
+
+        } else if ( geneSymbol.equalsIgnoreCase( "TNIP2" ) && nbciID.equalsIgnoreCase( "610669" ) ) {
+
+            return "79155";
+        }
+        return nbciID;
+
+    }
+
     private void writeFinalSfari( Set<String> literaturePubMed, String geneSymbol, String nbciID, String description,
             String descriptionInScore, ScoreValueObject scoreVO, boolean isNegative ) throws IOException {
 
@@ -273,67 +344,6 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         outFinalResults.write( negative + "\t" );
         writeScore( scoreVO );
         outFinalResults.newLine();
-    }
-
-    private void checkForSfariFiles() throws Exception {
-
-        writeFolder = WRITE_FOLDER + File.separator + SFARI;
-
-        File folder = new File( writeFolder );
-
-        if ( !folder.exists() ) {
-            throw new Exception( "cannot find the SFARI Folder" + folder.getAbsolutePath() );
-        }
-
-        // first file expected
-        autismGeneDataset = new File( writeFolder + File.separator + "autism-gene-dataset.csv" );
-        if ( !autismGeneDataset.exists() ) {
-            throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
-        }
-
-        // second file expected
-        geneScore = new File( writeFolder + File.separator + "gene-score.csv" );
-        if ( !geneScore.exists() ) {
-            throw new Exception( "cannot find file: " + autismGeneDataset.getAbsolutePath() );
-        }
-    }
-
-    private void addAllPubmed( String linePubmedIds, Set<String> mySet ) throws Exception {
-
-        String[] pubmedIds = linePubmedIds.split( "," );
-
-        for ( int i = 0; i < pubmedIds.length; i++ ) {
-
-            if ( !pubmedIds[i].trim().equalsIgnoreCase( "" ) ) {
-
-                Integer pubM = new Integer( pubmedIds[i].trim() );
-
-                if ( pubM < 1000 ) {
-                    throw new Exception( "Why pubM < 1000" );
-                }
-
-                if ( mySet.contains( pubmedIds[i].trim() ) ) {
-                    log.error( "SAME FOUND ***" + pubmedIds[i].trim() );
-                    System.exit( -1 );
-                }
-
-                mySet.add( pubmedIds[i].trim() );
-            }
-        }
-    }
-
-    private String treatSpecialCases( String geneSymbol, String nbciID ) {
-
-        if ( geneSymbol.equalsIgnoreCase( "ATP2B2" ) && nbciID.equalsIgnoreCase( "108733" ) ) {
-
-            return "491";
-
-        } else if ( geneSymbol.equalsIgnoreCase( "TNIP2" ) && nbciID.equalsIgnoreCase( "610669" ) ) {
-
-            return "79155";
-        }
-        return nbciID;
-
     }
 
     private void writeScore( ScoreValueObject scoreVO ) throws IOException {

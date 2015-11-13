@@ -31,11 +31,6 @@ public abstract class SymbolChangeAndLoggingAbstract extends AbstractCLIContextC
     // keep a log file of the process and error
     protected TreeSet<String> logMessages = new TreeSet<String>();
 
-    protected synchronized void loadServices() throws Exception {
-
-        this.geneService = this.getBean( GeneService.class );
-    }
-
     // sometimes we dont have the gene nbci, so we use taxon and gene symbol to find the correct gene
     protected Gene findGeneUsingSymbolandTaxon( String officialSymbol, String evidenceTaxon ) throws IOException {
 
@@ -77,118 +72,16 @@ public abstract class SymbolChangeAndLoggingAbstract extends AbstractCLIContextC
         return genesWithTaxon.iterator().next();
     }
 
-    // when we have more than 1 choice, which one to choose, some hard coded rules so we dont redo them each time
-    private Gene treatGemmaMultipleGeneSpeacialCases( String officialSymbol, Collection<Gene> genesFound,
-            String evidenceTaxon ) {
+    protected synchronized void loadServices() throws Exception {
 
-        Gene theChosenGene = null;
-
-        // human exceptions
-        if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
-
-            // HLA-DRB1 => 3123
-            if ( officialSymbol.equalsIgnoreCase( "HLA-DRB1" ) ) {
-                theChosenGene = findCorrectGene( "3123", genesFound );
-            }
-            // CCR2 => 729230
-            else if ( officialSymbol.equalsIgnoreCase( "CCR2" ) ) {
-                theChosenGene = findCorrectGene( "729230", genesFound );
-            }
-            // NPC1 => 4864
-            else if ( officialSymbol.equalsIgnoreCase( "NPC1" ) ) {
-                theChosenGene = findCorrectGene( "4864", genesFound );
-            }
-            // PRG4 => 10216
-            else if ( officialSymbol.equalsIgnoreCase( "PRG4" ) ) {
-                theChosenGene = findCorrectGene( "10216", genesFound );
-            }
-            // TTC34 => 100287898
-            else if ( officialSymbol.equalsIgnoreCase( "TTC34" ) ) {
-                theChosenGene = findCorrectGene( "100287898", genesFound );
-            }
-            // DNAH12 => 201625
-            else if ( officialSymbol.equalsIgnoreCase( "DNAH12" ) ) {
-                theChosenGene = findCorrectGene( "201625", genesFound );
-            }
-            // PSORS1C3 => 100130889
-            else if ( officialSymbol.equalsIgnoreCase( "PSORS1C3" ) ) {
-                theChosenGene = findCorrectGene( "100130889", genesFound );
-            }
-            // MICA => 100507436
-            else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
-                theChosenGene = findCorrectGene( "100507436", genesFound );
-            }
-
-            // MICA => 100507436
-            else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
-                theChosenGene = findCorrectGene( "100507436", genesFound );
-            }
-
-            // ADH5P2 => 343296
-            else if ( officialSymbol.equalsIgnoreCase( "ADH5P2" ) ) {
-                theChosenGene = findCorrectGene( "343296", genesFound );
-            }
-
-            // RPL15P3 => 653232
-            else if ( officialSymbol.equalsIgnoreCase( "RPL15P3" ) ) {
-                theChosenGene = findCorrectGene( "653232", genesFound );
-            }
-
-            // DCDC5 => 100506627
-            else if ( officialSymbol.equalsIgnoreCase( "DCDC5" ) ) {
-                theChosenGene = findCorrectGene( "100506627", genesFound );
-            }
-
-        } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
-
-            // Itga2b => 685269
-            if ( officialSymbol.equalsIgnoreCase( "Itga2b" ) ) {
-                theChosenGene = findCorrectGene( "685269", genesFound );
-            }
-            // Tcf7l2 => 679869
-            else if ( officialSymbol.equalsIgnoreCase( "Tcf7l2" ) ) {
-                theChosenGene = findCorrectGene( "679869", genesFound );
-            }
-            // Pkd2 => 498328
-            else if ( officialSymbol.equalsIgnoreCase( "Pkd2" ) ) {
-                theChosenGene = findCorrectGene( "498328", genesFound );
-            }
-            // Mthfd2 => 680308
-            else if ( officialSymbol.equalsIgnoreCase( "Mthfd2" ) ) {
-                theChosenGene = findCorrectGene( "680308", genesFound );
-            }
-            // Mthfd2 => 680308
-            else if ( officialSymbol.equalsIgnoreCase( "Mef2a" ) ) {
-                theChosenGene = findCorrectGene( "309957", genesFound );
-            }
-            // Mmp1 => 432357
-            else if ( officialSymbol.equalsIgnoreCase( "Mmp1" ) ) {
-                theChosenGene = findCorrectGene( "300339", genesFound );
-            }
-
-        } else if ( evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
-            // H2-Ea-ps => 100504404
-            if ( officialSymbol.equalsIgnoreCase( "H2-Ea-ps" ) ) {
-                theChosenGene = findCorrectGene( "100504404", genesFound );
-            }
-            // Ccl21b => 100504404
-            else if ( officialSymbol.equalsIgnoreCase( "Ccl21b" ) ) {
-                theChosenGene = findCorrectGene( "100042493", genesFound );
-            }
-        }
-
-        return theChosenGene;
+        this.geneService = this.getBean( GeneService.class );
     }
 
-    private Gene findCorrectGene( String ncbiId, Collection<Gene> genesFound ) {
+    protected void writeError( String errorMessage ) {
+        log.error( errorMessage );
+        // this gives the summary of erros at the end
+        logMessages.add( errorMessage );
 
-        for ( Gene gene : genesFound ) {
-
-            if ( gene.getNcbiGeneId().toString().equalsIgnoreCase( ncbiId ) ) {
-                return gene;
-            }
-        }
-        return null;
     }
 
     // special case to change symbol, used when nothing was found with symbol
@@ -297,11 +190,118 @@ public abstract class SymbolChangeAndLoggingAbstract extends AbstractCLIContextC
 
     }
 
-    protected void writeError( String errorMessage ) {
-        log.error( errorMessage );
-        // this gives the summary of erros at the end
-        logMessages.add( errorMessage );
+    private Gene findCorrectGene( String ncbiId, Collection<Gene> genesFound ) {
 
+        for ( Gene gene : genesFound ) {
+
+            if ( gene.getNcbiGeneId().toString().equalsIgnoreCase( ncbiId ) ) {
+                return gene;
+            }
+        }
+        return null;
+    }
+
+    // when we have more than 1 choice, which one to choose, some hard coded rules so we dont redo them each time
+    private Gene treatGemmaMultipleGeneSpeacialCases( String officialSymbol, Collection<Gene> genesFound,
+            String evidenceTaxon ) {
+
+        Gene theChosenGene = null;
+
+        // human exceptions
+        if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
+
+            // HLA-DRB1 => 3123
+            if ( officialSymbol.equalsIgnoreCase( "HLA-DRB1" ) ) {
+                theChosenGene = findCorrectGene( "3123", genesFound );
+            }
+            // CCR2 => 729230
+            else if ( officialSymbol.equalsIgnoreCase( "CCR2" ) ) {
+                theChosenGene = findCorrectGene( "729230", genesFound );
+            }
+            // NPC1 => 4864
+            else if ( officialSymbol.equalsIgnoreCase( "NPC1" ) ) {
+                theChosenGene = findCorrectGene( "4864", genesFound );
+            }
+            // PRG4 => 10216
+            else if ( officialSymbol.equalsIgnoreCase( "PRG4" ) ) {
+                theChosenGene = findCorrectGene( "10216", genesFound );
+            }
+            // TTC34 => 100287898
+            else if ( officialSymbol.equalsIgnoreCase( "TTC34" ) ) {
+                theChosenGene = findCorrectGene( "100287898", genesFound );
+            }
+            // DNAH12 => 201625
+            else if ( officialSymbol.equalsIgnoreCase( "DNAH12" ) ) {
+                theChosenGene = findCorrectGene( "201625", genesFound );
+            }
+            // PSORS1C3 => 100130889
+            else if ( officialSymbol.equalsIgnoreCase( "PSORS1C3" ) ) {
+                theChosenGene = findCorrectGene( "100130889", genesFound );
+            }
+            // MICA => 100507436
+            else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
+                theChosenGene = findCorrectGene( "100507436", genesFound );
+            }
+
+            // MICA => 100507436
+            else if ( officialSymbol.equalsIgnoreCase( "MICA" ) ) {
+                theChosenGene = findCorrectGene( "100507436", genesFound );
+            }
+
+            // ADH5P2 => 343296
+            else if ( officialSymbol.equalsIgnoreCase( "ADH5P2" ) ) {
+                theChosenGene = findCorrectGene( "343296", genesFound );
+            }
+
+            // RPL15P3 => 653232
+            else if ( officialSymbol.equalsIgnoreCase( "RPL15P3" ) ) {
+                theChosenGene = findCorrectGene( "653232", genesFound );
+            }
+
+            // DCDC5 => 100506627
+            else if ( officialSymbol.equalsIgnoreCase( "DCDC5" ) ) {
+                theChosenGene = findCorrectGene( "100506627", genesFound );
+            }
+
+        } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
+
+            // Itga2b => 685269
+            if ( officialSymbol.equalsIgnoreCase( "Itga2b" ) ) {
+                theChosenGene = findCorrectGene( "685269", genesFound );
+            }
+            // Tcf7l2 => 679869
+            else if ( officialSymbol.equalsIgnoreCase( "Tcf7l2" ) ) {
+                theChosenGene = findCorrectGene( "679869", genesFound );
+            }
+            // Pkd2 => 498328
+            else if ( officialSymbol.equalsIgnoreCase( "Pkd2" ) ) {
+                theChosenGene = findCorrectGene( "498328", genesFound );
+            }
+            // Mthfd2 => 680308
+            else if ( officialSymbol.equalsIgnoreCase( "Mthfd2" ) ) {
+                theChosenGene = findCorrectGene( "680308", genesFound );
+            }
+            // Mthfd2 => 680308
+            else if ( officialSymbol.equalsIgnoreCase( "Mef2a" ) ) {
+                theChosenGene = findCorrectGene( "309957", genesFound );
+            }
+            // Mmp1 => 432357
+            else if ( officialSymbol.equalsIgnoreCase( "Mmp1" ) ) {
+                theChosenGene = findCorrectGene( "300339", genesFound );
+            }
+
+        } else if ( evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
+            // H2-Ea-ps => 100504404
+            if ( officialSymbol.equalsIgnoreCase( "H2-Ea-ps" ) ) {
+                theChosenGene = findCorrectGene( "100504404", genesFound );
+            }
+            // Ccl21b => 100504404
+            else if ( officialSymbol.equalsIgnoreCase( "Ccl21b" ) ) {
+                theChosenGene = findCorrectGene( "100042493", genesFound );
+            }
+        }
+
+        return theChosenGene;
     }
 
 }

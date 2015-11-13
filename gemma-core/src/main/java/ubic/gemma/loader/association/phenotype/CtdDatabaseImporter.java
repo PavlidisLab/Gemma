@@ -25,10 +25,10 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     // name of the external database
     public static final String CTD = "CTD";
-    // path of file to download
-    public static final String CTD_URL_PATH = "http://ctdbase.org/reports/";
     // name of the CTD file
     public static final String CTD_FILE = "CTD_genes_diseases.tsv.gz";
+    // path of file to download
+    public static final String CTD_URL_PATH = "http://ctdbase.org/reports/";
 
     public static void main( String[] args ) throws Exception {
 
@@ -51,6 +51,16 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
         findOmimAndMeshMappingUsingOntologyFile();
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "ctdImport";
     }
 
     private void downloadCTDFileIfDoesntExist() {

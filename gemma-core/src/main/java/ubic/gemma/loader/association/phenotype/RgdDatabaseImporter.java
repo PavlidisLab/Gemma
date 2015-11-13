@@ -22,14 +22,14 @@ import ubic.gemma.model.genome.Gene;
 
 public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
-    // name of the external database
-    protected static final String RGD = "RGD";
-
-    // path of files to download
-    public static final String RGD_URL_PATH = "ftp://rgd.mcw.edu/pub/data_release/annotated_rgd_objects_by_ontology/";
     public static final String RGD_FILE_HUMAN = "homo_genes_rdo";
+
     public static final String RGD_FILE_MOUSE = "mus_genes_rdo";
     public static final String RGD_FILE_RAT = "rattus_genes_rdo";
+    // path of files to download
+    public static final String RGD_URL_PATH = "ftp://rgd.mcw.edu/pub/data_release/annotated_rgd_objects_by_ontology/";
+    // name of the external database
+    protected static final String RGD = "RGD";
 
     public static void main( String[] args ) throws Exception {
 
@@ -50,11 +50,18 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     }
 
-    private void processRGDFiles( String rgdHuman, String rgdMouse, String rgdRat ) throws Exception {
-        processRGDFile( "human", rgdHuman );
-        processRGDFile( "mouse", rgdMouse );
-        processRGDFile( "rat", rgdRat );
-        writeBuffersAndCloseFiles();
+    public RgdDatabaseImporter( String[] args ) throws Exception {
+        super( args );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "rgdImport";
     }
 
     public void processRGDFile( String taxon, String fileName ) throws Exception {
@@ -93,8 +100,11 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
     }
 
-    public RgdDatabaseImporter( String[] args ) throws Exception {
-        super( args );
+    private void processRGDFiles( String rgdHuman, String rgdMouse, String rgdRat ) throws Exception {
+        processRGDFile( "human", rgdHuman );
+        processRGDFile( "mouse", rgdMouse );
+        processRGDFile( "rat", rgdRat );
+        writeBuffersAndCloseFiles();
     }
 
     private String removeSpecialSymbol( String geneId ) {

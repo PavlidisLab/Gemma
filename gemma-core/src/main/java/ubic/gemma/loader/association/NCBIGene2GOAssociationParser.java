@@ -137,6 +137,13 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         }
     }
 
+    /**
+     * @return
+     */
+    public int getCount() {
+        return count;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -208,11 +215,6 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     }
 
     @Override
-    public Gene2GOAssociation parseOneLine( String line ) {
-        return this.mapFromGene2GO( line );
-    }
-
-    @Override
     public void parse( InputStream inputStream, BlockingQueue<Gene2GOAssociation> aqueue ) throws IOException {
         if ( inputStream == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aqueue;
@@ -221,15 +223,13 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     }
 
     @Override
-    protected void addResult( Gene2GOAssociation obj ) {
-        count++;
+    public Gene2GOAssociation parseOneLine( String line ) {
+        return this.mapFromGene2GO( line );
     }
 
-    /**
-     * @return
-     */
-    public int getCount() {
-        return count;
+    @Override
+    protected void addResult( Gene2GOAssociation obj ) {
+        count++;
     }
 
 }

@@ -55,26 +55,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueOb
  */
 public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
-    // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
-    private static String[] initArguments() {
-
-        String[] args = new String[8];
-        // user
-        args[0] = "-u";
-        args[1] = "userhere";
-        // password
-        args[2] = "-p";
-        args[3] = "";
-        // the path of the file
-        args[4] = "-f";
-        args[5] = "pathhere";
-        // create the evidence in the database, can be set to false for testing
-        args[6] = "-c";
-        args[7] = "true";
-
-        return args;
-    }
-
     public static void main( String[] args ) {
 
         EvidenceImporterCLI evidenceImporterCLI = new EvidenceImporterCLI();
@@ -98,6 +78,36 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+
+    // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
+    private static String[] initArguments() {
+
+        String[] args = new String[8];
+        // user
+        args[0] = "-u";
+        args[1] = "userhere";
+        // password
+        args[2] = "-p";
+        args[3] = "";
+        // the path of the file
+        args[4] = "-f";
+        args[5] = "pathhere";
+        // create the evidence in the database, can be set to false for testing
+        args[6] = "-c";
+        args[7] = "true";
+
+        return args;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        return "evidenceImport";
     }
 
     @Override
@@ -217,6 +227,203 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         return null;
     }
 
+    // special case to change symbol, used when nothing was found with symbol
+    private Integer checkForSymbolChange( String officialSymbol, String evidenceTaxon ) throws IOException {
+
+        String newOfficialSymbol = null;
+
+        if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
+
+            if ( officialSymbol.equalsIgnoreCase( "ARVD2" ) ) {
+                newOfficialSymbol = "RYR2";
+            } else if ( officialSymbol.equalsIgnoreCase( "ARVD1" ) ) {
+                newOfficialSymbol = "TGFB3";
+            } else if ( officialSymbol.equalsIgnoreCase( "PEO1" ) ) {
+                newOfficialSymbol = "C10orf2";
+            } else if ( officialSymbol.equalsIgnoreCase( "CTPS1" ) ) {
+                newOfficialSymbol = "CTPS";
+            } else if ( officialSymbol.equalsIgnoreCase( "CO3" ) ) {
+                newOfficialSymbol = "COX3";
+            } else if ( officialSymbol.equalsIgnoreCase( "CYB" ) ) {
+                newOfficialSymbol = "CYTB";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ATP6" ) ) {
+                newOfficialSymbol = "ATP6";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ATP8" ) ) {
+                newOfficialSymbol = "ATP8";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-CO3" ) ) {
+                newOfficialSymbol = "COX3";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-CYB" ) ) {
+                newOfficialSymbol = "CYTB";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND1" ) ) {
+                newOfficialSymbol = "ND1";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND2" ) ) {
+                newOfficialSymbol = "ND2";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND3" ) ) {
+                newOfficialSymbol = "ND3";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND4" ) ) {
+                newOfficialSymbol = "ND4";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND4L" ) ) {
+                newOfficialSymbol = "ND4L";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND5" ) ) {
+                newOfficialSymbol = "ND5";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND6" ) ) {
+                newOfficialSymbol = "ND6";
+            } else if ( officialSymbol.equalsIgnoreCase( "MT-TL1" ) ) {
+                newOfficialSymbol = "TRNL1";
+            }
+
+        } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
+
+            if ( officialSymbol.equalsIgnoreCase( "Hsd3b2" ) ) {
+                newOfficialSymbol = "Hsd3b1";
+            } else if ( officialSymbol.equalsIgnoreCase( "Mt-coi" ) || officialSymbol.equalsIgnoreCase( "Mt-co1" ) ) {
+                newOfficialSymbol = "COX1";
+            } else if ( officialSymbol.equalsIgnoreCase( "Mt-cyb" ) ) {
+                newOfficialSymbol = "CYTB";
+            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd1" ) ) {
+                newOfficialSymbol = "ND1";
+            } else if ( officialSymbol.equalsIgnoreCase( "Mt-co2" ) ) {
+                newOfficialSymbol = "COX2";
+            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd5" ) ) {
+                newOfficialSymbol = "ND5";
+            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd3" ) ) {
+                newOfficialSymbol = "ND3";
+            } else if ( officialSymbol.equalsIgnoreCase( "Srebf1_v2" ) ) {
+                newOfficialSymbol = "Srebf1";
+            } else if ( officialSymbol.equalsIgnoreCase( "Naip6" ) ) {
+                newOfficialSymbol = "Naip2";
+            } else if ( officialSymbol.equalsIgnoreCase( "Slco1a4" ) ) {
+                newOfficialSymbol = "Slco1a2";
+            } else if ( officialSymbol.equalsIgnoreCase( "Klk1b3" ) ) {
+                newOfficialSymbol = "Klk1";
+            }
+        }
+
+        if ( newOfficialSymbol != null ) {
+            return findGeneId( newOfficialSymbol, evidenceTaxon );
+        }
+
+        return null;
+
+    }
+
+    /**
+     * convert for LiteratureEvidenceValueObject
+     */
+    private EvidenceValueObject convert2LiteratureOrGenereicVO( String[] tokens ) throws IOException {
+        EvidenceValueObject evidence = null;
+
+        String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
+
+        if ( primaryReferencePubmeds.equalsIgnoreCase( "" ) ) {
+            evidence = new GenericEvidenceValueObject();
+        } else {
+            evidence = new LiteratureEvidenceValueObject();
+        }
+
+        populateCommonFields( evidence, tokens );
+
+        return evidence;
+    }
+
+    /**
+     * convert for ExperimentalEvidenceValueObject
+     */
+    // TODO
+    private ExperimentalEvidenceValueObject convertFileLine2ExperimentalValueObjects( String[] tokens )
+            throws IOException {
+
+        ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject();
+        populateCommonFields( evidence, tokens );
+
+        String reviewReferencePubmed = tokens[this.mapColumns.get( "OtherPubMed" )].trim();
+
+        Set<String> relevantPublicationsPubmed = new HashSet<String>();
+        if ( !reviewReferencePubmed.equals( "" ) ) {
+
+            relevantPublicationsPubmed.add( reviewReferencePubmed );
+        }
+
+        for ( String relevantPubMedID : relevantPublicationsPubmed ) {
+            CitationValueObject relevantPublicationValueObject = new CitationValueObject();
+            relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
+            evidence.getPhenotypeAssPubVO().add(
+                    PhenotypeAssPubValueObject.createRelevantPublication( relevantPubMedID ) );
+        }
+
+        Set<String> developmentStage = trimArray( tokens[this.mapColumns.get( "DevelopmentalStage" )].split( ";" ) );
+        Set<String> bioSource = trimArray( tokens[this.mapColumns.get( "BioSource" )].split( ";" ) );
+        Set<String> organismPart = trimArray( tokens[this.mapColumns.get( "OrganismPart" )].split( ";" ) );
+        Set<String> experimentDesign = trimArray( tokens[this.mapColumns.get( "ExperimentDesign" )].split( ";" ) );
+        Set<String> treatment = trimArray( tokens[this.mapColumns.get( "Treatment" )].split( ";" ) );
+        Set<String> experimentOBI = trimArray( tokens[this.mapColumns.get( "Experiment" )].split( ";" ) );
+
+        Set<CharacteristicValueObject> experimentTags = new HashSet<CharacteristicValueObject>();
+
+        experimentTags.addAll( experiementTags2Ontology( developmentStage, this.DEVELOPMENTAL_STAGE,
+                this.DEVELOPMENTAL_STAGE_ONTOLOGY, this.nifstdOntologyService ) );
+        experimentTags.addAll( experiementTags2Ontology( bioSource, this.BIOSOURCE_ONTOLOGY, this.BIOSOURCE_ONTOLOGY,
+                null ) );
+        experimentTags.addAll( experiementTags2Ontology( organismPart, this.ORGANISM_PART, this.ORGANISM_PART_ONTOLOGY,
+                this.fmaOntologyService ) );
+        experimentTags.addAll( experiementTags2Ontology( experimentDesign, this.EXPERIMENT_DESIGN,
+                this.EXPERIMENT_DESIGN_ONTOLOGY, this.obiService ) );
+        experimentTags.addAll( experiementTags2Ontology( treatment, this.TREATMENT, this.TREATMENT_ONTOLOGY, null ) );
+        experimentTags.addAll( experiementTags2Ontology( experimentOBI, this.EXPERIMENT, this.EXPERIMENT_ONTOLOGY,
+                this.obiService ) );
+
+        evidence.setExperimentCharacteristics( experimentTags );
+
+        return evidence;
+    }
+
+    /**
+     * once we imported some evidence in Neurocarta, we want to copy a copy of what was imported and when, those files
+     * are committed in Gemma, so its possible to see over time all that was imported
+     */
+    @SuppressWarnings("unused")
+    private void createImportLog( EvidenceValueObject evidenceValueObject ) {
+
+        // default
+        String externalDatabaseName = "MANUAL_CURATION";
+
+        // name the file by its external database name
+        if ( evidenceValueObject.getEvidenceSource() != null
+                && evidenceValueObject.getEvidenceSource().getExternalDatabase() != null ) {
+            externalDatabaseName = evidenceValueObject.getEvidenceSource().getExternalDatabase().getName();
+        }
+
+        String keepCopyOfImportedFile = externalDatabaseName + "_" + getTodayDate() + ".tsv";
+
+        // move the file
+        File mvFile = new File( inputFile );
+        mvFile.renameTo( new File( WRITE_FOLDER + File.separator + keepCopyOfImportedFile ) );
+    }
+
+    private Set<CharacteristicValueObject> experiementTags2Ontology( Set<String> values, String category,
+            String categoryUri, AbstractOntologyService ontologyUsed ) throws IOException {
+
+        Set<CharacteristicValueObject> experimentTags = new HashSet<CharacteristicValueObject>();
+
+        for ( String term : values ) {
+
+            String valueUri = "";
+
+            if ( ontologyUsed != null ) {
+                Collection<OntologyTerm> ontologyTerms = ontologyUsed.findTerm( term );
+                OntologyTerm ot = findExactTerm( ontologyTerms, term );
+
+                if ( ot != null ) {
+                    valueUri = ot.getUri();
+                }
+            }
+
+            CharacteristicValueObject c = new CharacteristicValueObject( term, category, valueUri, categoryUri );
+            experimentTags.add( c );
+        }
+        return experimentTags;
+    }
+
     /**
      * Change the file received into an entity that can save in the database
      * 
@@ -251,6 +458,125 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         this.br.close();
 
         return evidenceValueObjects;
+    }
+
+    private Gene findCorrectGene( String ncbiId, Collection<Gene> genesFound ) {
+
+        for ( Gene gene : genesFound ) {
+
+            if ( gene.getNcbiGeneId().toString().equalsIgnoreCase( ncbiId ) ) {
+                return gene;
+            }
+        }
+        return null;
+    }
+
+    // sometimes we dont have the gene nbci, so we use taxon and gene symbol to find the correct gene
+    private Integer findGeneId( String officialSymbol, String evidenceTaxon ) throws IOException {
+
+        Collection<Gene> genes = this.geneService.findByOfficialSymbol( officialSymbol );
+
+        Collection<Gene> genesWithTaxon = new HashSet<Gene>();
+
+        for ( Gene gene : genes ) {
+
+            if ( gene.getTaxon().getCommonName().equalsIgnoreCase( evidenceTaxon ) ) {
+                if ( gene.getNcbiGeneId() != null ) {
+                    genesWithTaxon.add( gene );
+                }
+            }
+        }
+
+        if ( genesWithTaxon.isEmpty() ) {
+
+            Integer geneNCBi = checkForSymbolChange( officialSymbol, evidenceTaxon );
+
+            if ( geneNCBi != null ) {
+                return geneNCBi;
+            }
+
+            writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
+
+            return -1;
+
+        }
+
+        // too many results found, to check why
+        if ( genesWithTaxon.size() >= 2 ) {
+
+            Gene g = treatGemmaMultipleGeneSpeacialCases( officialSymbol, genesWithTaxon, evidenceTaxon );
+
+            if ( g != null ) {
+                return g.getNcbiGeneId();
+            }
+
+            String error = "Found more than 1 gene using Symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon;
+
+            for ( Gene geneWithTaxon : genesWithTaxon ) {
+                writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiGeneId() );
+            }
+        }
+
+        return genesWithTaxon.iterator().next().getNcbiGeneId();
+    }
+
+    private String getTodayDate() {
+        DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH:mm" );
+        Calendar cal = Calendar.getInstance();
+        return dateFormat.format( cal.getTime() );
+    }
+
+    // value or valueUri given changed to valueUri (even if valueUri is given in file we need to check)
+    private String phenotype2Ontology( String phenotypeToSearch ) throws IOException {
+
+        OntologyTerm ot = null;
+
+        // we got an uri, search by uri
+        if ( phenotypeToSearch.indexOf( "http://purl." ) != -1 ) {
+            log.info( "Found an URI: " + phenotypeToSearch );
+            ot = this.diseaseOntologyService.getTerm( phenotypeToSearch );
+
+            if ( ot == null ) {
+                ot = this.humanPhenotypeOntologyService.getTerm( phenotypeToSearch );
+            }
+            if ( ot == null ) {
+                ot = this.mammalianPhenotypeOntologyService.getTerm( phenotypeToSearch );
+            }
+        }
+        // value found
+        else {
+
+            // search disease
+            Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( phenotypeToSearch );
+
+            ot = findExactTerm( ontologyTerms, phenotypeToSearch );
+
+            if ( ot == null ) {
+                // search hp
+                ontologyTerms = this.humanPhenotypeOntologyService.findTerm( phenotypeToSearch );
+                ot = findExactTerm( ontologyTerms, phenotypeToSearch );
+
+            }
+            if ( ot == null ) {
+
+                // search mammalian
+                ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( phenotypeToSearch );
+                ot = findExactTerm( ontologyTerms, phenotypeToSearch );
+            }
+        }
+
+        // we cannot find the specific phenotype given
+        if ( ot == null ) {
+            // ***flawed writeError( "phenotype not found in disease, hp and mp Ontology : " + phenotypeToSearch );
+            // return null;
+        }
+
+        // check for obsolete terms
+        // if ( ot.isTermObsolete() ) {
+        // writeError( "TERM IS OBSOLETE: " + ot.getLabel() + " " + ot.getUri() );
+        // }
+
+        return phenotypeToSearch;// /***testing...ot.getUri();
     }
 
     /**
@@ -345,73 +671,80 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     }
 
     /**
-     * convert for LiteratureEvidenceValueObject
+     * hard coded rules to set scores depending on the type of the database
      */
-    private EvidenceValueObject convert2LiteratureOrGenereicVO( String[] tokens ) throws IOException {
-        EvidenceValueObject evidence = null;
+    private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject evidence,
+            String evidenceTaxon ) {
+        // OMIM got special character in description to find score
+        if ( externalDatabaseName.equalsIgnoreCase( "OMIM" ) ) {
 
-        String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
+            String description = evidence.getDescription();
 
-        if ( primaryReferencePubmeds.equalsIgnoreCase( "" ) ) {
-            evidence = new GenericEvidenceValueObject();
-        } else {
-            evidence = new LiteratureEvidenceValueObject();
+            if ( description.indexOf( "{" ) != -1 && description.indexOf( "}" ) != -1 ) {
+                evidence.getScoreValueObject().setStrength( new Double( 0.6 ) );
+            } else if ( description.indexOf( "[" ) != -1 && description.indexOf( "]" ) != -1 ) {
+                evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+            } else if ( description.indexOf( "{?" ) != -1 && description.indexOf( "}" ) != -1 ) {
+                evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+            } else if ( description.indexOf( "?" ) != -1 ) {
+                evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+            } else {
+                evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
+            }
         }
 
-        populateCommonFields( evidence, tokens );
+        // RGD we use the taxon and the evidence code
+        else if ( externalDatabaseName.equalsIgnoreCase( "RGD" ) ) {
 
-        return evidence;
-    }
+            if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
 
-    /**
-     * convert for ExperimentalEvidenceValueObject
-     */
-    // TODO
-    private ExperimentalEvidenceValueObject convertFileLine2ExperimentalValueObjects( String[] tokens )
-            throws IOException {
+                String evidenceCode = evidence.getEvidenceCode();
 
-        ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject();
-        populateCommonFields( evidence, tokens );
+                if ( evidenceCode.equalsIgnoreCase( "TAS" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
+                } else if ( evidenceCode.equalsIgnoreCase( "IEP" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.setRelationship( "altered expression association" );
+                } else if ( evidenceCode.equalsIgnoreCase( "IGI" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                } else if ( evidenceCode.equalsIgnoreCase( "IED" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                } else if ( evidenceCode.equalsIgnoreCase( "IAGP" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.setRelationship( "genetic association" );
+                } else if ( evidenceCode.equalsIgnoreCase( "QTM" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                } else if ( evidenceCode.equalsIgnoreCase( "IPM" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.setRelationship( "genetic association" );
+                } else if ( evidenceCode.equalsIgnoreCase( "IMP" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.setRelationship( "mutation association" );
+                } else if ( evidenceCode.equalsIgnoreCase( "IDA" ) ) {
+                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                }
 
-        String reviewReferencePubmed = tokens[this.mapColumns.get( "OtherPubMed" )].trim();
-
-        Set<String> relevantPublicationsPubmed = new HashSet<String>();
-        if ( !reviewReferencePubmed.equals( "" ) ) {
-
-            relevantPublicationsPubmed.add( reviewReferencePubmed );
+            } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) || evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
+                evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+            }
+        }
+        // for SFARI it is set into an other program
+        // TODO move SFARIImporter to ExternalDatabaseImporter
+        else if ( externalDatabaseName.equalsIgnoreCase( "SFARI" ) ) {
+            return;
+        } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" )
+                || externalDatabaseName.equalsIgnoreCase( "GWAS_Catalog" ) ) {
+            evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+        } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
+                || externalDatabaseName.equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
+            return;
         }
 
-        for ( String relevantPubMedID : relevantPublicationsPubmed ) {
-            CitationValueObject relevantPublicationValueObject = new CitationValueObject();
-            relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
-            evidence.getPhenotypeAssPubVO().add(
-                    PhenotypeAssPubValueObject.createRelevantPublication( relevantPubMedID ) );
+        // no score set ?
+        else if ( evidence.getScoreValueObject().getStrength() == null ) {
+            writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI() + "   and taxon: "
+                    + evidenceTaxon );
         }
-
-        Set<String> developmentStage = trimArray( tokens[this.mapColumns.get( "DevelopmentalStage" )].split( ";" ) );
-        Set<String> bioSource = trimArray( tokens[this.mapColumns.get( "BioSource" )].split( ";" ) );
-        Set<String> organismPart = trimArray( tokens[this.mapColumns.get( "OrganismPart" )].split( ";" ) );
-        Set<String> experimentDesign = trimArray( tokens[this.mapColumns.get( "ExperimentDesign" )].split( ";" ) );
-        Set<String> treatment = trimArray( tokens[this.mapColumns.get( "Treatment" )].split( ";" ) );
-        Set<String> experimentOBI = trimArray( tokens[this.mapColumns.get( "Experiment" )].split( ";" ) );
-
-        Set<CharacteristicValueObject> experimentTags = new HashSet<CharacteristicValueObject>();
-
-        experimentTags.addAll( experiementTags2Ontology( developmentStage, this.DEVELOPMENTAL_STAGE,
-                this.DEVELOPMENTAL_STAGE_ONTOLOGY, this.nifstdOntologyService ) );
-        experimentTags.addAll( experiementTags2Ontology( bioSource, this.BIOSOURCE_ONTOLOGY, this.BIOSOURCE_ONTOLOGY,
-                null ) );
-        experimentTags.addAll( experiementTags2Ontology( organismPart, this.ORGANISM_PART, this.ORGANISM_PART_ONTOLOGY,
-                this.fmaOntologyService ) );
-        experimentTags.addAll( experiementTags2Ontology( experimentDesign, this.EXPERIMENT_DESIGN,
-                this.EXPERIMENT_DESIGN_ONTOLOGY, this.obiService ) );
-        experimentTags.addAll( experiementTags2Ontology( treatment, this.TREATMENT, this.TREATMENT_ONTOLOGY, null ) );
-        experimentTags.addAll( experiementTags2Ontology( experimentOBI, this.EXPERIMENT, this.EXPERIMENT_ONTOLOGY,
-                this.obiService ) );
-
-        evidence.setExperimentCharacteristics( experimentTags );
-
-        return evidence;
     }
 
     // Change a set of phenotype to a set of CharacteristicValueObject
@@ -430,196 +763,6 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         }
 
         return characteristicPhenotypes;
-    }
-
-    // value or valueUri given changed to valueUri (even if valueUri is given in file we need to check)
-    private String phenotype2Ontology( String phenotypeToSearch ) throws IOException {
-
-        OntologyTerm ot = null;
-
-        // we got an uri, search by uri
-        if ( phenotypeToSearch.indexOf( "http://purl." ) != -1 ) {
-            log.info( "Found an URI: " + phenotypeToSearch );
-            ot = this.diseaseOntologyService.getTerm( phenotypeToSearch );
-
-            if ( ot == null ) {
-                ot = this.humanPhenotypeOntologyService.getTerm( phenotypeToSearch );
-            }
-            if ( ot == null ) {
-                ot = this.mammalianPhenotypeOntologyService.getTerm( phenotypeToSearch );
-            }
-        }
-        // value found
-        else {
-
-            // search disease
-            Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( phenotypeToSearch );
-
-            ot = findExactTerm( ontologyTerms, phenotypeToSearch );
-
-            if ( ot == null ) {
-                // search hp
-                ontologyTerms = this.humanPhenotypeOntologyService.findTerm( phenotypeToSearch );
-                ot = findExactTerm( ontologyTerms, phenotypeToSearch );
-
-            }
-            if ( ot == null ) {
-
-                // search mammalian
-                ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( phenotypeToSearch );
-                ot = findExactTerm( ontologyTerms, phenotypeToSearch );
-            }
-        }
-
-        // we cannot find the specific phenotype given
-        if ( ot == null ) {
-            // ***flawed writeError( "phenotype not found in disease, hp and mp Ontology : " + phenotypeToSearch );
-            // return null;
-        }
-
-        // check for obsolete terms
-        // if ( ot.isTermObsolete() ) {
-        // writeError( "TERM IS OBSOLETE: " + ot.getLabel() + " " + ot.getUri() );
-        // }
-
-        return phenotypeToSearch;// /***testing...ot.getUri();
-    }
-
-    /**
-     * check that all gene exists in Gemma
-     * 
-     * @throws IOException
-     * @throws Exception
-     */
-    private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
-
-        System.out.println( "Problem: gene id " + geneId + " gene name: " + geneName );
-
-        Gene g = this.geneService.findByNCBIId( new Integer( geneId ) );
-
-        // we found a gene
-        if ( g != null ) {
-            if ( !g.getOfficialSymbol().equalsIgnoreCase( geneName ) ) {
-
-                writeWarning( "Different Gene name found: file=" + geneName + "      Gene name in Gemma="
-                        + g.getOfficialSymbol() );
-            }
-
-            if ( !g.getTaxon().getCommonName().equals( "human" ) && !g.getTaxon().getCommonName().equals( "mouse" )
-                    && !g.getTaxon().getCommonName().equals( "rat" ) && !g.getTaxon().getCommonName().equals( "fly" )
-                    && !g.getTaxon().getCommonName().equals( "worm" )
-                    && !g.getTaxon().getCommonName().equals( "zebrafish" ) ) {
-
-                String speciesFound = g.getTaxon().getCommonName();
-
-                // lets try to map it to a human taxon using its symbol
-                g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
-
-                if ( g != null ) {
-                    writeWarning( "We found species: " + speciesFound + " on geneId: " + geneId
-                            + " and changed to it to the human symbol: " + geneName );
-                } else {
-                    throw new EntityNotFoundException( "The geneId: " + geneId + " using species: " + speciesFound
-                            + " exist but couldnt be map to its human symbol using: " + geneName
-                            + ", this evidence wont be imported" );
-                }
-            }
-        } else {
-            // lets try to map it to a human taxon using its symbol
-            g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
-
-            if ( g != null ) {
-                writeWarning( "We didnt found the geneId: " + geneId + " and changed it to the human symbol: "
-                        + geneName );
-            } else {
-                throw new EntityNotFoundException( "The geneId:" + geneId + " symbol: " + geneName
-                        + " was not found in Gemma, this evidence wont be imported" );
-            }
-        }
-        return g;
-    }
-
-    private void verifyMappingType( String phenotypeMapping ) {
-
-        if ( !( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) || phenotypeMapping.equalsIgnoreCase( "Curated" )
-                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" )
-                || phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) || phenotypeMapping.isEmpty() ) ) {
-            writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
-        }
-
-    }
-
-    private Set<CharacteristicValueObject> experiementTags2Ontology( Set<String> values, String category,
-            String categoryUri, AbstractOntologyService ontologyUsed ) throws IOException {
-
-        Set<CharacteristicValueObject> experimentTags = new HashSet<CharacteristicValueObject>();
-
-        for ( String term : values ) {
-
-            String valueUri = "";
-
-            if ( ontologyUsed != null ) {
-                Collection<OntologyTerm> ontologyTerms = ontologyUsed.findTerm( term );
-                OntologyTerm ot = findExactTerm( ontologyTerms, term );
-
-                if ( ot != null ) {
-                    valueUri = ot.getUri();
-                }
-            }
-
-            CharacteristicValueObject c = new CharacteristicValueObject( term, category, valueUri, categoryUri );
-            experimentTags.add( c );
-        }
-        return experimentTags;
-    }
-
-    // sometimes we dont have the gene nbci, so we use taxon and gene symbol to find the correct gene
-    private Integer findGeneId( String officialSymbol, String evidenceTaxon ) throws IOException {
-
-        Collection<Gene> genes = this.geneService.findByOfficialSymbol( officialSymbol );
-
-        Collection<Gene> genesWithTaxon = new HashSet<Gene>();
-
-        for ( Gene gene : genes ) {
-
-            if ( gene.getTaxon().getCommonName().equalsIgnoreCase( evidenceTaxon ) ) {
-                if ( gene.getNcbiGeneId() != null ) {
-                    genesWithTaxon.add( gene );
-                }
-            }
-        }
-
-        if ( genesWithTaxon.isEmpty() ) {
-
-            Integer geneNCBi = checkForSymbolChange( officialSymbol, evidenceTaxon );
-
-            if ( geneNCBi != null ) {
-                return geneNCBi;
-            }
-
-            writeError( "Gene not found using symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon );
-
-            return -1;
-
-        }
-
-        // too many results found, to check why
-        if ( genesWithTaxon.size() >= 2 ) {
-
-            Gene g = treatGemmaMultipleGeneSpeacialCases( officialSymbol, genesWithTaxon, evidenceTaxon );
-
-            if ( g != null ) {
-                return g.getNcbiGeneId();
-            }
-
-            String error = "Found more than 1 gene using Symbol: " + officialSymbol + "   and taxon: " + evidenceTaxon;
-
-            for ( Gene geneWithTaxon : genesWithTaxon ) {
-                writeError( error + "\tGene NCBI: " + geneWithTaxon.getNcbiGeneId() );
-            }
-        }
-
-        return genesWithTaxon.iterator().next().getNcbiGeneId();
     }
 
     // when we have more than 1 choice, which one to choose, some hard coded rules so we dont redo them each time
@@ -720,211 +863,68 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         return theChosenGene;
     }
 
-    private Gene findCorrectGene( String ncbiId, Collection<Gene> genesFound ) {
-
-        for ( Gene gene : genesFound ) {
-
-            if ( gene.getNcbiGeneId().toString().equalsIgnoreCase( ncbiId ) ) {
-                return gene;
-            }
-        }
-        return null;
-    }
-
-    // special case to change symbol, used when nothing was found with symbol
-    private Integer checkForSymbolChange( String officialSymbol, String evidenceTaxon ) throws IOException {
-
-        String newOfficialSymbol = null;
-
-        if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
-
-            if ( officialSymbol.equalsIgnoreCase( "ARVD2" ) ) {
-                newOfficialSymbol = "RYR2";
-            } else if ( officialSymbol.equalsIgnoreCase( "ARVD1" ) ) {
-                newOfficialSymbol = "TGFB3";
-            } else if ( officialSymbol.equalsIgnoreCase( "PEO1" ) ) {
-                newOfficialSymbol = "C10orf2";
-            } else if ( officialSymbol.equalsIgnoreCase( "CTPS1" ) ) {
-                newOfficialSymbol = "CTPS";
-            } else if ( officialSymbol.equalsIgnoreCase( "CO3" ) ) {
-                newOfficialSymbol = "COX3";
-            } else if ( officialSymbol.equalsIgnoreCase( "CYB" ) ) {
-                newOfficialSymbol = "CYTB";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ATP6" ) ) {
-                newOfficialSymbol = "ATP6";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ATP8" ) ) {
-                newOfficialSymbol = "ATP8";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-CO3" ) ) {
-                newOfficialSymbol = "COX3";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-CYB" ) ) {
-                newOfficialSymbol = "CYTB";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND1" ) ) {
-                newOfficialSymbol = "ND1";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND2" ) ) {
-                newOfficialSymbol = "ND2";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND3" ) ) {
-                newOfficialSymbol = "ND3";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND4" ) ) {
-                newOfficialSymbol = "ND4";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND4L" ) ) {
-                newOfficialSymbol = "ND4L";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND5" ) ) {
-                newOfficialSymbol = "ND5";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-ND6" ) ) {
-                newOfficialSymbol = "ND6";
-            } else if ( officialSymbol.equalsIgnoreCase( "MT-TL1" ) ) {
-                newOfficialSymbol = "TRNL1";
-            }
-
-        } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) ) {
-
-            if ( officialSymbol.equalsIgnoreCase( "Hsd3b2" ) ) {
-                newOfficialSymbol = "Hsd3b1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-coi" ) || officialSymbol.equalsIgnoreCase( "Mt-co1" ) ) {
-                newOfficialSymbol = "COX1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-cyb" ) ) {
-                newOfficialSymbol = "CYTB";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd1" ) ) {
-                newOfficialSymbol = "ND1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-co2" ) ) {
-                newOfficialSymbol = "COX2";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd5" ) ) {
-                newOfficialSymbol = "ND5";
-            } else if ( officialSymbol.equalsIgnoreCase( "Mt-nd3" ) ) {
-                newOfficialSymbol = "ND3";
-            } else if ( officialSymbol.equalsIgnoreCase( "Srebf1_v2" ) ) {
-                newOfficialSymbol = "Srebf1";
-            } else if ( officialSymbol.equalsIgnoreCase( "Naip6" ) ) {
-                newOfficialSymbol = "Naip2";
-            } else if ( officialSymbol.equalsIgnoreCase( "Slco1a4" ) ) {
-                newOfficialSymbol = "Slco1a2";
-            } else if ( officialSymbol.equalsIgnoreCase( "Klk1b3" ) ) {
-                newOfficialSymbol = "Klk1";
-            }
-        }
-
-        if ( newOfficialSymbol != null ) {
-            return findGeneId( newOfficialSymbol, evidenceTaxon );
-        }
-
-        return null;
-
-    }
-
     /**
-     * hard coded rules to set scores depending on the type of the database
-     */
-    private void setScoreDependingOnExternalSource( String externalDatabaseName, EvidenceValueObject evidence,
-            String evidenceTaxon ) {
-        // OMIM got special character in description to find score
-        if ( externalDatabaseName.equalsIgnoreCase( "OMIM" ) ) {
-
-            String description = evidence.getDescription();
-
-            if ( description.indexOf( "{" ) != -1 && description.indexOf( "}" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.6 ) );
-            } else if ( description.indexOf( "[" ) != -1 && description.indexOf( "]" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-            } else if ( description.indexOf( "{?" ) != -1 && description.indexOf( "}" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-            } else if ( description.indexOf( "?" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
-            } else {
-                evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
-            }
-        }
-
-        // RGD we use the taxon and the evidence code
-        else if ( externalDatabaseName.equalsIgnoreCase( "RGD" ) ) {
-
-            if ( evidenceTaxon.equalsIgnoreCase( "human" ) ) {
-
-                String evidenceCode = evidence.getEvidenceCode();
-
-                if ( evidenceCode.equalsIgnoreCase( "TAS" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
-                } else if ( evidenceCode.equalsIgnoreCase( "IEP" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-                    evidence.setRelationship( "altered expression association" );
-                } else if ( evidenceCode.equalsIgnoreCase( "IGI" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-                } else if ( evidenceCode.equalsIgnoreCase( "IED" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-                } else if ( evidenceCode.equalsIgnoreCase( "IAGP" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-                    evidence.setRelationship( "genetic association" );
-                } else if ( evidenceCode.equalsIgnoreCase( "QTM" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-                } else if ( evidenceCode.equalsIgnoreCase( "IPM" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
-                    evidence.setRelationship( "genetic association" );
-                } else if ( evidenceCode.equalsIgnoreCase( "IMP" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
-                    evidence.setRelationship( "mutation association" );
-                } else if ( evidenceCode.equalsIgnoreCase( "IDA" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
-                }
-
-            } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) || evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
-            }
-        }
-        // for SFARI it is set into an other program
-        // TODO move SFARIImporter to ExternalDatabaseImporter
-        else if ( externalDatabaseName.equalsIgnoreCase( "SFARI" ) ) {
-            return;
-        } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" )
-                || externalDatabaseName.equalsIgnoreCase( "GWAS_Catalog" ) ) {
-            evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
-        } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
-                || externalDatabaseName.equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
-            return;
-        }
-
-        // no score set ?
-        else if ( evidence.getScoreValueObject().getStrength() == null ) {
-            writeError( "no score found for a evidence using NCBI: " + evidence.getGeneNCBI() + "   and taxon: "
-                    + evidenceTaxon );
-        }
-    }
-
-    /**
-     * once we imported some evidence in Neurocarta, we want to copy a copy of what was imported and when, those files
-     * are committed in Gemma, so its possible to see over time all that was imported
-     */
-    @SuppressWarnings("unused")
-    private void createImportLog( EvidenceValueObject evidenceValueObject ) {
-
-        // default
-        String externalDatabaseName = "MANUAL_CURATION";
-
-        // name the file by its external database name
-        if ( evidenceValueObject.getEvidenceSource() != null
-                && evidenceValueObject.getEvidenceSource().getExternalDatabase() != null ) {
-            externalDatabaseName = evidenceValueObject.getEvidenceSource().getExternalDatabase().getName();
-        }
-
-        String keepCopyOfImportedFile = externalDatabaseName + "_" + getTodayDate() + ".tsv";
-
-        // move the file
-        File mvFile = new File( inputFile );
-        mvFile.renameTo( new File( WRITE_FOLDER + File.separator + keepCopyOfImportedFile ) );
-    }
-
-    private String getTodayDate() {
-        DateFormat dateFormat = new SimpleDateFormat( "yyyy-MM-dd_HH:mm" );
-        Calendar cal = Calendar.getInstance();
-        return dateFormat.format( cal.getTime() );
-    }
-
-    /*
-     * (non-Javadoc)
+     * check that all gene exists in Gemma
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @throws IOException
+     * @throws Exception
      */
-    @Override
-    public String getCommandName() {
-        return "evidenceImport";
+    private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
+
+        System.out.println( "Problem: gene id " + geneId + " gene name: " + geneName );
+
+        Gene g = this.geneService.findByNCBIId( new Integer( geneId ) );
+
+        // we found a gene
+        if ( g != null ) {
+            if ( !g.getOfficialSymbol().equalsIgnoreCase( geneName ) ) {
+
+                writeWarning( "Different Gene name found: file=" + geneName + "      Gene name in Gemma="
+                        + g.getOfficialSymbol() );
+            }
+
+            if ( !g.getTaxon().getCommonName().equals( "human" ) && !g.getTaxon().getCommonName().equals( "mouse" )
+                    && !g.getTaxon().getCommonName().equals( "rat" ) && !g.getTaxon().getCommonName().equals( "fly" )
+                    && !g.getTaxon().getCommonName().equals( "worm" )
+                    && !g.getTaxon().getCommonName().equals( "zebrafish" ) ) {
+
+                String speciesFound = g.getTaxon().getCommonName();
+
+                // lets try to map it to a human taxon using its symbol
+                g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
+
+                if ( g != null ) {
+                    writeWarning( "We found species: " + speciesFound + " on geneId: " + geneId
+                            + " and changed to it to the human symbol: " + geneName );
+                } else {
+                    throw new EntityNotFoundException( "The geneId: " + geneId + " using species: " + speciesFound
+                            + " exist but couldnt be map to its human symbol using: " + geneName
+                            + ", this evidence wont be imported" );
+                }
+            }
+        } else {
+            // lets try to map it to a human taxon using its symbol
+            g = this.geneService.findByOfficialSymbol( geneName, taxonService.findByCommonName( "human" ) );
+
+            if ( g != null ) {
+                writeWarning( "We didnt found the geneId: " + geneId + " and changed it to the human symbol: "
+                        + geneName );
+            } else {
+                throw new EntityNotFoundException( "The geneId:" + geneId + " symbol: " + geneName
+                        + " was not found in Gemma, this evidence wont be imported" );
+            }
+        }
+        return g;
+    }
+
+    private void verifyMappingType( String phenotypeMapping ) {
+
+        if ( !( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) || phenotypeMapping.equalsIgnoreCase( "Curated" )
+                || phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" )
+                || phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) || phenotypeMapping.isEmpty() ) ) {
+            writeError( "Unsuported phenotypeMapping: " + phenotypeMapping );
+        }
+
     }
 
 }

@@ -31,31 +31,6 @@ import ubic.gemma.util.AbstractCLIContextCLI;
  */
 public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
 
-    private PhenotypeAssociationManagerService phenotypeAssociationService = null;
-    private String externalDatabaseName = "";
-
-    // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
-    private static String[] initArguments() {
-
-        String[] args = new String[6];
-        // user
-        args[0] = "-u";
-        args[1] = "administrator";
-        // password
-        args[2] = "-p";
-        args[3] = "administrator"; // FIXME WTF??
-        // what database name when want to delete
-        args[4] = "-d";
-        args[5] = "DGA";
-
-        return args;
-    }
-
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PHENOTYPES;
-    }
-
     public static void main( String[] args ) {
 
         DeleteEvidenceCLI deleteEvidenceImporterCLI = new DeleteEvidenceCLI();
@@ -79,6 +54,51 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+    }
+    // initArgument is only call when no argument is given on the command line, (it make it faster to run it in eclipse)
+    private static String[] initArguments() {
+
+        String[] args = new String[6];
+        // user
+        args[0] = "-u";
+        args[1] = "administrator";
+        // password
+        args[2] = "-p";
+        args[3] = "administrator"; // FIXME WTF??
+        // what database name when want to delete
+        args[4] = "-d";
+        args[5] = "DGA";
+
+        return args;
+    }
+
+    private String externalDatabaseName = "";
+
+    private PhenotypeAssociationManagerService phenotypeAssociationService = null;
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.PHENOTYPES;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     */
+    @Override
+    public String getCommandName() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        @SuppressWarnings("static-access")
+        Option databaseOption = OptionBuilder.withDescription( "External database name to be deleted" ).hasArg()
+                .withArgName( "name of external database" ).isRequired().create( "d" );
+        addOption( databaseOption );
+
     }
 
     @Override
@@ -119,29 +139,9 @@ public class DeleteEvidenceCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    protected void buildOptions() {
-        @SuppressWarnings("static-access")
-        Option databaseOption = OptionBuilder.withDescription( "External database name to be deleted" ).hasArg()
-                .withArgName( "name of external database" ).isRequired().create( "d" );
-        addOption( databaseOption );
-
-    }
-
-    @Override
     protected void processOptions() {
         super.processOptions();
         this.externalDatabaseName = new String( getOptionValue( 'd' ) );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
-    @Override
-    public String getCommandName() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }
