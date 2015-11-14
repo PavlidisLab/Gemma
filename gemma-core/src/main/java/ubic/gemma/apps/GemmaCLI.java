@@ -19,14 +19,12 @@
 package ubic.gemma.apps;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-//import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -107,8 +105,11 @@ public class GemmaCLI {
         if ( args.length == 0 ) {
             printHelp( commands );
         } else {
-            String commandRequested = args[0];
-            if ( !commands.containsKey( commandRequested ) ) {
+            LinkedList<String> f = new LinkedList<String>( Arrays.asList( args ) );
+            String commandRequested = f.remove( 0 );
+            Object[] argsToPass = f.toArray( new String[] {} );
+
+            if ( !commandClasses.containsKey( commandRequested ) ) {
                 System.err.println( "Unrecognized command: " + commandRequested );
                 printHelp( commands );
                 System.err.println( "Unrecognized command: " + commandRequested );
@@ -117,14 +118,13 @@ public class GemmaCLI {
                 try {
                     Class<?> c = commandClasses.get( commandRequested );
                     Method method = c.getMethod( "main", String[].class );
-                    // Object cliinstance = c.newInstance();
-                    method.invoke( null, ( Object ) args );
+                    System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
+                    method.invoke( null, ( Object ) argsToPass );
                 } catch ( Exception e ) {
-                    System.err.println( "Gemma CLI error! Report to developers: " + e.getMessage() );
+                    System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
                     throw new RuntimeException( e );
                 } finally {
-                    System.err.println( "========= Gemma CLI run complete with method=" + commandRequested
-                            + "============" );
+                    System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
                     System.exit( 0 );
                 }
             }
