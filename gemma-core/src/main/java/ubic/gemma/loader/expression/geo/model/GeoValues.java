@@ -59,8 +59,6 @@ public class GeoValues implements Serializable {
 
     private static final long serialVersionUID = 3748363645735281578L;
 
-    private static Set<String> AFFY_EXON_PLATFORMS = new HashSet<String>();
-
     private static Log log = LogFactory.getLog( GeoValues.class.getName() );
 
     /*
@@ -249,9 +247,6 @@ public class GeoValues implements Serializable {
 
         skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
 
-        // see bug 3891 FIXME put this somewhere more central.
-        AFFY_EXON_PLATFORMS.add( "GPL6247" );
-
     }
 
     private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
@@ -336,23 +331,28 @@ public class GeoValues implements Serializable {
              */
             if ( sample.isMightNotHaveDataInFile() ) {
                 addSample( sample, 0 );
-                log.warn( "Adding dummy quantitation type" );
+                log.warn( "Data not anticipated to be present (RNA-seq etc.), adding dummy quantitation type" );
                 return;
                 // throw new IllegalStateException( "Samples must have a platform assigned." );
             }
 
             // exon array data sets are missing the data, which we compute later anyway from CEL files.
             // See bug 3981 and GSE28383 and GSE28886
-            if ( AFFY_EXON_PLATFORMS.contains( platform.getGeoAccession() )
-                    || ( platform.getTitle().toLowerCase().contains( "affymetrix" ) && platform.getTitle()
-                            .toLowerCase().contains( "exon" ) ) ) {
+            if ( platform.getTitle().toLowerCase().contains( "affymetrix" )
+                    && platform.getTitle().toLowerCase().contains( "exon" ) ) {
                 addSample( sample, 0 );
-                log.warn( "Adding dummy quantitation type" );
+                log.warn( "Data not anticipated to be usable (exon arrays), adding dummy quantitation type" );
                 return;
             }
 
-            throw new UnsupportedOperationException(
-                    "Can't deal with empty samples when that sample is the first one on its platform." );
+            addSample( sample, 0 );
+            sample.setMightNotHaveDataInFile( true );
+            log.warn( "Sample lacks data, no data will be imported for this data set" );
+            platform.setUseDataFromGEO(false);
+            return;
+
+            // throw new UnsupportedOperationException(
+            // "Can't deal with empty samples when that sample is the first one on its platform." );
 
         } else {
 

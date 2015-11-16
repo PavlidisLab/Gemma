@@ -328,6 +328,11 @@ public class GeoFamilyParser implements Parser<Object> {
             return;
         }
 
+        if ( currentSample.isMightNotHaveDataInFile() ) {
+            log.info( "Sample might not have any data: " + currentSample + ", skipping missing data check fillin" );
+            return;
+        }
+
         if ( currentSample.getPlatforms().size() > 1 ) {
             log.warn( "Multi-platform sample: " + currentSample );
         }

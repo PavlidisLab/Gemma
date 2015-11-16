@@ -42,9 +42,31 @@ public class GeoPlatform extends GeoData {
 
     private static final String DISTRIBUTION_VIRTUAL = "virtual";
 
+    private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
+
     private static final long serialVersionUID = 1L;
 
-    private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
+    private Collection<String> catalogNumbers = new HashSet<String>();
+
+    private String coating = "";
+
+    private Collection<String> contributer = new HashSet<String>();
+
+    private String description = "";
+
+    private Collection<String> designElements = new HashSet<String>();
+
+    private String distribution = "";
+
+    private String lastUpdateDate = "";
+
+    private String manufactureProtocol = "";
+
+    private String manufacturer = "";
+
+    private Collection<String> organisms = new HashSet<String>();
+
+    private List<List<String>> platformData = new ArrayList<List<String>>();
 
     /**
      * Store information on the platform here. Map of designElements to other information. This has to be lists so the
@@ -59,39 +81,22 @@ public class GeoPlatform extends GeoData {
      */
     private Map<String, String> probeNamesInGemma = new HashMap<String, String>();
 
-    private Collection<String> catalogNumbers = new HashSet<String>();
-
-    private String coating = "";
-
-    private Collection<String> contributer = new HashSet<String>();
-
-    private String description = "";
-
-    private String distribution = "";
-
-    private String manufactureProtocol = "";
-
-    private String manufacturer = "";
-
-    private Collection<String> organisms = new HashSet<String>();
-
-    private List<List<String>> platformData = new ArrayList<List<String>>();
-
     private Collection<Integer> pubMedIds = new HashSet<Integer>();
+
+    private String sample = "DNA";
+
+    private String supplementaryFile = "";
 
     private String support = "";
 
     private GeoDataset.PlatformType technology = null;
 
+    /**
+     * Will be set to false during parsing if data are missing.
+     */
+    private boolean useDataFromGEO = true;
+
     private Collection<String> webLinks = new HashSet<String>();
-
-    private String sample = "DNA";
-
-    private String lastUpdateDate = "";
-
-    private String supplementaryFile = "";
-
-    private Collection<String> designElements = new HashSet<String>();
 
     /**
      * Add a value to a column. A special case is when the column is of the probe ids (design element name).
@@ -426,6 +431,16 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
+     * Normally only set this if "false". Default is true, but will be overridden for certain typs of platforms such as
+     * MPSS (rna-seq), SAGE or Exon arrays.
+     * 
+     * @param b
+     */
+    public void setUseDataFromGEO( boolean b ) {
+        this.useDataFromGEO = b;
+    }
+
+    /**
      * @param webLinks The webLinks to set.
      */
     public void setWebLinks( Collection<String> webLinks ) {
@@ -437,6 +452,8 @@ public class GeoPlatform extends GeoData {
      *         and Exon array data.
      */
     public boolean useDataFromGeo() {
+
+        if ( !this.useDataFromGEO ) return false;
 
         if ( technology == null ) {
             throw new IllegalStateException( "Don't call until the technology type is filled in" );
@@ -453,7 +470,7 @@ public class GeoPlatform extends GeoData {
             throw new IllegalStateException( "Can't figure out suitability of data until platform title is filled in." );
         }
 
-        if ( technology.equals( PlatformType.inSituOligonucleotide ) && ( getTitle().contains( "Exon" ) ) ) {
+        if ( technology.equals( PlatformType.inSituOligonucleotide ) && ( getTitle().toLowerCase().contains( "exon" ) ) ) {
             // This is not expected to be very robust, but there's not much else to go on, apparently.
             return false;
         }

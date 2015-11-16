@@ -338,7 +338,9 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
             try {
                 preprocessorService.process( ee );
             } catch ( PreprocessingException e ) {
-                log.error( "Error during postprocessing of " + ee + " , make sure additional steps are completed", e );
+                log.error( "Experiment was loaded, but there was an error during postprocessing: " + ee
+                        + " , make sure additional steps are completed", e );
+                errorObjects.add( ee.getShortName() + ": " + e.getMessage() );
             }
 
         }
