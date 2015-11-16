@@ -29,6 +29,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -57,6 +58,8 @@ import ubic.gemma.loader.expression.geo.model.GeoDataset.PlatformType;
 public class GeoValues implements Serializable {
 
     private static final long serialVersionUID = 3748363645735281578L;
+
+    private static Set<String> AFFY_EXON_PLATFORMS = new HashSet<String>();
 
     private static Log log = LogFactory.getLog( GeoValues.class.getName() );
 
@@ -246,6 +249,9 @@ public class GeoValues implements Serializable {
 
         skippableQuantitationTypes.addAll( Arrays.asList( moreSkip ) );
 
+        // see bug 3891 FIXME put this somewhere more central.
+        AFFY_EXON_PLATFORMS.add( "GPL6247" );
+
     }
 
     private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
@@ -335,10 +341,11 @@ public class GeoValues implements Serializable {
                 // throw new IllegalStateException( "Samples must have a platform assigned." );
             }
 
-            // rarely (once?) exon array data sets are missing the data, which we compute later anyway from CEL files.
-            // See bug 3981 and GSE28383
-            if ( platform.getTitle().toLowerCase().contains( "affymetrix" )
-                    && platform.getTitle().toLowerCase().contains( "exon" ) ) {
+            // exon array data sets are missing the data, which we compute later anyway from CEL files.
+            // See bug 3981 and GSE28383 and GSE28886
+            if ( AFFY_EXON_PLATFORMS.contains( platform.getGeoAccession() )
+                    || ( platform.getTitle().toLowerCase().contains( "affymetrix" ) && platform.getTitle()
+                            .toLowerCase().contains( "exon" ) ) ) {
                 addSample( sample, 0 );
                 log.warn( "Adding dummy quantitation type" );
                 return;
