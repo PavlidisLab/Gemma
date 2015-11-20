@@ -113,7 +113,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
                         continue;
                     }
 
-                    if ( ees.findByAccession( geoRecord.getGeoAccession() ) != null ) {
+                    if ( !ees.findByAccession( geoRecord.getGeoAccession() ).isEmpty() ) {
                         continue;
                     }
 
