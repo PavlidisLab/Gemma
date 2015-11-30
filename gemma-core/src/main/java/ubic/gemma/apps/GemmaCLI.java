@@ -153,6 +153,7 @@ public class GemmaCLI {
 
             System.err.println( "\n---- " + cmdg.toString() + " ----" );
             for ( String cmd : commandsInGroup.keySet() ) {
+                if ( cmd == null ) continue; // just in case... but no command name means "skip";
                 System.err.println( cmd + " - " + commandsInGroup.get( cmd ) );
             }
         }
