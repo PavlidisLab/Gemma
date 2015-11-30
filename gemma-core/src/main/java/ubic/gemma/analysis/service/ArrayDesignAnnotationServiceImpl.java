@@ -30,6 +30,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -176,7 +177,7 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
                 Long probeId = probeNameToId.get( probeName );
 
                 results.get( probeId )[0] = probeName; // Probe Name (redundant!)
-                results.get( probeId )[1] = fields[1]; // Gene Symbol
+                results.get( probeId )[1] = fields[1]; // Gene Symbol(s)
                 results.get( probeId )[2] = fields[2]; // Gene Name
 
                 // fields[3] is the GO annotations, we skip that.
@@ -406,6 +407,10 @@ public class ArrayDesignAnnotationServiceImpl implements ArrayDesignAnnotationSe
         int simple = 0;
         int empty = 0;
         int complex = 0;
+        // we used LinkedHasSets to keep everything in a predictable order - this is important for the gene symbols,
+        // descriptions and NCBIids (but not important for GO terms). When a probe maps to multiple genes, we list those
+        // three items for the genes in the same order. There is a feature request to make
+        // the order deterministic (i.e.,lexigraphic sort), this could be done by using little gene objects or whatever.
         Collection<OntologyTerm> goTerms = new LinkedHashSet<OntologyTerm>();
         Set<String> genes = new LinkedHashSet<String>();
         Set<String> geneDescriptions = new LinkedHashSet<String>();

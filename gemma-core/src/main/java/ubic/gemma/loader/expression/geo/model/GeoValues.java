@@ -29,7 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -348,7 +347,7 @@ public class GeoValues implements Serializable {
             addSample( sample, 0 );
             sample.setMightNotHaveDataInFile( true );
             log.warn( "Sample lacks data, no data will be imported for this data set" );
-            platform.setUseDataFromGEO(false);
+            platform.setUseDataFromGEO( false );
             return;
 
             // throw new UnsupportedOperationException(

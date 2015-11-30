@@ -122,12 +122,15 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         addOption( fileOption );
 
         Option accessionOption = OptionBuilder.hasArg().withArgName( "Accession(s)" )
-                .withDescription( "Optional comma-delimited list of accessions (GSE or GDS) to load" )
+                .withDescription( "Optional comma-delimited list of accessions (GSE or GDS or GPL) to load" )
                 .withLongOpt( "acc" ).create( 'e' );
         addOption( accessionOption );
 
-        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" )
-                .withDescription( "Load platforms (array designs) only" ).withLongOpt( "platforms" ).create( 'y' );
+        Option platformOnlyOption = OptionBuilder
+                .withArgName( "Platforms only" )
+                .withDescription(
+                        "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
+                .withLongOpt( "platforms" ).create( 'y' );
         addOption( platformOnlyOption );
 
         Option noBioAssayMatching = OptionBuilder.withDescription( "Do not try to match samples across platforms" )

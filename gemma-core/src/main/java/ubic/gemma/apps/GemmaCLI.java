@@ -66,6 +66,7 @@ public class GemmaCLI {
             // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
             final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.apps" );
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.loader.association.phenotype" ) );
+            classes.addAll( provider.findCandidateComponents( "chibi.gemmaanalysis" ) );
 
             for ( BeanDefinition bean : classes ) {
                 try {
@@ -77,6 +78,7 @@ public class GemmaCLI {
                     Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
                     String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
                     if ( commandName == null ) {
+                        // keep null to avoid printing some commands...
                         continue;
                     }
 
@@ -102,7 +104,8 @@ public class GemmaCLI {
             System.exit( 1 );
         }
 
-        if ( args.length == 0 ) {
+        if ( args.length == 0 || args[0].equalsIgnoreCase( "--help" ) || args[0].equalsIgnoreCase( "-help" )
+                || args[0].equalsIgnoreCase( "help" ) ) {
             printHelp( commands );
         } else {
             LinkedList<String> f = new LinkedList<String>( Arrays.asList( args ) );

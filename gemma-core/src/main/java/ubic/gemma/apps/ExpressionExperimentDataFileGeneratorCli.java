@@ -53,9 +53,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         }
     }
 
-    ExpressionDataFileService expressionDataFileService;
+    private ExpressionDataFileService expressionDataFileService;
 
-    private String DESCRIPTION = "Generate Flat data files (diff expression, co-expression) for a given set of experiments";
+    private String DESCRIPTION = "Generate analysis text files (diff expression, co-expression)";
 
     private boolean force_write = false;
 
