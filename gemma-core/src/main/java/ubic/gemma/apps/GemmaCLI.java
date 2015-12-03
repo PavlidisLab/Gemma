@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
@@ -125,6 +126,7 @@ public class GemmaCLI {
                     method.invoke( null, ( Object ) argsToPass );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
+                    System.err.println( ExceptionUtils.getStackTrace( e ) );
                     throw new RuntimeException( e );
                 } finally {
                     System.err.println( "========= Gemma CLI run of " + commandRequested + " complete ============" );
