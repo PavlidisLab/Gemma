@@ -22,8 +22,10 @@ import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -67,45 +69,30 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 public abstract class AbstractCLI {
 
     public enum ErrorCode {
-        NORMAL, MISSING_OPTION, INVALID_OPTION, MISSING_ARGUMENT, FATAL_ERROR, AUTHENTICATION_ERROR
+        AUTHENTICATION_ERROR, FATAL_ERROR, INVALID_OPTION, MISSING_ARGUMENT, MISSING_OPTION, NORMAL
     }
 
-    protected static final String THREADS_OPTION = "threads";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
 
     protected static final String AUTO_OPTION_NAME = "auto";
 
-    private static final char PASSWORD_CONSTANT = 'p';
-    private static final char USERNAME_OPTION = 'u';
-    private static final char PORT_OPTION = 'P';
-    private static final char HOST_OPTION = 'H';
-
-    private static final char VERBOSITY_OPTION = 'v';
-    private static final String HEADER = "Options:";
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
-    private static final int DEFAULT_PORT = 3306;
-    private static int DEFAULT_VERBOSITY = 4; // info.
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
 
-    protected Options options = new Options();
-
-    private CommandLine commandLine;
+    protected static final String THREADS_OPTION = "threads";
+    private static final int DEFAULT_PORT = 3306;
+    private static int DEFAULT_VERBOSITY = 4; // info.
 
     /* support for convenience options */
     private String DEFAULT_HOST = "localhost";
-    private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
     private Map<Logger, Level> originalLoggingLevels = new HashMap<Logger, Level>();
+    private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
 
-    protected int numThreads = 1;
-    protected String host = DEFAULT_HOST;
-    protected int port = DEFAULT_PORT;
-    protected String username;
-    protected String password;
-
-    /**
-     * Date used to identify which endities to run the tool on (e.g., those which were run less recently than mDate). To
-     * enable call addDateOption.
-     */
-    protected String mDate = null;
+    private static final String HEADER = "Options:";
+    private static final char HOST_OPTION = 'H';
+    private static final char PASSWORD_CONSTANT = 'p';
+    private static final char PORT_OPTION = 'P';
+    private static final char USERNAME_OPTION = 'u';
+    private static final char VERBOSITY_OPTION = 'v';
 
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
@@ -119,10 +106,26 @@ public abstract class AbstractCLI {
 
     // needs to be concurrently modifiable.
     protected Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<Object>() );
+    protected String host = DEFAULT_HOST;
+    /**
+     * Date used to identify which endities to run the tool on (e.g., those which were run less recently than mDate). To
+     * enable call addDateOption.
+     */
+    protected String mDate = null;
+
+    protected int numThreads = 1;
+    protected Options options = new Options();
+    protected String password;
+    protected Option passwordOpt;
+    protected int port = DEFAULT_PORT;
 
     protected Collection<Object> successObjects = Collections.synchronizedSet( new HashSet<Object>() );
-    protected Option passwordOpt;
+
+    protected String username;
+
     protected Option usernameOpt;
+
+    private CommandLine commandLine;
 
     public AbstractCLI() {
         this.buildStandardOptions();
@@ -177,6 +180,13 @@ public abstract class AbstractCLI {
     public String[] getArgs() {
         return commandLine.getArgs();
     }
+
+    /**
+     * A short memorable name for the command that can be used to locate this class.
+     * 
+     * @return name; if null, this will not be available as a shortcut command.
+     */
+    public abstract String getCommandName();
 
     /**
      * @param opt
@@ -241,13 +251,6 @@ public abstract class AbstractCLI {
     }
 
     public abstract String getShortDesc();
-
-    /**
-     * A short memorable name for the command that can be used to locate this class.
-     * 
-     * @return name; if null, this will not be available as a shortcut command.
-     */
-    public abstract String getCommandName();
 
     public boolean hasOption( char opt ) {
         return commandLine.hasOption( opt );
@@ -369,12 +372,12 @@ public abstract class AbstractCLI {
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
-                "Set verbosity level (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
+                "Set verbosity level for all loggers (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
         Option otherLogOpt = OptionBuilder
                 .hasArg()
                 .withArgName( "logger" )
                 .withDescription(
-                        "Set the selected logger to the verbosity level after the equals sign. For example, '--logger org.hibernate.SQL=4'" )
+                        "Set the named logger to the verbosity level after the equals sign. For example, '--logger org.hibernate.SQL=4'" )
                 .create( "logger" );
 
         options.addOption( otherLogOpt );
@@ -616,6 +619,17 @@ public abstract class AbstractCLI {
     }
 
     /**
+     * @param verbosity2
+     */
+    private void configureAllLoggers( int v ) {
+        Enumeration<?> currentLoggers = LogManager.getLoggerRepository().getCurrentLoggers();
+        while ( currentLoggers.hasMoreElements() ) {
+            Logger logger = ( Logger ) currentLoggers.nextElement();
+            setLoggerLevel( v, logger );
+        }
+    }
+
+    /**
      * Set up logging according to the user-selected (or default) verbosity level.
      */
     private void configureLogging( String loggerName, int v ) {
@@ -623,44 +637,14 @@ public abstract class AbstractCLI {
         Logger log4jLogger = LogManager.exists( loggerName );
 
         if ( log4jLogger == null ) {
-            try {
-                Class<?> loggerclaz = Class.forName( loggerName );
-                log4jLogger = LogManager.getLogger( loggerclaz );
-            } catch ( ClassNotFoundException e ) {
-                // ...
-            }
-
-            if ( log4jLogger == null ) {
-                log.warn( "No logger of name '" + loggerName + "'" );
-                return;
-            }
+            log4jLogger = LogManager.getLogger( loggerName );
         }
 
+        // if logger name is nonsense this will not do anything.
+        log.info( "Setting logging for " + loggerName + " to " + v );
         this.originalLoggingLevels.put( log4jLogger, log4jLogger.getLevel() );
 
-        switch ( v ) {
-            case 0:
-                log4jLogger.setLevel( Level.OFF );
-                break;
-            case 1:
-                log4jLogger.setLevel( Level.FATAL );
-                break;
-            case 2:
-                log4jLogger.setLevel( Level.ERROR );
-                break;
-            case 3:
-                log4jLogger.setLevel( Level.WARN );
-                break;
-            case 4:
-                log4jLogger.setLevel( Level.INFO );
-                break;
-            case 5:
-                log4jLogger.setLevel( Level.DEBUG );
-                break;
-            default:
-                throw new RuntimeException( "Verbosity must be from 0 to 5" );
-
-        }
+        setLoggerLevel( v, log4jLogger );
 
         log.debug( "Logging level is at " + log4jLogger.getEffectiveLevel() );
     }
@@ -697,9 +681,10 @@ public abstract class AbstractCLI {
 
         if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
             this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
-            if ( verbosity < 1 || verbosity > 5 ) {
-                throw new RuntimeException( "Verbosity must be from 1 to 5" );
+            if ( verbosity < 0 || verbosity > 5 ) {
+                throw new RuntimeException( "Verbosity must be from 0 to 5" );
             }
+            configureAllLoggers( this.verbosity );
         }
         PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
         ConsoleAppender cnslAppndr = new ConsoleAppender( layout );
@@ -712,10 +697,9 @@ public abstract class AbstractCLI {
             String[] vals = value.split( "=" );
             if ( vals.length != 2 ) throw new RuntimeException( "Logging value must in format [logger]=[value]" );
             try {
-                log.info( "Setting logging for " + vals[0] + " to " + vals[1] );
                 configureLogging( vals[0], Integer.parseInt( vals[1] ) );
             } catch ( NumberFormatException e ) {
-                throw new RuntimeException( "Logging level must be an integer" );
+                throw new RuntimeException( "Logging level must be an integer between 0 and 5" );
             }
         }
 
@@ -723,7 +707,36 @@ public abstract class AbstractCLI {
             this.mDate = this.getOptionValue( "mdate" );
         }
 
-        configureLogging( "ubic.gemma", this.verbosity );
-
     }
+
+    /**
+     * @param level
+     * @param log4jLogger
+     */
+    private void setLoggerLevel( int level, Logger log4jLogger ) {
+        switch ( level ) {
+            case 0:
+                log4jLogger.setLevel( Level.OFF );
+                break;
+            case 1:
+                log4jLogger.setLevel( Level.FATAL );
+                break;
+            case 2:
+                log4jLogger.setLevel( Level.ERROR );
+                break;
+            case 3:
+                log4jLogger.setLevel( Level.WARN );
+                break;
+            case 4:
+                log4jLogger.setLevel( Level.INFO );
+                break;
+            case 5:
+                log4jLogger.setLevel( Level.DEBUG );
+                break;
+            default:
+                throw new RuntimeException( "Verbosity must be from 0 to 5" );
+
+        }
+    }
+
 }
