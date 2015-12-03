@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -78,7 +79,7 @@ public class GemmaCLI {
 
                     Method method = aclazz.getMethod( "getCommandName", new Class[] {} );
                     String commandName = ( String ) method.invoke( cliinstance, new Object[] {} );
-                    if ( commandName == null ) {
+                    if ( commandName == null || StringUtils.isBlank( commandName ) ) {
                         // keep null to avoid printing some commands...
                         continue;
                     }
@@ -123,6 +124,7 @@ public class GemmaCLI {
                     Class<?> c = commandClasses.get( commandRequested );
                     Method method = c.getMethod( "main", String[].class );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
+                    System.err.println( "Options: " + StringUtils.join( argsToPass, " " ) );
                     method.invoke( null, ( Object ) argsToPass );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );

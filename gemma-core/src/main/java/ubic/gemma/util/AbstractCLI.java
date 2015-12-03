@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -372,12 +371,13 @@ public abstract class AbstractCLI {
         Option helpOpt = new Option( "h", "help", false, "Print this message" );
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
-                "Set verbosity level for all loggers (0=silent, 5=very verbose; default is " + DEFAULT_VERBOSITY + ")" );
+                "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
         Option otherLogOpt = OptionBuilder
                 .hasArg()
                 .withArgName( "logger" )
                 .withDescription(
-                        "Set the named logger to the verbosity level after the equals sign. For example, '--logger org.hibernate.SQL=4'" )
+                        "Configure a specific logger verbosity"
+                                + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
                 .create( "logger" );
 
         options.addOption( otherLogOpt );
@@ -493,7 +493,9 @@ public abstract class AbstractCLI {
     protected final Exception processCommandLine( String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
-        System.err.println( "Gemma version " + Settings.getAppVersion() );
+        String appVersion = Settings.getAppVersion();
+        if ( appVersion == null ) appVersion = "?";
+        System.err.println( "Gemma version " + appVersion );
 
         if ( args == null ) {
             printHelp();
