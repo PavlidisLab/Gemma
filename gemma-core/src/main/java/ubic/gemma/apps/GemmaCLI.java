@@ -124,7 +124,7 @@ public class GemmaCLI {
                     Class<?> c = commandClasses.get( commandRequested );
                     Method method = c.getMethod( "main", String[].class );
                     System.err.println( "========= Gemma CLI invocation of " + commandRequested + " ============" );
-                    System.err.println( "Options: " + StringUtils.join( argsToPass, " " ) );
+                    System.err.println( "Options: " + getOptStringForLogging( argsToPass ) );
                     method.invoke( null, ( Object ) argsToPass );
                 } catch ( Exception e ) {
                     System.err.println( "Gemma CLI error: " + e.getClass().getName() + " - " + e.getMessage() );
@@ -136,6 +136,18 @@ public class GemmaCLI {
                 }
             }
         }
+    }
+
+    /**
+     * @param argsToPass
+     * @return
+     */
+    public static String getOptStringForLogging( Object[] argsToPass ) {
+        // try to mask the password...
+        // return StringUtils.join( argsToPass, " " ).replaceAll( "(-(-)?p(assword)?)\\s+(.+?)\\s", "\1 XXXXXX " );
+
+        return java.util.regex.Pattern.compile( "(-(-)?p(assword)?)\\s+(.+?)\\s" )
+                .matcher( StringUtils.join( argsToPass, " " ) ).replaceAll( "$1 XXXXXX " );
     }
 
     /**
