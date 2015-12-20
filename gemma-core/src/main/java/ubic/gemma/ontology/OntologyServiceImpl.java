@@ -59,6 +59,7 @@ import ubic.basecode.ontology.providers.MouseDevelopmentOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.basecode.ontology.providers.SequenceOntologyService;
+import ubic.basecode.ontology.providers.UberonOntologyService;
 import ubic.basecode.ontology.search.OntologySearch;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -239,6 +240,7 @@ public class OntologyServiceImpl implements OntologyService {
     private SearchService searchService;
 
     private SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
+    private UberonOntologyService uberonOntologyService = new UberonOntologyService();
 
     @Override
     public void afterPropertiesSet() {
@@ -247,8 +249,8 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.gemmaOntologyService );
         this.ontologyServices.add( this.experimentalFactorOntologyService );
         this.ontologyServices.add( this.obiService );
-        this.ontologyServices.add( this.nifstdOntologyService );
-        this.ontologyServices.add( this.fmaOntologyService );
+        this.ontologyServices.add( this.nifstdOntologyService ); // DEPRECATED?
+        this.ontologyServices.add( this.fmaOntologyService ); // DEPRECATED
         this.ontologyServices.add( this.diseaseOntologyService );
         this.ontologyServices.add( this.cellTypeOntologyService );
         this.ontologyServices.add( this.chebiOntologyService );
@@ -258,6 +260,7 @@ public class OntologyServiceImpl implements OntologyService {
         this.ontologyServices.add( this.humanDevelopmentOntologyService );
         this.ontologyServices.add( this.sequenceOntologyService );
         this.ontologyServices.add( this.cellLineOntologyService );
+        this.ontologyServices.add( this.uberonOntologyService );
 
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             serv.startInitializationThread( false );
