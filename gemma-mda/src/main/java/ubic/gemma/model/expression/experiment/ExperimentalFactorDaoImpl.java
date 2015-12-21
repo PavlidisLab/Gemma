@@ -134,8 +134,8 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
 
             // if there are factorvalues to remove
             if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
-                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                // getBioMaterialDao().update( bm ); // needed?
+                bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial ); 
+                this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
             }
         }
 
