@@ -227,8 +227,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         stringency = Math.max( stringency, chooseStringency( queryGenesOnly, eeIds.size(), genes.size() ) );
 
-        assert stringency > 0;
-        assert stringency >= 2 || eeIds.size() == 1;
+        assert stringency >= 1 || eeIds.size() == 1;
 
         log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
                 + ") and genes (" + genes.size() + ") queried" );
@@ -247,9 +246,11 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                 allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
                         maxResults, quick );
             }
-            if ( allCoexpressions.isEmpty() && stringency > 1 ) {
+            int minimum_stringency_for_requery = 2;
+
+            if ( allCoexpressions.isEmpty() && stringency > minimum_stringency_for_requery ) {
                 stringency -= stepSize; // step size completely made up.
-                stringency = Math.max( 1, stringency );
+                stringency = Math.max( minimum_stringency_for_requery, stringency ); // keep stringency at least 2.
                 log.info( "No results, requerying with stringeny=" + stringency );
             } else {
                 // no results.
