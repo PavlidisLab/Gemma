@@ -132,28 +132,28 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
     */
    addToPreviewedSet : function( combo, record, index ) {
 
-      var geneSet = record.get( 'resultValueObject' );
-
-      if ( geneSet.geneIds.length > 0 ) {
+      var o = record.get( 'resultValueObject' );
+      console.log( o.constructor.name );
+      if ( o.constructor.name === 'GeneValueObject' ) { // might not be safe...
+         this._appendAndUpdate( [ o.id ] );
+      } else if ( o.geneIds && o.geneIds.length > 0 ) {// it's a set
          /*
           * Work with those directly.
           */
-         var newIds = geneSet.geneIds;
+         var newIds = o.geneIds;
          this._appendAndUpdate( newIds );
 
-      } else if ( geneSet.id != null ) {
+      } else if ( o.id !== null ) { // set, but with no genes.
          /*
           * Add the genes to the current set. This is a bit clumsy...
           */
-         GeneSetController.load( geneSet.id, function( fetched ) {
+         GeneSetController.load( o.id, function( fetched ) {
             this._appendAndUpdate( fetched.geneIds );
          }.createDelegate( this ) );
 
       } else {
-         throw 'Cannot add to preview from this type of object';
+         throw 'Cannot add to preview from this type of object: ' + o.constructor.name;
       }
-
-      var allIds = this.selectedSetValueObject.geneIds;
 
    },
 
@@ -260,7 +260,8 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
       } );
       this.withinSetGeneCombo.setTaxonId( this.taxonId );
 
-      // FIXME might want to do this by firing an event and let container handle (as it stands, preview and management
+      // FIXME might want to do this by firing an event and let container handle (as it stands, preview and
+      // management
       // are intertwined)
       this.withinSetGeneCombo.on( 'select', this.addToPreviewedSet.createDelegate( this ), this );
 
