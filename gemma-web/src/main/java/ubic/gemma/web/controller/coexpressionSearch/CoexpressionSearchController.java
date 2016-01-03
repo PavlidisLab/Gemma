@@ -216,6 +216,14 @@ public class CoexpressionSearchController {
         }
 
         assert queryGeneIds != null && !queryGeneIds.isEmpty();
+
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
+        if ( queryGeneIds.size() == 1 ) {
+            // there is nothing to do; really we shouldn't be here.
+            assert !searchOptions.getGeneIds().isEmpty();
+            return doSearch( searchOptions );
+        }
+
         assert searchOptions.getQueryGenesOnly();
 
         // Add the user's datasets to the selected datasets
@@ -223,8 +231,6 @@ public class CoexpressionSearchController {
         if ( searchOptions.isUseMyDatasets() ) {
             myEE = expressionExperimentService.loadMyExpressionExperiments();
         }
-
-        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
 
         Collection<Long> eeIds = chooseExperimentsToQuery( searchOptions, result );
 

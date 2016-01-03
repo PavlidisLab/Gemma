@@ -2,7 +2,7 @@ Ext.namespace( 'Gemma' );
 
 /**
  * Responsible for conducting a coexpression search, and holds the results. Basically wraps a
- * CoexpressionMetaValueObject and encapsluates the search
+ * CoexpressionMetaValueObject and encapsulates the search
  * 
  * @author cam
  * @class
@@ -209,7 +209,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          this.stringency = newStringency;
          this.fireEvent( 'search-started' );
          this.cytoscapeSearchResults = this.searchResults;
-         this.searchCommandUsed.stringency = newStringency; // FIXME WHY ARE WE CHANGING THIS?
+         this.searchCommandUsed.stringency = newStringency; // FIXME WHY ARE WE CHANGING THIS HERE?
          this.cytoscapeResultsUpToDate = true;
 
          /*
@@ -230,6 +230,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
 
       }
 
+      // otherwise...
       var searchStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency( newStringency );
       this.stringency = searchStringency;
 
@@ -240,22 +241,11 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
          eeIds : this.searchCommandUsed.eeIds, // IS THIS AVAILABLE?
          stringency : searchStringency,
          useMyDatasets : false,
-         queryGenesOnly : true,
+         queryGenesOnly : geneIdsSubset.length > 1, // important!
          taxonId : this.searchCommandUsed.taxonId,
          eeSetName : this.searchCommandUsed.eeSetName,
          eeSetId : this.searchCommandUsed.eeSetId
       };
-
-      if ( geneIdsSubset.length < 2 ) {
-         // There is a bug where if you can get a gene back in results but if you search for it by itself there are
-         // no results(PPP2R1A human) (WHAT IS THIS BUG??)
-         this.cytoscapeSearchResults.results = [];
-         this.fireEvent( 'complete-search-results-ready', this.cytoscapeSearchResults, coexpressionSearchCommand );
-
-         alert( "Error, there were no genes, this is a bug" );
-
-         return;
-      }
 
       /*
        * Do a search that fills in the edges among the genes already found.
@@ -312,7 +302,8 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
    search : function( searchCommand ) {
       this.searchCommandUsed = searchCommand; // this is the only place this gets set. If Sets were used, the ids will
       // not be here.
-      console.log( this.searchCommandUsed );
+      // console.log( "Query from client:" );
+      // console.log( this.searchCommandUsed );
       var ref = this;
       ref.fireEvent( 'search-started' );
       CoexpressionSearchController.doBackgroundCoexSearch( searchCommand, {
@@ -330,6 +321,7 @@ Gemma.CoexpressionSearchData = Ext.extend( Ext.util.Observable, {
                   ref.fireEvent( 'aftersearch', results.errorState, true );
                   ref.fireEvent( 'search-error', results.errorState );
                } else {
+                  // console.log( "Server results:" )
                   ref.searchResults = results;
                   ref.allGeneIdsSet = Gemma.CoexVOUtil.getAllGeneIds( ref.getResults() );
                   ref.cytoscapeResultsUpToDate = false;

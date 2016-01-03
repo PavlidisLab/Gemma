@@ -177,7 +177,7 @@ Gemma.AnalysisResultsSearchForm = Ext
 
             if ( selectedVO instanceof GeneValueObject ) {
                // this should never happen
-               console.log( "got a single gene" );
+               // console.log( "got a single gene" );
                var gene = selectedVO;
                // Why do we do it this way? it would be easier to have selected always be a set in the first place.
                var singleGeneSet = new SessionBoundGeneSetValueObject();
@@ -211,7 +211,7 @@ Gemma.AnalysisResultsSearchForm = Ext
 
             if ( selectedVO instanceof ExpressionExperimentValueObject ) {
                // we should not let this happen.
-               console.log( "got a single experiment " );
+               // console.log( "got a single experiment " );
                var ee = selectedVO;
                var singleExperimentSet = new SessionBoundExpressionExperimentSetValueObject();
                singleExperimentSet.id = null;
@@ -512,22 +512,20 @@ Gemma.AnalysisResultsSearchForm = Ext
 
             Gemma.AnalysisResultsSearchForm.superclass.initComponent.call( this );
 
-            this.on( 'queryUpdateFromCoexpressionViz',
-               function( genesToPreview, genesToPreviewIds, taxonId, taxonName ) {
-                  this.getEl().unmask();
+            this.on( 'queryUpdateFromCoexpressionViz', function( geneIds ) {
+               this.getEl().unmask();
 
-                  if ( this.geneSearchAndPreview.preview ) {
-                     this.geneSearchAndPreview.preview.selectionEditorWindow.hide();
-                  }
+               if ( this.geneSearchAndPreview.preview ) {
+                  this.geneSearchAndPreview.preview.selectionEditorWindow.hide();
+               }
 
-                  if ( this.experimentSearchAndPreviewPanel.preview ) {
-                     this.experimentSearchAndPreviewPanel.preview.selectionEditorWindow.hide();
-                  }
+               if ( this.experimentSearchAndPreviewPanel.preview ) {
+                  this.experimentSearchAndPreviewPanel.preview.selectionEditorWindow.hide();
+               }
 
-                  this.geneSearchAndPreview.getGenesFromGeneValueObjects( genesToPreview, genesToPreviewIds, taxonId,
-                     taxonName );
+               this.geneSearchAndPreview.getGenes( geneIds );
 
-               }, this );
+            }, this );
 
             this.addEvents( 'beforesearch', 'aftersearch', 'differential_expression_search_query_ready',
                'coexpression_search_query_ready', 'modechange' );

@@ -15,7 +15,7 @@ Gemma.AnalysesSearchUtils = {
       var geneIds = [];
       var vo = geneSetValueObject;
       if ( vo instanceof GeneValueObject ) {
-         console.log( "got a sole gene" );
+         // console.log( "got a sole gene" );
          geneIds.push( vo.id );
       } else if ( vo instanceof GeneSetValueObject ) {
          geneIds = geneIds.concat( vo.geneIds );
@@ -35,7 +35,7 @@ Gemma.AnalysesSearchUtils = {
       var eeIds = [];
       var vo = experimentSetValueObject;
       if ( vo instanceof ExpressionExperimentValueObject ) {
-         console.log( "Got a sole experiment" );
+         // console.log( "Got a sole experiment" );
          eeIds.push( vo.id );
       } else if ( vo instanceof ExpressionExperimentSetValueObject ) {
          eeIds = eeIds.concat( vo.expressionExperimentIds );

@@ -94,8 +94,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             // we should deal with sets, not
             // single gene objects, we end up having two cases too often. Convert gene directly to set and stick with
             // it.
-            var newset = this.makeSessionBoundGeneSet( [ id ], taxonId, "From symbol",
-               'Group made from gene symbols entered' );
+            var newset = this.makeSessionBoundGeneSet( [ id ], taxonId, "From IDs", 'Group made from genes entered' );
             this.setSelectedGeneSetValueObject( newset );
          } else {
             throw "Don't know what kind of object was received";
@@ -118,7 +117,8 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
 
       /**
        * 
-       * @param geneIds
+       * @param {Array}
+       *           genes of gene ids
        * @param taxonId
        * @param name
        * @param description
@@ -127,6 +127,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
       makeSessionBoundGeneSet : function( geneIds, taxonId, name, description ) {
          // debugger;
          var newGeneSet = new SessionBoundGeneSetValueObject();
+
          newGeneSet.modified = false;
          newGeneSet.geneIds = geneIds;
          newGeneSet.taxonId = taxonId;
@@ -166,8 +167,8 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
 
          this.searchForm.geneIds = geneIds;
 
-         var geneset = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From Symbol List',
-            'Group made from gene symbols entered.' );
+         var geneset = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From user query',
+            'Group made from user query entered.' );
 
          // if some genes weren't found
          // prepare a msg for the user
@@ -186,7 +187,6 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             }
          }
 
-         // reset the gene preview panel content
          this.resetGenePreview();
 
          this.preview.setTaxonId( taxonId );
@@ -194,7 +194,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
          var message = queriesWithNoResults.length > 0 ? String.format(
             Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.inexactFromList, msgMany, msgNone ) : '';
 
-         // FIXME if there is already a set, we should add to it, not clobber it.
+         // FIXME maybe if there is already a set, we should add to it, not clobber it.
          this.preview.loadGenePreviewFromGeneSet( geneset, message );
 
          this.setSelectedGeneSetValueObject( geneset );
@@ -208,12 +208,11 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
        * Given text, search Gemma for matching genes. Used to 'bulk load' genes from the GUI.
        * 
        * @param {}
-       *           e
+       *           e - text supplied
        * @param {Number}
        *           taxonId
        */
       getGenesFromList : function( e, taxonId ) {
-         // debugger;
 
          var taxonName;
          if ( !taxonId && this.searchForm.getTaxonId() ) {
@@ -250,7 +249,7 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             }
          } );
 
-         this.fireEvent( 'madeFirstSelection' ); // important? why outside the callback?
+         this.fireEvent( 'madeFirstSelection' ); // see MetaAnalysisSelectExperimentPanel ? why outside the callback?
          this.fireEvent( 'select' );
       },
 
@@ -284,40 +283,41 @@ Gemma.GeneSearchAndPreview = Ext.extend( Ext.Panel,
             }
          } );
 
-         this.fireEvent( 'madeFirstSelection' ); // important? why outside the callback?
+         this.fireEvent( 'madeFirstSelection' ); // // see MetaAnalysisSelectExperimentPanel why outside the callback?
          this.fireEvent( 'select' );
       },
 
       /**
-       * Allows updates to the query genes in the form based on existing GeneValueObjects already returned from the
-       * server.
+       * Allows updates to the query genes.
        * 
-       * A stripped down version of getGenesFromList because we already have the GeneValueObjects from the search
-       * results and there is no need for a call to the back end
+       * @param {Array}
+       *           geneIds
        * 
-       * @param {}
-       *           e
        */
-      getGenesFromGeneValueObjects : function( genesToPreview, geneIds, taxonId, taxonName ) {
+      getGenes : function( geneIds ) {
 
          this.searchForm.geneIds = geneIds;
-         var vo = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From symbol list', 'Group made from gene symbols' );
+         var taxonId = this.searchForm.getTaxonId();
+         this.preview.setTaxonId( taxonId );
 
+         this.resetGenePreview();
          this.changeDisplayAfterSelection();
 
-         this.setSelectedGeneSetValueObject( vo );
+         var geneset = this.makeSessionBoundGeneSet( geneIds, taxonId, 'From IDs', 'Group made from gene IDs' );
 
-         this.searchForm.taxonChanged( taxonId, taxonName );
+         this.preview.loadGenePreviewFromGeneSet( geneset, "Updated genes" );
 
-         this.preview.setTaxonId( taxonId );
-         this.preview.loadGenePreviewFromGenes( genesToPreview );
+         this.setSelectedGeneSetValueObject( geneset );
+
          this.preview.show();
-         this.fireEvent( 'madeFirstSelection' ); // important?
+         this.fireEvent( 'madeFirstSelection' ); // see MetaAnalysisSelectExperimentPanel
          this.fireEvent( 'select' );
+         return geneset;
+
       },
 
       /**
-       * 
+       * @private
        */
       changeDisplayAfterSelection : function() {
          this.geneCombo.disable().hide();

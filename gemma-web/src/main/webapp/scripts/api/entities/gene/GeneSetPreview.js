@@ -133,7 +133,6 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    addToPreviewedSet : function( combo, record, index ) {
 
       var o = record.get( 'resultValueObject' );
-      console.log( o.constructor.name );
       if ( o.constructor.name === 'GeneValueObject' ) { // might not be safe...
          this._appendAndUpdate( [ o.id ] );
       } else if ( o.geneIds && o.geneIds.length > 0 ) {// it's a set

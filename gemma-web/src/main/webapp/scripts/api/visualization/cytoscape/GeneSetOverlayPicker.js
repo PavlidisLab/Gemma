@@ -90,6 +90,7 @@ Gemma.GeneSetOverlayPicker = Ext.extend( Ext.Window, {
    },
 
    /**
+    * For the selection of genes to overlay.
     * 
     * @returns {Gemma.GeneSearchAndPreview}
     */
