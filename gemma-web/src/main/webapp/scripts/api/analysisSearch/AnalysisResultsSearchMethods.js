@@ -79,6 +79,12 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
          return;
       }
 
+      if ( !experimentSetValueObject ) {
+         Ext.Msg.alert( "Error", "You must choose experiments for differential expression queries." );
+         this.fireEvent( 'searchAborted' );
+         return;
+      }
+
       /**
        * Verify that experiments and genes are not empty (though we may allow this). If there are too many experiments
        * or genes, warn the user and offer to trim the sets.
@@ -136,7 +142,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend( Ext.util.Observable, {
       if ( Gemma.AnalysesSearchUtils.isGeneSetEmpty( geneSetValueObject ) ) {
 
          /*
-          * That's okay if they don't have too many experiments
+          * That's okay if they don't have too many experiments FIXME this is not set up right for diffex, but does what
+          * we want for coexp?
           */
          if ( !Gemma.AnalysesSearchUtils.isExperimentSetEmpty( experimentSetValueObject )
             && experimentSetValueObject.size < 10 /* FIXME */) {

@@ -84,6 +84,9 @@ Gemma.ExperimentSetPreview = Ext
             this.updateTitle();
          },
 
+         /**
+          * @memberOf Gemma.ExperimentSetPreview
+          */
          reset : function() {
             this.resetPreview();
             this.entityIds = null;
@@ -94,6 +97,7 @@ Gemma.ExperimentSetPreview = Ext
          /**
           * public don't use params if you want to update name based on this.selectedEntityOrGroup
           * 
+          * @memberOf Gemma.ExperimentSetPreview
           * @param {Object}
           *           selectedSet
           * 
