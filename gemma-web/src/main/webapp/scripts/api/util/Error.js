@@ -64,7 +64,7 @@ Gemma.parseException = function( ex ) {
          return "Error stack trace could not be parsed";
       }
    } else {
-      console.log( "what" );
+      // console.log( "what" );
       return ex;
    }
 
