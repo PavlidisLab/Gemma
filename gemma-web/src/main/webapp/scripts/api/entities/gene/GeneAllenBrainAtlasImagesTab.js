@@ -9,7 +9,7 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend( Ext.Panel, {
    defaults : {
       border : false
    },
-   
+
    /**
     * @memberOf Gemma.GeneAllenBrainAtlasImage
     */
@@ -78,7 +78,7 @@ Gemma.geneLinkOutPopUp = function( abaImageUrl ) {
 
    var abaWindowId = "geneDetailsAbaWindow";
    var win = Ext.getCmp( abaWindowId );
-   if ( win !== null ) {
+   if ( win ) {
       win.close();
    }
 
@@ -86,7 +86,8 @@ Gemma.geneLinkOutPopUp = function( abaImageUrl ) {
       html : "<img src='" + abaImageUrl + "'>",
       id : abaWindowId,
       stateful : false,
-      title : "<img height='15'  src='/Gemma/images/abaExpressionLegend.gif'>"
+   // Allen no longer gives colour images.
+   // title : "<img height='15' src='/Gemma/images/abaExpressionLegend.gif'>"//
    // ,
    // width : 500,
    // height : 400,
