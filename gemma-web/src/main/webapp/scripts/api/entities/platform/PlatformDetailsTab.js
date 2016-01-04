@@ -527,7 +527,7 @@ Gemma.PlatformDetails = Ext
                               }.createDelegate( this ),
                               errorHandler : function( er, exception ) {
                                  Ext.Msg.alert( "Error", er + "\n" + exception.stack );
-                                 console.log( exception.stack );
+                                 // console.log( exception.stack );
                               }
                            } );
                   } );

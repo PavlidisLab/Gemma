@@ -237,8 +237,8 @@ Gemma.ProbeLevelDiffExGrid = Ext
             var value = new RegExp( Ext.escapeRe( text ), 'i' );
             return function( r, id ) {
                var obj = r.data;
-               return value.match( obj.expressionExperiment.name ) || value.match( obj.expressionExperiment.shortName )
-                  || value.match( obj.experimentalFactors[0].name );
+               return value.test( obj.expressionExperiment.name ) || value.test( obj.expressionExperiment.shortName )
+                  || value.test( obj.experimentalFactors[0].name );
             };
          },
 

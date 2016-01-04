@@ -84,7 +84,7 @@ Gemma.ExpressionExperimentGrid = Ext
             var value = new RegExp( Ext.escapeRe( text ), 'i' );
             return function( r, id ) {
                var obj = r.data;
-               return value.match( obj.name ) || value.match( obj.shortName );
+               return value.test( obj.name ) || value.test( obj.shortName );
             };
          },
 

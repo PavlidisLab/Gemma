@@ -164,7 +164,7 @@ Gemma.EEReportGrid = Ext
          },
 
          clearFilter : function() {
-            this.setFiltersToDefault();
+            this.getTopToolbar().setFiltersToDefault();
             this.getStore().clearFilter();
          },
 
@@ -172,7 +172,7 @@ Gemma.EEReportGrid = Ext
             var value = new RegExp( Ext.escapeRe( text ), 'i' );
             return function( r, id ) {
                var obj = r.data;
-               return value.match( obj.name ) || value.match( obj.shortName );
+               return value.test( obj.name ) || value.test( obj.shortName );
             };
          },
 
@@ -789,27 +789,35 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel( {
 
 Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
    {
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       getSearchFun : function( text ) {
          var value = new RegExp( Ext.escapeRe( text ), 'i' );
          return function( r, id ) {
             var obj = r.data;
-            return value.match( obj.name ) || value.match( obj.shortName );
+            return value.test( obj.name ) || value.test( obj.shortName );
          };
       },
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       refresh : function() {
          this.setFiltersToDefault();
          this.fireEvent( 'loadStore', [ this.taxonid, this.ids, this.limit, this.filterType, this.showPublic ] );
       },
 
       filterType : null,
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       filterByNeed : function( box, record, index ) {
          this.filterType = record.get( 'filterType' );
          this.fireEvent( 'loadStore', [ this.taxonid, this.ids, this.limit, this.filterType, this.showPublic ] );
       },
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       filterByTaxon : function( box, record, index ) {
 
          // if user selected 'All taxa', load all datasets
@@ -822,7 +830,9 @@ Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
          this.fireEvent( 'loadStore', [ this.taxonid, this.ids, this.limit, this.filterType, this.showPublic ] );
 
       },
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       filterByLimit : function( box, record, index ) {
          this.limit = record.get( 'count' );
          // can't do "50 recently updated" and search results
@@ -830,7 +840,9 @@ Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
 
          this.fireEvent( 'loadStore', [ this.taxonid, this.ids, this.limit, this.filterType, this.showPublic ] );
       },
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       filterBySearch : function( record ) {
          this.ids = record.memberIds;
          // if user selected an experiment instead of an experiment group, member
@@ -844,7 +856,9 @@ Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
          this.fireEvent( 'loadStore', [ this.taxonid, this.ids, Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType,
                                        this.showPublic ] );
       },
-
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       getBookmark : function() {
          var url = Gemma.BASEURL + "/expressionExperiment/showAllExpressionExperimentLinkSummaries.html?";
          if ( this.ids ) {
@@ -867,6 +881,28 @@ Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
             + '</a>' );
       },
 
+      // only call this after everything has loaded! otherwise will break
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
+      setFiltersToDefault : function() {
+
+         this.taxonid = (this.taxonCombo.getStore().getAt( 0 )) ? this.taxonCombo.getStore().getAt( 0 ).get( 'id' )
+            : "-1";
+         this.taxonCombo.setValue( this.taxonid );
+
+         this.limit = this.limitCombo.defaultValue;
+         this.limitCombo.setValue( this.limit );
+
+         this.filterType = this.filterCombo.defaultValue;
+         this.filterCombo.setValue( this.filterCombo.defaultValue );
+
+         this.searchCombo.clearValue();
+         this.ids = null;
+      },
+      /**
+       * @memberOf Gemma.EEReportGridToolbar
+       */
       initComponent : function() {
 
          this.filterCombo = new Ext.form.ComboBox( {
@@ -958,23 +994,6 @@ Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
                this.filterCombo.setValue( this.filterCombo.defaultValue );
             }
          }, this );
-
-         // only call this after everything has loaded! otherwise will break
-         this.setFiltersToDefault = function() {
-
-            this.taxonid = (this.taxonCombo.getStore().getAt( 0 )) ? this.taxonCombo.getStore().getAt( 0 ).get( 'id' )
-               : "-1";
-            this.taxonCombo.setValue( this.taxonid );
-
-            this.limit = this.limitCombo.defaultValue;
-            this.limitCombo.setValue( this.limit );
-
-            this.filterType = this.filterCombo.defaultValue;
-            this.filterCombo.setValue( this.filterCombo.defaultValue );
-
-            this.searchCombo.clearValue();
-            this.ids = null;
-         };
 
          Ext.apply( this, {
             items : [ this.searchCombo, this.filterCombo, this.taxonCombo, this.limitCombo, {
