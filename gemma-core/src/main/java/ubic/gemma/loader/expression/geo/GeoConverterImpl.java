@@ -707,7 +707,7 @@ public class GeoConverterImpl implements GeoConverter {
         assert datasets.size() > 0;
 
         for ( GeoSample sample : series.getSamples() ) {
-            // ugly, we have to assume there is only one platform per sampl.
+            // ugly, we have to assume there is only one platform per sample.
             if ( sample.getPlatforms().iterator().next().equals( platform ) ) {
                 platformSpecific.addSample( sample );
             }
@@ -2385,6 +2385,13 @@ public class GeoConverterImpl implements GeoConverter {
             List<GeoSample> datasetSamples, GeoPlatform geoPlatform ) {
         assert datasetSamples.size() > 0 : "No samples in dataset";
 
+        if ( !geoPlatform.useDataFromGeo() ) {
+            // see bug 4181
+            log.warn( "Platform characteristics indicate data from GEO should be ignored or will not be present anyway ("
+                    + geoPlatform + ")" );
+            return;
+        }
+
         log.info( "Converting vectors for " + geoPlatform.getGeoAccession() + ", " + datasetSamples.size()
                 + " samples." );
 
@@ -2481,6 +2488,14 @@ public class GeoConverterImpl implements GeoConverter {
                 + ", " + expExp.getQuantitationTypes().size() + " quantitation types." );
     }
 
+    /**
+     * f
+     * 
+     * @param externalDb
+     * @param externalRef
+     * @param bs
+     * @return
+     */
     private DatabaseEntry createDatabaseEntry( ExternalDatabase externalDb, String externalRef, BioSequence bs ) {
         DatabaseEntry dbe;
         if ( isGenbank( externalDb ) ) {

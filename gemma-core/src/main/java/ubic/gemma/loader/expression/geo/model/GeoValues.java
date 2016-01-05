@@ -319,8 +319,10 @@ public class GeoValues implements Serializable {
         if ( platform.getTechnology().equals( PlatformType.MPSS )
                 || platform.getTechnology().equals( PlatformType.SAGE ) ) {
             /*
-             * We're not going to add data for this. Note
+             * We're not going to add data for this. Setting this false is a bit redundant (see
+             * GeoPlatform.useDataFromGeo) but can't hurt.
              */
+            platform.setUseDataFromGEO( false );
             return;
 
         } else if ( !sampleDimensions.containsKey( platform ) ) {
@@ -491,7 +493,12 @@ public class GeoValues implements Serializable {
      * @return
      */
     public Integer getQuantitationTypeIndex( GeoPlatform platform, String columnName ) {
-        return this.quantitationTypeNameMap.get( platform ).get( columnName );
+        Map<String, Integer> map = this.quantitationTypeNameMap.get( platform );
+        if ( map == null ) {
+            // See bug 4181 - this happens when the platform has no data and we don't expect that.
+            throw new IllegalStateException( "No QT map for " + platform );
+        }
+        return map.get( columnName );
     }
 
     /**
