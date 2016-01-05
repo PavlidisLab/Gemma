@@ -173,12 +173,14 @@ Gemma.GenePage = Ext.extend( Ext.TabPanel, {
 
       phenotypeEvidenceGridPanel.getView().emptyText = Gemma.HelpText.WidgetDefaults.PhenotypePanel.noRecordEmptyText;
 
+      // This code fails because reload() is called when there are no valid parameters for the call. See bug 4348
+
       // In PhenotypePanel, when a user logs in, PhenotypeGridPanel will be reloaded first, followed by
       // PhenotypeGeneGridPanel and then PhenotypeEvidenceGridPanel. So, the following code should not
       // be done in PhenotypeEvidenceGridPanel. Otherwise, PhenotypeEvidenceGridPanel would be reloaded twice.
-      Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {
-         phenotypeEvidenceGridPanel.getStore().reload();
-      }, this );
+      // Gemma.Application.currentUser.on( "logIn", function( userName, isAdmin ) {
+      // phenotypeEvidenceGridPanel.getStore().reload();
+      // }, this );
 
       return phenotypeEvidenceGridPanel;
    }

@@ -147,7 +147,6 @@ public class GeneController extends BaseController {
     public GeneValueObject loadGeneDetails( Long geneId ) {    	
         //return geneCoreService.loadGeneDetails( geneId );
     	GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
-    	String thisTaxon = gvo.getTaxonCommonName();
     	Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService.findEvidenceByGeneId(
                 geneId, new HashSet<String>(), new EvidenceFilter( gvo.getTaxonId(), false, null ) );
     	Iterator<EvidenceValueObject> iter = collEVO.iterator();
@@ -163,7 +162,9 @@ public class GeneController extends BaseController {
     }
 
     /**
-     * used to show gene info in the phenotype tab
+     * AJAX
+     * used to show gene info in the phenotype tab 
+     * FIXME Why is the taxonId a parameter, since we have the gene ID?
      */
     public Collection<EvidenceValueObject> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {

@@ -20,6 +20,13 @@ Gemma.GeneDetails = Ext
             align : 'stretch'
          },
          layout : 'vbox',
+
+         /**
+          * @private
+          * @param homologues
+          * @param mainGeneSymbol
+          * @returns {String}
+          */
          renderHomologues : function( homologues, mainGeneSymbol ) {
             var homologueStr = '';
             if ( homologues && homologues.length > 0 ) {
@@ -51,7 +58,7 @@ Gemma.GeneDetails = Ext
          },
 
          /**
-          * 
+          * @private
           * @param geneSets
           * @returns {Array}
           */
@@ -81,7 +88,7 @@ Gemma.GeneDetails = Ext
          },
 
          /**
-          * 
+          * @private
           * @param geneDetails
           * @returns {String}
           */
@@ -113,7 +120,8 @@ Gemma.GeneDetails = Ext
          },
 
          /**
-          * 
+          * @memberOf Gemma.GeneDetailsTab
+          * @private
           * @param geneDetails
           * @returns {String}
           */
@@ -171,7 +179,7 @@ Gemma.GeneDetails = Ext
             this.fireEvent( 'changeTab', tabName );
          },
          /**
-          * 
+          * @private
           * @param ncbiId
           * @param count
           * @returns {String}
@@ -199,6 +207,11 @@ Gemma.GeneDetails = Ext
                } );
          },
 
+         /**
+          * @private
+          * @param geneDetails
+          * @returns {Ext.Panel}
+          */
          renderNodeDegree : function( geneDetails ) {
 
             /*
@@ -325,6 +338,11 @@ Gemma.GeneDetails = Ext
             }
          },
 
+         /**
+          * @private
+          * @param aliases
+          * @returns
+          */
          renderAliases : function( aliases ) {
             if ( aliases != null && aliases.length > 0 ) {
                aliases.sort();
