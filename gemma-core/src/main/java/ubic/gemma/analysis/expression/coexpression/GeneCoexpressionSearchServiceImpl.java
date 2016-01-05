@@ -185,20 +185,22 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
     /**
      * @param inputEeIds
-     * @param genes
+     * @param genes 1 or more.
      * @param stringency if set to 1, may be adjusted
      * @param maxResults per gene, not including the query genes themselves. Ignored if this is 'querygenesonly'
-     * @param queryGenesOnly
+     * @param queryGenesOnly will be ignored if number of genes is 1.
      * @param quick
      * @return CoexpressionMetaValueObject, in which the results are already populated and sorted.
      */
     private CoexpressionMetaValueObject doCoexpressionSearch( Collection<Long> inputEeIds, Collection<Long> genes,
-            int stringency, int maxResults, boolean queryGenesOnly, boolean quick ) {
+            int stringency, final int maxResults, final boolean queryGenesOnly, final boolean quick ) {
         if ( genes.isEmpty() ) {
             CoexpressionMetaValueObject r = new CoexpressionMetaValueObject();
             r.setErrorState( "No genes selected" );
             return r;
         }
+
+        boolean actuallyUseQueryGeneOnly = queryGenesOnly && genes.size() > 1;
 
         Taxon taxon = this.geneService.load( genes.iterator().next() ).getTaxon();
         List<ExpressionExperimentValueObject> eevos = getFilteredEEvos( inputEeIds, taxon );
@@ -219,13 +221,13 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         // to do this auto-adjust for 'query genes only'.
 
         if ( genes.size() > THRESHOLD_TRIGGER_QUERYGENESONLY ) {
-            if ( !queryGenesOnly ) {
+            if ( !actuallyUseQueryGeneOnly ) {
                 log.info( "Switching to 'query genes only'" );
             }
-            queryGenesOnly = true;
+            actuallyUseQueryGeneOnly = true;
         }
 
-        stringency = Math.max( stringency, chooseStringency( queryGenesOnly, eeIds.size(), genes.size() ) );
+        stringency = Math.max( stringency, chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
 
         assert stringency >= 1 || eeIds.size() == 1;
 
@@ -235,9 +237,10 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         // HACK drop the stringency until we get some results.
         int stepSize = 3;
         while ( true ) {
-            if ( queryGenesOnly ) {
+            if ( actuallyUseQueryGeneOnly ) {
                 // note that maxResults is ignored.
                 if ( genes.size() < 2 ) {
+                    // should be impossible - could assert.
                     throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
                 }
                 allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds,
@@ -261,7 +264,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         log.info( "Final actual stringency used was " + stringency );
 
         result.setQueryStringency( stringency );
-        result.setQueryGenesOnly( queryGenesOnly );
+        result.setQueryGenesOnly( actuallyUseQueryGeneOnly );
 
         Set<Long> queryGeneIds = allCoexpressions.keySet();
         assert genes.containsAll( queryGeneIds );
@@ -273,7 +276,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             Collection<CoexpressionValueObject> coexpressions = allCoexpressions.get( queryGene );
 
             List<CoexpressionValueObjectExt> results = addExtCoexpressionValueObjects( idMap.get( queryGene ),
-                    coexpressions, stringency, queryGenesOnly, genes );
+                    coexpressions, stringency, actuallyUseQueryGeneOnly, genes );
 
             // test for bug 4036
             // for ( CoexpressionValueObjectExt cvo : results ) {
