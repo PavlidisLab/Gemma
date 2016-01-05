@@ -77,7 +77,7 @@ public class Settings {
      * Configuration parameter for lib directory, where jars shouldu be copied to make them available to the compute
      * grid (for example)
      */
-    private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
+   // private static final String GEMMA_LIB_DIR = "gemma.lib.dir";
 
     private static final String REMOTE_TASKS_ENABLED_PROPERTY = "gemma.remoteTasks.enabled";
 
@@ -488,14 +488,14 @@ public class Settings {
         return config.getKeys( key );
     }
 
-    /**
-     * The directory where the Gemma jar files will be available to other applications (e.g., the compute grid).
-     * 
-     * @return
-     */
-    public static String getLibDirectoryPath() {
-        return getString( GEMMA_LIB_DIR );
-    }
+//    /**
+//     * The directory where the Gemma jar files will be available to other applications (e.g., the compute grid).
+//     * 
+//     * @return
+//     */
+//    public static String getLibDirectoryPath() {
+//        return getString( GEMMA_LIB_DIR );
+//    }
 
     /**
      * @param key

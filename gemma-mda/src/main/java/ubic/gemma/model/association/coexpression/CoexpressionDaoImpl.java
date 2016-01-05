@@ -113,7 +113,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      * datasets is quite large. Note that this setting should depend on how many datasets are in the system in the first
      * place, and is thus species-specific. So this is just a temporary measure.
      */
-    private static final int MIN_STRINGENCY_FOR_GENE_FIRST_QUERY = 6;
+    // private static final int MIN_STRINGENCY_FOR_GENE_FIRST_QUERY = 6;
 
     @Autowired
     private CoexpressionCache gene2GeneCoexpressionCache;
@@ -610,7 +610,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
         assert !bas.isEmpty();
         assert genes != null;
-        assert maxResults >= 0;
+        assert maxResults >= 0; // maxResults is ignored if it is a "my genes only" query.
         assert stringency >= 1;
 
         Map<Long, List<CoexpressionValueObject>> rrr = this.getCoexpressionFromCacheOrDb( t, genes, bas, stringency,
@@ -1616,6 +1616,9 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
 
         // we assume the genes are from the same taxon.
         assert t != null;
+
+        @SuppressWarnings("unused")
+        // used for alternative query, see below.
         String className = CoexpressionQueryUtils.getGeneLinkClassName( t );
 
         // fetch rest of genes needed from the database.
