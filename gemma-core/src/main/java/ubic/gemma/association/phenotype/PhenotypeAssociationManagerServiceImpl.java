@@ -77,6 +77,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
+import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -183,6 +184,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     @Transactional(readOnly = true)
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId, Long evidenceId ) {
+
+        if ( StringUtils.isBlank( pubMedId ) ) return null;
 
         // check if the given pubmedID is already in the database
         BibliographicReference bibliographicReference = this.bibliographicReferenceService.findByExternalId( pubMedId );
@@ -1199,8 +1202,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         if ( !evidence.getPhenotypeAssPubVO().isEmpty() && evidence.getEvidenceSource() == null ) {
-            validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, evidence
-                    .getPhenotypeAssPubVO().iterator().next().getCitationValueObject().getPubmedAccession() );
+
+            PhenotypeAssPubValueObject pubvo = evidence.getPhenotypeAssPubVO().iterator().next();
+            CitationValueObject citationValueObject = pubvo.getCitationValueObject();
+            String pubmedAccession = citationValueObject == null ? null : citationValueObject.getPubmedAccession();
+
+            validateEvidenceValueObject = determineSameGeneAndPhenotypeAnnotated( evidence, pubmedAccession );
+
         }
 
         return validateEvidenceValueObject;
