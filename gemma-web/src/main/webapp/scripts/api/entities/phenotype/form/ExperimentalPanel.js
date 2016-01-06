@@ -60,7 +60,7 @@ Gemma.PhenotypeAssociationForm.ExperimentalPanel = Ext.extend( Ext.Panel,
          }.createDelegate( this );
 
          var updateExperimentTagsValidity = function( isModifying ) {
-            experimentTagErrorMessages.clear();
+            experimentTagErrorMessages = [];
 
             if ( experimentTagsPanel.checkDuplicate() ) {
                experimentTagErrorMessages
