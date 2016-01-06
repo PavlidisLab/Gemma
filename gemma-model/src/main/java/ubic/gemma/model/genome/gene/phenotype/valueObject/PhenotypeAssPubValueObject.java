@@ -65,8 +65,8 @@ public class PhenotypeAssPubValueObject implements Comparable<PhenotypeAssPubVal
 
         int compare = this.type.compareTo( phenotypeAssociationPublicationValueObject.getType() );
 
-        if ( compare == 0 ) {
-            // TODO Auto-generated method stub
+        if ( compare == 0 && this.citationValueObject != null
+                && phenotypeAssociationPublicationValueObject.getCitationValueObject() != null ) {
             compare = this.citationValueObject.compareTo( phenotypeAssociationPublicationValueObject
                     .getCitationValueObject() );
         }
