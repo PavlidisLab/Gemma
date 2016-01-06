@@ -918,11 +918,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         queryString += "join TAXON tax on tax.ID = gene.TAXON_FK ";
 
         if ( SecurityUtil.isUserAdmin() && !force ) {
-            // no constraint needed.
+            // no constraint needed. A 'where' will be added later if we need it. FIXME: this is very ugly.
             queryString += " ";
         } else {
             // See entityutils for a generalization of this.
-            // / non-admin user, need to add constraint on permissions.
+            // / non-admin user, need to add constraint on permissions. Adds the beginning of the WHERE clause.
             queryString += "join ACLOBJECTIDENTITY aoi on phen.ID = aoi.OBJECT_ID ";
             queryString += "join ACLENTRY ace on ace.OBJECTIDENTITY_FK = aoi.ID ";
             queryString += "join ACLSID sid on sid.ID = aoi.OWNER_SID_FK ";
