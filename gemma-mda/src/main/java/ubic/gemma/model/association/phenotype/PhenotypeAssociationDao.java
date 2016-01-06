@@ -98,10 +98,17 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /**
      * find PhenotypeAssociations associated with a BibliographicReference
+     * 
+     * @param pubMedID
      */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
-    /** find private evidence id that the user can modifiable or own */
+    /**
+     * find private evidence id that the user can modify or owns
+     * 
+     * @param taxonId optional
+     * @param limit optional
+     */
     public Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit );
 
     /**
@@ -130,7 +137,9 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     public Collection<String> loadAllDescription();
 
-    /** find all phenotypes in Neurocarta */
+    /**
+     * find all phenotypes in Neurocarta
+     */
     public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**

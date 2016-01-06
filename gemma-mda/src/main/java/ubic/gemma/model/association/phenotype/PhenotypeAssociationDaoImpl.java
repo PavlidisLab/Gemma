@@ -286,7 +286,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false, false );
 
-        sqlQuery += addValuesUriToQuery( SecurityUtil.isUserAdmin() ? "" : "and", phenotypeUris );
+        sqlQuery += addValuesUriToQuery( SecurityUtil.isUserAdmin() ? " where " : " and ", phenotypeUris );
 
         if ( !SecurityUtil.isUserAdmin() ) {
             if ( !sqlQuery.trim().endsWith( "where" ) ) {
@@ -415,9 +415,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 "pubMedID", pubMedID );
     }
 
-    /**
-     * find private evidence id that the user can modifiy
-     */
     @Override
     public Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit ) {
 
@@ -435,7 +432,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Set<Long> ids = new HashSet<>();
 
         String sqlQuery = "select distinct phen.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false, true );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false /* force */, true );
 
         if ( !SecurityUtil.isUserAdmin() ) { // admins have no restrictions.
             if ( !sqlQuery.trim().endsWith( "where" ) ) {
@@ -482,7 +479,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
          * numbers. ACESID 4 is anonymous; MASK=1 is read.
          */
         String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true, false );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true /* force */, false );
         if ( !sqlQuery.trim().endsWith( "where" ) ) {
             sqlQuery += " and ";
         }
@@ -534,7 +531,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
 
         String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true, false );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true /* force */, false );
 
         // rule to find public: anonymous, READ.
         if ( !sqlQuery.trim().endsWith( "where" ) ) {
@@ -905,6 +902,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /**
      * basic sql command to deal with security; adds the where clause; delcare aliases charac, phen and gene; ace, aoi,
      * sid
+     * 
+     * @param force ??
+     * @param addStatus ??
      */
     private String getPhenotypesGenesAssociationsBeginQuery( boolean force, boolean addStatus ) {
         String queryString = "";
@@ -919,7 +919,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         if ( SecurityUtil.isUserAdmin() && !force ) {
             // no constraint needed.
-            queryString += " where ";
+            queryString += " ";
         } else {
             // See entityutils for a generalization of this.
             // / non-admin user, need to add constraint on permissions.

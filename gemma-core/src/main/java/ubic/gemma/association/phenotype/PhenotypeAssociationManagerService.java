@@ -185,8 +185,8 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**
-     * This method loads all phenotypes in the database and counts their occurence using the database It builts the tree
-     * using parents of terms, and will return 3 trees representing Disease, HP and MP
+     * Loads all phenotypes in the database and counts their occurrence using the database It builds the tree using
+     * parents of terms, and will return 3 trees representing Disease, HP and MP
      * 
      * @param taxonCommonName specify a taxon (optional)
      * @return A collection of the phenotypes with the gene occurence
@@ -194,15 +194,15 @@ public interface PhenotypeAssociationManagerService {
     public abstract Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( EvidenceFilter evidenceFilter );
 
     /**
-     * This method returns information about external data sources from Phenocarta, including URLs and
-     * timestamps of the most recent update dates/times.     
+     * Get information about external data sources from Phenocarta, including URLs and timestamps of the most recent
+     * update dates/times.
      * 
      * @return A collection of objects with information about external data sources in Phenocarta
      */
     public abstract Collection<DumpsValueObject> helpFindAllDumps();
-    
+
     /**
-     * This method can be used if we want to reimport data from a specific external Database
+     * use if we want to reimport data from a specific external Database
      * 
      * @param externalDatabaseName
      */

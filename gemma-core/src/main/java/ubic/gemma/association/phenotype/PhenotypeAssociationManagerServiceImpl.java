@@ -30,10 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -648,12 +645,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return simpleTreeValueObjects;
     }
 
-    /**
-     * This method returns information about external data sources from Phenocarta, including URLs and timestamps of the
-     * most recent update dates/times.
+    /*
+     * (non-Javadoc)
      * 
-     * @return A collection of objects with information about external data sources in Phenocarta
+     * @see ubic.gemma.association.phenotype.PhenotypeAssociationManagerService#helpFindAllDumps()
      */
+    @Override
     public Collection<DumpsValueObject> helpFindAllDumps() {
 
         Collection<DumpsValueObject> dumpsValueObjects = new HashSet<DumpsValueObject>();
@@ -1280,7 +1277,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         currDBFoundinExtDBs = true;
                 }
 
-                if ( dbFromColln.getLastUpdateDate().getTime() > thisFile.lastModified() ) {
+                if ( dbFromColln != null && dbFromColln.getLastUpdateDate().getTime() > thisFile.lastModified() ) {
                     fileWriterDataSource = new BufferedWriter( new FileWriter( datasetsFolderPath
                             + externalDatabaseValueObject.getName().replaceAll( " ", "" ) + ".tsv" ) );
 
@@ -2051,6 +2048,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             TreeSet<TreeCharacteristicValueObject> finalTreesWithRoots,
             Map<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
+        if ( tc == null ) {
+            // ???? there was a null check at the end of this method, which doesn't do any good since we access TC in
+            // the next line here.
+            return;
+        }
+
         OntologyTerm ontologyTerm = this.ontologyHelper.findOntologyTermByUri( tc.getValueUri() );
 
         Collection<OntologyTerm> ontologyParents = ontologyTerm.getParents( true );
@@ -2079,7 +2082,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         } else {
             // found a root, no more parents
-            if ( tc != null && tc.getValue() != null && !tc.getValue().equals( "" ) ) finalTreesWithRoots.add( tc );
+            if ( tc.getValue() != null && !tc.getValue().equals( "" ) ) {
+                finalTreesWithRoots.add( tc );
+            }
         }
     }
 
