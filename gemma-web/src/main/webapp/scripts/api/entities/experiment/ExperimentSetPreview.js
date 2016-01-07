@@ -127,9 +127,9 @@ Gemma.ExperimentSetPreview = Ext
 
             var usableSize = 0;
             if ( this.mode == 'coex' ) {
-               usableSize = numWithCoex ? numWithCoex : 0;
+               usableSize = numWithCoex > 0 ? numWithCoex : 0;
             } else {
-               usableSize = numWithDiffex ? numWithDiffex : 0;
+               usableSize = numWithDiffex > 0 ? numWithDiffex : 0;
             }
 
             if ( usableSize > size ) {

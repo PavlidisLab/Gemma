@@ -215,7 +215,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
 
             var eeTpl = new Ext.XTemplate(
                '<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" '
-                  + 'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' );
+                  + 'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName}) <tpl if="resultValueObject.hasCoexpressionAnalysis">C</tpl>'
+                  + '&nbsp;<tpl if="resultValueObject.hasDifferentialExpressionAnalysis">D</tpl></span></div>' );
             var modifiedSessionTpl = new Ext.XTemplate(
                '	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}:'
                   + ' {description} ({size}) ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' );
