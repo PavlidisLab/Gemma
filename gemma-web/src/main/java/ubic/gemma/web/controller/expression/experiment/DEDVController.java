@@ -184,13 +184,7 @@ public class DEDVController {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private SVDService svdService;
-
-    @Autowired
-    private GeneDifferentialExpressionService geneDifferentialExpressionService;
-
-    @Autowired
-    private GeneService geneService;
+    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
 
     @Autowired
     private FactorValueService factorValueService;
@@ -199,10 +193,16 @@ public class DEDVController {
     private CoexpressionService geneCoexpressionService;
 
     @Autowired
+    private GeneDifferentialExpressionService geneDifferentialExpressionService;
+
+    @Autowired
+    private GeneService geneService;
+
+    @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    private SVDService svdService;
 
     /**
      * Given a collection of expression experiment Ids and a geneId returns a map of DEDV value objects to a collection
@@ -1172,6 +1172,16 @@ public class DEDVController {
     }
 
     /**
+     * Ensure the names are unique in the colour bars
+     * 
+     * @param factor
+     * @return
+     */
+    private String getUniqueFactorName( ExperimentalFactor factor ) {
+        return factor.getName() + " [ID=" + factor.getId() + "]";
+    }
+
+    /**
      * Takes the DEDVs and put them in point objects and normalize the values. returns a map of eeid to visValueObject.
      * Currently removes multiple hits for same gene. Tries to pick best DEDV. Organizes the experiments from lowest to
      * higest p-value
@@ -1491,10 +1501,10 @@ public class DEDVController {
 
             // this is defensive, should only come into play when there's something messed up with the data.
             // for every factor, add a missing-value entry (guards against missing data messing up the layout)
-            for ( ExperimentalFactor facName : factorNames ) {
+            for ( ExperimentalFactor factor : factorNames ) {
                 String[] facValAndColour = new String[] { "No value", missingValueColour };
-                // FIXME are names unique? Not guaranteed...
-                factorNamesToValueColourPairs.put( facName.getName(), facValAndColour );
+
+                factorNamesToValueColourPairs.put( getUniqueFactorName( factor ), facValAndColour );
             }
 
             // for each experimental factor, store the name and value
@@ -1510,7 +1520,7 @@ public class DEDVController {
                  */
                 if ( valueOrId == null || factor.getType() == null
                         || ( factor.getType().equals( FactorType.CATEGORICAL ) && factor.getFactorValues().isEmpty() ) ) {
-                    factorsMissingValues.add( factor.getName() );
+                    factorsMissingValues.add( getUniqueFactorName( factor ) );
                     continue;
                 }
 
@@ -1546,25 +1556,25 @@ public class DEDVController {
                     facValsStr = getFactorValueDisplayString( facVal );
                 }
 
-                if ( !factorToValueNames.containsKey( factor.getName() ) ) {
-                    factorToValueNames.put( factor.getName(), new LinkedHashMap<String, String>() );
+                if ( !factorToValueNames.containsKey( getUniqueFactorName( factor ) ) ) {
+                    factorToValueNames.put( getUniqueFactorName( factor ), new LinkedHashMap<String, String>() );
                 }
                 // assign colour if unassigned or fetch it if already assigned
                 String colourString = "";
-                if ( !factorToValueNames.get( factor.getName() ).containsKey( facValsStr ) ) {
+                if ( !factorToValueNames.get( getUniqueFactorName( factor ) ).containsKey( facValsStr ) ) {
                     if ( factorColoursMap.containsKey( factor ) ) {
                         colourString = factorColoursMap.get( factor ).poll();
                     }
                     if ( colourString == null || colourString == "" ) { // ran out of predefined colours
                         colourString = getRandomColour( random );
                     }
-                    factorToValueNames.get( factor.getName() ).put( facValsStr, colourString );
+                    factorToValueNames.get( getUniqueFactorName( factor ) ).put( facValsStr, colourString );
                 } else {
-                    colourString = factorToValueNames.get( factor.getName() ).get( facValsStr );
+                    colourString = factorToValueNames.get( getUniqueFactorName( factor ) ).get( facValsStr );
                 }
                 String[] facValAndColour = new String[] { facValsStr, colourString };
 
-                factorNamesToValueColourPairs.put( factor.getName(), facValAndColour );
+                factorNamesToValueColourPairs.put( getUniqueFactorName( factor ), facValAndColour );
 
             }
             factorValueMaps.add( factorNamesToValueColourPairs );
