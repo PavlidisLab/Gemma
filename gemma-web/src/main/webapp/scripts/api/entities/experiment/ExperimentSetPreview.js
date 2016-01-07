@@ -125,11 +125,11 @@ Gemma.ExperimentSetPreview = Ext
                name = selectedSet.name;
             }
 
-            var usableSize;
+            var usableSize = 0;
             if ( this.mode == 'coex' ) {
-               usableSize = numWithCoex;
+               usableSize = numWithCoex ? numWithCoex : 0;
             } else {
-               usableSize = numWithDiffex;
+               usableSize = numWithDiffex ? numWithDiffex : 0;
             }
 
             if ( usableSize > size ) {

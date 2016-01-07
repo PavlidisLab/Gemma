@@ -114,11 +114,11 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
     * @param taxonId
     * @param name
     * @param description
-    * @returns {SessionBoundExperimentSetValueObject}
+    * @returns {SessionBoundExpressionExperimentSetValueObject}
     */
    makeSessionBoundExperimentSet : function( experimentIds, taxonId, name, description ) {
       // debugger;
-      var newEESet = new SessionBoundExperimentSetValueObject();
+      var newEESet = new SessionBoundExpressionExperimentSetValueObject();
       newEESet.modified = false;
       newEESet.expressionExperimentIds = experimentIds;
       newEESet.taxonId = taxonId;
@@ -143,13 +143,13 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
          this.setSelectedExpressionExperimentSetValueObject( vo );
       } else if ( vo instanceof ExpressionExperimentValueObject ) {
          var newset = this.makeSessionBoundExperimentSet( [ vo.id ], taxonId, "From experiment",
-            'Group made from experiment' );
+            'Group made from one experiment' );
          this.setSelectedExpressionExperimentSetValueObject( newset );
       } else {
          this.setSelectedExpressionExperimentSetValueObject( vo );
       }
 
-      this.preview.loadExperimentPreviewFromExperimentSet( vo );
+      this.preview.loadExperimentPreviewFromExperimentSet( this.getSelectedExpressionExperimentSetValueObject() );
 
       // for bookmarking diff ex viz
       if ( id === null || id === -1 ) {
