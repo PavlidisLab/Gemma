@@ -144,6 +144,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
       } else if ( vo instanceof ExpressionExperimentValueObject ) {
          var newset = this.makeSessionBoundExperimentSet( [ vo.id ], taxonId, "From experiment",
             'Group made from one experiment' );
+         if ( vo.hasCoexpressionAnalysis )
+            newset.numWithCoexpressionAnalysis = 1;
+         if ( vo.hasDifferentialExpressionAnalysis )
+            newset.numWithDifferentialExpressionAnalysis = 1;
          this.setSelectedExpressionExperimentSetValueObject( newset );
       } else {
          this.setSelectedExpressionExperimentSetValueObject( vo );
