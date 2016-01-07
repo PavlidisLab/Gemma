@@ -196,6 +196,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
+        // FIXME bug 4349 - userName is not used!
         return this.phenotypeAssociationDao.findPrivatePhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable,
                 externalDatabaseIds, noElectronicAnnotation );
     }
@@ -206,6 +207,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             String userName, Collection<String> groups, boolean showOnlyEditable, Collection<Long> externalDatabaseIds,
             boolean noElectronicAnnotation ) {
+        // FIXME bug 4349 - userName is not used!
         return this.phenotypeAssociationDao.findPublicPhenotypesGenesAssociations( taxon, valuesUri, showOnlyEditable,
                 externalDatabaseIds, noElectronicAnnotation );
     }
