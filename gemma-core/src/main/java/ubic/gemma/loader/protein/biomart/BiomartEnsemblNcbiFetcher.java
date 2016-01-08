@@ -142,7 +142,7 @@ public class BiomartEnsemblNcbiFetcher {
         }
         xmlQuery.append( "</Dataset>" );
         xmlQuery.append( "</Query>" );
-        log.info( "Biomart query was:\n" + xmlQuery.toString() );
+        if ( log.isDebugEnabled() ) log.debug( "Biomart query was:\n" + xmlQuery.toString() );
         return xmlQuery.toString();
     }
 
