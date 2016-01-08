@@ -60,6 +60,7 @@ public class BiomartEnsemblNcbiFetcher {
     public final static String BIOMARTPATH = "protein.biomart.remotepath";
     private static final String BIOMART = "biomart";
     private static final String FILESEPARATOR = "\t";
+    private static final int READ_TIMEOUT_SECONDS = 30;
     private static Log log = LogFactory.getLog( BiomartEnsemblNcbiFetcher.class );
 
     public BiomartEnsemblNcbiFetcher() {
@@ -189,6 +190,7 @@ public class BiomartEnsemblNcbiFetcher {
         URLConnection conn = null;
         try {
             conn = urlToRead.openConnection();
+            conn.setReadTimeout( 1000 * READ_TIMEOUT_SECONDS );
             conn.setDoOutput( true );
             try (Writer writer = new OutputStreamWriter( conn.getOutputStream() );) {
                 writer.write( data );
