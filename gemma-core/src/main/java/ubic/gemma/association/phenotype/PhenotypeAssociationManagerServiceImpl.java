@@ -969,7 +969,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        List<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<CharacteristicValueObject>();
+        List<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<>();
 
         boolean geneProvided = true;
 
@@ -998,12 +998,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // rules to order the Ontology results found
-        Set<CharacteristicValueObject> phenotypesWithExactMatch = new TreeSet<CharacteristicValueObject>();
-        Set<CharacteristicValueObject> phenotypesAlreadyPresentOnGene = new TreeSet<CharacteristicValueObject>();
-        Set<CharacteristicValueObject> phenotypesStartWithQueryAndInDatabase = new TreeSet<CharacteristicValueObject>();
-        Set<CharacteristicValueObject> phenotypesStartWithQuery = new TreeSet<CharacteristicValueObject>();
-        Set<CharacteristicValueObject> phenotypesSubstringAndInDatabase = new TreeSet<CharacteristicValueObject>();
-        Set<CharacteristicValueObject> phenotypesSubstring = new TreeSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypesWithExactMatch = new TreeSet<>();
+        Set<CharacteristicValueObject> phenotypesAlreadyPresentOnGene = new TreeSet<>();
+        Set<CharacteristicValueObject> phenotypesStartWithQueryAndInDatabase = new TreeSet<>();
+        Set<CharacteristicValueObject> phenotypesStartWithQuery = new TreeSet<>();
+        Set<CharacteristicValueObject> phenotypesSubstringAndInDatabase = new TreeSet<>();
+        Set<CharacteristicValueObject> phenotypesSubstring = new TreeSet<>();
 
         /*
          * for each CharacteristicVO found from the Ontology, filter them and add them to a specific list if they
