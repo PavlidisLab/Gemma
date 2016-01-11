@@ -43,6 +43,7 @@ public class BioAssayOutlierProcessingTaskImpl extends AbstractTask<TaskResult, 
         } else {
             sampleRemoveService.markAsMissing( bioAssays );
         }
+        bioAssayService.thaw( bioAssays );
 
         Collection<BioAssayValueObject> flagged = new HashSet<>();
         for ( BioAssay ba : bioAssays ) {
