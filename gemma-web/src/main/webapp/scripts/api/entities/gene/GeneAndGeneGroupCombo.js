@@ -40,7 +40,7 @@ Gemma.GeneAndGeneGroupComboRecord = Ext.data.Record.create( [ {
    type : "string",
    defaultValue : ""
 }, {
-   name : "memberIds",
+   name : "memberIds", // I want to deprecate memberIds.
    defaultValue : []
 }, {
    name : "comboText",

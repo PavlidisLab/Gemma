@@ -39,12 +39,10 @@ Gemma.ExperimentAndExperimentGroupComboRecord = Ext.data.Record.create( [ {
    name : "taxonName",
    type : "string",
    defaultValue : ""
-}
- , {
- name : "memberIds",
- defaultValue : []
- }
-, {
+}, {
+   name : "memberIds", // I want to deprecate memberIds.
+   defaultValue : []
+}, {
    name : "resultValueObject"
 }, {
    name : "userOwned",

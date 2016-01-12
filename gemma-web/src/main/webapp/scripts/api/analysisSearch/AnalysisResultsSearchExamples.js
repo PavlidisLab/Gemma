@@ -175,7 +175,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
                size : expIds.length,
                taxonId : eeSet.taxonId,
                taxonName : eeSet.taxonName,
-               memberIds : expIds,
+               memberIds : expIds, // I want to deprecate memberIds.
                resultValueObject : eeSet,
                userOwned : false
             } );
@@ -231,7 +231,7 @@ Gemma.AnalysisResultsSearchExamples = Ext.extend( Ext.Panel, {
             size : geneSet.geneIds.length,
             taxonId : geneSet.taxonId,
             taxonName : geneSet.taxonName,
-            memberIds : geneSet.geneIds,
+            memberIds : geneSet.geneIds, // I want to deprecate memberIds.
             resultValueObject : geneSet,
             comboText : geneSet.name + ": " + geneSet.description,
             userOwned : false

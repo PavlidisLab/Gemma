@@ -177,7 +177,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
          }
 
          var geneIdsToAdd = [];
-         geneIdsToAdd = searchResultValObj.memberIds;
+         geneIdsToAdd = searchResultValObj.memberIds; // I want to deprecate memberIds.
 
          if ( !geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0 ) {
             return;
@@ -195,7 +195,8 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
          }.createDelegate( this ) );
 
       },
-      /*
+
+      /**
        * set the taxon for this grid and for the toolbar to control what can be added from combo
        */
       setTaxonId : function( taxonId ) {
@@ -207,6 +208,10 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
          }
 
       },
+
+      /**
+       * 
+       */
       initComponent : function() {
          Ext.apply( this, {
             store : new Ext.data.SimpleStore( {
