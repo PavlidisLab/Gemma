@@ -102,7 +102,7 @@ public interface GeneDao extends BaseDao<Gene> {
      * 
      * @param query
      * @param taxonId
-     * @return
+     * @return map of gene symbol (tolowercase()) to the gene. The actual query that led to the gene is not retained.
      */
     public Map<String, Gene> findByOfficialSymbols( Collection<String> query, Long taxonId );
 

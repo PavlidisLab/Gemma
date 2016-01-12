@@ -229,7 +229,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             List<Gene> results = getHibernateTemplate().findByNamedParam( queryString,
                     new String[] { "symbols", "taxonId" }, new Object[] { batch, taxonId } );
             for ( Gene g : results ) {
-                result.put( g.getOfficialSymbol(), g );
+                result.put( g.getOfficialSymbol().toLowerCase(), g );
             }
         }
         return result;
