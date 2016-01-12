@@ -194,7 +194,7 @@ Gemma.CoexVOUtil = {
       var returnObject = {};
       returnObject.geneResults = trimmedGeneResults;
       returnObject.trimStringency = trimStringency;
-      debugger;
+      // debugger;
       return returnObject;
 
    },
