@@ -152,7 +152,7 @@ public class GeneSetValueObject implements SecureValueObject {
      * @return
      */
     public Integer getSize() {
-        if ( this.getGeneIds() != null )
+        if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() )
             return this.getGeneIds().size();
         else if ( this.size > 0 ) return this.size;
         return 0;
