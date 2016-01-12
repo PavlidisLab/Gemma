@@ -36,7 +36,10 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * Object to store search results of different classes in a similar way for displaying to user (ex: enables genes and
  * gene sets to be entries in the same combo box) object types handled are: Gene, GeneSet, GeneSetValueObject,
  * ExpressionExperiment and ExpressionExperimentSet SearchObject is also handled if the object it holds is of any of
- * those types for a gene or experiment, the memberIds field is a collection just containing the object's id
+ * those types for a gene or experiment, the memberIds field is a collection just containing the object's id. memberIds
+ * is just for convenience on the client.
+ * <P>
+ * In effect this wraps the resultValueObject.
  * 
  * @author thea
  * @version $Id$
@@ -74,16 +77,20 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private Long id;
 
-    private Boolean isGroup; // whether this search result represents a group of entities or not
+    /**
+     * whether this search result represents a group of entities or not (the resultValueObject)
+     */
+    private Boolean isGroup;
 
     /**
-     * for genes and experiments, the memeberIds field is a collection containing just their id
+     * for genes and experiments, the memeberIds field is a collection containing just their id. This is primarly used
+     * as a convenience on the client.
      */
     private Collection<Long> memberIds = new HashSet<Long>();
 
     private String name;
 
-    // the query exactly as entered by the user.F
+    // the query exactly as entered by the user.
     private String originalQuery;
 
     // for grouping.
@@ -91,6 +98,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private Class<?> resultClass;
 
+    /**
+     * The actual underlying valueobject; class is of resultClass.
+     */
     private Object resultValueObject;
 
     private int size; // the number of items; 1 if not a group
@@ -223,7 +233,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
 
     /**
-     * @return the resultValueObject
+     * @return the resultValueObject, which will be (for the example of genes) a GeneValueObject or a
+     *         GeneSetValueObject, which also has several subclasses (SessionBound etc.)
      */
     public Object getResultValueObject() {
         return resultValueObject;
@@ -258,13 +269,14 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         return userOwned;
     }
 
-    public void setMemberIds( Collection<Long> memberIds ) {
-        this.memberIds = memberIds;
-    }
-
     public void setOriginalQuery( String originalQuery ) {
         this.originalQuery = originalQuery;
     }
+
+    // Do not allow setting this directly.
+    // public void setMemberIds( Collection<Long> memberIds ) {
+    // this.memberIds = memberIds;
+    // }
 
     public void setParentTaxonId( Long parentTaxonId ) {
         this.parentTaxonId = parentTaxonId;
@@ -293,6 +305,14 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.resultClass = resultValueObject.getClass();
     }
 
+    /*
+     * DO NOT USE :) Size is inferred from the wrapped resultValueObject.
+     */
+    @SuppressWarnings("unused")
+    private void setSize( int size ) {
+        this.size = size;
+    }
+
     /**
      * @param geneSet
      */
@@ -303,7 +323,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.taxonName = eeSet.getTaxonName();
         this.name = eeSet.getName();
         this.description = eeSet.getDescription();
-        this.memberIds = eeSet.getExpressionExperimentIds(); // might not be filled in.
+        // this.memberIds = eeSet.getExpressionExperimentIds(); // might not be filled in.
         this.id = eeSet.getId();
         this.setResultValueObject( eeSet );
     }
@@ -320,7 +340,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.taxonName = expressionExperiment.getTaxon();
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();
-        this.memberIds.add( expressionExperiment.getId() );
+        // .memberIds.add( expressionExperiment.getId() );
         this.id = expressionExperiment.getId();
         setResultValueObject( expressionExperiment );
     }

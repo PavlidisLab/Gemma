@@ -37,8 +37,6 @@
 
 package ubic.gemma.expression.experiment;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.session.GemmaSessionBackedValueObject;
 
@@ -59,11 +57,6 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
      */
     public SessionBoundExpressionExperimentSetValueObject() {
         super();
-    }
-
-    @Override
-    public Collection<Long> getMemberIds() {
-        return this.getExpressionExperimentIds();
     }
 
     /*

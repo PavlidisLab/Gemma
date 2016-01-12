@@ -18,8 +18,6 @@
  */
 package ubic.gemma.session;
 
-import java.util.Collection;
-
 /**
  * TODO Document FIXME should be in util or web package?
  * 
@@ -32,11 +30,6 @@ public interface GemmaSessionBackedValueObject {
      * @return
      */
     public Long getId();
-
-    /**
-     * @return
-     */
-    public Collection<Long> getMemberIds();
 
     /**
      * @return

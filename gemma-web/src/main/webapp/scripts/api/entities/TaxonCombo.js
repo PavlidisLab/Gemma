@@ -107,7 +107,7 @@ Gemma.TaxonCombo = Ext.extend( Gemma.StatefulRemoteCombo, {
          tpl : tmpl
       } );
 
-      Gemma.EVENTBUS.on( 'taxonchanged', function() {
+      Gemma.EVENTBUS.on( 'taxonchanged', function( taxonId ) {
          this.setTaxonById( taxonId );
       }, this );
 

@@ -64,17 +64,18 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
      * @param description should not be null
      * @param taxonId can be null
      * @param taxonName can be null
-     * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
+     * @param geneIds can be null; for a gene or experiment, this is a collection just containing their id
      */
     public FreeTextGeneResultsValueObject( String name, String description, Long taxonId, String taxonName,
-            Collection<Long> memberIds, String queryString ) {
+            Collection<Long> geneIds, String queryString ) {
 
         this.setName( name );
         this.setDescription( description );
-        this.setSize( memberIds.size() );
+
         this.setTaxonId( taxonId );
         this.setTaxonName( taxonName );
-        this.setGeneIds( memberIds );
+
+        this.setGeneIds( geneIds );
         this.setId( new Long( -1 ) );
         this.setModified( false );
         this.setQueryString( queryString );

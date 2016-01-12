@@ -17,7 +17,7 @@
 Ext.namespace( 'Gemma' );
 
 /**
- * 
+ * Serverside: SearchResultDisplayObject (generic), here wraps either a single experiment or eeSet (valueobject)
  */
 Gemma.ExperimentAndExperimentGroupComboRecord = Ext.data.Record.create( [ {
    name : "name",
@@ -39,10 +39,12 @@ Gemma.ExperimentAndExperimentGroupComboRecord = Ext.data.Record.create( [ {
    name : "taxonName",
    type : "string",
    defaultValue : ""
-}, {
-   name : "memberIds",
-   defaultValue : []
-}, {
+}
+ , {
+ name : "memberIds",
+ defaultValue : []
+ }
+, {
    name : "resultValueObject"
 }, {
    name : "userOwned",
@@ -192,6 +194,18 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
          getParams : function( query ) {
             // console.log( "ExperimentCombo getting parameters for search: " + query );
             return [ query, this.taxonId ];
+         },
+
+         /**
+          * Was: getSelected but changed to match GeneAndGeneGroupCombo
+          * 
+          * @returns
+          */
+         getExperimentGroup : function() {
+            if ( this.getRawValue() === '' ) {
+               return null;
+            }
+            return this.selectedExpressionExperimentGroup;
          },
 
          /**

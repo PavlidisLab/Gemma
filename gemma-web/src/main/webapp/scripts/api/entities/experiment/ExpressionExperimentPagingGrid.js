@@ -544,7 +544,7 @@ Gemma.ExperimentPagingGrid = Ext
                   this.showAll = false;
                   filterById = true;
                   // create a store that browses with selected ids
-                  var ids = selectedGroup.memberIds;
+                  var ids = selectedGroup.expressionExperimentIds;
                   this.loadExperimentsById( ids );
                   // ids is not security filtered
                   // var totalCount = this.getStore().getTotalCount();

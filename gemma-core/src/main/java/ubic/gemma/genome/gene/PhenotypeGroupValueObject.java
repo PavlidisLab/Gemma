@@ -58,7 +58,7 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
      * @param description should not be null
      * @param taxonId can be null
      * @param taxonName can be null
-     * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
+     * @param memberIds can be null; for a gene this is a collection just containing their id
      */
     public static PhenotypeGroupValueObject convertFromGeneSetValueObject( GeneSetValueObject gsvo, String searchTerm ) {
         return new PhenotypeGroupValueObject( gsvo.getName(), gsvo.getDescription(), gsvo.getTaxonId(),
@@ -81,14 +81,14 @@ public class PhenotypeGroupValueObject extends SessionBoundGeneSetValueObject {
      * @param description should not be null
      * @param taxonId can be null
      * @param taxonName can be null
-     * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
+     * @param memberIds can be null; for a gene this is a collection just containing their id
      */
     public PhenotypeGroupValueObject( String name, String description, Long taxonId, String taxonName,
             Collection<Long> memberIds, String phenotypeName, String phenotypeCategory, String searchTerm ) {
 
         this.setName( name );
         this.setDescription( description );
-        this.setSize( memberIds.size() );
+        // this.setSize( memberIds.size() );
         this.setTaxonId( taxonId );
         this.setTaxonName( taxonName );
         this.setGeneIds( memberIds );

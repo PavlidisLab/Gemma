@@ -101,8 +101,8 @@ Gemma.SetPreview = Ext.extend( Ext.Panel, {
    addingCombo : null,
 
    /**
-    * @protected Use public methods from subclasses instead ex: loadGenePreviewFromIds, loadGenePreviewFromGenes,
-    *            loadGenePreviewFromGeneSet (& analogs for experiment) which will all eventually call this method
+    * @protected Use public methods from subclasses instead ex: loadGenePreviewFromIds, loadGenePreviewFromGeneSet (&
+    *            analogs for experiment) which will all eventually call this method
     * 
     * updates the contents of the preview box with the entities passed in
     * 
@@ -114,6 +114,8 @@ Gemma.SetPreview = Ext.extend( Ext.Panel, {
     *           optional message that will be displayed (html)
     */
    loadPreview : function( entities, total, message ) {
+      // debugger;
+
       var size = total;
 
       // reset the preview panel content, but don't erase the data.
@@ -198,15 +200,17 @@ Gemma.SetPreview = Ext.extend( Ext.Panel, {
       } );
 
       this.selectionEditorWindow.show();
+      //
+      // if ( this.entityIds && this.entityIds.length > 0 ) {
+      // // console.log( "using the entityIds, should be using selectedSetValueObject" );
+      // this.selectionEditor.loadEntities( this.entityIds, function() {
+      // if ( this.selectionEditor.loadMask ) {
+      // this.selectionEditor.loadMask.hide();
+      // }
+      // }.createDelegate( this, [], false ) );
+      // } else
 
-      if ( this.entityIds && this.entityIds.length > 0 ) {
-         // console.log( "using the entityIds, should be using selectedSetValueObject" );
-         this.selectionEditor.loadEntities( this.entityIds, function() {
-            if ( this.selectionEditor.loadMask ) {
-               this.selectionEditor.loadMask.hide();
-            }
-         }.createDelegate( this, [], false ) );
-      } else if ( this.selectedSetValueObject ) {
+      if ( this.selectedSetValueObject ) {
 
          // the id should be the real id of an set entity in the database.
          this.selectionEditor.loadSetValueObject( this.selectedSetValueObject, function() {

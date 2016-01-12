@@ -844,10 +844,10 @@ Gemma.EEReportGridToolbar = Ext.extend( Ext.Toolbar,
        * @memberOf Gemma.EEReportGridToolbar
        */
       filterBySearch : function( record ) {
-         this.ids = record.memberIds;
+         this.ids = record.expressionExperimentIds;
          // if user selected an experiment instead of an experiment group, member
          // ids will be null
-         if ( this.ids === null ) {
+         if ( this.ids === null || this.ids.length == 0 ) {
             this.ids = [ record.id ];
          }
          // can't do "50 recently updated" and search results

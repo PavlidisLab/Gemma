@@ -19,8 +19,6 @@
 
 package ubic.gemma.genome.gene;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.session.GemmaSessionBackedValueObject;
 
@@ -42,11 +40,6 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
         super();
         this.setModified( false );
         this.setId( new Long( this.hashCode() ) );
-    }
-
-    @Override
-    public Collection<Long> getMemberIds() {
-        return this.getGeneIds();
     }
 
     /**

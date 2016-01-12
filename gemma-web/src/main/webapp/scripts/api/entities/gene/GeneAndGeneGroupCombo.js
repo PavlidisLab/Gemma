@@ -16,6 +16,9 @@
 
 Ext.namespace( 'Gemma' );
 
+/**
+ * Corresponds to a SearchResultDisplayObject
+ */
 Gemma.GeneAndGeneGroupComboRecord = Ext.data.Record.create( [ {
    name : "name",
    type : "string"
@@ -337,6 +340,11 @@ Gemma.GeneAndGeneGroupCombo = Ext
             }
          },
 
+         /**
+          * FIXME make sure this returns something easy to work with.
+          * 
+          * @returns
+          */
          getGeneGroup : function() {
             if ( this.getRawValue() === '' ) {
                return null;
@@ -344,9 +352,17 @@ Gemma.GeneAndGeneGroupCombo = Ext
             return this.selectedGeneGroup;
          },
 
-         setGeneGroup : function( combo, geneGroup, index ) {
+         /**
+          * @private
+          * 
+          * Triggered when something is selected.
+          */
+         setGeneGroup : function( combo, record, index ) {
+
+            // debugger;
+
             // this.reset();
-            this.selectedGeneGroup = geneGroup.data;
+            this.selectedGeneGroup = record.data; // SearchResultDisplayObject.
             this.tooltip = new Ext.ToolTip( {
                target : this.getEl(),
                html : String.format( '{0} ({1})', this.selectedGeneGroup.name, this.selectedGeneGroup.description )

@@ -7,7 +7,9 @@ Ext.namespace( 'Gemma' );
 
 /**
  * 
- * Displays a small number of elements from the set with links to the set's page and to an editor
+ * Displays a small number of elements from the set with links to the set's page and to an editor. FIXME this is messed
+ * up (misnamed?0 because it manages the preview, but also deals with keeping track of the actual gene set via the
+ * _addToPreviewedSet.
  * 
  * @class Gemma.GeneSetPreview
  * @xtype Gemma.GeneSetPreview
@@ -31,6 +33,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
       GenePickerController.getGenes( previewIds, {
          callback : function( genes ) {
             this.loadPreview( genes, ids.length, message );
+            this.updateTitle();
             this.fireEvent( 'previewLoaded', genes );
          }.createDelegate( this ),
          errorHandler : Gemma.genericErrorHandler
@@ -44,17 +47,14 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    },
 
    /**
-    * public update the contents of the gene preview box
+    * @public update the contents of the gene preview box with a given geneSet.
     * 
     * @param {GeneValueSetObject[]}
     *           geneSet populate preview with members
+    * @param {String}
+    *           message an extra message to show.
     */
    loadGenePreviewFromGeneSet : function( geneSet, message ) {
-
-      /*
-       * FIXME this is a little confusing 'preview' and setting the actual set.
-       */
-      this.setSelectedSetValueObject( geneSet );
 
       var ids = geneSet.geneIds;
 
@@ -65,6 +65,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
          GeneSetController.getGenesInGroup.apply( this, [ geneSet.id, this.preview_size, {
             callback : function( genes ) {
                this.loadPreview( genes, this.selectedSetValueObject.size, message );
+               this.updateTitle();
                this.fireEvent( 'previewLoaded', genes );
             }.createDelegate( this ),
             errorHandler : Gemma.genericErrorHandler
@@ -75,18 +76,18 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
 
    },
 
-   /**
-    * @public update the contents of the gene preview box. This is used when other components are adding genes to the
-    *         query (e.g.. from the cytoscape view)
-    * 
-    * @param {GeneValueObject[]}
-    *           genes an array of genes to use to populate preview
-    */
-   loadGenePreviewFromGenes : function( genes, message ) {
-      var limit = (genes.length < this.preview_size) ? genes.length : this.preview_size;
-      var previewGenes = genes.slice( 0, limit );
-      this.loadPreview( previewGenes, genes.length, message );
-   },
+   // /**
+   // * @public update the contents of the gene preview box. This is used when other components are adding genes to the
+   // * query (e.g.. from the cytoscape view)
+   // *
+   // * @param {GeneValueObject[]}
+   // * genes an array of genes to use to populate preview
+   // */
+   // loadGenePreviewFromGenes : function( genes, message ) {
+   // var limit = (genes.length < this.preview_size) ? genes.length : this.preview_size;
+   // var previewGenes = genes.slice( 0, limit );
+   // this.loadPreview( previewGenes, genes.length, message );
+   // },
 
    /**
     * 
@@ -94,9 +95,12 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    updateTitle : function() {
       var selectedSet = this.selectedSetValueObject;
 
-      if ( typeof selectedSet == undefined || selectedSet == null ) {
+      if ( !selectedSet ) {
+         this.previewContent.setTitle( '<span style="font-size:1.2em">' + 'No selection'
+            + '</span> &nbsp;&nbsp;<span style="font-weight:normal">(0 genes)' );
          return;
       }
+
       var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.geneIds.length;
 
       if ( selectedSet instanceof DatabaseBackedGeneSetValueObject ) {
@@ -122,34 +126,38 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    },
 
    /**
-    * Given the current selection, when the user selects another result from the combo: we merge it in (FIXME harmonize
-    * with ExperimentSetPreview)
+    * Given the current selection, when the user selects another result from the combo: we merge it in. FIXME remove
+    * this from the preview proper.
     * 
+    * @private
     * @param combo
     * @param record
     * @param index
     * @returns
     */
-   addToPreviewedSet : function( combo, record, index ) {
+   _addToPreviewedSet : function( combo, record, index ) {
 
       var o = record.get( 'resultValueObject' );
-      if ( o.constructor.name === 'GeneValueObject' ) { // might not be safe...
-         this._appendAndUpdate( [ o.id ] );
-      } else if ( o.geneIds && o.geneIds.length > 0 ) {// it's a set
-         /*
-          * Work with those directly.
-          */
-         var newIds = o.geneIds;
-         this._appendAndUpdate( newIds );
 
-      } else if ( o.id !== null ) { // set, but with no genes.
-         /*
-          * Add the genes to the current set. This is a bit clumsy...
-          */
-         GeneSetController.load( o.id, function( fetched ) {
-            this._appendAndUpdate( fetched.geneIds );
-         }.createDelegate( this ) );
+      if ( o instanceof GeneValueObject ) { // see valueObjectsInheritanceStructure.
+         this._appendAndUpdate( [ o.id ] ); // note that we have the gene, so doing this by ID is a bit wasteful.
+      } else if ( o instanceof GeneSetValueObject ) {
+         if ( o.geneIds && o.geneIds.length > 0 ) {
+            /*
+             * We have the Gene IDs, no need to fetch them again.
+             */
+            var newIds = o.geneIds;
+            this._appendAndUpdate( newIds );
 
+         } else {
+            /*
+             * Add the genes from the set to the current set (not sure this case is used!)
+             */
+            console.log( "Warning: gene set on client without gene ids, but it has an id" );
+            GeneSetController.load( o.id, function( fetched ) {
+               this._appendAndUpdate( o.geneIds );
+            }.createDelegate( this ) );
+         }
       } else {
          throw 'Cannot add to preview from this type of object: ' + o.constructor.name;
       }
@@ -157,57 +165,62 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    },
 
    /**
+    * Given gene ids, add them to the current group. If the current group is already a 'temporary' one, then just add
+    * them. If the current group is a database-backed one, make a session-bound group that is based on the original.
+    * FIXME move this out of the preview proper.
+    * 
     * @private
     * @param geneIdsToAdd
     *           {Array}
     */
    _appendAndUpdate : function( geneIdsToAdd ) {
-
       var allIds = this.selectedSetValueObject.geneIds;
-      /*
-       * FIXME: are these always all the geneIds? Preview-mode suggests not
-       * 
-       */
 
+      // don't add duplicates
+      var added = false;
       for (var i = 0; i < geneIdsToAdd.length; i++) {
          if ( allIds.indexOf( geneIdsToAdd[i] ) < 0 ) {
             allIds.push( geneIdsToAdd[i] );
+            added = true;
          }
       }
+
+      this.withinSetGeneCombo.reset();
+      this.withinSetGeneCombo.blur();
+
+      if ( !added ) {
+         return;
+      }
+
+      this._loadGenePreviewFromIds( allIds ); // async
 
       /*
        * if the current selection is just a session group, don't create a new one.
        */
-      var editedGroup;
+      if ( this.selectedSetValueObject instanceof SessionBoundGeneSetValueObject ) {
 
-      if ( typeof this.selectedSetValueObject == 'SessionBoundGeneSetValueObject' ) {
-         /*
-          * Don't wipe it, just add on.
-          */
-         editedGroup = this.selectedSetValueObject;
+         var editedGroup = this.selectedSetValueObject;
          editedGroup.modified = true;
          editedGroup.geneIds = allIds;
-         editedGroup.size = editedGroup.geneIds.length;
+         editedGroup.size = editedGroup.geneIds.length; // not really necessary
 
-         GeneSetController.updateSessionGroup( editedGroup, true, // returns datasets added
-         function( geneSet ) {
+         GeneSetController.updateSessionGroup( editedGroup, {
+            callback : function( geneSet ) {
+               this.setSelectedSetValueObject( geneSet );
+               this.updateTitle();
 
-            this._loadGenePreviewFromIds( geneSet.geneIds ); // async
-            this.setSelectedSetValueObject( geneSet );
-            this.updateTitle();
-            this.withinSetGeneCombo.reset();
-            this.withinSetGeneCombo.blur();
+               this.fireEvent( 'geneListModified', geneSet );
+               this.fireEvent( 'doneModification' );
 
-            this.fireEvent( 'geneListModified', geneSet );
-            this.fireEvent( 'doneModification' );
+            }.createDelegate( this ),
+            errorHandler : Gemma.genericErrorHandler
+         } );
 
-         }.createDelegate( this ) /* FIXME error handler */);
-
-      } else {
-
-         editedGroup = new SessionBoundGeneSetValueObject();
+      } else /* the previous selection was another type of set - dbbound */{
+         var editedGroup = new SessionBoundGeneSetValueObject();
          editedGroup.id = null;
 
+         // Make a new set.
          if ( !(this.selectedSetValueObject.name.lastIndexOf( "Modification of:\n" ) === 0) ) {
             var currentTime = new Date();
             var hours = currentTime.getHours();
@@ -228,20 +241,17 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
          editedGroup.modified = true;
          editedGroup.isPublic = false;
 
-         GeneSetController.addSessionGroup( editedGroup, true, // returns datasets added
-         function( geneSet ) {
+         GeneSetController.addSessionGroup( editedGroup, true, {
+            callback : function( geneSet ) {
+               this.setSelectedSetValueObject( geneSet );
+               this.updateTitle();
 
-            this._loadGenePreviewFromIds( geneSet.geneIds ); // async
-            this.setSelectedSetValueObject( geneSet );
-            this.updateTitle();
+               this.fireEvent( 'geneListModified', geneSet );
+               this.fireEvent( 'doneModification' );
 
-            this.withinSetGeneCombo.reset();
-            this.withinSetGeneCombo.blur();
-
-            this.fireEvent( 'geneListModified', geneSet );
-            this.fireEvent( 'doneModification' );
-
-         }.createDelegate( this ) /* FIXME error handler */);
+            }.createDelegate( this ),
+            errorHandler : Gemma.genericErrorHandler
+         } );
       }
    },
 
@@ -250,6 +260,10 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
     */
    initComponent : function() {
 
+      /*
+       * Combo box hidden until the user selects some genes; this is how they add more genes using a search. They can
+       * also click on "edit or save your set", which goes to the geneSelectionEditor.
+       */
       this.withinSetGeneCombo = new Gemma.GeneAndGeneGroupCombo( {
          width : 300,
          style : 'margin:10px',
@@ -258,11 +272,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
          emptyText : 'Add genes to your group'
       } );
       this.withinSetGeneCombo.setTaxonId( this.taxonId );
-
-      // FIXME might want to do this by firing an event and let container handle (as it stands, preview and
-      // management
-      // are intertwined)
-      this.withinSetGeneCombo.on( 'select', this.addToPreviewedSet.createDelegate( this ), this );
+      this.withinSetGeneCombo.on( 'select', this._addToPreviewedSet.createDelegate( this ), this );
 
       Ext.apply( this, {
          selectionEditor : new Gemma.GeneMembersSaveGrid( {
@@ -284,11 +294,15 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
 
       Gemma.GeneSetPreview.superclass.initComponent.call( this );
 
+      /*
+       * The popup window for editing the gene set.
+       */
       this.selectionEditor.on( 'geneListModified', function( geneset ) {
+         // debugger;
          if ( typeof geneset.geneIds !== 'undefined' && typeof geneset.name !== 'undefined' ) {
-            this._loadGenePreviewFromIds( geneset.geneIds );
             this.setSelectedSetValueObject( geneset );
             this.updateTitle();
+            this._loadGenePreviewFromIds( geneset.geneIds );
          }
          this.fireEvent( 'geneListModified', geneset );
       }, this );

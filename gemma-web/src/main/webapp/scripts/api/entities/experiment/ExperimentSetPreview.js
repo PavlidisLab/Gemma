@@ -17,8 +17,6 @@ Gemma.ExperimentSetPreview = Ext
       Gemma.SetPreview,
       {
 
-         hideUnanalyzedDatasets : false,
-
          /**
           * update the contents of the experiment preview box
           * 
@@ -27,8 +25,8 @@ Gemma.ExperimentSetPreview = Ext
           * @param {Number[]}
           *           ids an array of experimentIds to use to populate preview
           */
-         loadExperimentPreviewFromIds : function( ids ) {
-            this.entityIds = ids;
+         _loadExperimentPreviewFromIds : function( ids ) {
+            // this.entityIds = ids;
             // load some experiments to display
             var limit = (ids.length < this.preview_size) ? ids.length : this.preview_size;
             var previewIds = ids.slice( 0, limit );
@@ -42,9 +40,14 @@ Gemma.ExperimentSetPreview = Ext
          },
 
          /**
-          * Whether we are in coexpression or differential expression mode
+          * @memberOf Gemma.ExperimentSetPreview
           */
-         mode : 'coex',
+         reset : function() {
+            this.resetPreview();
+            // this.entityIds = null;
+            this.previewContent.setTitle( null );
+            this.selectedSetValueObject = null;
+         },
 
          /**
           * @public update the contents of the experiment preview box
@@ -55,11 +58,11 @@ Gemma.ExperimentSetPreview = Ext
           */
          loadExperimentPreviewFromExperimentSet : function( eeSet ) {
 
-            var ids = eeSet.expressionExperimentIds;
             this.setSelectedSetValueObject( eeSet );
+            var ids = eeSet.expressionExperimentIds;
 
             if ( ids.length > 0 ) {
-               this.loadExperimentPreviewFromIds( ids );
+               this._loadExperimentPreviewFromIds( ids );
             } else if ( eeSet.id > 0 ) {
                // fetch from server.
                ExpressionExperimentSetController.getExperimentsInSet.apply( this, [ eeSet.id, this.preview_size, {
@@ -84,15 +87,12 @@ Gemma.ExperimentSetPreview = Ext
             this.updateTitle();
          },
 
+         hideUnanalyzedDatasets : false,
+
          /**
-          * @memberOf Gemma.ExperimentSetPreview
+          * Whether we are in coexpression or differential expression mode
           */
-         reset : function() {
-            this.resetPreview();
-            this.entityIds = null;
-            this.previewContent.setTitle( null );
-            this.selectedSetValueObject = null;
-         },
+         mode : 'coex',
 
          /**
           * public don't use params if you want to update name based on this.selectedEntityOrGroup
@@ -103,7 +103,7 @@ Gemma.ExperimentSetPreview = Ext
           * 
           */
          updateTitle : function() {
-
+            // debugger;
             var selectedSet = this.selectedSetValueObject;
 
             if ( typeof selectedSet == undefined || selectedSet == null ) {
@@ -132,13 +132,10 @@ Gemma.ExperimentSetPreview = Ext
                usableSize = numWithDiffex > 0 ? numWithDiffex : 0;
             }
 
-            if ( usableSize > size ) {
-               // BUG
-            }
-
+            // Whether the data sets have coexpression and/or differential expression available
             this.previewContent.setTitle( '<span style="font-size:1.2em">' + name
                + '</span><br /><span style="font-weight:normal">' + usableSize
-               + (usableSize > 1 ? " experiments" : " experiment ") + ' of ' + size + ' have '
+               + (size > 1 ? " experiments" : " experiment ") + ' of ' + size + ' have '
                + (this.mode == 'coex' ? 'co' : 'diff. ') + 'expression available' );
             // + (this.hideUnanalyzedDatasets ? '<br><span style="font-size:smaller">Unanalyzed experiments
             // hidden</span>'
@@ -149,17 +146,44 @@ Gemma.ExperimentSetPreview = Ext
          },
 
          /**
+          * Given the current selection, when the user selects another result from the combo: we merge it in
+          * 
+          * @private
+          * @param combo
+          * @param record
+          * @param index
+          * @returns
+          */
+         _addToPreviewedSet : function( combo, record, index ) {
+            // FIXME see GeneSetPreview._addToPreviewedSet and harmonize.
+            var rvo = record.get( 'resultValueObject' );
+
+            if ( rvo instanceof SessionBoundExpressionExperimentSetValueObject ) {
+               this._appendAndUpdate( combo, record, rvo.expressionExperimentIds );
+            } else if ( rvo instanceof ExpressionExperimentValueObject ) {
+               var singleId = [];
+               singleId.push( record.data.resultValueObject.id );
+               this._appendAndUpdate( combo, record, singleId );
+            } else {
+               ExpressionExperimentSetController.getExperimentIdsInSet( rvo.id, {
+                  callback : function( expIds ) {
+                     this._appendAndUpdate( combo, record, expIds );
+                  }.createDelegate( this ),
+                  errorHandler : Gemma.genericErrorHandler
+               } );
+            }
+
+         },
+
+         /**
           * @memberOf Gemma.ExperimentSetPreview
           * @param combo
           * @param record
           * @param newIds
           * @private
           */
-         mergeAndCreateSessionSet : function( combo, record, newIds ) {
+         _appendAndUpdate : function( combo, record, newIds ) {
 
-            // FIXME make this like the gene one. IF its an existing set call it 'modified from'; if it's based on a
-            // query
-            // name it after the query.
             var allIds = this.selectedSetValueObject.expressionExperimentIds;
 
             // don't add duplicates
@@ -168,44 +192,78 @@ Gemma.ExperimentSetPreview = Ext
                   allIds.push( newIds[i] );
                }
             }
-            var currentTime = new Date();
-            var hours = currentTime.getHours();
-            var minutes = currentTime.getMinutes();
-            if ( minutes < 10 ) {
-               minutes = "0" + minutes;
-            }
-            var time = '(' + hours + ':' + minutes + ') ';
 
             var editedGroup;
-            editedGroup = new SessionBoundExpressionExperimentSetValueObject();
-            editedGroup.id = null;
-            editedGroup.name = time + " Custom Experiment Group";
-            editedGroup.description = "Temporary experiment group created " + currentTime.toString();
-            editedGroup.expressionExperimentIds = allIds;
-            editedGroup.taxonId = record.get( 'taxonId' );
-            editedGroup.taxonName = record.get( 'taxonName' );
-            editedGroup.size = editedGroup.expressionExperimentIds.length;
-            editedGroup.modified = true;
-            editedGroup.isPublic = false;
 
-            editedGroup.numWithCoexpressionAnalysis = -1; // TODO
-            editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
+            if ( typeof this.selectedSetValueObject == 'SessionBoundExpressionExperimentSetValueObject' ) {
+               /*
+                * Don't wipe it, just add on.
+                */
+               editedGroup = this.selectedSetValueObject;
+               editedGroup.modified = true;
+               editedGroup.geneIds = allIds;
+               editedGroup.size = editedGroup.expressionExperimentIds.length;
 
-            ExpressionExperimentSetController.addSessionGroup( editedGroup, true, {
-               callback : function( newValueObject ) {
-                  combo.reset();
-                  combo.blur();
-                  this.setSelectedSetValueObject( newValueObject );
-                  this.loadExperimentPreviewFromExperimentSet( newValueObject );
+               ExpressionExperimentSetController.updateSessionGroups( [ editedGroup ], true, // returns
+               // SessionBoundExpressionExperimentSetValueObject
+               // added
+               {
+                  callback : function( eeSet ) {
 
-                  this.updateTitle();
-                  this.fireEvent( 'experimentListModified', newValueObject );
-                  this.fireEvent( 'doneModification' );
+                     this._loadExperimentPreviewFromIds( eeSet.expressionExperimentIds ); // async
+                     this.setSelectedSetValueObject( eeSet );
+                     this.updateTitle();
+                     this.withinSetExperimentCombo.reset();
+                     this.withinSetExperimentCombo.blur();
 
-               }.createDelegate( this ),
-               errorHandler : Gemma.genericErrorHandler
-            } );
+                     this.fireEvent( 'experimentListModified', eeSet );
+                     this.fireEvent( 'doneModification' );
 
+                  }.createDelegate( this ),
+                  errorHandler : Gemma.genericErrorHandler
+               } );
+
+            } else {
+               editedGroup = new SessionBoundExpressionExperimentSetValueObject();
+               editedGroup.id = null;
+
+               var currentTime = new Date();
+               var hours = currentTime.getHours();
+               var minutes = currentTime.getMinutes();
+               if ( minutes < 10 ) {
+                  minutes = "0" + minutes;
+               }
+               var time = '(' + hours + ':' + minutes + ') ';
+
+               editedGroup.name = time + " Custom Experiment Group";
+               editedGroup.description = "Temporary experiment group created " + currentTime.toString();
+
+               editedGroup.expressionExperimentIds = allIds;
+               editedGroup.taxonId = record.get( 'taxonId' );
+               editedGroup.taxonName = record.get( 'taxonName' );
+               editedGroup.size = editedGroup.expressionExperimentIds.length;
+               editedGroup.modified = true;
+               editedGroup.isPublic = false;
+               editedGroup.numWithCoexpressionAnalysis = -1; // TODO
+               editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
+
+               ExpressionExperimentSetController.addSessionGroup( editedGroup, true, {
+                  callback : function( newValueObject ) {
+
+                     this.setSelectedSetValueObject( newValueObject );
+                     this.loadExperimentPreviewFromExperimentSet( newValueObject );
+
+                     this.updateTitle();
+                     this.withinSetExperimentCombo.reset();
+                     this.withinSetExperimentCombo.blur();
+
+                     this.fireEvent( 'experimentListModified', newValueObject );
+                     this.fireEvent( 'doneModification' );
+
+                  }.createDelegate( this ),
+                  errorHandler : Gemma.genericErrorHandler
+               } );
+            }
          },
 
          /**
@@ -214,34 +272,16 @@ Gemma.ExperimentSetPreview = Ext
           */
          initComponent : function() {
 
-            var withinSetExperimentCombo = new Gemma.ExperimentAndExperimentGroupCombo( {
+            this.withinSetExperimentCombo = new Gemma.ExperimentAndExperimentGroupCombo( {
                width : 300,
                style : 'margin:10px',
                hideTrigger : true,
                emptyText : 'Add experiments to your group'
             } );
 
-            withinSetExperimentCombo.setTaxonId( this.taxonId );
-            withinSetExperimentCombo.on( 'select', function( combo, record, index ) {
+            this.withinSetExperimentCombo.setTaxonId( this.taxonId );
 
-               var rvo = record.get( 'resultValueObject' );
-
-               if ( rvo instanceof SessionBoundExpressionExperimentSetValueObject ) {
-                  this.mergeAndCreateSessionSet( combo, record, rvo.expressionExperimentIds );
-               } else if ( rvo instanceof ExpressionExperimentValueObject ) {
-                  var singleId = [];
-                  singleId.push( record.data.resultValueObject.id );
-                  this.mergeAndCreateSessionSet( combo, record, singleId );
-               } else {
-                  ExpressionExperimentSetController.getExperimentIdsInSet( rvo.id, {
-                     callback : function( expIds ) {
-                        this.mergeAndCreateSessionSet( combo, record, expIds );
-                     }.createDelegate( this ),
-                     errorHandler : Gemma.genericErrorHandler
-                  } );
-               }
-
-            }, this );
+            this.withinSetExperimentCombo.on( 'select', this._addToPreviewedSet, this );
 
             Ext
                .apply(
@@ -275,7 +315,7 @@ Gemma.ExperimentSetPreview = Ext
 
                      defaultPreviewTitle : "Experiment Selection Preview",
 
-                     addingCombo : withinSetExperimentCombo
+                     addingCombo : this.withinSetExperimentCombo
 
                   } );
 
@@ -283,13 +323,10 @@ Gemma.ExperimentSetPreview = Ext
 
             this.selectionEditor.on( 'experimentListModified', function( newSet ) {
                if ( typeof newSet.expressionExperimentIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
+                  this._loadExperimentPreviewFromIds( newSet.expressionExperimentIds );
                   this.setSelectedSetValueObject( newSet );
-                  this.loadExperimentPreviewFromExperimentSet( newSet );
                   this.updateTitle();
-
                }
-               this.listModified = true;
-
                this.fireEvent( 'experimentListModified', newSet );
             }, this );
 

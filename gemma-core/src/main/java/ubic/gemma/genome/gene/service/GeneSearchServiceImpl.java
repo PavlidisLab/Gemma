@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -596,13 +597,14 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     /**
-     * Get a list of SearchResultDisplayObjects that summarise all the results found (one per taxon)
+     * Get a list of SearchResultDisplayObjects that summarise all the results found (one per taxon), so at front end
+     * user can "select all"
      * 
      * @param query
      * @param genes
      * @param geneSets
      * @param goSRDOs
-     * @param phenotypeSRDOs TODO
+     * @param phenotypeSRDOs
      * @param taxon1
      * @return
      */
@@ -621,8 +623,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // if an experiment was returned by both experiment and experiment set search, don't count it twice
             // (managed by set)
-            HashSet<Long> geneIds = new HashSet<>();
-            HashMap<Long, HashSet<Long>> geneIdsByTaxonId = new HashMap<>();
+            Set<Long> geneIds = new HashSet<>();
+            Map<Long, Set<Long>> geneIdsByTaxonId = new HashMap<>();
 
             // add every individual gene to the set
             for ( SearchResultDisplayObject srdo : genes ) {
@@ -650,7 +652,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             Long taxonId = null;
             Taxon taxon;
-            for ( Map.Entry<Long, HashSet<Long>> entry : geneIdsByTaxonId.entrySet() ) {
+            for ( Map.Entry<Long, Set<Long>> entry : geneIdsByTaxonId.entrySet() ) {
                 taxonId = entry.getKey();
                 assert taxonId != null;
                 taxon = taxonService.load( taxonId );
@@ -669,17 +671,31 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     }
 
     /**
-     * @param phenotypeSRDOs
+     * @param searchResultDisplayObject
      * @param geneIdsByTaxonId
      */
-    private void updateGeneIdsByTaxonId( Collection<SearchResultDisplayObject> phenotypeSRDOs,
-            HashMap<Long, HashSet<Long>> geneIdsByTaxonId ) {
-        for ( SearchResultDisplayObject srdo : phenotypeSRDOs ) {
+    private void updateGeneIdsByTaxonId( Collection<SearchResultDisplayObject> searchResultDisplayObject,
+            Map<Long, Set<Long>> geneIdsByTaxonId ) {
+        for ( SearchResultDisplayObject srdo : searchResultDisplayObject ) {
             // get the ids of the gene members
             if ( !geneIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
                 geneIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
             }
-            geneIdsByTaxonId.get( srdo.getTaxonId() ).addAll( srdo.getMemberIds() );
+
+            Object resultValueObject = srdo.getResultValueObject();
+
+            if ( resultValueObject instanceof GeneValueObject ) {
+                geneIdsByTaxonId.get( srdo.getTaxonId() ).add( ( ( GeneValueObject ) resultValueObject ).getId() );
+
+            } else if ( resultValueObject instanceof GeneSetValueObject ) {
+                geneIdsByTaxonId.get( srdo.getTaxonId() ).addAll(
+                        ( ( GeneSetValueObject ) resultValueObject ).getGeneIds() );
+
+            } else {
+                throw new UnsupportedOperationException( "Unknown search result type: "
+                        + resultValueObject.getClass().getName() );
+            }
+
         }
     }
 
@@ -826,7 +842,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * 
      * @param query A list of gene names (symbols), one per line.
      * @param taxonId
-     * @return map with each gene-query as a key and a collection of the search-results as the value
+     * @return map with each gene-query as a key (toLowerCase()) and a collection of the search-results as the value
      * @throws IOException
      */
     @Override
@@ -840,20 +856,21 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         Map<String, GeneValueObject> queryToGenes = geneService.findByOfficialSymbols( query, taxonId );
 
         for ( String line : query ) {
+            line = StringUtils.strip( line );
 
-            if ( queryToGenes.containsKey( line ) ) {
+            if ( StringUtils.isBlank( line ) ) {
+                continue;
+            }
+
+            String queryAsKey = line.toLowerCase();
+            if ( queryToGenes.containsKey( queryAsKey ) ) {
+                // already found.
                 continue;
             }
 
             if ( queryToGenes.size() >= MAX_GENES_PER_QUERY ) {
-                log.warn( "Too many genes, stopping" );
+                log.warn( "Too many genes, stopping (limit=" + MAX_GENES_PER_QUERY + ')' );
                 break;
-            }
-
-            line = StringUtils.strip( line );
-
-            if ( line.isEmpty() ) {
-                continue;
             }
 
             // searching one gene at a time is a bit slow; we do a quick search for symbols.
@@ -862,17 +879,17 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
                 // an empty set is an indication of no results.
-                queryToGenes.put( line, null );
+                queryToGenes.put( queryAsKey, null );
             } else if ( geneSearchResults.size() == 1 ) { // Just one result so add it
                 Gene g = ( Gene ) geneSearchResults.iterator().next().getResultObject();
-                queryToGenes.put( line, new GeneValueObject( g ) );
+                queryToGenes.put( queryAsKey, new GeneValueObject( g ) );
             } else { // Multiple results need to find best one
                 // Usually if there is more than 1 results the search term was a official symbol and picked up matches
                 // like grin1, grin2, grin3, grin (given the search term was grin)
                 for ( SearchResult sr : geneSearchResults ) {
                     Gene srGene = ( Gene ) sr.getResultObject();
                     if ( srGene.getTaxon().equals( taxon ) && srGene.getOfficialSymbol().equalsIgnoreCase( line ) ) {
-                        queryToGenes.put( line, new GeneValueObject( srGene ) );
+                        queryToGenes.put( queryAsKey, new GeneValueObject( srGene ) );
                         break; // found so done
                     }
                 }

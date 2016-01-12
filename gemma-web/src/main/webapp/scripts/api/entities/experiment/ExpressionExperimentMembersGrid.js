@@ -165,7 +165,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             var name = eeSearchResult.name;
 
             var eeIdsToAdd = [];
-            eeIdsToAdd = eeSearchResult.memberIds;
+            eeIdsToAdd = eeSearchResult.expressionExperimentIds;
 
             if ( !eeIdsToAdd || eeIdsToAdd === null || eeIdsToAdd.length === 0 ) {
                return;
@@ -894,7 +894,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          },
 
          updateDatabase : function() {
-            debugger;
+            // debugger;
             var id = this.getSelectedExperimentSet().id;
             var eeIds = this.getEEIds();
 
@@ -986,6 +986,13 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
                      this.addBtn.setText( 'Add ' + rec.data.size + ' experiments' );
                   }
 
+                  /*
+                   * update the value to show the search worked. and keep the record; see
+                   * ExperimentSearchAndPreview.showPreview. This will be retrieved by the 'add' button.
+                   */
+                  this.lastSelection = rec.get( 'resultValueObject' );
+                  combo.setValue( this.lastSelection.shortName );
+
                }.createDelegate( this )
             }
          }
@@ -998,7 +1005,12 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
          text : 'Add',
          disabled : true,
          handler : function() {
-            this.eeGrid.addExperiments( this.eeCombo.getExpressionExperimentGroup() );
+
+            /*
+             * 1. get the experiments from the combo 2. Add them to the eeGrid (== this)
+             */
+            // debugger;
+            this.eeGrid.addExperiments( this.eeCombo.getExperimentGroup() );
             this.eeCombo.reset();
             this.addBtn.setText( 'Add' );
             this.addBtn.disable();

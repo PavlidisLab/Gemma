@@ -152,7 +152,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
                var taxonId = -1;
             }
          }
-         if ( taxonId != -1 ) {
+         if ( taxonId && taxonId != -1 ) {
             this.setTaxonId( taxonId );
          }
          this.getStore().loadData( geneData );
@@ -375,7 +375,7 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
 Ext.reg( 'geneMembersGrid', Gemma.GeneMembersGrid );
 
 /**
- * Table of genes with toolbar for searching.
+ * Table of genes (a geneMembersGrid) with toolbar for searching.
  * 
  * Adjust columns displayed using "columnSet" config (values can be "reduced" (default) or "full") if "full": symbol,
  * description, species and 'in list' boolean are shown if "reduced" (or any other value): only symbol and description
@@ -512,6 +512,9 @@ Gemma.GeneMembersSaveGrid = Ext
                   } ],
                   callbacks : {
                      'icon-cross' : function( grid, record, action, row, col ) {
+                        /*
+                         * ???
+                         */
                      }
                   }
                } );
@@ -819,7 +822,8 @@ Gemma.GeneMembersSaveGrid = Ext
                   } else {
                      this.promptLoginForSave( 'save' );
                   }
-               }.createDelegate( this )
+               }.createDelegate( this ),
+               errorHandler : Gemma.genericErrorHandler
             } );
 
          },
@@ -962,16 +966,18 @@ Gemma.GeneMembersSaveGrid = Ext
             editedGroup.size = this.getGeneIds().length;
             editedGroup.modified = true;
             editedGroup.isPublic = false;
-            GeneSetController.addSessionGroup( editedGroup, true, // returns datasets added
-            function( geneSet ) {
-               // should be at least one datasetSet
-               if ( geneSet === null ) {
-                  return;
-               } else {
-                  this.fireEvent( 'geneListModified', [ geneSet.id ], geneSet.geneIds );
-                  this.fireEvent( 'doneModification' );
-               }
-            }.createDelegate( this ) );
+            GeneSetController.addSessionGroup( editedGroup, true, {
+               callback : function( geneSet ) {
+                  // should be at least one datasetSet
+                  if ( geneSet === null ) {
+                     return;
+                  } else {
+                     this.fireEvent( 'geneListModified', geneSet );
+                     this.fireEvent( 'doneModification' );
+                  }
+               }.createDelegate( this ),
+               errorHandler : Gemma.genericErrorHandler
+            } );
 
          },
 
@@ -993,32 +999,37 @@ Gemma.GeneMembersSaveGrid = Ext
             editedGroup.taxonId = (this.newGroupTaxon) ? this.newGroupTaxon.id : this.taxonId;
             editedGroup.size = this.getGeneIds().length;
 
-            GeneSetController.create( [ editedGroup ], // returns datasets added: list, not single
-            function( geneSets ) {
-               // should be at least one datasetSet
-               if ( geneSets === null || geneSets.length === 0 ) {
-                  return;
-               } else if ( geneSets.length > 1 ) {
-                  throw "didn't expect more than one gene set";
-               } else {
-                  this.fireEvent( 'geneListModified', geneSets[0] );
-                  this.fireEvent( 'geneSetCreated', geneSets[0] );
-                  this.fireEvent( 'doneModification' );
-               }
-            }.createDelegate( this ) );
+            GeneSetController.create( [ editedGroup ], {
+               callback : function( geneSets ) {
+                  // should be at least one datasetSet
+                  if ( geneSets === null || geneSets.length === 0 ) {
+                     return;
+                  } else if ( geneSets.length > 1 ) {
+                     throw "didn't expect more than one gene set";
+                  } else {
+                     this.fireEvent( 'geneListModified', geneSets[0] );
+                     this.fireEvent( 'geneSetCreated', geneSets[0] );
+                     this.fireEvent( 'doneModification' );
+                  }
+               }.createDelegate( this ),
+               errorHandler : Gemma.genericErrorHandler
+            } );
 
          },
          updateDatabase : function() {
             var groupId = this.getSelectedGeneSetValueObject().id;
             var geneIds = this.getGeneIds();
 
-            GeneSetController.updateMembers( groupId, geneIds, function( msg ) {
-               this.selectedGeneSetValueObject.geneIds = geneIds;
+            GeneSetController.updateMembers( groupId, geneIds, {
+               callback : function( msg ) {
+                  this.selectedGeneSetValueObject.geneIds = geneIds;
 
-               this.fireEvent( 'geneListModified', this.selectedGeneSetValueObject );
-               this.fireEvent( 'geneListSavedOver' );
-               this.fireEvent( 'doneModification' );
-            }.createDelegate( this ) );
+                  this.fireEvent( 'geneListModified', this.selectedGeneSetValueObject );
+                  this.fireEvent( 'geneListSavedOver' );
+                  this.fireEvent( 'doneModification' );
+               }.createDelegate( this ),
+               errorHandler : Gemma.genericErrorHandler
+            } );
          }
       } );
 Ext.reg( 'geneMembersSaveGrid', Gemma.GeneMembersSaveGrid );
