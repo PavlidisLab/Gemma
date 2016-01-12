@@ -27,7 +27,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * Represents a Gene group gene set.
+ * Represents a Gene group gene set
  * 
  * @author kelsey
  * @version $Id$
@@ -43,7 +43,8 @@ public class GeneSetValueObject implements SecureValueObject {
     private boolean isPublic;
     private boolean isShared;
     private String name;
-    private Integer size;
+    private Integer size; // only used if we're not populating geneIds
+
     private Long taxonId;
     private String taxonName;
     private boolean userOwned = false;
@@ -151,7 +152,10 @@ public class GeneSetValueObject implements SecureValueObject {
      * @return
      */
     public Integer getSize() {
-        return this.size;
+        if ( this.getGeneIds() != null )
+            return this.getGeneIds().size();
+        else if ( this.size > 0 ) return this.size;
+        return 0;
     }
 
     public Long getTaxonId() {
@@ -213,18 +217,18 @@ public class GeneSetValueObject implements SecureValueObject {
 
     }
 
+    public void setSize( Integer size ) {
+        if ( this.getGeneIds() != null && !this.getGeneIds().isEmpty() && size != this.getGeneIds().size() ) {
+            throw new IllegalArgumentException( "Invalid 'size'" );
+        }
+        this.size = size;
+    }
+
     /**
      * @param name
      */
     public void setName( String name ) {
         this.name = name;
-    }
-
-    /**
-     * @param size
-     */
-    public void setSize( Integer size ) {
-        this.size = size;
     }
 
     public void setTaxonId( Long taxonId ) {
