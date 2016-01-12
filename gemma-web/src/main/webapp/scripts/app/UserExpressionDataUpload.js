@@ -1,7 +1,7 @@
 Ext.namespace( 'Gemma' );
 Ext.form.Field.prototype.msgTarget = 'side';
 Ext.BLANK_IMAGE_URL = "/Gemma/images/s.gif";
-Ext.Require( 'Ext.util.Observable', 'ExpressionDataFileUploadController' );
+// Ext.Require( 'Ext.util.Observable', 'ExpressionDataFileUploadController' ); // Ext 3 doesn't support.
 
 Gemma.DatasetUploadTool = Ext
    .extend(
