@@ -1265,28 +1265,6 @@ public class ExpressionExperimentController {
         displayResults
                 .addAll( expressionExperimentSearchService.searchExperimentsAndExperimentGroups( query, taxonId ) );
 
-        /*
-         * Remove experiments that are irrelevant. Unfortunately this doesn't deal with the contents of sets FIXME the
-         * ids of sets are not filled in here anyway, but the sizes are not accurate if there are private data in the
-         * set and the user is not an admin.
-         */
-        // Collection<Long> eeIds = new HashSet<>();
-        // for ( SearchResultDisplayObject r : displayResults ) {
-        // eeIds.addAll( r.getMemberIds() );
-        // }
-        // if ( !eeIds.isEmpty() ) {
-        // boolean changed = false;
-        // if ( config != null && config.isCoExAnalyzedOnly() ) {
-        // changed = eeIds.retainAll( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ) );
-        // }
-        //
-        // if ( config != null && config.isDiffExAnalyzedOnly() ) {
-        // changed = changed
-        // || eeIds.retainAll( differentialExpressionAnalysisService.getExperimentsWithAnalysis( eeIds ) );
-        // }
-        //
-        // }
-
         for ( SearchResultDisplayObject r : displayResults ) {
             r.setOriginalQuery( query );
         }

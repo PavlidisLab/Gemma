@@ -364,6 +364,7 @@
 			<dwr:include method="update" />
 			<dwr:include method="updateNameDesc" />
 			<dwr:include method="updateMembers" />
+			<dwr:include method="updateSessionGroup" />
 			<dwr:include method="updateSessionGroups" />
 			<dwr:include method="updateUserAndSessionGroups" />
 			<dwr:include method="findGeneSetsByGene" />

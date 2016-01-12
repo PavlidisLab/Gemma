@@ -33,17 +33,17 @@ import ubic.gemma.session.GemmaSessionBackedValueObject;
  */
 public abstract class AbstractSetListContainer implements Serializable {
 
+    private static final int MAX_MODIFIED_GROUPS = 3;
+
+    private static final int MAX_TOTAL = 1000;
+
     private static final long serialVersionUID = -7207696842986893748L;
 
-    static final int MAX_MODIFIED_GROUPS = 3;
+    private List<GemmaSessionBackedValueObject> allSessionBoundGroups;
 
-    static final int MAX_TOTAL = 1000;
+    private Long largestSessionId = 0l;
 
-    Long largestSessionId = 0l;
-
-    List<GemmaSessionBackedValueObject> allSessionBoundGroups;
-
-    List<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
+    private List<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
 
     public AbstractSetListContainer() {
         allSessionBoundGroups = new ArrayList<GemmaSessionBackedValueObject>();
@@ -93,15 +93,11 @@ public abstract class AbstractSetListContainer implements Serializable {
     }
 
     public List<? extends GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
-
         return allSessionBoundGroups;
-
     }
 
     public List<? extends GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
-
         return sessionBoundModifiedGroups;
-
     }
 
     public Long incrementAndGetLargestSessionId() {
@@ -119,6 +115,9 @@ public abstract class AbstractSetListContainer implements Serializable {
         return largestSessionId;
     }
 
+    /**
+     * @param vo
+     */
     public void removeSet( GemmaSessionBackedValueObject vo ) {
 
         if ( vo != null ) {
@@ -129,9 +128,7 @@ public abstract class AbstractSetListContainer implements Serializable {
                     allSessionBoundGroups.remove( i );
                     break;
                 }
-
             }
-
         }
         if ( vo != null ) {
 
@@ -141,13 +138,13 @@ public abstract class AbstractSetListContainer implements Serializable {
                     sessionBoundModifiedGroups.remove( i );
                     break;
                 }
-
             }
-
         }
-
     }
 
+    /**
+     * @param vo
+     */
     public void updateSet( GemmaSessionBackedValueObject vo ) {
 
         if ( vo != null ) {
@@ -159,9 +156,7 @@ public abstract class AbstractSetListContainer implements Serializable {
                     allSessionBoundGroups.add( i, vo );
                     break;
                 }
-
             }
-
         }
         if ( vo != null ) {
 
@@ -172,11 +167,8 @@ public abstract class AbstractSetListContainer implements Serializable {
                     sessionBoundModifiedGroups.add( i, vo );
                     break;
                 }
-
             }
-
         }
-
     }
 
 }

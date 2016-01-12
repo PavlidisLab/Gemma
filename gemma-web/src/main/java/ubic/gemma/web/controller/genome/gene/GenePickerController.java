@@ -75,13 +75,14 @@ public class GenePickerController {
      * AJAX
      * 
      * @param collection of <long> geneIds
-     * @return collection of gene entity objects
+     * @return collection of gene entity objects; duplicates will be resolved.
      */
     public Collection<GeneValueObject> getGenes( Collection<Long> geneIds ) {
         if ( geneIds == null || geneIds.isEmpty() ) {
             return new HashSet<GeneValueObject>();
         }
-        return geneService.loadValueObjects( geneIds );
+
+        return geneService.loadValueObjects( new HashSet<>( geneIds ) );
     }
 
     /**

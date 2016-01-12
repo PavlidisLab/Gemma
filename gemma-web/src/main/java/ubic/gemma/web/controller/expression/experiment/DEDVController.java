@@ -533,6 +533,10 @@ public class DEDVController {
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, geneIds );
         }
 
+        if ( dedvs.isEmpty() ) {
+            return null;
+        }
+
         Long time = watch.getTime();
         watch.reset();
         watch.start();
