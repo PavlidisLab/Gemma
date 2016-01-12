@@ -216,10 +216,11 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       } );
       this.geneSelectionEditor.setTaxonId( this.taxonId );
 
-      this.geneSelectionEditor.on( 'geneListModified', function( geneSetIds, geneIds ) {
-         this.setGeneIds( geneIds );
+      this.geneSelectionEditor.on( 'geneListModified', function( geneSet ) {
+         // This will (always? generally?) be a SessionBoundGeneSetValueObject.
+         this.setGeneIds( geneSet.geneIds );
          this.updateButtonText();
-         this.geneCombo.setValue( 'Custom gene group (' + geneIds.length + ' genes)' );
+         this.geneCombo.setValue( geneSet.name );
          this.listModified = true;
       }, this );
 
