@@ -1,4 +1,5 @@
 /**
+ * A gene search combo and a geneSetPreview.
  * 
  * @author thea
  * @version $Id$
@@ -22,6 +23,8 @@ Gemma.GeneSearchAndPreview = Ext
             } else {
                this.selectedGeneSetValueObject = gsvo;
             }
+            // This is goofy, but has to be done to get the preview in the right state. Triggers 'updateTitle()'.
+            this.preview.setSelectedSetValueObject( this.selectedGeneSetValueObject );
 
          },
 

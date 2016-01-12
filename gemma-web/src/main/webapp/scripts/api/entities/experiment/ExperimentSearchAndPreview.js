@@ -63,9 +63,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
          // console.log( "Got a wrapped valueobject (has resultValueObject)" );
          this.selectedExpressionExperimentGroup = eesvo.resultValueObject;
       } else {
+         // does this happen?
          this.selectedExpressionExperimentGroup = eesvo;
       }
-      this.preview.selectedSetValueObject = this.selectedExpressionExperimentGroup;
+      this.preview.setSelectedSetValueObject( this.selectedExpressionExperimentGroup );
 
    },
 

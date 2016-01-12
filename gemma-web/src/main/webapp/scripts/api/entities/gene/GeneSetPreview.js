@@ -8,8 +8,8 @@ Ext.namespace( 'Gemma' );
 /**
  * 
  * Displays a small number of elements from the set with links to the set's page and to an editor. FIXME this is messed
- * up (misnamed?0 because it manages the preview, but also deals with keeping track of the actual gene set via the
- * _addToPreviewedSet.
+ * up (misnamed?) because it manages the preview, but also deals with keeping track of the actual gene set via the
+ * _addToPreviewedSet. The actual preview is shown in previewContent.
  * 
  * @class Gemma.GeneSetPreview
  * @xtype Gemma.GeneSetPreview
@@ -33,7 +33,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
       GenePickerController.getGenes( previewIds, {
          callback : function( genes ) {
             this.loadPreview( genes, ids.length, message );
-            this.updateTitle();
+            // this.updateTitle(); // this is extra.
             this.fireEvent( 'previewLoaded', genes );
          }.createDelegate( this ),
          errorHandler : Gemma.genericErrorHandler
@@ -65,7 +65,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
          GeneSetController.getGenesInGroup.apply( this, [ geneSet.id, this.preview_size, {
             callback : function( genes ) {
                this.loadPreview( genes, this.selectedSetValueObject.size, message );
-               this.updateTitle();
+               // this.updateTitle(); // this is extra.
                this.fireEvent( 'previewLoaded', genes );
             }.createDelegate( this ),
             errorHandler : Gemma.genericErrorHandler
@@ -76,23 +76,11 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
 
    },
 
-   // /**
-   // * @public update the contents of the gene preview box. This is used when other components are adding genes to the
-   // * query (e.g.. from the cytoscape view)
-   // *
-   // * @param {GeneValueObject[]}
-   // * genes an array of genes to use to populate preview
-   // */
-   // loadGenePreviewFromGenes : function( genes, message ) {
-   // var limit = (genes.length < this.preview_size) ? genes.length : this.preview_size;
-   // var previewGenes = genes.slice( 0, limit );
-   // this.loadPreview( previewGenes, genes.length, message );
-   // },
-
    /**
-    * 
+    * This is called by SetPreview.setSelectedSetValueObject - a little odd.
     */
    updateTitle : function() {
+      // debugger;
       var selectedSet = this.selectedSetValueObject;
 
       if ( !selectedSet ) {
@@ -167,7 +155,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
    /**
     * Given gene ids, add them to the current group. If the current group is already a 'temporary' one, then just add
     * them. If the current group is a database-backed one, make a session-bound group that is based on the original.
-    * FIXME move this out of the preview proper.
+    * 
     * 
     * @private
     * @param geneIdsToAdd
@@ -207,7 +195,7 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
          GeneSetController.updateSessionGroup( editedGroup, {
             callback : function( geneSet ) {
                this.setSelectedSetValueObject( geneSet );
-               this.updateTitle();
+               // this.updateTitle();
 
                this.fireEvent( 'geneListModified', geneSet );
                this.fireEvent( 'doneModification' );
@@ -245,7 +233,6 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
             callback : function( geneSet ) {
                this.setSelectedSetValueObject( geneSet );
                this.updateTitle();
-
                this.fireEvent( 'geneListModified', geneSet );
                this.fireEvent( 'doneModification' );
 
@@ -274,6 +261,9 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
       this.withinSetGeneCombo.setTaxonId( this.taxonId );
       this.withinSetGeneCombo.on( 'select', this._addToPreviewedSet.createDelegate( this ), this );
 
+      /*
+       * The gene set editor.
+       */
       Ext.apply( this, {
          selectionEditor : new Gemma.GeneMembersSaveGrid( {
             name : 'geneSelectionEditor',
@@ -294,9 +284,6 @@ Gemma.GeneSetPreview = Ext.extend( Gemma.SetPreview, {
 
       Gemma.GeneSetPreview.superclass.initComponent.call( this );
 
-      /*
-       * The popup window for editing the gene set.
-       */
       this.selectionEditor.on( 'geneListModified', function( geneset ) {
          // debugger;
          if ( typeof geneset.geneIds !== 'undefined' && typeof geneset.name !== 'undefined' ) {

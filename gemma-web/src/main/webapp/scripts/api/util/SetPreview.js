@@ -53,7 +53,7 @@ Gemma.SetPreview = Ext.extend( Ext.Panel, {
    setSelectedSetValueObject : function( vo ) {
       this.selectedSetValueObject = vo;
       this.isSet = true;
-      this.updateTitle();
+      this.updateTitle(); // note we were calling this multiple times.
    },
 
    /**
