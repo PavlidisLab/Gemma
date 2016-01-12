@@ -57,6 +57,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
             }
          }
       } );
+
       Ext.apply( this, {
          extraButtons : [ this.geneGroupCombo, new Ext.Button( {
             text : "Clear",
@@ -106,6 +107,10 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
    clearButHandler : function() {
       this.removeAllGenes();
    },
+
+   /**
+    * @memberOf Gemma.EEDetailsVisualizationWidget
+    */
    showButHandler : function() {
 
       if ( this.visWindow ) {
@@ -145,8 +150,10 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend( Gemma.GeneGrid, {
 Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
    extraButtons : [],
    geneIds : [],
-   initComponent : function() {
+   taxonId : null,
 
+   initComponent : function() {
+      // debugger;
       Gemma.VisualizationWidgetGeneSelectionToolbar.superclass.initComponent.call( this );
 
       this.visPanel.on( 'loadSucceeded', function( returnedGeneCount, queryGeneCount ) {
@@ -168,6 +175,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
          listeners : {
             'select' : {
                fn : function( combo, rec, index ) {
+                  // debugger;
                   this.setGeneIds( rec.get( 'memberIds' ) );
                   this.setSelectedComboRecord( rec.data );
                   this.editBtn.enable();
@@ -261,6 +269,10 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       // }
 
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    afterRender : function( c, l ) {
       Gemma.GeneAndGroupAdderToolbar.superclass.afterRender.call( this, c, l );
       this.add( this.geneCombo, this.editBtn );
@@ -274,6 +286,10 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       // }
 
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    launchGeneSelectionEditor : function() {
 
       var geneIds = this.getGeneIds();
@@ -297,21 +313,45 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
          this.geneSelectionEditor.loadMask.hide();
       }.createDelegate( this, [], false ) );
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    getGeneIds : function() {
       return this.geneIds;
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    setGeneIds : function( ids ) {
       this.geneIds = ids;
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    setSelectedComboRecord : function( record ) {
       this.selectedComboRecord = record;
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    getSelectedComboRecord : function() {
       return this.selectedComboRecord;
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    getSelectedValueObject : function() {
       return (this.selectedComboRecord) ? this.selectedComboRecord.resultValueObject : null;
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    updateButtonText : function() {
       var numIds = this.getGeneIds().length;
       if ( numIds === 0 ) {
@@ -323,6 +363,10 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
             Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.GoButtonText.multiple, numIds ) );
       }
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    updateStatusText : function( status ) {
       if ( status && status.length > 0 ) {
          this.tbarText.update( status );
@@ -338,6 +382,10 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
          }
       }
    },
+
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    updateFoundVsQueryText : function( foundCount, queryCount ) {
       if ( foundCount !== undefined && queryCount !== undefined && foundCount !== null && queryCount !== null ) {
          this.tbarText.update( String.format(
@@ -348,6 +396,9 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       }
    },
 
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    clearHandler : function() {
       // TODO reset the combo
       this.setGeneIds( [] );
@@ -357,6 +408,9 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend( Ext.Toolbar, {
       this.clearBtn.disable();
    },
 
+   /**
+    * @memberOf Gemma.VisualizationWidgetGeneSelectionToolbar
+    */
    vizBtnHandler : function() {
       var geneList = this.getGeneIds();
       var eeId = this.eeId;
