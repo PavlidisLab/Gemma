@@ -24,7 +24,7 @@ Gemma.DownloadWindow = Ext.extend( Ext.Window, {
       } else if ( this.delim == ' ' ) {
          return 'spaces';
       } else {
-         return '\'' + delim + '\'';
+         return '\'' + this.delim + '\'';
       }
    },
 
@@ -38,7 +38,7 @@ Gemma.DownloadWindow = Ext.extend( Ext.Window, {
 
       for (var i = 0; i < this.downloadData.length; i++) {
          var downloadDataRow = this.downloadData[i];
-         text += downloadDataRow.join( delim ) + "\n";
+         text += downloadDataRow.join( this.delim ) + "\n";
       }
 
       this.show();
@@ -54,7 +54,7 @@ Gemma.DownloadWindow = Ext.extend( Ext.Window, {
 
       for (var i = 0; i < this.downloadData.length; i++) {
          var downloadDataRow = this.downloadData[i];
-         text += downloadDataRow.join( delim ) + "\n";
+         text += downloadDataRow.join( this.delim ) + "\n";
       }
 
       this.show();
