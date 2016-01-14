@@ -30,7 +30,7 @@ Gemma.MetaAnalysisWindow = Ext
                   {
                      listeners : {
                         nextButtonClicked : function( panel ) {
-                           var experimentOrExperimentSet = this.getSelectedExpressionExperimentSetValueObject();
+                           var experimentOrExperimentSet = this.getSelectedExperimentOrExperimentSetValueObject();
                            selectFactorPanel
                               .setSelectedExperimentIds( experimentOrExperimentSet.expressionExperimentIds );
                         }

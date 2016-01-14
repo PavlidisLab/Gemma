@@ -9,23 +9,27 @@ Ext.namespace( 'Gemma' );
 Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPanel, {
    title : 'Select experiments',
    nextButtonText : 'Select factors',
+   experimentSearchAndPreview : null,
+
+   getSelectedExperimentOrExperimentSetValueObject : function() {
+      return this.experimentSearchAndPreview.getSelectedExpressionExperimentSetValueObject();
+   },
 
    /**
     * @memberOf Gemma.MetaAnalysisSelectExperimentPanel
     */
    initComponent : function() {
-      var experimentSearchAndPreview = null;
 
       var contentPanel = new Ext.Panel( {
          border : false,
-         // Must define taxonChanged function because ExperimentSearchAndPreview requires it.
+         // Must define taxonChanged function because ExperimentSearchAndPreview requires it. //???
          taxonChanged : function( taxonId, taxonName ) {
          }
       } );
       var initContentPanel = function() {
          contentPanel.removeAll();
 
-         experimentSearchAndPreview = new Gemma.ExperimentSearchAndPreview( {
+         this.experimentSearchAndPreview = new Gemma.ExperimentSearchAndPreview( {
             width : 884,
             mode : 'diffex',
             searchForm : contentPanel,
@@ -36,9 +40,9 @@ Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPa
                }
             }
          } );
-         contentPanel.add( experimentSearchAndPreview );
+         contentPanel.add( this.experimentSearchAndPreview );
          contentPanel.doLayout();
-      };
+      }.createDelegate( this );
 
       var nextButton = this.createNextButton();
       nextButton.disable();
@@ -67,9 +71,7 @@ Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPa
             },
             items : [ nextButton, resetButton ]
          } ],
-         getSelectedExperimentOrExperimentSetValueObject : function() {
-            return experimentSearchAndPreview.getSelectedExpressionExperimentSetValueObject();
-         }
+
       } );
 
       Gemma.MetaAnalysisSelectExperimentPanel.superclass.initComponent.call( this );
