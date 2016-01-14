@@ -162,6 +162,7 @@ Gemma.ExperimentSetPreview = Ext
             } else if ( rvo instanceof ExpressionExperimentValueObject ) {
                this._appendAndUpdate( combo, rvo );
             } else {
+               // this shouldn't usually be happening? I mean, we should already have the ids.
                ExpressionExperimentSetController.getExperimentIdsInSet( rvo.id, {
                   callback : function( expIds ) {
                      rvo.expressionExperimentIds = expIds;
@@ -234,7 +235,7 @@ Gemma.ExperimentSetPreview = Ext
                } );
 
             } else {
-
+               // A group based on a database-bound group.
                editedGroup = new SessionBoundExpressionExperimentSetValueObject();
                editedGroup.id = null;
 
@@ -259,6 +260,7 @@ Gemma.ExperimentSetPreview = Ext
                /*
                 * 
                 */
+               debugger;
                var oldnumCoex = this.selectedSetValueObject.numWithCoexpressionAnalysis;
                var oldnumDiffEx = this.selectedSetValueObject.numWithDifferentialExpressionAnalysis;
 

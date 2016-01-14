@@ -357,7 +357,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                this.action.on( {
                   action : function( grid, record, action, row, col ) {
                      if ( action === 'icon-cross' ) {
-                        // debugger;
+
                         this.changeMade = true;
                         grid.getStore().remove( record );
                      }
@@ -553,12 +553,33 @@ Gemma.ExpressionExperimentMembersGrid = Ext
          // },
 
          /**
-          * Return all the ids of the experiments shown in this grid.
+          * @memberOf Gemma.ExpressionExperimentMembersGrid
+          * @return all the ids of the experiments shown in this grid.
           */
          getEEIds : function() {
             var result = [];
             this.store.each( function( rec ) {
                result.push( rec.get( "id" ) );
+            } );
+            return result;
+         },
+
+         getNumWithCoex : function() {
+            var result = 0;
+            this.store.each( function( rec ) {
+               if ( rec.get( "hasCoexpressionAnalysis" ) ) {
+                  result++;
+               }
+            } );
+            return result;
+         },
+
+         getNumWithDiffEx : function() {
+            var result = 0;
+            this.store.each( function( rec ) {
+               if ( rec.get( "hasDifferentialExpressionAnalysis" ) ) {
+                  result++;
+               }
             } );
             return result;
          },
@@ -583,14 +604,14 @@ Gemma.ExpressionExperimentMembersGrid = Ext
           */
          createDetails : function() {
 
+            var selectedSet = this.getSelectedExperimentSet();
+
             // if name for new group wasn't passed from parent component, make one
             // up
-            if ( !this.getSelectedExperimentSet()
-               && (!this.groupName || this.groupName === null || this.groupName === '') ) {
+            if ( !selectedSet && (!this.groupName || this.groupName === null || this.groupName === '') ) {
                this.newGroupName = "Experiment group created: " + (new Date()).toString();
             } else {
-               var groupName = (this.getSelectedExperimentSet() && this.getSelectedExperimentSet().name) ? this
-                  .getSelectedExperimentSet().name : this.groupName;
+               var groupName = (selectedSet && selectedSet.name) ? selectedSet.name : this.groupName;
 
                // adding time to end of session-bound group titles in case it's not
                // unique
@@ -605,15 +626,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                // Use simple, non descriptive naming for now
                this.newGroupName = time + "Custom Experiment Group";
 
-               // var matches = groupName.match(/^\(\d+:\d+\)\s*/);
-               // if ( matches !== null) {
-               // groupName = groupName.substring(matches[0].length, groupName.length);
-               // if (groupName.substring(0, prefix.length) === prefix &&
-               // groupName.substring(groupName.length - suffix.length, groupName.length) === suffix) {
-               // groupName = groupName.substring(prefix.length, groupName.length - suffix.length);
-               // }
-               // }
-               // this.newGroupName = time + ' Edited \'' + groupName + '\' group';
             }
 
             // if description for new group wasn't passed from parent component,
@@ -625,9 +637,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext
 
          login : function() {
             window.open( "/Gemma/login.jsp" );
-            // var win = new Ext.Window({
-            // items:[new Gemma.LoginPanel({})]});
-            // win.show();
          },
          okHandler : function() {
             // if user has made changes, save to session
@@ -879,8 +888,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             editedGroup.size = this.getEEIds().length;
             editedGroup.modified = true;
             editedGroup.isPublic = false;
-            editedGroup.numWithCoexpressionAnalysis = -1; // TODO
-            editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
+
+            editedGroup.numWithCoexpressionAnalysis = this.getNumWithCoex();
+            editedGroup.numWithDifferentialExpressionAnalysis = this.getNumWithDiffEx();
 
             ExpressionExperimentSetController.addSessionGroup( editedGroup, true, // returns datasets added
             function( newValueObject ) {
@@ -909,8 +919,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext
             editedGroup.size = this.getEEIds().length;
             editedGroup.isPublic = this.newGroupPublik;
             editedGroup.taxonId = (this.newGroupTaxon) ? this.newGroupTaxon.id : this.taxonId;
-            editedGroup.numWithCoexpressionAnalysis = -1; // TODO
-            editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
+            editedGroup.numWithCoexpressionAnalysis = this.getNumWithCoex();
+            editedGroup.numWithDifferentialExpressionAnalysis = this.getNumWithDiffEx();
 
             ExpressionExperimentSetController.create( [ editedGroup ], // returns datasets added
             function( newValueObjects ) {

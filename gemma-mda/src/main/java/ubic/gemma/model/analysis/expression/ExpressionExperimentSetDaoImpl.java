@@ -386,7 +386,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         }
 
         Collection<ExpressionExperimentSetValueObject> result = vo.values();
-        pouplateAnalysisInformation( result );
+        populateAnalysisInformation( result );
         return result;
     }
 
@@ -395,7 +395,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      * 
      * @param vo
      */
-    private void pouplateAnalysisInformation( Collection<ExpressionExperimentSetValueObject> vo ) {
+    private void populateAnalysisInformation( Collection<ExpressionExperimentSetValueObject> vo ) {
         if ( vo.isEmpty() ) {
             return;
         }
