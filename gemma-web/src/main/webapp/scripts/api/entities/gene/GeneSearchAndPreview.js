@@ -82,11 +82,13 @@ Gemma.GeneSearchAndPreview = Ext
           */
          loadGeneOrGroup : function( record, query ) {
 
-            var vo = record.data.resultValueObject;
-            var id = record.get( "resultValueObject" ).id;
+            var vo = record.get( 'resultValueObject' );
+            var id = vo.id;
             var size = record.get( "size" );
             var name = record.get( "name" );
-            var taxonId = this.searchForm.getTaxonId();
+            var taxonId = vo.taxonId;
+            Gemma.EVENTBUS.fireEvent( 'taxonchanged', taxonId );
+
             this.preview.setTaxonId( taxonId );
 
             if ( vo instanceof GeneSetValueObject ) {
@@ -234,6 +236,7 @@ Gemma.GeneSearchAndPreview = Ext
 
             this.maskGenePreview();
 
+            // FIXME eventbus fire event instead?
             this.searchForm.taxonChanged( taxonId, taxonName );
 
             var queries = e.geneNames.split( '\n' );

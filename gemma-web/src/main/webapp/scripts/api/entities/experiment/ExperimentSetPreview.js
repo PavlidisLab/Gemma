@@ -114,7 +114,6 @@ Gemma.ExperimentSetPreview = Ext
 
             // note that normally the ids are not filled in, so we just use the size.
             var size = selectedSet.size > 0 ? selectedSet.size : selectedSet.expressionExperimentIds.length;
-
             var numWithCoex = selectedSet.numWithCoexpressionAnalysis;
             var numWithDiffex = selectedSet.numWithDifferentialExpressionAnalysis;
 
@@ -159,15 +158,14 @@ Gemma.ExperimentSetPreview = Ext
             var rvo = record.get( 'resultValueObject' );
 
             if ( rvo instanceof SessionBoundExpressionExperimentSetValueObject ) {
-               this._appendAndUpdate( combo, record, rvo.expressionExperimentIds );
+               this._appendAndUpdate( combo, rvo );
             } else if ( rvo instanceof ExpressionExperimentValueObject ) {
-               var singleId = [];
-               singleId.push( record.data.resultValueObject.id );
-               this._appendAndUpdate( combo, record, singleId );
+               this._appendAndUpdate( combo, rvo );
             } else {
                ExpressionExperimentSetController.getExperimentIdsInSet( rvo.id, {
                   callback : function( expIds ) {
-                     this._appendAndUpdate( combo, record, expIds );
+                     rvo.expressionExperimentIds = expIds;
+                     this._appendAndUpdate( combo, rvo );
                   }.createDelegate( this ),
                   errorHandler : Gemma.genericErrorHandler
                } );
@@ -178,45 +176,57 @@ Gemma.ExperimentSetPreview = Ext
          /**
           * @memberOf Gemma.ExperimentSetPreview
           * @param combo
-          * @param record
-          * @param newIds
+          * @param valueObject
           * @private
           */
-         _appendAndUpdate : function( combo, record, newIds ) {
-
+         _appendAndUpdate : function( combo, valueObject ) {
             var allIds = this.selectedSetValueObject.expressionExperimentIds;
 
+            var newIds = [];
+            if ( valueObject instanceof ExpressionExperimentValueObject ) {
+               newIds.push( valueObject.id );
+            } else {
+               newIds = valueObject.expressionExperimentIds;
+            }
+
             // don't add duplicates
+            var added = false;
             for (var i = 0; i < newIds.length; i++) {
                if ( allIds.indexOf( newIds[i] ) < 0 ) {
                   allIds.push( newIds[i] );
+                  added = true;
                }
+            }
+
+            if ( !added ) {
+               this.fireEvent( 'doneModification' );
+               return;
             }
 
             var editedGroup;
 
-            if ( typeof this.selectedSetValueObject == 'SessionBoundExpressionExperimentSetValueObject' ) {
+            if ( this.selectedSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
                /*
                 * Don't wipe it, just add on.
                 */
                editedGroup = this.selectedSetValueObject;
                editedGroup.modified = true;
-               editedGroup.geneIds = allIds;
+               editedGroup.expressionExperimentIds = allIds;
                editedGroup.size = editedGroup.expressionExperimentIds.length;
 
-               ExpressionExperimentSetController.updateSessionGroups( [ editedGroup ], true, // returns
-               // SessionBoundExpressionExperimentSetValueObject
+               ExpressionExperimentSetController.updateSessionGroups( [ editedGroup ], // returns
+               // SessionBoundExpressionExperimentSetValueObject collection
                // added
                {
-                  callback : function( eeSet ) {
+                  callback : function( eeSets ) {
 
-                     this._loadExperimentPreviewFromIds( eeSet.expressionExperimentIds ); // async
-                     this.setSelectedSetValueObject( eeSet );
+                     this._loadExperimentPreviewFromIds( editedGroup.expressionExperimentIds ); // async
+                     this.setSelectedSetValueObject( editedGroup );
                      this.updateTitle();
                      this.withinSetExperimentCombo.reset();
                      this.withinSetExperimentCombo.blur();
 
-                     this.fireEvent( 'experimentListModified', eeSet );
+                     this.fireEvent( 'experimentListModified', editedGroup );
                      this.fireEvent( 'doneModification' );
 
                   }.createDelegate( this ),
@@ -224,6 +234,7 @@ Gemma.ExperimentSetPreview = Ext
                } );
 
             } else {
+
                editedGroup = new SessionBoundExpressionExperimentSetValueObject();
                editedGroup.id = null;
 
@@ -244,6 +255,13 @@ Gemma.ExperimentSetPreview = Ext
                editedGroup.size = editedGroup.expressionExperimentIds.length;
                editedGroup.modified = true;
                editedGroup.isPublic = false;
+
+               /*
+                * 
+                */
+               var oldnumCoex = this.selectedSetValueObject.numWithCoexpressionAnalysis;
+               var oldnumDiffEx = this.selectedSetValueObject.numWithDifferentialExpressionAnalysis;
+
                editedGroup.numWithCoexpressionAnalysis = -1; // TODO
                editedGroup.numWithDifferentialExpressionAnalysis = -1; // TODO
 

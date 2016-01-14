@@ -287,6 +287,7 @@
 			<dwr:include method="remove" />
 			<dwr:include method="loadAllUserAndSessionGroups" />
 			<dwr:include method="updateUserAndSessionGroups" />
+			<dwr:include method="updateSessionGroups" />
 			<dwr:include method="updateMembers" />
 			<dwr:include method="addUserAndSessionGroups" />
 			<dwr:include method="removeUserAndSessionGroups" />

@@ -177,7 +177,8 @@ Gemma.GeneMembersGrid = Ext.extend( Ext.grid.GridPanel,
          }
 
          var geneIdsToAdd = [];
-         geneIdsToAdd = searchResultValObj.memberIds; // I want to deprecate memberIds.
+         geneIdsToAdd = searchResultValObj.memberIds; // I want to deprecate memberIds. Use the underlying object. It's
+         // more efficient and clearer.
 
          if ( !geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0 ) {
             return;

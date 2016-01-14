@@ -200,9 +200,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
           * @returns
           */
          getExperimentGroup : function() {
-            if ( this.getRawValue() === '' ) {
-               return null;
-            }
             return this.selectedExpressionExperimentGroup;
          },
 

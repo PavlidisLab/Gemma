@@ -27,6 +27,7 @@ Gemma.MetaAnalysisSelectExperimentPanel = Ext.extend( Gemma.WizardTabPanelItemPa
 
          experimentSearchAndPreview = new Gemma.ExperimentSearchAndPreview( {
             width : 884,
+            mode : 'diffex',
             searchForm : contentPanel,
             listeners : {
                madeFirstSelection : function() {

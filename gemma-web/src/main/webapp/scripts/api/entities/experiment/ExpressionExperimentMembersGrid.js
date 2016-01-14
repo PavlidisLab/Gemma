@@ -161,27 +161,64 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                return;
             }
 
-            var id = eeSearchResult.id;
-            var name = eeSearchResult.name;
-
             var eeIdsToAdd = [];
-            eeIdsToAdd = eeSearchResult.expressionExperimentIds;
 
-            if ( !eeIdsToAdd || eeIdsToAdd === null || eeIdsToAdd.length === 0 ) {
-               return;
-            }
+            if ( eeSearchResult instanceof ExpressionExperimentSetValueObject ) {
+               this.showLoadMask();
 
-            ExpressionExperimentController.loadExpressionExperiments( eeIdsToAdd, function( ees ) {
+               if ( eeSearchResult.id > 0 /* not ideal, but this is getting set to -1 instead of null ? */) {
 
-               for (var j = 0; j < ees.length; j++) {
-                  if ( this.getStore().find( "id", ees[j].id ) < 0 ) {
-                     var Constructor = this.store.recordType;
-                     var record = new Constructor( ees[j] );
-                     this.getStore().add( [ record ] );
-                  }
+                  ExpressionExperimentSetController.getExperimentsInSet( eeSearchResult.id, -1 /* no limit */, {
+                     callback : function( ees ) {
+                        // don't add ones we already have...
+                        for (var j = 0; j < ees.length; j++) {
+                           if ( this.getStore().find( "id", ees[j].id ) < 0 ) {
+                              var Constructor = this.store.recordType;
+                              var record = new Constructor( ees[j] );
+                              this.getStore().add( [ record ] );
+                           }
+                        }
+                        this.hideLoadMask();
+                     }.createDelegate( this ),
+                     errorHandler : function( err, exception ) {
+                        Gemma.genericErrorHandler( err, exception );
+                        this.hideLoadMask();
+                     }.createDelegate( this )
+                  } );
+
+               } else {
+                  // should be a SessionBoundExpressionExperimentSetValueObject or subclass.
+                  ExpressionExperimentController.loadExpressionExperiments( eeSearchResult.expressionExperimentIds, {
+                     callback : function( ees ) {
+
+                        if ( ees.length == 0 ) {
+                           // FIXME error message.
+                        }
+
+                        for (var j = 0; j < ees.length; j++) {
+                           if ( this.getStore().find( "id", ees[j].id ) < 0 ) {
+                              var Constructor = this.store.recordType;
+                              var record = new Constructor( ees[j] );
+                              this.getStore().add( [ record ] );
+                           }
+                        }
+                        this.hideLoadMask();
+                     }.createDelegate( this ),
+                     errorHandler : function( err, exception ) {
+                        Gemma.genericErrorHandler( err, exception );
+                        this.hideLoadMask();
+                     }.createDelegate( this )
+                  } );
+
                }
 
-            }.createDelegate( this ) );
+            } else if ( eeSearchResult instanceof ExpressionExperimentValueObject ) {
+               var Constructor = this.store.recordType;
+               var record = new Constructor( eeSearchResult );
+               this.getStore().add( [ record ] );
+            } else {
+               // !!! ERROR
+            }
 
          },
 
@@ -207,6 +244,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   icon : "/Gemma/images/icons/cross.png",
                   hidden : true,
                   handler : function( button ) {
+                     debugger;
                      var records = this.getSelectionModel().getSelections();
                      this.getStore().remove( records );
                      button.setVisible( false );
@@ -311,6 +349,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   } ],
                   callbacks : {
                      'icon-cross' : function( grid, record, action, row, col ) {
+                        // debugger;
                      }
                   }
                } );
@@ -318,6 +357,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                this.action.on( {
                   action : function( grid, record, action, row, col ) {
                      if ( action === 'icon-cross' ) {
+                        // debugger;
                         this.changeMade = true;
                         grid.getStore().remove( record );
                      }
@@ -325,9 +365,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                   // You can cancel the action by returning false from this
                   // event handler.
                   beforeaction : function( grid, record, action, row, col ) {
-                     if ( grid.getStore().getCount() == 1 && action === 'icon-cross' ) {
-                        return false;
-                     }
+                     // disallow removing the last item - I don't like this, what's the problem? No message to user ->
+                     // confusing/looks broken.
+                     // if ( grid.getStore().getCount() == 1 && action === 'icon-cross' ) {
+                     // return false;
+                     // }
                      return true;
                   }
                } );
@@ -950,6 +992,7 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
 
    /**
     * @memberOf Gemma.ExperimentAndGroupAdderToolbar
+    * @private
     */
    initComponent : function() {
 
@@ -980,18 +1023,22 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
             'select' : {
                fn : function( combo, rec, index ) {
                   this.addBtn.enable();
-                  if ( rec.data.size === 1 ) {
+
+                  var vo = rec.get( 'resultValueObject' );
+
+                  if ( rec.get( 'size' ) === 1 ) {
                      this.addBtn.setText( 'Add 1 experiment' );
                   } else {
-                     this.addBtn.setText( 'Add ' + rec.data.size + ' experiments' );
+                     this.addBtn.setText( 'Add ' + rec.get( 'size' ) + ' experiments' );
                   }
 
                   /*
                    * update the value to show the search worked. and keep the record; see
                    * ExperimentSearchAndPreview.showPreview. This will be retrieved by the 'add' button.
                    */
-                  this.lastSelection = rec.get( 'resultValueObject' );
-                  combo.setValue( this.lastSelection.shortName );
+                  // debugger;
+                  combo.setRawValue( vo.name ); // we use rawvalue to avoid triggering a new search right away.
+                  this.lastSelection = vo;
 
                }.createDelegate( this )
             }
@@ -1005,12 +1052,7 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
          text : 'Add',
          disabled : true,
          handler : function() {
-
-            /*
-             * 1. get the experiments from the combo 2. Add them to the eeGrid (== this)
-             */
-            // debugger;
-            this.eeGrid.addExperiments( this.eeCombo.getExperimentGroup() );
+            this.eeGrid.addExperiments( this.lastSelection );
             this.eeCombo.reset();
             this.addBtn.setText( 'Add' );
             this.addBtn.disable();
@@ -1018,6 +1060,13 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
       } );
 
    },
+
+   /**
+    * @memberof Gemma.ExperimentAndGroupAdderToolbar
+    * @private
+    * @param c
+    * @param l
+    */
    afterRender : function( c, l ) {
       Gemma.ExperimentAndGroupAdderToolbar.superclass.afterRender.call( this, c, l );
 

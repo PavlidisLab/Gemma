@@ -1,5 +1,4 @@
 /**
- * A combo box that shows previews of the selection
  * 
  * @author thea
  * @version $Id$
@@ -18,7 +17,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
 
    emptyText : "Search by keyword or ID",
 
-   mode : 'coex',
+   mode : 'coex', // vs diffex.
 
    /**
     * @private
@@ -135,8 +134,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
    loadExperimentOrGroup : function( record, query ) {
 
       var vo = record.get( 'resultValueObject' );
-
-      var taxonId = this.searchForm.getTaxonId();
+      var taxonId = vo.taxonId;
       Gemma.EVENTBUS.fireEvent( 'taxonchanged', taxonId );
       this.queryUsedToGetSessionGroup = (id === null || id === -1) ? query : null;
 
@@ -218,11 +216,11 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
       this.experimentCombo.on( 'select', this.showPreview, this );
 
       this.preview = new Gemma.ExperimentSetPreview( {
-         hideUnanalyzedDatasets : true
+         hideUnanalyzedDatasets : true,
+         mode : this.mode
       } );
 
       this.preview.on( 'experimentListModified', function( newSet ) {
-
          if ( typeof newSet.expressionExperimentIds !== 'undefined' && typeof newSet.name !== 'undefined' ) {
             // update record
             this.setSelectedExpressionExperimentSetValueObject( newSet );

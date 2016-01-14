@@ -105,9 +105,9 @@ public class ExpressionExperimentSetController extends BaseController {
     public Collection<ExpressionExperimentSetValueObject> addUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> sets ) {
 
-        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<ExpressionExperimentSetValueObject> result = new HashSet<>();
 
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = new HashSet<>();
 
         for ( ExpressionExperimentSetValueObject eesvo : sets ) {
 
@@ -430,7 +430,7 @@ public class ExpressionExperimentSetController extends BaseController {
     }
 
     /**
-     * AJAX Updates the session group. TODO move to service?
+     * AJAX Updates the session group.
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> updateSessionGroups(
             Collection<SessionBoundExpressionExperimentSetValueObject> vos ) {

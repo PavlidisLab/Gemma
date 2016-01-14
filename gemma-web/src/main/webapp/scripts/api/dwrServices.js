@@ -705,6 +705,10 @@ ExpressionExperimentSetController.updateUserAndSessionGroups = function( p0, cal
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
       'updateUserAndSessionGroups', p0, callback );
 };
+ExpressionExperimentSetController.updateSessionGroups = function( p0, callback ) {
+   dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+      'updateSessionGroups', p0, callback );
+};
 ExpressionExperimentSetController.loadAllUserAndSessionGroups = function( callback ) {
    dwr.engine._execute( ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
       'loadAllUserAndSessionGroups', callback );
