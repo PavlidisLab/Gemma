@@ -260,7 +260,7 @@ Gemma.ExperimentSetPreview = Ext
                /*
                 * 
                 */
-               debugger;
+               // debugger;
                var oldnumCoex = this.selectedSetValueObject.numWithCoexpressionAnalysis;
                var oldnumDiffEx = this.selectedSetValueObject.numWithDifferentialExpressionAnalysis;
 
