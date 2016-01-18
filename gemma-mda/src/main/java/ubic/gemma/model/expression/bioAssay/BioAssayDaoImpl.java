@@ -364,4 +364,14 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#loadValueObjects(java.util.Collection)
+     */
+    @Override
+    public Collection<BioAssay> loadValueObjects( Collection<Long> ids ) {
+        throw new UnsupportedOperationException( "Sorry, not yet implemented" );
+    }
+
 }

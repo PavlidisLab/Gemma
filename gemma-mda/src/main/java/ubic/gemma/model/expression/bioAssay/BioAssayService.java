@@ -72,6 +72,13 @@ public interface BioAssayService {
     public BioAssay load( java.lang.Long id );
 
     /**
+     * @param ids
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<BioAssay> loadValueObjects( Collection<Long> ids );
+
+    /**
      * 
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })

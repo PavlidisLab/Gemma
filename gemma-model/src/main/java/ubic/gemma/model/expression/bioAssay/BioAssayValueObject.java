@@ -72,8 +72,12 @@ public class BioAssayValueObject implements Serializable {
     }
 
     /**
+     * This method is a bit dangerous because we get lazy-load errors.
+     * 
      * @param bioAssay
+     * @deprecated
      */
+    @Deprecated
     public BioAssayValueObject( BioAssay bioAssay ) {
         this.id = bioAssay.getId();
         this.name = bioAssay.getName();

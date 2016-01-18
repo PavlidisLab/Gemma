@@ -126,6 +126,16 @@ public class BioAssayServiceImpl implements BioAssayService {
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadValueObjects(java.util.Collection)
+     */
+    @Override
+    public Collection<BioAssay> loadValueObjects( Collection<Long> ids ) {
+        return this.getBioAssayDao().loadValueObjects( ids );
+    }
+
     /**
      * @see BioAssayService#remove(BioAssay)
      */

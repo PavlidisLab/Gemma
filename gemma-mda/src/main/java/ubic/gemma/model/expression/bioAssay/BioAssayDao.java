@@ -66,4 +66,10 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      */
     public void thaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
 
+    /**
+     * @param ids
+     * @return
+     */
+    public Collection<BioAssay> loadValueObjects( Collection<Long> ids );
+
 }
