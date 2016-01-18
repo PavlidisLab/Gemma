@@ -317,7 +317,7 @@ Gemma.CoexpressionGrid = Ext
          },
 
          /**
-          * called from toolbar why is this different from CytoscapeControlBar setup?
+          * called from toolbar FIXME why is this different from CytoscapeControlBar setup?
           * 
           * @private
           * @param spinner

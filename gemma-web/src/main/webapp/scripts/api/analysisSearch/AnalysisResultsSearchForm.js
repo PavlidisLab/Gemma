@@ -530,7 +530,7 @@ Gemma.AnalysisResultsSearchForm = Ext
             this.addEvents( 'beforesearch', 'aftersearch', 'differential_expression_search_query_ready',
                'coexpression_search_query_ready', 'modechange' );
 
-            // for events triggered when this page was reached using paramters encoded in the url.
+            // for events triggered when this page was reached using parameters encoded in the url.
             this.relayEvents( this.experimentSearchAndPreview.experimentCombo,
                [ 'experimentGroupUrlSelectionComplete' ] );
             this.relayEvents( this.geneSearchAndPreview, [ 'geneListUrlSelectionComplete' ] );

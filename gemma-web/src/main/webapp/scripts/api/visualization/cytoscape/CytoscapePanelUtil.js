@@ -174,7 +174,11 @@ Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function( searchR
    for (var i = 0; i < originalCoexpressionPairs.length; i++) {
       var coexpPair = originalCoexpressionPairs[i];
 
-      var nodeDegreeRank = coexpPair.foundGeneNodeDegreeRank;
+      // var nodeDegreeRank = coexpPair.foundGeneNodeDegreeRank;
+
+      /*
+       * DISABLED the node-degree filter because it is just confusing.
+       */
 
       /*
        * Removing genes is confusing ... but it must be done. However, we should do this based on specificity. Found
@@ -184,12 +188,11 @@ Gemma.CytoscapePanelUtil.restrictQueryGenesForCytoscapeQuery = function( searchR
        */
       if ( /*
              * meetsStringency( coexpPair, searchResults.getResultsStringency() ) &&
-             */absent( coexpPair.foundGene.id, geneIds ) && nodeDegreeRank < 0.8
+             */absent( coexpPair.foundGene.id, geneIds ) /* && nodeDegreeRank < 0.8 */
       /* && queryGeneCountHash[coexpPair.queryGene.id] < resultsPerQueryGene */) {
-
          geneIds.push( coexpPair.foundGene.id );
 
-         // queryGeneCountHash[coexpPair.queryGene.id] = queryGeneCountHash[coexpPair.queryGene.id] + 1;
+         // // queryGeneCountHash[coexpPair.queryGene.id] = queryGeneCountHash[coexpPair.queryGene.id] + 1;
       }
    }
 

@@ -256,12 +256,14 @@ Gemma.CytoscapeJSPanel = Ext.extend( Ext.Panel, {
       }
 
       // check to see if coexGrid display stringency is below cytoscape results stringency, if so, give the user
-      // the
-      // option of reloading graph
+      // the FIXME bug 4361 the coexGrid doesn't allow lowering the stringency.
+      // option of reloading graph ("a new query will be required...")
       // at new stringency or returning display to current cytoscape stringency
       var displayStringency = this.coexDisplaySettings.getStringency();
       var resultsStringency = this.coexpressionSearchData.getQueryStringency();
 
+      // FIXME see bug 4361 - this only fires when the tab is activated, so lowering the stringency while on the tab
+      // does nothing.
       if ( this.display.ready && displayStringency < resultsStringency ) {
          Ext.Msg.show( {
             title : 'New Search Required',

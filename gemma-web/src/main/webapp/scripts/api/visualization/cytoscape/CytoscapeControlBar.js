@@ -270,22 +270,34 @@ Gemma.CytoscapeControlBar = Ext
          /**
           * @private handler
           * @param requestedDisplayStringency
+          *           (this is the same as for the coexpressiongrid)
           */
          onStringencyChange : function( spinner ) {
-
-            var requestedDisplayStringency = spinner.field.getValue();
-
+            var spinnerValue = spinner.field.getValue();
             /*
              * Don't allow the stringency to go lower than that used in the query
              */
-            var appliedStringency = this.coexpressionSearchData.searchResults.appliedStringency;
+            var appliedStringency = this.coexpressionSearchData.getQueryStringency();
 
-            if ( requestedDisplayStringency < appliedStringency ) {
-               spinner.field.setValue( appliedStringency );
-               this.coexDisplaySettings.setStringency( appliedStringency );
+            if ( spinnerValue >= appliedStringency ) {
+               this.coexDisplaySettings.setStringency( spinnerValue );
             } else {
-               this.coexDisplaySettings.setStringency( requestedDisplayStringency );
+               spinner.field.setValue( appliedStringency );
             }
+
+            // var requestedDisplayStringency = spinner.field.getValue();
+            //
+            // /*
+            // * Don't allow the stringency to go lower than that used in the query
+            // */
+            // var appliedStringency = this.coexpressionSearchData.searchResults.appliedStringency;
+            //
+            // if ( requestedDisplayStringency < appliedStringency ) {
+            // spinner.field.setValue( appliedStringency );
+            // this.coexDisplaySettings.setStringency( appliedStringency );
+            // } else {
+            // this.coexDisplaySettings.setStringency( requestedDisplayStringency );
+            // }
 
          },
 
