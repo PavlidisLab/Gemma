@@ -232,7 +232,7 @@ Gemma.DatasetGroupEditor = Ext.extend( Ext.Panel, {
          this.datasetGroupMembersGrid.getStore().removeAll();
          this.datasetGroupMembersGrid.setTitle( record.get( "name" ) );
 
-         if ( record.get( 'expressionExperimentIds' ).length === 0 ) {
+         if ( record.get( 'expressionExperimentIds' ).length === 0 && record.get( 'id' ) ) {
             /*
              * Fetch the ids.
              */

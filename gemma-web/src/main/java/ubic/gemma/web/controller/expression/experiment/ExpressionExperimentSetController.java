@@ -173,6 +173,11 @@ public class ExpressionExperimentSetController extends BaseController {
      * @return
      */
     public Collection<Long> getExperimentIdsInSet( Long id ) {
+        
+        if (id == null) {
+            return new ArrayList<Long>();
+        }
+        
         ExpressionExperimentSetValueObject vo = expressionExperimentSetService.loadValueObject( id );
         if ( vo == null ) {
             throw new IllegalArgumentException( "No such set with id=" + id );

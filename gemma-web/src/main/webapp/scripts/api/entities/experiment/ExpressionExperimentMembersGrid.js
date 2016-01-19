@@ -909,7 +909,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext
                // group wasn't made before launching
                editedGroup = new ExpressionExperimentSetValueObject();
             } else {
-               editedGroup = Object.clone( this.getSelectedExperimentSet() );
+               editedGroup = this.getSelectedExperimentSet();
             }
 
             editedGroup.id = null;
