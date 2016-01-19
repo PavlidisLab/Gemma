@@ -472,65 +472,66 @@ Gemma.GemmaNavigationHeader = Ext
             var hideTaskUser = new Ext.util.DelayedTask( userBtn.hideMenu, userBtn );
 
             Gemma.GemmaNavigationHeader.superclass.initComponent.call( this );
-            this.add( [
-                       {
-                          xtype : 'box',
-                          autoEl : {
-                             tag : 'a',
-                             href : '/Gemma/home.html',
-                             cn : '<img src="/Gemma/images/logo/gemma-sm230x52_text.png" style="padding-left:10px"/>'
-                          }
-                       },
-                       {
-                          xtype : 'box',
-                          autoEl : {
-                             tag : 'img',
-                             src : '/Gemma/images/logo/phenocarta-45p.png',
-                             style : 'padding-left:10px',
-                             title : 'Previously known as Neurocarta',
-                             alt : 'Phenocarta'
-                          },
-                          hidden : window.location.pathname.indexOf( '/Gemma/phenotypes.html' ) < 0
-                             && window.location.pathname.indexOf( '/Gemma/phenotypeAssociationManager.html' ) < 0
-                             && window.location.pathname.indexOf( '/Gemma/neurocartaStatistics.html' ) < 0
-                       }, '->', {
-                          ref : 'navToolbar',
-                          xtype : 'toolbar',
-                          height : 23,
-                          style : 'background:white;border-style:none',
-                          defaults : {
-                             cls : 'bigText'
-                          },
-                          items : [ '->', searchBtn, {
-                             xtype : 'tbspacer',
-                             width : 15
-                          }, aboutBtn, {
-                             xtype : 'tbspacer',
-                             width : 15
-                          }, myGemmaBtn, {
-                             ref : 'myGemmaSpacer',
-                             xtype : 'tbspacer',
-                             width : 15,
-                             hidden : !userLoggedIn
-                          }, adminBtn, ' ', {
-                             ref : 'adminSpacer',
-                             xtype : 'tbspacer',
-                             width : 15,
-                             hidden : !isAdmin
-                          }, '-', {
-                             xtype : 'tbspacer',
-                             width : 15
-                          }, this.loginBtn, userBtn ]
+            this
+               .add( [
+                      {
+                         xtype : 'box',
+                         autoEl : {
+                            tag : 'a',
+                            href : '/Gemma/home.html',
+                            cn : '<img src="/Gemma/images/logo/gemma-headerlogo.png" style="padding-left:10px;padding-bottom:3px"/>'
+                         }
+                      },
+                      {
+                         xtype : 'box',
+                         autoEl : {
+                            tag : 'img',
+                            src : '/Gemma/images/logo/phenocarta-45p.png',
+                            style : 'padding-left:10px',
+                            title : 'Previously known as Neurocarta',
+                            alt : 'Phenocarta'
+                         },
+                         hidden : window.location.pathname.indexOf( '/Gemma/phenotypes.html' ) < 0
+                            && window.location.pathname.indexOf( '/Gemma/phenotypeAssociationManager.html' ) < 0
+                            && window.location.pathname.indexOf( '/Gemma/neurocartaStatistics.html' ) < 0
+                      }, '->', {
+                         ref : 'navToolbar',
+                         xtype : 'toolbar',
+                         height : 23,
+                         style : 'background:white;border-style:none',
+                         defaults : {
+                            cls : 'bigText'
+                         },
+                         items : [ '->', searchBtn, {
+                            xtype : 'tbspacer',
+                            width : 15
+                         }, aboutBtn, {
+                            xtype : 'tbspacer',
+                            width : 15
+                         }, myGemmaBtn, {
+                            ref : 'myGemmaSpacer',
+                            xtype : 'tbspacer',
+                            width : 15,
+                            hidden : !userLoggedIn
+                         }, adminBtn, ' ', {
+                            ref : 'adminSpacer',
+                            xtype : 'tbspacer',
+                            width : 15,
+                            hidden : !isAdmin
+                         }, '-', {
+                            xtype : 'tbspacer',
+                            width : 15
+                         }, this.loginBtn, userBtn ]
 
-                       }, {
-                          xtype : 'box',
-                          autoEl : {
-                             tag : 'a',
-                             href : 'http://www.ubc.ca/',
-                             cn : '<img src="/Gemma/images/logo/ubcgrey_logo_40.png"/>',
-                             style : 'padding-left:15px; padding-right:10px'
-                          }
-                       } ] );
+                      }, {
+                         xtype : 'box',
+                         autoEl : {
+                            tag : 'a',
+                            href : 'http://www.ubc.ca/',
+                            cn : '<img src="/Gemma/images/logo/ubcgrey_logo_40.png"/>',
+                            style : 'padding-left:15px; padding-right:10px'
+                         }
+                      } ] );
          }
       } );
 
