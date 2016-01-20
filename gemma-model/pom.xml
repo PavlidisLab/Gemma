@@ -17,13 +17,13 @@
 		<dependency>
 			<groupId>pavlab</groupId>
 			<artifactId>gemma-gsec</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>0.0.1</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.16-SNAPSHOT</version>
+			<version>1.0.16</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
