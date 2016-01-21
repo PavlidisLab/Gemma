@@ -20,12 +20,6 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>baseCode</groupId>
-			<artifactId>baseCode</artifactId>
-			<version>1.0.16-SNAPSHOT</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
 			<groupId>ubc.chibi.compass-fork</groupId>
 			<artifactId>compass-fork</artifactId>
 			<version>1.0</version>
