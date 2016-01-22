@@ -664,10 +664,9 @@ public class OntologyServiceImpl implements OntologyService {
      */
     @Override
     public boolean isObsolete( String uri ) {
+        if ( uri == null ) return false;
         OntologyTerm t = this.getTerm( uri );
-        if ( t != null && t.isTermObsolete() ) return true;
-
-        return false;
+        return t != null && t.isTermObsolete();
     }
 
     /*
