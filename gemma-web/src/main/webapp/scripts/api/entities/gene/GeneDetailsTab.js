@@ -179,6 +179,8 @@ Gemma.GeneDetails = Ext
             this.fireEvent( 'changeTab', tabName );
          },
          /**
+          * FIXME not fully implemented.
+          * 
           * @private
           * @param ncbiId
           * @param count
@@ -287,8 +289,13 @@ Gemma.GeneDetails = Ext
                                  chartRangeMax : max,
                                  width : 150,
                                  tooltipFormatter : function( spl, ops, fields ) {
-                                    return "Positive correlation links at support level " + fields.x + " or higher: "
-                                       + Math.pow( 10, fields.y ).toFixed( 0 ) + "  (Plot is log10 scaled)";
+                                    if ( fields.y ) {
+                                       return "Positive correlation links at support level " + fields.x
+                                          + " or higher = " + Math.pow( 10, fields.y ).toFixed( 0 )
+                                          + "  (Plot is log10 scaled)";
+                                    } else {
+                                       return "";
+                                    }
                                  }
                               } );
 
@@ -303,9 +310,13 @@ Gemma.GeneDetails = Ext
                                     chartRangeMax : max,
                                     width : 150,
                                     tooltipFormatter : function( spl, ops, fields ) {
-                                       return "Negative correlation links at support level " + fields.x
-                                          + " or higher: " + Math.pow( 10, fields.y ).toFixed( 0 )
-                                          + "  (Plot is log10 scaled)";
+                                       if ( fields.y ) {
+                                          return " Negative correlation links at support level " + fields.x
+                                             + " or higher = " + Math.pow( 10, fields.y ).toFixed( 0 )
+                                             + "  (Plot is log10 scaled)";
+                                       } else {
+                                          return "";
+                                       }
                                     }
                                  } );
                            }
@@ -433,13 +444,15 @@ Gemma.GeneDetails = Ext
                                                        hidden : !(geneDetails.taxonId == 1 || geneDetails.taxonId == 2
                                                           || geneDetails.taxonId == 3 || geneDetails.taxonId == 13 || geneDetails.taxonId == 14)
                                                     },
-                                                    {
-                                                       fieldLabel : 'Studies'
-                                                          + '&nbsp;<i id="studiesHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
-                                                       items : this.renderAssociatedExperiments( geneDetails.ncbiId,
-                                                          geneDetails.associatedExperimentCount )
-                                                    // FIXME add experiments about homologues
-                                                    },
+                                                    // See bug 4366.
+                                                    // {
+                                                    // fieldLabel : 'Studies'
+                                                    // + '&nbsp;<i id="studiesHelp" class="fa fa-question-circle
+                                                    // fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                    // items : this.renderAssociatedExperiments( geneDetails.ncbiId,
+                                                    // geneDetails.associatedExperimentCount )
+                                                    // // FIXME add experiments about homologues
+                                                    // },
                                                     {
                                                        fieldLabel : 'Elements'
                                                           + '&nbsp; <i id="elementsHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
