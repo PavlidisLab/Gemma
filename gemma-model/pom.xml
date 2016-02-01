@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.8</version>
+		<version>1.9-SNAPSHOT</version>
 	</parent>
 	<artifactId>gemma-model</artifactId>
 	<name>Gemma model</name>

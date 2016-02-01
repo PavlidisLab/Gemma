@@ -8,14 +8,14 @@
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.8</version>
+		<version>1.9-SNAPSHOT</version>
 	</parent>
 	<packaging>jar</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
 			<artifactId>gemma-model</artifactId>
-			<version>1.8</version>
+			<version>1.9-SNAPSHOT</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
