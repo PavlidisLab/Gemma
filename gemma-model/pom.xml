@@ -1,11 +1,12 @@
 <?xml version="1.0"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<packaging>jar</packaging>
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>1.9-SNAPSHOT</version>
+		<version>1.8-SNAPSHOT</version>
 	</parent>
 	<artifactId>gemma-model</artifactId>
 	<name>Gemma model</name>
@@ -61,7 +62,8 @@
 							</classpath>
 						</taskdef>
 						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";" output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
+							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
 							<fileset dir="src/main/resources" includes="**/*.hbm.xml" />
 						</schemaexport>
 					</target>
@@ -104,7 +106,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore />
+										<ignore></ignore>
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
