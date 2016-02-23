@@ -9,8 +9,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 
 /* this importer cannot automatically download files it expects the files to already be there */
+/**
+ * TODO Document Me
+ *
+ * @version $Id$
+ */
 public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // to find to file go to : http://dga.nubic.northwestern.edu/pages/download.php
@@ -23,6 +29,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     public static void main( String[] args ) throws Exception {
         @SuppressWarnings("unused")
         DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
+        databaseImporter.doWork( args );
     }
 
     private HashMap<String, HashSet<OntologyTerm>> commonLines = new HashMap<String, HashSet<OntologyTerm>>();
@@ -33,14 +40,10 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     public DgaDatabaseImporter( String[] args ) throws Exception {
         super( args );
-        checkForDGAFile();
-        findTermsWithParents();
-        processDGAFile();
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -249,4 +252,38 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         }
     }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from DGA, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        try {
+            checkForDGAFile();
+            findTermsWithParents();
+            processDGAFile();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

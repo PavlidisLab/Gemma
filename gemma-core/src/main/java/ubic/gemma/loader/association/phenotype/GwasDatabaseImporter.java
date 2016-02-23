@@ -17,8 +17,14 @@ package ubic.gemma.loader.association.phenotype;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
+/**
+ * TODO Document Me
+ *
+ * @version $Id$
+ */
 public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
@@ -32,8 +38,15 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     protected static final Integer CONTEXT_INDEX = 24;
     protected static final String DISEASE_TRAIT = "Disease/Trait";
     protected static final Integer DISEASE_TRAIT_INDEX = 7;
-    protected static final String INITIAL_SAMPLE_SIZE = "Initial Sample Size";
+    protected static final String INITIAL_SAMPLE_SIZE = "Initial Sample Description"; // *** changed from Initial Sample
+    // Size
+    // to reflect updated file
     protected static final Integer INITIAL_SAMPLE_SIZE_INDEX = 8;
+
+    protected static final String REPLICATION_SAMPLE_SIZE = "Replication Sample Description"; // *** changed from
+                                                                                              // Replication Sample Size
+                                                                                              // to reflect updated file
+
     protected static final String MAPPED_GENE = "Mapped_gene";
     protected static final Integer MAPPED_GENE_INDEX = 14;
     protected static final String OR_OR_BETA = "OR or beta";
@@ -45,7 +58,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     // names and positions of the headers, this will be check with the file to verify all headers
     protected static final String PUBMED_ID = "PUBMEDID";
     protected static final Integer PUBMED_ID_INDEX = 1;
-    protected static final String REPLICATION_SAMPLE_SIZE = "Replication Sample Size";
     protected static final Integer REPLICATION_SAMPLE_SIZE_INDEX = 9;
     protected static final String REPORTED_GENES = "Reported Gene(s)";
     protected static final Integer REPORTED_GENES_INDEX = 13;
@@ -59,15 +71,7 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
     public static void main( String[] args ) throws Exception {
 
         GwasDatabaseImporter importEvidence = new GwasDatabaseImporter( args );
-
-        // creates the folder where to place the file web downloaded files and final output files
-        importEvidence.createWriteFolderWithDate( GWAS );
-
-        // download the GWAS file
-        String gwasFile = importEvidence.downloadFileFromWeb( GWAS_URL_PATH, GWAS_FILE );
-
-        // process the gwas file
-        importEvidence.processGwasFile( gwasFile );
+        importEvidence.doWork( args );
     }
 
     public GwasDatabaseImporter( String[] args ) throws Exception {
@@ -76,7 +80,6 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -186,4 +189,41 @@ public class GwasDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstra
         checkHeader( headers[PLATFORM_INDEX], PLATFORM );
     }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from GWAS publications, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        // creates the folder where to place the file web downloaded files and final output files
+        try {
+            createWriteFolderWithDate( GWAS );
+            // download the GWAS file
+            String gwasFile = downloadFileFromWeb( GWAS_URL_PATH, GWAS_FILE );
+            // process the gwas file
+            processGwasFile( gwasFile );
+        } catch ( Exception e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

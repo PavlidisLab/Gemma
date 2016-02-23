@@ -19,8 +19,14 @@ import java.io.File;
 import java.io.InputStreamReader;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
+/**
+ * TODO Document Me
+ *
+ * @version $Id$
+ */
 public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     // name of the external database
@@ -33,7 +39,7 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     public static void main( String[] args ) throws Exception {
 
         CtdDatabaseImporter importEvidence = new CtdDatabaseImporter( args );
-        importEvidence.processCTDFile();
+        importEvidence.doWork( args );
     }
 
     // location of the ctd file
@@ -41,21 +47,11 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     public CtdDatabaseImporter( String[] args ) throws Exception {
         super( args );
-
-        // create a folder named CTD
-        writeFolder = createWriteFolderIfDoesntExist( CTD );
-
-        // download the CTD file if we dont already have it
-        downloadCTDFileIfDoesntExist();
-
-        // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
-        findOmimAndMeshMappingUsingOntologyFile();
-
+        doWork( args );
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -138,4 +134,41 @@ public class CtdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         writeBuffersAndCloseFiles();
     }
 
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from CTD, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        // create a folder named CTD
+        try {
+            writeFolder = createWriteFolderIfDoesntExist( CTD );
+            // download the CTD file if we dont already have it
+            downloadCTDFileIfDoesntExist();
+            // using the disease ontology file creates the mapping from mesh and omim id to valuesUri
+            findOmimAndMeshMappingUsingOntologyFile();
+            processCTDFile();
+        } catch ( Exception e ) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        return null;
+    }
 }

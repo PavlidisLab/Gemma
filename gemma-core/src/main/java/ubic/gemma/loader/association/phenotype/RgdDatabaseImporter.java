@@ -18,8 +18,14 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 import ubic.basecode.util.FileTools;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
+/**
+ * TODO Document Me
+ *
+ * @version $Id$
+ */
 public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstractCLI {
 
     public static final String RGD_FILE_HUMAN = "homo_genes_rdo";
@@ -34,19 +40,7 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     public static void main( String[] args ) throws Exception {
 
         RgdDatabaseImporter importEvidence = new RgdDatabaseImporter( args );
-
-        // creates the folder where to place the file web downloaded files and final output files
-        importEvidence.createWriteFolderWithDate( RGD );
-
-        String rgdHuman = importEvidence.downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_HUMAN );
-        String rgdMouse = importEvidence.downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_MOUSE );
-        String rgdRat = importEvidence.downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_RAT );
-
-        // find the OMIM and Mesh terms from the disease ontology file
-        importEvidence.findOmimAndMeshMappingUsingOntologyFile();
-
-        // process the rgd files
-        importEvidence.processRGDFiles( rgdHuman, rgdMouse, rgdRat );
+        importEvidence.doWork( args );
 
     }
 
@@ -56,7 +50,6 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -116,4 +109,47 @@ public class RgdDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
         return geneId;
     }
 
+    @Override
+    public CommandGroup getCommandGroup() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from RGD, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        try {
+            // creates the folder where to place the file web downloaded files and final output files
+            createWriteFolderWithDate( RGD );
+
+            String rgdHuman = downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_HUMAN );
+            String rgdMouse = downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_MOUSE );
+            String rgdRat = downloadFileFromWeb( RGD_URL_PATH, RGD_FILE_RAT );
+
+            // find the OMIM and Mesh terms from the disease ontology file
+            findOmimAndMeshMappingUsingOntologyFile();
+
+            // process the rgd files
+            processRGDFiles( rgdHuman, rgdMouse, rgdRat );
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 }

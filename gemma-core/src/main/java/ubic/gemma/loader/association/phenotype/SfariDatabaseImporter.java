@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 
 /**
@@ -59,10 +60,12 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
     public static final String SFARI = "SFARI";
     public static String SUPPORT_FOR_AUTISM_HEADER = "Support for Autism";
     public static String SUPPORTING_HEADER = "Supporting";
+
     public static void main( String[] args ) throws Exception {
         @SuppressWarnings("unused")
         SfariDatabaseImporter importEvidence = new SfariDatabaseImporter( args );
     }
+
     // messy file, need to be corrected each time not a real csv file, some conflicts with extra character "
     private File autismGeneDataset = null;
     // gene Id ---> description
@@ -76,15 +79,12 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
 
     public SfariDatabaseImporter( String[] args ) throws Exception {
         super( args );
+        doWork( args );
         /* this importer cannot automatically download files it expects the files to already be there */
-        checkForSfariFiles();
-        processSfariScoreFile();
-        processSfariGeneFile();
     }
 
     /*
      * (non-Javadoc)
-     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -99,6 +99,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
         for ( int i = 0; i < pubmedIds.length; i++ ) {
 
             if ( !pubmedIds[i].trim().equalsIgnoreCase( "" ) ) {
+                System.out.println( linePubmedIds );
 
                 Integer pubM = new Integer( pubmedIds[i].trim() );
 
@@ -190,7 +191,7 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
                 String description = lineTokens[supportForAutismIndex] + " ; " + lineTokens[evidenceOfSupportIndex];
                 Set<String> literaturePubMed = new HashSet<String>();
                 Set<String> literaturePubMedNegative = new HashSet<String>();
-
+                System.out.println( line );
                 addAllPubmed( lineTokens[positiveReferenceIndex], literaturePubMed );
                 addAllPubmed( lineTokens[primaryReferenceIndex], literaturePubMed );
                 // addAllPubmed( lineTokens[mostCitedIndex], this.literaturePubMed );
@@ -353,5 +354,40 @@ public class SfariDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstr
             outFinalResults.write( scoreVO.getScoreValue() + "\t" );
             outFinalResults.write( scoreVO.getStrength() + "\t" );
         }
+    }
+
+    @Override
+    public CommandGroup getCommandGroup() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+    }
+
+    @Override
+    public String getShortDesc() {
+        return "Creates a .tsv file of lines of evidence from SFARI, to be used with EvidenceImporterCLI.java to import into Phenocarta.";
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+
+        try {
+            checkForSfariFiles();
+            processSfariScoreFile();
+            processSfariGeneFile();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
