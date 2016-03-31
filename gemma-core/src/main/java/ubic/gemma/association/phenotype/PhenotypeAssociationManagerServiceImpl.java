@@ -54,6 +54,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.DateUtil;
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.association.phenotype.PhenotypeAssociationConstants;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -1239,6 +1240,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // folder where ErmineJ Files are kept
         String ermineJFolderPath = mainFolderPath + PhenotypeAssociationConstants.ERMINEJ_FOLDER_NAME + File.separator;
 
+        // folder where ErmineJ Files, without OMIM-sourced data, are kept
+        String ermineJWithOmimFolderPath = mainFolderPath + "AnnotationsWithOMIM" + File.separator;        
+
         // creates the folders if they dont exist
         File phenocartaHomeFolder = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH );
         phenocartaHomeFolder.mkdir();
@@ -1248,12 +1252,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         datasetsFolder.mkdir();
         File ermineJFolder = new File( ermineJFolderPath );
         ermineJFolder.mkdir();
-
+        File ermineJWithOmimFolder = new File( ermineJWithOmimFolderPath );
+        ermineJWithOmimFolder.mkdir();
+        
         // this writer will be used to write 1 file per resource
         BufferedWriter fileWriterDataSource = null;
         // this writer is the dump of all evidence
         try (BufferedWriter fileWriterAllEvidence = new BufferedWriter( new FileWriter( mainFolderPath
-                + PhenotypeAssociationConstants.FILE_ALL_PHENOCARTA_ANNOTATIONS ) );) {
+                + PhenotypeAssociationConstants.FILE_ALL_PHENOCARTA_ANNOTATIONS ) );
+                BufferedWriter fileWriterAllEvidenceWithOMIM = new BufferedWriter( new FileWriter( mainFolderPath
+                        + "AnnotationsWithOMIM" + File.separator
+                        + PhenotypeAssociationConstants.FILE_ALL_PHENOCARTA_ANNOTATIONS ) );) {
 
             // header of file
             String header = disclaimer
@@ -1368,12 +1377,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                                 + description + "\n";
 
                         fileWriterDataSource.write( evidenceLine );
-                        fileWriterAllEvidence.write( evidenceLine );
+                        if(!externalDatabaseValueObject.getName().contains("OMIM"))
+                            fileWriterAllEvidence.write( evidenceLine );
+                        fileWriterAllEvidenceWithOMIM.write( evidenceLine );
                     }
                     fileWriterDataSource.close();// finish writing one given data src file
                 }// old: finish loop of writing all ext data src files
             }// new: finish loop of writing all ext data src files, including checking modified times
             fileWriterAllEvidence.close();
+            fileWriterAllEvidenceWithOMIM.close();
 
             // LatestEvidenceExport ---> points to the latest dump
             File symbolicLink = new File( PhenotypeAssociationConstants.PHENOCARTA_HOME_FOLDER_PATH
@@ -1389,6 +1401,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ), false );
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ), true );
 
+            writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ),
+                    false );
+            writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ),
+                    true );
+            writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ),
+                    false );
+            writeErmineJFile( ermineJWithOmimFolderPath, disclaimer, this.taxonService.findByCommonName( "human" ),
+                    true );            
         }
     }
 
@@ -2273,8 +2293,19 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             phenoCartageneSets.write( disclaimer );
 
             // gets all : DOID id ---> gene NBCI
-            Collection<TreeCharacteristicValueObject> ontologyTrees = customTreeFeatures( findAllPhenotypesByTree(
-                    true, null, false, noElectronicAnnotation ) );
+            Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = findExternalDatabasesWithEvidence();
+            Collection<Long> extIDs = new HashSet<Long>();
+
+            for ( ExternalDatabaseValueObject externalDatabaseValueObject : externalDatabaseValueObjects ) {
+                if ( !externalDatabaseValueObject.getName().contains( "OMIM" ) )
+                    extIDs.add( externalDatabaseValueObject.getId() );
+            }
+            EvidenceFilter ef = new EvidenceFilter( taxon.getId(), false, extIDs );
+            Collection<TreeCharacteristicValueObject> ontologyTrees = null;
+            if ( writeFolder.contains( "OMIM" ) )
+                ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true, null, false, noElectronicAnnotation ) );
+            else
+                ontologyTrees = customTreeFeatures( findAllPhenotypesByTree( true, ef, false, noElectronicAnnotation ) );
 
             // cache the results, for a gene found
             HashMap<Integer, String> cacheMap = new HashMap<>();
