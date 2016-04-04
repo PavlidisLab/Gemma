@@ -1395,6 +1395,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 Files.delete( symbolicLink.toPath() );
             }
             Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
+            
+            log.info( "After symlink code; symlink now exists: " + symbolicLink.exists() );
 
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), false );
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), true );
@@ -2310,7 +2312,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             // cache the results, for a gene found
             HashMap<Integer, String> cacheMap = new HashMap<>();
 
-            log.info( "ErmineJ file dump" );
+            if ( writeFolder.contains( "OMIM" ) )
+                log.info( "ErmineJ file dump, incl OMIM; ontologyTrees: " + ontologyTrees.size() );
+            else
+                log.info( "ErmineJ file dump; ontologyTrees: " + ontologyTrees.size() );
 
             // ontologyTrees.iterator().next() is the disease Ontology, always at first position
             writeForErmineJ( ontologyTrees.iterator().next(), taxon, cacheMap, phenoCartageneSets );
@@ -2330,21 +2335,27 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Set<String> geneSymbols = new HashSet<>();
 
-        for ( Integer geneNCBI : t.getPublicGenesNBCI() ) {
+        if ( t != null ) {
+            log.info( "Writing ErmineJ: tree is not null" );
+            if ( t.getPublicGenesNBCI() != null ) {
+                log.info( "Writing ErmineJ: tree genes are not null" );
+                for ( Integer geneNCBI : t.getPublicGenesNBCI() ) {
 
-            if ( cacheMap.get( geneNCBI ) != null ) {
-                geneSymbols.add( cacheMap.get( geneNCBI ) );
-            } else {
-                Gene gene = this.geneService.findByNCBIId( geneNCBI );
-                if ( gene.getTaxon().equals( taxon ) ) {
-                    geneSymbols.add( gene.getOfficialSymbol() );
-                    cacheMap.put( geneNCBI, gene.getOfficialSymbol() );
-                } else {
-                    Gene homoGene = this.homologeneService.getHomologue( gene, taxon );
+                    if ( cacheMap.get( geneNCBI ) != null ) {
+                        geneSymbols.add( cacheMap.get( geneNCBI ) );
+                    } else {
+                        Gene gene = this.geneService.findByNCBIId( geneNCBI );
+                        if ( gene.getTaxon().equals( taxon ) ) {
+                            geneSymbols.add( gene.getOfficialSymbol() );
+                            cacheMap.put( geneNCBI, gene.getOfficialSymbol() );
+                        } else {
+                            Gene homoGene = this.homologeneService.getHomologue( gene, taxon );
 
-                    if ( homoGene != null ) {
-                        geneSymbols.add( homoGene.getOfficialSymbol() );
-                        cacheMap.put( geneNCBI, homoGene.getOfficialSymbol() );
+                            if ( homoGene != null ) {
+                                geneSymbols.add( homoGene.getOfficialSymbol() );
+                                cacheMap.put( geneNCBI, homoGene.getOfficialSymbol() );
+                            }
+                        }
                     }
                 }
             }
