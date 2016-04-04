@@ -19,18 +19,18 @@
 package ubic.gemma.model.genome;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 
 /**
- * 
+ * Represents a functionally transcribed unit in the genome, recognized by other databases (NCBI, Ensembl).
  */
-public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
+public abstract class Gene extends ChromosomeFeature {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.genome.Gene}.
@@ -39,8 +39,8 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
         /**
          * Constructs a new instance of {@link ubic.gemma.model.genome.Gene}.
          */
-        public static ubic.gemma.model.genome.Gene newInstance() {
-            return new ubic.gemma.model.genome.GeneImpl();
+        public static Gene newInstance() {
+            return new GeneImpl();
         }
 
     }
@@ -49,6 +49,7 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5693198926006383546L;
+
     private String officialSymbol;
 
     private String officialName;
@@ -57,19 +58,17 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
 
     private String ensemblId;
 
-    private Collection<GeneProduct> products = new java.util.HashSet<GeneProduct>();
+    private Collection<GeneProduct> products = new HashSet<GeneProduct>();
 
-    private Collection<GeneAlias> aliases = new java.util.HashSet<GeneAlias>();
+    private Collection<GeneAlias> aliases = new HashSet<GeneAlias>();
 
-    private ubic.gemma.model.genome.Taxon taxon;
+    private Taxon taxon;
 
-    private Collection<DatabaseEntry> accessions = new java.util.HashSet<DatabaseEntry>();
-
-    private Collection<BibliographicReference> citations = new java.util.HashSet<BibliographicReference>();
+    private Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
 
     private Multifunctionality multifunctionality;
 
-    private Collection<ubic.gemma.model.association.phenotype.PhenotypeAssociation> phenotypeAssociations = new java.util.HashSet<>();
+    private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -94,18 +93,7 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
     }
 
     /**
-     * <p>
-     * Papers referring to this gene.
-     * </p>
-     */
-    public Collection<BibliographicReference> getCitations() {
-        return this.citations;
-    }
-
-    /**
-     * <p>
      * An Ensembl ID for the gene.
-     * </p>
      */
     public String getEnsemblId() {
         return this.ensemblId;
@@ -154,10 +142,8 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
     }
 
     /**
-     * <p>
      * Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
      * is a denormalization for queries that don't care about location, just species-membership.
-     * </p>
      */
     public ubic.gemma.model.genome.Taxon getTaxon() {
         return this.taxon;
@@ -169,10 +155,6 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
 
     public void setAliases( Collection<GeneAlias> aliases ) {
         this.aliases = aliases;
-    }
-
-    public void setCitations( Collection<BibliographicReference> citations ) {
-        this.citations = citations;
     }
 
     public void setEnsemblId( String ensemblId ) {
@@ -203,7 +185,7 @@ public abstract class Gene extends ubic.gemma.model.genome.ChromosomeFeature {
         this.products = products;
     }
 
-    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
+    public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
     }
 
