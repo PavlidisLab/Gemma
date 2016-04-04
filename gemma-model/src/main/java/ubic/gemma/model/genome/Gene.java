@@ -130,7 +130,7 @@ public abstract class Gene extends ChromosomeFeature {
     /**
      * 
      */
-    public Collection<ubic.gemma.model.association.phenotype.PhenotypeAssociation> getPhenotypeAssociations() {
+    public Collection<PhenotypeAssociation> getPhenotypeAssociations() {
         return this.phenotypeAssociations;
     }
 
@@ -145,7 +145,7 @@ public abstract class Gene extends ChromosomeFeature {
      * Note that a Gene also has a chromosome, so the organism can be inferred that way as well. This direct association
      * is a denormalization for queries that don't care about location, just species-membership.
      */
-    public ubic.gemma.model.genome.Taxon getTaxon() {
+    public Taxon getTaxon() {
         return this.taxon;
     }
 
