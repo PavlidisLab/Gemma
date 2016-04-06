@@ -2371,9 +2371,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // do all children
-        if ( t.getChildren() != null ) {
-            for ( TreeCharacteristicValueObject children : t.getChildren() ) {
-                writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
+        if ( t != null ) {
+            if ( t.getChildren() != null ) {
+                for ( TreeCharacteristicValueObject children : t.getChildren() ) {
+                    writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
+                }
             }
         }
 
