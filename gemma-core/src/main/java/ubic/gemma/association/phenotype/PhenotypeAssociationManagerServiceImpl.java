@@ -1397,6 +1397,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
             
             log.info( "After symlink code; symlink now exists: " + symbolicLink.exists() );
+            log.info( "Right before ErmineJ; latest dir exists: " + mainFolder.exists() + " and is: "
+                    + mainFolder.toPath().toString() );
 
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), false );
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), true );
@@ -2369,8 +2371,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // do all children
-        for ( TreeCharacteristicValueObject children : t.getChildren() ) {
-            writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
+        if ( t.getChildren() != null ) {
+            for ( TreeCharacteristicValueObject children : t.getChildren() ) {
+                writeForErmineJ( children, taxon, cacheMap, phenoCartageneSets );
+            }
         }
 
     }
