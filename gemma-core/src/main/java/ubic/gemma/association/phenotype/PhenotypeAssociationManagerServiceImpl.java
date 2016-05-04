@@ -831,7 +831,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         StopWatch sw = new StopWatch();
         sw.start();
-        log.info( "Create PhenotypeAssociation on geneNCBI: " + evidence.getGeneNCBI() + " to "
+        log.debug( "Create PhenotypeAssociation on geneNCBI: " + evidence.getGeneNCBI() + " to "
                 + StringUtils.join( evidence.getPhenotypes(), "," ) );
 
         ValidateEvidenceValueObject validateEvidenceValueObject = null;
@@ -1308,7 +1308,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 
                         if ( i++ % 5000 == 0 ) {
-                            log.info( "Phenocarta dump of evidence at evidence number: " + i );
+                            log.debug( "Phenocarta dump of evidence at evidence number: " + i );
                         }
 
                         String pubmeds = "";
@@ -1396,8 +1396,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             Files.createSymbolicLink( symbolicLink.toPath(), mainFolder.toPath() );
             
-            log.info( "After symlink code; symlink now exists: " + symbolicLink.exists() );
-            log.info( "Right before ErmineJ; latest dir exists: " + mainFolder.exists() + " and is: "
+            log.debug( "After symlink code; symlink now exists: " + symbolicLink.exists() );
+            log.debug( "Right before ErmineJ; latest dir exists: " + mainFolder.exists() + " and is: "
                     + mainFolder.toPath().toString() );
 
             writeErmineJFile( ermineJFolderPath, disclaimer, this.taxonService.findByCommonName( "mouse" ), false );
@@ -2315,9 +2315,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             HashMap<Integer, String> cacheMap = new HashMap<>();
 
             if ( writeFolder.contains( "OMIM" ) )
-                log.info( "ErmineJ file dump, incl OMIM; ontologyTrees: " + ontologyTrees.size() );
+                log.debug( "ErmineJ file dump, incl OMIM; ontologyTrees: " + ontologyTrees.size() );
             else
-                log.info( "ErmineJ file dump; ontologyTrees: " + ontologyTrees.size() );
+                log.debug( "ErmineJ file dump; ontologyTrees: " + ontologyTrees.size() );
 
             // ontologyTrees.iterator().next() is the disease Ontology, always at first position
             writeForErmineJ( ontologyTrees.iterator().next(), taxon, cacheMap, phenoCartageneSets );
@@ -2338,9 +2338,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<String> geneSymbols = new HashSet<>();
 
         if ( t != null ) {
-            log.info( "Writing ErmineJ: tree is not null" );
+            log.debug( "Writing ErmineJ: tree is not null" );
             if ( t.getPublicGenesNBCI() != null ) {
-                log.info( "Writing ErmineJ: tree genes are not null" );
+                log.debug( "Writing ErmineJ: tree genes are not null" );
                 for ( Integer geneNCBI : t.getPublicGenesNBCI() ) {
 
                     if ( cacheMap.get( geneNCBI ) != null ) {
