@@ -54,6 +54,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
@@ -731,7 +732,51 @@ public class ExpressionExperimentController {
 
         return result;
     }
-
+    /**
+     * AJAX
+     * 
+     * @param id of an experimental factor
+     * @return A Map of biomaterial values and counts in format <value, count> of specified experimental factor
+     */
+    public Map<String, Integer> getCharDump(EntityDelegator e){
+    	
+    	if ( e == null || e.getId() == null) return null;
+    	
+    	//does the id actually point to a valid experiment?
+    	try{ExpressionExperiment ee = this.expressionExperimentService.load(e.getId());
+    		Collection<BioMaterial> bms = this.bioMaterialService.findByExperiment(ee);
+    		
+    		Map<String, Integer> charDumpResults = new CountingMap<>();
+    		
+        	for (BioMaterial bm: bms){
+        		Collection<Characteristic>characteristics = bm.getCharacteristics();
+        	
+        		for(Characteristic c : characteristics){
+        			//calls built-in toString method to string-ify bioMaterial
+        			String charString = c.toString();
+        			
+        			//if map already contains bioMaterial, increment the count;
+        			//else add in map with count of 1.
+        			if(charDumpResults.containsKey(charString)){
+        				
+        				int charVal = charDumpResults.get(charString)+1;
+        				
+        				charDumpResults.put(charString, charVal);
+        				
+        			}else{charDumpResults.put(charString, 1);}
+        		}
+        	
+        	}
+        	return charDumpResults;
+    		
+    		}catch(NullPointerException nps){return null;}
+    	
+    	
+    	
+		
+    	
+    	
+    }
     /**
      * Used to include the html for the qc table in an ext panel (without using a tag) (This method should probably be
      * in a service?)
