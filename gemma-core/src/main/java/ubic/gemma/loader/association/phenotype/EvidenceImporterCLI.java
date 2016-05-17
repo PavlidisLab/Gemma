@@ -646,8 +646,10 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         evidence.setIsNegativeEvidence( isNegativeEvidence );
         evidence.setOriginalPhenotype( originalPhenotype );
         evidence.setPhenotypeMapping( phenotypeMapping );
-        evidence.setRelationship( "gene-disease association" ); // ***have to change this per data src
-
+        evidence.setRelationship( "gene-disease association" );
+        if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) && description.contains( "marker/mechanism" ) )
+            evidence.setRelationship( "biomarker" );
+        
         if ( this.mapColumns.get( "Score" ) != null && this.mapColumns.get( "ScoreType" ) != null
                 && this.mapColumns.get( "Strength" ) != null ) {
 
