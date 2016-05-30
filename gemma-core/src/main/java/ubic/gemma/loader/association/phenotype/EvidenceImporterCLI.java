@@ -647,8 +647,10 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         evidence.setOriginalPhenotype( originalPhenotype );
         evidence.setPhenotypeMapping( phenotypeMapping );
         evidence.setRelationship( "gene-disease association" );
-        if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) && description.contains( "marker/mechanism" ) )
-            evidence.setRelationship( "biomarker" );
+        if ( externalDatabaseName.equalsIgnoreCase( "CTD" ) ) {
+            if ( description.contains( "marker/mechanism" ) ) evidence.setRelationship( "biomarker" );
+            if ( description.contains( "therapeutic" ) ) evidence.setRelationship( "therapeutic target" );
+        }
         
         if ( this.mapColumns.get( "Score" ) != null && this.mapColumns.get( "ScoreType" ) != null
                 && this.mapColumns.get( "Strength" ) != null ) {
