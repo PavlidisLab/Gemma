@@ -80,25 +80,24 @@ public class PubMedXMLFetcherTest {
     }
 
     /**
-     * 20301615 is a NCBI bookshelf article, not a paper
+     * 23865096 is a NCBI bookshelf article, not a paper
      * 
      * @throws Exception
      */
     @Test
     public final void testRetrieveByHTTPBookshelf() throws Exception {
         try {
-            BibliographicReference br = pmf.retrieveByHTTP( 20301615 );
+            BibliographicReference br = pmf.retrieveByHTTP( 23865096 );
 
             assertNotNull( br );
 
-            assertEquals( "Miles, Judith H; McCathren, Rebecca B; Stichter, Janine; Shinawi, Marwan",
-                    br.getAuthorList() );
+            assertEquals( "Tatton-Brown, Katrina; Rahman, Nazneen", br.getAuthorList() );
 
             assertEquals( "GeneReviews", br.getPublication().substring( 0, "GeneReviews".length() ) );
-            assertEquals( "Autism Spectrum Disorders", br.getTitle() );
+            assertEquals( "EZH2-Related Overgrowth", br.getTitle() );
 
             SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
-            assertEquals( "2003", f.format( br.getPublicationDate() ) );
+            assertEquals( "2013", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
             checkCause( e );
             return;
