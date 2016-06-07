@@ -100,14 +100,6 @@
 				</key>
 				<one-to-many class="ubic.gemma.model.common.description.DatabaseEntryImpl" />
 			</set>
-			<set name="citations" table="GENE_CITATIONS" lazy="true" fetch="select" inverse="false">
-				<key foreign-key="BIBLIOGRAPHIC_REFERENCE_GENES_FKC">
-					<column name="GENES_FK" sql-type="BIGINT" />
-				</key>
-				<many-to-many class="ubic.gemma.model.common.description.BibliographicReferenceImpl">
-					<column name="CITATIONS_FK" sql-type="BIGINT" />
-				</many-to-many>
-			</set>
 			<many-to-one name="multifunctionality" class="ubic.gemma.model.genome.gene.MultifunctionalityImpl"
 				cascade="all" lazy="proxy" fetch="select">
 				<column name="MULTIFUNCTIONALITY_FK" not-null="false" sql-type="BIGINT" unique="true" />
