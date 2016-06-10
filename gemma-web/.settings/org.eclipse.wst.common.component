@@ -5,22 +5,13 @@
       <wb-resource deploy-path="/WEB-INF/" source-path="/src/main/webapp/WEB-INF"/>
         <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
         <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
-        <dependent-module archiveName="gemma-core-1.8-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-core/gemma-core">
+        <dependent-module archiveName="gemma-core-1.9-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-core/gemma-core">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="gemma-mda-1.8-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-mda/gemma-mda">
+        <dependent-module archiveName="gemma-mda-1.9-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-mda/gemma-mda">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-        <dependent-module archiveName="gemma-model-1.8-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-model/gemma-model">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="gemma-gsec-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gsec/gsec">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="baseCode-1.0.16-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/baseCode/baseCode">
-            <dependency-type>uses</dependency-type>
-        </dependent-module>
-        <dependent-module archiveName="GEOMMTx-1.2-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/GEOMMTx/GEOMMTx">
+        <dependent-module archiveName="gemma-model-1.9-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/gemma-model/gemma-model">
             <dependency-type>uses</dependency-type>
         </dependent-module> 
       <property name="java-output-path" value="/gemma-web/target/Gemma/WEB-INF/classes"/>

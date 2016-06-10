@@ -148,3 +148,15 @@ gemma-web/.settings/org.eclipse.core.resources.prefs
 gemma-web/.classpath
 
 gemma-model/.classpath
+
+gemma-model/.classpath
+
+gemma-model/.classpath
+
+gemma-web/.classpath
+
+gemma-web/.settings/org.eclipse.core.resources.prefs
+
+*.prefs
+
+*.component
