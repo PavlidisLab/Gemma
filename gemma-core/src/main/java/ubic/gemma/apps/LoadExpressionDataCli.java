@@ -39,6 +39,7 @@ import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
@@ -197,9 +198,10 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                     if ( platformOnly ) {
                         Collection<?> designs = geoService.fetchAndLoad( accession, true, true, false, false, true,
                                 true );
+                        ArrayDesignService ads = getBean( ArrayDesignService.class );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            successObjects.add( ( ( Describable ) object ).getName()
+                            successObjects.add( ads.loadValueObject( ( ( ArrayDesign ) object ).getId() ).getName()
                                     + " ("
                                     + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next()
                                             .getAccession() + ")" );

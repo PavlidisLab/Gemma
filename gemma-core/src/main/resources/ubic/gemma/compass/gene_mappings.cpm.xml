@@ -21,7 +21,7 @@
 			<meta-data>official symbol</meta-data>
 		</property>
 		<component name="taxon" ref-alias="taxon" />
-		<component name="citations" ref-alias="bibliographicReference" />
+		<!-- <component name="citations" ref-alias="bibliographicReference" /> -->
 		<component name="products" ref-alias="geneProduct" />
 	</class>
 	<class name="genome.gene.GeneProductImpl" alias="geneProduct"

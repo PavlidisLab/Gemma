@@ -98,7 +98,7 @@ public class PubMedSearchTest {
         try {
             PubMedSearch pms = new PubMedSearch();
             Collection<String> searchTerms = new HashSet<String>();
-            searchTerms.add( "20301615" );
+            searchTerms.add( "23865096" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
             assertEquals( 1, actualResult.size() );
         } catch ( java.net.UnknownHostException e ) {
