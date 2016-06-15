@@ -139,7 +139,7 @@ public class BiomartEnsemblNcbiObjectGenerator {
             try {
                 parser.parse( taxonBiomartFile );
                 map = parser.getMap();
-                if ( map == null ) {
+                if ( map == null || map.isEmpty() ) {
                     throw new RuntimeException( "No valid objects could be parsed from biomart for taxon " + taxon
                             + " using file " + taxonBiomartFile );
                 }

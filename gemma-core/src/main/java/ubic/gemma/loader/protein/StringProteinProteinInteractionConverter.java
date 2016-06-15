@@ -48,24 +48,24 @@ import ubic.gemma.util.Settings;
  */
 public class StringProteinProteinInteractionConverter implements Converter<Object, Object> {
 
+    private static Log log = LogFactory.getLog( StringProteinProteinInteractionConverter.class );
+
+    /** The joining string between two protein ids to create the url link in string for the interaction */
+    private static final String PROTEIN2PROTEINLINK = "%0D";
+
     /** String url **/
     private static String stringUrl;
 
     /** Version of string being used */
     private static String stringVersion;
 
+    AtomicBoolean producerDone = new AtomicBoolean( false );
+
     /** The key is the ensembl protein id. */
     private Map<String, Ensembl2NcbiValueObject> ensembl2ncbi = null;
 
     /** Reference to external database as held in gemma system */
     private ExternalDatabase stringExternalDatabase;
-
-    private static Log log = LogFactory.getLog( StringProteinProteinInteractionConverter.class );
-
-    /** The joining string between two protein ids to create the url link in string for the interaction */
-    private static final String PROTEIN2PROTEINLINK = "%0D";
-
-    AtomicBoolean producerDone = new AtomicBoolean( false );
 
     /**
      * @param ensembl2ncbi Map of ensembl peptide ids to entrez/ncbi id genes.
@@ -81,10 +81,44 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
             throw new RuntimeException( new ConfigurationException( "stringVersion was null or empty" ) );
     }
 
+    /**
+     * Threaded conversion of domain objects to Gemma objects.
+     */
+    public void convert( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue,
+            final Collection<StringProteinProteinInteraction> stringProteinProteinInteractions ) {
+        // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
+        // then push the gene onto the geneQueue for loading
+        Thread convertThread = new Thread( new Runnable() {
+            @Override
+            public void run() {
+
+                try {
+                    for ( StringProteinProteinInteraction stringProteinProteinInteraction : stringProteinProteinInteractions ) {
+                        if ( stringProteinProteinInteraction == null ) {
+                            continue;
+                        }
+                        // converter
+                        Collection<Gene2GeneProteinAssociation> dataColl = convert( stringProteinProteinInteraction );
+                        // this returns a collection so split out and put on queue
+                        for ( Gene2GeneProteinAssociation gene2GeneProteinAssociation : dataColl ) {
+                            gene2GeneProteinAssociationQueue.put( gene2GeneProteinAssociation );
+                        }
+                    }
+                } catch ( InterruptedException e ) {
+                    log.info( "Interrupted." );
+                }
+                producerDone.set( true );
+            }
+
+        }, "Converter" );
+
+        convertThread.start();
+    }
+
     @Override
     public Collection<Object> convert( Collection<? extends Object> sourceDomainObjects ) {
         long startTime = System.currentTimeMillis();
-        Collection<Object> results = new HashSet<Object>();
+        Collection<Object> results = new HashSet<>();
         for ( Object object : sourceDomainObjects ) {
             results.add( this.convert( object ) );
         }
@@ -139,15 +173,15 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
 
         // empty if no mapping found
         if ( genesForProteinOne.isEmpty() ) {
-            log.warn( "No ncbi gene mapping for protein 1 " + stringProteinProteinInteraction.getProtein1() );
+            log.warn( "No ncbi gene mapping for protein 1: " + stringProteinProteinInteraction.getProtein1() );
         } else if ( genesForProteinTwo.isEmpty() ) {
-            log.warn( "No ncbi gene mapping for protein 2 " + stringProteinProteinInteraction.getProtein2() );
+            log.warn( "No ncbi gene mapping for protein 2: " + stringProteinProteinInteraction.getProtein2() );
         } else {
             // create the one to many mapping from ensembl to ncbi/entrez
             for ( Gene geneProtein1 : genesForProteinOne ) {
                 for ( Gene geneProtein2 : genesForProteinTwo ) {
                     Gene2GeneProteinAssociation gene2GeneProteinAssociation = Gene2GeneProteinAssociation.Factory
-                            .newInstance( geneProtein1, geneProtein2, 
+                            .newInstance( geneProtein1, geneProtein2,
                                     this.getDataBaseEntry( stringProteinProteinInteraction ),
                                     stringProteinProteinInteraction.getEvidenceVector(),
                                     stringProteinProteinInteraction.getCombined_score() );
@@ -160,6 +194,19 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     }
 
     /**
+     * Create a database entry which represents the external record as held in string
+     * 
+     * @param StringProteinProteinInteraction object which contains the two protein ids
+     * @return DatabaseEntry representing the record as held in string
+     */
+    public DatabaseEntry getDataBaseEntry( StringProteinProteinInteraction stringProteinProteinInteractionId ) {
+        String proteinProteinInteraction = this.getProteinProteinInteractionId( stringProteinProteinInteractionId );
+        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( proteinProteinInteraction, stringVersion,
+                stringUrl, stringExternalDatabase );
+        return databaseEntry;
+    }
+
+    /**
      * One ensemblProteinID can map to multiple ncbi genes. This method takes the ensembl gene and creates a collection
      * of entrez ncbi genes. It first has to remove the taxon id from the beginning of the peptide id as given by
      * string.
@@ -169,7 +216,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
      */
     public Collection<Gene> getNcbiGene( String ensemblProteinId ) {
         // log.debug("getting ncbi gene for ensembl id " + ensemblProteinId);
-        Collection<Gene> genes = new ArrayList<Gene>();
+        Collection<Gene> genes = new ArrayList<>();
 
         // in case species id is still on there from STRING like 12334.ENSD....
         String eid = ensemblProteinId.replaceFirst( "[0-9]+\\.", "" );
@@ -196,54 +243,6 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     }
 
     /**
-     * Threaded conversion of domain objects to Gemma objects.
-     */
-    public void convert( final BlockingQueue<Gene2GeneProteinAssociation> gene2GeneProteinAssociationQueue,
-            final Collection<StringProteinProteinInteraction> stringProteinProteinInteractions ) {
-        // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
-        // then push the gene onto the geneQueue for loading
-        Thread convertThread = new Thread( new Runnable() {
-            @Override
-            @SuppressWarnings("synthetic-access")
-            public void run() {
-
-                try {
-                    for ( StringProteinProteinInteraction stringProteinProteinInteraction : stringProteinProteinInteractions ) {
-                        if ( stringProteinProteinInteraction == null ) {
-                            continue;
-                        }
-                        // converter
-                        Collection<Gene2GeneProteinAssociation> dataColl = convert( stringProteinProteinInteraction );
-                        // this returns a collection so split out and put on queue
-                        for ( Gene2GeneProteinAssociation gene2GeneProteinAssociation : dataColl ) {
-                            gene2GeneProteinAssociationQueue.put( gene2GeneProteinAssociation );
-                        }
-                    }
-                } catch ( InterruptedException e ) {
-                    log.info( "Interrupted." );
-                }
-                producerDone.set( true );
-            }
-
-        }, "Converter" );
-
-        convertThread.start();
-    }
-
-    /**
-     * Create a database entry which represents the external record as held in string
-     * 
-     * @param StringProteinProteinInteraction object which contains the two protein ids
-     * @return DatabaseEntry representing the record as held in string
-     */
-    public DatabaseEntry getDataBaseEntry( StringProteinProteinInteraction stringProteinProteinInteractionId ) {
-        String proteinProteinInteraction = this.getProteinProteinInteractionId( stringProteinProteinInteractionId );
-        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( proteinProteinInteraction, stringVersion,
-                stringUrl, stringExternalDatabase );
-        return databaseEntry;
-    }
-
-    /**
      * This is a made up value for the accessionId which is the protein peptide id 1 and the protein peptide 2 combined
      * and separated by a percentage This is so that it can be sent as a whole to string to retrieve the record in
      * string
@@ -258,6 +257,17 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     }
 
     /**
+     * @return the stringExternalDatabase
+     */
+    public ExternalDatabase getStringExternalDatabase() {
+        return stringExternalDatabase;
+    }
+
+    public boolean isProducerDone() {
+        return this.producerDone.get();
+    }
+
+    /**
      * Set the map of ids
      * 
      * @param bioMartStringEntreGeneMapping
@@ -266,11 +276,8 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
         this.ensembl2ncbi = bioMartStringEntreGeneMapping;
     }
 
-    /**
-     * @return the stringExternalDatabase
-     */
-    public ExternalDatabase getStringExternalDatabase() {
-        return stringExternalDatabase;
+    public void setProducerDoneFlag( AtomicBoolean flag ) {
+        this.producerDone = flag;
     }
 
     /**
@@ -278,14 +285,6 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
      */
     public void setStringExternalDatabase( ExternalDatabase externalDatabase ) {
         this.stringExternalDatabase = externalDatabase;
-    }
-
-    public boolean isProducerDone() {
-        return this.producerDone.get();
-    }
-
-    public void setProducerDoneFlag( AtomicBoolean flag ) {
-        this.producerDone = flag;
     }
 
 }
