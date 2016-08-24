@@ -99,6 +99,7 @@ Ext.onReady( function() {
    /*
     * If we init before the tab is rendered, then the scroll bars don't show up.
     */
+   
    var experimentalFactorGrid = new Gemma.ExperimentalFactorGrid( {
       id : 'experimental-factor-grid',
       title : "Experimental Factors",
@@ -121,6 +122,16 @@ Ext.onReady( function() {
       editable : editable,
       taxonId : taxonId
    } );
+   var charDumpViewer = new Gemma.CharDumpViewer( {
+	      renderTo : "charDumpPanel",
+	      id : 'char-dump-panel',
+	      height : 670,
+	      eeId : eeId,
+	      //edId : edId,
+	      viewConfig : {
+	         forceFit : true
+	      },
+	   } );
 
    var efPanel = new Ext.Panel( {
       layout : 'border',
@@ -129,6 +140,7 @@ Ext.onReady( function() {
       items : [ experimentalFactorGrid, factorValueGrid ]
    } );
 
+   
    var bioMaterialEditor = new Gemma.BioMaterialEditor( {
       renderTo : "bioMaterialsPanel",
       id : 'biomaterial-grid-panel',
@@ -140,8 +152,17 @@ Ext.onReady( function() {
       },
       editable : editable
    } );
-
-   var tabPanel = new Ext.TabPanel( {
+   
+  
+   var cdPanel = new Ext.Panel( {
+  	      layout : 'border',
+  	      height : 670,
+  	      id : 'char-dump-panel',
+  	      renderTo : "charDumpPanel",
+ 	      items :  charDumpViewer
+   	 } );
+   
+     var tabPanel = new Ext.TabPanel( {
       renderTo : "experimentalDesignPanel",
       layoutOnTabChange : false,
       activeTab : 0,
@@ -152,17 +173,32 @@ Ext.onReady( function() {
       }, {
          contentEl : "bioMaterialsPanel",
          title : "Sample details"
-      } ]
+      } ,
+      //TODO:this is where you fill in the 3rd tab
+      //TODO: figure out how to deal with the thingy.
+      {
+    	  contentEl : "charDumpPanel",
+          title : "Extracted experiment details"
+      }]
    } );
-
+  
    /*
     * Only initialize once we are viewing the tab to help ensure the scroll bars are rendered right away.
     */
    var refreshNeeded = false;
+   //hack:
+//   var testBean = {
+//     id: eeId,
+//     classDelegatingFor: "ExpressionExperiment"};
 
+     
+//     var resultArray;
+     
    tabPanel.on( 'tabchange', function( panel, tab ) {
-      if ( refreshNeeded || !bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel' ) {
+      if ( refreshNeeded || !bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel'||
+    		  !charDumpViewer.firstInitDone && tab.contentEl =='charDumpPanel' ) {
          bioMaterialEditor.init();
+         charDumpViewer.init();
          refreshNeeded = false;
       }
    } );

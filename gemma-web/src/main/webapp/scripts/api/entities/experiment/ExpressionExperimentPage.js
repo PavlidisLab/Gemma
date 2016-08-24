@@ -123,7 +123,11 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
          title : 'Quantitation Types',
          itemId : 'quantitation',
          eeid : experimentDetails.id
-      } ) );
+      } ) 
+      //TODO: CHARDUMP TAB
+      
+      
+      );
 
       this.adjustForIsAdmin( isAdmin, this.editable );
 

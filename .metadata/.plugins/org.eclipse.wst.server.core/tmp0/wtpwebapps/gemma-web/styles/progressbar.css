@@ -1,0 +1,11 @@
+#progressBar {
+	padding-top: 5px;	
+	width: 500px;
+}
+
+#progress-bar-box-content {
+	width: 0;
+	height: 10px;
+	border-right: 1px solid #444444;
+	background: #9ACB34;
+}

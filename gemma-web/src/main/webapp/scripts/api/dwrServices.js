@@ -494,6 +494,12 @@ ExpressionExperimentController.getFactorValues = function( p0, callback ) {
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController', 'getFactorValues', p0,
       callback );
 };
+//mapping chardump
+//TODO:come back to this.
+ExpressionExperimentController.getCharDump = function( p0, callback ) {
+	   dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController', 'getCharDump', p0,
+	      callback );
+};
 ExpressionExperimentController.getExperimentalFactors = function( p0, callback ) {
    googleAnalyticsTrackPageviewIfConfigured( "/Gemma/ExpressionExperimentController/getExperimentalFactors" );
    dwr.engine._execute( ExpressionExperimentController._path, 'ExpressionExperimentController',

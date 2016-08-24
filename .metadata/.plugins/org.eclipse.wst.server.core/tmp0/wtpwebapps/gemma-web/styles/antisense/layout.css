@@ -1,0 +1,159 @@
+/* Based on a CSS Framework by Mike Stenhouse of Content with Style */
+	/* SITE SPECIFIC LAYOUT */
+body {
+	margin: 0;
+	padding: 0;
+	background: white top left repeat-x;
+//	text-align: left;
+}
+
+div#page {
+	width: 100%;
+	margin: 0 auto;
+	padding: 0;
+	text-align: left;
+}
+
+/* HEADER */
+div#headerclearnopadding {
+	margin: 0 0 2em 0;
+	padding: 0px;
+	text-align: left;
+	height: 50px; /* needed by IE 7 */
+	background-position: right;
+}
+
+div#switchLocale {
+	position: absolute;
+	right: 10px;
+}
+
+div#headerLeft {
+	float: left;
+}
+
+div#headerRight {
+	float: right;
+	text-align: right;
+}
+
+div#search {
+	float: right;
+	margin: 0px;
+	padding: 2px 10px 10px 10px;
+}
+
+/* END HEADER */ /* CONTENT */
+div#content {
+	padding-left:0px;
+	text-align: left;
+}
+
+body#error #content {
+	margin-top: 40px;
+}
+
+/* MAIN */
+div#main {
+	padding-left: 0px;
+}
+
+div .padded{
+	padding-left:20px;
+	text-align: left;
+}
+
+div#main.home {
+	margin: 10px;
+	/* border-left: 1px dotted #CCCCCC; */
+}
+
+div#main form ul li {
+	list-style-type: none;
+	margin-left: 0;
+}
+
+/* END MAIN */ /* SUB */
+div#sub h2 {
+	margin-bottom: 5px;
+}
+
+div#sub ul {
+	margin: 0;
+}
+
+div#sub ul li {
+	list-style-type: none;
+	margin-left: 0px;
+	padding-bottom: 10px;
+}
+
+/* END SUB */ /* END CONTENT */ /* FOOTER */
+div#footer {
+	color: #666666;
+	width: 100%;
+	margin: 0px;
+	padding-top: 30px;
+	text-align: left;
+	font-size: 0.9em;
+	float: left;
+}
+
+div#footer .left {
+	float: left;
+	padding-left:20px;
+}
+
+div#footer div#divider {
+	margin: 0 0 4px 0;
+	border-top: 1px solid #abc;
+}
+
+/* END FOOTER */ /* END LAYOUT */ /* custom layout for data summary */
+.datasummaryarea {
+	float: right;
+}
+
+.datasummary {
+	border-width: 1px;
+	border-spacing: 2px;
+	border-style: outset outset outset outset;
+	border-color: #0000EE blue blue #0000EE;
+	border-collapse: separate;
+	background-color: white;
+	float: right;
+	font-size: 0.9em;
+}
+
+.datasummary th {
+	border-width: 1px 1px 1px 1px;
+	padding: 0px;
+	border-style: outset outset outset outset;
+	border-color: blue blue blue blue;
+	background-color: white;
+	-moz-border-radius: 0px 0px 0px 0px;
+}
+
+.datasummary td {
+	font-size: 0.9em;
+	margin: 0 0 0 0;
+	padding: 1px;
+}
+
+.datasummary td {
+	border-width: 1px 1px 1px 1px;
+	padding: 0px;
+	border-style: none none none none;
+	border-color: gray gray gray gray;
+	background-color: white;
+	-moz-border-radius: 0px 0px 0px 0px;
+}
+
+table.list {
+	border-width: 1px 2px 1px 2px;
+	border-spacing: 4px;
+	border-style: outset outset outset outset;
+	border-color: gray gray gray gray;
+	border-collapse: separate;
+	background-color: white;
+}

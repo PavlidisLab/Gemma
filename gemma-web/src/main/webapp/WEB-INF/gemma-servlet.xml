@@ -314,6 +314,7 @@
 			<dwr:include method="updatePubMed" />
 			<dwr:include method="removePrimaryPublication" />
 			<dwr:include method="getAnnotation" />
+			<dwr:include method="getCharDump" />
 			<dwr:include method="getExperimentalFactors" />
 			<dwr:include method="getFactorValues" />
 			<dwr:include method="getDesignMatrixRows" />
@@ -816,6 +817,7 @@
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FactorValueValueObject" />
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.biomaterial.BioMatFactorCountObject" />
 
 		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject" />

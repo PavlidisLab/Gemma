@@ -1,0 +1,1 @@
+Items here are not part of the global bundle but are loaded for specific pages. They (always?) contain a Ext.onReady call. Executing them in the wrong context will causer errors.

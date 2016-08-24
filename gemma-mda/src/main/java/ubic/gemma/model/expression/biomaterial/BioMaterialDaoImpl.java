@@ -82,7 +82,8 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
 
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         return this
                 .getHibernateTemplate()

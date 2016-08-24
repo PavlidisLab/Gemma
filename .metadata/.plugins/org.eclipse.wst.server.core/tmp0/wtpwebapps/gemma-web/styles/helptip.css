@@ -1,0 +1,74 @@
+/*
+	Notice that IE has a display problem if the help link is on
+	the last line of a container with no padding. If this is the
+	case increase the padding bottom to at least 1px
+	
+	  $Id$
+*/
+a.errorLink {
+	background: transparent;
+	text-decoration: none;
+	cursor: help;
+}
+
+a.errorLink:hover {
+	background: transparent;
+	color: black;
+}
+
+a.helpLink {
+	color: Green;
+	text-decoration: none;
+	cursor: help;
+}
+
+a.helpLink:hover {
+	color: Red;
+	text-decoration: none;
+}
+
+.helpTooltip, .helpWideTooltip {
+	position: absolute;
+	
+	border: 1px Solid WindowFrame;
+	background: Infobackground;
+	color: InfoText; 
+	font: Status-Bar;
+	padding: 3px;
+	filter: progid : DXImageTransform . Microsoft .
+		Shadow(color = "#777777", Direction = 135, Strength = 3);
+	z-index: 10000;;
+	font: StatusBar;
+}
+
+.helpTooltip {
+	width: 250px;
+}
+
+/* added by PP */
+.helpWideTooltip {
+	width: 400px;
+}
+
+.helpTooltip a,.helpTooltip a:hover {
+	color: blue !important;
+	background: none;
+}
+
+
+.x-tip-gold .x-tip-tc, .x-tip-gold .x-tip-tl, .x-tip-gold .x-tip-tr, .x-tip-gold .x-tip-bc, .x-tip-gold .x-tip-bl, .x-tip-gold .x-tip-br, .x-tip-gold .x-tip-ml, .x-tip-gold .x-tip-mr {
+	background-image: url(/Gemma/images/documentation/tip-sprite-gold.gif);
+}
+
+.x-tip-gold .x-tip-anchor {
+    background-image:url(/Gemma/images/documentation/tip-anchor-sprite-gold.gif);
+}
+
+/** Added by Thea**/
+.x-tip-yellow .x-tip-tc, .x-tip-yellow .x-tip-tl, .x-tip-yellow .x-tip-tr, .x-tip-yellow .x-tip-bc, .x-tip-yellow .x-tip-bl, .x-tip-yellow .x-tip-br, .x-tip-yellow .x-tip-ml, .x-tip-yellow .x-tip-mr {
+	background-image: url(/Gemma/images/documentation/tip-sprite-yellow.gif);
+}
+
+.x-tip-yellow .x-tip-anchor {
+    background-image:url(/Gemma/images/documentation/tip-anchor-sprite-yellow.gif);
+}

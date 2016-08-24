@@ -14,9 +14,11 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ubic.basecode.dataStructure.CountingMap;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -32,6 +36,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+//import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author pavlidis
@@ -96,7 +101,6 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     public ExpressionExperiment getExpressionExperiment( Long id ) {
         return this.getBioMaterialDao().getExpressionExperiment( id );
     }
-
     /*
      * (non-Javadoc)
      * 
@@ -159,6 +163,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
     /**
      * @param bioMaterial
+     * 
      * @return @
      */
     @Override
@@ -185,7 +190,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     protected Collection<BioMaterial> handleLoadAll() {
         return ( Collection<BioMaterial> ) this.getBioMaterialDao().loadAll();
     }
@@ -326,4 +332,46 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         assert !bm.getFactorValues().isEmpty();
         return bm;
     }
+
+	@Override
+	public Collection<BioMatFactorCountObject> charDumpService(ExpressionExperiment ee) {
+		
+    		Collection<BioMaterial> bms = this.findByExperiment(ee);
+    		this.thaw(bms);
+    		
+    		Map<String, Integer> charDumpResults = new CountingMap<>();
+    		
+    		
+        	for (BioMaterial bm: bms){
+        		
+        		Collection<Characteristic>characteristics = bm.getCharacteristics();
+        	
+        		for(Characteristic c : characteristics){
+        			//calls built-in toString method to string-ify bioMaterial
+        			String charString = c.getCategory() +": "+ c.getValue();
+        			System.out.println(charString);
+        			
+        			//if map already contains bioMaterial, increment the count;
+        			//else add in map with count of 1.
+        			if(charDumpResults.containsKey(charString)){
+        				
+        				int charVal = charDumpResults.get(charString)+1;
+        				
+        				charDumpResults.put(charString, charVal);
+        				
+        			}
+        			else{charDumpResults.put(charString, 1);}
+        		
+        		}
+        	}
+        	
+        	Collection<BioMatFactorCountObject> toReturn = new HashSet<>();
+        	
+        	for (String key : charDumpResults.keySet()){
+        		BioMatFactorCountObject toAdd = new BioMatFactorCountObject(ee.getId(), key, charDumpResults.get(key));
+        		toReturn.add(toAdd);
+        	}
+      	
+        		return toReturn;
+   }
 }

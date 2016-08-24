@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -14,158 +15,168 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.common.description.DatabaseEntry;
+
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.job.progress.ProgressStatusService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderServiceImpl;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.ExternalDatabase;
+
+
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.model.expression.biomaterial.BioMaterialDaoImpl;
+import ubic.gemma.model.expression.biomaterial.BioMatFactorCountObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.biomaterial.BioMaterialServiceImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController;
 import ubic.gemma.web.remote.EntityDelegator;
-public class CharDumpTest extends BaseSpringContextTest{
+
+public class CharDumpTest extends BaseSpringContextTest {
+
+	@Autowired
+	private ProgressStatusService progressStatusService;
+
+	@Autowired
+	private TaskRunningService taskRunningService;
+
+
+	private String adName = RandomStringUtils.randomAlphabetic(10);
+
+	@Autowired
+	private ExpressionExperimentService eeService;
 	
 	@Autowired
-    private ProgressStatusService progressStatusService;
-
-    @Autowired
-    private TaskRunningService taskRunningService;
-
-    private ExpressionExperiment ee;
-
-    private String adName = RandomStringUtils.randomAlphabetic( 10 );
-
-    @Autowired
-    private ExpressionExperimentService eeService;
-    
-    private BioMaterialService bioMaterialService;
-    
-    private BioMaterial bioMat;
-
-    @Autowired
-    private ExperimentalDesignImporter experimentalDesignImporter;
-
-    @Autowired
-    private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
-
-    @Autowired
-    private AclTestUtils aclTestUtils;
-
+	private BioMaterialService bioMaterialService;
 	
-	private static ExpressionExperimentController testController;
-	private Map<String, Integer> testMap;
-    private EntityDelegator testDelegator;
-    
-    @After
-    public void tearDown() {
-        if ( ee != null ) {
-            eeService.delete( ee );
-        }
-    }
+
+	@Autowired
+	private ExperimentalDesignImporter experimentalDesignImporter;
+
+	@Autowired
+	private SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
+
+	@Autowired
+	private AclTestUtils aclTestUtils;
+
+	//private static ExpressionExperimentController testController;
+	private ExpressionExperiment ee;
+	private Collection<BioMatFactorCountObject> testMap;
+	private EntityDelegator testDelegator;
+	private String searchkeyName;
+	private String searchkeyAcc;
+	private Collection<BioMatFactorCountObject> testCharDump;
+
+	 private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
+
+	 ExternalDatabase ed;
+	 String accession;
+	 String contactName;
+	 boolean persisted = false;
+
+	@After
+	public void tearDown() {
+		if (ee != null) {
+			eeService.delete(ee);
+		}
+	}
 
 	@Before
-	public void setUp() throws Exception{
-		testController = new ExpressionExperimentController();
+	// TODO:refactor tests for biomat-service
+	public void setUp() throws Exception {
+		log.info("Starting setup");
 		testDelegator = new EntityDelegator();
-		//initialize the test maps as an empty map
-		testMap = new CountingMap<>();
+		BioMaterial testbm = this.getTestPersistentBioMaterial();
+		this.bioMaterialService.findOrCreate(testbm);
 		
-		 	SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
+		searchkeyName = testbm.getName();
+		searchkeyAcc = testbm.getExternalAccession().getAccession();
 
-	        Taxon human = taxonService.findByCommonName( "human" );
+		// create a couple more.
+		for (int i = 0; i < 100; i++) {
+			this.bioMaterialService.findOrCreate(this.getTestPersistentBioMaterial());
+		}
 
-	        String eeShortName = RandomStringUtils.randomAlphabetic( 10 );
-	        metaData.setShortName( eeShortName );
-	        metaData.setDescription( "bar" );
-	        metaData.setIsRatio( false );
-	        metaData.setTaxon( human );
-	        metaData.setQuantitationTypeName( "rma" );
-	        metaData.setScale( ScaleType.LOG2 );
-	        metaData.setType( StandardQuantitationType.AMOUNT );
+		 if ( !persisted ) {
+		 ee = this.getTestPersistentCompleteExpressionExperiment( false );
+		 ee.setName( EE_NAME );
+		
+		 DatabaseEntry accessionEntry = this.getTestPersistentDatabaseEntry();
+		 accession = accessionEntry.getAccession();
+		 ed = accessionEntry.getExternalDatabase();
+		 ee.setAccession( accessionEntry );
+//		
+		 eeService.update( ee );
+		 ee = eeService.thaw( ee );
+		 persisted = true;
+		 testCharDump = bioMaterialService.charDumpService(ee.getId());
+		 System.out.print(testCharDump.toString());
+		
+		 } else {
+		 log.debug( "Skipping making new ee for test" );
+		 }
+		 
+		 
 
-	        ArrayDesign ad = ArrayDesign.Factory.newInstance();
-
-	        ad.setShortName( adName );
-	        ad.setName( "foobly foo" );
-	        ad.setPrimaryTaxon( human );
-	        ad.setTechnologyType( TechnologyType.ONECOLOR );
-
-	        metaData.getArrayDesigns().add( ad );
-	       
-	        try (InputStream data = this.getClass().getResourceAsStream(
-	                "/data/loader/expression/experimentalDesignTestData.txt" );) {
-
-	            ee = simpleExpressionDataLoaderService.create( metaData, data );
-	            //TODO: figure out how to do setbioassays
-	            bioMat = bioMaterialService.create(getTestPersistentBioMaterial());
-	            Collection<BioAssay>testBioAssay = new ArrayList<>();
-	            ee.setBioAssays(testBioAssay);
-	        }
-	        ee = eeService.thawLite( ee );
-	        //TODO: associate expression experiment with biomats
+//		String eeShortName = RandomStringUtils.randomAlphabetic(10);
+//		metaData.setShortName(eeShortName);
+//		metaData.setDescription("bar");
+//		metaData.setIsRatio(false);
+//		metaData.setTaxon(human);
+//		metaData.setQuantitationTypeName("rma");
+//		metaData.setScale(ScaleType.LOG2);
+//		metaData.setType(StandardQuantitationType.AMOUNT);
+//
+//			// TODO: figure out how to do setbioassays
+		ee = eeService.thawLite(ee);
+//		// TODO: associate expression experiment with biomats
+		log.info("Ending setup");
 	}
-																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																
+
 	@Test
-	/**test for return value for null Delegator
-	 */																																																																																																																																																																																																																																																																					
+	/**
+	 * test for return value for null Delegator
+	 */
 	public void testNullDelegator() {
-		assertTrue(true);
-		Map<String, Integer> nullMap = testController.getCharDump(testDelegator);
-		assertEquals(nullMap,null);
 		
+		long nullExperimentid = 0;
+		Collection<BioMatFactorCountObject>nullMap = bioMaterialService.charDumpService(nullExperimentid);	
+		for (BioMatFactorCountObject object : nullMap)
+		{
+			System.out.println(object.toString());
+		}
 	}
 	
-	@Test
-	/**test for return value for Delegator with null id
-	 */
-	public void testNullId(){
-		
-		Map<String, Integer> nullIdMap = testController.getCharDump(testDelegator);
-		assertEquals(nullIdMap,null);
-	}
-	
-	@Test
-	/**test for return value for Delegator with invalid id
-	 */
-	public void testInvalidId(){
-		
-		
-		testDelegator.setId( (long) 999999999);//intentionally invalid
-		assertTrue(testDelegator.getId()!=ee.getId());
-		Map<String, Integer> invalidIdMap = testController.getCharDump(testDelegator);
-		assertEquals(invalidIdMap,null);
-	}
-	
+
 	@Test
 	/**test for return value for valid Delegator
 	 */
-	public void testValidDelegator(){
-		
-		assertTrue(true);
-		//TODO: find something to set as valid delegator
-		testDelegator.setId(ee.getId());
-		assertTrue(ee.getId()==testDelegator.getId());
-		
-		Map<String, Integer> validIdMap = testController.getCharDump(testDelegator);
-		
-//		testMap = somethingToDoWithMap
-		//TODO: figure out what the expected value should be
-		
-		assertEquals(validIdMap, testMap);
-		//TODO: comment out after figuring out what expected value should be
-		//fail("you haven't implemented the method yet genius.");
+	public void testValidDelegator() {
+			
+		try{
+			testMap = bioMaterialService.charDumpService(ee.getId());
+			assertEquals(testMap, testCharDump);
+			for (BioMatFactorCountObject object : testMap)
+			{
+				System.out.print(object.toString());
+			}
+			}
+			catch(NullPointerException e){
+				fail("should not be null");
+			}
+	
 	}
-	//other tests
+	// other tests
 
 }

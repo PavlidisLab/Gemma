@@ -1,0 +1,24 @@
+<!--  
+    Sitemesh configuration 
+    
+    $Id$
+    
+-->
+<decorators defaultdir="/decorators">
+    <excludes>
+        <pattern>/resources/*</pattern>
+    </excludes> 
+    
+    <decorator name="default" page="default.jsp">   
+        <pattern>/*</pattern>
+    </decorator>
+    <!--  Need this filter so that ajax json responses don't get decorated 
+          Would have rather used an exclude but they don't work -
+     -->
+    
+    <decorator name="ajax">
+        <pattern>/uploadFile*</pattern>
+    </decorator>
+
+    
+</decorators>

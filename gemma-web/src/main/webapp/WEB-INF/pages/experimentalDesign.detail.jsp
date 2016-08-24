@@ -117,3 +117,6 @@
 <div id="factorValuePanel" class="x-hide-display" style="margin-bottom: 1em;"></div>
 
 <div id="bioMaterialsPanel" class="x-hide-display"></div>
+
+<!-- lets hope this works for charDump -->
+<div id="charDumpPanel" class="x-hide-display" style="margin-bottom: 1em;"></div>

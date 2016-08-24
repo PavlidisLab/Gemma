@@ -1,0 +1,542 @@
+<!-- Compass Mapping DTD.
+
+<!DOCTYPE compass-core-mapping PUBLIC 
+    "-//Compass/Compass Core Mapping DTD 2.2//EN"
+    "http://www.compass-project.org/dtd/compass-core-mapping-2.2.dtd">
+-->
+
+<!ELEMENT compass-core-mapping (
+    (contract|class|resource|resource-contract|xml-object|xml-contract|root-json-object|json-contract)*
+)>
+    <!ATTLIST compass-core-mapping package CDATA #IMPLIED>
+
+<!ELEMENT json-contract (
+    json-id*,
+    (json-analyzer?),
+    (json-boost?),
+    (json-property|json-array|json-object)*,
+    (json-content?)
+)>
+    <!ATTLIST json-contract alias CDATA #REQUIRED>
+    <!ATTLIST json-contract extends CDATA #IMPLIED>
+    <!ATTLIST json-contract analyzer CDATA #IMPLIED>
+
+<!ELEMENT root-json-object (
+    all?,
+    sub-index-hash?,
+    json-id*,
+    (json-analyzer?),
+    (json-boost?),
+    (json-property|json-array|json-object)*,
+    (json-content?)
+)>
+    <!ATTLIST root-json-object alias CDATA #REQUIRED>
+    <!ATTLIST root-json-object sub-index CDATA #IMPLIED>
+    <!ATTLIST root-json-object extends CDATA #IMPLIED>
+    <!ATTLIST root-json-object analyzer CDATA #IMPLIED>
+    <!ATTLIST root-json-object boost CDATA #IMPLIED>
+    <!ATTLIST root-json-object dynamic (true|false) #IMPLIED>
+    <!ATTLIST root-json-object dynamic-naming-type (plain|full) #IMPLIED>
+    <!ATTLIST root-json-object spell-check (include|exclude|na) "na">
+
+<!ELEMENT json-object (
+    (json-property|json-array|json-object)*
+)>
+    <!ATTLIST json-object name CDATA #IMPLIED>
+    <!ATTLIST json-object converter CDATA #IMPLIED>
+    <!ATTLIST json-object dynamic (true|false) #IMPLIED>
+    <!ATTLIST json-object dynamic-naming-type (plain|full) #IMPLIED>
+
+<!ELEMENT json-array (
+    (json-property|json-object|json-array)?
+)>
+    <!ATTLIST json-array name CDATA #REQUIRED>
+    <!ATTLIST json-array index-name CDATA #IMPLIED>
+    <!ATTLIST json-array converter CDATA #IMPLIED>
+    <!ATTLIST json-array dynamic (true|false) #IMPLIED>
+    <!ATTLIST json-array dynamic-naming-type (plain|full) #IMPLIED>
+
+<!ELEMENT json-id EMPTY
+>
+    <!ATTLIST json-id name CDATA #REQUIRED>
+    <!ATTLIST json-id analyzer CDATA #IMPLIED>
+    <!ATTLIST json-id converter CDATA #IMPLIED>
+    <!ATTLIST json-id value-converter CDATA #IMPLIED>
+    <!ATTLIST json-id format CDATA #IMPLIED>
+    <!ATTLIST json-id omit-norms (true|false) "true">
+    <!ATTLIST json-id omit-tf (true|false) "true">
+    <!ATTLIST json-id spell-check (include|exclude|na) "na">
+
+<!ELEMENT json-property EMPTY
+>
+    <!ATTLIST json-property name CDATA #IMPLIED>
+    <!ATTLIST json-property index-name CDATA #IMPLIED>
+    <!ATTLIST json-property naming-type (plain|full) #IMPLIED>
+    <!ATTLIST json-property store (no|yes|compress) #IMPLIED>
+    <!ATTLIST json-property index (no|analyzed|not_analyzed|tokenized|un_tokenized) #IMPLIED>
+    <!ATTLIST json-property term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST json-property omit-norms (true|false) #IMPLIED>
+    <!ATTLIST json-property omit-tf (true|false) #IMPLIED>
+    <!ATTLIST json-property reverse (no|reader|string) "no">
+    <!ATTLIST json-property null-value CDATA #IMPLIED>
+    <!ATTLIST json-property analyzer CDATA #IMPLIED>
+    <!ATTLIST json-property override (true|false) "false">
+    <!ATTLIST json-property exclude-from-all (true|false|yes|no|no_analyzed) #IMPLIED>
+    <!ATTLIST json-property converter CDATA #IMPLIED>
+    <!ATTLIST json-property value-converter CDATA #IMPLIED>
+    <!ATTLIST json-property format CDATA #IMPLIED>
+    <!ATTLIST json-property boost CDATA #IMPLIED>
+    <!ATTLIST json-property spell-check (include|exclude|na) "na">
+
+<!ELEMENT json-content EMPTY
+>
+    <!ATTLIST json-content name CDATA #REQUIRED>
+    <!ATTLIST json-content store (yes|compress) "yes">
+    <!ATTLIST json-content converter CDATA #IMPLIED>
+
+<!ELEMENT json-analyzer EMPTY
+>
+    <!ATTLIST json-analyzer name CDATA #REQUIRED>
+    <!ATTLIST json-analyzer null-analyzer CDATA #IMPLIED>
+    <!ATTLIST json-analyzer converter CDATA #IMPLIED>
+
+<!ELEMENT json-boost EMPTY
+>
+    <!ATTLIST json-boost name CDATA #REQUIRED>
+    <!ATTLIST json-boost default CDATA #IMPLIED>
+    <!ATTLIST json-boost converter CDATA #IMPLIED>
+
+<!ELEMENT xml-contract (
+    xml-id*,
+    (xml-analyzer?),
+    (xml-boost?),
+    (xml-property)*,
+    (xml-content?)
+)>
+    <!ATTLIST xml-contract alias CDATA #REQUIRED>
+    <!ATTLIST xml-contract extends CDATA #IMPLIED>
+    <!ATTLIST xml-contract analyzer CDATA #IMPLIED>
+
+<!ELEMENT xml-object (
+    all?,
+    sub-index-hash?,
+    xml-id*,
+    (xml-analyzer?),
+    (xml-boost?),
+    (xml-property)*,
+    (xml-content?)
+)>
+    <!ATTLIST xml-object alias CDATA #REQUIRED>
+    <!ATTLIST xml-object sub-index CDATA #IMPLIED>
+    <!ATTLIST xml-object extends CDATA #IMPLIED>
+    <!ATTLIST xml-object xpath CDATA #IMPLIED>
+    <!ATTLIST xml-object analyzer CDATA #IMPLIED>
+    <!ATTLIST xml-object boost CDATA #IMPLIED>
+    <!ATTLIST xml-object spell-check (include|exclude|na) "na">
+
+<!ELEMENT xml-id EMPTY
+>
+    <!ATTLIST xml-id name CDATA #REQUIRED>
+    <!ATTLIST xml-id xpath CDATA #REQUIRED>
+    <!ATTLIST xml-id analyzer CDATA #IMPLIED>
+    <!ATTLIST xml-id converter CDATA #IMPLIED>
+    <!ATTLIST xml-id value-converter CDATA #IMPLIED>
+    <!ATTLIST xml-id format CDATA #IMPLIED>
+    <!ATTLIST xml-id omit-norms (true|false) "true">
+    <!ATTLIST xml-id omit-tf (true|false) "true">
+    <!ATTLIST xml-id spell-check (include|exclude|na) "na">
+
+<!ELEMENT xml-property EMPTY
+>
+    <!ATTLIST xml-property xpath CDATA #REQUIRED>
+    <!ATTLIST xml-property name CDATA #IMPLIED>
+    <!ATTLIST xml-property store (no|yes|compress) #IMPLIED>
+    <!ATTLIST xml-property index (no|analyzed|not_analyzed|tokenized|un_tokenized) #IMPLIED>
+    <!ATTLIST xml-property term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST xml-property omit-norms (true|false) #IMPLIED>
+    <!ATTLIST xml-property omit-tf (true|false) #IMPLIED>
+    <!ATTLIST xml-property reverse (no|reader|string) "no">
+    <!ATTLIST xml-property null-value CDATA #IMPLIED>
+    <!ATTLIST xml-property analyzer CDATA #IMPLIED>
+    <!ATTLIST xml-property override (true|false) "true">
+    <!ATTLIST xml-property exclude-from-all (true|false|yes|no|no_analyzed) #IMPLIED>
+    <!ATTLIST xml-property converter CDATA #IMPLIED>
+    <!ATTLIST xml-property value-converter CDATA #IMPLIED>
+    <!ATTLIST xml-property format CDATA #IMPLIED>
+    <!ATTLIST xml-property boost CDATA #IMPLIED>
+    <!ATTLIST xml-property spell-check (include|exclude|na) "na">
+
+<!ELEMENT xml-content EMPTY
+>
+    <!ATTLIST xml-content name CDATA #REQUIRED>
+    <!ATTLIST xml-content store (yes|compress) "yes">
+    <!ATTLIST xml-content converter CDATA #IMPLIED>
+
+<!ELEMENT xml-analyzer EMPTY
+>
+    <!ATTLIST xml-analyzer name CDATA #REQUIRED>
+    <!ATTLIST xml-analyzer xpath CDATA #REQUIRED>
+    <!ATTLIST xml-analyzer null-analyzer CDATA #IMPLIED>
+    <!ATTLIST xml-analyzer converter CDATA #IMPLIED>
+
+<!ELEMENT xml-boost EMPTY
+>
+    <!ATTLIST xml-boost name CDATA #REQUIRED>
+    <!ATTLIST xml-boost xpath CDATA #REQUIRED>
+    <!ATTLIST xml-boost default CDATA #IMPLIED>
+    <!ATTLIST xml-boost converter CDATA #IMPLIED>
+
+<!ELEMENT resource-contract (
+    resource-id*,
+    (resource-analyzer?),
+    (resource-boost?),
+    (resource-property)*
+)>
+    <!ATTLIST resource-contract alias CDATA #REQUIRED>
+    <!ATTLIST resource-contract extends CDATA #IMPLIED>
+    <!ATTLIST resource-contract analyzer CDATA #IMPLIED>
+
+<!ELEMENT resource (
+    all?,
+    sub-index-hash?,
+    resource-id*,
+    (resource-analyzer?),
+    (resource-boost?),
+    (resource-property)*
+)>
+    <!ATTLIST resource alias CDATA #REQUIRED>
+    <!ATTLIST resource sub-index CDATA #IMPLIED>
+    <!ATTLIST resource extends CDATA #IMPLIED>
+    <!ATTLIST resource analyzer CDATA #IMPLIED>
+    <!ATTLIST resource boost CDATA #IMPLIED>
+    <!ATTLIST resource spell-check (include|exclude|na) "na">
+
+<!ELEMENT resource-id EMPTY
+>
+    <!ATTLIST resource-id name CDATA #REQUIRED>
+    <!ATTLIST resource-id analyzer CDATA #IMPLIED>
+    <!ATTLIST resource-id converter CDATA #IMPLIED>
+    <!ATTLIST resource-id exclude-from-all (true|false|yes|no|no_analyzed) #IMPLIED>
+    <!ATTLIST resource-id boost CDATA #IMPLIED>
+    <!ATTLIST resource-id omit-norms (true|false) "true">
+    <!ATTLIST resource-id omit-tf (true|false) "true">
+    <!ATTLIST resource-id spell-check (include|exclude|na) "na">
+    <!ATTLIST resource-id format CDATA #IMPLIED>
+
+<!ELEMENT resource-property EMPTY
+>
+    <!ATTLIST resource-property name CDATA #REQUIRED>
+    <!ATTLIST resource-property store (no|yes|compress) #IMPLIED>
+    <!ATTLIST resource-property index (no|analyzed|not_analyzed|tokenized|un_tokenized) #IMPLIED>
+    <!ATTLIST resource-property term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST resource-property omit-norms (true|false) #IMPLIED>
+    <!ATTLIST resource-property omit-tf (true|false) #IMPLIED>
+    <!ATTLIST resource-property reverse (no|reader|string) "no">
+    <!ATTLIST resource-property analyzer CDATA #IMPLIED>
+    <!ATTLIST resource-property null-value CDATA #IMPLIED>
+    <!ATTLIST resource-property override (true|false) "true">
+    <!ATTLIST resource-property exclude-from-all (true|false|yes|no|no_analyzed) #IMPLIED>
+    <!ATTLIST resource-property converter CDATA #IMPLIED>
+    <!ATTLIST resource-property boost CDATA #IMPLIED>
+    <!ATTLIST resource-property spell-check (include|exclude|na) "na">
+    <!ATTLIST resource-property format CDATA #IMPLIED>
+
+<!ELEMENT resource-analyzer EMPTY
+>
+    <!ATTLIST resource-analyzer name CDATA #REQUIRED>
+    <!ATTLIST resource-analyzer null-analyzer CDATA #IMPLIED>
+    <!ATTLIST resource-analyzer converter CDATA #IMPLIED>
+
+<!ELEMENT resource-boost EMPTY
+>
+    <!ATTLIST resource-boost name CDATA #REQUIRED>
+    <!ATTLIST resource-boost default CDATA #IMPLIED>
+    <!ATTLIST resource-boost converter CDATA #IMPLIED>
+
+<!ELEMENT contract ( 
+    (id|id-component)*,
+    parent?,
+    (analyzer?),
+    (boost?),
+    (property|dynamic-meta-data|component|reference|constant)*
+)>
+    <!ATTLIST contract alias CDATA #REQUIRED>
+    <!ATTLIST contract extends CDATA #IMPLIED>
+    <!ATTLIST contract analyzer CDATA #IMPLIED>
+
+<!--
+    Marks a class as searchable.
+
+    A searchable class is assoiated with an alias, and allows to perform full text search on it's
+    mapped properties/fields.
+-->
+<!ELEMENT class (
+    all?,
+    sub-index-hash?,
+    (id|id-component)*,
+    parent?,
+    (analyzer?),
+    (boost?),
+    (property|dynamic-property|dynamic-meta-data|component|reference|constant|cascade)*
+)>
+    <!--
+        The fully qualified class name (or relative if the package is declared in compass-core-mapping).
+    -->
+    <!ATTLIST class name CDATA #REQUIRED>
+    <!--
+        The alias of the Resource that will be mapped to the class.
+
+        The alias can be used to reference the class when performing search operations,
+        or for other mappings to extend it.
+    -->
+    <!ATTLIST class alias CDATA #REQUIRED>
+    <!--
+        The sub index the searchable class will be saved to. A sub index is a fully functional index.
+
+        When joining several searchable classes into the same index, the search will be much faster,
+        but updates perform locks on the sub index level, so it might slow it down.
+
+        Defaults to the class alias value.
+    -->
+    <!ATTLIST class sub-index CDATA #IMPLIED>
+    <!--
+        The name of the analyzer that will be used to analyze TOKENIZED properties.
+
+        Defaults to the default analyzer which is one of the internal analyzers that comes with Compass.
+
+        Note, that when using the analyzer mapping (a child mapping of class mapping)
+        (for a property value that controls the analyzer), the analyzer attribute will have no effects.
+    -->
+    <!ATTLIST class analyzer CDATA #IMPLIED>
+    <!--
+        A comma seperated list of aliases to extend. Can extend a class mapping or a contract mapping.
+        Note that can extend more than one class/contract.
+    -->
+    <!ATTLIST class extends CDATA #IMPLIED>
+    <!--
+        Specifies if the class is a "root" class or not.
+
+        You should define the searchable class with false if it only acts as mapping
+        definitions for a component mapping.
+    -->
+    <!ATTLIST class root (true|false) "true">
+    <!--
+        Specifies if the class will be enabled to support polymorphism.
+
+        This is the less prefable way to map an inheritance tree, since the extends attribute
+        can be used to statically extend base classes or contracts.
+
+        Defaults to false.
+    -->
+    <!ATTLIST class poly (true|false) "false">
+    <!--
+        Specified the class name that will be used to instantiate if poly is set to true.
+        If not set, the actual class will be persisted to the index.
+    -->
+    <!ATTLIST class poly-class CDATA #IMPLIED>
+    <!--
+        The global converter lookup name registered with the configuration. Responsible for converting
+        the ClassMapping definition.
+
+        Defaults to compass internal ClassMappingConverter.
+    -->
+    <!ATTLIST class converter CDATA #IMPLIED>
+    <!--
+        Specifies the boost level for the class.
+
+        Defaults to 1.0.
+    -->
+    <!ATTLIST class boost CDATA #IMPLIED>
+    <!--
+        Controls if the class mapping will support the ability to un-marshall it from the search engine.
+
+        Defaults to true.
+    -->
+    <!ATTLIST class support-unmarshall (true|false) #IMPLIED>
+
+    <!ATTLIST class filter-duplicates (true|false) #IMPLIED>
+
+    <!ATTLIST class managed-id (auto|true|false|no|no_store) #IMPLIED>
+
+    <!ATTLIST class spell-check (include|exclude|na) "na">
+
+<!ELEMENT id (
+    meta-data*
+)>
+    <!ATTLIST id name CDATA #REQUIRED>
+    <!ATTLIST id class CDATA #IMPLIED>
+    <!ATTLIST id analyzer CDATA #IMPLIED>
+    <!ATTLIST id accessor CDATA #IMPLIED>
+    <!ATTLIST id managed-id (auto|true|false) "auto">
+    <!ATTLIST id managed-id-converter CDATA #IMPLIED>
+    <!ATTLIST id exclude-from-all (true|false|yes|no|no_analyzed) "no">
+    <!ATTLIST id converter CDATA #IMPLIED>
+    <!ATTLIST id boost CDATA #IMPLIED>
+
+<!ELEMENT property (
+    meta-data*
+)>
+    <!ATTLIST property name CDATA #REQUIRED>
+    <!ATTLIST property class CDATA #IMPLIED>
+    <!ATTLIST property analyzer CDATA #IMPLIED>
+    <!ATTLIST property override (true|false) "true">
+    <!ATTLIST property accessor CDATA #IMPLIED>
+    <!ATTLIST property managed-id (auto|true|false|no|no_store) #IMPLIED>
+    <!ATTLIST property managed-id-index (no|not_analyzed|un_tokenized) #IMPLIED>
+    <!ATTLIST property managed-id-converter CDATA #IMPLIED>
+    <!ATTLIST property exclude-from-all (true|false|yes|no|no_analyzed) "false">
+    <!ATTLIST property converter CDATA #IMPLIED>
+    <!ATTLIST property boost CDATA #IMPLIED>
+
+<!ELEMENT boost EMPTY
+>
+    <!ATTLIST boost name CDATA #REQUIRED>
+    <!ATTLIST boost default CDATA #IMPLIED>
+    <!ATTLIST boost accessor CDATA #IMPLIED>
+    <!ATTLIST boost converter CDATA #IMPLIED>
+
+<!ELEMENT analyzer EMPTY
+>
+    <!ATTLIST analyzer name CDATA #REQUIRED>
+    <!ATTLIST analyzer null-analyzer CDATA #IMPLIED>
+    <!ATTLIST analyzer accessor CDATA #IMPLIED>
+    <!ATTLIST analyzer converter CDATA #IMPLIED>
+
+<!ELEMENT id-component EMPTY
+>
+    <!ATTLIST id-component name CDATA #REQUIRED>
+    <!ATTLIST id-component ref-alias CDATA #IMPLIED>
+    <!ATTLIST id-component override (true|false) "true">
+    <!ATTLIST id-component max-depth CDATA #IMPLIED>
+    <!ATTLIST id-component prefix CDATA #IMPLIED>
+    <!ATTLIST id-component converter CDATA #IMPLIED>
+    <!ATTLIST id-component accessor CDATA #IMPLIED>
+    <!ATTLIST id-component cascade CDATA  #IMPLIED>
+
+<!ELEMENT component EMPTY
+>
+    <!ATTLIST component name CDATA #REQUIRED>
+    <!ATTLIST component ref-alias CDATA #IMPLIED>
+    <!ATTLIST component override (true|false) "true">
+    <!ATTLIST component max-depth CDATA #IMPLIED>
+    <!ATTLIST component prefix CDATA #IMPLIED>
+    <!ATTLIST component converter CDATA #IMPLIED>
+    <!ATTLIST component accessor CDATA #IMPLIED>
+    <!ATTLIST component cascade CDATA  #IMPLIED>
+
+<!ELEMENT reference EMPTY
+>
+    <!ATTLIST reference name CDATA #REQUIRED>
+    <!ATTLIST reference ref-alias CDATA #IMPLIED>
+    <!ATTLIST reference ref-comp-alias CDATA #IMPLIED>
+    <!ATTLIST reference converter CDATA #IMPLIED>
+    <!ATTLIST reference accessor CDATA #IMPLIED>
+    <!ATTLIST reference cascade CDATA  #IMPLIED>
+    <!ATTLIST reference lazy (true|false) #IMPLIED>
+
+<!ELEMENT parent EMPTY
+>
+    <!ATTLIST parent name CDATA #REQUIRED>
+    <!ATTLIST parent converter CDATA #IMPLIED>
+    <!ATTLIST parent accessor CDATA #IMPLIED>
+    <!ATTLIST parent cascade CDATA  #IMPLIED>
+
+<!ELEMENT cascade EMPTY
+>
+    <!ATTLIST cascade name CDATA #REQUIRED>
+    <!ATTLIST cascade converter CDATA #IMPLIED>
+    <!ATTLIST cascade accessor CDATA #IMPLIED>
+    <!ATTLIST cascade cascade CDATA  #IMPLIED>
+
+<!ELEMENT constant (
+    meta-data,
+    meta-data-value+
+)>
+    <!ATTLIST constant exclude-from-all (true|false|yes|no|no_analyzed) "no">
+    <!ATTLIST constant override (true|false) "true">
+    <!ATTLIST constant converter CDATA #IMPLIED>
+    <!ATTLIST constant spell-check (include|exclude|na) "na">
+
+<!ELEMENT dynamic-property EMPTY
+>
+    <!ATTLIST dynamic-property name CDATA #REQUIRED>
+    <!ATTLIST dynamic-property converter CDATA #IMPLIED>
+    <!ATTLIST dynamic-property accessor CDATA #IMPLIED>
+    <!ATTLIST dynamic-property name-prefix CDATA #IMPLIED>
+    <!ATTLIST dynamic-property name-property CDATA #IMPLIED>
+    <!ATTLIST dynamic-property value-property CDATA #IMPLIED>
+    <!ATTLIST dynamic-property name-converter CDATA #IMPLIED>
+    <!ATTLIST dynamic-property value-converter CDATA #IMPLIED>
+    <!ATTLIST dynamic-property name-format CDATA #IMPLIED>
+    <!ATTLIST dynamic-property value-format CDATA #IMPLIED>
+    <!ATTLIST dynamic-property store (no|yes|compress) #IMPLIED>
+    <!ATTLIST dynamic-property index (no|analyzed|not_analyzed|tokenized|un_tokenized) #IMPLIED>
+    <!ATTLIST dynamic-property term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST dynamic-property omit-norms (true|false) #IMPLIED>
+    <!ATTLIST dynamic-property omit-tf (true|false) #IMPLIED>
+    <!ATTLIST dynamic-property override (true|false) "true">
+    <!ATTLIST dynamic-property boost CDATA #IMPLIED>
+    <!ATTLIST dynamic-property null-value CDATA #IMPLIED>
+
+<!ELEMENT dynamic-meta-data (
+    #PCDATA
+)>
+    <!ATTLIST dynamic-meta-data name CDATA #REQUIRED>
+    <!ATTLIST dynamic-meta-data store (no|yes|compress) #IMPLIED>
+    <!ATTLIST dynamic-meta-data index (no|analyzed|not_analyzed|tokenized|un_tokenized) #IMPLIED>
+    <!ATTLIST dynamic-meta-data term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST dynamic-meta-data omit-norms (true|false) #IMPLIED>
+    <!ATTLIST dynamic-meta-data omit-tf (true|false) #IMPLIED>
+    <!ATTLIST dynamic-meta-data override (true|false) "true">
+    <!ATTLIST dynamic-meta-data reverse (no|reader|string) "no">
+    <!ATTLIST dynamic-meta-data analyzer CDATA #IMPLIED>
+    <!ATTLIST dynamic-meta-data exclude-from-all (true|false|yes|no|no_analyzed) #IMPLIED>
+    <!ATTLIST dynamic-meta-data converter CDATA #REQUIRED>
+    <!ATTLIST dynamic-meta-data boost CDATA #IMPLIED>
+    <!ATTLIST dynamic-meta-data format CDATA #IMPLIED>
+    <!ATTLIST dynamic-meta-data null-value CDATA #IMPLIED>
+    <!ATTLIST dynamic-meta-data type CDATA #IMPLIED>
+    <!ATTLIST dynamic-meta-data spell-check (include|exclude|na) "na">
+
+<!ELEMENT meta-data (
+    #PCDATA
+)>
+    <!ATTLIST meta-data store (no|yes|compress) #IMPLIED>
+    <!ATTLIST meta-data index (no|analyzed|not_analyzed|tokenized|un_tokenized) #IMPLIED>
+    <!ATTLIST meta-data term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST meta-data omit-norms (true|false) #IMPLIED>
+    <!ATTLIST meta-data omit-tf (true|false) #IMPLIED>
+    <!ATTLIST meta-data reverse (no|reader|string) "no">
+    <!ATTLIST meta-data null-value CDATA #IMPLIED>
+    <!ATTLIST meta-data analyzer CDATA #IMPLIED>
+    <!ATTLIST meta-data exclude-from-all (true|false|yes|no|no_analyzed) #IMPLIED>
+    <!ATTLIST meta-data converter CDATA #IMPLIED>
+    <!ATTLIST meta-data format CDATA #IMPLIED>
+    <!ATTLIST meta-data boost CDATA #IMPLIED>
+    <!ATTLIST meta-data spell-check (include|exclude|na) "na">
+
+<!ELEMENT meta-data-value (
+    #PCDATA
+)>
+
+<!ELEMENT sub-index-hash (
+    setting*
+)>
+    <!ATTLIST sub-index-hash type CDATA #REQUIRED>
+
+<!ELEMENT all EMPTY
+>
+    <!ATTLIST all enable (true|false) #IMPLIED>
+    <!ATTLIST all name CDATA  #IMPLIED>
+    <!ATTLIST all term-vector (no|yes|positions|offsets|positions_offsets) #IMPLIED>
+    <!ATTLIST all omit-norms (true|false) #IMPLIED>
+    <!ATTLIST all omit-tf (true|false) #IMPLIED>
+    <!ATTLIST all exclude-alias (true|false) #IMPLIED>
+    <!ATTLIST all spell-check (include|exclude|na) "na">
+    <!ATTLIST all include-unmapped-properties (true|false) #IMPLIED>
+
+
+<!ELEMENT setting EMPTY
+>
+    <!ATTLIST setting name CDATA #REQUIRED>
+    <!ATTLIST setting value CDATA #REQUIRED>

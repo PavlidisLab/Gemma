@@ -1,0 +1,167 @@
+/*
+
+Title:		jShowOff: a jQuery Content Rotator Plugin
+Author:		Erik Kallevig
+Version:	0.1.2
+Website:	http://ekallevig.com/jshowoff
+License: 	Dual licensed under the MIT and GPL licenses.
+
+*/
+
+
+/*-- jShowOff module styles --*/
+
+
+#features, #slidingFeatures, #labelFeatures, #basicFeatures, #thumbFeatures {
+	position: relative;
+	overflow: hidden;
+	width: 900px;
+	height: 250px;
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	-moz-border-radius-topleft: 6px;
+	-moz-border-radius-topright: 6px;
+	}
+.jshowoff {
+	width: 900px;
+	/*margin: 10px 0;*/
+	}
+.jshowoff div {	
+	width: 900px;
+	height: 250px;
+	}
+.jshowoff div div{	
+	width: auto;
+	height: auto;
+	}
+.jshowoff div, .jshowoff {
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	}
+.jshowoff img.rounded {
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	}
+#basicFeatures, .jshowoff.basicFeatures, .jshowoff.basicFeatures img, .jshowoff.basicFeatures div {
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+	}
+.jshowoff div p, .jshowoff div h2 {
+	_background-color: #efefef;
+	}
+.jshowoff h2, .jshowoff p {
+	font-size: 18px;
+	padding: 15px 20px 0px;
+	margin: 0;
+	}
+.jshowoff p {
+	font-size: 13px;
+	line-height: 15px;
+	}
+.eddie {
+	float: right;
+	padding: 15px 20px 15px 20px;
+	}
+.jshowoff p.jshowoff-slidelinks {
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	margin: 0;
+	padding: 0;
+	}
+.jshowoff-slidelinks a, .jshowoff-controls a {
+	display: block;
+	background-color: #fff;
+	color: teal;
+	padding: 5px 7px 5px;
+	margin: 5px 0 0 5px;
+	float: left;
+	text-decoration: none;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	outline: none;
+	line-height: 14px;
+	border: solid 1px gainsboro;
+	}
+.jshowoff-slidelinks a:hover, .jshowoff-controls a:hover {
+	color: orange;
+	}
+.jshowoff-slidelinks a.jshowoff-active, .jshowoff-slidelinks a.jshowoff-active:hover {
+	background-color: #fff;
+	color: #000;
+	border: solid 1px grey;
+	}
+p.jshowoff-controls {
+	background: transparent;
+	overflow: auto;
+	height: 1%;
+	padding: 0 0 5px 5px;
+	margin: 0;
+	-moz-border-radius-bottomleft: 6px;
+	-moz-border-radius-bottomright: 6px;
+	-webkit-border-bottom-left-radius: 6px;
+	-webkit-border-bottom-right-radius: 6px;
+	}
+.jshowoff-controls a {
+	margin: 5px 5px 0 0;
+	font-size: 12px;
+	line-height: 15px;
+	padding: 4px 8px 5px;
+	}
+
+.jshowoff-pausetext {
+	color: #fff;
+	}
+
+.jshowoff ul {
+	list-style: none outside;
+	line-height: 100%;
+	font-size: 11pt;
+	text-align: center;
+}
+.jshowoff li {
+	margin-bottom: 25px;
+	letter-spacing: 1px;
+}
+.jshowoff .highlightedSlideText {
+	color : #EC7F2C;
+	font-size: 13pt;
+}
+.jshowoff h1, .jshowoff h2 {
+	margin-bottom: 25px;
+	letter-spacing: 1px;
+}
+td.slideTextTD {
+	vertical-align: top;
+	width:350px;
+	font-size: 14pt;
+	line-height: 28px;
+	text-align: center;
+	vertical-align:middle;
+}
+td.slideImageTD {
+	width:300px;
+}
+
+span,img{padding:0;margin:0;border:0;}
+.fancy{
+	position:relative;
+	display:inline-block;
+	font-size:0;
+	line-height:0;
+}
+.fancy:after{
+	position:absolute;
+	top:1px;
+	left:1px;
+	bottom:1px;
+	right:1px;
+	border:1px solid rgba(255,255,255,0.5);
+	outline:1px solid rgba(0,0,0,0.2);
+	content:" ";
+}
+
+/*-- slides --*/
+#dataSummary #dataSummaryTable td{
+	font-size: 12px;
+}

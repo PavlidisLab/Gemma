@@ -1,0 +1,9 @@
+#Tomcat publish data
+#Mon Apr 04 15:54:24 PDT 2016
+org.eclipse.jst.j2ee.server\:gemma-core=WEB-INF/lib/gemma-core-1.9-SNAPSHOT.jar
+org.eclipse.jst.j2ee.server\:/binary\:/home/jliu/.m2/repository/org/springframework/spring-web/3.2.4.RELEASE/spring-web-3.2.4.RELEASE.jar=WEB-INF/lib/spring-web-3.2.4.RELEASE.jar
+org.eclipse.jst.j2ee.server\:/binary\:/home/jliu/Dropbox/side_project_2016/Gemma/gemma-web/target/Gemma/WEB-INF/lib/javamelody-core-1.31.0.jar=WEB-INF/classes/lib/javamelody-core-1.31.0.jar
+org.eclipse.jst.j2ee.server\:gemma-mda=WEB-INF/lib/gemma-mda-1.9-SNAPSHOT.jar
+org.eclipse.jst.j2ee.server\:gemma-model=WEB-INF/lib/gemma-model-1.9-SNAPSHOT.jar
+org.eclipse.jst.j2ee.server\:/binary\:/home/jliu/.m2/repository/net/bull/javamelody/javamelody-core/1.31.0/javamelody-core-1.31.0.jar=WEB-INF/lib/javamelody-core-1.31.0.jar
+org.eclipse.jst.j2ee.server\:/binary\:/home/jliu/Dropbox/side_project_2016/Gemma/gemma-web/target/Gemma/WEB-INF/lib/spring-web-3.2.4.RELEASE.jar=WEB-INF/classes/lib/spring-web-3.2.4.RELEASE.jar

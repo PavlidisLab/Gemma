@@ -13,7 +13,7 @@
    Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
    Ext.onReady(function() {
-      Ext.QuickTips.init();
+      Ext.QuickTips.init(); 
 
       // need wrapper panel because tabPanels can't have title headers (it's used for tabs)
       new Gemma.GemmaViewPort({ centerPanelConfig : new Ext.Panel({

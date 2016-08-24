@@ -26,6 +26,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+//import ubic.gemma.web.remote.EntityDelegator;
 
 /**
  * @author kelsey
@@ -122,5 +123,12 @@ public interface BioMaterialService {
      */
     @Secured({ "GROUP_ADMIN" })
     public void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
+
+    //@Secured({ "GROUP_ADMIN" })
+    //@Secured({ "IS_AUTHENTICATED_ANONYMOUSLY"})
+    @Secured({ "GROUP_USER" })
+    public Collection<BioMatFactorCountObject> charDumpService( ExpressionExperiment experiment);
+
+	//public Collection<BioMatFactorCountObject> charDumpService(Long id);
 
 }

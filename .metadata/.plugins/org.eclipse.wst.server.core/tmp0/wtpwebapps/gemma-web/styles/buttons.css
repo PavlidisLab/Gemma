@@ -1,0 +1,123 @@
+/* Apply class "x-toolbar-standardbutton" to buttons on a toolbar
+ * to make them appear with "normal" button styling, instead of toolbar button styling */
+.x-toolbar .x-toolbar-standardbutton .x-btn-tl { background-position: 0 0; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-tr { background-position: -3px 0; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-tc { background-position: 0 -6px; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-ml { background-position: 0px -24px; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-mr { background-position: -3px -24px; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-mc { background-position: 0 -1096px; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-bl { background-position: 0 -3px; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-br { background-position: -3px -3px; }
+.x-toolbar .x-toolbar-standardbutton .x-btn-bc { background-position: 0 -15px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-tl{ background-position: -6px 0; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-tr { background-position: -9px 0; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-tc { background-position: 0 -9px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-ml { background-position: -6px -24px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-mr { background-position: -9px -24px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-mc { background-position: 0 -2168px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-bl { background-position: -6px -3px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-br { background-position: -9px -3px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-over .x-btn-bc { background-position: 0 -18px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-tl, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-tl, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-tl { background-position: -12px 0; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-tr, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-tr, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-tr { background-position: -15px 0; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-tc, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-tc, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-tc { background-position: 0 -12px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-ml, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-ml, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-ml { background-position: -12px -24px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-mr, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-mr, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-mr { background-position: -15px -24px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-mc, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-mc, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-mc { background-position: 0 -3240px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-bl, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-bl, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-bl { background-position: -12px -3px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-br, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-br, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-br { background-position: -15px -3px; }
+.x-toolbar .x-toolbar-standardbutton.x-btn-click .x-btn-bc, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-bc, 
+.x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-bc { background-position: 0 -21px; }
+
+.x-btn,.bigText button{
+	font-size: 14px
+}
+.x-btn,.mediumText button{
+	font-size: 12px
+}
+.x-btn,.smallText button{
+	font-size: 10px
+}
+
+
+
+.transparent-btn .x-btn-tl, .transparent-btn .x-btn-tr, .transparent-btn .x-btn-tc, .transparent-btn .x-btn-ml, .transparent-btn .x-btn-mr, .transparent-btn .x-btn-mc, .transparent-btn .x-btn-bl, .transparent-btn .x-btn-br, .transparent-btn .x-btn-bc {
+    background-image:url(/Gemma/images/s.gif);
+	cursor:pointer;
+}
+.transparent-btn-link table:hover{
+	cursor:pointer;
+}
+.transparent-btn-link button {
+	color: #004f64;
+	text-decoration: none;
+}
+.transparent-btn-link button:hover {
+	color: #f47f20;
+	text-decoration: none;
+}
+.transparent-btn-link x-btn-pressed{
+	color:red
+}
+
+
+#fi-button-msg {
+	border: 2px solid #ccc;
+	padding: 5px 10px;
+	background: #eee;
+	float: left;
+}
+
+.purple-btn .x-btn-tl, .purple-btn .x-btn-tr, .purple-btn .x-btn-tc, .purple-btn .x-btn-ml, .purple-btn .x-btn-mr, .purple-btn .x-btn-mc, .purple-btn .x-btn-bl, .purple-btn .x-btn-br, .purple-btn .x-btn-bc {
+    background-image:url('/Gemma/images/default/button/btn-light.gif');
+}
+ 
+
+table.x-btn.highlightToggle{
+	padding: 2px;
+}
+table.x-btn.highlightToggleBorderOn{
+	margin 7px;
+	border: 1px solid #FFA858;
+	border-radius: 4px;
+	padding: 1px;
+}
+table.x-btn-pressed.highlightToggle{
+	margin 7px;
+	border: 1px solid #FFA858;
+	border-radius: 4px;
+	padding: 1px;
+}
+.highlightToggle .x-btn-tl, .highlightToggle  .x-btn-tr, .highlightToggle .x-btn-tc, .highlightToggle .x-btn-ml, .highlightToggle .x-btn-mr, .highlightToggle .x-btn-mc, .highlightToggle .x-btn-bl, .highlightToggle .x-btn-br, .highlightToggle .x-btn-bc{
+	background-image:url('/Gemma/images/default/button/btn-match-panel.gif');
+}
+.x-btn-pressed.highlightToggle button span{
+	color:black;	
+}
+.highlightToggle button span{
+	color:grey
+}
+
+
+
+.details .x-btn-text {
+	background-image: url('/Gemma/images/icons/details.gif');
+}
+
