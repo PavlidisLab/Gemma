@@ -127,7 +127,6 @@ Ext.onReady( function() {
 	      id : 'char-dump-panel',
 	      height : 670,
 	      eeId : eeId,
-	      //edId : edId,
 	      viewConfig : {
 	         forceFit : true
 	      },
@@ -186,14 +185,7 @@ Ext.onReady( function() {
     * Only initialize once we are viewing the tab to help ensure the scroll bars are rendered right away.
     */
    var refreshNeeded = false;
-   //hack:
-//   var testBean = {
-//     id: eeId,
-//     classDelegatingFor: "ExpressionExperiment"};
-
-     
-//     var resultArray;
-     
+   
    tabPanel.on( 'tabchange', function( panel, tab ) {
       if ( refreshNeeded || !bioMaterialEditor.firstInitDone && tab.contentEl == 'bioMaterialsPanel'||
     		  !charDumpViewer.firstInitDone && tab.contentEl =='charDumpPanel' ) {
