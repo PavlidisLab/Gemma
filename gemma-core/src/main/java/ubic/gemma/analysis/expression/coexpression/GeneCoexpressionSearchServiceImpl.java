@@ -35,7 +35,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.CoexpressionService;
@@ -44,7 +43,6 @@ import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValue
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.EntityUtils;
 
 /**
@@ -67,13 +65,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-
-    @Autowired
     private CoexpressionService coexpressionService;
-
-    @Autowired
-    private GeneOntologyService geneOntologyService;
 
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
@@ -127,7 +119,8 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         // database hit. loadValueObjects is too slow.
-        Map<Long, GeneValueObject> coexpedGenes = EntityUtils.getIdMap( geneService.loadValueObjectsLiter( coxpGenes ) );
+        Map<Long, GeneValueObject> coexpedGenes = EntityUtils
+                .getIdMap( geneService.loadValueObjectsLiter( coxpGenes ) );
 
         for ( CoexpressionValueObject cvo : coexp ) {
 
@@ -186,7 +179,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     /**
      * @param inputEeIds
      * @param genes 1 or more.
-     * @param stringency if set to 1, may be adjusted
+     * @param stringency; this may be modified to control the number of results, unless "queryGenesOnly" is true.
      * @param maxResults per gene, not including the query genes themselves. Ignored if this is 'querygenesonly'
      * @param queryGenesOnly will be ignored if number of genes is 1.
      * @param quick
@@ -227,12 +220,18 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             actuallyUseQueryGeneOnly = true;
         }
 
-        stringency = Math.max( stringency, chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
+        if ( stringency < 1 ) stringency = 1;
+
+        if ( !queryGenesOnly ) {
+            stringency = Math.max( stringency,
+                    chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
+            log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
+                    + ") and genes (" + genes.size() + ") queried" );
+        } else {
+            log.info( "Query gene only: stringency maintained at requested value=" + stringency );
+        }
 
         assert stringency >= 1 || eeIds.size() == 1;
-
-        log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
-                + ") and genes (" + genes.size() + ") queried" );
 
         // HACK drop the stringency until we get some results.
         int stepSize = 3;
@@ -373,11 +372,11 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         List<ExpressionExperimentValueObject> securityFilteredEevos;
         if ( eeIds == null || eeIds.isEmpty() ) {
             // all valid experiments for taxon.
-            securityFilteredEevos = new ArrayList<>( expressionExperimentService.loadValueObjects(
-                    coexpressionAnalysisService.getExperimentsWithAnalysis( taxon ), false ) );
+            securityFilteredEevos = new ArrayList<>( expressionExperimentService
+                    .loadValueObjects( coexpressionAnalysisService.getExperimentsWithAnalysis( taxon ), false ) );
         } else {
-            securityFilteredEevos = new ArrayList<>( expressionExperimentService.loadValueObjects(
-                    coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ), false ) );
+            securityFilteredEevos = new ArrayList<>( expressionExperimentService
+                    .loadValueObjects( coexpressionAnalysisService.getExperimentsWithAnalysis( eeIds ), false ) );
         }
 
         List<ExpressionExperimentValueObject> eevos = new ArrayList<>();
