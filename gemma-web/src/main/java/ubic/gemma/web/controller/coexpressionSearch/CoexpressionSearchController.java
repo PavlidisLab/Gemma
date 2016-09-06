@@ -107,9 +107,6 @@ public class CoexpressionSearchController {
     private GeneSetService geneSetService;
 
     @Autowired
-    private SearchService searchService;
-
-    @Autowired
     private TaskRunningService taskRunningService;
 
     /**
