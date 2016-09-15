@@ -43,7 +43,6 @@ import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.search.SearchService;
 import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
@@ -83,8 +82,8 @@ public class CoexpressionSearchController {
 
     private static Log log = LogFactory.getLog( CoexpressionSearchController.class.getName() );
 
-    private static final int MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY = Settings.getInt(
-            "gemma.coexpressionSearch.maxGenesForQueryGenesOnly", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY );
+    private static final int MAX_GENES_FOR_QUERY_GENES_ONLY_QUERY = Settings
+            .getInt( "gemma.coexpressionSearch.maxGenesForQueryGenesOnly", DEFAULT_MAX_GENES_PER_MY_GENES_ONLY );
 
     private static final int MAX_RESULTS_PER_GENE = Settings.getInt( "gemma.coexpressionSearch.maxResultsPerQueryGene",
             DEFAULT_MAX_RESULTS );
@@ -135,8 +134,8 @@ public class CoexpressionSearchController {
         if ( searchOptions.getGeneIds() == null || searchOptions.getGeneIds().isEmpty() ) {
 
             if ( searchOptions.getGeneSetId() != null ) {
-                searchOptions.setGeneIds( geneSetService.getGeneIdsInGroup( new GeneSetValueObject( searchOptions
-                        .getGeneSetId() ) ) );
+                searchOptions.setGeneIds(
+                        geneSetService.getGeneIdsInGroup( new GeneSetValueObject( searchOptions.getGeneSetId() ) ) );
             }
 
             if ( searchOptions.getGeneIds().isEmpty() ) {
@@ -236,7 +235,7 @@ public class CoexpressionSearchController {
         if ( myEE != null && !myEE.isEmpty() ) {
             eeIds.addAll( EntityUtils.getIds( myEE ) );
         } else {
-            log.info( "No user data to add" );
+            log.debug( "No user data to add" );
         }
 
         if ( eeIds.isEmpty() ) {
@@ -314,8 +313,8 @@ public class CoexpressionSearchController {
         if ( searchOptions.getEeSetId() != null ) {
             eeSetId = searchOptions.getEeSetId();
         } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
-            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
-                    .getEeSetName() );
+            Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService
+                    .findByName( searchOptions.getEeSetName() );
             if ( eeSets.size() == 1 ) {
                 eeSetId = eeSets.iterator().next().getId();
             } else {

@@ -31,7 +31,7 @@ _$*
 *.elc
 *.ln
 core
-
+**/DS_Store
 # Project ignores (converted from .cvsignore files)
 gemma-web/.settings/org.eclipse.m2e.core.prefs
 gemma-web/target

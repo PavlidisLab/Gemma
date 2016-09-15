@@ -110,7 +110,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
     }
 
     /**
-     * The first gene for the underlying link
+     * The first gene for the underlying link; this is always the lower ID.
      * 
      * @return
      */
@@ -130,7 +130,7 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
     }
 
     /**
-     * The second gene for the underlying link
+     * The second gene for the underlying link; this is always the higher ID.
      * 
      * @return
      */
