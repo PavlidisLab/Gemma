@@ -300,7 +300,9 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         Collections.sort( result.getResults() );
 
         // FIXME we might want to suppress this in some situations
-        result.trim();
+        if ( !queryGenesOnly ) {
+            result.trim();
+        }
 
         populateNodeDegrees( result );
         // if ( searchOptions.isUseMyDatasets() ) {

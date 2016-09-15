@@ -229,7 +229,12 @@ public class CoexpressionMetaValueObject {
      * stringency.
      * <p>
      * The other trim method only removes non-query gene edges, so it is suitable for large 'query genes only'.
+     * <p>
+     * Warning, this method can remove results that user may have expected.
+     * 
+     * @deprecated because this is too ad hoc and messy
      */
+    @Deprecated
     public void trim() {
 
         // sorted.
@@ -261,9 +266,9 @@ public class CoexpressionMetaValueObject {
 
         assert initialTrimStringency >= startStringency;
 
-        log.info( "Original results size: " + geneResults.size() + " trimmed results size: "
-                + strippedGeneResults.size() + "  Total results removed: "
-                + ( geneResults.size() - strippedGeneResults.size() ) );
+        log.info(
+                "Original results size: " + geneResults.size() + " trimmed results size: " + strippedGeneResults.size()
+                        + "  Total results removed: " + ( geneResults.size() - strippedGeneResults.size() ) );
 
         Collections.sort( strippedGeneResults );
         this.setResults( strippedGeneResults );
@@ -435,7 +440,7 @@ public class CoexpressionMetaValueObject {
     // }
     //
     // log.info( "Original results size: " + this.getResults().size() + " trimmed size: " + strippedGeneResults.size()
-    // + "  Total results removed: " + ( this.getResults().size() - strippedGeneResults.size() ) );
+    // + " Total results removed: " + ( this.getResults().size() - strippedGeneResults.size() ) );
     //
     // Collections.sort( strippedGeneResults );
     // this.setResults( strippedGeneResults );
