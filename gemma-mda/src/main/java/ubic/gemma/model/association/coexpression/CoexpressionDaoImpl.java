@@ -272,6 +272,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                 // Must be unique
                 assert !seenNewSupportDetails.contains( sd ) : "Already saw " + sd + " while processing " + proposedG2G;
 
+                assert proposedG2G.getLink() != null;
                 batchToCreate.put( sd, proposedG2G.getLink() );
 
                 if ( seenNewLinks.contains( proposedG2G ) ) {
