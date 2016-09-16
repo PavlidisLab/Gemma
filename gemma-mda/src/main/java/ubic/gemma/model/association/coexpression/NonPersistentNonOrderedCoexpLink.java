@@ -115,28 +115,30 @@ public class NonPersistentNonOrderedCoexpLink implements Comparable<NonPersisten
      * @return
      */
     public Long getFirstGene() {
-        if ( link == null ) throw new IllegalStateException();
-        return link.getFirstGene();
+        // if ( link == null ) throw new IllegalStateException();
+        // return link.getFirstGene();
+        return this.g1;
     }
 
     /**
-     * The underlying link
+     * The underlying link (may be null depending on how this was constructed)
      * 
      * @return
      */
     public Gene2GeneCoexpression getLink() {
-        if ( link == null ) throw new IllegalStateException();
+        // if ( link == null ) throw new IllegalStateException();
         return link;
     }
 
     /**
-     * The second gene for the underlying link; this is always the higher ID.
+     * The second gene for the underlying link; this is always the higher ID - not necesssarily the secondGene
      * 
      * @return
      */
     public Long getSecondGene() {
-        if ( link == null ) throw new IllegalStateException();
-        return link.getSecondGene();
+        // if ( link == null ) throw new IllegalStateException();
+        // return link.getSecondGene();
+        return this.g2;
     }
 
     @Override
