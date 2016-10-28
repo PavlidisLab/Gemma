@@ -45,7 +45,7 @@ Gemma.alertUserToError = function( baseValueObject, title ) {
 };
 
 Gemma.parseException = function( ex ) {
-   if ( $.isArray( ex ) ) {
+   if ( ex.constructor === Array ) {
       var s = "";
       try {
          for (var i = 0; i < ex.length; i++) {
