@@ -18,7 +18,7 @@
             <!-- lets wrap in a pool to avoid creating a connection per send -->
             <bean class="org.springframework.jms.connection.CachingConnectionFactory">
                 <property name="targetConnectionFactory">
-                    <ref local="jmsFactory" />
+                    <ref bean="jmsFactory" />
                 </property>
                 <property name="sessionCacheSize" value="5" />
             </bean>
