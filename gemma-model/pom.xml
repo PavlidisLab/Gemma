@@ -20,12 +20,6 @@
 			<type>jar</type>
 		</dependency>
 		<dependency>
-			<groupId>baseCode</groupId>
-			<artifactId>baseCode</artifactId>
-			<version>1.0.16</version>
-			<type>jar</type>
-		</dependency>
-		<dependency>
 			<groupId>com.googlecode.javaewah</groupId>
 			<artifactId>JavaEWAH</artifactId>
 			<version>0.7.9</version>
