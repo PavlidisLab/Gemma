@@ -66,6 +66,11 @@
 			<id>ptan</id>
 			<organization>University of British Columbia</organization>
 		</developer>
+		<developer>
+			<name>Matthew Jacobson</name>
+			<id>jacobsonmt</id>
+			<organization>University of British Columbia</organization>
+		</developer>
 	</developers>
 	<contributors>
 		<contributor>
@@ -310,7 +315,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.16</version>
+			<version>1.0.17</version>
 		</dependency>
 	</dependencies>
 	<build>
