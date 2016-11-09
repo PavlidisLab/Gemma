@@ -44,7 +44,7 @@ public class ExpressionExperimentBibRefFinder {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinder.class.getName() );
 
-    private static String GEO_SERIES_URL_BASE = "http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=";
+    private static String GEO_SERIES_URL_BASE = "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=";
 
     private static String PUBMEDREF_REGEX = "class=\"pubmed_id\" id=\"(\\d+)";
 

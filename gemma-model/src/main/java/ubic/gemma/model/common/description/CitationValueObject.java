@@ -39,7 +39,7 @@ import org.apache.commons.lang3.StringUtils;
 public class CitationValueObject implements Comparable<CitationValueObject> {
 
     // for constructing pubmedURLs
-    final static String PUBMED_URL_ROOT = "http://www.ncbi.nlm.nih.gov/pubmed/";
+    final static String PUBMED_URL_ROOT = "https://www.ncbi.nlm.nih.gov/pubmed/";
 
     /**
      * construct a citation value object from a BibliographicReference returns null if the BibliographicReference param
@@ -239,7 +239,5 @@ public class CitationValueObject implements Comparable<CitationValueObject> {
     public void setRetracted( boolean retracted ) {
         this.retracted = retracted;
     }
-    
-    
 
 }

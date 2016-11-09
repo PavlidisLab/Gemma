@@ -54,7 +54,6 @@ public class ESearchXMLParser {
         Document document = openAndParse( is );
         return extractIds( document );
     }
-    
 
     /**
      * @param is
@@ -64,9 +63,9 @@ public class ESearchXMLParser {
      * @throws SAXException
      */
     private Document openAndParse( InputStream is ) throws IOException, ParserConfigurationException, SAXException {
-        if ( is.available() == 0 ) {
-            throw new IOException( "XML stream contains no data." );
-        }
+        //        if ( is.available() == 0 ) {
+        //            throw new IOException( "XML stream contains no data." );
+        //        }
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setIgnoringComments( true );
@@ -85,7 +84,7 @@ public class ESearchXMLParser {
         log.debug( "Got " + value );
         return Integer.parseInt( value );
     }
-    
+
     /**
      * @param document
      * @return

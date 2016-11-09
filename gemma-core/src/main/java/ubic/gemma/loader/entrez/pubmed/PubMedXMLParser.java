@@ -125,9 +125,9 @@ public class PubMedXMLParser {
     public Collection<BibliographicReference> parse( InputStream is ) {
 
         try {
-            if ( is.available() == 0 ) {
-                throw new IOException( "XML stream contains no data." );
-            }
+            //            if ( is.available() == 0 ) {
+            //                throw new IOException( "XML stream contains no data." );
+            //            }
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setIgnoringComments( true );

@@ -43,9 +43,10 @@ import ubic.gemma.loader.entrez.pubmed.XMLUtils;
  */
 public class EutilFetch {
 
-    private static String ESEARCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
-    // private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
-    private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
+    private static String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
+    // private static String EFETCH =
+    // "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
+    private static String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
 
     public enum Mode {
         HTML, TEXT, XML

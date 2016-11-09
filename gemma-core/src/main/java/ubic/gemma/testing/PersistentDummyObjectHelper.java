@@ -258,7 +258,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
@@ -329,7 +329,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
@@ -474,7 +474,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
