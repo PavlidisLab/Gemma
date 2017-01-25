@@ -1,4 +1,5 @@
 /*
+
  * The Gemma project
  * 
  * Copyright (c) 2006 University of British Columbia
@@ -40,6 +41,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
@@ -127,8 +129,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 .withLongOpt( "acc" ).create( 'e' );
         addOption( accessionOption );
 
-        Option platformOnlyOption = OptionBuilder
-                .withArgName( "Platforms only" )
+        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" )
                 .withDescription(
                         "Load platforms (array designs) only; implied if you supply GPL instead of GSE or GDS" )
                 .withLongOpt( "platforms" ).create( 'y' );
@@ -139,9 +140,9 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
 
         addOption( noBioAssayMatching );
 
-        Option splitByPlatformOption = OptionBuilder.withDescription(
-                "Force data from each platform into a separate experiment. This implies '-nomatch'" ).create(
-                "splitByPlatform" );
+        Option splitByPlatformOption = OptionBuilder
+                .withDescription( "Force data from each platform into a separate experiment. This implies '-nomatch'" )
+                .create( "splitByPlatform" );
         addOption( splitByPlatformOption );
 
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
@@ -201,10 +202,10 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         ArrayDesignService ads = getBean( ArrayDesignService.class );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            successObjects.add( ads.loadValueObject( ( ( ArrayDesign ) object ).getId() ).getName()
-                                    + " ("
-                                    + ( ( ArrayDesign ) object ).getExternalReferences().iterator().next()
-                                            .getAccession() + ")" );
+                            ArrayDesign ad = ads.thawLite( ( ( ArrayDesign ) object ) );
+
+                            successObjects.add( ad.getName() + " ("
+                                    + ad.getExternalReferences().iterator().next().getAccession() + ")" );
                         }
                     } else {
                         processAccession( geoService, accession );
