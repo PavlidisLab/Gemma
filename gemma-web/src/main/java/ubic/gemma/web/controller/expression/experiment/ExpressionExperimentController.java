@@ -150,9 +150,11 @@ public class ExpressionExperimentController {
         public TaskResult execute() {
             expressionExperimentService.delete( taskCommand.getEntityId() );
 
-            return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) ).addObject( "message",
-                    "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
+            return new TaskResult( taskCommand,
+                    new ModelAndView(
+                            new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                                    .addObject( "message",
+                                            "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }
     }
@@ -250,8 +252,8 @@ public class ExpressionExperimentController {
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             result.setId( expressionExperiment.getId() );
-            result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( bibliographicReferenceService
-                    .thaw( publication ) ) );
+            result.setPrimaryCitation( CitationValueObject
+                    .convert2CitationValueObject( bibliographicReferenceService.thaw( publication ) ) );
             return new TaskResult( taskCommand, result );
         }
 
@@ -544,23 +546,26 @@ public class ExpressionExperimentController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
-                    .addObject( "message", "No search criteria provided" );
+            return new ModelAndView(
+                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                            .addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids = expressionExperimentService.filter( searchString );
 
         if ( ids.isEmpty() ) {
 
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
-                    .addObject( "message", "Your search yielded no results." );
+            return new ModelAndView(
+                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                            .addObject( "message", "Your search yielded no results." );
 
         }
 
         if ( ids.size() == 1 ) {
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                    + ids.iterator().next() ) ).addObject( "message",
-                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next() ) )
+                            .addObject( "message",
+                                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         String list = "";
@@ -568,9 +573,10 @@ public class ExpressionExperimentController {
             list += id + ",";
         }
 
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
-                + list ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size()
-                + " Datasets matched." );
+        return new ModelAndView(
+                new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ) )
+                        .addObject( "message",
+                                "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
@@ -866,15 +872,15 @@ public class ExpressionExperimentController {
             // Get count for new assays
             int newAssayCount = wn.getNewAssayCount();
 
-            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
-            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
+            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null )
+                    ? EntityUtils.getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
+            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null )
+                    ? EntityUtils.getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
 
-            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ? wn
-                    .getNewExpressionExperiments().size() : 0;
-            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null ) ? wn
-                    .getUpdatedExpressionExperiments().size() : 0;
+            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null )
+                    ? wn.getNewExpressionExperiments().size() : 0;
+            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null )
+                    ? wn.getUpdatedExpressionExperiments().size() : 0;
 
             /* Store counts for new and updated experiments by taxonId */
             Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
@@ -903,12 +909,12 @@ public class ExpressionExperimentController {
             int newArrayCount = ( wn.getNewArrayDesigns() != null ) ? wn.getNewArrayDesigns().size() : 0;
             int updatedArrayCount = ( wn.getUpdatedArrayDesigns() != null ) ? wn.getUpdatedArrayDesigns().size() : 0;
 
-            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 ) ? true
-                    : false;
+            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 )
+                    ? true : false;
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 ) ? true
                     : false;
-            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG )
-                    .format( wn.getDate() ) : "";
+            String date = ( wn.getDate() != null )
+                    ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
             date = date.replace( '-', ' ' );
 
             summary.element( "updateDate", date );
@@ -979,7 +985,8 @@ public class ExpressionExperimentController {
         }
 
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
-        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
+        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
+                initialResult );
         finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
         finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
 
@@ -1011,8 +1018,9 @@ public class ExpressionExperimentController {
         }
         finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
 
-        finalResult.setUserCanWrite( securityService.isEditable( ee ) );
-        finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
+        // this should be taken care of by the security interceptor. See bug 4373
+        // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
+        // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
 
         /*
          * populate the publication and author information
@@ -1020,8 +1028,8 @@ public class ExpressionExperimentController {
         finalResult.setDescription( ee.getDescription() );
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult
-                    .setPrimaryCitation( CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            finalResult.setPrimaryCitation(
+                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
             String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
 
             try {
@@ -1245,8 +1253,9 @@ public class ExpressionExperimentController {
 
         // add session bound sets
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
-                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited )
+                ? sessionListManager.getModifiedExperimentSets( taxonId )
+                : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -1776,8 +1785,8 @@ public class ExpressionExperimentController {
             if ( batchEffectDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected";
             } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_PVALTHRESHOLD ) {
-                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() )
-                        + "); p=" + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
+                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
+                        + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
             }
         }
         return result;
@@ -1844,8 +1853,8 @@ public class ExpressionExperimentController {
 
         } else if ( ids == null || ids.isEmpty() ) {
             // load everything (up to the limit)
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser,
-                    limitToUse, showPublic );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser, limitToUse,
+                    showPublic );
         } else {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limitToUse,
                     showPublic );
@@ -1960,8 +1969,8 @@ public class ExpressionExperimentController {
                  * This could be sped up by making value object methods, but because these are not so many, this should
                  * be acceptable.
                  */
-                List<ExpressionExperiment> ees = showPublic ? new ArrayList<>(
-                        expressionExperimentService.loadUserOwnedExpressionExperiments() )
+                List<ExpressionExperiment> ees = showPublic
+                        ? new ArrayList<>( expressionExperimentService.loadUserOwnedExpressionExperiments() )
                         : new ArrayList<ExpressionExperiment>(
                                 expressionExperimentService.loadMySharedExpressionExperiments() );
 
@@ -2070,7 +2079,8 @@ public class ExpressionExperimentController {
                 orderBy = "dateLastUpdated";
                 descending = !descending;
             } else {
-                log.error( "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: " + orderBy );
+                log.error(
+                        "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: " + orderBy );
             }
 
             if ( ids != null ) {
@@ -2124,7 +2134,8 @@ public class ExpressionExperimentController {
                     .loadValueObjects( eeIds, true );
             if ( taxon != null ) {
                 // AND filter for taxon
-                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it.hasNext(); ) {
+                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it
+                        .hasNext(); ) {
                     ExpressionExperimentValueObject evo = it.next();
                     if ( !evo.getTaxonId().equals( taxon.getId() ) ) {
                         it.remove();
@@ -2134,8 +2145,8 @@ public class ExpressionExperimentController {
 
         } else if ( taxon != null ) {
             // everything for taxon
-            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
+            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService
+                    .loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
         } else {
             // everything
             initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(

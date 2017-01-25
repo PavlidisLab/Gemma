@@ -85,9 +85,9 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private Integer coexpressionLinkCount = null;
 
-    private Boolean currentUserHasWritePermission = false;
+    private Boolean currentUserHasWritePermission = null;
 
-    private Boolean currentUserIsOwner = false;
+    private Boolean currentUserIsOwner = null;
 
     private Date dateArrayDesignLastUpdated;
 
@@ -119,13 +119,13 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private String externalUri;
 
-    private Boolean hasBothIntensities = false;
+    private Boolean hasBothIntensities = null;
 
-    private Boolean hasCoexpressionAnalysis = false;
+    private Boolean hasCoexpressionAnalysis = null;
 
-    private Boolean hasDifferentialExpressionAnalysis = false;
+    private Boolean hasDifferentialExpressionAnalysis = null;
 
-    private Boolean hasEitherIntensity = false;
+    private Boolean hasEitherIntensity = null;
 
     private Boolean hasProbeSpecificForQueryGene;
 
@@ -133,7 +133,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private String investigators;
 
-    private Boolean isPublic = true;
+    private Boolean isPublic = null;
 
     private boolean isShared = false;
 
@@ -214,36 +214,35 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
                 otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidated(), otherBean.getTechnologyType(),
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
                 otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.getIsPublic(),
-                otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(), otherBean
-                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getDateCreated(), otherBean
-                        .getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
-                        .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
-                otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(), otherBean
-                        .getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(), otherBean
-                        .getDateLastUpdated(), otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(),
+                otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(),
+                otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getDateCreated(),
+                otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(),
+                otherBean.getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
+                otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(),
+                otherBean.getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(),
+                otherBean.getDateLastUpdated(), otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(),
                 otherBean.getMinPvalue(), otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(),
-                otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(), otherBean
-                        .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
-                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(), otherBean
-                        .getParentTaxonId() );
+                otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(),
+                otherBean.getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
+                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(),
+                otherBean.getParentTaxonId(), otherBean.getUserOwned() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
             String source, String accession, Integer bioAssayCount, String taxon, Long taxonId,
             Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
-            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, boolean validatedFlag,
-            String technologyType, boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
+            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, boolean validatedFlag, String technologyType,
+            boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
             Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
             boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
             String investigators, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
-            String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
-            Date dateLinkAnalysis, Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
+            String processedDataVectorComputationEventType, String missingValueAnalysisEventType, Date dateLinkAnalysis,
+            Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
             Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
-            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
-            Long experimentalDesign, Date autoTagDate,
-            Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
-            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails,
-            Boolean isSubset, Long parentTaxonId ) {
+            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity, Long experimentalDesign,
+            Date autoTagDate, Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses,
+            Date batchAnalysisDate, Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType,
+            String troubleDetails, Boolean isSubset, Long parentTaxonId, Boolean currentUserIsOwner ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -296,6 +295,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.troubleDetails = troubleDetails;
         this.isSubset = isSubset;
         this.parentTaxonId = parentTaxonId;
+        this.currentUserIsOwner = currentUserIsOwner;
     }
 
     /**
@@ -434,14 +434,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
      */
     public Integer getCoexpressionLinkCount() {
         return this.coexpressionLinkCount;
-    }
-
-    public Boolean getCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
-    }
-
-    public Boolean getCurrentUserIsOwner() {
-        return currentUserIsOwner;
     }
 
     /**
