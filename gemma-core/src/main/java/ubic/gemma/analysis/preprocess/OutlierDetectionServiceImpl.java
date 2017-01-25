@@ -78,9 +78,6 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-
-    @Autowired
     private SVDServiceHelper svdService;
 
     private OutlierDetectionTestDetails testDetails;
@@ -162,7 +159,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
      * @return
      */
     @Override
-    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, DoubleMatrix<BioAssay, BioAssay> cormat ) {
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
+            DoubleMatrix<BioAssay, BioAssay> cormat ) {
         return identifyOutliers( ee, cormat, DEFAULT_QUANTILE, DEFAULT_FRACTION );
     }
 
@@ -305,7 +303,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         lowerQuantileValue = sortedCors[( int ) ( Math.floor( desiredQuantileIndex ) - 1 )];
         upperQuantileValue = sortedCors[( int ) Math.floor( desiredQuantileIndex )];
 
-        return ( lowerQuantileValue + ( ( desiredQuantileIndex - Math.floor( desiredQuantileIndex ) ) * ( upperQuantileValue - lowerQuantileValue ) ) );
+        return ( lowerQuantileValue + ( ( desiredQuantileIndex - Math.floor( desiredQuantileIndex ) )
+                * ( upperQuantileValue - lowerQuantileValue ) ) );
     }
 
     private DoubleArrayList getCorrelationList( DoubleMatrix<BioAssay, BioAssay> cormat ) {
@@ -357,8 +356,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         if ( useRegression && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
 
             double importanceThreshold = 0.01;
-            Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee, ee.getExperimentalDesign()
-                    .getExperimentalFactors(), importanceThreshold );
+            Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee,
+                    ee.getExperimentalDesign().getExperimentalFactors(), importanceThreshold );
             /* Remove 'batch' from important factors */
             ExperimentalFactor batch = null;
             for ( ExperimentalFactor factor : importantFactors ) {
@@ -425,7 +424,9 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return bas;
     }
 
-    /*** Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range ***/
+    /***
+     * Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range
+     ***/
     private Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat ) {
 
