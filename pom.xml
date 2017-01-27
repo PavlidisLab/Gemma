@@ -466,7 +466,7 @@
 			<id>ibiblio</id>
 			<name>ibiblio</name>
 			<url>
-				http://mirrors.ibiblio.org/pub/mirrors/maven2
+				http://maven.ibiblio.org/maven2/
 			</url>
 			<layout>default</layout>
 			<snapshots>
