@@ -232,11 +232,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
             String source, String accession, Integer bioAssayCount, String taxon, Long taxonId,
             Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
-            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, boolean validatedFlag, String technologyType,
-            boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
-            Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
-            boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
-            String investigators, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
+            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, Boolean validatedFlag, String technologyType,
+            Boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
+            Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, Boolean isPublic,
+            Boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
+            String investigators, Date dateCreated, Boolean troubleFlag, Integer coexpressionLinkCount,
             String processedDataVectorComputationEventType, String missingValueAnalysisEventType, Date dateLinkAnalysis,
             Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
             Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
@@ -303,7 +303,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
      * @param sampleRemovedFlags
      */
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
-        Collection<AuditEventValueObject> converted = new HashSet<AuditEventValueObject>();
+        Collection<AuditEventValueObject> converted = new HashSet<>();
 
         for ( AuditEvent ae : s ) {
             converted.add( new AuditEventValueObject( ae ) );
