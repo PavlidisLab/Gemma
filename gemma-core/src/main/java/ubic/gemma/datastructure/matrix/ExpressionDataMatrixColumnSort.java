@@ -986,11 +986,7 @@ public class ExpressionDataMatrixColumnSort {
         }
 
         if ( !ExperimentalDesignUtils.isContinuous( ef ) ) {
-            if ( ef.getCategory().getCategory().toLowerCase().equals( "timepoint" ) ) {
-                sortByTimepoint( factorValues );
-            } else {
                 sortByControl( factorValues );
-            }
         } else {
             sortIfMeasurement( factorValues );
         }
