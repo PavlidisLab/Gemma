@@ -1,4 +1,5 @@
 /*
+
  * The Gemma project
  * 
  * Copyright (c) 2013 University of British Columbia
@@ -720,7 +721,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     /**
      * 
      */
-    public boolean getTroubled() {
+    public Boolean getTroubled() {
         return this.troubled;
     }
 
@@ -730,11 +731,13 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     @Override
     public boolean getUserCanWrite() {
+        if ( this.currentUserHasWritePermission == null ) return false;
         return this.currentUserHasWritePermission;
     }
 
     @Override
     public boolean getUserOwned() {
+        if ( this.currentUserIsOwner == null ) return false;
         return this.currentUserIsOwner;
     }
 
