@@ -136,9 +136,9 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private Boolean isPublic = null;
 
-    private boolean isShared = false;
+    private Boolean isShared = false;
 
-    private boolean isSubset = false;
+    private Boolean isSubset = false;
 
     private String linkAnalysisEventType;
 
@@ -176,11 +176,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private String technologyType;
 
-    private boolean troubled = false;
+    private Boolean troubled = false;
 
     private String troubleDetails = "(Reason for trouble not populated)";
 
-    private boolean validated = false;
+    private Boolean validated = false;
 
     public ExpressionExperimentValueObject() {
     }
@@ -761,11 +761,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     /**
      * 
      */
-    public boolean isHasBothIntensities() {
+    public Boolean isHasBothIntensities() {
         return this.hasBothIntensities;
     }
 
-    public boolean isSubset() {
+    public Boolean isSubset() {
         return isSubset;
     }
 
@@ -866,10 +866,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     public void setHasBothIntensities( boolean hasBothIntensities ) {
-        this.hasBothIntensities = hasBothIntensities;
-    }
-
-    public void setHasBothIntensities( Boolean hasBothIntensities ) {
         this.hasBothIntensities = hasBothIntensities;
     }
 
