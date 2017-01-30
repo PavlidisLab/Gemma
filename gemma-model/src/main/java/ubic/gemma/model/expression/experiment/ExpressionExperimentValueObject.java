@@ -731,12 +731,14 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     @Override
     public boolean getUserCanWrite() {
+        // FIXME consider making return type Boolean
         if ( this.currentUserHasWritePermission == null ) return false;
         return this.currentUserHasWritePermission;
     }
 
     @Override
     public boolean getUserOwned() {
+        // FIXME consider making return type Boolean
         if ( this.currentUserIsOwner == null ) return false;
         return this.currentUserIsOwner;
     }
