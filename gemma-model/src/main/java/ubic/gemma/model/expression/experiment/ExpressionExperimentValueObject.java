@@ -226,7 +226,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
                 otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(),
                 otherBean.getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
                 otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(),
-                otherBean.getParentTaxonId(), otherBean.getUserOwned() );
+                otherBean.getParentTaxonId(), otherBean.getUserOwned(), otherBean.getIsShared() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
@@ -243,7 +243,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity, Long experimentalDesign,
             Date autoTagDate, Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses,
             Date batchAnalysisDate, Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType,
-            String troubleDetails, Boolean isSubset, Long parentTaxonId, Boolean currentUserIsOwner ) {
+            String troubleDetails, Boolean isSubset, Long parentTaxonId, Boolean currentUserIsOwner,
+            Boolean isShared ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -267,6 +268,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.dateDifferentialAnalysis = dateDifferentialAnalysis;
         this.sampleRemovedFlags = sampleRemovedFlags;
         this.isPublic = isPublic;
+        this.isShared = isShared;
         this.currentUserHasWritePermission = currentUserHasWritePermission;
         this.clazz = clazz;
         this.sourceExperiment = sourceExperiment;
@@ -319,7 +321,10 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     /**
      * Copies all properties from the argument value object into this value object.
+     * 
+     * @deprecated not used? Needs care to maintain.
      */
+    @Deprecated
     public void copy( ExpressionExperimentValueObject otherBean ) {
         if ( otherBean != null ) {
             this.setId( otherBean.getId() );
@@ -344,6 +349,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             this.setDateDifferentialAnalysis( otherBean.getDateDifferentialAnalysis() );
             this.setSampleRemovedFlags( otherBean.getSampleRemovedFlags() );
             this.setIsPublic( otherBean.getIsPublic() );
+            this.setIsShared( otherBean.getIsShared() );
             this.setClazz( otherBean.getClazz() );
             this.setSourceExperiment( otherBean.getSourceExperiment() );
             this.setPubmedId( otherBean.getPubmedId() );
@@ -575,11 +581,15 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     @Override
     public boolean getIsPublic() {
+        // FIXME - this is sometimes being left as null, but it shouldn't.
+        if ( this.isPublic == null ) return false;
         return this.isPublic;
     }
 
     @Override
     public boolean getIsShared() {
+        // FIXME - this is sometimes being left as null, but it shouldn't.
+        if ( this.isShared == null ) return false;
         return this.isShared;
     }
 
@@ -612,18 +622,17 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * <p>
+     * 
      * The number of terms (Characteristics) the experiment has to describe it.
-     * </p>
+     * 
      */
     public Integer getNumAnnotations() {
         return this.numAnnotations;
     }
 
     /**
-     * <p>
      * The number of experimental factors the experiment has (counting those that are populated with biomaterials)
-     * </p>
+     * 
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
@@ -666,6 +675,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.sampleRemovedFlags;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.model.SecureValueObject#getSecurableClass()
+     */
     @Override
     public Class<? extends Securable> getSecurableClass() {
         if ( this.isSubset ) {
