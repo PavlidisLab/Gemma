@@ -40,41 +40,9 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * Class to handle dumping data from Goldenpath into Gemma.
  * 
  * @author pavlidis
- * @version $Id$
+ * @deprecated
  */
 public class GoldenPathDumper extends GoldenPath {
-
-    /**
-     * @author paul
-     * @version $Id$
-     */
-    private class BioSequenceEnsemblMappingQuery extends MappingSqlQuery<BioSequence> {
-
-        public BioSequenceEnsemblMappingQuery( DataSource ds, String query ) {
-            super( ds, query );
-            compile();
-        }
-
-        @Override
-        public BioSequence mapRow( ResultSet rs, int rowNumber ) throws SQLException {
-            BioSequence bioSequence = BioSequence.Factory.newInstance();
-
-            DatabaseEntry de = DatabaseEntry.Factory.newInstance();
-
-            String name = rs.getString( "name" );
-            bioSequence.setName( name );
-            bioSequence.setPolymerType( PolymerType.RNA );
-            bioSequence.setIsCircular( false );
-
-            de.setAccession( name );
-            de.setExternalDatabase( ensembl );
-
-            bioSequence.setType( SequenceType.mRNA );
-            bioSequence.setSequenceDatabaseEntry( de );
-
-            return bioSequence;
-        }
-    }
 
     /**
      * @author paul
@@ -148,7 +116,6 @@ public class GoldenPathDumper extends GoldenPath {
     }
 
     private static final String REF_GENE_TABLE_NAME = "refGene";
-    private static final String ENSEMBL_TABLE_NAME = "ensGene";
 
     // these are provided for testing (switch off ones not using)
     private boolean DO_EST = true;
@@ -157,9 +124,7 @@ public class GoldenPathDumper extends GoldenPath {
 
     private boolean DO_REFSEQ = true;
 
-    ExternalDatabase genbank;
-
-    ExternalDatabase ensembl;
+    private ExternalDatabase genbank;
 
     public GoldenPathDumper() {
         super();
@@ -200,7 +165,7 @@ public class GoldenPathDumper extends GoldenPath {
         log.info( "starting ests" );
         int offset = 0;
         int numInput = 0;
-        Collection<Integer> seen = new HashSet<Integer>();
+        Collection<Integer> seen = new HashSet<>();
         while ( DO_EST && !( limit > 0 && numInput >= limit ) ) {
             try {
                 Collection<BioSequence> sequences = loadSequencesByQuery( "all_est", SequenceType.EST, limitSuffix
@@ -260,25 +225,6 @@ public class GoldenPathDumper extends GoldenPath {
             }
         }
 
-        log.info( "starting ensembl" ); // not for mouse.
-        offset = 0;
-        numInput = 0;
-        while ( DO_REFSEQ && !( limit > 0 && numInput >= limit ) ) {
-            try {
-                Collection<BioSequence> sequences = loadEnsemblByQuery( limitSuffix + " offset " + offset );
-                if ( sequences.size() == 0 ) {
-                    break;
-                }
-                Collection<BioSequence> toAdd = screenDuplicates( seen, sequences );
-                numInput = addToQueue( queue, numInput, toAdd );
-
-                offset += batchSize;
-            } catch ( Exception e ) {
-                log.info( e ); // This will happen if we run on a genome that doesn't have the ensembl tracks.
-                break;
-            }
-        }
-
     }
 
     /**
@@ -321,17 +267,6 @@ public class GoldenPathDumper extends GoldenPath {
      * @param query
      * @return
      */
-    private Collection<BioSequence> loadEnsemblByQuery( String limitSuffix ) {
-        String query = "SELECT name FROM " + ENSEMBL_TABLE_NAME + " " + limitSuffix;
-        BioSequenceEnsemblMappingQuery bsQuery = new BioSequenceEnsemblMappingQuery( this.jdbcTemplate.getDataSource(),
-                query );
-        return bsQuery.execute();
-    }
-
-    /**
-     * @param query
-     * @return
-     */
     private Collection<BioSequence> loadRefseqByQuery( String limitSuffix ) {
         String query = "SELECT name FROM " + REF_GENE_TABLE_NAME + " " + limitSuffix;
         BioSequenceRefseqMappingQuery bsQuery = new BioSequenceRefseqMappingQuery( this.jdbcTemplate.getDataSource(),
@@ -355,7 +290,7 @@ public class GoldenPathDumper extends GoldenPath {
      * @return
      */
     private Collection<BioSequence> screenDuplicates( Collection<Integer> seen, Collection<BioSequence> sequences ) {
-        Collection<BioSequence> toAdd = new HashSet<BioSequence>();
+        Collection<BioSequence> toAdd = new HashSet<>();
         for ( BioSequence sequence : sequences ) {
             if ( seen.contains( sequence.getName().hashCode() ) ) {
                 continue;

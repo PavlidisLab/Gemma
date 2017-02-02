@@ -119,6 +119,7 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
      * The number of distinct BioMaterials associated with the experiment.
      */
     public Integer getNumberOfSamples() {
+        // FIXME this is not set. See bug 4307
         return this.numberOfSamples;
     }
 
