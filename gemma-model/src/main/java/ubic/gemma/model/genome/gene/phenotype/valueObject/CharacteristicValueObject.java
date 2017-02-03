@@ -135,14 +135,15 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     @Override
     public int compareTo( CharacteristicValueObject o ) {
-
-        if ( this.category != null && o.category != null && !this.category.equalsIgnoreCase( o.category ) ) {
+        if ( this.category != null && o.category != null && !this.category.equalsIgnoreCase( o.category )
+                && o.category != null ) {
             return ( this.category.compareToIgnoreCase( o.category ) );
-        } else if ( this.taxon != null && o.taxon != null && !this.taxon.equalsIgnoreCase( o.taxon ) ) {
+        } else if ( this.taxon != null && o.taxon != null && !this.taxon.equalsIgnoreCase( o.taxon )
+                && o.taxon != null ) {
             return this.taxon.compareToIgnoreCase( o.taxon );
-        } else if ( !this.value.equalsIgnoreCase( o.value ) ) {
+        } else if ( this.value != null && !this.value.equalsIgnoreCase( o.value ) && o.value != null ) {
             return this.value.compareToIgnoreCase( o.value );
-        } else if ( this.valueUri != null ) {
+        } else if ( this.valueUri != null && o.valueUri != null ) {
             return this.valueUri.compareToIgnoreCase( o.valueUri );
         } else {
             return 1;
