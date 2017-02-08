@@ -2005,7 +2005,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                     v.setTroubleDetails( "Troubled reason not loaded" );
                 }
             } else {
-                v.setTroubleDetails( "Not troubled" );
+                v.setTroubleDetails( "Not troubled (Troubled status might be propagated from platform)" );
             }
             Object technology = res[12];
             if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );

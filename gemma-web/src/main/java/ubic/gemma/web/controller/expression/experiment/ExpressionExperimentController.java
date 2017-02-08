@@ -18,9 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.util.SecurityUtil;
-
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -40,20 +37,24 @@ import java.util.TreeMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONObject;
-
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.util.SecurityUtil;
+import net.sf.json.JSONObject;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
@@ -79,7 +80,9 @@ import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
@@ -95,6 +98,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -299,6 +303,9 @@ public class ExpressionExperimentController {
     private SecurityService securityService;
     @Autowired
     private TaxonService taxonService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
 
     @Autowired
     private SVDService svdService;
@@ -955,7 +962,13 @@ public class ExpressionExperimentController {
             throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
         }
 
-        ee = expressionExperimentService.thawLiter( ee );
+        try {
+            ee = expressionExperimentService.thawLiter( ee );
+        } catch ( UncategorizedSQLException e ) {
+            log.error( e );
+        } catch ( LazyInitializationException e ) {
+            log.error( e );
+        }
 
         Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
 
@@ -1012,11 +1025,26 @@ public class ExpressionExperimentController {
         }
 
         Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<Long> adids = new HashSet<>();
+        Collection<ArrayDesignValueObject> advos = new ArrayList<ArrayDesignValueObject>();
         for ( ArrayDesign ad : arrayDesignsUsed ) {
-            adids.add( ad.getId() );
+            ArrayDesignValueObject advo = arrayDesignService.loadValueObject( ad.getId() );
+
+            // Retrieve trouble details
+            AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( ad );
+            if ( troubleEvent != null ) {
+                advo.setTroubleDetails( StringEscapeUtils.escapeHtml4( troubleEvent.toString() ) );
+            }
+
+            advos.add( advo );
         }
-        finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
+        finalResult.setArrayDesigns( advos );
+
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( ad );
+            if ( troubleEvent != null ) {
+
+            }
+        }
 
         // this should be taken care of by the security interceptor. See bug 4373
         // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
@@ -1027,27 +1055,42 @@ public class ExpressionExperimentController {
          */
         finalResult.setDescription( ee.getDescription() );
 
-        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult.setPrimaryCitation(
-                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
-            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
+        try {
 
-            try {
-                finalResult.setPubmedId( Integer.parseInt( accession ) );
-            } catch ( NumberFormatException e ) {
-                log.warn( "Pubmed id not formatted correctly: " + accession );
+            if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
+                finalResult.setPrimaryCitation(
+                        CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+                String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
+
+                try {
+                    finalResult.setPubmedId( Integer.parseInt( accession ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "Pubmed id not formatted correctly: " + accession );
+                }
             }
+
+        } catch ( UncategorizedSQLException e ) {
+            log.error( e );
+        } catch ( LazyInitializationException e ) {
+            log.error( e );
         }
 
         finalResult.setQChtml( getQCTagHTML( ee ) );
 
         boolean hasBatchInformation = false;
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
-                break;
+        try {
+            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                    hasBatchInformation = true;
+                    break;
+                }
             }
+        } catch ( UncategorizedSQLException e ) {
+            log.error( e );
+        } catch ( LazyInitializationException e ) {
+            log.error( e );
         }
+
         finalResult.setHasBatchInformation( hasBatchInformation );
         if ( hasBatchInformation ) {
             finalResult.setBatchConfound( batchConfound( ee ) );

@@ -433,14 +433,16 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             }
 
             if ( troubledEEs.contains( id ) ) {
-                Collection<Long> tids = new HashSet<>();
-                tids.add( id );
-                Map<Long, AuditEvent> troublM = expressionExperimentService.getLastTroubleEvent( tids );
-                if ( !troublM.isEmpty() ) {
-                    eeVo.setTroubleDetails( troublM.get( id ).getDate() + ": " + troublM.get( id ).getNote() );
-                    eeVo.setTroubled( true );
+                eeVo.setTroubled( true );
+
+                // See if this troubled flag comes from event on this EE and if so, retrieve its details.
+                AuditEvent tEvent = expressionExperimentService.getOustandingTroubleEvent( id );
+                if ( tEvent != null ) {
+                    eeVo.setTroubleDetails( tEvent.getDate() + ": " + tEvent.getNote() );
                 } else {
-                    log.warn( "Status was out of date? for EE=" + id );
+                    log.warn(
+                            "No troubled details found. Flag probably propagated from platform, but status might be out of date. For EE="
+                                    + id );
                 }
             }
 
