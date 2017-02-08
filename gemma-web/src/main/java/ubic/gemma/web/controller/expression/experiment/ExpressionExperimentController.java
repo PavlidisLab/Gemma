@@ -1039,13 +1039,6 @@ public class ExpressionExperimentController {
         }
         finalResult.setArrayDesigns( advos );
 
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( ad );
-            if ( troubleEvent != null ) {
-
-            }
-        }
-
         // this should be taken care of by the security interceptor. See bug 4373
         // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
         // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
