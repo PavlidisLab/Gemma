@@ -18,8 +18,6 @@
  */
 package ubic.gemma.expression.experiment.service;
 
-import gemma.gsec.SecurityService;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -34,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import gemma.gsec.SecurityService;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
@@ -58,6 +57,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchi
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -331,8 +331,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public Collection<Long> filter( String searchString ) {
 
-        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService.search( SearchSettingsImpl
-                .expressionExperimentSearch( searchString ) );
+        Map<Class<?>, List<SearchResult>> searchResultsMap = searchService
+                .search( SearchSettingsImpl.expressionExperimentSearch( searchString ) );
 
         assert searchResultsMap != null;
 
@@ -679,9 +679,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.
+     * expression .experiment.ExpressionExperiment)
      */
     @Override
     @Transactional(readOnly = true)
@@ -746,8 +745,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithBatchEffect() {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
-                ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService
+                .getEntitiesWithEvent( ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment ee : entities ) {
             if ( this.getBatchEffect( ee ) == null ) {
@@ -769,8 +768,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ) {
         List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService.getEntitiesWithEvent(
-                ExpressionExperiment.class, auditEventClass ) );
+        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService
+                .getEntitiesWithEvent( ExpressionExperiment.class, auditEventClass ) );
         return entities;
     }
 
@@ -805,7 +804,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastLinkAnalysis( final Collection<Long> ids ) {
-        return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
+        return getLastEvent( this.loadMultiple( ids ), LinkAnalysisEvent.Factory.newInstance() );
     }
 
     /**
@@ -814,7 +813,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastMissingValueAnalysis( final Collection<Long> ids ) {
-        return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
+        return getLastEvent( this.loadMultiple( ids ), MissingValueAnalysisEvent.Factory.newInstance() );
     }
 
     /**
@@ -823,26 +822,47 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( final Collection<Long> ids ) {
-        return getLastEvent( ids, ProcessedVectorComputationEvent.Factory.newInstance() );
+        return getLastEvent( this.loadMultiple( ids ), ProcessedVectorComputationEvent.Factory.newInstance() );
     }
 
     /**
-     * @see ExpressionExperimentService#getLastTroubleEvent(Collection)
+     * @see ExpressionExperimentService#getOustandingTroubleEvent(Long)
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<Long, AuditEvent> getLastTroubleEvent( final Collection<Long> ids ) {
-        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+    public AuditEvent getOustandingTroubleEvent( final Long id ) {
+        ExpressionExperiment ee = this.load( id );
+
+        Collection<ExpressionExperiment> ees = new HashSet<>();
+        ees.add( ee );
 
         // this checks the array designs, too.
         Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
 
-        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
         for ( Auditable a : directEvents.keySet() ) {
-            troubleMap.put( a.getId(), directEvents.get( a ) );
+            return directEvents.get( a );
         }
 
-        return troubleMap;
+        return null;
+    }
+
+    /**
+     * @see ExpressionExperimentService#getLastTroubleEvent(Collection)
+     * @deprecated this method was used for event tracing to set TROUBLE flag. We should now be using the
+     *             {@link ExpressionExperimentService.getTroubled(Collection<Long>)} for this purpose.
+     */
+    @Deprecated
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, AuditEvent> getLastTroubleEvent( final Collection<Long> ids ) {
+        return getLastEvent( this.loadMultiple( ids ), TroubleStatusFlagEvent.Factory.newInstance() );
+    }
+
+    /**
+     * @return
+     */
+    private Map<Long, AuditEvent> getLastTroubleEvents() {
+        return getLastEvent( this.loadAll(), TroubleStatusFlagEvent.Factory.newInstance() );
     }
 
     /**
@@ -851,7 +871,25 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastValidationEvent( final Collection<Long> ids ) {
-        return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
+        return getLastEvent( this.loadMultiple( ids ), ValidatedFlagEvent.Factory.newInstance() );
+    }
+
+    /**
+     * @param ids
+     * @param type
+     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
+     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
+     */
+    private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
+
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        AuditEvent last;
+        for ( ExpressionExperiment experiment : ees ) {
+            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
+            lastEventMap.put( experiment.getId(), last );
+        }
+        return lastEventMap;
     }
 
     /**
@@ -995,6 +1033,14 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Override
     @Transactional(readOnly = true)
+    public Collection<Long> getTroubled( Collection<Long> ids ) {
+        Collection<Long> untroubled = this.getUntroubled( ids );
+        ids.removeAll( untroubled );
+        return ids;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
         Collection<Long> firstPass = this.expressionExperimentDao.getUntroubled( ids );
 
@@ -1052,8 +1098,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
-            boolean descending, Taxon taxon ) {
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+            Taxon taxon ) {
         return this.expressionExperimentDao.loadAllValueObjectsTaxonOrdered( orderField, descending, taxon );
     }
 
@@ -1329,42 +1375,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         if ( resource != null ) return resource.getLabel();
 
         return null;
-    }
-
-    /**
-     * @param ids
-     * @param type
-     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
-     */
-    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
-        AuditEvent last;
-        for ( ExpressionExperiment experiment : ees ) {
-            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
-            lastEventMap.put( experiment.getId(), last );
-        }
-        return lastEventMap;
-    }
-
-    /**
-     * @return
-     */
-    private Map<Long, AuditEvent> getLastTroubleEvents() {
-        Collection<ExpressionExperiment> ees = this.loadAll();
-
-        // this checks the array designs, too.
-        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
-
-        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
-        for ( Auditable a : directEvents.keySet() ) {
-            troubleMap.put( a.getId(), directEvents.get( a ) );
-        }
-
-        return troubleMap;
     }
 
     @Override

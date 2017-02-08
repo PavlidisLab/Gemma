@@ -411,6 +411,12 @@ public interface ExpressionExperimentService {
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
 
     /**
+     * @param id
+     * @return trouble event for the given id, if this event is still in effect. NUll if no such event is found.
+     */
+    public AuditEvent getOustandingTroubleEvent( Long id );
+
+    /**
      * @param ids
      * @return
      */
@@ -513,6 +519,14 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Taxon getTaxon( BioAssaySet bioAssaySet );
+
+    /**
+     * Of the given EE ids, get the ones which are troubled.
+     * 
+     * @param ids
+     * @return
+     */
+    public Collection<Long> getTroubled( Collection<Long> ids );
 
     /**
      * Of the given EE ids, get the ones which are not troubled.
