@@ -96,9 +96,8 @@ public class IndexServiceImpl implements IndexService {
         public IndexerResult execute() {
             IndexerResult result = null;
             String taskId = taskRunningService.submitRemoteTask( taskCommand );
-            @SuppressWarnings("unchecked")
-            SubmittedTask<IndexerResult> indexingTask = ( SubmittedTask<IndexerResult> ) taskRunningService
-                    .getSubmittedTask( taskId );
+
+            SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
             try {
                 TaskResult f = indexingTask.getResult();
 

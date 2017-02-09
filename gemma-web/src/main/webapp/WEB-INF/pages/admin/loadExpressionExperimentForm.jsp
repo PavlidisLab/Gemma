@@ -1,16 +1,16 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <head>
-
 	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/loadExpressionExperiment.js' />
-
 </head>
 
-<title><fmt:message key="expressionExperimentLoad.title" />
+<title>
+	<fmt:message key="expressionExperimentLoad.title" />
 </title>
+
 <content tag="heading">
-<fmt:message key="expressionExperimentLoad.title" />
+	<fmt:message key="expressionExperimentLoad.title" />
 </content>
 
 <fmt:message key="expressionExperimentLoad.message" />
@@ -24,35 +24,40 @@
 		</th>
 		<td>
 			<input type="text" name="accession" id="accession" size="40" value="<c:out value="${status.value}"/>" />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 	<tr>
 		<th>
 			<fmt:message key="expressionExperimentLoad.arrayExpress" />
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+				onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false">
+				<img src="/Gemma/images/help.png" /> 
+			</a>
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="arrayExpress" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+			<input id="arrayExpress" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 				<c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 	<tr>
 		<th>
 			<fmt:message key="expressionExperimentLoad.platformOnly" />
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Load an array design only, not  expression data.'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+				onclick="showHelpTip(event, 'Load an array design only, not  expression data.'); return false">
+				<img src="/Gemma/images/help.png" />
+			</a>
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true" id="loadPlatformOnly"
+			<input type="checkbox" name="<c:out value="${status.expression}"/>" value="true" id="loadPlatformOnly"
 				<c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 	<tr>
@@ -64,37 +69,42 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="suppressMatching" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+			<input id="suppressMatching" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 				<c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 	<tr>
 		<th>
 			<fmt:message key="expressionExperimentLoad.splitByPlatform" />
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+				onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want the sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false">
+				<img src="/Gemma/images/help.png" /> 
+			</a>
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="splitByPlatform" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+			<input id="splitByPlatform" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 				<c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 	<tr>
 		<th>
 			<fmt:message key="expressionExperimentLoad.allowSuperSeries" />
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'If series is a superseries in GEO, allow it to load; leave this unchecked to prevent accidental superseries loading.'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+				onclick="showHelpTip(event, 'If series is a superseries in GEO, allow it to load; leave this unchecked to prevent accidental superseries loading.'); return false">
+				<img src="/Gemma/images/help.png" /> 
+			</a>
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input checked id="allowSuperSeriesLoad" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>"
+			<input checked id="allowSuperSeriesLoad" type="checkbox" name="<c:out value="${status.expression}"/>"
 				value="true" <c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 	
@@ -103,14 +113,16 @@
 		<th>
 			<fmt:message key="expressionExperimentLoad.allowArrayExpressDesign" />
 			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'When loading from ArrayExpress, allow the array design to be imported. It must not be an array design already in Gemma!'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+				onclick="showHelpTip(event, 'When loading from ArrayExpress, allow the array design to be imported. It must not be an array design already in Gemma!'); return false">
+				<img src="/Gemma/images/help.png" /> 
+			</a>
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input checked id="allowArrayExpressDesign" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>"
+			<input checked id="allowArrayExpressDesign" type="checkbox" name="<c:out value="${status.expression}"/>"
 				value="false" <c:if test="${status.value}">checked</c:if> />
-			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
+			<span class="fieldError"> <c:out value="${status.errorMessage}" /> 
+			</span>
 		</td>
 	</tr>
 

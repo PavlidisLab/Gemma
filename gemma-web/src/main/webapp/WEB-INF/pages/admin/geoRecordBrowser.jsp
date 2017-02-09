@@ -29,16 +29,16 @@
 </head>
 <body>
 
-	<div id="messages" style="margin: 10px; width: 600px"></div>
+	<div id="messages"></div>
 
-	<div id="progress-area" style="padding: 20px; "></div>
+	<div id="progress-area"></div>
 
 	<p>
 		Displaying <b> <span id="numRecords" ></span>
 		</b> GEO records.
 	</p>
 
-	<div id="geostuff" style="padding: 20px; margin: 10px;" ></div>
+	<div id="geostuff" class="table-padding"></div>
 
 	<br />
 	<p>

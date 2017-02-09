@@ -33,11 +33,12 @@
 		design</a>
 </p>
 
-<Gemma:expressionQC ee="${expressionExperiment.id}" numOutliersRemoved="${numOutliersRemoved}" numPossibleOutliers="${numPossibleOutliers}" hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
+<Gemma:expressionQC ee="${expressionExperiment.id}" numOutliersRemoved="${numOutliersRemoved}" numPossibleOutliers="${numPossibleOutliers}" 
+	hasCorrMat="${hasCorrMat}" hasNodeDegreeDist="${hasNodeDegreeDist }"
 	hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }" hasCorrDist="${hasCorrDist}"
 	eeManagerId="eemanager" />
 
-<div style="padding: 20px; margin: 10px;" id="bioAssayTable" ></div>
+<div id="bioAssayTable" class="table-padding" ></div>
 
 <input id="eeId" type="hidden" value="${expressionExperiment.id}" />
 

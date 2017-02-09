@@ -4,14 +4,19 @@
 
 <title><fmt:message key="bioAssay.details" /></title>
 
-<h2>
-	<fmt:message key="bioAssay.details" />
-</h2>
-<table style="width:30%; table{border-collapse: separate; border-spacing: 10px;}">
+<div class="padded">
+	<h2>
+		<fmt:message key="bioAssay.details" />
+	</h2>
+</div>
+
+<table class="detail">
 	<tr>
-		<td class="label"><strong> <fmt:message
-					key="bioAssay.name" />
-		</strong></td>
+		<td class="label">
+			<strong> 
+				<fmt:message key="bioAssay.name" />
+			</strong>
+		</td>
 		<td>${bioAssay.name}</td>
 	</tr>
 	<tr>

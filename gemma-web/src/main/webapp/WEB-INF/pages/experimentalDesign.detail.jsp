@@ -4,10 +4,13 @@
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
 <head>
-<title><fmt:message key="experimentalDesign.details" /></title>
-<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/eeDataFetch.js' />
-<jwr:script src='/scripts/app/ExperimentalDesign.js' />
+	<title>
+		<fmt:message key="experimentalDesign.details" />
+	</title>
+	
+	<jwr:script src='/scripts/api/ext/data/DwrProxy.js' />
+	<jwr:script src='/scripts/app/eeDataFetch.js' />
+	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
 <input type="hidden" id="reloadOnLogout" value="true">
@@ -21,11 +24,10 @@
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
 
-<div style="padding-left: 20px; margin-bottom: 10px;">
+<div class="pleft-mbot">
 	<h2>
 		<fmt:message key="experimentalDesign.details" />
-		for <a href='<c:out value="${expressionExperimentUrl}" />'><jsp:getProperty name="expressionExperiment"
-				property="shortName" /> </a>
+		for <a href='<c:out value="${expressionExperimentUrl}" />'><jsp:getProperty name="expressionExperiment"	property="shortName" /> </a>
 	</h2>
 
 	<c:choose>
@@ -45,50 +47,57 @@
 	</c:choose>
 
 
-	<table style="table{border-collapse: separate; border-spacing: 3px;}">
+	<table class="detail">
 		<tr>
 			<td class="label"><b><fmt:message key="expressionExperiment.name" /> </b></td>
-			<td><c:choose>
+			<td>
+				<c:choose>
 					<c:when test="${not empty expressionExperiment.name}">
 						<c:out value="${expressionExperiment.name}" />
 					</c:when>
 					<c:otherwise>(Name not available)</c:otherwise>
-				</c:choose></td>
+				</c:choose>
+			</td>
 		</tr>
+		
 		<tr>
 			<td class="label"><fmt:message key="expressionExperiment.description" /></td>
-			<td><c:choose>
+			<td>
+				<c:choose>
 					<c:when test="${not empty expressionExperiment.description}">
 						<textarea rows=12 readonly style="width: 700px; background-color: white; border: 1px solid gainsboro">
 							<c:out value="${expressionExperiment.description}" />
 						</textarea>
 					</c:when>
 					<c:otherwise>(Description not available)</c:otherwise>
-				</c:choose></td>
+				</c:choose>
+			</td>
 		</tr>
+		
 		<tr>
 			<td class="label"><fmt:message key="databaseEntry.title" /></td>
-
-			<td><c:choose>
+			<td>
+				<c:choose>
 					<c:when test="${not empty expressionExperiment.accession}">
 						<Gemma:databaseEntry databaseEntry="${expressionExperiment.accession }" />
 					</c:when>
 					<c:otherwise>(Database entry not available)</c:otherwise>
-				</c:choose></td>
+				</c:choose>
+			</td>
 		</tr>
+		
 		<tr>
 			<td class="label"><fmt:message key="pubMed.publication" /></td>
-
-
-			<td><c:choose>
+			<td>
+				<c:choose>
 					<c:when test="${not empty expressionExperiment.primaryPublication}">
 						<Gemma:citation citation="${expressionExperiment.primaryPublication }" />
 					</c:when>
 					<c:otherwise>(Primary publication not available)</c:otherwise>
-				</c:choose></td>
-
-
+				</c:choose>
+			</td>
 		</tr>
+		
 	</table>
 </div>
 <security:accesscontrollist domainObject="${expressionExperiment}" hasPermission="WRITE,ADMINISTRATION">

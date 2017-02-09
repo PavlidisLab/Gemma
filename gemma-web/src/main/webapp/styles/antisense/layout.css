@@ -109,6 +109,25 @@ div#footer div#divider {
 	border-top: 1px solid #abc;
 }
 
+div#messages{
+	margin: 10px;
+	width: 600px;
+}
+
+div#progress-area{
+	padding: 20px; 
+}
+
+div.table-padding{
+	padding: 20px;
+	margin: 10px;
+}
+
+div.pleft-mbot{
+	padding-left: 20px;
+	margin-bottom: 10px;
+}
+
 /* END FOOTER */ /* END LAYOUT */ /* custom layout for data summary */
 .datasummaryarea {
 	float: right;
@@ -156,4 +175,11 @@ table.list {
 	border-color: gray gray gray gray;
 	border-collapse: separate;
 	background-color: white;
+}
+
+table.detail{
+	padding: 2px; 
+	width: 30%; 
+	border-collapse: separate; 
+	border-spacing: 4px;
 }

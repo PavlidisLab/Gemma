@@ -1,8 +1,10 @@
 <%-- jshowoff.css is included in the bundle --%>
 <div id="sloganText">
-	<h2 style="text-align: center; color: grey; font-size: 1.8em">Tools and database for meta-analysis of functional
-		genomics data</h2>
+	<h2 style="text-align: center; color: grey; font-size: 1.8em">
+		Tools and database for meta-analysis of functional genomics data
+	</h2>
 </div>
+
 <div id="frontPageSlideShow" align="center"
 	style="width: 100%; background: url(/Gemma/images/slideShow/gradientBack.jpg) repeat-x; margin-bottom: 30px; border-top: 1px solid gainsboro; border-bottom: 1px solid gainsboro;">
 	<div id="features" style="overflow: hidden;">
@@ -10,16 +12,16 @@
 			<table>
 				<tr>
 					<td class="slideImageTD">
-						<%-- Width here needs to be enough to fit the labels at left and right edges --%> <img
-						src="http://chart.apis.google.com/chart?chs=340x240&cht=p&chco=224499&chd=${ googleData}
+						<%-- Width here needs to be enough to fit the labels at left and right edges --%> 
+						<img src="http://chart.apis.google.com/chart?chs=340x240&cht=p&chco=224499&chd=${ googleData}
 									&chds=a&chdl=${ googleLabels}&chf=bg,s,FFFFFF00
 									&chdlp=b|l&chdls=2f2f2f,13"
-						width="340" height="240" alt="" /> <img style="position: absolute; top: 123px; left: 250px"
-						src="/Gemma/images/slideShow/humanOutline_35_3.png" /> <img style="position: absolute; top: 60px; left: 200px"
-						src="/Gemma/images/slideShow/mouseOutline65_simplified.png" /> <!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
+							width="340" height="240" alt="" /> 
+						<img style="position: absolute; top: 123px; left: 250px" src="/Gemma/images/slideShow/humanOutline_35_3.png" /> 
+						<img style="position: absolute; top: 60px; left: 200px"	src="/Gemma/images/slideShow/mouseOutline65_simplified.png" /> 
+						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
-					<td class="slideTextTD">Over <b>6000</b> curated expression studies
-					</td>
+					<td class="slideTextTD">Over <b>6000</b> curated expression studies	</td>
 				</tr>
 			</table>
 		</div>
@@ -27,8 +29,8 @@
 			<table>
 				<tr>
 					<td class="slideImageTD"><img src="/Gemma/images/slideShow/diffEx.png" style="margin-top: 10px" /></td>
-					<td align=center class="slideTextTD">Search and visualise <b>differential expression</b> patterns across genes
-						and conditions
+					<td align=center class="slideTextTD">
+						Search and visualise <b>differential expression</b> patterns across genes and conditions
 					</td>
 				</tr>
 			</table>
@@ -38,8 +40,8 @@
 				<tr>
 					<td class="slideImageTD"><img class="rounded" src="/Gemma/images/slideShow/coex.png" style="margin-top: 15px;">
 					</td>
-					<td class="slideTextTD">Search <b>coexpression</b> patterns across studies and visualise the results in a
-						network
+					<td class="slideTextTD">
+						Search <b>coexpression</b> patterns across studies and visualise the results in a network
 					</td>
 				</tr>
 			</table>
@@ -48,7 +50,9 @@
 			<table>
 				<tr>
 					<td class="slideImageTD"><img src="/Gemma/images/slideShow/myGemma2.png" style="padding: 15px"></td>
-					<td class="slideTextTD"><b>Create and share</b> your own gene and experiment groups</td>
+					<td class="slideTextTD">
+						<b>Create and share</b> your own gene and experiment groups
+					</td>
 				</tr>
 			</table>
 		</div>
@@ -59,7 +63,8 @@
 					<td class="slideTextTD">
 						<div>
 							<img src="/Gemma/images/logo/phenocarta-45p.png">
-						</div> Browse over 60,000 evidence-based <b>gene-to-phenotype associations</b> and create your own
+						</div> 
+						Browse over 60,000 evidence-based <b>gene-to-phenotype associations</b> and create your own
 					</td>
 				</tr>
 			</table>
