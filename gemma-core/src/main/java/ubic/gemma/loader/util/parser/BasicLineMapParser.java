@@ -98,8 +98,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
     public void parse( InputStream is ) throws IOException {
 
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
-        try (@SuppressWarnings("resource")
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
 
             StopWatch timer = new StopWatch();
             timer.start();

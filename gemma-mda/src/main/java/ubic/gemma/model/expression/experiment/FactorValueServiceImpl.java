@@ -52,6 +52,7 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#getAllFactorValues()
      */
+    @SuppressWarnings("unchecked")
     protected java.util.Collection<FactorValue> handleGetAllFactorValues() {
         return ( Collection<FactorValue> ) this.getFactorValueDao().loadAll();
     }
@@ -71,6 +72,7 @@ public class FactorValueServiceImpl extends FactorValueServiceBase {
      * 
      * @see ubic.gemma.model.expression.experiment.FactorValueServiceBase#handleLoadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<FactorValue> handleLoadAll() {
         return ( Collection<FactorValue> ) this.getFactorValueDao().loadAll();

@@ -38,6 +38,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 public abstract class BioAssay extends Auditable implements gemma.gsec.model.SecuredChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7868768731812964045L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
      */
     public static final class Factory {

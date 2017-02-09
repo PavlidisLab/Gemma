@@ -18,14 +18,14 @@
  */
 package ubic.gemma.infrastructure.jms;
 
-import org.apache.activemq.command.ActiveMQQueue;
-import ubic.gemma.infrastructure.common.MessageReceiver;
-
 import javax.jms.Queue;
 
+import org.apache.activemq.command.ActiveMQQueue;
+
+import ubic.gemma.infrastructure.common.MessageReceiver;
+
 /**
- * author: anton
- * date: 08/02/13
+ * author: anton date: 08/02/13
  */
 public class JmsMessageReceiver<T> implements MessageReceiver<T> {
 
@@ -37,15 +37,17 @@ public class JmsMessageReceiver<T> implements MessageReceiver<T> {
         this.queue = new ActiveMQQueue( queueName );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T receive() {
         Object message = jmsHelper.receiveMessage( queue );
-        return (T) message;
+        return ( T ) message;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public T blockingReceive() {
         Object message = jmsHelper.blockingReceiveMessage( queue );
-        return (T) message;
+        return ( T ) message;
     }
 }

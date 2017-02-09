@@ -25,6 +25,10 @@ package ubic.gemma.model.analysis;
  */
 public abstract class Analysis extends ubic.gemma.model.common.Auditable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -7666181528240555473L;
     private ubic.gemma.model.common.protocol.Protocol protocol;
     private ubic.gemma.model.common.description.ExternalDatabase source;
 

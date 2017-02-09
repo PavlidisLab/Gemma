@@ -40,7 +40,7 @@
 		</tr>
 		<tr>
 			<td>
-				<label styleClass="desc" key="arrayDesign" />
+				<label styleClass="desc" key="arrayDesign" ></label>
 				<spring:bind path="arrayDesignSequenceAddCommand.arrayDesign">
 					<select name="${status.expression}">
 						<c:forEach items="${arrayDesigns}" var="arrayDesign">
@@ -58,7 +58,7 @@
 		</tr>
 		<tr>
 			<td>
-				<label styleClass="desc" key="sequence.file" />
+				<label styleClass="desc" key="sequence.file" ></label>
 				<spring:bind path="arrayDesignSequenceAddCommand.sequenceFile.file">
 					<input type="file" size=30
 						name="<c:out value="${status.expression}" />"
@@ -70,7 +70,7 @@
 		</tr>
 		<tr>
 			<td>
-				<label styleClass="desc" key="sequenceType" />
+				<label styleClass="desc" key="sequenceType" ></label>
 				<spring:bind path="arrayDesignSequenceAddCommand.sequenceType">
 					<select name="${status.expression}">
 						<c:forEach items="${sequenceTypes}" var="sequenceType">

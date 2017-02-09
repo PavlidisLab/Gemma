@@ -18,8 +18,6 @@
  */
 package ubic.gemma.expression.experiment.service;
 
-import gemma.gsec.SecurityService;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -31,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import gemma.gsec.SecurityService;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -78,16 +77,16 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
          */
         Collection<ExpressionExperimentSet> dups = findByName( eesvo.getName() );
         if ( dups == null || !dups.isEmpty() ) {
-            throw new IllegalArgumentException( "Sorry, there is already a set with that name (" + eesvo.getName()
-                    + ")" );
+            throw new IllegalArgumentException(
+                    "Sorry, there is already a set with that name (" + eesvo.getName() + ")" );
         }
 
         ExpressionExperimentSet newSet = ExpressionExperimentSet.Factory.newInstance();
         newSet.setName( eesvo.getName() );
         newSet.setDescription( eesvo.getDescription() );
 
-        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService.loadMultiple( eesvo
-                .getExpressionExperimentIds() );
+        Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService
+                .loadMultiple( eesvo.getExpressionExperimentIds() );
 
         newSet.getExperiments().addAll( datasetsAnalyzed );
 
@@ -138,9 +137,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#deleteDatabaseEntity(ubic.gemma.expression
-     * .experiment.DatabaseBackedExpressionExperimentSetValueObject)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#deleteDatabaseEntity(ubic.gemma.
+     * expression .experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
     @Transactional
@@ -201,9 +199,9 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         eeSet = ExpressionExperimentSet.Factory.newInstance();
         eeSet.setTaxon( taxon );
         eeSet.setName( getMasterSetName( taxon ) );
-        eeSet.setDescription( String.format(
-                ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION,
-                String.valueOf( expressionExperiments.size() ) ) );
+        eeSet.setDescription(
+                String.format( ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION,
+                        String.valueOf( expressionExperiments.size() ) ) );
         eeSet.getExperiments().addAll( expressionExperiments );
         return eeSet;
     }
@@ -218,8 +216,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public boolean isAutomaticallyGenerated( String experimentSetDescription ) {
-        String regexDesc = String.format(
-                ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
+        String regexDesc = String
+                .format( ExpressionExperimentSetService.AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION, ".*" );
         return experimentSetDescription.matches( regexDesc );
     }
 
@@ -228,6 +226,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * 
      * @see ExpressionExperimentSetService#load(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
@@ -295,9 +294,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ExpressionExperimentSetService#thaw(ubic.gemma.model.analysis.expression
-     * .ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#thaw(ubic.gemma.model.analysis.expression .ExpressionExperimentSet)
      */
     @Override
     @Transactional(readOnly = true)
@@ -315,8 +312,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             throw new IllegalArgumentException( "Cannot update null set" );
         }
         if ( expressionExperimentSet.getId() == null || expressionExperimentSet.getId() < 0 ) {
-            throw new IllegalArgumentException( "Can only update an existing eeset (passed id="
-                    + expressionExperimentSet.getId() + ")" );
+            throw new IllegalArgumentException(
+                    "Can only update an existing eeset (passed id=" + expressionExperimentSet.getId() + ")" );
         }
 
         if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
@@ -397,9 +394,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#updateDatabaseEntity(ubic.gemma.expression
-     * .experiment.DatabaseBackedExpressionExperimentSetValueObject)
+     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#updateDatabaseEntity(ubic.gemma.
+     * expression .experiment.DatabaseBackedExpressionExperimentSetValueObject)
      */
     @Override
     @Transactional
@@ -442,8 +438,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         Collection<ExpressionExperiment> newExperiments = expressionExperimentService.loadMultiple( eeIds );
 
         if ( newExperiments.isEmpty() ) {
-            throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
-                    + " provided)" );
+            throw new IllegalArgumentException(
+                    "None of the experiment ids were valid (out of " + eeIds.size() + " provided)" );
         }
         if ( newExperiments.size() < eeIds.size() ) {
             throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found "
@@ -457,8 +453,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
 
             // make sure experiments being added are from the right taxon
             if ( eeTaxon == null || !eeTaxon.equals( eeSet.getTaxon() ) ) {
-                throw new IllegalArgumentException( experiment
-                        + " is of the wrong taxon to add to eeset. EESet taxon is " + eeSet.getTaxon() );
+                throw new IllegalArgumentException(
+                        experiment + " is of the wrong taxon to add to eeset. EESet taxon is " + eeSet.getTaxon() );
             }
 
             basColl.add( experiment );
@@ -482,7 +478,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      */
     @Override
     @Transactional
-    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO ) {
+    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc(
+            ExpressionExperimentSetValueObject eeSetVO ) {
 
         Long groupId = eeSetVO.getId();
         ExpressionExperimentSet eeSet = this.load( groupId );
@@ -502,8 +499,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ExpressionExperimentSet)
      */
     @Override
-    protected ExpressionExperimentSet handleCreate(
-            ExpressionExperimentSet expressionExperimentSet ) {
+    protected ExpressionExperimentSet handleCreate( ExpressionExperimentSet expressionExperimentSet ) {
         return this.getExpressionExperimentSetDao().create( expressionExperimentSet );
     }
 
@@ -536,6 +532,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().loadAll();

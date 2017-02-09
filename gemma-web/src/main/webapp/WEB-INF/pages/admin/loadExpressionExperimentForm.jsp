@@ -36,7 +36,7 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="arrayExpress" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+			<input id="arrayExpress" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 				<c:if test="${status.value}">checked</c:if> />
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>
@@ -50,7 +50,7 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true" id="loadPlatformOnly"
+			<input style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true" id="loadPlatformOnly"
 				<c:if test="${status.value}">checked</c:if> />
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>
@@ -64,7 +64,7 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="suppressMatching" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+			<input id="suppressMatching" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 				<c:if test="${status.value}">checked</c:if> />
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>
@@ -78,7 +78,7 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input id="splitByPlatform" align="left" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
+			<input id="splitByPlatform" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>" value="true"
 				<c:if test="${status.value}">checked</c:if> />
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>
@@ -92,7 +92,7 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input checked id="allowSuperSeriesLoad" align="left" type="checkbox" name="<c:out value="${status.expression}"/>"
+			<input checked id="allowSuperSeriesLoad" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>"
 				value="true" <c:if test="${status.value}">checked</c:if> />
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>
@@ -108,7 +108,7 @@
 		</th>
 		<td align="left">
 			<input type="hidden" name="_<c:out value="${status.expression}"/>">
-			<input checked id="allowArrayExpressDesign" align="left" type="checkbox" name="<c:out value="${status.expression}"/>"
+			<input checked id="allowArrayExpressDesign" style="text-align: left;" type="checkbox" name="<c:out value="${status.expression}"/>"
 				value="false" <c:if test="${status.value}">checked</c:if> />
 			<span class="fieldError"> <c:out value="${status.errorMessage}" /> </span>
 		</td>

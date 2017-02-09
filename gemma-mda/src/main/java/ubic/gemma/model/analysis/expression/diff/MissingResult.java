@@ -21,6 +21,11 @@ package ubic.gemma.model.analysis.expression.diff;
  * @version $Id$
  */
 public class MissingResult extends DiffExprGeneSearchResult {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2868418055346274525L;
+
     public MissingResult( Long resultSetId, Long geneId ) {
         super( resultSetId, geneId );
     }

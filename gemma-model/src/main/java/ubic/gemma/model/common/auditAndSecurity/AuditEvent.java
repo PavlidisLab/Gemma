@@ -34,6 +34,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 public abstract class AuditEvent implements Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -1212093157703833905L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent}.
      */
     public static final class Factory {

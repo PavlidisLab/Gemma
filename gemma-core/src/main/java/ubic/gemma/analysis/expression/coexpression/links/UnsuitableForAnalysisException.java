@@ -24,6 +24,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class UnsuitableForAnalysisException extends RuntimeException {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4436136164850796179L;
+
     public UnsuitableForAnalysisException( ExpressionExperiment ee, String string ) {
         super( ee.getShortName() + " Unsuitable for analysis: " + string );
     }

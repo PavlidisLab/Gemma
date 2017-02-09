@@ -34,11 +34,11 @@
 	<div id="progress-area" style="padding: 20px; "></div>
 
 	<p>
-		Displaying <b> <span id="numRecords" />
+		Displaying <b> <span id="numRecords" ></span>
 		</b> GEO records.
 	</p>
 
-	<div id="geostuff" style="padding: 20px; margin: 10px;" />
+	<div id="geostuff" style="padding: 20px; margin: 10px;" ></div>
 
 	<br />
 	<p>

@@ -23,4 +23,9 @@ package ubic.gemma.model.association.phenotype;
  */
 public abstract class DataAnalysisEvidence extends PhenotypeAssociation {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1823081475754671450L;
+
 }

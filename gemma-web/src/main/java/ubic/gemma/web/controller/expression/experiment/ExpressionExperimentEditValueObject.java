@@ -34,6 +34,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  */
 public class ExpressionExperimentEditValueObject extends ExpressionExperimentDetailsValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1630521876359566915L;
     private Collection<QuantitationTypeValueObject> quantitationTypes;
 
     /**

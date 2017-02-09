@@ -34,6 +34,11 @@ import ubic.gemma.model.common.description.Characteristic;
  */
 public abstract class Investigation extends Auditable implements Securable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5191564466698945873L;
+
     private Collection<Characteristic> characteristics = new HashSet<>();
 
     private Collection<Contact> investigators = new HashSet<>();

@@ -24,6 +24,11 @@ import ubic.gemma.model.association.phenotype.GenericEvidence;
 
 public class GenericEvidenceValueObject extends EvidenceValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 754768748091915831L;
+
     public GenericEvidenceValueObject() {
         super();
     }

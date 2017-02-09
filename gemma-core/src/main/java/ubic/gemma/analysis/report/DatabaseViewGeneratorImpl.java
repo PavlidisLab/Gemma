@@ -32,14 +32,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -83,9 +83,6 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-
-    @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -284,7 +281,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             /*
              * For each gene that is differentially expressed, print out a line per contrast
              */
-            writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
+            writer.write(
+                    "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
             int i = 0;
             for ( ExpressionExperiment ee : experiments ) {
                 ee = expressionExperimentService.thawLite( ee );
@@ -354,7 +352,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                             if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD )
                                 continue;
 
-                            String formatted = formatDiffExResult( ee, dear, factorName, factorURI, baselineDescription );
+                            String formatted = formatDiffExResult( ee, dear, factorName, factorURI,
+                                    baselineDescription );
 
                             if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
 
@@ -364,7 +363,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 if ( limit > 0 && ++i > limit ) break;
 
-            }// EE loop
+            } // EE loop
         }
     }
 
@@ -398,8 +397,8 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
             String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
 
-            buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(), g
-                    .getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription,
+            buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(),
+                    g.getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription,
                     factorValueDescription, direction ) );
         }
 

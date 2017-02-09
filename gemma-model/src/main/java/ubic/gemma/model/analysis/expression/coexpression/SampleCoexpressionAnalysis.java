@@ -26,6 +26,11 @@ import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 public abstract class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5006465967597402551L;
+
+    /**
      * Constructs new instances of {@link SampleCoexpressionAnalysis}.
      */
     public static final class Factory {

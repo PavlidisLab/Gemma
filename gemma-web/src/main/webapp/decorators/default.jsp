@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <%-- Include common set of tag library declarations for each layout --%>
 <%@ include file="/common/taglibs.jsp"%>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <%-- Include common set of meta tags for each layout --%>
 <%@ include file="/common/meta.jsp"%>

@@ -31,6 +31,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  */
 public abstract class BioAssaySet extends Investigation {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 2368063046639481521L;
+
     public abstract Collection<BioAssay> getBioAssays();
 
 }

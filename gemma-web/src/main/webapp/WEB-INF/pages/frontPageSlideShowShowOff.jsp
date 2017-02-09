@@ -3,8 +3,8 @@
 	<h2 style="text-align: center; color: grey; font-size: 1.8em">Tools and database for meta-analysis of functional
 		genomics data</h2>
 </div>
-<div id="frontPageSlideShow" width="100%" align="center"
-	style="background: url(/Gemma/images/slideShow/gradientBack.jpg) repeat-x; margin-bottom: 30px; border-top: 1px solid gainsboro; border-bottom: 1px solid gainsboro;">
+<div id="frontPageSlideShow" align="center"
+	style="width: 100%; background: url(/Gemma/images/slideShow/gradientBack.jpg) repeat-x; margin-bottom: 30px; border-top: 1px solid gainsboro; border-bottom: 1px solid gainsboro;">
 	<div id="features" style="overflow: hidden;">
 		<div title="1" id="dataChart">
 			<table>

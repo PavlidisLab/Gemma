@@ -100,9 +100,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.BioMaterial
-     * )
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.
+     * BioMaterial )
      */
     @Override
     @Transactional(readOnly = true)
@@ -185,6 +184,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     /**
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioMaterial> handleLoadAll() {
         return ( Collection<BioMaterial> ) this.getBioMaterialDao().loadAll();
@@ -219,9 +219,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.biomaterial
-     * .BioMaterial)
+     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.
+     * biomaterial .BioMaterial)
      */
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) {
@@ -264,8 +263,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.getExperimentalFactor().getId().equals( factorId ) ) {
                         if ( fv.getMeasurement() == null ) {
-                            throw new IllegalStateException( "Should have been a measurement associated with fv=" + fv
-                                    + ", cannot update." );
+                            throw new IllegalStateException(
+                                    "Should have been a measurement associated with fv=" + fv + ", cannot update." );
                         } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
                             log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
                                     + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );

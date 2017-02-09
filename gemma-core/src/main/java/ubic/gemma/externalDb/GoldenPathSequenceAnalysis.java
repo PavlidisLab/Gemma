@@ -119,6 +119,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
      */
+    @SuppressWarnings("unchecked")
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap, String strand, Gene gene ) {
 
@@ -133,9 +134,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         }
 
         if ( mRNAs.size() > 0 ) {
-            if ( log.isDebugEnabled() )
-                log.debug( mRNAs.size() + " mRNAs found at chr" + chromosome + ":" + queryStart + "-" + queryEnd
-                        + ", trying to improve overlap of  " + exonOverlap );
+            if ( log.isDebugEnabled() ) log.debug( mRNAs.size() + " mRNAs found at chr" + chromosome + ":" + queryStart
+                    + "-" + queryEnd + ", trying to improve overlap of  " + exonOverlap );
 
             int maxOverlap = exonOverlap;
             for ( Gene mRNA : mRNAs ) {
@@ -198,6 +198,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
      */
+    @SuppressWarnings("unchecked")
     private int checkESTs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap, String strand ) {
 
@@ -212,9 +213,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         }
 
         if ( ests.size() > 0 ) {
-            if ( log.isDebugEnabled() )
-                log.debug( ests.size() + " ESTs found at chr" + chromosome + ":" + queryStart + "-" + queryEnd
-                        + ", trying to improve overlap of  " + exonOverlap );
+            if ( log.isDebugEnabled() ) log.debug( ests.size() + " ESTs found at chr" + chromosome + ":" + queryStart
+                    + "-" + queryEnd + ", trying to improve overlap of  " + exonOverlap );
 
             int maxOverlap = exonOverlap;
             for ( Gene est : ests ) {
@@ -248,7 +248,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param method
      * @param config The useEsts and useRNA options are relevant
      * @return a ThreePrimeData object containing the results.
-     * @see getThreePrimeDistances <p>
+     * @see getThreePrimeDistances
+     *      <p>
      *      FIXME this should take a PhysicalLocation as an argument.
      */
     private BlatAssociation computeLocationInGene( String chromosome, Long queryStart, Long queryEnd, String starts,
@@ -400,8 +401,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     PhysicalLocation genePl = PhysicalLocation.Factory.newInstance();
                     genePl.setStrand( pl.getStrand() );
 
-                    Chromosome c = Chromosome.Factory.newInstance(
-                            SequenceManipulation.deBlatFormatChromosomeName( chromosome ), taxon );
+                    Chromosome c = Chromosome.Factory
+                            .newInstance( SequenceManipulation.deBlatFormatChromosomeName( chromosome ), taxon );
                     pl.setChromosome( c );
                     genePl.setChromosome( c );
 
@@ -577,8 +578,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
          * Use kgXRef only to get the description - sometimes missing thus the outer join.
          */
         String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ', kgXref.description) "
-                + "FROM refFlat as r left outer join kgXref on r.geneName = kgXref.geneSymbol "
-                + "WHERE "
+                + "FROM refFlat as r left outer join kgXref on r.geneName = kgXref.geneSymbol " + "WHERE "
                 + "((r.txStart >= ? AND r.txEnd <= ?) OR (r.txStart <= ? AND r.txEnd >= ?) OR "
                 + "(r.txStart >= ?  AND r.txStart <= ?) OR  (r.txEnd >= ? AND  r.txEnd <= ? )) and r.chrom = ? ";
 
@@ -614,11 +614,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         Object[] params = null;
 
         if ( strand == null )
-            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
-                    regionStart, regionEnd, searchChrom };
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd, regionStart,
+                    regionEnd, searchChrom };
         else
-            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
-                    regionStart, regionEnd, searchChrom, strand };
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd, regionStart,
+                    regionEnd, searchChrom, strand };
 
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<Gene>>() {
 
@@ -640,8 +640,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     pl.setStrand( rs.getString( 5 ) );
                     pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
-                    Chromosome c = Chromosome.Factory.newInstance(
-                            SequenceManipulation.deBlatFormatChromosomeName( chromosome ), getTaxon() );
+                    Chromosome c = Chromosome.Factory
+                            .newInstance( SequenceManipulation.deBlatFormatChromosomeName( chromosome ), getTaxon() );
                     pl.setChromosome( c );
 
                     // note that we aren't setting the chromosome here; we already know that.
@@ -686,11 +686,11 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         Object[] params = null;
 
         if ( strand == null )
-            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
-                    regionStart, regionEnd, searchChrom };
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd, regionStart,
+                    regionEnd, searchChrom };
         else
-            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd,
-                    regionStart, regionEnd, searchChrom, strand };
+            params = new Object[] { regionStart, regionEnd, regionStart, regionEnd, regionStart, regionEnd, regionStart,
+                    regionEnd, searchChrom, strand };
 
         return this.getJdbcTemplate().query( query, params, new ResultSetExtractor<Collection<Gene>>() {
 
@@ -712,8 +712,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                     pl.setStrand( rs.getString( 5 ) );
                     pl.setBin( SequenceBinUtils.binFromRange( ( int ) rs.getLong( 3 ), rs.getInt( 4 ) ) );
 
-                    Chromosome c = Chromosome.Factory.newInstance(
-                            SequenceManipulation.deBlatFormatChromosomeName( chromosome ), getTaxon() );
+                    Chromosome c = Chromosome.Factory
+                            .newInstance( SequenceManipulation.deBlatFormatChromosomeName( chromosome ), getTaxon() );
                     pl.setChromosome( c );
 
                     // note that we aren't setting the chromosome here; we already know that.
@@ -886,9 +886,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<BlatAssociation> findAssociations( String chromosome, Long queryStart, Long queryEnd,
             String starts, String sizes, String strand, ThreePrimeDistanceMethod method, ProbeMapperConfig config ) {
 
-        if ( log.isDebugEnabled() )
-            log.debug( "Seeking gene overlaps with: chrom=" + chromosome + " start=" + queryStart + " end=" + queryEnd
-                    + " strand=" + strand );
+        if ( log.isDebugEnabled() ) log.debug( "Seeking gene overlaps with: chrom=" + chromosome + " start="
+                + queryStart + " end=" + queryEnd + " strand=" + strand );
 
         if ( queryEnd < queryStart ) throw new IllegalArgumentException( "End must not be less than start" );
 

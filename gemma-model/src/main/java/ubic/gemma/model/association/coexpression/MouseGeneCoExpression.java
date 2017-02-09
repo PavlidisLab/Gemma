@@ -26,6 +26,11 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 public abstract class MouseGeneCoExpression extends Gene2GeneCoexpression {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 6475614056538630827L;
+
+    /**
      * Constructs new instances of {@link MouseGeneCoExpression}.
      */
     public static final class Factory {

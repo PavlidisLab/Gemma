@@ -38,6 +38,11 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public abstract class BioMaterial extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 4374359557498220256L;
+
+    /**
      * Constructs new instances of {@link BioMaterial}.
      */
     public static final class Factory {

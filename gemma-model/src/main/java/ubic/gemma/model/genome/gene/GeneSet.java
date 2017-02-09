@@ -35,6 +35,11 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 public abstract class GeneSet extends Auditable implements SecuredNotChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 4357218100681569138L;
+
+    /**
      * Constructs new instances of {@link GeneSet}.
      */
     public static final class Factory {

@@ -31,6 +31,11 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalysisResultSet {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 7226901182513177574L;
+
+    /**
      * Constructs new instances of {@link ExpressionAnalysisResultSet}.
      */
     public static final class Factory {

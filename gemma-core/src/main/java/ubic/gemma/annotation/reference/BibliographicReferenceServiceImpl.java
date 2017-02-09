@@ -196,6 +196,7 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
 
+        @SuppressWarnings("unchecked")
         List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( ss,
                 BibliographicReference.class );
 
@@ -234,8 +235,9 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) {
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search(
-                SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
+        @SuppressWarnings("unchecked")
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+                .search( SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );

@@ -21,23 +21,22 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.io.Serializable;
 import java.util.Collection;
 
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.stereotype.Component;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.util.Settings;
 
@@ -174,6 +173,7 @@ public class ProcessedDataVectorCacheImpl implements InitializingBean, Processed
     public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Long g ) {
         Element element = cache.get( new CacheKey( ee.getId(), g ) );
         if ( element == null ) return null;
+        @SuppressWarnings("unchecked")
         Collection<DoubleVectorValueObject> result = ( Collection<DoubleVectorValueObject> ) element.getObjectValue();
 
         /*

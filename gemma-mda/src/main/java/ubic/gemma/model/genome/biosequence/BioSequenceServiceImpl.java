@@ -57,6 +57,7 @@ public class BioSequenceServiceImpl extends BioSequenceServiceBase {
      * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioSequence> handleCreate( Collection<BioSequence> bioSequences ) {
         return ( Collection<BioSequence> ) this.getBioSequenceDao().create( bioSequences );
@@ -159,9 +160,8 @@ public class BioSequenceServiceImpl extends BioSequenceServiceBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleThaw(ubic.gemma.model.genome.biosequence.BioSequence
-     * )
+     * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleThaw(ubic.gemma.model.genome.biosequence.
+     * BioSequence )
      */
     @Override
     protected BioSequence handleThaw( BioSequence bioSequence ) {

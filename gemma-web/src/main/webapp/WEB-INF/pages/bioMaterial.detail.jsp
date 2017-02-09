@@ -40,7 +40,7 @@
 	BioMaterial: ${bioMaterial.name} from <a title="${expressionExperiment.name}"
 		href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=${expressionExperiment.id}">${expressionExperiment.shortName}</a>
 </h2>
-<table width="50%" cellspacing="5">
+<table style="width:50%; table{border-collapse: separate; border-spacing: 5px;}">
 
 	<tr>
 		<td valign="top"><b> <fmt:message key="bioMaterial.description" />

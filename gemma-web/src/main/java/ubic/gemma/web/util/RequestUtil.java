@@ -171,6 +171,7 @@ public class RequestUtil {
      * @param aRequest DOCUMENT ME!
      */
     public static void reclaimRequestAttributes( HttpServletRequest aRequest ) {
+        @SuppressWarnings("unchecked")
         Map<String, Object> map = ( Map<String, Object> ) aRequest.getSession().getAttribute( STOWED_REQUEST_ATTRIBS );
 
         if ( map == null ) {

@@ -72,8 +72,8 @@ public class BibRefControllerTest extends BaseSpringWebTest {
         PubMedXMLParser pmp = new PubMedXMLParser();
 
         try {
-            Collection<BibliographicReference> brl = pmp.parse( getClass()
-                    .getResourceAsStream( "/data/pubmed-test.xml" ) );
+            Collection<BibliographicReference> brl = pmp
+                    .parse( getClass().getResourceAsStream( "/data/pubmed-test.xml" ) );
             br = brl.iterator().next();
 
             /* set the bib ref's pubmed accession number to the database entry. */
@@ -177,6 +177,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
     public void testShowAllForExperiments() {
         ModelAndView mv = brc.showAllForExperiments( this.newGet( "/bibRef/showAllEeBibRefs.html" ),
                 ( HttpServletResponse ) null );
+        @SuppressWarnings("unchecked")
         Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> citationToEEs = ( Map<CitationValueObject, Collection<ExpressionExperimentValueObject>> ) mv
                 .getModel().get( "citationToEEs" );
         assertNotNull( citationToEEs );

@@ -14,14 +14,14 @@
 		<c:when test="${not empty param.exception}">
 			<p>${param.exception.message}</p>
 
-			<p>Possible next steps:
-			<ul>
-				<li>Go back and try what you were doing again</li>
-				<li>Do you need to log in?</li>
-				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
-
-			</p>
+			<div>
+				<p>Possible next steps:</p>
+				<ul>
+					<li>Go back and try what you were doing again</li>
+					<li>Do you need to log in?</li>
+					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+				</ul>
+			</div>
 
 			<security:authorize access="hasRole('GROUP_ADMIN')">
 				<Gemma:exception exception="${exception}" />
@@ -31,13 +31,14 @@
 
 			<p>${requestScope['javax.servlet.error.exception'].message}</p>
 
-			<p>Possible next steps:
-			<ul>
-				<li>Go back and try what you were doing again</li>
-				<li>Do you need to log in?</li>
-				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
-			</p>
+			<div>
+				<p>Possible next steps:</p>
+				<ul>
+					<li>Go back and try what you were doing again</li>
+					<li>Do you need to log in?</li>
+					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+				</ul>
+			</div>
 
 			<security:authorize access="hasRole('GROUP_ADMIN')">
 				<%-- this is causing stackoverflow errors ... no idea why, since upgrading to spring 3.2 from 3.0.7 --%>
@@ -48,13 +49,14 @@
 		<c:when test="${not empty requestScope['exception']}">
 			<p>${requestScope['exception'].message}</p>
 
-			<p>Possible next steps:
-			<ul>
-				<li>Go back and try what you were doing again</li>
-				<li>Do you need to log in?</li>
-				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
-			</p>
+			<div>
+				<p>Possible next steps:</p>
+				<ul>
+					<li>Go back and try what you were doing again</li>
+					<li>Do you need to log in?</li>
+					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+				</ul>
+			</div>
 
 
 			<security:authorize access="hasRole('GROUP_ADMIN')">
@@ -66,13 +68,14 @@
 				<fmt:message key="errorPage.info.missing" />
 			</p>
 
-			<p>Possible next steps:
-			<ul>
-				<li>Go back and try what you were doing again</li>
-				<li>Do you need to log in?</li>
-				<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
-			</ul>
-			</p>
+			<div>
+				<p>Possible next steps:</p>
+				<ul>
+					<li>Go back and try what you were doing again</li>
+					<li>Do you need to log in?</li>
+					<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+				</ul>
+			</div>
 
 
 		</c:otherwise>

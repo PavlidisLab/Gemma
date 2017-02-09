@@ -27,7 +27,6 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
     private static final String DGA = "DGA";
 
     public static void main( String[] args ) throws Exception {
-        @SuppressWarnings("unused")
         DgaDatabaseImporter databaseImporter = new DgaDatabaseImporter( args );
         databaseImporter.doWork( args );
     }
@@ -44,6 +43,7 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
@@ -109,7 +109,8 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 // found a term
                 if ( line.indexOf( "DOID" ) != -1 ) {
                     // this being of the url could change make sure its still correct if something doesn't work
-                    String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
+                    String valueUri = "http://purl.obolibrary.org/obo/DOID_"
+                            + findStringBetweenSpecialCharacter( line );
 
                     String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
                     String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
@@ -184,7 +185,8 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                 // found a term
                 if ( line.indexOf( "DOID" ) != -1 ) {
                     // this being of the url could change make sure its still correct if something doesn't work
-                    String valueUri = "http://purl.obolibrary.org/obo/DOID_" + findStringBetweenSpecialCharacter( line );
+                    String valueUri = "http://purl.obolibrary.org/obo/DOID_"
+                            + findStringBetweenSpecialCharacter( line );
 
                     String geneId = findStringBetweenSpecialCharacter( dgaReader.readLine(), "GeneID" );
                     String pubMedID = findStringBetweenSpecialCharacter( dgaReader.readLine(), "PubMedID" );
@@ -204,16 +206,16 @@ public class DgaDatabaseImporter extends ExternalDatabaseEvidenceImporterAbstrac
                             int howDeepIdTerm = findHowManyParents( o, 0 );
 
                             // keep leaf or deep enough or uri=DOID_162(cancer)
-                            if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 ) || o.getUri().indexOf(
-                                    "DOID_162" ) != -1 ) ) {
+                            if ( !( ( o.getChildren( true ).size() != 0 && howDeepIdTerm < 2 )
+                                    || o.getUri().indexOf( "DOID_162" ) != -1 ) ) {
 
                                 // negative
                                 if ( ( geneRIF.indexOf( " is not " ) != -1
                                         || geneRIF.indexOf( " not associated " ) != -1
                                         || geneRIF.indexOf( " no significant " ) != -1
                                         || geneRIF.indexOf( " no association " ) != -1
-                                        || geneRIF.indexOf( " not significant " ) != -1 || geneRIF
-                                        .indexOf( " not expressed " ) != -1 )
+                                        || geneRIF.indexOf( " not significant " ) != -1
+                                        || geneRIF.indexOf( " not expressed " ) != -1 )
                                         && geneRIF.indexOf( "is associated" ) == -1
                                         && geneRIF.indexOf( "is significant" ) == -1
                                         && geneRIF.indexOf( "is not only" ) == -1

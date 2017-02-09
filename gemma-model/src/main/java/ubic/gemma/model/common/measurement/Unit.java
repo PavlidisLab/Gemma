@@ -24,6 +24,11 @@ package ubic.gemma.model.common.measurement;
 public abstract class Unit implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 6348133346610787608L;
+
+    /**
      * Constructs new instances of {@link Unit}.
      */
     public static final class Factory {

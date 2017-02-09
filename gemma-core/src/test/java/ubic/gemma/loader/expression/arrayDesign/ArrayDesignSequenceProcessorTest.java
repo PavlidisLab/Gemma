@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.util.Settings;
 
 /**
@@ -63,9 +62,6 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
     @Autowired
     private ArrayDesignService arrayDesignService;
     private Taxon taxon;
-
-    @Autowired
-    private BioSequenceService bss;
 
     @Before
     public void setup() {
@@ -144,16 +140,18 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
 
+        @SuppressWarnings("unchecked")
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false, true, true );
 
         result = ads.iterator().next();
         result = arrayDesignService.thaw( result );
         // have to specify taxon as this has two taxons in it
-        try (InputStream f = this.getClass().getResourceAsStream(
-                "/data/loader/expression/arrayDesign/identifierTest.txt" );) {
-            Collection<BioSequence> res = app.processArrayDesign( result, f, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
+        try (InputStream f = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );) {
+            Collection<BioSequence> res = app.processArrayDesign( result, f,
+                    new String[] { "testblastdb", "testblastdbPartTwo" },
+                    FileTools.resourceToPath( "/data/loader/genome/blast" ), taxon, true );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );
@@ -170,14 +168,16 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
         GeoService geoService = this.getBean( GeoService.class );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath() ) );
 
+        @SuppressWarnings("unchecked")
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,
                 false, false );
         result = ads.iterator().next();
 
         result = arrayDesignService.thaw( result );
         try {
-            Collection<BioSequence> res = app.processArrayDesign( result, new String[] { "testblastdb",
-                    "testblastdbPartTwo" }, FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
+            Collection<BioSequence> res = app.processArrayDesign( result,
+                    new String[] { "testblastdb", "testblastdbPartTwo" },
+                    FileTools.resourceToPath( "/data/loader/genome/blast" ), false );
             assertNotNull( res );
             for ( BioSequence sequence : res ) {
                 assertNotNull( sequence.getSequence() );

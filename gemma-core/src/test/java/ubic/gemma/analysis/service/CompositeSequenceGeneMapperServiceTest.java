@@ -125,7 +125,9 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
     @Before
     public void setup() throws Exception {
         cleanup();
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
+        geoService
+                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
+        @SuppressWarnings("unchecked")
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession, true,
                 true, false, false );
         ad = ads.iterator().next();
@@ -194,8 +196,8 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         ArrayDesignSequenceAlignmentService aligner = getBean( ArrayDesignSequenceAlignmentService.class );
 
-        InputStream blatResultInputStream = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl96.blatresults.psl.gz" ) );
+        InputStream blatResultInputStream = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/genome/gpl96.blatresults.psl.gz" ) );
 
         Collection<BlatResult> results = blat.processPsl( blatResultInputStream, taxon );
 
@@ -246,8 +248,8 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
      * @throws IOException
      */
     private void loadSequenceData() throws IOException {
-        try (InputStream sequenceFile = this.getClass().getResourceAsStream(
-                "/data/loader/genome/gpl96_short.sequences2.fasta" );) {
+        try (InputStream sequenceFile = this.getClass()
+                .getResourceAsStream( "/data/loader/genome/gpl96_short.sequences2.fasta" );) {
 
             sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST,
                     taxonService.findByCommonName( "human" ) );

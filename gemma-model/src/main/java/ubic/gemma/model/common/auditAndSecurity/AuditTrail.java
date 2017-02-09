@@ -27,6 +27,11 @@ import java.util.Collection;
 public abstract class AuditTrail implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7450755789163303140L;
+
+    /**
      * Constructs new instances of {@link AuditTrail}.
      */
     public static final class Factory {

@@ -18,10 +18,14 @@
  */
 package ubic.gemma.search.indexer;
 
+import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+
 import org.compass.core.Compass;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+
 import ubic.gemma.job.SubmittedTask;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -29,9 +33,6 @@ import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.maintenance.IndexerResult;
 import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.util.CompassUtils;
-
-import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Services for updating the search indexes.
@@ -95,7 +96,9 @@ public class IndexServiceImpl implements IndexService {
         public IndexerResult execute() {
             IndexerResult result = null;
             String taskId = taskRunningService.submitRemoteTask( taskCommand );
-            SubmittedTask<IndexerResult> indexingTask = taskRunningService.getSubmittedTask( taskId );
+            @SuppressWarnings("unchecked")
+            SubmittedTask<IndexerResult> indexingTask = ( SubmittedTask<IndexerResult> ) taskRunningService
+                    .getSubmittedTask( taskId );
             try {
                 TaskResult f = indexingTask.getResult();
 

@@ -45,7 +45,7 @@
 	</c:choose>
 
 
-	<table cellspacing="3">
+	<table style="table{border-collapse: separate; border-spacing: 3px;}">
 		<tr>
 			<td class="label"><b><fmt:message key="expressionExperiment.name" /> </b></td>
 			<td><c:choose>
@@ -59,7 +59,7 @@
 			<td class="label"><fmt:message key="expressionExperiment.description" /></td>
 			<td><c:choose>
 					<c:when test="${not empty expressionExperiment.description}">
-						<textarea rows=12 readonly="true" style="width: 700px; background-color: white; border: 1px solid gainsboro">
+						<textarea rows=12 readonly style="width: 700px; background-color: white; border: 1px solid gainsboro">
 							<c:out value="${expressionExperiment.description}" />
 						</textarea>
 					</c:when>

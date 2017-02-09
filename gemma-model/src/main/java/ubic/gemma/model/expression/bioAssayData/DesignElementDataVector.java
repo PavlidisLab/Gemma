@@ -26,6 +26,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class DesignElementDataVector extends DataVector {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4185333066166517308L;
     private BioAssayDimension bioAssayDimension;
     private CompositeSequence designElement;
 

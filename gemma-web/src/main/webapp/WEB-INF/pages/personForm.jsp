@@ -11,10 +11,10 @@
 	<table class="detail">
 		<tr>
 			<th>
-				<label key="person.firstName" />
+				<label key="person.firstName" ></label>
 			</th>
 
-			<td alignment="right" width="31%">
+			<td align="right" width="31%">
 				<strong>First Name</strong>
 			</td>
 			<td>
@@ -34,10 +34,10 @@
 
 		<tr>
 			<th>
-				<label key="person.middleName" />
+				<label key="person.middleName" ></label>
 			</th>
 
-			<td alignment="right" width="31%">
+			<td align="right" width="31%">
 				<strong>Middle Name:</strong>
 			</td>
 			<td>
@@ -57,7 +57,7 @@
 		<tr>
 
 			<th>
-				<label key="person.lastName" />
+				<label key="person.lastName" ></label>
 			</th>
 
 			<td align="right" width="31%">

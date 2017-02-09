@@ -72,8 +72,9 @@ public class GemmaCLI {
 
             for ( BeanDefinition bean : classes ) {
                 try {
-                    Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class.forName( bean
-                            .getBeanClassName() );
+                    @SuppressWarnings("unchecked")
+                    Class<? extends AbstractCLI> aclazz = ( Class<? extends AbstractCLI> ) Class
+                            .forName( bean.getBeanClassName() );
 
                     Object cliinstance = aclazz.newInstance();
 

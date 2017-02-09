@@ -19,7 +19,8 @@
 
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,7 +41,6 @@ import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -54,8 +54,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  */
 public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private DiffExAnalyzer analyzer;
@@ -80,8 +78,8 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
     @Before
     public void setup() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
-                .resourceToPath( "/data/analysis/expression/gse26927short" ) ) );
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
+                FileTools.resourceToPath( "/data/analysis/expression/gse26927short" ) ) );
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE26927", false, true, false, false );
@@ -107,10 +105,8 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         ee = expressionExperimentService.thaw( ee );
 
-        designImporter.importDesign(
-                ee,
-                this.getClass().getResourceAsStream(
-                        "/data/analysis/expression/gse26927short/2684_GSE26927_expdesign.data.txt" ) );
+        designImporter.importDesign( ee, this.getClass()
+                .getResourceAsStream( "/data/analysis/expression/gse26927short/2684_GSE26927_expdesign.data.txt" ) );
 
     }
 

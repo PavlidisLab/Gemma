@@ -26,6 +26,11 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public abstract class ContrastResult implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 7800859456071333232L;
+
+    /**
      * Constructs new instances of {@link ContrastResult}.
      */
     public static final class Factory {

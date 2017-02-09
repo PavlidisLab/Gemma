@@ -26,6 +26,11 @@ import ubic.gemma.model.common.Auditable;
  */
 public abstract class Protocol extends Auditable implements Securable {
     /**
+     * 
+     */
+    private static final long serialVersionUID = -1902891452989019766L;
+
+    /**
      * Constructs new instances of {@link Protocol}.
      */
     public static final class Factory {

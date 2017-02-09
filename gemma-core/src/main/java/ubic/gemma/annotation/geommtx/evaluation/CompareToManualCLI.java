@@ -34,6 +34,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.Resource;
+import com.hp.hpl.jena.vocabulary.DC_11;
+
 import ubic.GEOMMTx.LabelLoader;
 import ubic.GEOMMTx.OntologyTools;
 import ubic.GEOMMTx.ProjectRDFModelTools;
@@ -53,17 +64,6 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
-import com.hp.hpl.jena.vocabulary.DC_11;
 
 /**
  * TODO Document Me
@@ -86,10 +86,12 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         }
         return result;
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
     }
+
     public static void main( String[] args ) {
         CompareToManualCLI p = new CompareToManualCLI();
 
@@ -111,7 +113,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
             total += map.get( key );
         }
         for ( String key : map.keySet() ) {
-            System.out.println( key + " => " + map.get( key ) + "(" + ( float ) map.get( key ) / ( float ) total + ")" );
+            System.out
+                    .println( key + " => " + map.get( key ) + "(" + ( float ) map.get( key ) / ( float ) total + ")" );
         }
     }
 
@@ -624,10 +627,11 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private Map<String, Set<String>> getHumanMappingsFromDisk() throws Exception {
         Map<String, Set<String>> result;
-        try (ObjectInputStream o = new ObjectInputStream( new FileInputStream(
-                SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );) {
+        try (ObjectInputStream o = new ObjectInputStream(
+                new FileInputStream( SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );) {
             result = ( Map<String, Set<String>> ) o.readObject();
         }
 
@@ -927,7 +931,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
             Set<String> oneSourceMachineURLs = new HashSet<String>();
             for ( String URI : machineURLs ) {
                 if ( de.getDecriptionType( dataset, URI ).contains( source )
-                        && de.getDecriptionType( dataset, URI ).size() == 1 ) continue;
+                        && de.getDecriptionType( dataset, URI ).size() == 1 )
+                    continue;
                 oneSourceMachineURLs.add( URI );
             }
             mmtxURLs.put( dataset, oneSourceMachineURLs );
@@ -936,8 +941,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     private void saveHumanMappingsToDisk() {
         log.info( "Saved mappings" );
-        try (ObjectOutputStream o = new ObjectOutputStream( new FileOutputStream(
-                SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) )) {
+        try (ObjectOutputStream o = new ObjectOutputStream(
+                new FileOutputStream( SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) )) {
             o.writeObject( manualURLs );
             o.close();
 
@@ -972,14 +977,27 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
             Resource expNode = model.createResource( GEOObjectURI );
             expNode.addProperty( DC_11.title, experiment.getName() );
         }
+        FileWriter fw = null;
         try {
-            model.write( new FileWriter( f ) );
+            fw = new FileWriter( f );
+            model.write( fw );
         } catch ( Exception e ) {
             e.printStackTrace();
+
+        } finally {
+            if ( fw != null ) {
+                try {
+                    fw.close();
+                } catch ( IOException e ) {
+                    log.error( "Failed to close FileWriter" );
+                }
+            }
         }
     }
 
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override

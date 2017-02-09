@@ -117,6 +117,7 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
         return this.getDifferentialExpressionResultDao().getAnalysis( rs );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysisResult> load( Collection<Long> ids ) {
@@ -176,7 +177,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
     @Override
     protected Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
             Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults ) {
-        return this.getDifferentialExpressionResultDao().getExperimentalFactors( differentialExpressionAnalysisResults );
+        return this.getDifferentialExpressionResultDao()
+                .getExperimentalFactors( differentialExpressionAnalysisResults );
     }
 
     /*

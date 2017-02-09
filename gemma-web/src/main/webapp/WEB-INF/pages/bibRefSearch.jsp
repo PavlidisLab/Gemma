@@ -21,12 +21,12 @@
 	action="<c:url value="/bibRefSearch.html"/>">
 	<table>
 		<tr>
-			<td><label styleClass="desc" key="pubMed.id" /></td>
+			<td><label styleClass="desc" key="pubMed.id" ></label></td>
 
 			<td><spring:bind path="searchCriteria.accession">
 					<input type="text" name="${status.expression}"
 						value="${status.value}">
-					<span class="fieldError" />
+					<span class="fieldError" ></span>
 				</spring:bind></td>
 
 			<td align="left"><input type="submit" name="submit"

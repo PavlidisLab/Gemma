@@ -32,12 +32,13 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
@@ -52,8 +53,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import cern.colt.list.DoubleArrayList;
-import cern.jet.stat.Descriptive;
 
 /**
  * @author Paul
@@ -74,9 +73,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
@@ -283,7 +279,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @param fisherPvalueDown
      */
     private void debug( Gene g, DoubleArrayList pvalues4geneUp, DoubleArrayList pvalues4geneDown,
-            Collection<DifferentialExpressionAnalysisResult> resultsUsed, double fisherPvalueUp, double fisherPvalueDown ) {
+            Collection<DifferentialExpressionAnalysisResult> resultsUsed, double fisherPvalueUp,
+            double fisherPvalueDown ) {
 
         // System.err.println( "Up\t" + g.getOfficialSymbol() + "\t" + StringUtils.join( pvalues4geneUp.toList(), '\t' )
         // );
@@ -301,9 +298,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
         // }
         // System.err.println();
 
-        if ( log.isDebugEnabled() )
-            log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g", g.getOfficialSymbol(),
-                    fisherPvalueUp, fisherPvalueDown ) );
+        if ( log.isDebugEnabled() ) log.debug( String.format( "Meta-results for %s: pUp=%.4g pdown=%.4g",
+                g.getOfficialSymbol(), fisherPvalueUp, fisherPvalueDown ) );
     }
 
     /**
@@ -390,9 +386,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 pvalues4geneDown.add( pvalue4GeneInOneResultSetDown );
                 foldChanges4gene.add( foldChange4GeneInOneResultSet );
 
-                if ( log.isDebugEnabled() )
-                    log.debug( String.format( "%s %.4f %.4f %.1f", g.getOfficialSymbol(), pvalue4GeneInOneResultSetUp,
-                            pvalue4GeneInOneResultSetDown, foldChange4GeneInOneResultSet ) );
+                if ( log.isDebugEnabled() ) log.debug( String.format( "%s %.4f %.4f %.1f", g.getOfficialSymbol(),
+                        pvalue4GeneInOneResultSetUp, pvalue4GeneInOneResultSetDown, foldChange4GeneInOneResultSet ) );
             } // loop over results for one gene
             assert resultsUsed.size() >= pvalues4geneUp.size();
 
@@ -574,8 +569,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @return
      */
     private GeneDifferentialExpressionMetaAnalysisResult makeMetaAnalysisResult( Gene g,
-            Collection<DifferentialExpressionAnalysisResult> resultsUsed, Double meanLogFoldChange,
-            double fisherPvalue, boolean upperTail ) {
+            Collection<DifferentialExpressionAnalysisResult> resultsUsed, Double meanLogFoldChange, double fisherPvalue,
+            boolean upperTail ) {
 
         GeneDifferentialExpressionMetaAnalysisResult metaAnalysisResult = GeneDifferentialExpressionMetaAnalysisResult.Factory
                 .newInstance();
@@ -597,7 +592,8 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * @return a map of genes to the usable results for that gene. There can be more than one result for one resultset.
      */
     private Map<Gene, Collection<DifferentialExpressionAnalysisResult>> organizeResultsByGene(
-            Collection<ExpressionAnalysisResultSet> resultSets, Collection<DifferentialExpressionAnalysisResult> res2set ) {
+            Collection<ExpressionAnalysisResultSet> resultSets,
+            Collection<DifferentialExpressionAnalysisResult> res2set ) {
         Collection<CompositeSequence> probes = new HashSet<>();
 
         for ( ExpressionAnalysisResultSet rs : resultSets ) {

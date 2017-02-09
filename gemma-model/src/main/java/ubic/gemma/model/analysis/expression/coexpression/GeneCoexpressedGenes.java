@@ -31,6 +31,10 @@ import java.util.Collection;
  */
 public class GeneCoexpressedGenes extends IdArray {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6715464097628664297L;
     private Long geneId;
 
     // needed to fulfil javabean contract

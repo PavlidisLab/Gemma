@@ -32,6 +32,11 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 public abstract class BatchCorrectionEvent extends ExpressionExperimentAnalysisEventImpl {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -3061045506228031201L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent}.
      */
     public static final class Factory {

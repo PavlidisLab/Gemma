@@ -18,14 +18,6 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.SecurityService;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.User;
-import gemma.gsec.util.SecurityUtil;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +37,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.SecurityService;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.User;
+import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.service.GeneSetService;
@@ -416,9 +415,8 @@ public class SecurityControllerImpl implements SecurityController {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePublic(ubic.gemma.web.remote.EntityDelegator
-     * )
+     * @see ubic.gemma.web.controller.common.auditAndSecurity.SecurityController#makePublic(ubic.gemma.web.remote.
+     * EntityDelegator )
      */
     @Override
     public boolean makePublic( EntityDelegator ed ) {
@@ -508,9 +506,8 @@ public class SecurityControllerImpl implements SecurityController {
                 securityService.makeOwnedByUser( s, settings.getOwner().getAuthority() );
             } else {
                 // this warning is not even worth issuing if we are not an administrator.
-                if ( SecurityUtil.isUserAdmin() )
-                    log.warn( "Can't make groupauthority " + settings.getOwner().getAuthority()
-                            + " owner, not implemented" );
+                if ( SecurityUtil.isUserAdmin() ) log.warn(
+                        "Can't make groupauthority " + settings.getOwner().getAuthority() + " owner, not implemented" );
             }
         } catch ( AccessDeniedException e ) {
             log.warn( "Non-administrators cannot change the owner of an entity" );
@@ -524,8 +521,8 @@ public class SecurityControllerImpl implements SecurityController {
          */
         String currentGroupName = settings.getCurrentGroup();
         if ( StringUtils.isNotBlank( currentGroupName )
-                && !( currentGroupName.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || currentGroupName
-                        .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
+                && !( currentGroupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
+                        || currentGroupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
 
             // this test only makes sense for changing the group's name, not for changing the permissions
             // of potentially shared entities
@@ -535,9 +532,6 @@ public class SecurityControllerImpl implements SecurityController {
 
             Boolean readable = settings.isCurrentGroupCanRead();
             Boolean writeable = settings.isCurrentGroupCanWrite();
-            if ( readable == null || writeable == null ) {
-                throw new IllegalArgumentException( "Must provide settings for 'currentGroup'" );
-            }
 
             if ( readable ) {
                 securityService.makeReadableByGroup( s, currentGroupName );

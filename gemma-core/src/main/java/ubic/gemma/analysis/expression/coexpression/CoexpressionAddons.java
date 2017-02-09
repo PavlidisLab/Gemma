@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.loader.protein.ProteinLinkOutFormatter;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
 import ubic.gemma.model.association.TfGeneAssociation;
@@ -76,8 +75,7 @@ public class CoexpressionAddons {
                             + proteinInteraction.getSecondGene() );
                 }
 
-                if ( proteinInteraction.getDatabaseEntry() != null
-                        && proteinInteraction.getSecondGene().getId() != null
+                if ( proteinInteraction.getDatabaseEntry() != null && proteinInteraction.getSecondGene().getId() != null
                         && proteinInteraction.getFirstGene().getId() != null ) {
                     // can append extra details to link if required this
                     // formating code should be somewhere else?
@@ -152,22 +150,23 @@ public class CoexpressionAddons {
 
         if ( proteinProteinInteraction == null ) return;
 
-        ProteinLinkOutFormatter proteinFormatter = new ProteinLinkOutFormatter();
-        String proteinProteinIdUrl = proteinFormatter
-                .getStringProteinProteinInteractionLinkGemmaDefault( proteinProteinInteraction.getDatabaseEntry() );
-
-        String evidenceText = proteinFormatter.getEvidenceDisplayText( proteinProteinInteraction.getEvidenceVector() );
-
-        String confidenceText = proteinFormatter.getConfidenceScoreAsPercentage( proteinProteinInteraction
-                .getConfidenceScore() );
+        // ProteinLinkOutFormatter proteinFormatter = new ProteinLinkOutFormatter();
+        // String proteinProteinIdUrl = proteinFormatter
+        // .getStringProteinProteinInteractionLinkGemmaDefault( proteinProteinInteraction.getDatabaseEntry() );
+        //
+        // String evidenceText = proteinFormatter.getEvidenceDisplayText( proteinProteinInteraction.getEvidenceVector()
+        // );
+        //
+        // String confidenceText = proteinFormatter.getConfidenceScoreAsPercentage( proteinProteinInteraction
+        // .getConfidenceScore() );
 
         // log.debug( "A coexpression link in GEMMA has a interaction in STRING " + proteinProteinIdUrl +
         // " evidence of "
         // + evidenceText );
-//
-//        cvo.setGene2GeneProteinAssociationStringUrl( proteinProteinIdUrl );
-        //        cvo.setGene2GeneProteinInteractionConfidenceScore( confidenceText );
-//        cvo.setGene2GeneProteinInteractionEvidence( evidenceText );
+        //
+        // cvo.setGene2GeneProteinAssociationStringUrl( proteinProteinIdUrl );
+        // cvo.setGene2GeneProteinInteractionConfidenceScore( confidenceText );
+        // cvo.setGene2GeneProteinInteractionEvidence( evidenceText );
 
     }
 

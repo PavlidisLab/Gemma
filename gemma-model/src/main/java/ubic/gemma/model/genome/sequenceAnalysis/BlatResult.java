@@ -24,6 +24,11 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public abstract class BlatResult extends SequenceSimilaritySearchResult {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5703130745858235525L;
+
+    /**
      * Constructs new instances of {@link BlatResult}.
      */
     public static final class Factory {

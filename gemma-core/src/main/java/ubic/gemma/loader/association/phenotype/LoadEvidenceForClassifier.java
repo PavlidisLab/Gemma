@@ -40,7 +40,6 @@ import ubic.gemma.util.Settings;
  */
 public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
-    @SuppressWarnings("unused")
     public static void main( String[] args ) throws Exception {
 
         new LoadEvidenceForClassifier( args );
@@ -130,8 +129,8 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
     private void findEvidence() throws FileNotFoundException, IOException {
 
-        BufferedReader br = new BufferedReader( new InputStreamReader(
-                LoadEvidenceForClassifier.class.getResourceAsStream( evidenceDumpPath ) ) );
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader( LoadEvidenceForClassifier.class.getResourceAsStream( evidenceDumpPath ) ) );
 
         // skip first line
         String firstLine = br.readLine();
@@ -201,8 +200,8 @@ public class LoadEvidenceForClassifier extends AbstractCLIContextCLI {
 
     private void loadTrainingSetUsed() throws FileNotFoundException, IOException {
 
-        BufferedReader br = new BufferedReader( new InputStreamReader(
-                LoadEvidenceForClassifier.class.getResourceAsStream( trainingSetPath ) ) );
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader( LoadEvidenceForClassifier.class.getResourceAsStream( trainingSetPath ) ) );
 
         String line = "";
 

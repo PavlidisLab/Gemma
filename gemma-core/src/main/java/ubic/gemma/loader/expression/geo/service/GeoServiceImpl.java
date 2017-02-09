@@ -114,7 +114,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         for ( CompositeSequence cs : els ) {
             cs.setArrayDesign( targetPlatform );
-            cs.setBiologicalCharacteristic( ( BioSequence ) persisterHelper.persist( cs.getBiologicalCharacteristic() ) );
+            cs.setBiologicalCharacteristic(
+                    ( BioSequence ) persisterHelper.persist( cs.getBiologicalCharacteristic() ) );
         }
 
         log.info( "Adding " + els.size() + " elements to " + targetPlatform );
@@ -206,7 +207,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         if ( series.isSuperSeries() ) {
             if ( allowSuperSeriesImport ) {
                 log.info( " ========= SuperSeries Detected! =========" );
-                log.info( "Please make sure you want to import this as a superseries and not the individual subseries" );
+                log.info(
+                        "Please make sure you want to import this as a superseries and not the individual subseries" );
             } else {
                 throw new IllegalStateException(
                         "SuperSeries detected, set 'allowSuperSeriesImport' to 'true' to allow this dataset to load" );
@@ -236,6 +238,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         geoConverter.clear();
         geoConverter.setSplitByPlatform( splitByPlatform );
 
+        @SuppressWarnings("unchecked")
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
 
         check( result );
@@ -354,11 +357,11 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         if ( series.getSamples().size() == 0 ) {
-            throw new AlreadyExistsInSystemException( "All the samples in " + series
-                    + " are in the system already (in other ExpressionExperiments)" );
+            throw new AlreadyExistsInSystemException(
+                    "All the samples in " + series + " are in the system already (in other ExpressionExperiments)" );
         }
 
-        if ( series.getSamples().size() < 2 /* we don't really have a lower limit set anywhere else */) {
+        if ( series.getSamples().size() < 2 /* we don't really have a lower limit set anywhere else */ ) {
             throw new IllegalStateException(
                     "After removing samples already in the system, this data set is too small to load: "
                             + series.getSamples().size() + " left (removed " + toSkip.size() + ")" );
@@ -393,8 +396,8 @@ public class GeoServiceImpl extends AbstractGeoService {
             if ( dataset.equals( result ) ) continue;
             assert dataset.getPlatform().equals( lastPlatform );
             log.info( "Collapsing " + dataset + " into " + result + " Platform=" + dataset.getPlatform() );
-            result.setDescription( result.getDescription() + " Note: this dataset " + "includes the samples from "
-                    + dataset );
+            result.setDescription(
+                    result.getDescription() + " Note: this dataset " + "includes the samples from " + dataset );
             result.getSubsets().addAll( dataset.getSubsets() );
             result.setNumSamples( result.getNumSamples() + dataset.getNumSamples() );
             result.getColumnNames().addAll( dataset.getColumnNames() );
@@ -445,8 +448,7 @@ public class GeoServiceImpl extends AbstractGeoService {
         for ( int i = 0; i < gemmaNames.size(); i++ ) {
             String gemmaName = gemmaNames.get( i );
             String geoName = geoNames.get( i );
-            if ( log.isDebugEnabled() )
-                log.debug( "GEO name:" + geoName + "; name to be used for Gemma:" + gemmaName );
+            if ( log.isDebugEnabled() ) log.debug( "GEO name:" + geoName + "; name to be used for Gemma:" + gemmaName );
             pl.getProbeNamesInGemma().put( geoName, gemmaName );
         }
     }
@@ -548,7 +550,8 @@ public class GeoServiceImpl extends AbstractGeoService {
      * @param columnWithGeoNames
      * @return
      */
-    private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign, String columnWithGeoNames ) {
+    private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign,
+            String columnWithGeoNames ) {
         Set<String> geoProbeNames = new HashSet<String>();
 
         if ( rawGEOPlatform.getDesignElements().isEmpty() ) {
@@ -747,7 +750,8 @@ public class GeoServiceImpl extends AbstractGeoService {
      * @param series
      * @param
      */
-    private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series, ArrayDesignsForExperimentCache c ) {
+    private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series,
+            ArrayDesignsForExperimentCache c ) {
 
         Set<GeoPlatform> platforms = getPlatforms( series );
         if ( platforms.size() == 0 ) throw new IllegalStateException( "Series has no platforms" );

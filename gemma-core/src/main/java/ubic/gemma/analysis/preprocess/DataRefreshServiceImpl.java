@@ -27,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class DataRefreshServiceImpl implements DataRefreshService {
 
+    @SuppressWarnings("unused")
     @Autowired
     private DataUpdater dataUpdater;
 

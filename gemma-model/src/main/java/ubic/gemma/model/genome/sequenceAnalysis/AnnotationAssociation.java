@@ -31,6 +31,11 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 public abstract class AnnotationAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 8648644792470060326L;
+
+    /**
      * Constructs new instances of {@link AnnotationAssociation}.
      */
     public static final class Factory {

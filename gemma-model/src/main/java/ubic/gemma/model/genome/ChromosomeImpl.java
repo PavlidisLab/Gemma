@@ -23,4 +23,9 @@ package ubic.gemma.model.genome;
  */
 public class ChromosomeImpl extends ubic.gemma.model.genome.Chromosome {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7394734846565885136L;
+
 }

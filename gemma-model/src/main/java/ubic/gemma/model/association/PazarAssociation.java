@@ -30,6 +30,11 @@ import ubic.gemma.model.genome.Gene;
 public abstract class PazarAssociation extends TfGeneAssociation {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 765189108667614057L;
+
+    /**
      * Constructs new instances of {@link PazarAssociation}.
      */
     public static final class Factory {

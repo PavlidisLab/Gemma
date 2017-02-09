@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import gemma.gsec.util.SecurityUtil;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -52,6 +50,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.google.common.collect.Lists;
+
+import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
@@ -85,8 +86,6 @@ import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
-import com.google.common.collect.Lists;
-
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
@@ -114,11 +113,11 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             if ( this.taskCommand.getEntityId() == null ) {
                 log.info( "Generating summary for all platforms" );
                 arrayDesignReportService.generateArrayDesignReport();
-                return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
-                        "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
+                return new TaskResult( taskCommand,
+                        new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
             }
-            ArrayDesignValueObject report = arrayDesignReportService.generateArrayDesignReport( taskCommand
-                    .getEntityId() );
+            ArrayDesignValueObject report = arrayDesignReportService
+                    .generateArrayDesignReport( taskCommand.getEntityId() );
             return new TaskResult( taskCommand, report );
 
         }
@@ -140,9 +139,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                 throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );
             }
             arrayDesignService.remove( ad );
-            return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
-                    "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject( "message", "Array " + ad.getShortName()
-                    + " removed from Database." ) );
+            return new TaskResult( taskCommand,
+                    new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                            .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );
 
         }
 
@@ -243,8 +242,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
         if ( assays.size() != 0 ) {
             return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Array  " + arrayDesign.getName()
-                            + " can't be deleted. Dataset has a dependency on this Array." );
+                    "message",
+                    "Array  " + arrayDesign.getName() + " can't be deleted. Dataset has a dependency on this Array." );
         }
 
         String taskId = taskRunningService.submitLocalTask( new TaskCommand( arrayDesign.getId() ) );
@@ -323,16 +322,16 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( filter ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "No search criteria provided" );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                    .addObject( "message", "No search criteria provided" );
         }
 
         Collection<SearchResult> searchResults = searchService.search( SearchSettingsImpl.arrayDesignSearch( filter ) )
                 .get( ArrayDesign.class );
 
         if ( ( searchResults == null ) || ( searchResults.size() == 0 ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "No search criteria provided" );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                    .addObject( "message", "No search criteria provided" );
 
         }
 
@@ -340,9 +339,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( searchResults.size() == 1 ) {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) )
-                    .addObject( "message", "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName()
-                            + ")" );
+            return new ModelAndView(
+                    new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) ).addObject(
+                            "message",
+                            "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
         for ( SearchResult ad : searchResults ) {
@@ -353,8 +353,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         Long overallElapsed = overallWatch.getTime();
         log.info( "Generating the AD list:  (" + list + ") took: " + overallElapsed / 1000 + "s " );
 
-        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) ).addObject(
-                "message", searchResults.size() + " Platforms matched your search." );
+        return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html?id=" + list ) )
+                .addObject( "message", searchResults.size() + " Platforms matched your search." );
 
     }
 
@@ -375,8 +375,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "taskId", taskId );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject( "taskId",
+                    taskId );
         }
 
         try {
@@ -418,7 +418,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             if ( !showMergees && a.getIsMergee() && a.getExpressionExperimentCount() == 0 ) {
                 toHide.add( a );
             }
-            if ( !showOrphans && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
+            if ( !showOrphans
+                    && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
                 toHide.add( a );
             }
         }
@@ -444,9 +445,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getDesignSummaries(ubic.gemma.model.expression
-     * .arrayDesign.ArrayDesign)
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getDesignSummaries(ubic.gemma.model.
+     * expression .arrayDesign.ArrayDesign)
      */
     @Override
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
@@ -617,9 +617,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#remove(ubic.gemma.web.remote.EntityDelegator
-     * )
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#remove(ubic.gemma.web.remote.
+     * EntityDelegator )
      */
     @Override
     public String remove( EntityDelegator ed ) {
@@ -629,8 +628,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( ed.getId() );
         if ( assays.size() != 0 ) {
-            throw new IllegalArgumentException( "Cannot delete " + arrayDesign
-                    + ", it is used by an expression experiment" );
+            throw new IllegalArgumentException(
+                    "Cannot delete " + arrayDesign + ", it is used by an expression experiment" );
         }
 
         RemoveArrayLocalTask job = new RemoveArrayLocalTask( new TaskCommand( arrayDesign.getId() ) );
@@ -734,22 +733,18 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     @RequestMapping("/showExpressionExperiments.html")
     public ModelAndView showExpressionExperiments( HttpServletRequest request ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Not found" );
-        }
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message", "Platform with id=" + id + " not found" );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                    .addObject( "message", "Platform with id=" + id + " not found" );
         }
         // seems inefficient? but need security filtering.
         Collection<ExpressionExperiment> ees = arrayDesignService.getExpressionExperiments( arrayDesign );
 
         String ids = StringUtils.join( EntityUtils.getIds( ees ).toArray(), "," );
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
-                + ids ) );
+        return new ModelAndView(
+                new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + ids ) );
     }
 
     @Override
@@ -797,7 +792,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             result.setSubsumees( subsumeesVos );
         }
         if ( subsumer != null ) {
-            ArrayDesignValueObjectExt subsumerVo = new ArrayDesignValueObjectExt( new ArrayDesignValueObject( subsumer ) );
+            ArrayDesignValueObjectExt subsumerVo = new ArrayDesignValueObjectExt(
+                    new ArrayDesignValueObject( subsumer ) );
             result.setSubsumer( subsumerVo );
             // subsumer = arrayDesignService.thawLite( subsumer );
             // populateMergeStatus( subsumer, subsumerVo );

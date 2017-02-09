@@ -265,10 +265,8 @@ abstract public class GenomePersister extends CommonPersister {
                     if ( oldGeneForExistingGeneProduct != null ) {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
                         if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
-                            log.warn( "Switching gene product from one gene to another: "
-                                    + existingGeneProduct
-                                    + " switching to "
-                                    + geneInfo
+                            log.warn( "Switching gene product from one gene to another: " + existingGeneProduct
+                                    + " switching to " + geneInfo
                                     + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
 
                             // / Here we just remove its old association.
@@ -277,8 +275,9 @@ abstract public class GenomePersister extends CommonPersister {
                             geneDao.update( oldGeneForExistingGeneProduct );
 
                             if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
-                                log.warn( "Gene has no products left after removing that gene product (but it might change later): "
-                                        + oldGeneForExistingGeneProduct );
+                                log.warn(
+                                        "Gene has no products left after removing that gene product (but it might change later): "
+                                                + oldGeneForExistingGeneProduct );
                             }
                         }
 
@@ -390,15 +389,16 @@ abstract public class GenomePersister extends CommonPersister {
      * @param bioSequence2GeneProduct
      * @return
      */
-    protected BioSequence2GeneProduct persistBioSequence2GeneProduct( BioSequence2GeneProduct bioSequence2GeneProduct ) {
+    protected BioSequence2GeneProduct persistBioSequence2GeneProduct(
+            BioSequence2GeneProduct bioSequence2GeneProduct ) {
         if ( bioSequence2GeneProduct == null ) return null;
         if ( !isTransient( bioSequence2GeneProduct ) ) return bioSequence2GeneProduct;
 
         if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
             return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
         }
-        throw new UnsupportedOperationException( "Don't know how to deal with "
-                + bioSequence2GeneProduct.getClass().getName() );
+        throw new UnsupportedOperationException(
+                "Don't know how to deal with " + bioSequence2GeneProduct.getClass().getName() );
 
     }
 
@@ -430,6 +430,7 @@ abstract public class GenomePersister extends CommonPersister {
      * @param gene
      * @param checkFirst check if it exists already.
      */
+    @SuppressWarnings("unchecked")
     protected Gene persistGene( Gene gene, boolean checkFirst ) {
         if ( gene == null ) return null;
         if ( !isTransient( gene ) ) return gene;
@@ -559,7 +560,8 @@ abstract public class GenomePersister extends CommonPersister {
         if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
 
         // the sequence is the main field we might update.
-        if ( bioSequence.getSequence() != null && !bioSequence.getSequence().equals( existingBioSequence.getSequence() ) ) {
+        if ( bioSequence.getSequence() != null
+                && !bioSequence.getSequence().equals( existingBioSequence.getSequence() ) ) {
             existingBioSequence.setSequence( bioSequence.getSequence() );
         }
 
@@ -596,8 +598,8 @@ abstract public class GenomePersister extends CommonPersister {
 
         if ( bioSequence.getSequenceDatabaseEntry() != null
                 && !bioSequence.getSequenceDatabaseEntry().equals( existingBioSequence.getSequenceDatabaseEntry() ) ) {
-            existingBioSequence.setSequenceDatabaseEntry( ( DatabaseEntry ) persist( bioSequence
-                    .getSequenceDatabaseEntry() ) );
+            existingBioSequence
+                    .setSequenceDatabaseEntry( ( DatabaseEntry ) persist( bioSequence.getSequenceDatabaseEntry() ) );
         }
 
         // biosequence2geneproduct?
@@ -735,9 +737,8 @@ abstract public class GenomePersister extends CommonPersister {
     private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
 
         if ( geneProduct.getPhysicalLocation() != null ) {
-            geneProduct.getPhysicalLocation().setChromosome(
-                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome(), geneProduct.getGene()
-                            .getTaxon() ) );
+            geneProduct.getPhysicalLocation().setChromosome( persistChromosome(
+                    geneProduct.getPhysicalLocation().getChromosome(), geneProduct.getGene().getTaxon() ) );
         }
 
         if ( geneProduct.getExons() != null ) {
@@ -917,9 +918,8 @@ abstract public class GenomePersister extends CommonPersister {
         blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
         blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome(), null ) );
         blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );
-        if ( blatResult.getTargetAlignedRegion() != null )
-            blatResult.setTargetAlignedRegion( fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion(),
-                    null ) );
+        if ( blatResult.getTargetAlignedRegion() != null ) blatResult.setTargetAlignedRegion(
+                fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion(), null ) );
         return blatResultDao.create( blatResult );
     }
 
@@ -999,7 +999,8 @@ abstract public class GenomePersister extends CommonPersister {
      * @param result
      * @return
      */
-    private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult( SequenceSimilaritySearchResult result ) {
+    private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult(
+            SequenceSimilaritySearchResult result ) {
         if ( result instanceof BlatResult ) {
             return persistBlatResult( ( BlatResult ) result );
         }
@@ -1029,8 +1030,8 @@ abstract public class GenomePersister extends CommonPersister {
 
         existingGeneProduct.setPhysicalLocation( updatedGeneProductInfo.getPhysicalLocation() );
         if ( existingGeneProduct.getPhysicalLocation() != null ) {
-            existingGeneProduct.getPhysicalLocation().setChromosome(
-                    persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome(),
+            existingGeneProduct.getPhysicalLocation()
+                    .setChromosome( persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome(),
                             geneForExistingGeneProduct.getTaxon() ) );
         }
 

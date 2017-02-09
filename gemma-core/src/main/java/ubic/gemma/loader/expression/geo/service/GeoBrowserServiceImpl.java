@@ -164,8 +164,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     }
 
     @Override
-    public List<GeoRecord> searchGeoRecords( String searchString, int start, int count ) throws IOException,
-            ParseException {
+    public List<GeoRecord> searchGeoRecords( String searchString, int start, int count )
+            throws IOException, ParseException {
         GeoBrowser browser = new GeoBrowser();
         // Change this method to browser.getGeoRecordsBySearchTerm when implemented in GeoBrowser.java
         List<GeoRecord> records = browser.getGeoRecordsBySearchTerm( searchString, start, count );
@@ -274,8 +274,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
                                 + lastTroubleEvent.getNote() + "\"/>";
                     }
                 }
-                buf.append( "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
-                        + arrayDesign.getId() + "\">" + gpl + "</a></strong>" + trouble );
+                buf.append(
+                        "<p><strong>Platform in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
+                                + arrayDesign.getId() + "\">" + gpl + "</a></strong>" + trouble );
             } else {
                 buf.append( "<p><strong>" + gpl + " [New to Gemma]</strong>" );
             }
@@ -294,10 +295,12 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     /**
      * 
      */
+    @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {
         File f = getInfoStoreFile();
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis );) {
+            try (FileInputStream fis = new FileInputStream( f );
+                    ObjectInputStream ois = new ObjectInputStream( fis );) {
 
                 this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
                 ois.close();
@@ -373,8 +376,9 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
             if ( ee != null ) {
-                buf.append( "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                        + ee.getId() + "\">" + gse + "</a></strong>" );
+                buf.append(
+                        "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                + ee.getId() + "\">" + gse + "</a></strong>" );
             } else {
                 buf.append( "\n<p><strong>" + gse + " [new to Gemma]</strong>" );
             }

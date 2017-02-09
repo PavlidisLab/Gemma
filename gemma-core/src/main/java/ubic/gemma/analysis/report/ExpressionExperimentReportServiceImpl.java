@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.report;
 
-import gemma.gsec.SecurityService;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +27,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -41,19 +47,9 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Component;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
@@ -114,13 +110,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
-    private CoexpressionService geneCoexpressionService;
-
-    @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
-
-    @Autowired
-    private SecurityService securityService;
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -165,9 +155,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.statsCache = new Cache( config );
         } else {
-            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
-                    overFlowToDisk, null, eternal, secondsToLive, 0, diskPersistent, diskExpiryThreadIntervalSeconds,
-                    null );
+            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                    null, eternal, secondsToLive, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
         }
 
         cacheManager.addCache( statsCache );

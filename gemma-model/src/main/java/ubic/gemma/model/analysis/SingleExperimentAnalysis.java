@@ -32,6 +32,11 @@ public abstract class SingleExperimentAnalysis extends ExpressionAnalysis implem
     /**
      * 
      */
+    private static final long serialVersionUID = -6301345978501023402L;
+
+    /**
+     * 
+     */
     private BioAssaySet experimentAnalyzed;
 
     /**

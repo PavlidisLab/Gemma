@@ -81,7 +81,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.find(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -96,7 +97,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByAbbreviation(java.lang.String abbreviation)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -110,7 +112,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByCommonName(java.lang.String commonName)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -125,7 +128,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -140,7 +144,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findByScientificName(java.lang.String scientificName)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -155,7 +160,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.findOrCreate(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -257,6 +263,7 @@ public class TaxonServiceImpl implements TaxonService {
     /**
      * @see ubic.gemma.genome.taxon.service.TaxonService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public java.util.Collection<Taxon> loadAll() {
@@ -325,7 +332,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.remove(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -340,7 +348,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.thaw(ubic.gemma.model.genome.Taxon taxon)' -->' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -355,7 +364,8 @@ public class TaxonServiceImpl implements TaxonService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.genome.taxon.service.TaxonServiceException(
                     "Error performing 'ubic.gemma.model.genome.TaxonService.update(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 

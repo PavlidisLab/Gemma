@@ -37,6 +37,11 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 public abstract class ExpressionExperiment extends BioAssaySet implements SecuredNotChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 6374751424316315527L;
+
+    /**
      * Constructs new instances of {@link ExpressionExperiment}.
      */
     public static final class Factory {

@@ -18,19 +18,8 @@
  */
 package ubic.gemma.persistence;
 
-import static org.junit.Assert.fail;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Test;
 
-import ubic.gemma.model.common.Describable;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**

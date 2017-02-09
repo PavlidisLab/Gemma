@@ -26,6 +26,11 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 public abstract class SampleCoexpressionMatrix implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 4340621792397336563L;
+
+    /**
      * Constructs new instances of {@link SampleCoexpressionMatrix}.
      */
     public static final class Factory {

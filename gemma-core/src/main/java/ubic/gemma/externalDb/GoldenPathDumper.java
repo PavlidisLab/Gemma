@@ -42,6 +42,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * @author pavlidis
  * @deprecated
  */
+@Deprecated
 public class GoldenPathDumper extends GoldenPath {
 
     /**
@@ -168,8 +169,8 @@ public class GoldenPathDumper extends GoldenPath {
         Collection<Integer> seen = new HashSet<>();
         while ( DO_EST && !( limit > 0 && numInput >= limit ) ) {
             try {
-                Collection<BioSequence> sequences = loadSequencesByQuery( "all_est", SequenceType.EST, limitSuffix
-                        + " offset " + offset );
+                Collection<BioSequence> sequences = loadSequencesByQuery( "all_est", SequenceType.EST,
+                        limitSuffix + " offset " + offset );
                 if ( sequences.size() == 0 ) {
                     break;
                 }
@@ -189,8 +190,8 @@ public class GoldenPathDumper extends GoldenPath {
         numInput = 0;
         while ( DO_MRNA && !( limit > 0 && numInput >= limit ) ) {
             try {
-                Collection<BioSequence> sequences = loadSequencesByQuery( "all_mrna", SequenceType.mRNA, limitSuffix
-                        + " offset " + offset );
+                Collection<BioSequence> sequences = loadSequencesByQuery( "all_mrna", SequenceType.mRNA,
+                        limitSuffix + " offset " + offset );
                 if ( sequences.size() == 0 ) {
                     break;
                 }

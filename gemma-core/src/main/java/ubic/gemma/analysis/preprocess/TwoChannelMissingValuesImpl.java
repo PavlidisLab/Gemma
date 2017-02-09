@@ -102,9 +102,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
+     * @see ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.
+     * experiment .ExpressionExperiment)
      */
     @Override
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp ) {
@@ -114,9 +113,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, double, java.util.Collection)
+     * @see ubic.gemma.analysis.preprocess.TwoChannelMissingValues#computeMissingValues(ubic.gemma.model.expression.
+     * experiment .ExpressionExperiment, double, java.util.Collection)
      */
     @Override
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,
@@ -286,7 +284,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
 
                 // If the "preferred" value is already missing, we retain that, or if it is a special value
                 Double pref = prefRow == null ? Double.NaN : prefRow[col];
-                if ( pref == null || pref.isNaN()
+                if ( pref.isNaN()
                         || ( extraMissingValueIndicators != null && extraMissingValueIndicators.contains( pref ) ) ) {
                     detectionCalls[col] = false;
                     continue;
@@ -487,8 +485,8 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
         present.setName( "Detection call" );
 
         if ( !signalThreshold.isNaN() ) {
-            present.setDescription( "Detection call based on signal threshold of " + signalThreshold
-                    + " (Computed by Gemma)" );
+            present.setDescription(
+                    "Detection call based on signal threshold of " + signalThreshold + " (Computed by Gemma)" );
         } else {
             present.setDescription( "Detection call based on signal to noise threshold of " + signalToNoiseThreshold
                     + " (Computed by Gemma)" );
@@ -530,11 +528,13 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
         // not exhaustive...
         if ( preferred == null || ( signalChannelA == null && signalChannelB == null ) ) {
-            log.warn( "Must have at least preferred and one intensity data matrix, missing value computation should not proceed" );
+            log.warn(
+                    "Must have at least preferred and one intensity data matrix, missing value computation should not proceed" );
             return false;
         }
 
-        if ( ( bkgChannelA != null && bkgChannelA.rows() == 0 ) || ( bkgChannelB != null && bkgChannelB.rows() == 0 ) ) {
+        if ( ( bkgChannelA != null && bkgChannelA.rows() == 0 )
+                || ( bkgChannelB != null && bkgChannelB.rows() == 0 ) ) {
             log.warn( "Background values must not be empty when non-null" );
             return false;
         }

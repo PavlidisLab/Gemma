@@ -23,6 +23,10 @@ package ubic.gemma.model.common.description;
  */
 public abstract class BibRefAnnotation implements java.io.Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2925637697790915030L;
     private Long id;
     private Boolean isMajorTopic;
 

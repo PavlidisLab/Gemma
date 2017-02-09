@@ -18,10 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import gemma.gsec.SecurityService;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.authentication.UserService;
 
 import java.util.Collection;
 import java.util.Date;
@@ -38,12 +34,13 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.CitationValueObject;
-import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -83,9 +80,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
     private GeneService geneService;
-
-    @Autowired
-    private DatabaseEntryDao databaseEntryDao;
 
     private static boolean dosLoaded = false;
 
@@ -145,19 +139,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         try {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 
     @Autowired
     private UserManager userManager;
-
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private SecurityService securityService;
 
     @Test
     public void testFindBibliographicReference() {
@@ -286,7 +274,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertTrue( !this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "can", null ).isEmpty() );
 
         // this should not return anything
-        assertTrue( this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "canloixys", null ).isEmpty() );
+        assertTrue(
+                this.phenotypeAssociationManagerService.searchOntologyForPhenotypes( "canloixys", null ).isEmpty() );
     }
 
     @Test
@@ -305,8 +294,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         createLiteratureEvidence( this.geneNCBI, "http://purl.obolibrary.org/obo/DOID_2531" );
 
-        Map<GeneValueObject, OntologyTerm> r = this.phenotypeAssociationManagerService.findGenesForPhenotype(
-                term.getUri(), this.humanTaxon.getId(), true );
+        Map<GeneValueObject, OntologyTerm> r = this.phenotypeAssociationManagerService
+                .findGenesForPhenotype( term.getUri(), this.humanTaxon.getId(), true );
 
         assertTrue( r.size() > 0 );
 
@@ -321,8 +310,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testFindEvidenceByFilters() {
-        Collection<EvidenceValueObject> evidenceVO = this.phenotypeAssociationManagerService.findEvidenceByFilters(
-                this.humanTaxon.getId(), 10, null );
+        Collection<EvidenceValueObject> evidenceVO = this.phenotypeAssociationManagerService
+                .findEvidenceByFilters( this.humanTaxon.getId(), 10, null );
         assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
 
         this.runAsAnonymous();
@@ -332,8 +321,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testLoadEvidenceWithExternalDatabaseName() {
-        assertTrue( !this.phenotypeAssociationManagerService.loadEvidenceWithExternalDatabaseName(
-                TEST_EXTERNAL_DATABASE, null ).isEmpty() );
+        assertTrue( !this.phenotypeAssociationManagerService
+                .loadEvidenceWithExternalDatabaseName( TEST_EXTERNAL_DATABASE, null ).isEmpty() );
 
         assertTrue( this.phenotypeAssociationManagerService.loadEvidenceWithoutExternalDatabaseName().isEmpty() );
     }

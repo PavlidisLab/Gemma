@@ -27,6 +27,11 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
  */
 public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4401437961722829548L;
+
     public LiteratureEvidenceValueObject() {
         super();
     }

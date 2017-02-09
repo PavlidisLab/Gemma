@@ -110,8 +110,8 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
             return null;
         }
-        Collection<GeneDifferentialExpressionMetaAnalysis> found = this.findByInvestigation( investigations.iterator()
-                .next() );
+        Collection<GeneDifferentialExpressionMetaAnalysis> found = this
+                .findByInvestigation( investigations.iterator().next() );
         if ( found.isEmpty() ) return null;
         return found.iterator().next();
     }
@@ -142,6 +142,7 @@ public class GeneDiffExMetaAnalysisServiceImpl implements GeneDiffExMetaAnalysis
         return geneDiffExMetaAnalysisDao.load( id );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneDifferentialExpressionMetaAnalysis> loadAll() {

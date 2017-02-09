@@ -30,6 +30,11 @@ import ubic.gemma.model.genome.Taxon;
 public class SearchSettingsImpl extends SearchSettings {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -8856730658411678433L;
+
+    /**
      * Convenience method to get pre-configured settings.
      * 
      * @param query

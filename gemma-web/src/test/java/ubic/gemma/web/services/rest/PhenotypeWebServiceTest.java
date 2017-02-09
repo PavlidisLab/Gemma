@@ -27,21 +27,17 @@ import java.io.InputStream;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import net.sf.json.JSONArray;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import net.sf.json.JSONArray;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.CitationValueObject;
-import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
@@ -68,15 +64,6 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
-
-    @Autowired
-    private GeneService geneService;
-
-    @Autowired
-    private DatabaseEntryDao databaseEntryDao;
 
     private Taxon humanTaxon = null;
 

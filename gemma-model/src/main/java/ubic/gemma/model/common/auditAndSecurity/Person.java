@@ -24,6 +24,11 @@ package ubic.gemma.model.common.auditAndSecurity;
 public abstract class Person extends ContactImpl implements gemma.gsec.model.Person {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7873047856249494633L;
+
+    /**
      * Constructs new instances of {@link Person}.
      */
     public static final class Factory {

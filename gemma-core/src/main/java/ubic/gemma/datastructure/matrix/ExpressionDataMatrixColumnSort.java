@@ -986,7 +986,7 @@ public class ExpressionDataMatrixColumnSort {
         }
 
         if ( !ExperimentalDesignUtils.isContinuous( ef ) ) {
-                sortByControl( factorValues );
+            sortByControl( factorValues );
         } else {
             sortIfMeasurement( factorValues );
         }
@@ -1292,6 +1292,7 @@ public class ExpressionDataMatrixColumnSort {
     /**
      * @param factorValues
      */
+    @SuppressWarnings("unused")
     private static void sortByTimepoint( List<FactorValue> factorValues ) {
         // TODO
         sortByControl( factorValues ); // temporary. See issue 4435 - also support for valueobjects

@@ -31,6 +31,11 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  */
 public abstract class ExperimentCoexpressionLink implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3850440587168527052L;
+
     private BioAssaySet experiment;
 
     /*

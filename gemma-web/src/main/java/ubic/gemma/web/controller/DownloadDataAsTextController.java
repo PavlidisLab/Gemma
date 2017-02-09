@@ -53,6 +53,7 @@ public class DownloadDataAsTextController {
     /*
      * Handle case of text export of the results.
      */
+    @SuppressWarnings("unused")
     @RequestMapping("/downloadMetaheatmapData.html")
     protected ModelAndView handleRequestInternal( HttpServletRequest request ) throws Exception {
 

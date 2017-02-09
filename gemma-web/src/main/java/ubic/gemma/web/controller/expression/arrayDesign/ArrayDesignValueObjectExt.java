@@ -36,6 +36,11 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 218696698777199533L;
+
     private Set<String> additionalTaxa;
 
     private String allParentsAnnotationLink;

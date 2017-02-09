@@ -25,4 +25,9 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class BatchCorrectionEventImpl extends BatchCorrectionEvent {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -3064019793264641050L;
+
 }

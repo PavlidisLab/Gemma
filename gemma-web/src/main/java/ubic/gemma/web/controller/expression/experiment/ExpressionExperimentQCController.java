@@ -82,6 +82,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.doublealgo.Formatter;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.jet.stat.Descriptive;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
@@ -109,16 +114,10 @@ import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.doublealgo.Formatter;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.jet.stat.Descriptive;
 
 //
 /**
@@ -154,9 +153,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     @Autowired
     private SVDService svdService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     @Autowired
     private MeanVarianceService meanVarianceService;
@@ -455,8 +451,8 @@ public class ExpressionExperimentQCController extends BaseController {
             matrix.viewColumn( 0 ).assign( means );
             matrix.viewColumn( 1 ).assign( variances );
 
-            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null, new String[] { "mean",
-                    "variance" }, null, null, null, null );
+            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null,
+                    new String[] { "mean", "variance" }, null, null, null, null );
             ModelAndView mav = new ModelAndView( new TextView() );
             mav.addObject( TextView.TEXT_PARAM, matrixString );
 
@@ -556,7 +552,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param width
      * @param height
      */
-    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
+    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
+            double height ) {
         chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
     }
 
@@ -731,8 +728,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId, String factorName )
-            throws FileNotFoundException, IOException {
+    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId,
+            String factorName ) throws FileNotFoundException, IOException {
         if ( ee == null || analysisId == null || rsId == null ) {
             log.warn( "Got invalid values: " + ee + " " + analysisId + " " + rsId + " " + factorName );
             return null;
@@ -765,8 +762,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @return
      */
     private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
-        DoubleArrayList eigenGeneL = new DoubleArrayList( ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj(
-                component ) ) );
+        DoubleArrayList eigenGeneL = new DoubleArrayList(
+                ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj( component ) ) );
         DescriptiveWithMissing.standardize( eigenGeneL );
         Double[] eigenGene = ArrayUtils.toObject( eigenGeneL.elements() );
         return eigenGene;
@@ -907,8 +904,8 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
-        Map<Long, ExperimentalFactor> efIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign()
-                .getExperimentalFactors() );
+        Map<Long, ExperimentalFactor> efIdMap = EntityUtils
+                .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             boolean isContinous = ExperimentalDesignUtils.isContinuous( ef );
@@ -1231,8 +1228,8 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math
-                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
+        int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX,
+                size * DEFAULT_QC_IMAGE_SIZE_PX );
         ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
 
         return true;
@@ -1297,8 +1294,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private DoubleArrayList zscore( DoubleArrayList d ) {
         DoubleArrayList z = new DoubleArrayList();
         double mean = Descriptive.mean( d );
-        double sd = Descriptive.standardDeviation( Descriptive.variance( d.size(), Descriptive.sum( d ),
-                Descriptive.sumOfSquares( d ) ) );
+        double sd = Descriptive.standardDeviation(
+                Descriptive.variance( d.size(), Descriptive.sum( d ), Descriptive.sumOfSquares( d ) ) );
         for ( int i = 0; i < d.size(); i++ ) {
             z.add( Math.abs( d.getQuick( i ) - mean ) / sd );
         }
@@ -1446,7 +1443,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private void writePlaceholderThumbnailImage( OutputStream os, int placeholderSize ) throws IOException {
         // Make the image a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
-        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9, BufferedImage.TYPE_INT_RGB );
+        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9,
+                BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.white );
         g.fillRect( 0, 0, placeholderSize + 16, placeholderSize + 9 );
@@ -1515,8 +1513,8 @@ public class ExpressionExperimentQCController extends BaseController {
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setBasePaint( Color.white );
 
-        ChartUtilities
-                .writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ), DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
+                DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
 
@@ -1530,8 +1528,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param size
      * @throws IOException
      */
-    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId,
-            Long rsId, String factorName, int size ) throws IOException {
+    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
+            String factorName, int size ) throws IOException {
         XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
 
         if ( series == null ) {

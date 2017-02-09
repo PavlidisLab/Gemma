@@ -29,6 +29,11 @@ import ubic.gemma.model.genome.Gene;
  */
 public abstract class GeneCoexpressionNodeDegree implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1456064687251594963L;
+
     public static final class Factory {
         public static GeneCoexpressionNodeDegree newInstance( Gene g ) {
             return new GeneCoexpressionNodeDegreeImpl( g );

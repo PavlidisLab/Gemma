@@ -42,9 +42,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     // SAGE item
     private String anchor;
 
-    // Sequencing items
-    private String libraryStrategy;
-
     public enum LibraryStrategy {
         OTHER, RNASEQ
     }
@@ -182,14 +179,13 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     }
 
     public GeoChannel getChannel( int i ) {
-        if ( i <= 0 || i > channels.size() )
-            throw new IllegalArgumentException( "Invalid channel index " + i + ", only " + channels.size()
-                    + " channels available." );
+        if ( i <= 0 || i > channels.size() ) throw new IllegalArgumentException(
+                "Invalid channel index " + i + ", only " + channels.size() + " channels available." );
         GeoChannel result = channels.get( i - 1 );
 
         if ( result.getChannelNumber() != i ) {
-            throw new IllegalStateException( "Channel number recorded in object was incorrect."
-                    + result.getChannelNumber() + " != " + i );
+            throw new IllegalStateException(
+                    "Channel number recorded in object was incorrect." + result.getChannelNumber() + " != " + i );
         }
         return result;
     }
@@ -388,7 +384,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.description = description;
         this.isGenePix = description.contains( "GenePix" );
         if ( isGenePix && !this.warnedAboutGenePix ) {
-            log.warn( "GenePix data detected: Some unused quantitation types may be skipped (futher warnings skipped)" );
+            log.warn(
+                    "GenePix data detected: Some unused quantitation types may be skipped (futher warnings skipped)" );
             warnedAboutGenePix = true;
         }
     }
@@ -458,10 +455,8 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     @Override
     public String toString() {
-        return super.toString()
-                + ( this.getPlatforms().size() > 0 ? " on "
-                        + ( this.getPlatforms().size() == 1 ? this.getPlatforms().iterator().next() : ( this
-                                .getPlatforms().size() + " platforms" ) ) : "" );
+        return super.toString() + ( this.getPlatforms().size() > 0 ? " on " + ( this.getPlatforms().size() == 1
+                ? this.getPlatforms().iterator().next() : ( this.getPlatforms().size() + " platforms" ) ) : "" );
     }
 
 }

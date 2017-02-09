@@ -33,7 +33,6 @@ import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -60,9 +59,6 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private OutlierDetectionService outlierDetectionService;
 
-    @Autowired
-    private BioAssayService bioAssayService;
-
     /**
      * Test method for
      * {@link ubic.gemma.analysis.preprocess.OutlierDetectionService#hasOutliers(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
@@ -75,8 +71,8 @@ public class OutlierDetectionServiceTest extends AbstractGeoServiceTest {
         ExpressionExperiment ee = eeService.findByShortName( "GSE2982" );
 
         if ( ee == null ) {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse2982Short" ) ) );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse2982Short" ) ) );
 
             Collection<?> results = geoService.fetchAndLoad( "GSE2982", false, false, true, false );
 

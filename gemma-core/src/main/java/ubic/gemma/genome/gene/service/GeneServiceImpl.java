@@ -114,6 +114,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#create(Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional
     public Collection<Gene> create( final Collection<Gene> genes ) {
@@ -364,20 +365,14 @@ public class GeneServiceImpl implements GeneService {
             // gene products in advance to remove the outliers. Currently this method is assuming the 1st gene product
             // is not the outlier.
             if ( !currentStrand.equalsIgnoreCase( strand ) ) {
-                log.warn( "Gene products for "
-                        + gene.getOfficialSymbol()
-                        + " , Id="
-                        + gene.getId()
+                log.warn( "Gene products for " + gene.getOfficialSymbol() + " , Id=" + gene.getId()
                         + " are on different strands. Unable to compute distance when products are on different strands. Skipping Gene product: "
                         + gp.getId() );
                 continue;
             }
 
             if ( !currentChromosone.equals( chromosome ) ) {
-                log.warn( "Gene products for "
-                        + gene.getOfficialSymbol()
-                        + " , Id="
-                        + gene.getId()
+                log.warn( "Gene products for " + gene.getOfficialSymbol() + " , Id=" + gene.getId()
                         + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
                         + gp.getId() );
 
@@ -428,6 +423,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadAll() {
@@ -569,6 +565,7 @@ public class GeneServiceImpl implements GeneService {
     /**
      * @see GeneService#loadMultiple(Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadMultiple( final Collection<Long> ids ) {

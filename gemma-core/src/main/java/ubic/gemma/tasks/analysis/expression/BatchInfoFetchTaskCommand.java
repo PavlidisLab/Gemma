@@ -11,6 +11,11 @@ import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
  *
  */
 public class BatchInfoFetchTaskCommand extends ExpressionExperimentReportTaskCommand {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -1901958943061377082L;
+
     public BatchInfoFetchTaskCommand( ExpressionExperiment expressionExperiment ) {
         super( expressionExperiment );
         this.setMaxRuntime( 15 );

@@ -10,6 +10,11 @@ import ubic.gemma.tasks.Task;
  */
 public class AutoTaggerTaskCommand extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -6804441052315842892L;
+
     public AutoTaggerTaskCommand( Long entityId ) {
         super( entityId );
     }

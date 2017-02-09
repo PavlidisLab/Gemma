@@ -31,6 +31,11 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 public abstract class PrincipalComponentAnalysis extends SingleExperimentAnalysis {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 7046708934564931841L;
+
+    /**
      * Constructs new instances of {@link PrincipalComponentAnalysis}.
      */
     public static final class Factory {

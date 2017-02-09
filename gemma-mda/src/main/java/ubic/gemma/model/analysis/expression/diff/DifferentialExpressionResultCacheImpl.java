@@ -24,23 +24,22 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.stereotype.Component;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.config.CacheConfiguration;
 import net.sf.ehcache.config.NonstopConfiguration;
 import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.stereotype.Component;
-
 import ubic.gemma.util.Settings;
 
 /**
@@ -186,9 +185,8 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultCache#get(ubic.gemma.model.analysis.expression
-     * .diff.ExpressionAnalysisResultSet, ubic.gemma.model.genome.Gene)
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultCache#get(ubic.gemma.model.analysis.
+     * expression .diff.ExpressionAnalysisResultSet, ubic.gemma.model.genome.Gene)
      */
     @Override
     public DiffExprGeneSearchResult get( Long resultSet, Long g ) {
@@ -237,7 +235,8 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
     }
 
     @Override
-    public void addToTopHitsCache( ExpressionAnalysisResultSet resultSet, List<DifferentialExpressionValueObject> items ) {
+    public void addToTopHitsCache( ExpressionAnalysisResultSet resultSet,
+            List<DifferentialExpressionValueObject> items ) {
         this.topHitsCache.put( new Element( resultSet.getId(), items ) );
 
     }
@@ -249,6 +248,7 @@ public class DifferentialExpressionResultCacheImpl implements DifferentialExpres
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultCache#getTopHits(ubic.gemma.model.analysis
      * .expression.diff.ExpressionAnalysisResultSet)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public List<DifferentialExpressionValueObject> getTopHits( ExpressionAnalysisResultSet resultSet ) {
         Element element = this.topHitsCache.get( resultSet );

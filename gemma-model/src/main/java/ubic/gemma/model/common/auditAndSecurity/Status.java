@@ -24,6 +24,11 @@ package ubic.gemma.model.common.auditAndSecurity;
 public abstract class Status implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -3418540112052921387L;
+
+    /**
      * Constructs new instances of {@link Status}.
      */
     public static final class Factory {

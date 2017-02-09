@@ -41,7 +41,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
@@ -246,6 +245,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                 removeIfExists( accession );
             }
 
+            @SuppressWarnings("unchecked")
             Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                     accession, false, doMatching, true, this.splitByPlatform, this.allowSuperSeriesLoad,
                     this.allowSubSeriesLoad );

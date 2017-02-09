@@ -22,6 +22,11 @@ package ubic.gemma.analysis.preprocess;
  */
 public class PreprocessingException extends Throwable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -8463478950898408838L;
+
     public PreprocessingException() {
         super();
     }

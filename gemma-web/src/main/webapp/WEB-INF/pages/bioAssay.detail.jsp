@@ -7,7 +7,7 @@
 <h2>
 	<fmt:message key="bioAssay.details" />
 </h2>
-<table width="30%" cellspacing="10">
+<table style="width:30%; table{border-collapse: separate; border-spacing: 10px;}">
 	<tr>
 		<td class="label"><strong> <fmt:message
 					key="bioAssay.name" />

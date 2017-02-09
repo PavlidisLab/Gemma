@@ -90,14 +90,15 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     private ExpressionExperiment ee = null;
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
 
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "GSE5949short" ) ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE5949", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE5949short" ) ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE5949", false, true, false, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
@@ -133,14 +134,15 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     /**
      * Three platforms, one sample was not run on GPL81. It's 'Norm-1a', but the name we use for the sample is random.
      */
+    @SuppressWarnings("unchecked")
     @Test
     public void testComputeDevRankForExpressionExperimentMultiArrayWithGaps() throws Exception {
 
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse482short" ) ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE482", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse482short" ) ) );
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE482", false, true, false, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
@@ -249,10 +251,11 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse404Short" ) ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE404", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse404Short" ) ) );
+            @SuppressWarnings("unchecked")
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE404", false, true, false, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             this.ee = ( ExpressionExperiment ) e.getData();

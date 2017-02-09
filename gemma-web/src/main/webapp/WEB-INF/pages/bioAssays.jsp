@@ -37,7 +37,7 @@
 	hasPCA="${hasPCA}" numFactors="${numFactors}" hasMeanVariance="${hasMeanVariance }" hasCorrDist="${hasCorrDist}"
 	eeManagerId="eemanager" />
 
-<div style="padding: 20px; margin: 10px;" id="bioAssayTable" />
+<div style="padding: 20px; margin: 10px;" id="bioAssayTable" ></div>
 
 <input id="eeId" type="hidden" value="${expressionExperiment.id}" />
 

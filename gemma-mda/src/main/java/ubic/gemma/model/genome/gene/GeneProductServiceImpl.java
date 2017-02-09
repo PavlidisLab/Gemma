@@ -166,6 +166,7 @@ public class GeneProductServiceImpl extends GeneProductServiceBase {
      * 
      * @see GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) {
         return ( Collection<GeneProduct> ) this.getGeneProductDao().load( ids );

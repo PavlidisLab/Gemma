@@ -28,6 +28,11 @@ import ubic.gemma.model.analysis.Investigation;
 public abstract class GenericExperiment extends Investigation {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -1322252603261082189L;
+
+    /**
      * Constructs new instances of {@link GenericExperiment}.
      */
     public static final class Factory {

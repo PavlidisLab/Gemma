@@ -25,6 +25,8 @@ import java.util.concurrent.ExecutionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import ubic.gemma.infrastructure.common.MessageSender;
 import ubic.gemma.job.EmailNotificationContext;
 import ubic.gemma.job.SubmittedTask;
@@ -32,8 +34,6 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.common.TaskPostProcessing;
 import ubic.gemma.job.executor.common.TaskStatusUpdate;
-
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * @author anton
@@ -43,6 +43,7 @@ public class SubmittedTaskRemote {
     private static Log log = LogFactory.getLog( SubmittedTaskRemote.class );
 
     private TaskCommand taskCommand;
+    @SuppressWarnings("unused")
     private List<String> progressUpdates; // TODO: keep local copy of task log messages, to be used in email
                                           // notification.
     private ListenableFuture<TaskResult> future;
@@ -90,7 +91,7 @@ public class SubmittedTaskRemote {
         }
     }
 
-    public void setFuture( ListenableFuture future ) {
+    public void setFuture( ListenableFuture<TaskResult> future ) {
         this.future = future;
     }
 

@@ -33,6 +33,10 @@ import java.io.Serializable;
  * @version $Id$
  */
 public abstract class Gene2GeneIdAssociation implements Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 3735868529324395241L;
     final private Long id = null;
     final private Long firstGene = null;
 

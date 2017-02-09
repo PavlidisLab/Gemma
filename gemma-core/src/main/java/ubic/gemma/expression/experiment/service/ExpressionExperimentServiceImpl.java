@@ -741,6 +741,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return differentialExpressionAnalysisDao;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithBatchEffect() {
@@ -764,6 +765,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ) {
@@ -1072,6 +1074,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAll() {
@@ -1124,6 +1127,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     /**
      * @see ExpressionExperimentService#loadMultiple(Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadMultiple( final Collection<Long> ids ) {

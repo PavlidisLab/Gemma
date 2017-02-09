@@ -78,6 +78,7 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
     /**
      * @see ubic.gemma.model.common.quantitationtype.QuantitationTypeService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public java.util.Collection<QuantitationType> loadAll() {
@@ -102,7 +103,8 @@ public class QuantitationTypeServiceImpl implements QuantitationTypeService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.quantitationtype.QuantitationTypeServiceException(
                     "Error performing 'ubic.gemma.model.common.quantitationtype.QuantitationTypeService.remove(ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
