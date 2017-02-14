@@ -1,10 +1,10 @@
 /* Based on a CSS Framework by Mike Stenhouse of Content with Style */
-	/* SITE SPECIFIC LAYOUT */
+/* SITE SPECIFIC LAYOUT */
 body {
 	margin: 0;
 	padding: 0;
-	background: white top left repeat-x;
-//	text-align: left;
+	background: white top left repeat-x; //
+	text-align: left;
 }
 
 div#page {
@@ -45,7 +45,7 @@ div#search {
 
 /* END HEADER */ /* CONTENT */
 div#content {
-	padding-left:0px;
+	padding-left: 0px;
 	text-align: left;
 }
 
@@ -58,8 +58,9 @@ div#main {
 	padding-left: 0px;
 }
 
-div .padded{
-	padding-left:20px;
+div.padded {
+	padding-left: 20px;
+	padding-right: 20px;
 	text-align: left;
 }
 
@@ -101,7 +102,7 @@ div#footer {
 
 div#footer .left {
 	float: left;
-	padding-left:20px;
+	padding-left: 20px;
 }
 
 div#footer div#divider {
@@ -109,21 +110,21 @@ div#footer div#divider {
 	border-top: 1px solid #abc;
 }
 
-div#messages{
+div#messages {
 	margin: 10px;
 	width: 600px;
 }
 
-div#progress-area{
-	padding: 20px; 
+div#progress-area {
+	padding: 20px;
 }
 
-div.table-padding{
+div.table-padding {
 	padding: 20px;
 	margin: 10px;
 }
 
-div.pleft-mbot{
+div.pleft-mbot {
 	padding-left: 20px;
 	margin-bottom: 10px;
 }
@@ -168,6 +169,24 @@ div.pleft-mbot{
 	-moz-border-radius: 0px 0px 0px 0px;
 }
 
+.v-padded {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.table-nice-wrapper table {
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+
+.table-nice-wrapper table td {
+	padding: 2px 5px;
+}
+
+.odd-gray tr:nth-child(odd) {
+	background-color: #eeeeee;
+}
+
 table.list {
 	border-width: 1px 2px 1px 2px;
 	border-spacing: 4px;
@@ -177,9 +196,49 @@ table.list {
 	background-color: white;
 }
 
-table.detail{
-	padding: 2px; 
-	width: 30%; 
-	border-collapse: separate; 
+table.detail {
+	padding: 2px;
+	width: 30%;
+	border-collapse: separate;
 	border-spacing: 4px;
+}
+
+table.pad-cols tr td {
+	padding: 5px 5px;
+}
+
+table.info-boxes>tbody>tr>td:nth-child(2) {
+	width: 40px;
+	text-align: left;
+}
+
+table.row-separated {
+	padding: 2px 0 2px 0;
+	border-collapse: collapse;
+	border-spacing: 0px;
+}
+
+table.row-separated td {
+	padding: 5px 0px 5px 0px;
+	border-bottom: 1px solid #cccccc;
+	vertical-align: middle;
+}
+
+table.row-separated tr.last-row td {
+	border: 0px;
+}
+
+table.row-separated .buttonBar {
+	padding: 10px 0 0 0;
+}
+
+hr.normal {
+	marging: 15px 0;
+	border : 0;
+	clear: both;
+	display: block;
+	width: 100%;
+	background-color: #cccccc;
+	height: 1px;
+	border: 0;
 }

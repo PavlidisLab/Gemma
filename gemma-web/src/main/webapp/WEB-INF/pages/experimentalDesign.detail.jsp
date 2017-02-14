@@ -46,8 +46,9 @@
 		</c:otherwise>
 	</c:choose>
 
+	<hr class="normal">
 
-	<table class="detail">
+	<table class="detail row-separated pad-cols">
 		<tr>
 			<td class="label"><b><fmt:message key="expressionExperiment.name" /> </b></td>
 			<td>
@@ -65,9 +66,13 @@
 			<td>
 				<c:choose>
 					<c:when test="${not empty expressionExperiment.description}">
-						<textarea rows=12 readonly style="width: 700px; background-color: white; border: 1px solid gainsboro">
+						<span style="
+							width: 700px;
+							height: 200px;
+							background-color: white;
+							">
 							<c:out value="${expressionExperiment.description}" />
-						</textarea>
+						</span>
 					</c:when>
 					<c:otherwise>(Description not available)</c:otherwise>
 				</c:choose>
@@ -100,29 +105,34 @@
 		
 	</table>
 </div>
-<security:accesscontrollist domainObject="${expressionExperiment}" hasPermission="WRITE,ADMINISTRATION">
-	<c:if test="${!hasPopulatedDesign}">
-		<div style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">
-			<p>
-				Use the form below to populate the experimental design details. Alternatively you can <a href="#"
-					onClick="showDesignUploadForm()">upload</a> a design description file. Instructions are <a target="_blank"
-					href="<c:url value='http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload' />">here</a>.
-				If you want to use the upload method, you can get a blank <a href="#"
-					onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
-					file</a> to get started.
-			</p>
-		</div>
-	</c:if>
-</security:accesscontrollist>
 
-<!-- Experimental Factors -->
+<div class="padded">
 
-<%-- This form element is needed for the checkboxes in the factor value panel --%>
-<form name="factorValueForm">
-	<div id="experimentalDesignPanel"></div>
-</form>
-<div id="experimentalFactorPanel" style="margin-bottom: 1em;"></div>
+	<security:accesscontrollist domainObject="${expressionExperiment}" hasPermission="WRITE,ADMINISTRATION">
+		<c:if test="${!hasPopulatedDesign}">
+			<div style="width: 600px; background-color: #EEEEEE; margin: 7px; padding: 7px;">
+				<p>
+					Use the form below to populate the experimental design details. Alternatively you can <a href="#"
+						onClick="showDesignUploadForm()">upload</a> a design description file. Instructions are <a target="_blank"
+						href="<c:url value='http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload' />">here</a>.
+					If you want to use the upload method, you can get a blank <a href="#"
+						onClick="fetchData(false, ${expressionExperiment.id }, 'text', null, ${expressionExperiment.experimentalDesign.id})">template
+						file</a> to get started.
+				</p>
+			</div>
+		</c:if>
+	</security:accesscontrollist>
+	
+	<!-- Experimental Factors -->
+	
+	<%-- This form element is needed for the checkboxes in the factor value panel --%>
+	<form name="factorValueForm">
+		<div id="experimentalDesignPanel"></div>
+	</form>
+	<div id="experimentalFactorPanel" style="margin-bottom: 1em;"></div>
+	
+	<div id="factorValuePanel" class="x-hide-display" style="margin-bottom: 1em;"></div>
+	
+	<div id="bioMaterialsPanel" class="x-hide-display"></div>
 
-<div id="factorValuePanel" class="x-hide-display" style="margin-bottom: 1em;"></div>
-
-<div id="bioMaterialsPanel" class="x-hide-display"></div>
+</div>
