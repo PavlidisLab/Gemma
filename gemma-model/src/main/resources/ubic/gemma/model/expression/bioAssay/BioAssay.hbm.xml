@@ -20,7 +20,7 @@
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
       <property name="processingDate" type="java.util.Date">

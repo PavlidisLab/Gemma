@@ -20,13 +20,13 @@
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="authorList" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="authorList" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="AUTHOR_LIST" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="title" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="title" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="TITLE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
       <property name="publisher" type="java.lang.String">
@@ -50,16 +50,16 @@
       <property name="fullTextUri" type="java.lang.String">
          <column name="FULL_TEXT_URI" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="abstractText" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="abstractText" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="ABSTRACT_TEXT" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="citation" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="citation" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="CITATION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
       <property name="publicationDate" type="java.util.Date">
          <column name="PUBLICATION_DATE" not-null="false" unique="false" sql-type="DATETIME"/>
       </property>
-      <property name="annotatedAbstract" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="annotatedAbstract" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="ANNOTATED_ABSTRACT" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
       <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="proxy" fetch="select">
