@@ -40,25 +40,11 @@ import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.NonstopConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
-import net.sf.ehcache.config.TerracottaConfiguration;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.queryParser.QueryParser;
 import org.compass.core.Compass;
 import org.compass.core.CompassCallback;
 import org.compass.core.CompassException;
@@ -77,6 +63,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration;
+import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
+import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
+import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.BatchIterator;
@@ -1776,7 +1774,7 @@ public class SearchServiceImpl implements SearchService {
     private Collection<SearchResult> expressionExperimentSearch( final SearchSettings settings ) {
         StopWatch watch = startTiming();
 
-        log.info( "Starting search for " + settings );
+        log.info( "Starting search for " + settings.getQuery() + " in taxon: " + settings.getTaxon() );
 
         Collection<SearchResult> results = new HashSet<SearchResult>();
 
@@ -2321,6 +2319,109 @@ public class SearchServiceImpl implements SearchService {
     }
 
     /**
+     * @param settings
+     * @param webSpeedSearch
+     * @return a collection of SearchResults holding all the genes resulting from the search with given SearchSettings.
+     */
+    private Collection<SearchResult> getGenesFromSettings( SearchSettings settings, boolean webSpeedSearch ) {
+        Collection<SearchResult> genes = null;
+        if ( settings.getSearchGenes() ) {
+            genes = geneSearch( settings, webSpeedSearch );
+        }
+        return genes;
+    }
+
+    /**
+     * Checks whether settings have the search genes flag and does the search if needed.
+     * 
+     * @param results the results to which should any new results be accreted.
+     * @param settings
+     * @param webSpeedSearch
+     * @return same object as given, possibly extended by new items from gene search.
+     */
+    private List<SearchResult> accreteResultsGenes( List<SearchResult> results, SearchSettings settings,
+            boolean webSpeedSearch ) {
+        if ( settings.getSearchGenes() ) {
+            Collection<SearchResult> genes = this.getGenesFromSettings( settings, webSpeedSearch );
+            accreteResults( results, genes );
+        }
+        return results;
+    }
+
+    /**
+     * Checks settings for all do-search flags, except for gene (see
+     * {@link(this.AccreteResultsGenes(List<SearchResults>, SearchSettings))}), and does the search if needed.
+     * 
+     * @param results the results to which should any new results be accreted.
+     * @param settings
+     * @param webSpeedSearch
+     * @return same object as given, possibly extended by new items from search.
+     */
+    private List<SearchResult> accreteResultsOthers( List<SearchResult> results, SearchSettings settings,
+            boolean webSpeedSearch ) {
+
+        if ( settings.getSearchExperiments() ) {
+            Collection<SearchResult> foundEEs = expressionExperimentSearch( settings );
+            results.addAll( foundEEs );
+        }
+
+        // SearchSettings persistent entity does not contain a usePhenotypes property that this logic requires
+        /*
+         * if ( settings.getUsePhenotypes() && settings.getSearchGenes() ) {
+         * 
+         * Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
+         * geneSearchService.getPhenotypeAssociatedGenes( settings.getQuery(), settings.getTaxon() ),
+         * "From phenotype association" ); accreteResults( results, phenotypeGenes ); }
+         */
+
+        Collection<SearchResult> compositeSequences = null;
+        if ( settings.getSearchProbes() ) {
+            compositeSequences = compositeSequenceSearch( settings );
+            accreteResults( results, compositeSequences );
+        }
+
+        if ( settings.getSearchPlatforms() ) {
+            Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
+            accreteResults( results, foundADs );
+        }
+
+        if ( settings.getSearchBioSequences() ) {
+            Collection<SearchResult> genes = this.getGenesFromSettings( settings, webSpeedSearch );
+
+            Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
+            accreteResults( results, bioSequences );
+        }
+
+        if ( settings.getUseGo() ) {
+            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult(
+                    geneSearchService.getGOGroupGenes( settings.getQuery(), settings.getTaxon() ), "From GO group" );
+            accreteResults( results, ontologyGenes );
+        }
+
+        if ( settings.getSearchBibrefs() ) {
+            Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
+            accreteResults( results, bibliographicReferences );
+        }
+
+        if ( settings.getSearchGeneSets() ) {
+            Collection<SearchResult> geneSets = geneSetSearch( settings );
+            accreteResults( results, geneSets );
+        }
+
+        if ( settings.getSearchExperimentSets() ) {
+            Collection<SearchResult> experimentSets = experimentSetSearch( settings );
+            accreteResults( results, experimentSets );
+        }
+
+        if ( settings.getSearchPhenotypes() ) {
+            Collection<SearchResult> phenotypes = phenotypeSearch( settings );
+            accreteResults( results, phenotypes );
+        }
+
+        return results;
+    }
+
+    /**
      * Makes no attempt at resolving the search query as a URI. Will tokenize the search query if there are control
      * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
      * 
@@ -2337,137 +2438,29 @@ public class SearchServiceImpl implements SearchService {
      */
     protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects,
             boolean webSpeedSearch ) {
-        String enhancedQuery = StringUtils.strip( settings.getQuery() );
 
-        String searchString = QueryParser.escape( enhancedQuery );
-
-        if ( settings.getTaxon() == null ) {
-
-            // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
-            String[] searchTerms = searchString.split( "\\s+", 4 );
-            for ( int i = 0; i < searchTerms.length; i++ ) {
-                searchTerms[i] = searchTerms[i].toLowerCase();
-            }
-            List<String> searchTermsList = Arrays.asList( searchTerms );
-
-            // this Set is ordered by insertion order(LinkedHashMap)
-            Set<String> keywords = nameToTaxonMap.keySet();
-
-            // only strip out taxon terms if there is more than one search term in query and if the entire search string
-            // is not itself a keyword
-            if ( searchTerms.length > 1 && !keywords.contains( searchString.toLowerCase() ) ) {
-
-                for ( String keyword : keywords ) {
-
-                    int termIndex = searchString.toLowerCase().indexOf( keyword );
-                    // make sure that the keyword occurs in the searchString
-                    if ( termIndex != -1 ) {
-                        // make sure that either the keyword is multi-term or that it occurs as a single term(not as
-                        // part of another word)
-                        if ( keyword.contains( " " ) || searchTermsList.contains( keyword ) ) {
-                            searchString = searchString.replaceFirst( "(?i)" + keyword, "" ).trim();
-                            settings.setTaxon( nameToTaxonMap.get( keyword ) );
-                            // break on first term found in keywords since they should be(more or less) ordered by
-                            // precedence
-                            break;
-                        }
-                    }
-
-                }
-
-            }
-
-        }
+        settings = SearchSettingsStringUtils.processSettings( settings, this.nameToTaxonMap );
 
         List<SearchResult> rawResults = new ArrayList<>();
 
         // do gene first first before we munge the query too much.
-        Collection<SearchResult> genes = null;
-        if ( settings.getSearchGenes() ) {
-            genes = geneSearch( settings, webSpeedSearch );
-            accreteResults( rawResults, genes );
-        }
-
-        String[] searchTerms = searchString.split( "\\s+" );
+        this.accreteResultsGenes( rawResults, settings, webSpeedSearch );
 
         // some strings of size 1 cause lucene to barf and they were slipping through in multi-term queries, get rid of
         // them
-        if ( searchTerms.length > 0 ) {
-            searchString = "";
-            for ( String sTerm : searchTerms ) {
-                if ( sTerm.length() > 1 ) {
-                    searchString = searchString + " " + sTerm;
-                }
-            }
-            searchString = searchString.trim();
-        }
-
-        settings.setQuery( searchString );
+        settings.setQuery( SearchSettingsStringUtils.stripShortTerms( settings.getQuery() ) );
 
         // If nothing to search return nothing.
-        if ( StringUtils.isBlank( searchString ) ) {
+        if ( StringUtils.isBlank( settings.getQuery() ) ) {
             return new HashMap<Class<?>, List<SearchResult>>();
         }
 
-        if ( settings.getSearchExperiments() ) {
-            Collection<SearchResult> foundEEs = expressionExperimentSearch( settings );
-            rawResults.addAll( foundEEs );
-        }
+        rawResults = this.accreteResultsOthers( rawResults, settings, webSpeedSearch );
 
-        // SearchSettings persistent entity does not contain a usePhenotypes property that these logic requires
-        /*
-         * if ( settings.getUsePhenotypes() && settings.getSearchGenes() ) {
-         * 
-         * Collection<SearchResult> phenotypeGenes = dbHitsToSearchResult(
-         * geneSearchService.getPhenotypeAssociatedGenes( searchString, settings.getTaxon() ),
-         * "From phenotype association" ); accreteResults( rawResults, phenotypeGenes ); }
-         */
-
-        Collection<SearchResult> compositeSequences = null;
-        if ( settings.getSearchProbes() ) {
-            compositeSequences = compositeSequenceSearch( settings );
-            accreteResults( rawResults, compositeSequences );
-        }
-
-        if ( settings.getSearchPlatforms() ) {
-            Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
-            accreteResults( rawResults, foundADs );
-        }
-
-        if ( settings.getSearchBioSequences() ) {
-            Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
-            accreteResults( rawResults, bioSequences );
-        }
-
-        if ( settings.getUseGo() ) {
-            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult(
-                    geneSearchService.getGOGroupGenes( searchString, settings.getTaxon() ), "From GO group" );
-            accreteResults( rawResults, ontologyGenes );
-        }
-
-        if ( settings.getSearchBibrefs() ) {
-            Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
-            accreteResults( rawResults, bibliographicReferences );
-        }
-
-        if ( settings.getSearchGeneSets() ) {
-            Collection<SearchResult> geneSets = geneSetSearch( settings );
-            accreteResults( rawResults, geneSets );
-        }
-
-        if ( settings.getSearchExperimentSets() ) {
-            Collection<SearchResult> experimentSets = experimentSetSearch( settings );
-            accreteResults( rawResults, experimentSets );
-        }
-
-        if ( settings.getSearchPhenotypes() ) {
-            Collection<SearchResult> phenotypes = phenotypeSearch( settings );
-            accreteResults( rawResults, phenotypes );
-        }
         Map<Class<?>, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
                 fillObjects );
 
-        log.info( "search for: " + settings.getQuery() + " " + rawResults.size()
+        log.info( "search for: " + settings.getQuery() + " yielded " + rawResults.size()
                 + " raw results (final tally may be filtered)" );
 
         return sortedLimitedResults;
