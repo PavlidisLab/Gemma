@@ -242,3 +242,11 @@ hr.normal {
 	height: 1px;
 	border: 0;
 }
+
+.x-form-item{
+	vertical-align: bottom;
+	border-bottom: solid 1px #eeeeee;
+	padding: 0px 0px;
+	width: 100%;
+	text-align: left;
+}

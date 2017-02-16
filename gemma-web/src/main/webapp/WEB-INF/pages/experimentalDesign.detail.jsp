@@ -66,13 +66,22 @@
 			<td>
 				<c:choose>
 					<c:when test="${not empty expressionExperiment.description}">
-						<span style="
-							width: 700px;
-							height: 200px;
+						<pre style="
+							white-space: pre-wrap;       /* Since CSS 2.1 */
+						    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+						    white-space: -pre-wrap;      /* Opera 4-6 */
+						    white-space: -o-pre-wrap;    /* Opera 7 */
+						    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+    
+							width: 600px;
+							height: auto;
+							max-height: 150px;
+							overflow-y: scroll;
+							overflow-x: hidden;
 							background-color: white;
 							">
 							<c:out value="${expressionExperiment.description}" />
-						</span>
+						</pre>
 					</c:when>
 					<c:otherwise>(Description not available)</c:otherwise>
 				</c:choose>
