@@ -85,6 +85,7 @@ public abstract class BlatResultServiceBase implements BlatResultService {
      * @see BlatResultService#update(BlatResult)
      */
     @Override
+    @Transactional
     public void update( final BlatResult blatResult ) {
         this.handleUpdate( blatResult );
 
