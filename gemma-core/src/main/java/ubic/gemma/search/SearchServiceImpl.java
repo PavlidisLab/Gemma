@@ -365,8 +365,8 @@ public class SearchServiceImpl implements SearchService {
                 terms = taxon.getScientificName().split( "\\s+" );
                 if ( terms.length > 1 ) {
                     for ( String s : terms ) {
-
-                        if ( !s.equalsIgnoreCase( "Oncorhynchus" ) ) {
+                        if ( !s.equalsIgnoreCase( "Oncorhynchus" ) && !s.equalsIgnoreCase( "Human" ) ) {
+                            // 'human herpesvirus' was overriding 'homo sapiens' for kw 'human' in the map.
                             nameToTaxonMap.put( s.toLowerCase(), taxon );
                         }
                     }

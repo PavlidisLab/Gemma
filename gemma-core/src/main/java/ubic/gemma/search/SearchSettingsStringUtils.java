@@ -57,16 +57,15 @@ public class SearchSettingsStringUtils {
 
             // only strip out taxon terms if there is more than one search term in query and if the entire search string
             // is not itself a keyword
-            if ( searchTerms.length > 1 && !keywords.contains( settings.getQuery().toLowerCase() ) ) {
+            if ( searchTerms.length > 1 && !keywords.contains( searchString ) ) {
 
                 for ( String keyword : keywords ) {
 
-                    int termIndex = searchString.toLowerCase().indexOf( keyword );
                     // make sure that the keyword occurs in the searchString
-                    if ( termIndex != -1 ) {
+                    if ( searchString.contains( keyword ) ) {
+
                         // make sure that either the keyword is multi-term or that it occurs as a single term(not as
                         // part of another word)
-
                         if ( keyword.contains( " " ) || searchTermsList.contains( keyword ) ) {
                             searchString = searchString.replaceFirst( "(?i)" + keyword, "" ).trim();
                             settings.setTaxon( nameToTaxonMap.get( keyword ) );

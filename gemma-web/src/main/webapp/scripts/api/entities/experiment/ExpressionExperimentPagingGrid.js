@@ -535,7 +535,7 @@ Gemma.ExperimentPagingGrid = Ext
                // console.log(records[0]);
             }, this );
             var eeCombo = new Gemma.ExperimentAndExperimentGroupCombo( {
-               width : 310,
+               width : 500,
                hideTrigger : true
             } );
             eeCombo.on( "recordSelected", function( selectedGroup ) {

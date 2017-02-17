@@ -56,8 +56,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
 
          name : 'experimentAndExperimentGroupCombo',
          displayField : 'name',
-         width : 160,
-         listWidth : 450, // ridiculously large so IE displays it properly
+         width : 500,
+         listWidth : 550, // ridiculously large so IE displays it properly
          lazyInit : false, // true to not initialize the list for this combo until the field is focused (defaults to
          // true)
          triggerAction : 'all', // run the query specified by the allQuery config option when the trigger is clicked
@@ -65,7 +65,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
          enableKeyEvents : true,
 
          loadingText : 'Searching ...', // FIXME if field is blank use 'loading ...'
-         emptyText : "Find experiments by keyword",
+         emptyText : "Find experiments by keyword", //'human' alone maps to human herpesvirus
          listEmptyTextBlankQuery : 'Search by keyword or ID',
          listEmptyText : 'No results',
          minChars : 3,
