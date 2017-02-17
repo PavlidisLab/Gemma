@@ -1169,9 +1169,6 @@ public class ExpressionExperimentQCController extends BaseController {
         // Set maximum plot range to Y_MAX + YRANGE * OFFSET to leave some extra white space
         final double OFFSET_FACTOR = 0.05f;
 
-        // MV plot filtering
-        final double ZSCORE_MAX = 2;
-
         // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
         final int MAX_IMAGE_SIZE_PX = 5;
 
@@ -1179,11 +1176,8 @@ public class ExpressionExperimentQCController extends BaseController {
             return false;
         }
 
-        // filter out extreme outliers by using a z-score cutoff, specially useful for GeneSpring data, e.g. GSE27262
-        MeanVarianceRelation filteredMvr = removeMVOutliers( mvr, ZSCORE_MAX );
-
         // get data points
-        XYSeriesCollection collection = getMeanVariance( filteredMvr );
+        XYSeriesCollection collection = getMeanVariance( mvr );
 
         if ( collection.getSeries().size() == 0 ) {
             return false;
@@ -1230,6 +1224,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX,
                 size * DEFAULT_QC_IMAGE_SIZE_PX );
+
         ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
 
         return true;
@@ -1243,6 +1238,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param zscoreMax
      * @return
      */
+    @SuppressWarnings("unused")
     private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
         MeanVarianceRelation ret = MeanVarianceRelation.Factory.newInstance();
         ByteArrayConverter bac = new ByteArrayConverter();
@@ -1271,8 +1267,9 @@ public class ExpressionExperimentQCController extends BaseController {
 
             filteredMeans.add( means.getQuick( i ) );
             filteredVars.add( vars.getQuick( i ) );
-            filteredLowessX.add( lowessXs.getQuick( i ) );
-            filteredLowessY.add( lowessYs.getQuick( i ) );
+            // FIXME this is for cases when lowess vectors are too short, which should not happen.
+            if ( i < lowessXs.size() ) filteredLowessX.add( lowessXs.getQuick( i ) );
+            if ( i < lowessYs.size() ) filteredLowessY.add( lowessYs.getQuick( i ) );
         }
 
         log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
