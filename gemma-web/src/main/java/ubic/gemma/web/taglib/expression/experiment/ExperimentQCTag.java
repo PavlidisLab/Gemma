@@ -168,7 +168,7 @@ public class ExperimentQCTag extends TagSupport {
 
             buf.append( "</td>" );
             /*
-             * popupImage is defined in ExpressinExperimentDetails.js
+             * popupImage is defined in ExpressinExperimentPage.js
              */
             String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid;
 
