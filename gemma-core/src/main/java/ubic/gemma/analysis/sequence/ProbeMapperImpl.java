@@ -86,7 +86,8 @@ public class ProbeMapperImpl implements ProbeMapper {
         Map<String, Collection<BlatAssociation>> allRes = new HashMap<>();
         int count = 0;
 
-        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence( blatResults );
+        Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = groupBlatResultsByBioSequence(
+                blatResults );
 
         assert !biosequenceToBlatResults.isEmpty();
 
@@ -372,8 +373,11 @@ public class ProbeMapperImpl implements ProbeMapper {
     }
 
     /**
-     * TODO implement checking the score, not just the exon overlap.
+     * FIXME possibly implement checking the score, not just the exon overlap. As it stands, the scoring has already
+     * done its work by removing redundant blat hits, and very weak hits are also already removed. I'm not convinced
+     * more filtering on score is needed here.
      * 
+     * @see BlatAssociationScorer.scoreResults which does some of the filtering
      * @param blatAssociationsForSequence associations for one sequence.
      * @param config
      * @return filtered collection
@@ -403,7 +407,8 @@ public class ProbeMapperImpl implements ProbeMapper {
      * @param blatResults
      * @return
      */
-    private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence( Collection<BlatResult> blatResults ) {
+    private Map<BioSequence, Collection<BlatResult>> groupBlatResultsByBioSequence(
+            Collection<BlatResult> blatResults ) {
 
         Map<BioSequence, Collection<BlatResult>> biosequenceToBlatResults = new HashMap<>();
 
