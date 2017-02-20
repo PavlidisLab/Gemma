@@ -124,8 +124,9 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
                     assert innerMap != null;
 
-                    // only one event per type
-                    if ( !innerMap.containsKey( atmap.get( t ) ) ) {
+                    // only replace event if its date is more recent.
+                    Auditable ae = atmap.get( t );
+                    if ( !innerMap.containsKey( ae ) || innerMap.get( ae ).getDate().compareTo( e.getDate() ) < 0 ) {
                         innerMap.put( atmap.get( t ), e );
                     }
                     break;
