@@ -336,14 +336,26 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     }
 
     @Override
+    public Collection<Long> getTroubled( Collection<Long> ids ) {
+        return this.getByTroubledFlag( ids, true );
+    }
+
+    @Override
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
+        return this.getByTroubledFlag( ids, false );
+    }
+
+    private Collection<Long> getByTroubledFlag( Collection<Long> ids, boolean troubled ) {
         Collection<Long> batch = new HashSet<Long>();
         Collection<Long> firstPass = new HashSet<Long>();
+
+        int tState = troubled ? 1 : 0;
 
         /*
          * First check the EEs themselves.
          */
-        String eeQueryString = "select e.id from ExpressionExperimentImpl e join e.status s where s.troubled = 0 and e.id in (:ids)";
+        String eeQueryString = "select e.id from ExpressionExperimentImpl e join e.status s where s.troubled = "
+                + tState + " and e.id in (:ids)";
         for ( Long id : ids ) {
             batch.add( id );
             if ( batch.size() == BATCH_SIZE ) {
@@ -362,7 +374,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Collection<Long> result = new HashSet<Long>();
         final String eeAdQuery = "select ee.id from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad inner join ad.status s where ee.id in (:ees) and s.troubled = 0";
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad inner join ad.status s where ee.id in (:ees) and s.troubled = "
+                + tState;
 
         batch.clear();
         for ( Long id : firstPass ) {
@@ -1867,6 +1880,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
         Hibernate.initialize( result.getPrimaryPublication() );
+        Hibernate.initialize( result.getStatus() );
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {
@@ -1996,6 +2010,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setShortName( ( String ) res[10] );
             v.setDateCreated( ( ( Date ) res[11] ) );
             v.setTroubled( ( ( Boolean ) res[17] ) );
+            v.setValidated( ( Boolean ) res[18] );
             v.setParentTaxonId( ( Long ) res[21] );
 
             if ( ( ( Boolean ) res[17] ) ) {
@@ -2005,7 +2020,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                     v.setTroubleDetails( "Troubled reason not loaded" );
                 }
             } else {
-                v.setTroubleDetails( "Not troubled (Troubled status might be propagated from platform)" );
+                v.setTroubleDetails( "Not troubled" );
             }
             Object technology = res[12];
             if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );

@@ -195,15 +195,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     @Transactional(readOnly = true)
     public AuditEvent getLastTroubleEvent( final Auditable auditable ) {
-        AuditEvent troubleEvent = this.auditEventDao.getLastEvent( auditable, TroubleStatusFlagEventImpl.class );
-        if ( troubleEvent == null ) {
-            return null;
-        }
-        AuditEvent okEvent = this.auditEventDao.getLastEvent( auditable, OKStatusFlagEventImpl.class );
-        if ( okEvent != null && okEvent.getDate().after( troubleEvent.getDate() ) ) {
-            return null;
-        }
-        return troubleEvent;
+        return this.auditEventDao.getLastOutstandingTroubleEvent( this.auditEventDao.getEvents( auditable ) );
     }
 
     /**

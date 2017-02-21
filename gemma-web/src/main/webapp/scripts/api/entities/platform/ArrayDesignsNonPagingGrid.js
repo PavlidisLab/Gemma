@@ -54,17 +54,7 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "troubled"
       }, {
-         name : "troubleEvent"
-      }, {
-         name : "troubleEventDate",
-         convert : function( v, record ) {
-            if ( record.troubleEvent && record.troubleEvent.date ) {
-               return record.troubleEvent.date;
-            }
-            return null;
-         },
-         dateFormat : "timestamp",
-         type : "date"
+         name : "troubleDetails"
       }, {
          name : "statusArray",
          convert : function( v, record ) {
@@ -323,17 +313,14 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
                      var statusString = "";
 
                      if ( record.get( 'troubled' ) ) {
-                        var te = record.get( 'troubleEvent' );
-                        if ( te && (te.detail || te.note || te.performer) ) {
-                           var date = (record.get( 'troubleEventDate' )) ? new Date( record.get( 'troubleEventDate' ) )
-                              .format( "Y-m-d" ) : '';
-                           var detail = (te && te.detail) ? '(' + te.detail + ')' : '';
-                           var user = (te && te.performer) ? ' by ' + te.performer + ': ' : '';
-                           statusString += '<img title="' + date + user + te.note + detail
-                              + '" src="/Gemma/images/icons/stop.png"/>&nbsp;';
+                        var te = record.get( 'troubleDetails' );
+                        alert(te);
+                        if ( te ) {
+                           statusString += '<img title="' + te + '" ';
                         } else {
-                           statusString += '<img src="/Gemma/images/icons/stop.png"/>&nbsp;';
+                           statusString += '<img ';
                         }
+                        statusString += 'src="/Gemma/images/icons/stop.png"/>&nbsp;'
                      }
                      if ( record.get( 'isMerged' ) ) {
                         statusString += '<img title="'

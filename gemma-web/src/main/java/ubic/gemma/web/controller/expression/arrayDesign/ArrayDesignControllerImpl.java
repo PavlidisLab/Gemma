@@ -62,8 +62,6 @@ import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
@@ -164,8 +162,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private ArrayDesignService arrayDesignService;
     @Autowired
     private AuditableUtil auditableUtil;
-    @Autowired
-    private AuditTrailService auditTrailService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
     @Autowired
@@ -461,41 +457,91 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     @Override
     public ArrayDesignValueObjectExt getDetails( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "ID cannot be null" );
-        }
 
-        ArrayDesign arrayDesign = arrayDesignService.load( id ); // this shouldn't really be necessary
-
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
-        }
-
+        ArrayDesign arrayDesign = this.getADSafely( id );
         log.info( "Loading details of " + arrayDesign );
-
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
         ArrayDesignValueObject vo = arrayDesignService.loadValueObject( id );
         arrayDesignReportService.fillInValueObjects( Lists.newArrayList( vo ) );
         arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
 
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
+        result.setTroubleDetails( StringEscapeUtils.escapeHtml4( result.getTroubleDetails() ) );
+        result = this.setExtRefsAndCounts( result, arrayDesign );
+        result = this.setAlternateNames( result, arrayDesign );
+        result = this.setAdditionalTaxa( result, id ); // This is very SLOW and does not seem to be used
+        result = this.setExtRefsAndCounts( result, arrayDesign );
+        result = this.setSummaryInfo( result, id );
 
-        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
+        populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
 
-        int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
+        log.info( "Finished loading details of " + arrayDesign );
+        return result;
+    }
 
-        Collection<String> names = new HashSet<>();
-        for ( AlternateName an : arrayDesign.getAlternateNames() ) {
-            names.add( an.getName() );
+    /**
+     * Loads, checks not null, and thaws the Array Design with given ID;
+     * 
+     * @param id
+     * @return
+     */
+    private ArrayDesign getADSafely( Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "ID cannot be null" );
         }
-        result.setAlternateNames( names );
 
+        ArrayDesign arrayDesign = arrayDesignService.load( id );
+
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
+        }
+
+        return arrayDesignService.thawLite( arrayDesign );
+    }
+
+    /**
+     * Sets additional taxa on the given value object.
+     * 
+     * @param result
+     * @param id
+     * @return
+     */
+    private ArrayDesignValueObjectExt setAdditionalTaxa( ArrayDesignValueObjectExt result, Long id ) {
         Collection<Taxon> t = arrayDesignService.getTaxa( id );
         for ( Taxon taxon : t ) {
             taxonService.thaw( taxon );
         }
         result.setAdditionalTaxa( t );
+        return result;
+    }
+
+    /**
+     * Setls alternate names on the given value object.
+     * 
+     * @param result
+     * @param arrayDesign
+     * @return
+     */
+    private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
+        Collection<String> names = new HashSet<>();
+        for ( AlternateName an : arrayDesign.getAlternateNames() ) {
+            names.add( an.getName() );
+        }
+        result.setAlternateNames( names );
+        return result;
+    }
+
+    /**
+     * Sets external references, design element count and express. experiment count on the given value object.
+     * 
+     * @param result
+     * @param arrayDesign
+     * @return
+     */
+    private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
+        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
+
+        int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
         Collection<DatabaseEntryValueObject> externalReferences = new HashSet<>();
         for ( DatabaseEntry en : arrayDesign.getExternalReferences() ) {
@@ -504,27 +550,23 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result.setExternalReferences( externalReferences );
         result.setDesignElementCount( numCompositeSequences );
         result.setExpressionExperimentCount( numExpressionExperiments );
+        return result;
+    }
 
+    /**
+     * Sets the summary info on the given value object.
+     * 
+     * @param result
+     * @param id
+     * @return
+     */
+    private ArrayDesignValueObjectExt setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
         if ( summary != null ) {
             result.setNumProbeAlignments( summary.getNumProbeAlignments() );
             result.setNumProbesToGenes( summary.getNumProbesToGenes() );
             result.setNumProbeSequences( summary.getNumProbeSequences() );
         }
-
-        AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
-        if ( troubleEvent != null ) {
-            result.setTroubled( true );
-            result.setTroubleDetails( StringEscapeUtils.escapeHtml4( troubleEvent.toString() ) );
-        }
-        AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
-        if ( validatedEvent != null ) {
-            result.setValidated( true );
-        }
-
-        populateMergeStatus( arrayDesign, result ); // SLOW if we follow down to mergees of mergees etc.
-
-        log.info( "Finished loading details of " + arrayDesign );
         return result;
     }
 

@@ -310,12 +310,16 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets );
 
     /**
-     * Includes ones which are untroubled and which don't have a troubled ArrayDesign.
-     * 
      * @param ids
-     * @return
+     * @return EEs that are not troubled and are not from a troubled array design.
      */
     public Collection<Long> getUntroubled( Collection<Long> ids );
+
+    /**
+     * @param ids
+     * @return EEs that are troubled or are from a troubled array design.
+     */
+    public Collection<Long> getTroubled( Collection<Long> ids );
 
     public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
 

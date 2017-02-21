@@ -123,7 +123,7 @@ Gemma.ExpressionExperimentDetails = Ext
             }
 
             if ( ee.troubled ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
                   + ee.troubleDetails + '"/>';
             }
 

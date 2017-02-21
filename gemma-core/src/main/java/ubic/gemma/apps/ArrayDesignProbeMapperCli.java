@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 
 /**
@@ -520,9 +519,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             allArrayDesigns = arrayDesignService.loadAll();
         }
 
-        final Map<Long, AuditEvent> troubled = arrayDesignService.getLastTroubleEvent( EntityUtils
-                .getIds( allArrayDesigns ) );
-
         final SecurityContext context = SecurityContextHolder.getContext();
 
         // split over multiple threads so we can multiplex. Put the array designs in a queue. WARNING this does not work
@@ -552,7 +548,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             void consume( ArrayDesign x ) {
 
-                if ( troubled.containsKey( x.getId() ) ) {
+                if ( x.getStatus().getTroubled() ) {
                     log.warn( "Skipping troubled platform: " + x );
                     errorObjects.add( x + ": " + "Skipped because it is troubled; run in non-batch-mode" );
                     return;

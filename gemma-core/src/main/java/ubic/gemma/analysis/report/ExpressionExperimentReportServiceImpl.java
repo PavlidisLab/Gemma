@@ -283,8 +283,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
-
-        Collection<Long> troubledEEs = getTroubled( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
@@ -293,8 +291,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
         Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
-
-        Collection<Long> validatedEEs = getValidated( vos );
 
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
@@ -386,12 +382,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setDateArrayDesignLastUpdated( date );
             }
 
-            if ( validatedEEs.contains( ee.getId() ) ) {
-
-                eeVo.setValidated( true );
-
-            }
-
             if ( autotaggerEvents.containsKey( ee ) ) {
                 AuditEvent taggerEvent = autotaggerEvents.get( ee );
 
@@ -419,24 +409,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 // we find we are getting lazy-load exceptions from this guy.
                 eeVo.auditEvents2SampleRemovedFlags( removalEvents );
 
-            }
-
-            if ( troubledEEs.contains( id ) ) {
-                eeVo.setTroubled( true );
-
-                // See if this troubled flag comes from event on this EE and if so, retrieve its details.
-                AuditEvent tEvent = expressionExperimentService.getOustandingTroubleEvent( id );
-                if ( tEvent != null ) {
-                    eeVo.setTroubleDetails( tEvent.getDate() + ": " + tEvent.getNote() );
-                } else {
-                    log.warn(
-                            "No troubled details found. Flag probably propagated from platform, but status might be out of date. For EE="
-                                    + id );
-                }
-            }
-
-            if ( validatedEEs.contains( id ) ) {
-                eeVo.setValidated( true );
             }
 
             if ( mostRecentDate.after( new Date( 0 ) ) ) results.put( ee.getId(), mostRecentDate );
@@ -594,24 +566,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         assert eeVo.getDateCreated() != null;
         assert eeVo.getDateLastUpdated() != null;
 
-    }
-
-    private Collection<Long> getTroubled( Collection<ExpressionExperiment> ees ) {
-        Collection<Long> ids = EntityUtils.getIds( ees );
-        Collection<Long> untroubled = expressionExperimentService.getUntroubled( ids );
-        ids.removeAll( untroubled );
-        return ids;
-    }
-
-    private Collection<Long> getValidated( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> result = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject ee : vos ) {
-
-            if ( ee.getValidated() ) {
-                result.add( ee.getId() );
-            }
-        }
-        return result;
     }
 
     /**

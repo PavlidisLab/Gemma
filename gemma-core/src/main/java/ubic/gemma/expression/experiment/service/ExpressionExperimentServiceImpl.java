@@ -1036,30 +1036,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getTroubled( Collection<Long> ids ) {
-        Collection<Long> untroubled = this.getUntroubled( ids );
-        ids.removeAll( untroubled );
-        return ids;
+        return this.expressionExperimentDao.getTroubled( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
-        Collection<Long> firstPass = this.expressionExperimentDao.getUntroubled( ids );
-
-        /*
-         * Now check the array designs.
-         */
-        Map<ArrayDesign, Collection<Long>> ads = this.expressionExperimentDao.getArrayDesignsUsed( firstPass );
-        Collection<Long> troubled = new HashSet<Long>();
-        for ( ArrayDesign a : ads.keySet() ) {
-            if ( a.getStatus().getTroubled() ) {
-                troubled.addAll( ads.get( a ) );
-            }
-        }
-
-        firstPass.removeAll( troubled );
-
-        return firstPass;
+        return this.expressionExperimentDao.getUntroubled( ids );
     }
 
     /**

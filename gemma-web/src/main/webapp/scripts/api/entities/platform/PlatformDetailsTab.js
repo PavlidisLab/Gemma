@@ -342,7 +342,7 @@ Gemma.PlatformDetails = Ext
             var text = '';
 
             if ( platformDetails.troubled ) {
-               text = '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+               text = '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
                   + platformDetails.troubleDetails + '"/> Unusable';
             } else if ( platformDetails.validated ) {
                text = "Validated";

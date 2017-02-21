@@ -43,9 +43,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -79,9 +77,7 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
@@ -137,6 +133,10 @@ import ubic.gemma.web.view.TextView;
 @Controller
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController {
+
+    private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
+    private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
+
     /**
      * Delete expression experiments.
      * 
@@ -302,10 +302,6 @@ public class ExpressionExperimentController {
     private SecurityService securityService;
     @Autowired
     private TaxonService taxonService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
     @Autowired
     private SVDService svdService;
     @Autowired
@@ -955,26 +951,9 @@ public class ExpressionExperimentController {
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
-        }
-
-        try {
-            ee = expressionExperimentService.thawLiter( ee );
-        } catch ( UncategorizedSQLException e ) {
-            log.error( e );
-        } catch ( LazyInitializationException e ) {
-            log.error( e );
-        }
-
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
-
-        Collection<Long> ids = Collections.singleton( ee.getId() );
-
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids,
-                false );
+        ExpressionExperiment ee = this.getEESafely( id );
+        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService
+                .loadValueObjects( Collections.singleton( ee.getId() ), false );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -982,9 +961,192 @@ public class ExpressionExperimentController {
 
         getReportData( initialResults );
 
-        /*
-         * Check for multiple "preferred" qts and reprocessing.
-         */
+        ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
+        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
+                initialResult );
+
+        finalResult.setArrayDesigns(
+                arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
+        finalResult.setQChtml( getQCTagHTML( ee ) );
+        finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
+
+        finalResult = this.setPrefferedAndReprocessed( finalResult, ee );
+        finalResult = this.setMutipleTechTypes( finalResult, ee );
+        finalResult = this.setParentTaxon( finalResult, initialResult.getTaxonId() );
+        // this should be taken care of by the security interceptor. See bug 4373
+        // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
+        // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
+        finalResult = this.setPublicationAndAuthor( finalResult, ee );
+        finalResult = this.setBatchInfo( finalResult, ee );
+        finalResult = this.setTroubleInfo( finalResult, ee );
+
+        Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
+        if ( lastArrayDesignUpdate != null ) {
+            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
+        }
+
+        return finalResult;
+
+    }
+
+    /**
+     * Checks the given EE and all the given array designs for trouble and sets the appropriate properties on the given
+     * value object.
+     * 
+     * @param finalResult
+     * @param ee
+     * @param ads
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setTroubleInfo( ExpressionExperimentDetailsValueObject finalResult,
+            ExpressionExperiment ee ) {
+
+        boolean eeTroubled = ee.getStatus().getTroubled();
+        boolean adTroubled = false;
+        String troubleDetails = null;
+
+        if ( eeTroubled ) {
+            // If EE is troubled itself, show the reason for that trouble
+            troubleDetails = expressionExperimentService.getLastTroubleEvent( Collections.singleton( ee.getId() ) )
+                    .get( ee.getId() ).getDetail();
+
+        } else {
+            // if EE is not troubled, but the array design(s) it belongs to is/are, show the details of their trouble.
+            for ( ArrayDesignValueObject ad : finalResult.getArrayDesigns() ) {
+                if ( ad.getTroubled() ) {
+                    adTroubled = true;
+                    if ( troubleDetails == null ) {
+                        troubleDetails = TROUBLE_DETAIL_PLATF;
+                    } else {
+                        troubleDetails += TROUBLE_DETAIL_SEPARATOR;
+                    }
+                    troubleDetails += ad.getTroubleDetails();
+                }
+            }
+        }
+
+        finalResult.setTroubled( eeTroubled || adTroubled );
+        finalResult.setTroubleDetails( StringEscapeUtils.escapeHtml4( troubleDetails ) );
+
+        return finalResult;
+    }
+
+    /**
+     * Sets batch information and related properties
+     * 
+     * @param finalResult
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
+            ExpressionExperiment ee ) {
+        boolean hasBatchInformation = false;
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+
+        finalResult.setHasBatchInformation( hasBatchInformation );
+        if ( hasBatchInformation ) {
+            finalResult.setBatchConfound( batchConfound( ee ) );
+            finalResult.setBatchEffect( batchEffect( ee ) );
+        }
+
+        return finalResult;
+    }
+
+    /**
+     * populates the publication and author information
+     * 
+     * @param finalResult
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setPublicationAndAuthor(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+
+        finalResult.setDescription( ee.getDescription() );
+
+        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
+            finalResult.setPrimaryCitation(
+                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
+
+            try {
+                finalResult.setPubmedId( Integer.parseInt( accession ) );
+            } catch ( NumberFormatException e ) {
+                log.warn( "Pubmed id not formatted correctly: " + accession );
+            }
+        }
+
+        return finalResult;
+    }
+
+    /**
+     * Loads, checks not null, and thaws the array designs the given EE is associated with.
+     * 
+     * @param ee
+     * @return
+     */
+    private Collection<ArrayDesign> getADsSafely( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( ads == null ) {
+            throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
+        }
+        ads = arrayDesignService.thawLite( ads );
+
+        return ads;
+    }
+
+    /**
+     * Loads, checks not null, and thaws the ee with given ID;
+     * 
+     * @param id
+     * @return
+     */
+    private ExpressionExperiment getEESafely( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
+        }
+        ee = expressionExperimentService.thawLiter( ee );
+
+        return ee;
+    }
+
+    /**
+     * Checks and sets multiple technology types
+     * 
+     * @param finalResult
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setMutipleTechTypes(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+        Collection<TechnologyType> techTypes = new HashSet<>();
+        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            techTypes.add( ad.getTechnologyType() );
+        }
+
+        finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
+
+        return finalResult;
+    }
+
+    /**
+     * Check for multiple "preferred" qts and reprocessing.
+     *
+     * @param finalResult
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setPrefferedAndReprocessed(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
+
         boolean dataReprocessedFromRaw = false;
         int countPreferred = 0;
         for ( QuantitationType qt : quantitationTypes ) {
@@ -996,21 +1158,21 @@ public class ExpressionExperimentController {
             }
         }
 
-        ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
-        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
-                initialResult );
         finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
         finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
 
-        Collection<TechnologyType> techTypes = new HashSet<>();
-        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            techTypes.add( ad.getTechnologyType() );
-        }
+        return finalResult;
+    }
 
-        finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
-
-        // Set the parent taxon
-        Long taxonId = initialResult.getTaxonId();
+    /**
+     * Checks and sets parent taxon and related properties
+     * 
+     * @param finalResult
+     * @param taxonId
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setParentTaxon( ExpressionExperimentDetailsValueObject finalResult,
+            Long taxonId ) {
         assert taxonId != null;
         Taxon taxon = taxonService.load( taxonId );
         taxonService.thaw( taxon );
@@ -1022,83 +1184,7 @@ public class ExpressionExperimentController {
             finalResult.setParentTaxonId( taxon.getId() );
             finalResult.setParentTaxon( taxon.getCommonName() );
         }
-
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<ArrayDesignValueObject> advos = new ArrayList<ArrayDesignValueObject>();
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            ArrayDesignValueObject advo = arrayDesignService.loadValueObject( ad.getId() );
-
-            // Retrieve trouble details
-            AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( ad );
-            if ( troubleEvent != null ) {
-                advo.setTroubleDetails( StringEscapeUtils.escapeHtml4( troubleEvent.toString() ) );
-            }
-
-            advos.add( advo );
-        }
-        finalResult.setArrayDesigns( advos );
-
-        // this should be taken care of by the security interceptor. See bug 4373
-        // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
-        // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
-
-        /*
-         * populate the publication and author information
-         */
-        finalResult.setDescription( ee.getDescription() );
-
-        try {
-
-            if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-                finalResult.setPrimaryCitation(
-                        CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
-                String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
-
-                try {
-                    finalResult.setPubmedId( Integer.parseInt( accession ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Pubmed id not formatted correctly: " + accession );
-                }
-            }
-
-        } catch ( UncategorizedSQLException e ) {
-            log.error( e );
-        } catch ( LazyInitializationException e ) {
-            log.error( e );
-        }
-
-        finalResult.setQChtml( getQCTagHTML( ee ) );
-
-        boolean hasBatchInformation = false;
-        try {
-            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                    hasBatchInformation = true;
-                    break;
-                }
-            }
-        } catch ( UncategorizedSQLException e ) {
-            log.error( e );
-        } catch ( LazyInitializationException e ) {
-            log.error( e );
-        }
-
-        finalResult.setHasBatchInformation( hasBatchInformation );
-        if ( hasBatchInformation ) {
-            finalResult.setBatchConfound( batchConfound( ee ) );
-            finalResult.setBatchEffect( batchEffect( ee ) );
-        }
-
-        Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
-        if ( lastArrayDesignUpdate != null ) {
-            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
-        }
-
-        // experiment sets this ee belongs to
-        finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
-
         return finalResult;
-
     }
 
     /**
