@@ -418,6 +418,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
                 toHide.add( a );
             }
+            a.setTroubleDetails( StringEscapeUtils.escapeHtml4( a.getTroubleDetails() ) );
         }
         result.removeAll( toHide );
 

@@ -314,7 +314,6 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
 
                      if ( record.get( 'troubled' ) ) {
                         var te = record.get( 'troubleDetails' );
-                        alert(te);
                         if ( te ) {
                            statusString += '<img title="' + te + '" ';
                         } else {

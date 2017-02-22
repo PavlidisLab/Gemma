@@ -1010,9 +1010,14 @@ public class ExpressionExperimentController {
             troubleDetails = expressionExperimentService.getLastTroubleEvent( Collections.singleton( ee.getId() ) )
                     .get( ee.getId() ).getDetail();
 
-        } else {
+        }
+
+        for ( ArrayDesignValueObject ad : finalResult.getArrayDesigns() ) {
+            // this loop has to happen even if eeTroubled, because we need to escape troubleDetails of all the ADs
+            ad.setTroubleDetails( StringEscapeUtils.escapeHtml4( ad.getTroubleDetails() ) );
+
             // if EE is not troubled, but the array design(s) it belongs to is/are, show the details of their trouble.
-            for ( ArrayDesignValueObject ad : finalResult.getArrayDesigns() ) {
+            if ( !eeTroubled ) {
                 if ( ad.getTroubled() ) {
                     adTroubled = true;
                     if ( troubleDetails == null ) {
