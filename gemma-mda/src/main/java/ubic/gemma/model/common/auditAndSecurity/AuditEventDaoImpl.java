@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
@@ -45,10 +44,6 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.CommonQueries;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
@@ -163,65 +158,25 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         Collection<Class<? extends AuditEventType>> types = new HashSet<Class<? extends AuditEventType>>();
         types.add( TroubleStatusFlagEvent.class );
         types.add( OKStatusFlagEvent.class );
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> lastEvents = this.getLastEvents( auditables,
+
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> lastEventsAll = this.getLastEvents( auditables,
                 types );
 
         Map<Auditable, AuditEvent> results = new HashMap<Auditable, AuditEvent>();
 
-        if ( !lastEvents.containsKey( TroubleStatusFlagEvent.class ) ) {
-            return results;
-        }
-
-        /*
-         * Common case: check if auditables are EEs.
-         */
-
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-
         for ( Auditable a : auditables ) {
 
-            Map<Auditable, AuditEvent> trouble = lastEvents.get( TroubleStatusFlagEvent.class );
-
-            if ( !trouble.containsKey( a ) ) {
-                // no trouble! but we should check the array designs later.
-                if ( a instanceof ExpressionExperiment ) {
-                    ees.add( ( ExpressionExperiment ) a );
-                }
-                continue;
+            // Get events for the current auditable object
+            Collection<AuditEvent> lastEvents = new HashSet<AuditEvent>();
+            for ( Class<? extends AuditEventType> aet : lastEventsAll.keySet() ) {
+                lastEvents.add( lastEventsAll.get( aet ).get( a ) );
             }
 
-            AuditEvent t = trouble.get( a );
-
-            Map<Auditable, AuditEvent> ok = lastEvents.get( OKStatusFlagEvent.class );
-
-            if ( ok.containsKey( a ) ) {
-                // do we have a more recent ok event?
-                AuditEvent o = ok.get( a );
-                if ( o.getDate().after( t.getDate() ) ) {
-                    continue;
-                }
-
-                results.put( a, t );
-
-            } else {
+            // check if there is an outstanding trouble event
+            AuditEvent t = this.getLastOutstandingTroubleEventNoSort( lastEvents );
+            if ( t != null ) {
                 results.put( a, t );
             }
-
-        }
-
-        if ( !ees.isEmpty() ) {
-            Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
-            Map<ArrayDesign, Collection<Long>> ads = CommonQueries.getArrayDesignsUsed( eemap.keySet(), this
-                    .getSessionFactory().getCurrentSession() );
-
-            Map<Auditable, AuditEvent> arrayDesignTrouble = getLastOutstandingTroubleEvents( ads.keySet() );
-
-            for ( Entry<Auditable, AuditEvent> e : arrayDesignTrouble.entrySet() ) {
-                for ( Long ee : ads.get( e.getKey() ) ) {
-                    results.put( eemap.get( ee ), e.getValue() );
-                }
-            }
-            results.putAll( arrayDesignTrouble );
 
         }
 
@@ -247,7 +202,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * java.lang.Class)
      */
     @Override
-    public void retainHavingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+    public void retainHavingEvent( final Collection<? extends Auditable> a,
+            final Class<? extends AuditEventType> type ) {
 
         final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
 
@@ -677,7 +633,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         AuditEvent lastTroubleEvent = null;
         AuditEvent lastOKEvent = null;
         for ( AuditEvent event : events ) {
-            if ( event.getEventType() == null ) {
+            if ( event == null || event.getEventType() == null ) {
                 continue;
             } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
                 if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) ) lastOKEvent = event;

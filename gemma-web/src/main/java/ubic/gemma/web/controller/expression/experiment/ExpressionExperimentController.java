@@ -77,6 +77,7 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -136,6 +137,7 @@ public class ExpressionExperimentController {
 
     private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
     private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
+    private static final String TROUBLE_DETAIL_EVENT_NOT_FOUND = "No trouble event found for the experiment";
 
     /**
      * Delete expression experiments.
@@ -1001,14 +1003,22 @@ public class ExpressionExperimentController {
     private ExpressionExperimentDetailsValueObject setTroubleInfo( ExpressionExperimentDetailsValueObject finalResult,
             ExpressionExperiment ee ) {
 
-        boolean eeTroubled = ee.getStatus().getTroubled();
+        boolean eeTroubled = finalResult.getTroubled();
+        boolean eeTroubledButNoInfo = false;
         boolean adTroubled = false;
         String troubleDetails = null;
+        String adTroubleDetails = null;
 
         if ( eeTroubled ) {
             // If EE is troubled itself, show the reason for that trouble
-            troubleDetails = expressionExperimentService.getLastTroubleEvent( Collections.singleton( ee.getId() ) )
-                    .get( ee.getId() ).getDetail();
+            AuditEvent ae = expressionExperimentService.getOustandingTroubleEvent( ee.getId() );
+            if ( ae == null ) {
+                troubleDetails = TROUBLE_DETAIL_EVENT_NOT_FOUND;
+                eeTroubledButNoInfo = true;
+                log.error( "Experiment has a troubled status, but no trouble event was found! EE id: " + ee.getId() );
+            } else {
+                troubleDetails = ae.getDetail();
+            }
 
         }
 
@@ -1016,18 +1026,22 @@ public class ExpressionExperimentController {
             // this loop has to happen even if eeTroubled, because we need to escape troubleDetails of all the ADs
             ad.setTroubleDetails( StringEscapeUtils.escapeHtml4( ad.getTroubleDetails() ) );
 
-            // if EE is not troubled, but the array design(s) it belongs to is/are, show the details of their trouble.
-            if ( !eeTroubled ) {
+            // if the array design(s) the EE belongs to is/are troubled, also show the details of their trouble.
+            if ( !eeTroubled || eeTroubledButNoInfo ) {
                 if ( ad.getTroubled() ) {
                     adTroubled = true;
-                    if ( troubleDetails == null ) {
-                        troubleDetails = TROUBLE_DETAIL_PLATF;
+                    if ( adTroubleDetails == null ) {
+                        adTroubleDetails = TROUBLE_DETAIL_PLATF;
                     } else {
-                        troubleDetails += TROUBLE_DETAIL_SEPARATOR;
+                        adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
                     }
-                    troubleDetails += ad.getTroubleDetails();
+                    adTroubleDetails += ad.getTroubleDetails();
                 }
             }
+        }
+
+        if ( adTroubleDetails != null ) {
+            troubleDetails += TROUBLE_DETAIL_SEPARATOR + adTroubleDetails;
         }
 
         finalResult.setTroubled( eeTroubled || adTroubled );

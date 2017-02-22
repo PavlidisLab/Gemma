@@ -20,6 +20,7 @@ package ubic.gemma.expression.experiment.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -835,11 +836,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public AuditEvent getOustandingTroubleEvent( final Long id ) {
         ExpressionExperiment ee = this.load( id );
 
-        Collection<ExpressionExperiment> ees = new HashSet<>();
-        ees.add( ee );
-
-        // this checks the array designs, too.
-        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
+        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao()
+                .getLastOutstandingTroubleEvents( Collections.singleton( ee ) );
 
         for ( Auditable a : directEvents.keySet() ) {
             return directEvents.get( a );
@@ -850,8 +848,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     /**
      * @see ExpressionExperimentService#getLastTroubleEvent(Collection)
-     * @deprecated this method was used for event tracing to set TROUBLE flag. We should now be using the
-     *             {@link ExpressionExperimentService.getTroubled(Collection<Long>)} for this purpose.
      */
     @Deprecated
     @Override

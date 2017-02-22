@@ -419,7 +419,12 @@ public interface ExpressionExperimentService {
     /**
      * @param ids
      * @return
+     * @deprecated this method was used for event tracing to set TROUBLE flag. We should now be using the
+     *             {@link ExpressionExperimentService.getTroubled(Collection<Long>)} for this purpose. To retrieve a
+     *             trouble event that is still in effect, use
+     *             {@link ExpressionExperimentService.getOustandingTroubleEvent(Long)}
      */
+    @Deprecated
     public Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
 
     /**
