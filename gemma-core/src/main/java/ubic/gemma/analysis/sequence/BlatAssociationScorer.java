@@ -73,9 +73,11 @@ public class BlatAssociationScorer {
      *         that these 'refined' BlatAssociations will be used in further analysis.
      * @throws IllegalArgumentException if the blatAssociations are from multiple biosequences.
      */
-    public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations, ProbeMapperConfig config ) {
+    public static BlatAssociation scoreResults( Collection<BlatAssociation> blatAssociations,
+            ProbeMapperConfig config ) {
 
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores( blatAssociations );
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts2Associations = organizeBlatAssociationsByGeneProductAndInitializeScores(
+                blatAssociations );
 
         BlatAssociation globalBest = removeExtraHitsPerGeneProduct( blatAssociations, geneProducts2Associations );
 
@@ -96,7 +98,7 @@ public class BlatAssociationScorer {
         Map<PhysicalLocation, Collection<Gene>> geneClusters = clusterGenes( genes2Associations );
 
         // compute specificity at the level of genes. First, get the best score for each gene cluster.
-        Map<PhysicalLocation, Double> scores = new HashMap<PhysicalLocation, Double>();
+        Map<PhysicalLocation, Double> scores = new HashMap<>();
         for ( PhysicalLocation pl : geneClusters.keySet() ) {
             Double geneScore = 0.0;
 
@@ -147,6 +149,10 @@ public class BlatAssociationScorer {
      * <p>
      * FIXME this assumes a linear relationship between score and hybridization signal, which is unrealistic. Because
      * the scores for our hits are already filtered, this method gives results fairly close to 1/N.
+     * <p>
+     * 
+     * FIXME This is not actually used to filter BLAT results (and there's no suggestion we need to). The value gets set
+     * into BlatAssociation.specificity but this is never read. We should either use it or lose it.
      * 
      * @param scores r of all the genes for the hit in question.
      * @param score
@@ -173,7 +179,7 @@ public class BlatAssociationScorer {
     private static Map<PhysicalLocation, Collection<Gene>> clusterGenes(
             Map<Gene, Collection<BlatAssociation>> associations ) {
 
-        Map<PhysicalLocation, Collection<Gene>> clusters = new HashMap<PhysicalLocation, Collection<Gene>>();
+        Map<PhysicalLocation, Collection<Gene>> clusters = new HashMap<>();
 
         for ( Gene gene : associations.keySet() ) {
 
@@ -224,7 +230,7 @@ public class BlatAssociationScorer {
      */
     private static Map<Gene, Collection<BlatAssociation>> organizeBlatAssociationsByGene(
             Collection<BlatAssociation> blatAssociations ) {
-        Map<Gene, Collection<BlatAssociation>> genes = new HashMap<Gene, Collection<BlatAssociation>>();
+        Map<Gene, Collection<BlatAssociation>> genes = new HashMap<>();
         for ( BlatAssociation blatAssociation : blatAssociations ) {
             Gene gene = blatAssociation.getGeneProduct().getGene();
             if ( !genes.containsKey( gene ) ) {
@@ -245,7 +251,7 @@ public class BlatAssociationScorer {
      */
     private static Map<GeneProduct, Collection<BlatAssociation>> organizeBlatAssociationsByGeneProductAndInitializeScores(
             Collection<BlatAssociation> blatAssociations ) {
-        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<GeneProduct, Collection<BlatAssociation>>();
+        Map<GeneProduct, Collection<BlatAssociation>> geneProducts = new HashMap<>();
         Collection<BioSequence> sequences = new HashSet<BioSequence>();
 
         for ( BlatAssociation blatAssociation : blatAssociations ) {
@@ -305,7 +311,7 @@ public class BlatAssociationScorer {
             }
 
             // Remove the lower-scoring ones for this gene product
-            Collection<BlatAssociation> toKeep = new HashSet<BlatAssociation>();
+            Collection<BlatAssociation> toKeep = new HashSet<>();
             toKeep.add( best );
             keepers.add( best );
             geneProduct2BlatAssociations.put( geneProduct, toKeep );

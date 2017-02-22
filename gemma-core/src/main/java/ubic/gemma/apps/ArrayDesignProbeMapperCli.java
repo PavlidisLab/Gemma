@@ -67,10 +67,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private final static String OPTION_MICRORNA = "i";
     private final static String OPTION_MRNA = "m";
     private final static String OPTION_NSCAN = "s";
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
+
     private final static String OPTION_REFSEQ = "r";
 
     public static void main( String[] args ) {
@@ -114,6 +116,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     public String getShortDesc() {
         return "Process the BLAT results for an array design to map them onto genes";
     }
+
     /*
      * (non-Javadoc)
      * 
@@ -147,11 +150,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( OptionBuilder.withDescription(
                 "Assign non-gene mappings to a ProbeAlignedRegion including creation of new ones (default="
-                        + ProbeMapperConfig.DEFAULT_ALLOW_PARS + ")" ).create( "usePars" ) );
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PARS + ")" )
+                .create( "usePars" ) );
 
         addOption( OptionBuilder.withDescription(
                 "Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default="
-                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" ).create( "usePred" ) );
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" )
+                .create( "usePred" ) );
 
         addOption( OptionBuilder
                 .hasArg()
@@ -174,18 +179,20 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                                 + OPTION_ENSEMBL + " - search Ensembl track for predicted genes \n"
 
-                                + OPTION_NSCAN + " - search NScan track for predicted genes\n" ).create( CONFIG_OPTION ) );
+                                + OPTION_NSCAN + " - search NScan track for predicted genes\n" )
+                .create( CONFIG_OPTION ) );
 
         addOption( OptionBuilder.withDescription(
                 "Only seek miRNAs; this is the same as '-config " + OPTION_MICRORNA + "; overrides -config." ).create(
-                MIRNA_ONLY_MODE_OPTION ) );
+                        MIRNA_ONLY_MODE_OPTION ) );
 
         Option taxonOption = OptionBuilder
                 .hasArg()
                 .withArgName( "taxon" )
                 .withDescription(
                         "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
-                                + " ArrayDesigns from that taxon (overrides -a)" ).create( 't' );
+                                + " ArrayDesigns from that taxon (overrides -a)" )
+                .create( 't' );
 
         addOption( taxonOption );
 
@@ -198,7 +205,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
                                 + "File format: 2 columns with column 1= probe name in Gemma, "
                                 + "column 2=sequence name (not required, and not used for direct gene-based annotation)"
-                                + " column 3 = gene symbol (will be matched to that in Gemma)" ).hasArg()
+                                + " column 3 = gene symbol (will be matched to that in Gemma)" )
+                .hasArg()
                 .withArgName( "file" ).create( "import" );
 
         addOption( directAnnotation );
@@ -222,7 +230,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( probesToDoOption );
 
-        super.addThreadsOption();
+        //  using more than one thread won't work
+        //   super.addThreadsOption();
     }
 
     /*
@@ -242,7 +251,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         allowSubsumedOrMerged = true;
 
-        if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignsToProcess.isEmpty() ) {
+        if ( this.taxon != null && this.directAnnotationInputFileName == null
+                && this.arrayDesignsToProcess.isEmpty() ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName()
                     + " Array designs, troubled platforms may be skipped *** " );
         }
@@ -289,7 +299,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                             audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
                                     new AlignmentBasedGeneMappingEventImpl() );
                         } else {
-                            audit( arrayDesign, "Run with default parameters", new AlignmentBasedGeneMappingEventImpl() );
+                            audit( arrayDesign, "Run with default parameters",
+                                    new AlignmentBasedGeneMappingEventImpl() );
                         }
                     }
                 }
@@ -334,7 +345,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE )
                 || !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE )
                         || arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) || arrayDesign
-                        .getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) ) {
+                                .getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) ) {
             log.info( "Skipping because it is not a microarray platform" );
             return false;
         }
@@ -364,7 +375,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             log.debug( "Inspecting: " + currentEventClass );
 
             // Get the most recent event of each type.
-            if ( lastRepeatMask == null && ArrayDesignRepeatAnalysisEvent.class.isAssignableFrom( currentEventClass ) ) {
+            if ( lastRepeatMask == null
+                    && ArrayDesignRepeatAnalysisEvent.class.isAssignableFrom( currentEventClass ) ) {
                 lastRepeatMask = currentEvent;
                 log.debug( "Last repeat mask: " + lastRepeatMask.getDate() );
             } else if ( lastSequenceUpdate == null
@@ -404,7 +416,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             }
 
-            if ( lastSequenceAnalysis != null && lastSequenceUpdate.getDate().after( lastSequenceAnalysis.getDate() ) ) {
+            if ( lastSequenceAnalysis != null
+                    && lastSequenceUpdate.getDate().after( lastSequenceAnalysis.getDate() ) ) {
                 log.warn( arrayDesign + ": Sequences were updated more recently than the last sequence analysis" );
                 return false;
             }
@@ -521,11 +534,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        // split over multiple threads so we can multiplex. Put the array designs in a queue. WARNING this does not work
-        // correctly because of sharing of entities between platform. You will get hibernate errors.
-
         /*
-         * Here is our task runner.
+         * Here is our task runner. NOTE using more than one thread is disabled.
          */
         class Consumer implements Runnable {
             private final BlockingQueue<ArrayDesign> queue;
@@ -563,16 +573,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
         }
 
-        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+        BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
         for ( ArrayDesign ad : allArrayDesigns ) {
             arrayDesigns.add( ad );
         }
 
-        /*
-         * Start the threads
-         */
-        log.info( this.numThreads + " threads" );
-        Collection<Thread> threads = new ArrayList<Thread>();
+        //   log.info( this.numThreads + " threads" );
+        this.numThreads = 1;
+        Collection<Thread> threads = new ArrayList<>();
         for ( int i = 0; i < this.numThreads; i++ ) {
             Consumer c1 = new Consumer( arrayDesigns );
             Thread k = new Thread( c1 );
@@ -727,6 +735,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     /**
+     * 
      * @param arrayDesign
      */
     private void processProbes( ArrayDesign arrayDesign ) {
