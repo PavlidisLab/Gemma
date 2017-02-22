@@ -470,7 +470,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result.setTroubleDetails( StringEscapeUtils.escapeHtml4( result.getTroubleDetails() ) );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setAlternateNames( result, arrayDesign );
-        result = this.setAdditionalTaxa( result, id ); // This is very SLOW and does not seem to be used
+        // result = this.setAdditionalTaxa( result, id ); // This is very SLOW and is not implemented in UI
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setSummaryInfo( result, id );
 
@@ -507,6 +507,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
      * @param id
      * @return
      */
+    @SuppressWarnings("unused")
     private ArrayDesignValueObjectExt setAdditionalTaxa( ArrayDesignValueObjectExt result, Long id ) {
         Collection<Taxon> t = arrayDesignService.getTaxa( id );
         for ( Taxon taxon : t ) {
