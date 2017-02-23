@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Prepare the "processed" expression data vectors, and can also do batch correction.F
  * 
  * @author xwan, paul
- * @version $Id$
  * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
@@ -57,10 +56,12 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             throw new RuntimeException( e );
         }
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
+
     private boolean batchCorrect = false;
     private PreprocessorService preprocessorService;
 
