@@ -72,7 +72,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.security.audit.AuditableUtil;
@@ -470,7 +469,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         result.setTroubleDetails( StringEscapeUtils.escapeHtml4( result.getTroubleDetails() ) );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setAlternateNames( result, arrayDesign );
-        // result = this.setAdditionalTaxa( result, id ); // This is very SLOW and is not implemented in UI
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setSummaryInfo( result, id );
 
@@ -498,23 +496,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         }
 
         return arrayDesignService.thawLite( arrayDesign );
-    }
-
-    /**
-     * Sets additional taxa on the given value object.
-     * 
-     * @param result
-     * @param id
-     * @return
-     */
-    @SuppressWarnings("unused")
-    private ArrayDesignValueObjectExt setAdditionalTaxa( ArrayDesignValueObjectExt result, Long id ) {
-        Collection<Taxon> t = arrayDesignService.getTaxa( id );
-        for ( Taxon taxon : t ) {
-            taxonService.thaw( taxon );
-        }
-        result.setAdditionalTaxa( t );
-        return result;
     }
 
     /**

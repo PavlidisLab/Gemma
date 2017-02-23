@@ -35,8 +35,7 @@ Gemma.PlatformDetails = Ext
                         jQuery( '#taxonHelp' )
                            .qtip(
                               {
-                                 content : "The primary taxon for sequences on this platform (i.e., what it was designed for), "
-                                    + "and other taxa used as sequence sources",
+                                 content : "The primary taxon for sequences on this platform (i.e., what it was designed for).",
                                  style : {
                                     name : 'cream'
                                  }
