@@ -9,6 +9,11 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend( Ext.Panel, {
    defaults : {
       border : false
    },
+   listeners : {
+      'afterrender' : function( c ) {
+         jQuery( 'i[title]' ).qtip();
+      }
+   },
 
    /**
     * @memberOf Gemma.GeneAllenBrainAtlasImage
@@ -40,10 +45,9 @@ Gemma.GeneAllenBrainAtlasImages = Ext.extend( Ext.Panel, {
                   + img.abaHomologousMouseGene.officialSymbol + ' [' + img.abaHomologousMouseGene.taxonCommonName
                   + ']</a>' : '';
                this.add( {
-                  html : '<h3>Allen Brain Atlas expression pattern' + '<a class="helpLink" href="javascript:void(0)"'
-                     + 'onclick="showHelpTip(event, \''
-                     + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '\'); return false">'
-                     + '<img src="/Gemma/images/help.png" /> </a>' + '<a title="Go to Allen Brain Atlas details for '
+                  html : '<h3>Allen Brain Atlas expression pattern' + '<i class="qtp fa fa-question-circle fa-fw" title="'
+                     + Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT + '">'
+                     + '</i>' + '<a title="Go to Allen Brain Atlas details for '
                      + img.queryGeneSymbol + '" href="' + img.abaGeneURL + '" target="_blank">'
                      + '<img src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>' + '</h3>' + '<p>'
                      + homologueText + '<p/>'

@@ -250,3 +250,9 @@ hr.normal {
 	width: 100%;
 	text-align: left;
 }
+
+i[class*=qtp]{
+	font-size: medium;
+	color: #8793b9;
+}
+

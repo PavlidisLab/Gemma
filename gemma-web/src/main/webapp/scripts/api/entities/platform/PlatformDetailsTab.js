@@ -169,7 +169,7 @@ Gemma.PlatformDetails = Ext
          renderAnnotationFileLinks : function( platformDetails ) {
             var text = '';
             if ( platformDetails.noParentsAnnotationLink )
-               text += '<a  ext:qtip="Recommended version for ermineJ" class="annotationLink" href="'
+               text += '<a ext:qtip="Recommended version for ermineJ" class="annotationLink" href="'
                   + platformDetails.noParentsAnnotationLink + '" >Basic</a>&nbsp;&nbsp;';
             if ( platformDetails.allParentsAnnotationLink )
                text += '<a class="annotationLink" href="' + platformDetails.allParentsAnnotationLink
@@ -457,47 +457,47 @@ Gemma.PlatformDetails = Ext
                                               items : [
                                                        {
                                                           fieldLabel : "Aliases "
-                                                             + '&nbsp;<i id="aliasHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp;<i id="aliasHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderAlternateNames( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Taxon'
-                                                             + '&nbsp<i id="taxonHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="taxonHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderTaxon( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Platform type'
-                                                             + '&nbsp<i id="typeHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="typeHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderType( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Number of elements'
-                                                             + '&nbsp<i id="numElementsHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="numElementsHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderElementsLink( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Experiments'
-                                                             + '&nbsp<i id="experimentsHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="experimentsHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderExperimentLink( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Description'
-                                                             + '&nbsp<i id="descriptionHelp" class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="descriptionHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderDescription( platformDetails.description )
                                                        },
                                                        {
                                                           fieldLabel : 'Sources'
-                                                             + '&nbsp<i id="sourcesHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="sourcesHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderExternalAccesions( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Relationships'
-                                                             + '&nbsp<i id="mergedHelp"  class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="mergedHelp"  class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderMerged( platformDetails )
                                                        },
                                                        {
                                                           fieldLabel : 'Status'
-                                                             + '&nbsp<i id="statusHelp" class="fa fa-question-circle fa-fw" style="font-size:smaller;color:grey"></i>',
+                                                             + '&nbsp<i id="statusHelp" class="qtp fa fa-question-circle fa-fw"></i>',
                                                           items : this.renderStatus( platformDetails )
                                                        } ]
                                            /*
@@ -511,13 +511,13 @@ Gemma.PlatformDetails = Ext
                                     pan
                                        .add( {
                                           fieldLabel : 'Annotation files'
-                                             + '&nbsp<i id="annotationHelp"  class="fa fa-question-circle fa-fw-circle" style="font-size:smaller;color:grey"></i>',
+                                             + '&nbsp<i id="annotationHelp"  class="qtp fa fa-question-circle fa-fw"></i>',
                                           items : this.renderAnnotationFileLinks( platformDetails )
                                        } );
                                     pan
                                        .add( {
                                           fieldLabel : 'Gene map summary'
-                                             + '&nbsp<i id="reportHelp"  class="fa fa-question-circle fa-fw " style="font-size:smaller;color:grey"></i>',
+                                             + '&nbsp<i id="reportHelp"  class="qtp fa fa-question-circle fa-fw"></i>',
                                           items : this.renderReport( platformDetails )
                                        } );
                                  }

@@ -9,6 +9,12 @@
 	<fmt:message key="expressionExperimentLoad.title" />
 </title>
 
+<script>
+$(document).ready(function () {
+   $('i[title]').qtip(); 
+});
+</script>
+
 <content tag="heading"> 
 	<div class="padded">
 		<fmt:message key="expressionExperimentLoad.title" /> 
@@ -41,10 +47,9 @@
 				<fmt:message key="expressionExperimentLoad.arrayExpress" />
 			</td>
 			<td align="center">
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'Check if data is to come from ArrayExpress.'); return false">
-					<img src="/Gemma/images/help.png" />
-				</a>
+				<i class="qtp fa fa-question-circle fa-fw"
+					title='Check if data is to come from ArrayExpress.'>
+				</i>
 			</td>
 			<td align="left">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
@@ -61,10 +66,9 @@
 				<fmt:message key="expressionExperimentLoad.platformOnly" />
 			</td>
 			<td align="center">
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'Load an array design only, not  expression data.'); return false">
-					<img src="/Gemma/images/help.png" />
-				</a>
+				<i class="qtp fa fa-question-circle fa-fw"
+					title='Load an array design only, not expression data.'>
+				</i>
 			</td>
 			<td align="left">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
@@ -81,10 +85,9 @@
 				<fmt:message key="expressionExperimentLoad.suppressMatching" />
 			</td>
 			<td align="center">
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'Check this box if you know tdat samples were run on only one platform each. Otderwise an attempt will be made to identify biological replicates on different platforms.'); return false">
-					<img src="/Gemma/images/help.png" />
-				</a>
+				<i class="qtp fa fa-question-circle fa-fw"
+					title='Check this box if you know tdat samples were run on only one platform each. Otderwise an attempt will be made to identify biological replicates on different platforms.'>
+				</i>
 			</td>
 			<td align="left">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
@@ -101,10 +104,9 @@
 				<fmt:message key="expressionExperimentLoad.splitByPlatform" />
 			</td>
 			<td align="center">
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'For multi-platform studies, check this box if you want tde sample run on each platform to be considered separate experiments. If checked implies suppress matching'); return false">
-					<img src="/Gemma/images/help.png" />
-				</a>
+				<i class="qtp fa fa-question-circle fa-fw"
+					title='For multi-platform studies, check this box if you want tde sample run on each platform to be considered separate experiments. If checked implies suppress matching'>
+				</i>
 			</td>
 			<td align="left">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
@@ -121,10 +123,9 @@
 				<fmt:message key="expressionExperimentLoad.allowSuperSeries" />
 			</td>
 			<td align="center">
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'If series is a superseries in GEO, allow it to load; leave this unchecked to prevent accidental superseries loading.'); return false">
-					<img src="/Gemma/images/help.png" />
-				</a>
+				<i class="qtp fa fa-question-circle fa-fw"
+					title='If series is a superseries in GEO, allow it to load; leave this unchecked to prevent accidental superseries loading.'>
+				</i>
 			</td>
 			<td align="left">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">
@@ -141,10 +142,9 @@
 				<fmt:message key="expressionExperimentLoad.allowArrayExpressDesign" />
 			</td>
 			<td align="center">
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'When loading from ArrayExpress, allow tde array design to be imported. It must not be an array design already in Gemma!'); return false">
-					<img src="/Gemma/images/help.png" />
-				</a>
+				<i class="qtp fa fa-question-circle fa-fw"
+					title='When loading from ArrayExpress, allow tde array design to be imported. It must not be an array design already in Gemma!'>
+				</i>
 			</td>
 			<td align="left">
 				<input type="hidden" name="_<c:out value="${status.expression}"/>">

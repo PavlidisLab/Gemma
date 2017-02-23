@@ -58,20 +58,6 @@
 
 	<!-- used -->
 	<tag>
-		<name>help</name>
-		<tag-class>ubic.gemma.web.taglib.HelpTag</tag-class>
-		<body-content>empty</body-content>
-		<attribute>
-			<name>helpFile</name>
-			<required>true</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
-	</tag>
-
-
-
-	<!-- used -->
-	<tag>
 		<name>citation</name>
 		<tag-class>ubic.gemma.web.taglib.ShortBibliographicReferenceTag
 		</tag-class>
