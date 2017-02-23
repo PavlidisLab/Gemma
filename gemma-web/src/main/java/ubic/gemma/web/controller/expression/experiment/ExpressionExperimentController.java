@@ -759,7 +759,12 @@ public class ExpressionExperimentController {
         qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
         qc.setNumOutliersRemoved( numOutliersRemoved( ee ) );
-        qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
+        try {
+            qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
+        } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
+            log.fatal( e );
+            e.printStackTrace();
+        }
         return qc.getQChtml();
     }
 
