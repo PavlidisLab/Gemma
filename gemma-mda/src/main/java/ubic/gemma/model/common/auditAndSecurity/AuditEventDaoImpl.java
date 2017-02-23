@@ -169,7 +169,10 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             // Get events for the current auditable object
             Collection<AuditEvent> lastEvents = new HashSet<AuditEvent>();
             for ( Class<? extends AuditEventType> aet : lastEventsAll.keySet() ) {
-                lastEvents.add( lastEventsAll.get( aet ).get( a ) );
+                AuditEvent ae = lastEventsAll.get( aet ).get( a );
+                if ( ae != null ) {
+                    lastEvents.add( ae );
+                }
             }
 
             // check if there is an outstanding trouble event
