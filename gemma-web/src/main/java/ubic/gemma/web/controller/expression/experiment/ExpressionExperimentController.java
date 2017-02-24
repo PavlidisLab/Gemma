@@ -1008,30 +1008,34 @@ public class ExpressionExperimentController {
     private ExpressionExperimentDetailsValueObject setTroubleInfo( ExpressionExperimentDetailsValueObject finalResult,
             ExpressionExperiment ee ) {
 
-        boolean eeTroubled = finalResult.getTroubled();
+        boolean eeTroubled = ee.getStatus().getTroubled();
         boolean eeTroubledButNoInfo = false;
         boolean adTroubled = false;
-        String troubleDetails = null;
+        String eeTroubleDetails = null;
         String adTroubleDetails = null;
+        String finalTroubleDetails = "";
 
+        // If EE is troubled itself, show the reason for that trouble
         if ( eeTroubled ) {
-            // If EE is troubled itself, show the reason for that trouble
+
             AuditEvent ae = expressionExperimentService.getOustandingTroubleEvent( ee.getId() );
             if ( ae == null ) {
-                troubleDetails = TROUBLE_DETAIL_EVENT_NOT_FOUND;
+                eeTroubleDetails = TROUBLE_DETAIL_EVENT_NOT_FOUND;
                 eeTroubledButNoInfo = true;
                 log.error( "Experiment has a troubled status, but no trouble event was found! EE id: " + ee.getId() );
             } else {
-                troubleDetails = ae.getDetail();
+                eeTroubleDetails = ae.toString();
             }
 
         }
 
+        // this loop has to happen even if eeTroubled, because we need to escape troubleDetails of all the ADs to be
+        // displayed as AD trouble
         for ( ArrayDesignValueObject ad : finalResult.getArrayDesigns() ) {
-            // this loop has to happen even if eeTroubled, because we need to escape troubleDetails of all the ADs
             ad.setTroubleDetails( StringEscapeUtils.escapeHtml4( ad.getTroubleDetails() ) );
 
-            // if the array design(s) the EE belongs to is/are troubled, also show the details of their trouble.
+            // if the EE is not troubled, but the array design(s) the EE belongs to is/are troubled, show the details of
+            // their trouble.
             if ( !eeTroubled || eeTroubledButNoInfo ) {
                 if ( ad.getTroubled() ) {
                     adTroubled = true;
@@ -1045,12 +1049,15 @@ public class ExpressionExperimentController {
             }
         }
 
-        if ( adTroubleDetails != null ) {
-            troubleDetails += TROUBLE_DETAIL_SEPARATOR + adTroubleDetails;
+        // Construct the final trouble string to be displayed as EE trouble
+        if ( eeTroubled ) {
+            finalTroubleDetails += eeTroubleDetails;
+        } else if ( adTroubled ) {
+            finalTroubleDetails += adTroubleDetails;
         }
 
         finalResult.setTroubled( eeTroubled || adTroubled );
-        finalResult.setTroubleDetails( StringEscapeUtils.escapeHtml4( troubleDetails ) );
+        finalResult.setTroubleDetails( StringEscapeUtils.escapeHtml4( finalTroubleDetails ) );
 
         return finalResult;
     }
