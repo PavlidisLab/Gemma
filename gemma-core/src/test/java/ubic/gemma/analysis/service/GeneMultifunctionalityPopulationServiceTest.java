@@ -84,7 +84,7 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
     @Before
     public void setUp() throws Exception {
 
-        if ( !goService.isRunning() ) {
+        if ( goService.isRunning() ) {
             goService.shutDown();
         }
         gene2GoService.removeAll();

@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.zip.GZIPInputStream;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,6 +45,11 @@ public class GeneOntologyServiceTest2 {
                 GeneOntologyServiceTest.class.getResourceAsStream( "/data/loader/ontology/go.bptest.owl.gz" ) );
         assert is != null;
         gos.loadTermsInNameSpace( is );
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+        gos.shutDown();
     }
 
     @Test
