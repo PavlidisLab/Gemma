@@ -44,6 +44,7 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
@@ -157,6 +158,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables ) {
         Collection<Class<? extends AuditEventType>> types = new HashSet<Class<? extends AuditEventType>>();
         types.add( TroubleStatusFlagEvent.class );
+        types.add( ValidatedFlagEvent.class );
         types.add( OKStatusFlagEvent.class );
 
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> lastEventsAll = this.getLastEvents( auditables,
@@ -226,7 +228,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * java.lang.Class)
      */
     @Override
-    public void retainLackingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+    public void retainLackingEvent( final Collection<? extends Auditable> a,
+            final Class<? extends AuditEventType> type ) {
         StopWatch timer = new StopWatch();
         timer.start();
         final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
@@ -462,8 +465,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
-            String queryString = "select distinct adb from "
-                    + clazz
+            String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
             try {
                 org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession()
@@ -487,8 +489,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     protected java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
-            String queryString = "select distinct adb from "
-                    + clazz
+            String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
             try {
                 org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession()
@@ -507,11 +508,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     protected void handleThaw( AuditEvent auditEvent ) throws Exception {
         if ( auditEvent == null ) return;
 
-        auditEvent = ( AuditEvent ) this
-                .getHibernateTemplate()
+        auditEvent = ( AuditEvent ) this.getHibernateTemplate()
                 .findByNamedParam(
                         "select a from AuditEventImpl a fetch all properties join fetch a.performer fetch all properties where a = :ae ",
-                        "ae", auditEvent ).iterator().next();
+                        "ae", auditEvent )
+                .iterator().next();
 
     }
 
@@ -638,7 +639,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         for ( AuditEvent event : events ) {
             if ( event == null || event.getEventType() == null ) {
                 continue;
-            } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+            } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() )
+                    || ValidatedFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
                 if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) ) lastOKEvent = event;
             } else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
                 if ( lastTroubleEvent == null || lastTroubleEvent.getDate().before( event.getDate() ) )
