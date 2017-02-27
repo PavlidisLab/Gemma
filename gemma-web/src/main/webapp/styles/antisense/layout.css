@@ -243,12 +243,17 @@ hr.normal {
 	border: 0;
 }
 
-.x-form-item{
+.x-form-item:nth-child(odd){
 	vertical-align: bottom;
-	border-bottom: solid 1px #eeeeee;
+	/* border-bottom: solid 1px #eeeeee; */
+	background: #f4f4f4;
 	padding: 0px 0px;
 	width: 100%;
 	text-align: left;
+}
+
+.x-form-item:nth-child(odd) *:not(textarea) {
+	background: #f4f4f4;
 }
 
 i[class*=qtp]{
