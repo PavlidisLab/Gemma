@@ -18,8 +18,6 @@
  */
 package ubic.gemma.expression.experiment.service;
 
-import gemma.gsec.SecurityService;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import gemma.gsec.SecurityService;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -356,7 +355,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         List<SearchResultDisplayObject> masterResults = new LinkedList<>();
 
         Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
-                .loadAllExperimentSetValueObjects();
+                .loadAllExperimentSetValueObjects( true );
 
         for ( ExpressionExperimentSetValueObject evo : evos ) {
 

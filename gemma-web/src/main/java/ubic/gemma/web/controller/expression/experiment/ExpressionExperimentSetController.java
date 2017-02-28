@@ -173,8 +173,8 @@ public class ExpressionExperimentSetController extends BaseController {
      * @return
      */
     public Collection<Long> getExperimentIdsInSet( Long id ) {
-        
-        if (id == null) {
+
+        if ( id == null ) {
             return new ArrayList<Long>();
         }
         
@@ -247,7 +247,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAll() {
         Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService
-                .loadAllExperimentSetValueObjects();
+                .loadAllExperimentSetValueObjects( false );
 
         return sets;
     }
@@ -291,7 +291,7 @@ public class ExpressionExperimentSetController extends BaseController {
 
         Collection<ExpressionExperimentSetValueObject> valueObjects = new ArrayList<ExpressionExperimentSetValueObject>();
 
-        valueObjects.addAll( expressionExperimentSetService.loadMySetValueObjects() );
+        valueObjects.addAll( expressionExperimentSetService.loadMySetValueObjects( false ) );
         valueObjects.addAll( sessionListManager.getAllExperimentSets() );
 
         return valueObjects;
@@ -430,7 +430,7 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public ExpressionExperimentSetValueObject updateNameDesc( ExpressionExperimentSetValueObject eeSetVO ) {
 
-        return expressionExperimentSetService.updateDatabaseEntityNameDesc( eeSetVO );
+        return expressionExperimentSetService.updateDatabaseEntityNameDesc( eeSetVO, false );
 
     }
 

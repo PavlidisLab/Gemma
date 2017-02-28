@@ -81,16 +81,35 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
 
+    /**
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
+     * @return
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects();
+    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects( boolean loadEEIds );
 
+    /**
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
+     * @return
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds );
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+            boolean loadEEIds );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id );
 
+    /**
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
+     * @return
+     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    public ExpressionExperimentSetValueObject loadValueObject( Long id );
+    public ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds );
 
 }

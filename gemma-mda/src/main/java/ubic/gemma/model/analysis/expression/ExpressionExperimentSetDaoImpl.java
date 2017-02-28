@@ -189,8 +189,8 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
 
     @Override
     public Collection<? extends ExpressionExperimentSet> loadAll() {
-        final Collection<? extends ExpressionExperimentSet> results = this.getHibernateTemplate().loadAll(
-                ExpressionExperimentSetImpl.class );
+        final Collection<? extends ExpressionExperimentSet> results = this.getHibernateTemplate()
+                .loadAll( ExpressionExperimentSetImpl.class );
         return results;
     }
 
@@ -201,8 +201,8 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
      */
     @Override
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
-        return this.getHibernateTemplate().find(
-                "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
+        return this.getHibernateTemplate()
+                .find( "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
     }
 
     /*
@@ -217,16 +217,16 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects() {
-        return fetchValueObjects( null );
+    public Collection<ExpressionExperimentSetValueObject> loadAllValueObjects( boolean loadEEIds ) {
+        return fetchValueObjects( null, loadEEIds );
     }
 
     @Override
-    public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
+    public ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds ) {
         Collection<Long> setIds = new HashSet<>();
         setIds.add( id );
 
-        Collection<ExpressionExperimentSetValueObject> vos = this.loadValueObjects( setIds );
+        Collection<ExpressionExperimentSetValueObject> vos = this.loadValueObjects( setIds, loadEEIds );
         if ( vos.isEmpty() ) {
             return null;
         }
@@ -234,8 +234,9 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
     }
 
     @Override
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
-        return fetchValueObjects( eeSetIds );
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+            boolean loadEEIds ) {
+        return fetchValueObjects( eeSetIds, loadEEIds );
     }
 
     /**
@@ -330,25 +331,15 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
                 "query", name );
     }
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // * ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleGetAnalyses(ubic.gemma.model.analysis
-    // * .expression.ExpressionExperimentSet)
-    // */
-    // protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
-    // throws Exception {
-    // return this.getHibernateTemplate().findByNamedParam(
-    // "select a from ExpressionAnalysis a join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
-    // "eeset", expressionExperimentSet );
-    // }
-
     /**
      * @param ids, if null fetch all.
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
      * @return
      */
-    private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids ) {
+    private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
+            boolean loadEEIds ) {
         Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<>();
         Query queryObject = this.getLoadValueObjectsQueryString( ids );
         List<?> list = queryObject.list();
@@ -382,7 +373,9 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
             v.setSize( ( ( Long ) res[5] ).intValue() );
 
             // Add experiment ids
-            v.setExpressionExperimentIds( this.getExperimentIdsInSet( eeId ) );
+            if ( loadEEIds ) {
+                v.setExpressionExperimentIds( this.getExperimentIdsInSet( eeId ) );
+            }
 
             vo.put( eeId, v );
 

@@ -241,8 +241,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects() {
-        return this.getExpressionExperimentSetDao().loadAllValueObjects();
+    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects( boolean loadEEIds ) {
+        return this.getExpressionExperimentSetDao().loadAllValueObjects( loadEEIds );
     }
 
     @Override
@@ -269,8 +269,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects() {
-        return this.getExpressionExperimentSetDao().loadAllValueObjects();
+    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects( boolean loadEEIds ) {
+        return this.getExpressionExperimentSetDao().loadAllValueObjects( loadEEIds );
     }
 
     @Override
@@ -282,13 +282,26 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
-        return this.getExpressionExperimentSetDao().loadValueObject( id );
+        return this.getExpressionExperimentSetDao().loadValueObject( id, false );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds ) {
+        return this.getExpressionExperimentSetDao().loadValueObject( id, loadEEIds );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
-        return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds );
+        return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds, false );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+            boolean loadEEIds ) {
+        return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds, loadEEIds );
     }
 
     /*
@@ -478,8 +491,8 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      */
     @Override
     @Transactional
-    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc(
-            ExpressionExperimentSetValueObject eeSetVO ) {
+    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
+            boolean loadEEIds ) {
 
         Long groupId = eeSetVO.getId();
         ExpressionExperimentSet eeSet = this.load( groupId );
@@ -491,7 +504,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 ) eeSet.setName( eeSetVO.getName() );
         this.update( eeSet );
 
-        return this.loadValueObject( eeSet.getId() );
+        return this.loadValueObject( eeSet.getId(), loadEEIds );
 
     }
 
