@@ -2186,8 +2186,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessX() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessY() );
         }
     }
 

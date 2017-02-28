@@ -800,9 +800,8 @@ public class ExpressionExperimentQCController extends BaseController {
 
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
         double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        double[] loessX = bac.byteArrayToDoubles( mvr.getLowessX() );
-        double[] loessY = bac.byteArrayToDoubles( mvr.getLowessY() );
-        if ( means == null || variances == null || loessX == null || loessY == null ) {
+
+        if ( means == null || variances == null ) {
             return dataset;
         }
 
@@ -811,14 +810,7 @@ public class ExpressionExperimentQCController extends BaseController {
             series.add( means[i], variances[i] );
         }
 
-        // loess fit trend line
-        XYSeries loessSeries = new XYSeries( "Loess" );
-        for ( int i = 0; i < loessX.length; i++ ) {
-            loessSeries.add( loessX[i], loessY[i] );
-        }
-
         dataset.addSeries( series );
-        dataset.addSeries( loessSeries );
 
         return dataset;
     }
@@ -1245,18 +1237,12 @@ public class ExpressionExperimentQCController extends BaseController {
 
         DoubleArrayList vars = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getVariances() ) );
         DoubleArrayList means = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getMeans() ) );
-        DoubleArrayList lowessXs = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getLowessX() ) );
-        DoubleArrayList lowessYs = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getLowessY() ) );
 
         DoubleArrayList filteredMeans = new DoubleArrayList();
         DoubleArrayList filteredVars = new DoubleArrayList();
-        DoubleArrayList filteredLowessX = new DoubleArrayList();
-        DoubleArrayList filteredLowessY = new DoubleArrayList();
 
         DoubleArrayList zVars = zscore( vars );
         DoubleArrayList zMeans = zscore( means );
-
-        assert lowessXs.size() == zMeans.size(); // AIOB error sometimes for lowessXs?
 
         // clip outliers
         for ( int i = 0; i < zMeans.size(); i++ ) {
@@ -1267,18 +1253,11 @@ public class ExpressionExperimentQCController extends BaseController {
 
             filteredMeans.add( means.getQuick( i ) );
             filteredVars.add( vars.getQuick( i ) );
-            // FIXME this is for cases when lowess vectors are too short, which should not happen.
-            if ( i < lowessXs.size() ) filteredLowessX.add( lowessXs.getQuick( i ) );
-            if ( i < lowessYs.size() ) filteredLowessY.add( lowessYs.getQuick( i ) );
         }
 
-        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
-                + zscoreMax + ". Max lowessX,Y is (" + Descriptive.max( filteredLowessX ) + ","
-                + Descriptive.max( filteredLowessY ) + "). Max mean,variance is ( " + Descriptive.max( filteredMeans )
-                + "," + Descriptive.max( filteredVars ) + ")." );
+        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < " + zscoreMax
+                + ". Max mean,variance is ( " + Descriptive.max( filteredMeans ) + "," + Descriptive.max( filteredVars ) + ")." );
 
-        ret.setLowessY( bac.doubleArrayToBytes( filteredLowessY ) );
-        ret.setLowessX( bac.doubleArrayToBytes( filteredLowessX ) );
         ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
         ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
 
@@ -1291,8 +1270,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private DoubleArrayList zscore( DoubleArrayList d ) {
         DoubleArrayList z = new DoubleArrayList();
         double mean = Descriptive.mean( d );
-        double sd = Descriptive.standardDeviation(
-                Descriptive.variance( d.size(), Descriptive.sum( d ), Descriptive.sumOfSquares( d ) ) );
+        double sd = Descriptive.standardDeviation( Descriptive.variance( d.size(), Descriptive.sum( d ), Descriptive.sumOfSquares( d ) ) );
         for ( int i = 0; i < d.size(); i++ ) {
             z.add( Math.abs( d.getQuick( i ) - mean ) / sd );
         }
