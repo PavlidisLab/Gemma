@@ -204,7 +204,7 @@ Gemma.ExperimentPagingGrid = Ext
 
                   if ( value ) {
                      return '<img title="' + record.get( 'troubleDetails' )
-                        + '" src="/Gemma/images/icons/warning.png"/>';
+                        + '" src="/Gemma/images/icons/stop.png"/>';
                   }
 
                   var text = '';
@@ -538,17 +538,31 @@ Gemma.ExperimentPagingGrid = Ext
                width : 500,
                hideTrigger : true
             } );
-            eeCombo.on( "recordSelected", function( selectedGroup ) {
-               if ( selectedGroup !== null ) {
+            eeCombo.on( "groupSelected", function( storeItem ) {
+               
+               if (storeItem && storeItem.data && storeItem.data.resultValueObject) {
 
+                  var resultVO = storeItem.data.resultValueObject;
+                  var ids = [];
+                  
                   this.showAll = false;
-                  filterById = true;
-                  // create a store that browses with selected ids
-                  var ids = selectedGroup.expressionExperimentIds;
+                  this.filterById = true;
+
+                  if(resultVO.expressionExperimentIds){
+                     // Case when a group was returned.
+                     var ids = resultVO.expressionExperimentIds;
+                  }else if(resultVO.id){
+                     // Case when a single experiment was returned.
+                     var ids = [resultVO.id];
+                  }else{
+                     // Case when neither was found.
+                     console.log("ComboBox did not return any Expression Experiment ID/IDs.");
+                  }
+                  
                   this.loadExperimentsById( ids );
                   // ids is not security filtered
                   // var totalCount = this.getStore().getTotalCount();
-                  this.setTitle( "Displaying set: &quot;" + selectedGroup.name + "&quot;" );
+                  this.setTitle( "Displaying set: &quot;" + resultVO.name + "&quot;" );
 
                   // problem: if the user reaches this grid with a URL like '[...]?taxonId=4' and then does a
                   // search, the taxon

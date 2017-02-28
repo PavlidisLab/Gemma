@@ -381,6 +381,9 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
              */
             v.setSize( ( ( Long ) res[5] ).intValue() );
 
+            // Add experiment ids
+            v.setExpressionExperimentIds( this.getExperimentIdsInSet( eeId ) );
+
             vo.put( eeId, v );
 
         }
@@ -388,6 +391,12 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         Collection<ExpressionExperimentSetValueObject> result = vo.values();
         populateAnalysisInformation( result );
         return result;
+    }
+
+    private Collection<Long> getExperimentIdsInSet( Long setId ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select i.id from ExpressionExperimentSetImpl eset join eset.experiments i where eset.id = :id", "id",
+                setId );
     }
 
     /**

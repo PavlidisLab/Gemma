@@ -353,43 +353,29 @@ public class SearchServiceImpl implements SearchService {
                 nameToTaxonMap.put( taxon.getAbbreviation().trim().toLowerCase(), taxon );
         }
 
-        // loop through again breaking up multi-word taxon database names and handling some special cases(e.g. salmon,
-        // rainbow are common to multiple taxa)
-        // doing this is a separate loop so that these names take lower precedence when matching than the full terms in
-        // the generated keySet
-        // some of the special cases the section below may be unnecessary, or more may need to be added
+        // Loop through again breaking up multi-word taxon database names.
+        // Doing this is a separate loop so that these names take lower precedence when matching than the full terms in
+        // the generated keySet.
         for ( Taxon taxon : taxonCollection ) {
-
-            String[] terms;
-            if ( taxon.getScientificName() != null ) {
-                terms = taxon.getScientificName().split( "\\s+" );
-                if ( terms.length > 1 ) {
-                    for ( String s : terms ) {
-                        if ( !s.equalsIgnoreCase( "Oncorhynchus" ) && !s.equalsIgnoreCase( "Human" ) ) {
-                            // 'human herpesvirus' was overriding 'homo sapiens' for kw 'human' in the map.
-                            nameToTaxonMap.put( s.toLowerCase(), taxon );
-                        }
-                    }
-                }
-            }
-            if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
-                if ( taxon.getCommonName().equalsIgnoreCase( "salmonid" ) ) {
-                    nameToTaxonMap.put( "salmon", taxon );
-                }
-
-                terms = taxon.getCommonName().split( "\\s+" );
-                if ( terms.length > 1 ) {
-                    for ( String s : terms ) {
-                        if ( !s.equalsIgnoreCase( "salmon" ) && !s.equalsIgnoreCase( "pink" )
-                                && !s.equalsIgnoreCase( "rainbow" ) ) {
-                            nameToTaxonMap.put( s.toLowerCase(), taxon );
-                        }
-                    }
-                }
-            }
-
+            this.addTerms( taxon, taxon.getCommonName() );
+            this.addTerms( taxon, taxon.getScientificName() );
         }
 
+    }
+
+    private void addTerms( Taxon taxon, String taxonName ) {
+        String[] terms;
+        if ( StringUtils.isNotBlank( taxonName ) ) {
+            terms = taxonName.split( "\\s+" );
+            // Only continue for multi-word
+            if ( terms.length > 1 ) {
+                for ( String s : terms ) {
+                    if ( !nameToTaxonMap.containsKey( s.trim().toLowerCase() ) ) {
+                        nameToTaxonMap.put( s.trim().toLowerCase(), taxon );
+                    }
+                }
+            }
+        }
     }
 
     @Override

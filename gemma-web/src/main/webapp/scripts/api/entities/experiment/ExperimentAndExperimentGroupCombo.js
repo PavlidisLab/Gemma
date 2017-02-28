@@ -311,7 +311,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                   // console.log( 'valid results match the query=' + this.getValue() );
 
                   if ( this.urlInitiatedQuery ) {
-                     this.fireEvent( "select", this, records[0] );
+                     this.fireEvent( "groupSelected", records[0] );
                      // } else if ( this.getValue() !== records[0].originalQuery ) {
 
                   } else if ( this.getValue() !== query ) {
@@ -360,6 +360,12 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                   }
                }.createDelegate( this ), 1250 );
             }, this );
+            
+            this.on( 'select', function ( element ){
+                  var storeItem = element.store.data.items[element.selectedIndex];
+                  this.fireEvent( "groupSelected", storeItem );
+               }
+            );
 
             this.addEvents( "experimentGroupUrlSelectionComplete" );
          },

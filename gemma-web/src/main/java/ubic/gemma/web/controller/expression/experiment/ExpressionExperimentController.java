@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -334,52 +335,14 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browse( ListBatchCommand batch ) {
 
         if ( batch.getLimit() == 0 ) {
             batch.setStart( 0 );
         }
 
-        int limit = batch.getLimit();
-        int origStart = batch.getStart();
-        // have to load entities instead of directly loading value objects because we need security filtering
-        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch );
+        return this.browseSpecific( batch, null, null );
 
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityUtil.isUserAdmin() ) {
-            records = removeTroubledExperimentVOs( records );
-        }
-
-        assert records != null;
-
-        /*
-         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
-         * have access to
-         */
-        int count = records.size();
-
-        int start = origStart;
-        int stop = Math.min( origStart + limit, records.size() );
-
-        if ( batch.getLimit() == 0 ) {
-            stop = records.size();
-        }
-
-        List<ExpressionExperimentValueObject> recordsSubset = records.subList( start, stop );
-
-        // this populates securityInfo TODO populate security info in filter
-        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        // getExpressionExperimentValueObjects( recordsSubset ) );
-
-        // if admin, want to show why experiment is troubled
-        if ( SecurityUtil.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( recordsSubset );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                recordsSubset, count );
-
-        return returnVal;
     }
 
     /**
@@ -388,10 +351,9 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseByTaxon( ListBatchCommand batch,
+            Long taxonId ) {
 
-        int origLimit = batch.getLimit();
-        int origStart = batch.getStart();
         if ( taxonId == null ) {
             return browse( batch );
         }
@@ -401,40 +363,9 @@ public class ExpressionExperimentController {
                     + ", but this id is invalid. Browsing without taxon restriction." );
             return browse( batch );
         }
-        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, taxon );
 
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityUtil.isUserAdmin() ) {
-            records = removeTroubledExperimentVOs( records );
-        }
+        return this.browseSpecific( batch, null, taxon );
 
-        /*
-         * can't just do countAll because this will count experiments the user may not have access to Integer count =
-         * expressionExperimentService.countAll();
-         */
-        int count = records.size();
-
-        int pSize = Math.min( origStart + origLimit, records.size() );
-
-        // batch.getLimit = 0 when download all as text
-        if ( batch.getLimit() == 0 ) {
-            pSize = count;
-        }
-
-        List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
-
-        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
-
-        // if admin, want to show if experiment is troubled
-        if ( SecurityUtil.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( recordsSubset );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                recordsSubset, count );
-
-        return returnVal;
     }
 
     /**
@@ -443,44 +374,65 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecificIds( ListBatchCommand batch,
             Collection<Long> ids ) {
 
         if ( batch.getLimit() == 0 ) {
             batch.setLimit( ids.size() );
             batch.setStart( 0 );
         }
+        Set<Long> noDupIds = new HashSet<Long>( ids );
+
+        return this.browseSpecific( batch, noDupIds, null );
+
+    }
+
+    private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
+            Collection<Long> ids, Taxon taxon ) {
 
         int origLimit = batch.getLimit();
         int origStart = batch.getStart();
 
-        Set<Long> noDupIds = new HashSet<Long>( ids );
-        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, noDupIds );
+        List<ExpressionExperimentValueObject> recordsOrig = loadAllValueObjectsOrdered( batch, ids, taxon );
+        List<ExpressionExperimentDetailsValueObject> records = new LinkedList<>();
+
+        for ( ExpressionExperimentValueObject ro : recordsOrig ) {
+            records.add( new ExpressionExperimentDetailsValueObject( ro ) );
+        }
 
         // if user is not admin, remove troubled experiments
         if ( !SecurityUtil.isUserAdmin() ) {
             records = removeTroubledExperimentVOs( records );
         }
 
+        /*
+         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
+         * have access to
+         */
+        int count = records.size();
         int pSize = Math.min( origStart + origLimit, records.size() );
-
-        // batch.getLimit = 0 when download all as text
         if ( batch.getLimit() == 0 ) {
-            pSize = records.size();
+            pSize = count;
         }
+        List<ExpressionExperimentDetailsValueObject> recordsSubset = records.subList( origStart, pSize );
 
-        List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
+        // this populates securityInfo TODO populate security info in filter
+        // List<ExpressionExperimentDetailsValueObject> valueObjects = new
+        // ArrayList<ExpressionExperimentDetailsValueObject>(
+        // getExpressionExperimentDetailsValueObjects( records.subList( origStart, pSize ) ) );
 
-        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
-
-        // if admin, want to show if experiment is troubled
+        // if admin, want to show why experiment is troubled
         if ( SecurityUtil.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( recordsSubset );
+            for ( ExpressionExperimentDetailsValueObject vo : recordsSubset ) {
+                ExpressionExperiment ee = this.getEESafely( vo.getId() );
+                vo.setArrayDesigns(
+                        arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
+                this.setTroubleInfo( vo, ee );
+            }
         }
 
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                recordsSubset, records.size() );
+        JsonReaderResponse<ExpressionExperimentDetailsValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentDetailsValueObject>(
+                recordsSubset, count );
         return returnVal;
     }
 
@@ -2185,15 +2137,6 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch ) {
-        return loadAllValueObjectsOrdered( batch, null, null );
-    }
-
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
-            Collection<Long> ids ) {
-        return loadAllValueObjectsOrdered( batch, ids, null );
-    }
-
     /**
      * @param batch
      * @param ids
@@ -2253,15 +2196,6 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * @param batch
-     * @param taxon
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Taxon taxon ) {
-        return loadAllValueObjectsOrdered( batch, null, taxon );
-    }
-
-    /**
      * This is security filtered.
      * 
      * @param eeIds
@@ -2304,12 +2238,13 @@ public class ExpressionExperimentController {
      * @param records
      * @return
      */
-    private List<ExpressionExperimentValueObject> removeTroubledExperimentVOs(
-            List<ExpressionExperimentValueObject> records ) {
-        List<ExpressionExperimentValueObject> untroubled = new ArrayList<ExpressionExperimentValueObject>( records );
+    private List<ExpressionExperimentDetailsValueObject> removeTroubledExperimentVOs(
+            List<ExpressionExperimentDetailsValueObject> records ) {
+        List<ExpressionExperimentDetailsValueObject> untroubled = new ArrayList<ExpressionExperimentDetailsValueObject>(
+                records );
 
-        Collection<ExpressionExperimentValueObject> toRemove = new ArrayList<ExpressionExperimentValueObject>();
-        for ( ExpressionExperimentValueObject record : records ) {
+        Collection<ExpressionExperimentDetailsValueObject> toRemove = new ArrayList<ExpressionExperimentDetailsValueObject>();
+        for ( ExpressionExperimentDetailsValueObject record : records ) {
 
             if ( record.getTroubled() ) {
                 toRemove.add( record );
