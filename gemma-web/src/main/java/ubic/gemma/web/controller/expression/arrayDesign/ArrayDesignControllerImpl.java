@@ -58,7 +58,6 @@ import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
@@ -167,8 +166,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     private SearchService searchService;
     @Autowired
     private TaskRunningService taskRunningService;
-    @Autowired
-    private TaxonService taxonService;
 
     @Override
     public String addAlternateName( Long arrayDesignId, String alternateName ) {
