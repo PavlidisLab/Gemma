@@ -106,6 +106,14 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public Map<String, Gene> findByOfficialSymbols( Collection<String> query, Long taxonId );
 
+    /**
+     * Quickly load exact matches.
+     * 
+     * @param ncbiIds
+     * @return map of NCBI Id to the gene.
+     */
+    public Map<Integer, Gene> findByNcbiIds( Collection<Integer> ncbiIds );
+
     public Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
     /**

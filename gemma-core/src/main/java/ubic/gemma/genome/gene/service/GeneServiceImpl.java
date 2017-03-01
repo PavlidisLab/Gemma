@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -181,6 +182,17 @@ public class GeneServiceImpl implements GeneService {
     public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
         Gene gene = findByNCBIId( accession );
         return new GeneValueObject( gene );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds ) {
+        Map<Integer, GeneValueObject> result = new HashMap<>();
+        Map<Integer, Gene> genes = this.getGeneDao().findByNcbiIds( ncbiIds );
+        for ( Entry<Integer, Gene> entry : genes.entrySet() ) {
+            result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
+        }
+        return result;
     }
 
     /**

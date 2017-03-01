@@ -235,6 +235,21 @@ public class GeneDaoImpl extends GeneDaoBase {
         return result;
     }
 
+    @Override
+    public Map<Integer, Gene> findByNcbiIds( Collection<Integer> ncbiIds ) {
+        Map<Integer, Gene> result = new HashMap<>();
+        final String queryString = "from GeneImpl g where g.ncbiGeneId in (:ncbi)";
+
+        for ( Collection<Integer> batch : new BatchIterator<>( ncbiIds, BATCH_SIZE ) ) {
+            List<Gene> results = getHibernateTemplate().findByNamedParam( queryString,
+                    "ncbi", batch );
+            for ( Gene g : results ) {
+                result.put( g.getNcbiGeneId(), g );
+            }
+        }
+        return result;
+    }
+
     // /*
     // * (non-Javadoc)
     // *
