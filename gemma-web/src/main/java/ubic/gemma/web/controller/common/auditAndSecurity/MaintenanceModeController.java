@@ -18,8 +18,6 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.util.SecurityUtil;
-
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.Constants;
 
@@ -61,6 +60,7 @@ public class MaintenanceModeController {
     @RequestMapping(method = RequestMethod.POST)
     public ModelAndView setMode( String stop, String start, HttpServletRequest request ) throws Exception {
 
+        @SuppressWarnings("unchecked")
         Map<String, Object> config = ( Map<String, Object> ) request.getSession().getServletContext()
                 .getAttribute( Constants.CONFIG );
 

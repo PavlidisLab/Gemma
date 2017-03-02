@@ -19,11 +19,10 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
-import gemma.gsec.model.Securable;
-
 import java.util.Collection;
 import java.util.HashSet;
 
+import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -36,6 +35,11 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
 public abstract class BioMaterial extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredChild {
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4374359557498220256L;
 
     /**
      * Constructs new instances of {@link BioMaterial}.
@@ -79,7 +83,8 @@ public abstract class BioMaterial extends ubic.gemma.model.common.Auditable impl
     /**
      * An optional external refernce for this BioMaterial. In many cases this is the same as the accession for the
      * related BioAssay. We store the information here to help make the data easier to trace. Note that more than one
-     * BioMaterial may reference a given external accession. </p>
+     * BioMaterial may reference a given external accession.
+     * </p>
      */
     public DatabaseEntry getExternalAccession() {
         return this.externalAccession;

@@ -26,6 +26,11 @@ import org.apache.commons.lang3.StringUtils;
 public class GeneCoexpressionTestedIn extends IdArray {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 3122664964809277501L;
+
+    /**
      * This serves as the primary key.
      */
     private Long geneId;

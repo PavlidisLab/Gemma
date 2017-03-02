@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.report;
 
-import gemma.gsec.SecurityService;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -44,6 +42,7 @@ import org.springframework.social.twitter.api.Twitter;
 import org.springframework.social.twitter.api.impl.TwitterTemplate;
 import org.springframework.stereotype.Component;
 
+import gemma.gsec.SecurityService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.Settings;
@@ -248,6 +247,15 @@ public class TwitterOutboundImpl implements TwitterOutbound {
         return EXPERIMENT_URL_BASE + ee.getId();
     }
 
+    /**
+     * TODO remove this unnecessary method, or fix it in case it is needed.
+     * 
+     * @param url
+     * @return
+     * @deprecated the shortener does not work, and is unused
+     */
+    @SuppressWarnings("unused")
+    @Deprecated
     private String shortenUrl( String url ) {
 
         URL toGet;
@@ -257,9 +265,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
             throw new IllegalArgumentException( "URL could not be shortened!" );
         }
 
-        // stupid warning, it is managed!
-        try (@SuppressWarnings("resource")
-        BufferedReader in = new BufferedReader( new InputStreamReader( toGet.openStream() ) );) {
+        try (BufferedReader in = new BufferedReader( new InputStreamReader( toGet.openStream() ) );) {
             StringBuilder buf = new StringBuilder();
 
             // should be just one line...

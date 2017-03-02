@@ -20,9 +20,6 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.ContactService;
-import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.util.AbstractCLIContextCLI;
@@ -81,7 +78,7 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
             Exception err = processCommandLine( args );
             if ( err != null ) return err;
 
-            ContactService contactService = this.getBean( ContactService.class );
+            // ContactService contactService = this.getBean( ContactService.class );
 
             ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
 
@@ -98,7 +95,8 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
             // c = contactService.findOrCreate( c );
             // toAdd.setDatabaseSupplier( c );
             // toAdd.setDescription(
-            // "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "
+            // "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human
+            // genes and genetic phenotypes. "
             // +
             // "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University."
             // );

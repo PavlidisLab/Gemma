@@ -30,6 +30,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
  */
 public class BioAssayValueObject implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 9164284536309673585L;
+
     public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
         Collection<BioAssayValueObject> result = new HashSet<>();
         for ( BioAssay bioAssay : bioAssays ) {

@@ -31,6 +31,11 @@ public abstract class ExperimentalDesign extends ubic.gemma.model.common.Auditab
         gemma.gsec.model.SecuredChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1734101852541885497L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
      */
     public static final class Factory {

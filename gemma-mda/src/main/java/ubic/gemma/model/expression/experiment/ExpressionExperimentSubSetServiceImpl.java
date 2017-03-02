@@ -122,6 +122,7 @@ public class ExpressionExperimentSubSetServiceImpl extends ExpressionExperimentS
     /**
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService#getAllExpressionExperimentSubSets()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperimentSubSet> handleLoadAll() {
         return ( Collection<ExpressionExperimentSubSet> ) this.getExpressionExperimentSubSetDao().loadAll();

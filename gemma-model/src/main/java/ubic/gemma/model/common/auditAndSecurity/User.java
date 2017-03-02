@@ -26,6 +26,11 @@ import java.util.Collection;
 public abstract class User extends PersonImpl implements gemma.gsec.model.User {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5910497757956461559L;
+
+    /**
      * Constructs new instances of {@link User}.
      */
     public static final class Factory {

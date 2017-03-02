@@ -7,7 +7,7 @@
 	</mapping>
 	<mapping>
 		<from>datatype::Clob</from>
-		<to>ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType</to>
+		<to>org.springframework.orm.hibernate3.support.ClobStringType</to>
 	</mapping>
 	<mapping>
 		<from>datatype::URL</from>

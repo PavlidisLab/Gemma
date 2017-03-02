@@ -73,6 +73,16 @@ public class PhenotypeWebService {
                 showOnlyEditable ), new HashSet<String>( phenotypeValueUris ) );
     }
 
+    @GET
+    @Path("/find-evidence-by-external-database")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<EvidenceValueObject> findEvidenceByExternalDatabase(
+            @QueryParam("externalDatabaseName") String externalDatabaseName,
+            @QueryParam("limit") Integer limit ) {
+        return this.phenotypeAssociationManagerService.loadEvidenceWithExternalDatabaseName( externalDatabaseName,
+                limit );
+    }
+
     /**
      * @param taxonId
      * @param showOnlyEditable

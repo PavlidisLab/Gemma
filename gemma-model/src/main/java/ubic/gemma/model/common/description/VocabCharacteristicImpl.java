@@ -18,7 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -36,8 +37,8 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
         if ( !super.equals( object ) ) return false;
         if ( !( object instanceof VocabCharacteristic ) ) return false;
         VocabCharacteristic that = ( VocabCharacteristic ) object;
-        return ObjectUtils.equals( this.getCategoryUri(), that.getCategoryUri() )
-                && ObjectUtils.equals( this.getValueUri(), that.getValueUri() );
+        return Objects.equals( this.getCategoryUri(), that.getCategoryUri() )
+                && Objects.equals( this.getValueUri(), that.getValueUri() );
     }
 
     @Override

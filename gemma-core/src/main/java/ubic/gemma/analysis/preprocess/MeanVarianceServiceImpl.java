@@ -21,6 +21,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.MeanVarianceEstimator;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -29,8 +31,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 
 /**
  * Manage the mean-variance relationship.
@@ -74,10 +74,6 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
         if ( mve.getMeanVariance() != null ) {
             mvr.setMeans( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 0 ).toArray() ) );
             mvr.setVariances( bac.doubleArrayToBytes( mve.getMeanVariance().viewColumn( 1 ).toArray() ) );
-        }
-        if ( mve.getLoess() != null ) {
-            mvr.setLowessX( bac.doubleArrayToBytes( mve.getLoess().viewColumn( 0 ).toArray() ) );
-            mvr.setLowessY( bac.doubleArrayToBytes( mve.getLoess().viewColumn( 1 ).toArray() ) );
         }
 
         return mvr;

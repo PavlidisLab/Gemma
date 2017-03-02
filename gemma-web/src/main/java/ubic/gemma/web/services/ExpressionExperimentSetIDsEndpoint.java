@@ -73,7 +73,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
         setLocalName( LOCAL_NAME );
 
         Collection<ExpressionExperimentSetValueObject> eesCol = expressionExperimentSetService
-                .loadAllExperimentSetValueObjects();
+                .loadAllExperimentSetValueObjects( false );
 
         // retain expression experiment sets that have a name assigned (probably not necessary?)
         Collection<ExpressionExperimentSetValueObject> eesColToUse = new HashSet<ExpressionExperimentSetValueObject>();

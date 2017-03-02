@@ -35,6 +35,10 @@ import ubic.gemma.model.genome.Gene;
  */
 public abstract class Gene2GeneAssociation implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -322186137554528167L;
     final private Long id = null;
     final private Gene firstGene = null;
 

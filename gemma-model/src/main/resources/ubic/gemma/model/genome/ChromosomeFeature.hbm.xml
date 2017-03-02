@@ -16,7 +16,7 @@
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
-		<property name="description" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
 		</property>
 		<property name="ncbiId" type="java.lang.String">
@@ -66,7 +66,7 @@
 				<column name="OFFICIAL_SYMBOL" not-null="false" unique="false"
 					sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 			</property>
-			<property name="officialName" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+			<property name="officialName" type="org.springframework.orm.hibernate3.support.ClobStringType">
 				<column name="OFFICIAL_NAME" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
 			</property>
 			<property name="ncbiGeneId" type="java.lang.Integer">

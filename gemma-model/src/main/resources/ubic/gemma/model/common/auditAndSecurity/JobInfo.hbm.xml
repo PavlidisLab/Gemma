@@ -14,7 +14,7 @@
       <property name="runningStatus" type="java.lang.Boolean">
          <column name="RUNNING_STATUS" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
-      <property name="failedMessage" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="failedMessage" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="FAILED_MESSAGE" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
       <property name="startTime" type="java.util.Date">
@@ -29,7 +29,7 @@
       <property name="description" type="java.lang.String">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <property name="messages" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+      <property name="messages" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="MESSAGES" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
       <property name="taskId" type="java.lang.String">

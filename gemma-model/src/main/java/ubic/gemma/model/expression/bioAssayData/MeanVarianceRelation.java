@@ -50,9 +50,6 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
     private byte[] means;
 
     private byte[] variances;
-    private byte[] lowessX;
-
-    private byte[] lowessY;
 
     private Long id;
 
@@ -94,20 +91,6 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
     /**
      * 
      */
-    public byte[] getLowessX() {
-        return this.lowessX;
-    }
-
-    /**
-     * 
-     */
-    public byte[] getLowessY() {
-        return this.lowessY;
-    }
-
-    /**
-     * 
-     */
     public byte[] getMeans() {
         return this.means;
     }
@@ -140,14 +123,6 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
 
     public void setId( Long id ) {
         this.id = id;
-    }
-
-    public void setLowessX( byte[] lowessX ) {
-        this.lowessX = lowessX;
-    }
-
-    public void setLowessY( byte[] lowessY ) {
-        this.lowessY = lowessY;
     }
 
     public void setMeans( byte[] means ) {

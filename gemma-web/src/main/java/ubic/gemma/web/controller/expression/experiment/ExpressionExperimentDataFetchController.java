@@ -316,9 +316,16 @@ public class ExpressionExperimentDataFetchController {
         // response.setContentType( "application/octet-stream" ); // see Bug4206
         response.setContentLength( ( int ) f.length() );
         response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
-
-        FileCopyUtils.copy( new FileInputStream( f ), response.getOutputStream() );
+        FileInputStream in = new FileInputStream( f );
+        FileCopyUtils.copy( in, response.getOutputStream() );
         response.flushBuffer();
+
+        try {
+            in.close();
+        } catch ( IOException e ) {
+
+        }
+
     }
 
     /**

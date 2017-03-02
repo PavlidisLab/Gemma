@@ -113,11 +113,6 @@ public class BioMaterialController {
 
         Long id = Long.parseLong( request.getParameter( "eeid" ) );
 
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( "Must provide an expression experiment id" );
-        }
-
         Collection<BioMaterial> bioMaterials = getBioMaterialsForEE( id );
 
         ModelAndView mav = new ModelAndView( "bioMaterialAnnotator" );
@@ -269,10 +264,6 @@ public class BioMaterialController {
             return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", message );
         }
 
-        if ( id == null ) {
-            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", "Must provide a biomaterial id" );
-        }
-
         BioMaterial bioMaterial = bioMaterialService.load( id );
         if ( bioMaterial == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -280,8 +271,8 @@ public class BioMaterialController {
         bioMaterialService.thaw( bioMaterial );
 
         request.setAttribute( "id", id ); // / ??
-        ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial ).addObject(
-                "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
+        ModelAndView mnv = new ModelAndView( "bioMaterial.detail" ).addObject( "bioMaterial", bioMaterial )
+                .addObject( "expressionExperiment", bioMaterialService.getExpressionExperiment( id ) );
 
         return mnv;
     }

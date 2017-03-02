@@ -9,6 +9,11 @@ import java.io.Serializable;
  *
  */
 public class TaskControl implements Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5774284414395387630L;
+
     public enum Request{CANCEL, ADD_EMAIL_NOTIFICATION}
 
     private Request request;

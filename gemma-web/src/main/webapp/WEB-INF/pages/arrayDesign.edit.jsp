@@ -20,7 +20,7 @@
 	<table>
 		<tr>
 			<td class="label">
-				<label key="arrayDesign.name" />
+				<label key="arrayDesign.name" ></label>
 			</td>
 			<td>
 				<spring:bind path="arrayDesign.name">
@@ -31,7 +31,7 @@
 		</tr>
 		<tr>
 			<td class="label">
-				<label key="arrayDesign.shortName" />
+				<label key="arrayDesign.shortName" ></label>
 			</td>
 			<td>
 				<spring:bind path="arrayDesign.shortName">
@@ -43,7 +43,7 @@
 		</tr>
 		<tr>
 			<td class="label">
-				<label key="arrayDesign.technologyType" />
+				<label key="arrayDesign.technologyType" ></label>
 			</td>
 			<td>
 				<spring:bind path="arrayDesign.technologyType">
@@ -60,7 +60,7 @@
 
 		<tr>
 			<td class="label">
-				<label key="arrayDesign.description" />
+				<label key="arrayDesign.description" ></label>
 			</td>
 			<td>
 				<spring:bind path="arrayDesign.description">

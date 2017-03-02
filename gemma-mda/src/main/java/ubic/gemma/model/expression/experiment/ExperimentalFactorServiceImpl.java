@@ -27,13 +27,15 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService
  */
 @Service
-public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
+public class ExperimentalFactorServiceImpl
+        extends ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase {
 
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#load(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<ExperimentalFactor> load( Collection<Long> ids ) {
@@ -65,8 +67,8 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
         /*
          * First, check to see if there are any diff results that use this factor.
          */
-        Collection<DifferentialExpressionAnalysis> analyses = getDifferentialExpressionAnalysisDao().findByFactor(
-                experimentalFactor );
+        Collection<DifferentialExpressionAnalysis> analyses = getDifferentialExpressionAnalysisDao()
+                .findByFactor( experimentalFactor );
         for ( DifferentialExpressionAnalysis a : analyses ) {
             getDifferentialExpressionAnalysisDao().remove( a );
         }
@@ -78,9 +80,8 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression
-     * .experiment.ExperimentalFactor)
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.
+     * expression .experiment.ExperimentalFactor)
      */
     @Override
     protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) {
@@ -90,9 +91,8 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.expression
-     * .experiment.ExperimentalFactor)
+     * @see ubic.gemma.model.expression.experiment.ExperimentalFactorServiceBase#handleFindOrcreate(ubic.gemma.model.
+     * expression .experiment.ExperimentalFactor)
      */
     @Override
     protected ExperimentalFactor handleFindOrCreate( ExperimentalFactor experimentalFactor ) {
@@ -112,6 +112,7 @@ public class ExperimentalFactorServiceImpl extends ubic.gemma.model.expression.e
     /**
      * @see ubic.gemma.model.expression.experiment.ExperimentalFactorService#getAllExperimentalFactors()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ExperimentalFactor> handleLoadAll() {
         return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().loadAll();

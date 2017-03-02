@@ -72,6 +72,7 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
      * 
      * @see CompositeSequenceServiceBase#handleCreate(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleCreate( Collection<CompositeSequence> compositeSequences ) {
         return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
@@ -234,6 +235,7 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
      * 
      * @see CompositeSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleLoadMultiple( Collection<Long> ids ) {
         return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().load( ids );

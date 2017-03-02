@@ -33,6 +33,11 @@ import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
  */
 public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7262262666070114995L;
+
     private Double selectionThreshold = 0D;
 
     private Double metaPvalue = 0D;

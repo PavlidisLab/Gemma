@@ -258,7 +258,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
@@ -329,7 +329,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
@@ -423,7 +423,8 @@ public class PersistentDummyObjectHelper {
      * @param dosequence If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
      * @return ArrayDesign
      */
-    public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames, boolean dosequence ) {
+    public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,
+            boolean dosequence ) {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
@@ -474,7 +475,7 @@ public class PersistentDummyObjectHelper {
         ee.setShortName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setName( "Expression Experiment " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
         ee.setDescription( "A test expression experiment" );
-        ee.setSource( "http://www.ncbi.nlm.nih.gov/geo/" );
+        ee.setSource( "https://www.ncbi.nlm.nih.gov/geo/" );
         DatabaseEntry de1 = this.getTestPersistentDatabaseEntry( geo );
         ee.setAccession( de1 );
 
@@ -580,6 +581,7 @@ public class PersistentDummyObjectHelper {
     /**
      * @return Collection<BioSequence2GeneProduct>
      */
+    @SuppressWarnings("unchecked")
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<BioSequence2GeneProduct>();
@@ -832,7 +834,8 @@ public class PersistentDummyObjectHelper {
     /**
      * @return Collection
      */
-    protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef, Collection<FactorValue> allFactorValues ) {
+    protected Collection<FactorValue> getFactorValues( ExperimentalFactor ef,
+            Collection<FactorValue> allFactorValues ) {
 
         Collection<FactorValue> fvCol = new HashSet<FactorValue>();
         for ( int i = 0; i < NUM_FACTOR_VALUES; i++ ) {
@@ -862,9 +865,8 @@ public class PersistentDummyObjectHelper {
 
     private Collection<BioMaterial> getBioMaterials( Collection<FactorValue> allFactorValues ) {
 
-        if ( allFactorValues.isEmpty() )
-            throw new RuntimeException(
-                    "Factor values have not been associated with biomaterials.  Try creating the experimental design first." );
+        if ( allFactorValues.isEmpty() ) throw new RuntimeException(
+                "Factor values have not been associated with biomaterials.  Try creating the experimental design first." );
 
         Iterator<FactorValue> iter = allFactorValues.iterator();
 
@@ -903,8 +905,8 @@ public class PersistentDummyObjectHelper {
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, List<BioAssay> bioAssays, ArrayDesign ad ) {
 
-        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(
-                ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
+        BioAssayDimension baDim = BioAssayDimension.Factory
+                .newInstance( ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
 
         Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
         for ( QuantitationType quantType : quantitationTypes ) {

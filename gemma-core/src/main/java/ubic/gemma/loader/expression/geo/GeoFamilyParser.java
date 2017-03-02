@@ -197,8 +197,7 @@ public class GeoFamilyParser implements Parser<Object> {
             throw new IOException( "No bytes to read from the input stream." );
         }
 
-        try (@SuppressWarnings("resource")
-        final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
+        try (final BufferedReader dis = new BufferedReader( new InputStreamReader( is ) );) {
 
             log.debug( "Parsing...." );
 
@@ -359,9 +358,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 for ( Object i : qTypeIndexes ) {
                     values.addValue( currentSample, ( Integer ) i, el, " " );
                 }
-                if ( log.isDebugEnabled() )
-                    log.debug( "Added data missing from sample=" + currentSample + " for probe=" + el + " on "
-                            + samplePlatform );
+                if ( log.isDebugEnabled() ) log.debug( "Added data missing from sample=" + currentSample + " for probe="
+                        + el + " on " + samplePlatform );
             }
         }
         if ( countMissing > 0 ) {
@@ -549,8 +547,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 parseLine( line );
                 if ( ++parsedLines % 20000 == 0 && Thread.currentThread().isInterrupted() ) {
                     dis.close(); // clean up
-                    throw new java.util.concurrent.CancellationException( "Thread was terminated during parsing. "
-                            + this.getClass() );
+                    throw new java.util.concurrent.CancellationException(
+                            "Thread was terminated during parsing. " + this.getClass() );
                 }
             }
 
@@ -772,9 +770,7 @@ public class GeoFamilyParser implements Parser<Object> {
             if ( seenColumnNames.contains( columnName ) ) {
 
                 if ( !alreadyWarnedAboutDuplicateColumnName ) {
-                    log.warn( "\n---------- WARNING ------------\n"
-                            + columnName
-                            + " appears more than once for sample "
+                    log.warn( "\n---------- WARNING ------------\n" + columnName + " appears more than once for sample "
                             + currentSample()
                             + ", it will be mangled to make it unique.\nThis usually indicates a problem with the GEO file format! (future similar warnings for this data set suppressed)\n" );
                     alreadyWarnedAboutDuplicateColumnName = true;
@@ -801,14 +797,9 @@ public class GeoFamilyParser implements Parser<Object> {
                 desiredColumnNumber = qtMapForPlatform.get( columnName );
                 if ( desiredColumnNumber != actualColumnNumber ) {
                     if ( !alreadyWarnedAboutInconsistentColumnOrder ) {
-                        log.warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
-                                + columnName
-                                + " is not in previous column "
-                                + desiredColumnNumber
-                                + ":\nFor sample "
-                                + currentSample()
-                                + ", it is in column "
-                                + actualColumnNumber
+                        log.warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n" + columnName
+                                + " is not in previous column " + desiredColumnNumber + ":\nFor sample "
+                                + currentSample() + ", it is in column " + actualColumnNumber
                                 + ". This usually isn't a problem but it's worth checking to make sure data isn't misaligned"
                                 + " (future warnings for this data set suppressed)\n" );
                         alreadyWarnedAboutInconsistentColumnOrder = true;
@@ -818,7 +809,8 @@ public class GeoFamilyParser implements Parser<Object> {
                      * NOW, for this sample, but in our data structure we put it where we EXPECT it to be (where it was
                      * the first time we saw it). This is our attempt to fix problems with columns moving around.
                      */
-                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
+                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber,
+                            desiredColumnNumber );
                 }
                 values.addQuantitationType( platformForSample, columnName, desiredColumnNumber );
             } else {
@@ -840,13 +832,11 @@ public class GeoFamilyParser implements Parser<Object> {
                         }
                     }
                     desiredColumnNumber = max + 1;
-                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
+                    quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber,
+                            desiredColumnNumber );
                     if ( !alreadyWarnedAboutClobbering ) {
                         log.warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
-                                + "Current column name "
-                                + columnName
-                                + " reassigned to index "
-                                + desiredColumnNumber
+                                + "Current column name " + columnName + " reassigned to index " + desiredColumnNumber
                                 + " to avoid clobbering. This usually isn't a problem but it's worth checking to make sure data isn't misaligned "
                                 + "(future similar warnings for this data set suppressed)\n" );
                         alreadyWarnedAboutClobbering = true;
@@ -861,11 +851,10 @@ public class GeoFamilyParser implements Parser<Object> {
              * Some quantitation types are skipped to save space.
              */
             if ( !isWanted ) {
-                if ( log.isDebugEnabled() )
-                    log.debug( "Data column " + columnName + " will be skipped for " + currentSample()
-                            + " - it is an 'unwanted' quantitation type (column number "
-                            + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
-                            + "the quantitation type.)" );
+                if ( log.isDebugEnabled() ) log.debug( "Data column " + columnName + " will be skipped for "
+                        + currentSample() + " - it is an 'unwanted' quantitation type (column number "
+                        + currentIndex.get( platformForSample ) + ", " + desiredColumnNumber
+                        + "the quantitation type.)" );
             } else {
                 wantedQuantitationTypes.add( desiredColumnNumber );
             }

@@ -18,9 +18,6 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -30,12 +27,17 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
+
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 
 /**
  * For display and editing of users. Note: do not use parameterized collections as parameters for ajax methods in this
@@ -71,10 +73,16 @@ public class UserListControllerImpl implements UserListController {
 
         Collection<UserValueObject> userValueObjects = new ArrayList<UserValueObject>();
 
-        Collection<gemma.gsec.model.User> users = userManager.loadAll();
-        for ( gemma.gsec.model.User u : users ) {
-            UserValueObject uv = new UserValueObject( u );
-            userValueObjects.add( uv );
+        try {
+            Collection<gemma.gsec.model.User> users = userManager.loadAll();
+            for ( gemma.gsec.model.User u : users ) {
+                UserValueObject uv = new UserValueObject( u );
+                userValueObjects.add( uv );
+            }
+        } catch ( UncategorizedSQLException e ) {
+            log.error( e );
+        } catch ( LazyInitializationException e ) {
+            log.error( e );
         }
         return userValueObjects;
     }
@@ -91,7 +99,16 @@ public class UserListControllerImpl implements UserListController {
         /*
          * FIXME: this lists all users, not the ones who are active.
          */
-        return new ModelAndView( "/admin/activeUsers", "users", userManager.loadAll() );
+        Collection<gemma.gsec.model.User> users = null;
+        try {
+            users = userManager.loadAll();
+        } catch ( UncategorizedSQLException e ) {
+            log.error( e );
+        } catch ( LazyInitializationException e ) {
+            log.error( e );
+        }
+
+        return new ModelAndView( "/admin/activeUsers", "users", users );
     }
 
     /*
@@ -111,9 +128,9 @@ public class UserListControllerImpl implements UserListController {
 
         boolean newUser = false;
         if ( u == null ) {
-            userDetails = new UserDetailsImpl(
-                    passwordEncoder.encodePassword( user.getPassword(), user.getUserName() ), user.getUserName(),
-                    false, null, user.getEmail(), userManager.generateSignupToken( user.getUserName() ), new Date() );
+            userDetails = new UserDetailsImpl( passwordEncoder.encodePassword( user.getPassword(), user.getUserName() ),
+                    user.getUserName(), false, null, user.getEmail(),
+                    userManager.generateSignupToken( user.getUserName() ), new Date() );
         } else {
             u.setEmail( user.getEmail() );
             u.setEnabled( user.isEnabled() );

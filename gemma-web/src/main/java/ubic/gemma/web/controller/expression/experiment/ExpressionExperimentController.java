@@ -18,9 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import gemma.gsec.SecurityService;
-import gemma.gsec.util.SecurityUtil;
-
 import java.io.IOException;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -32,6 +29,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,8 +38,7 @@ import java.util.TreeMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONObject;
-
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -54,6 +51,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import gemma.gsec.SecurityService;
+import gemma.gsec.util.SecurityUtil;
+import net.sf.json.JSONObject;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.MeanVarianceService;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
@@ -78,7 +78,7 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -95,6 +95,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -134,6 +135,11 @@ import ubic.gemma.web.view.TextView;
 @Controller
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController {
+
+    private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
+    private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
+    private static final String TROUBLE_DETAIL_EVENT_NOT_FOUND = "No trouble event found for the experiment";
+
     /**
      * Delete expression experiments.
      * 
@@ -150,9 +156,11 @@ public class ExpressionExperimentController {
         public TaskResult execute() {
             expressionExperimentService.delete( taskCommand.getEntityId() );
 
-            return new TaskResult( taskCommand, new ModelAndView( new RedirectView(
-                    "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) ).addObject( "message",
-                    "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
+            return new TaskResult( taskCommand,
+                    new ModelAndView(
+                            new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                                    .addObject( "message",
+                                            "Dataset id: " + taskCommand.getEntityId() + " removed from Database" ) );
 
         }
     }
@@ -250,8 +258,8 @@ public class ExpressionExperimentController {
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             result.setId( expressionExperiment.getId() );
-            result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( bibliographicReferenceService
-                    .thaw( publication ) ) );
+            result.setPrimaryCitation( CitationValueObject
+                    .convert2CitationValueObject( bibliographicReferenceService.thaw( publication ) ) );
             return new TaskResult( taskCommand, result );
         }
 
@@ -297,7 +305,6 @@ public class ExpressionExperimentController {
     private SecurityService securityService;
     @Autowired
     private TaxonService taxonService;
-
     @Autowired
     private SVDService svdService;
     @Autowired
@@ -328,52 +335,14 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browse( ListBatchCommand batch ) {
 
         if ( batch.getLimit() == 0 ) {
             batch.setStart( 0 );
         }
 
-        int limit = batch.getLimit();
-        int origStart = batch.getStart();
-        // have to load entities instead of directly loading value objects because we need security filtering
-        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch );
+        return this.browseSpecific( batch, null, null );
 
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityUtil.isUserAdmin() ) {
-            records = removeTroubledExperimentVOs( records );
-        }
-
-        assert records != null;
-
-        /*
-         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
-         * have access to
-         */
-        int count = records.size();
-
-        int start = origStart;
-        int stop = Math.min( origStart + limit, records.size() );
-
-        if ( batch.getLimit() == 0 ) {
-            stop = records.size();
-        }
-
-        List<ExpressionExperimentValueObject> recordsSubset = records.subList( start, stop );
-
-        // this populates securityInfo TODO populate security info in filter
-        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        // getExpressionExperimentValueObjects( recordsSubset ) );
-
-        // if admin, want to show why experiment is troubled
-        if ( SecurityUtil.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( recordsSubset );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                recordsSubset, count );
-
-        return returnVal;
     }
 
     /**
@@ -382,10 +351,9 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseByTaxon( ListBatchCommand batch,
+            Long taxonId ) {
 
-        int origLimit = batch.getLimit();
-        int origStart = batch.getStart();
         if ( taxonId == null ) {
             return browse( batch );
         }
@@ -395,40 +363,9 @@ public class ExpressionExperimentController {
                     + ", but this id is invalid. Browsing without taxon restriction." );
             return browse( batch );
         }
-        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, taxon );
 
-        // if user is not admin, remove troubled experiments
-        if ( !SecurityUtil.isUserAdmin() ) {
-            records = removeTroubledExperimentVOs( records );
-        }
+        return this.browseSpecific( batch, null, taxon );
 
-        /*
-         * can't just do countAll because this will count experiments the user may not have access to Integer count =
-         * expressionExperimentService.countAll();
-         */
-        int count = records.size();
-
-        int pSize = Math.min( origStart + origLimit, records.size() );
-
-        // batch.getLimit = 0 when download all as text
-        if ( batch.getLimit() == 0 ) {
-            pSize = count;
-        }
-
-        List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
-
-        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
-
-        // if admin, want to show if experiment is troubled
-        if ( SecurityUtil.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( recordsSubset );
-        }
-
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                recordsSubset, count );
-
-        return returnVal;
     }
 
     /**
@@ -437,44 +374,65 @@ public class ExpressionExperimentController {
      * @param batch
      * @return
      */
-    public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
+    public JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecificIds( ListBatchCommand batch,
             Collection<Long> ids ) {
 
         if ( batch.getLimit() == 0 ) {
             batch.setLimit( ids.size() );
             batch.setStart( 0 );
         }
+        Set<Long> noDupIds = new HashSet<Long>( ids );
+
+        return this.browseSpecific( batch, noDupIds, null );
+
+    }
+
+    private JsonReaderResponse<ExpressionExperimentDetailsValueObject> browseSpecific( ListBatchCommand batch,
+            Collection<Long> ids, Taxon taxon ) {
 
         int origLimit = batch.getLimit();
         int origStart = batch.getStart();
 
-        Set<Long> noDupIds = new HashSet<Long>( ids );
-        List<ExpressionExperimentValueObject> records = loadAllValueObjectsOrdered( batch, noDupIds );
+        List<ExpressionExperimentValueObject> recordsOrig = loadAllValueObjectsOrdered( batch, ids, taxon );
+        List<ExpressionExperimentDetailsValueObject> records = new LinkedList<>();
+
+        for ( ExpressionExperimentValueObject ro : recordsOrig ) {
+            records.add( new ExpressionExperimentDetailsValueObject( ro ) );
+        }
 
         // if user is not admin, remove troubled experiments
         if ( !SecurityUtil.isUserAdmin() ) {
             records = removeTroubledExperimentVOs( records );
         }
 
+        /*
+         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
+         * have access to
+         */
+        int count = records.size();
         int pSize = Math.min( origStart + origLimit, records.size() );
-
-        // batch.getLimit = 0 when download all as text
         if ( batch.getLimit() == 0 ) {
-            pSize = records.size();
+            pSize = count;
         }
+        List<ExpressionExperimentDetailsValueObject> recordsSubset = records.subList( origStart, pSize );
 
-        List<ExpressionExperimentValueObject> recordsSubset = records.subList( origStart, pSize );
+        // this populates securityInfo TODO populate security info in filter
+        // List<ExpressionExperimentDetailsValueObject> valueObjects = new
+        // ArrayList<ExpressionExperimentDetailsValueObject>(
+        // getExpressionExperimentDetailsValueObjects( records.subList( origStart, pSize ) ) );
 
-        // List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
-        // getExpressionExperimentValueObjects( records.subList( origStart, pSize ) ) );
-
-        // if admin, want to show if experiment is troubled
+        // if admin, want to show why experiment is troubled
         if ( SecurityUtil.isUserAdmin() ) {
-            expressionExperimentReportService.getEventInformation( recordsSubset );
+            for ( ExpressionExperimentDetailsValueObject vo : recordsSubset ) {
+                ExpressionExperiment ee = this.getEESafely( vo.getId() );
+                vo.setArrayDesigns(
+                        arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
+                this.setTroubleInfo( vo, ee );
+            }
         }
 
-        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                recordsSubset, records.size() );
+        JsonReaderResponse<ExpressionExperimentDetailsValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentDetailsValueObject>(
+                recordsSubset, count );
         return returnVal;
     }
 
@@ -544,23 +502,26 @@ public class ExpressionExperimentController {
 
         // Validate the filtering search criteria.
         if ( StringUtils.isBlank( searchString ) ) {
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
-                    .addObject( "message", "No search criteria provided" );
+            return new ModelAndView(
+                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                            .addObject( "message", "No search criteria provided" );
         }
 
         Collection<Long> ids = expressionExperimentService.filter( searchString );
 
         if ( ids.isEmpty() ) {
 
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
-                    .addObject( "message", "Your search yielded no results." );
+            return new ModelAndView(
+                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
+                            .addObject( "message", "Your search yielded no results." );
 
         }
 
         if ( ids.size() == 1 ) {
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                    + ids.iterator().next() ) ).addObject( "message",
-                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
+            return new ModelAndView( new RedirectView(
+                    "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + ids.iterator().next() ) )
+                            .addObject( "message",
+                                    "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
         }
 
         String list = "";
@@ -568,9 +529,10 @@ public class ExpressionExperimentController {
             list += id + ",";
         }
 
-        return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id="
-                + list ) ).addObject( "message", "Search Criteria: " + searchString + "; " + ids.size()
-                + " Datasets matched." );
+        return new ModelAndView(
+                new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" + list ) )
+                        .addObject( "message",
+                                "Search Criteria: " + searchString + "; " + ids.size() + " Datasets matched." );
     }
 
     /**
@@ -749,7 +711,12 @@ public class ExpressionExperimentController {
         qc.setHasMeanVariance( meanVarianceService.hasMeanVariance( ee ) );
         qc.setHasCorrDist( this.coexpressionAnalysisService.hasCoexpCorrelationDistribution( ee ) );
         qc.setNumOutliersRemoved( numOutliersRemoved( ee ) );
-        qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
+        try {
+            qc.setNumPossibleOutliers( numPossibleOutliers( ee ) );
+        } catch ( java.lang.ArrayIndexOutOfBoundsException e ) {
+            log.fatal( e );
+            e.printStackTrace();
+        }
         return qc.getQChtml();
     }
 
@@ -866,15 +833,15 @@ public class ExpressionExperimentController {
             // Get count for new assays
             int newAssayCount = wn.getNewAssayCount();
 
-            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
-            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null ) ? EntityUtils
-                    .getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
+            Collection<Long> newExpressionExperimentIds = ( wn.getNewExpressionExperiments() != null )
+                    ? EntityUtils.getIds( wn.getNewExpressionExperiments() ) : new ArrayList<Long>();
+            Collection<Long> updatedExpressionExperimentIds = ( wn.getUpdatedExpressionExperiments() != null )
+                    ? EntityUtils.getIds( wn.getUpdatedExpressionExperiments() ) : new ArrayList<Long>();
 
-            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null ) ? wn
-                    .getNewExpressionExperiments().size() : 0;
-            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null ) ? wn
-                    .getUpdatedExpressionExperiments().size() : 0;
+            int newExpressionExperimentCount = ( wn.getNewExpressionExperiments() != null )
+                    ? wn.getNewExpressionExperiments().size() : 0;
+            int updatedExpressionExperimentCount = ( wn.getUpdatedExpressionExperiments() != null )
+                    ? wn.getUpdatedExpressionExperiments().size() : 0;
 
             /* Store counts for new and updated experiments by taxonId */
             Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
@@ -903,12 +870,12 @@ public class ExpressionExperimentController {
             int newArrayCount = ( wn.getNewArrayDesigns() != null ) ? wn.getNewArrayDesigns().size() : 0;
             int updatedArrayCount = ( wn.getUpdatedArrayDesigns() != null ) ? wn.getUpdatedArrayDesigns().size() : 0;
 
-            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 ) ? true
-                    : false;
+            boolean drawNewColumn = ( newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0 )
+                    ? true : false;
             boolean drawUpdatedColumn = ( updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 ) ? true
                     : false;
-            String date = ( wn.getDate() != null ) ? DateFormat.getDateInstance( DateFormat.LONG )
-                    .format( wn.getDate() ) : "";
+            String date = ( wn.getDate() != null )
+                    ? DateFormat.getDateInstance( DateFormat.LONG ).format( wn.getDate() ) : "";
             date = date.replace( '-', ' ' );
 
             summary.element( "updateDate", date );
@@ -943,20 +910,9 @@ public class ExpressionExperimentController {
      */
     public ExpressionExperimentDetailsValueObject loadExpressionExperimentDetails( Long id ) {
 
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
-        }
-
-        ee = expressionExperimentService.thawLiter( ee );
-
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
-
-        Collection<Long> ids = Collections.singleton( ee.getId() );
-
-        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService.loadValueObjects( ids,
-                false );
+        ExpressionExperiment ee = this.getEESafely( id );
+        Collection<ExpressionExperimentValueObject> initialResults = expressionExperimentService
+                .loadValueObjects( Collections.singleton( ee.getId() ), false );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -964,9 +920,216 @@ public class ExpressionExperimentController {
 
         getReportData( initialResults );
 
-        /*
-         * Check for multiple "preferred" qts and reprocessing.
-         */
+        ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
+        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
+                initialResult );
+
+        finalResult.setArrayDesigns(
+                arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
+        finalResult.setQChtml( getQCTagHTML( ee ) );
+        finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
+
+        finalResult = this.setPrefferedAndReprocessed( finalResult, ee );
+        finalResult = this.setMutipleTechTypes( finalResult, ee );
+        finalResult = this.setParentTaxon( finalResult, initialResult.getTaxonId() );
+        // this should be taken care of by the security interceptor. See bug 4373
+        // finalResult.setUserCanWrite( securityService.isEditable( ee ) );
+        // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
+        finalResult = this.setPublicationAndAuthor( finalResult, ee );
+        finalResult = this.setBatchInfo( finalResult, ee );
+        finalResult = this.setTroubleInfo( finalResult, ee );
+
+        Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
+        if ( lastArrayDesignUpdate != null ) {
+            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
+        }
+
+        return finalResult;
+
+    }
+
+    /**
+     * Checks the given EE and all the given array designs for trouble and sets the appropriate properties on the given
+     * value object.
+     * 
+     * @param finalResult
+     * @param ee
+     * @param ads
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setTroubleInfo( ExpressionExperimentDetailsValueObject finalResult,
+            ExpressionExperiment ee ) {
+
+        boolean eeTroubled = ee.getStatus().getTroubled();
+        boolean eeTroubledButNoInfo = false;
+        boolean adTroubled = false;
+        String eeTroubleDetails = null;
+        String adTroubleDetails = null;
+        String finalTroubleDetails = "";
+
+        // If EE is troubled itself, show the reason for that trouble
+        if ( eeTroubled ) {
+
+            AuditEvent ae = expressionExperimentService.getOustandingTroubleEvent( ee.getId() );
+            if ( ae == null ) {
+                eeTroubleDetails = TROUBLE_DETAIL_EVENT_NOT_FOUND;
+                eeTroubledButNoInfo = true;
+                log.error( "Experiment has a troubled status, but no trouble event was found! EE id: " + ee.getId() );
+            } else {
+                eeTroubleDetails = ae.toString();
+            }
+
+        }
+
+        // this loop has to happen even if eeTroubled, because we need to escape troubleDetails of all the ADs to be
+        // displayed as AD trouble
+        for ( ArrayDesignValueObject ad : finalResult.getArrayDesigns() ) {
+            ad.setTroubleDetails( StringEscapeUtils.escapeHtml4( ad.getTroubleDetails() ) );
+
+            // if the EE is not troubled, but the array design(s) the EE belongs to is/are troubled, show the details of
+            // their trouble.
+            if ( !eeTroubled || eeTroubledButNoInfo ) {
+                if ( ad.getTroubled() ) {
+                    adTroubled = true;
+                    if ( adTroubleDetails == null ) {
+                        adTroubleDetails = TROUBLE_DETAIL_PLATF;
+                    } else {
+                        adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
+                    }
+                    adTroubleDetails += ad.getTroubleDetails();
+                }
+            }
+        }
+
+        // Construct the final trouble string to be displayed as EE trouble
+        if ( eeTroubled ) {
+            finalTroubleDetails += eeTroubleDetails;
+        } else if ( adTroubled ) {
+            finalTroubleDetails += adTroubleDetails;
+        }
+
+        finalResult.setTroubled( eeTroubled || adTroubled );
+        finalResult.setTroubleDetails( StringEscapeUtils.escapeHtml4( finalTroubleDetails ) );
+
+        return finalResult;
+    }
+
+    /**
+     * Sets batch information and related properties
+     * 
+     * @param finalResult
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setBatchInfo( ExpressionExperimentDetailsValueObject finalResult,
+            ExpressionExperiment ee ) {
+        boolean hasBatchInformation = false;
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+
+        finalResult.setHasBatchInformation( hasBatchInformation );
+        if ( hasBatchInformation ) {
+            finalResult.setBatchConfound( batchConfound( ee ) );
+            finalResult.setBatchEffect( batchEffect( ee ) );
+        }
+
+        return finalResult;
+    }
+
+    /**
+     * populates the publication and author information
+     * 
+     * @param finalResult
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setPublicationAndAuthor(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+
+        finalResult.setDescription( ee.getDescription() );
+
+        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
+            finalResult.setPrimaryCitation(
+                    CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
+            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
+
+            try {
+                finalResult.setPubmedId( Integer.parseInt( accession ) );
+            } catch ( NumberFormatException e ) {
+                log.warn( "Pubmed id not formatted correctly: " + accession );
+            }
+        }
+
+        return finalResult;
+    }
+
+    /**
+     * Loads, checks not null, and thaws the array designs the given EE is associated with.
+     * 
+     * @param ee
+     * @return
+     */
+    private Collection<ArrayDesign> getADsSafely( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( ads == null ) {
+            throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
+        }
+        ads = arrayDesignService.thawLite( ads );
+
+        return ads;
+    }
+
+    /**
+     * Loads, checks not null, and thaws the ee with given ID;
+     * 
+     * @param id
+     * @return
+     */
+    private ExpressionExperiment getEESafely( Long id ) {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
+        }
+        ee = expressionExperimentService.thawLiter( ee );
+
+        return ee;
+    }
+
+    /**
+     * Checks and sets multiple technology types
+     * 
+     * @param finalResult
+     * @param ee
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setMutipleTechTypes(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+        Collection<TechnologyType> techTypes = new HashSet<>();
+        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
+            techTypes.add( ad.getTechnologyType() );
+        }
+
+        finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
+
+        return finalResult;
+    }
+
+    /**
+     * Check for multiple "preferred" qts and reprocessing.
+     *
+     * @param finalResult
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setPrefferedAndReprocessed(
+            ExpressionExperimentDetailsValueObject finalResult, ExpressionExperiment ee ) {
+
+        Collection<QuantitationType> quantitationTypes = expressionExperimentService.getQuantitationTypes( ee );
+
         boolean dataReprocessedFromRaw = false;
         int countPreferred = 0;
         for ( QuantitationType qt : quantitationTypes ) {
@@ -978,20 +1141,21 @@ public class ExpressionExperimentController {
             }
         }
 
-        ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
-        ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
         finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
         finalResult.setReprocessedFromRawData( dataReprocessedFromRaw );
 
-        Collection<TechnologyType> techTypes = new HashSet<>();
-        for ( ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee ) ) {
-            techTypes.add( ad.getTechnologyType() );
-        }
+        return finalResult;
+    }
 
-        finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
-
-        // Set the parent taxon
-        Long taxonId = initialResult.getTaxonId();
+    /**
+     * Checks and sets parent taxon and related properties
+     * 
+     * @param finalResult
+     * @param taxonId
+     * @return
+     */
+    private ExpressionExperimentDetailsValueObject setParentTaxon( ExpressionExperimentDetailsValueObject finalResult,
+            Long taxonId ) {
         assert taxonId != null;
         Taxon taxon = taxonService.load( taxonId );
         taxonService.thaw( taxon );
@@ -1003,59 +1167,7 @@ public class ExpressionExperimentController {
             finalResult.setParentTaxonId( taxon.getId() );
             finalResult.setParentTaxon( taxon.getCommonName() );
         }
-
-        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
-        Collection<Long> adids = new HashSet<>();
-        for ( ArrayDesign ad : arrayDesignsUsed ) {
-            adids.add( ad.getId() );
-        }
-        finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
-
-        finalResult.setUserCanWrite( securityService.isEditable( ee ) );
-        finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
-
-        /*
-         * populate the publication and author information
-         */
-        finalResult.setDescription( ee.getDescription() );
-
-        if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult
-                    .setPrimaryCitation( CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
-            String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
-
-            try {
-                finalResult.setPubmedId( Integer.parseInt( accession ) );
-            } catch ( NumberFormatException e ) {
-                log.warn( "Pubmed id not formatted correctly: " + accession );
-            }
-        }
-
-        finalResult.setQChtml( getQCTagHTML( ee ) );
-
-        boolean hasBatchInformation = false;
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
-                hasBatchInformation = true;
-                break;
-            }
-        }
-        finalResult.setHasBatchInformation( hasBatchInformation );
-        if ( hasBatchInformation ) {
-            finalResult.setBatchConfound( batchConfound( ee ) );
-            finalResult.setBatchEffect( batchEffect( ee ) );
-        }
-
-        Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
-        if ( lastArrayDesignUpdate != null ) {
-            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
-        }
-
-        // experiment sets this ee belongs to
-        finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
-
         return finalResult;
-
     }
 
     /**
@@ -1245,8 +1357,9 @@ public class ExpressionExperimentController {
 
         // add session bound sets
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager
-                .getModifiedExperimentSets( taxonId ) : sessionListManager.getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited )
+                ? sessionListManager.getModifiedExperimentSets( taxonId )
+                : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<>();
 
@@ -1274,9 +1387,6 @@ public class ExpressionExperimentController {
 
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
-
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /**
      * AJAX (used by ExperimentCombo.js)
@@ -1436,10 +1546,6 @@ public class ExpressionExperimentController {
     @RequestMapping(value = { "/showExpressionExperimentSubSet.html", "/showSubset" })
     public ModelAndView showSubSet( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
-        if ( id == null ) {
-            // should be a validation error, on 'submit'.
-            throw new EntityNotFoundException( identifierNotFound );
-        }
 
         ExpressionExperimentSubSet subset = expressionExperimentSubSetService.load( id );
         if ( subset == null ) {
@@ -1776,8 +1882,8 @@ public class ExpressionExperimentController {
             if ( batchEffectDetails.getDataWasBatchCorrected() ) {
                 result = "Data has been batch-corrected";
             } else if ( batchEffectDetails.getPvalue() < BATCH_EFFECT_PVALTHRESHOLD ) {
-                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() )
-                        + "); p=" + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
+                result = "This data set may have a batch artifact (PC" + ( batchEffectDetails.getComponent() ) + "); p="
+                        + String.format( "%.2g", batchEffectDetails.getPvalue() ) + "<br />";
             }
         }
         return result;
@@ -1844,8 +1950,8 @@ public class ExpressionExperimentController {
 
         } else if ( ids == null || ids.isEmpty() ) {
             // load everything (up to the limit)
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser,
-                    limitToUse, showPublic );
+            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser, limitToUse,
+                    showPublic );
         } else {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser, limitToUse,
                     showPublic );
@@ -1960,8 +2066,8 @@ public class ExpressionExperimentController {
                  * This could be sped up by making value object methods, but because these are not so many, this should
                  * be acceptable.
                  */
-                List<ExpressionExperiment> ees = showPublic ? new ArrayList<>(
-                        expressionExperimentService.loadUserOwnedExpressionExperiments() )
+                List<ExpressionExperiment> ees = showPublic
+                        ? new ArrayList<>( expressionExperimentService.loadUserOwnedExpressionExperiments() )
                         : new ArrayList<ExpressionExperiment>(
                                 expressionExperimentService.loadMySharedExpressionExperiments() );
 
@@ -2031,15 +2137,6 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch ) {
-        return loadAllValueObjectsOrdered( batch, null, null );
-    }
-
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch,
-            Collection<Long> ids ) {
-        return loadAllValueObjectsOrdered( batch, ids, null );
-    }
-
     /**
      * @param batch
      * @param ids
@@ -2070,7 +2167,8 @@ public class ExpressionExperimentController {
                 orderBy = "dateLastUpdated";
                 descending = !descending;
             } else {
-                log.error( "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: " + orderBy );
+                log.error(
+                        "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: " + orderBy );
             }
 
             if ( ids != null ) {
@@ -2098,15 +2196,6 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * @param batch
-     * @param taxon
-     * @return
-     */
-    private List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( ListBatchCommand batch, Taxon taxon ) {
-        return loadAllValueObjectsOrdered( batch, null, taxon );
-    }
-
-    /**
      * This is security filtered.
      * 
      * @param eeIds
@@ -2124,7 +2213,8 @@ public class ExpressionExperimentController {
                     .loadValueObjects( eeIds, true );
             if ( taxon != null ) {
                 // AND filter for taxon
-                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it.hasNext(); ) {
+                for ( Iterator<ExpressionExperimentValueObject> it = initialListOfValueObject.iterator(); it
+                        .hasNext(); ) {
                     ExpressionExperimentValueObject evo = it.next();
                     if ( !evo.getTaxonId().equals( taxon.getId() ) ) {
                         it.remove();
@@ -2134,8 +2224,8 @@ public class ExpressionExperimentController {
 
         } else if ( taxon != null ) {
             // everything for taxon
-            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
-                    expressionExperimentService.loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
+            initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>( expressionExperimentService
+                    .loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
         } else {
             // everything
             initialListOfValueObject = new ArrayList<ExpressionExperimentValueObject>(
@@ -2148,12 +2238,13 @@ public class ExpressionExperimentController {
      * @param records
      * @return
      */
-    private List<ExpressionExperimentValueObject> removeTroubledExperimentVOs(
-            List<ExpressionExperimentValueObject> records ) {
-        List<ExpressionExperimentValueObject> untroubled = new ArrayList<ExpressionExperimentValueObject>( records );
+    private List<ExpressionExperimentDetailsValueObject> removeTroubledExperimentVOs(
+            List<ExpressionExperimentDetailsValueObject> records ) {
+        List<ExpressionExperimentDetailsValueObject> untroubled = new ArrayList<ExpressionExperimentDetailsValueObject>(
+                records );
 
-        Collection<ExpressionExperimentValueObject> toRemove = new ArrayList<ExpressionExperimentValueObject>();
-        for ( ExpressionExperimentValueObject record : records ) {
+        Collection<ExpressionExperimentDetailsValueObject> toRemove = new ArrayList<ExpressionExperimentDetailsValueObject>();
+        for ( ExpressionExperimentDetailsValueObject record : records ) {
 
             if ( record.getTroubled() ) {
                 toRemove.add( record );

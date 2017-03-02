@@ -25,6 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.stereotype.Component;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
@@ -36,15 +44,6 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.apache.commons.lang3.time.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
-import org.springframework.stereotype.Component;
-
 import ubic.gemma.util.Settings;
 
 /**
@@ -138,9 +137,8 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
         boolean overFlowToDisk = Settings.getBoolean( "gemma.cache.gene2gene.usedisk",
                 GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
-        boolean eternal = Settings
-                .getBoolean( "gemma.cache.gene2gene.eternal", GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL )
-                && timeToLive == 0;
+        boolean eternal = Settings.getBoolean( "gemma.cache.gene2gene.eternal",
+                GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL ) && timeToLive == 0;
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
 
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
@@ -246,6 +244,7 @@ public class CoexpressionCacheImpl implements InitializingBean, CoexpressionCach
      * 
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionCache#get(java.lang.Long)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public List<CoexpressionValueObject> get( Long g ) {
         if ( !this.enabled.get() ) return null;

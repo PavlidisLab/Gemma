@@ -123,7 +123,7 @@ Gemma.ExpressionExperimentDetails = Ext
             }
 
             if ( ee.troubled ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
                   + ee.troubleDetails + '"/>';
             }
 
@@ -746,11 +746,21 @@ Gemma.ExpressionExperimentDetails = Ext
                                              + '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,'
                                              + e.id
                                              + ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;'
-                                             + '<a class="helpLink" href="?" onclick="showHelpTip(event, \''
-                                             + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT
-                                             + '\');' + ' return false"> <img src="/Gemma/images/help.png" /> </a>'
+                                             + '<i class="qtp fa fa-question-circle fa-fw"></i>'
                                              + '</div>',
-                                          width : 400
+                                          width : 400,
+                                          listeners : {
+                                             'afterrender' : function( c ) {
+                                                jQuery( '#downloads i' )
+                                                   .qtip(
+                                                      {
+                                                         content : Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT,
+                                                         style : {
+                                                            name : 'cream'
+                                                         }
+                                                      } );
+                                             }
+                                          }
                                        }, {
                                           fieldLabel : 'Platforms',
                                           html : this.renderArrayDesigns( e.arrayDesigns ),

@@ -1,4 +1,5 @@
 /*
+
  * The Gemma project
  * 
  * Copyright (c) 2013 University of British Columbia
@@ -85,9 +86,9 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private Integer coexpressionLinkCount = null;
 
-    private Boolean currentUserHasWritePermission = false;
+    private Boolean currentUserHasWritePermission = null;
 
-    private Boolean currentUserIsOwner = false;
+    private Boolean currentUserIsOwner = null;
 
     private Date dateArrayDesignLastUpdated;
 
@@ -119,13 +120,13 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private String externalUri;
 
-    private Boolean hasBothIntensities = false;
+    private Boolean hasBothIntensities = null;
 
-    private Boolean hasCoexpressionAnalysis = false;
+    private Boolean hasCoexpressionAnalysis = null;
 
-    private Boolean hasDifferentialExpressionAnalysis = false;
+    private Boolean hasDifferentialExpressionAnalysis = null;
 
-    private Boolean hasEitherIntensity = false;
+    private Boolean hasEitherIntensity = null;
 
     private Boolean hasProbeSpecificForQueryGene;
 
@@ -133,11 +134,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private String investigators;
 
-    private Boolean isPublic = true;
+    private Boolean isPublic = null;
 
-    private boolean isShared = false;
+    private Boolean isShared = false;
 
-    private boolean isSubset = false;
+    private Boolean isSubset = false;
 
     private String linkAnalysisEventType;
 
@@ -175,11 +176,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     private String technologyType;
 
-    private boolean troubled = false;
+    private Boolean troubled = false;
 
     private String troubleDetails = "(Reason for trouble not populated)";
 
-    private boolean validated = false;
+    private Boolean validated = false;
 
     public ExpressionExperimentValueObject() {
     }
@@ -214,36 +215,36 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
                 otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidated(), otherBean.getTechnologyType(),
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
                 otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.getIsPublic(),
-                otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(), otherBean
-                        .getPubmedId(), otherBean.getInvestigators(), otherBean.getDateCreated(), otherBean
-                        .getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
-                        .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
-                otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(), otherBean
-                        .getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(), otherBean
-                        .getDateLastUpdated(), otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(),
+                otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(),
+                otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getDateCreated(),
+                otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(),
+                otherBean.getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
+                otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(),
+                otherBean.getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(),
+                otherBean.getDateLastUpdated(), otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(),
                 otherBean.getMinPvalue(), otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(),
-                otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(), otherBean
-                        .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
-                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(), otherBean
-                        .getParentTaxonId() );
+                otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(),
+                otherBean.getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
+                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(),
+                otherBean.getParentTaxonId(), otherBean.getUserOwned(), otherBean.getIsShared() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
             String source, String accession, Integer bioAssayCount, String taxon, Long taxonId,
             Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
-            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, boolean validatedFlag,
-            String technologyType, boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
-            Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
-            boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
-            String investigators, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
-            String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
-            Date dateLinkAnalysis, Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
+            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, Boolean validatedFlag, String technologyType,
+            Boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
+            Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, Boolean isPublic,
+            Boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
+            String investigators, Date dateCreated, Boolean troubleFlag, Integer coexpressionLinkCount,
+            String processedDataVectorComputationEventType, String missingValueAnalysisEventType, Date dateLinkAnalysis,
+            Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
             Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
-            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
-            Long experimentalDesign, Date autoTagDate,
-            Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
-            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails,
-            Boolean isSubset, Long parentTaxonId ) {
+            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity, Long experimentalDesign,
+            Date autoTagDate, Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses,
+            Date batchAnalysisDate, Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType,
+            String troubleDetails, Boolean isSubset, Long parentTaxonId, Boolean currentUserIsOwner,
+            Boolean isShared ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -267,6 +268,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.dateDifferentialAnalysis = dateDifferentialAnalysis;
         this.sampleRemovedFlags = sampleRemovedFlags;
         this.isPublic = isPublic;
+        this.isShared = isShared;
         this.currentUserHasWritePermission = currentUserHasWritePermission;
         this.clazz = clazz;
         this.sourceExperiment = sourceExperiment;
@@ -296,13 +298,14 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         this.troubleDetails = troubleDetails;
         this.isSubset = isSubset;
         this.parentTaxonId = parentTaxonId;
+        this.currentUserIsOwner = currentUserIsOwner;
     }
 
     /**
      * @param sampleRemovedFlags
      */
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
-        Collection<AuditEventValueObject> converted = new HashSet<AuditEventValueObject>();
+        Collection<AuditEventValueObject> converted = new HashSet<>();
 
         for ( AuditEvent ae : s ) {
             converted.add( new AuditEventValueObject( ae ) );
@@ -318,7 +321,10 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     /**
      * Copies all properties from the argument value object into this value object.
+     * 
+     * @deprecated not used? Needs care to maintain.
      */
+    @Deprecated
     public void copy( ExpressionExperimentValueObject otherBean ) {
         if ( otherBean != null ) {
             this.setId( otherBean.getId() );
@@ -343,6 +349,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
             this.setDateDifferentialAnalysis( otherBean.getDateDifferentialAnalysis() );
             this.setSampleRemovedFlags( otherBean.getSampleRemovedFlags() );
             this.setIsPublic( otherBean.getIsPublic() );
+            this.setIsShared( otherBean.getIsShared() );
             this.setClazz( otherBean.getClazz() );
             this.setSourceExperiment( otherBean.getSourceExperiment() );
             this.setPubmedId( otherBean.getPubmedId() );
@@ -434,14 +441,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
      */
     public Integer getCoexpressionLinkCount() {
         return this.coexpressionLinkCount;
-    }
-
-    public Boolean getCurrentUserHasWritePermission() {
-        return currentUserHasWritePermission;
-    }
-
-    public Boolean getCurrentUserIsOwner() {
-        return currentUserIsOwner;
     }
 
     /**
@@ -582,11 +581,15 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     @Override
     public boolean getIsPublic() {
+        // FIXME - this is sometimes being left as null, but it shouldn't.
+        if ( this.isPublic == null ) return false;
         return this.isPublic;
     }
 
     @Override
     public boolean getIsShared() {
+        // FIXME - this is sometimes being left as null, but it shouldn't.
+        if ( this.isShared == null ) return false;
         return this.isShared;
     }
 
@@ -619,18 +622,17 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     /**
-     * <p>
+     * 
      * The number of terms (Characteristics) the experiment has to describe it.
-     * </p>
+     * 
      */
     public Integer getNumAnnotations() {
         return this.numAnnotations;
     }
 
     /**
-     * <p>
      * The number of experimental factors the experiment has (counting those that are populated with biomaterials)
-     * </p>
+     * 
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
@@ -673,6 +675,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.sampleRemovedFlags;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see gemma.gsec.model.SecureValueObject#getSecurableClass()
+     */
     @Override
     public Class<? extends Securable> getSecurableClass() {
         if ( this.isSubset ) {
@@ -728,7 +735,7 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     /**
      * 
      */
-    public boolean getTroubled() {
+    public Boolean getTroubled() {
         return this.troubled;
     }
 
@@ -738,11 +745,15 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     @Override
     public boolean getUserCanWrite() {
+        // FIXME consider making return type Boolean
+        if ( this.currentUserHasWritePermission == null ) return false;
         return this.currentUserHasWritePermission;
     }
 
     @Override
     public boolean getUserOwned() {
+        // FIXME consider making return type Boolean
+        if ( this.currentUserIsOwner == null ) return false;
         return this.currentUserIsOwner;
     }
 
@@ -764,11 +775,11 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     /**
      * 
      */
-    public boolean isHasBothIntensities() {
+    public Boolean isHasBothIntensities() {
         return this.hasBothIntensities;
     }
 
-    public boolean isSubset() {
+    public Boolean isSubset() {
         return isSubset;
     }
 
@@ -869,10 +880,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
     }
 
     public void setHasBothIntensities( boolean hasBothIntensities ) {
-        this.hasBothIntensities = hasBothIntensities;
-    }
-
-    public void setHasBothIntensities( Boolean hasBothIntensities ) {
         this.hasBothIntensities = hasBothIntensities;
     }
 

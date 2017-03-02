@@ -18,20 +18,19 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.Securable;
-import gemma.gsec.model.SecureValueObject;
-
 import java.util.Collection;
 import java.util.HashSet;
 
+import gemma.gsec.model.Securable;
+import gemma.gsec.model.SecureValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
 
 /**
  * @author tvrossum
  * @version $Id$
  */
-public class ExpressionExperimentSetValueObject implements SecureValueObject,
-        Comparable<ExpressionExperimentSetValueObject> {
+public class ExpressionExperimentSetValueObject
+        implements SecureValueObject, Comparable<ExpressionExperimentSetValueObject> {
 
     private static final long serialVersionUID = -6852364688337216390L;
 
@@ -65,6 +64,7 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
     private boolean userCanWrite = false;
 
     private boolean userOwned = false;
+
     public ExpressionExperimentSetValueObject() {
         this.expressionExperimentIds = new HashSet<Long>();
     }
@@ -91,6 +91,7 @@ public class ExpressionExperimentSetValueObject implements SecureValueObject,
         } else if ( !id.equals( other.id ) ) return false;
         return true;
     }
+
     public String getDescription() {
         return description;
     }

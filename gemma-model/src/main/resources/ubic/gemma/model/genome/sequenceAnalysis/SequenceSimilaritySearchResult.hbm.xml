@@ -70,13 +70,13 @@
          <property name="blockCount" type="java.lang.Integer">
             <column name="BLOCK_COUNT" not-null="false" unique="false" sql-type="INTEGER"/>
          </property>
-         <property name="blockSizes" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <property name="blockSizes" type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="BLOCK_SIZES" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
          </property>
-         <property name="queryStarts" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <property name="queryStarts" type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="QUERY_STARTS" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
          </property>
-         <property name="targetStarts" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+         <property name="targetStarts" type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="TARGET_STARTS" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
          </property>
       </subclass>

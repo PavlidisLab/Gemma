@@ -49,6 +49,7 @@ public class LinkCreator {
     private Constructor<? extends SupportDetails> supportDetailsFactoryMethod;
     private Constructor<? extends SupportDetails> supportDetailsFactoryMethodByIds;
 
+    @SuppressWarnings("unchecked")
     public LinkCreator( Taxon taxon ) {
 
         if ( TaxonUtility.isMouse( taxon ) ) {
@@ -90,7 +91,7 @@ public class LinkCreator {
     // throw new RuntimeException( e );
     // }
     // }
-    
+
     public Gene2GeneCoexpression create( double w, Long firstGene, Long secondGene ) {
 
         try {

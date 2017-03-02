@@ -40,6 +40,7 @@ public class UnitServiceImpl implements UnitService {
      * @return
      * @see ubic.gemma.model.common.measurement.UnitDao#create(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional
     public Collection<Unit> create( Collection<Unit> entities ) {
@@ -94,6 +95,7 @@ public class UnitServiceImpl implements UnitService {
      * @return
      * @see ubic.gemma.model.common.measurement.UnitDao#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<Unit> loadAll() {

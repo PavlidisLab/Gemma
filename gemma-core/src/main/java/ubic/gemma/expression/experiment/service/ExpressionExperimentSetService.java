@@ -130,10 +130,13 @@ public interface ExpressionExperimentSetService {
      * Security filtering is handled by the call to load the set entities
      * ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.loadAllExperimentSetsWithTaxon()
      * 
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
      * @return ExpressionExperimentSets that have more than 1 experiment in them & have a taxon value.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects();
+    public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects( boolean loadEEIds );
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them. Security at DAO level.
@@ -149,10 +152,13 @@ public interface ExpressionExperimentSetService {
     /**
      * load the user's sets
      * 
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects();
+    public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects( boolean loadEEIds );
 
     /**
      * @return
@@ -179,13 +185,38 @@ public interface ExpressionExperimentSetService {
     public ExpressionExperimentSetValueObject loadValueObject( Long id );
 
     /**
-     * Get value objects for the given ids. The experimentIds are not filled in.
+     * Get a value object for the id param.
+     * 
+     * @param id
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
+     * @return null if id doesn't match an experiment set
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
+    public ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds );
+
+    /**
+     * Get value objects for the given ids. ExpressioNExperimentIDs are not filled in.
      * 
      * @param eeSetIds
      * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds );
+
+    /**
+     * Get value objects for the given ids.
+     * 
+     * @param eeSetIds
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+            boolean loadEEIds );
 
     /**
      * Security handled at DAO level.
@@ -223,8 +254,12 @@ public interface ExpressionExperimentSetService {
      * object's name and description.
      * 
      * @param eeSetVO
+     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
+     *        This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
+     *        EESets this might want to be avoided.
      * @return
      */
-    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO );
+    public ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
+            boolean loadEEIds );
 
 }

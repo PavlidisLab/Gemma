@@ -27,4 +27,9 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public abstract class AuditEventTypeImpl extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4165364023890515206L;
+
 }

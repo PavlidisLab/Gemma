@@ -47,7 +47,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.SequenceBinUtils;
 
@@ -146,9 +145,6 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private BioSequenceService bioSequenceService;
 
     @Autowired
-    private BlatResultService blatResultService;
-
-    @Autowired
     private Persister persisterHelper;
 
     /*
@@ -195,7 +191,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      * .expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon, java.util.Collection)
      */
     @Override
-    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon, Collection<BlatResult> rawBlatResults ) {
+    public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon,
+            Collection<BlatResult> rawBlatResults ) {
 
         log.info( "Looking for old results to remove..." );
 
@@ -282,8 +279,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
-            throw new IllegalArgumentException( ( taxaOnArray == null ? "?" : taxaOnArray.size() )
-                    + " taxon found for " + arrayDesign + " specifiy which taxon to run" );
+            throw new IllegalArgumentException( ( taxaOnArray == null ? "?" : taxaOnArray.size() ) + " taxon found for "
+                    + arrayDesign + " specifiy which taxon to run" );
 
         }
         return taxon;
@@ -387,6 +384,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
      *        mouse to human)
      * @return
      */
+    @SuppressWarnings("unchecked")
     private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
 
         Collection<Integer> seen = new HashSet<>();
@@ -421,7 +419,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
                 pl.setNucleotideLength( br.getTargetEnd().intValue() - br.getTargetStart().intValue() );
                 pl.setStrand( br.getStrand() );
                 br.setTargetAlignedRegion( pl );
-                pl.setBin( SequenceBinUtils.binFromRange( br.getTargetStart().intValue(), br.getTargetEnd().intValue() ) );
+                pl.setBin(
+                        SequenceBinUtils.binFromRange( br.getTargetStart().intValue(), br.getTargetEnd().intValue() ) );
             }
 
         }

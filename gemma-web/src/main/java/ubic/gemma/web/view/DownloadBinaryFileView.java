@@ -71,6 +71,7 @@ public class DownloadBinaryFileView extends AbstractView {
         InputStream reader = new BufferedInputStream( new FileInputStream( f ) );
         FileCopyUtils.copy( reader, response.getOutputStream() );
         response.flushBuffer();
+        reader.close();
     }
 
 }

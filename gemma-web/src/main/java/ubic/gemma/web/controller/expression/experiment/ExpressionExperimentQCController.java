@@ -82,6 +82,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.doublealgo.Formatter;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
+import cern.jet.stat.Descriptive;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
@@ -109,16 +114,10 @@ import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.view.TextView;
-import cern.colt.list.DoubleArrayList;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.doublealgo.Formatter;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
-import cern.jet.stat.Descriptive;
 
 //
 /**
@@ -154,9 +153,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     @Autowired
     private SVDService svdService;
-
-    @Autowired
-    private ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     @Autowired
     private MeanVarianceService meanVarianceService;
@@ -455,8 +451,8 @@ public class ExpressionExperimentQCController extends BaseController {
             matrix.viewColumn( 0 ).assign( means );
             matrix.viewColumn( 1 ).assign( variances );
 
-            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null, new String[] { "mean",
-                    "variance" }, null, null, null, null );
+            String matrixString = new Formatter( "%1.2G" ).toTitleString( matrix, null,
+                    new String[] { "mean", "variance" }, null, null, null, null );
             ModelAndView mav = new ModelAndView( new TextView() );
             mav.addObject( TextView.TEXT_PARAM, matrixString );
 
@@ -556,7 +552,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param width
      * @param height
      */
-    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
+    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width,
+            double height ) {
         chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
     }
 
@@ -731,8 +728,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId, String factorName )
-            throws FileNotFoundException, IOException {
+    private XYSeries getDiffExPvalueHistXYSeries( ExpressionExperiment ee, Long analysisId, Long rsId,
+            String factorName ) throws FileNotFoundException, IOException {
         if ( ee == null || analysisId == null || rsId == null ) {
             log.warn( "Got invalid values: " + ee + " " + analysisId + " " + rsId + " " + factorName );
             return null;
@@ -765,8 +762,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @return
      */
     private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
-        DoubleArrayList eigenGeneL = new DoubleArrayList( ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj(
-                component ) ) );
+        DoubleArrayList eigenGeneL = new DoubleArrayList(
+                ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj( component ) ) );
         DescriptiveWithMissing.standardize( eigenGeneL );
         Double[] eigenGene = ArrayUtils.toObject( eigenGeneL.elements() );
         return eigenGene;
@@ -803,9 +800,8 @@ public class ExpressionExperimentQCController extends BaseController {
 
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
         double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        double[] loessX = bac.byteArrayToDoubles( mvr.getLowessX() );
-        double[] loessY = bac.byteArrayToDoubles( mvr.getLowessY() );
-        if ( means == null || variances == null || loessX == null || loessY == null ) {
+
+        if ( means == null || variances == null ) {
             return dataset;
         }
 
@@ -814,14 +810,7 @@ public class ExpressionExperimentQCController extends BaseController {
             series.add( means[i], variances[i] );
         }
 
-        // loess fit trend line
-        XYSeries loessSeries = new XYSeries( "Loess" );
-        for ( int i = 0; i < loessX.length; i++ ) {
-            loessSeries.add( loessX[i], loessY[i] );
-        }
-
         dataset.addSeries( series );
-        dataset.addSeries( loessSeries );
 
         return dataset;
     }
@@ -907,8 +896,8 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
-        Map<Long, ExperimentalFactor> efIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign()
-                .getExperimentalFactors() );
+        Map<Long, ExperimentalFactor> efIdMap = EntityUtils
+                .getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             boolean isContinous = ExperimentalDesignUtils.isContinuous( ef );
@@ -1172,9 +1161,6 @@ public class ExpressionExperimentQCController extends BaseController {
         // Set maximum plot range to Y_MAX + YRANGE * OFFSET to leave some extra white space
         final double OFFSET_FACTOR = 0.05f;
 
-        // MV plot filtering
-        final double ZSCORE_MAX = 2;
-
         // set the final image size to be the minimum of MAX_IMAGE_SIZE_PX or size
         final int MAX_IMAGE_SIZE_PX = 5;
 
@@ -1182,11 +1168,8 @@ public class ExpressionExperimentQCController extends BaseController {
             return false;
         }
 
-        // filter out extreme outliers by using a z-score cutoff, specially useful for GeneSpring data, e.g. GSE27262
-        MeanVarianceRelation filteredMvr = removeMVOutliers( mvr, ZSCORE_MAX );
-
         // get data points
-        XYSeriesCollection collection = getMeanVariance( filteredMvr );
+        XYSeriesCollection collection = getMeanVariance( mvr );
 
         if ( collection.getSeries().size() == 0 ) {
             return false;
@@ -1231,8 +1214,9 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getXYPlot().setRangeAxis( yAxis );
         chart.getXYPlot().setDomainAxis( xAxis );
 
-        int finalSize = ( int ) Math
-                .min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX, size * DEFAULT_QC_IMAGE_SIZE_PX );
+        int finalSize = ( int ) Math.min( MAX_IMAGE_SIZE_PX * DEFAULT_QC_IMAGE_SIZE_PX,
+                size * DEFAULT_QC_IMAGE_SIZE_PX );
+
         ChartUtilities.writeChartAsPNG( os, chart, finalSize, finalSize );
 
         return true;
@@ -1246,24 +1230,19 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param zscoreMax
      * @return
      */
+    @SuppressWarnings("unused")
     private MeanVarianceRelation removeMVOutliers( MeanVarianceRelation mvr, double zscoreMax ) {
         MeanVarianceRelation ret = MeanVarianceRelation.Factory.newInstance();
         ByteArrayConverter bac = new ByteArrayConverter();
 
         DoubleArrayList vars = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getVariances() ) );
         DoubleArrayList means = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getMeans() ) );
-        DoubleArrayList lowessXs = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getLowessX() ) );
-        DoubleArrayList lowessYs = new DoubleArrayList( bac.byteArrayToDoubles( mvr.getLowessY() ) );
 
         DoubleArrayList filteredMeans = new DoubleArrayList();
         DoubleArrayList filteredVars = new DoubleArrayList();
-        DoubleArrayList filteredLowessX = new DoubleArrayList();
-        DoubleArrayList filteredLowessY = new DoubleArrayList();
 
         DoubleArrayList zVars = zscore( vars );
         DoubleArrayList zMeans = zscore( means );
-
-        assert lowessXs.size() == zMeans.size(); // AIOB error sometimes for lowessXs?
 
         // clip outliers
         for ( int i = 0; i < zMeans.size(); i++ ) {
@@ -1274,17 +1253,11 @@ public class ExpressionExperimentQCController extends BaseController {
 
             filteredMeans.add( means.getQuick( i ) );
             filteredVars.add( vars.getQuick( i ) );
-            filteredLowessX.add( lowessXs.getQuick( i ) );
-            filteredLowessY.add( lowessYs.getQuick( i ) );
         }
 
-        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < "
-                + zscoreMax + ". Max lowessX,Y is (" + Descriptive.max( filteredLowessX ) + ","
-                + Descriptive.max( filteredLowessY ) + "). Max mean,variance is ( " + Descriptive.max( filteredMeans )
-                + "," + Descriptive.max( filteredVars ) + ")." );
+        log.debug( filteredMeans.size() + " (out of " + means.size() + ") MV points had mean or variance zscore < " + zscoreMax
+                + ". Max mean,variance is ( " + Descriptive.max( filteredMeans ) + "," + Descriptive.max( filteredVars ) + ")." );
 
-        ret.setLowessY( bac.doubleArrayToBytes( filteredLowessY ) );
-        ret.setLowessX( bac.doubleArrayToBytes( filteredLowessX ) );
         ret.setVariances( bac.doubleArrayToBytes( filteredVars ) );
         ret.setMeans( bac.doubleArrayToBytes( filteredMeans ) );
 
@@ -1297,8 +1270,7 @@ public class ExpressionExperimentQCController extends BaseController {
     private DoubleArrayList zscore( DoubleArrayList d ) {
         DoubleArrayList z = new DoubleArrayList();
         double mean = Descriptive.mean( d );
-        double sd = Descriptive.standardDeviation( Descriptive.variance( d.size(), Descriptive.sum( d ),
-                Descriptive.sumOfSquares( d ) ) );
+        double sd = Descriptive.standardDeviation( Descriptive.variance( d.size(), Descriptive.sum( d ), Descriptive.sumOfSquares( d ) ) );
         for ( int i = 0; i < d.size(); i++ ) {
             z.add( Math.abs( d.getQuick( i ) - mean ) / sd );
         }
@@ -1446,7 +1418,8 @@ public class ExpressionExperimentQCController extends BaseController {
     private void writePlaceholderThumbnailImage( OutputStream os, int placeholderSize ) throws IOException {
         // Make the image a bit bigger to account for the empty space around the generated image.
         // If we can find a way to remove this empty space, we don't need to make the chart bigger.
-        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9, BufferedImage.TYPE_INT_RGB );
+        BufferedImage buffer = new BufferedImage( placeholderSize + 16, placeholderSize + 9,
+                BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.white );
         g.fillRect( 0, 0, placeholderSize + 16, placeholderSize + 9 );
@@ -1515,8 +1488,8 @@ public class ExpressionExperimentQCController extends BaseController {
         XYItemRenderer renderer = chart.getXYPlot().getRenderer();
         renderer.setBasePaint( Color.white );
 
-        ChartUtilities
-                .writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ), DEFAULT_QC_IMAGE_SIZE_PX );
+        ChartUtilities.writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ),
+                DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
 
@@ -1530,8 +1503,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param size
      * @throws IOException
      */
-    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId,
-            Long rsId, String factorName, int size ) throws IOException {
+    private boolean writePValueHistThumbnailImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
+            String factorName, int size ) throws IOException {
         XYSeries series = getDiffExPvalueHistXYSeries( ee, analysisId, rsId, factorName );
 
         if ( series == null ) {

@@ -104,14 +104,14 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
      */
     public ArrayDesignValueObject( ArrayDesignValueObject otherBean ) {
         this( otherBean.getName(), otherBean.getShortName(), otherBean.getDesignElementCount(), otherBean.getTaxon(),
-                otherBean.getExpressionExperimentCount(), otherBean.getHasSequenceAssociations(), otherBean
-                        .getHasBlatAssociations(), otherBean.getHasGeneAssociations(), otherBean.getId(), otherBean
-                        .getColor(), otherBean.getNumProbeSequences(), otherBean.getNumProbeAlignments(), otherBean
-                        .getNumProbesToGenes(), otherBean.getNumGenes(), otherBean.getDateCached(), otherBean
-                        .getLastSequenceUpdate(), otherBean.getLastSequenceAnalysis(), otherBean.getLastGeneMapping(),
+                otherBean.getExpressionExperimentCount(), otherBean.getHasSequenceAssociations(),
+                otherBean.getHasBlatAssociations(), otherBean.getHasGeneAssociations(), otherBean.getId(),
+                otherBean.getColor(), otherBean.getNumProbeSequences(), otherBean.getNumProbeAlignments(),
+                otherBean.getNumProbesToGenes(), otherBean.getNumGenes(), otherBean.getDateCached(),
+                otherBean.getLastSequenceUpdate(), otherBean.getLastSequenceAnalysis(), otherBean.getLastGeneMapping(),
                 otherBean.getIsSubsumed(), otherBean.getIsSubsumer(), otherBean.getIsMerged(), otherBean.getIsMergee(),
-                otherBean.getLastRepeatMask(), otherBean.getTroubled(), otherBean.getValidated(), otherBean
-                        .getDateCreated(), otherBean.getDescription(), otherBean.getTechnologyType() );
+                otherBean.getLastRepeatMask(), otherBean.getTroubled(), otherBean.getValidated(),
+                otherBean.getDateCreated(), otherBean.getDescription(), otherBean.getTechnologyType() );
     }
 
     /**
@@ -132,10 +132,9 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
             Integer expressionExperimentCount, Boolean hasSequenceAssociations, Boolean hasBlatAssociations,
             Boolean hasGeneAssociations, Long id, String color, String numProbeSequences, String numProbeAlignments,
             String numProbesToGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
-            java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed,
-            Boolean isSubsumer, Boolean isMerged, Boolean isMergee, java.util.Date lastRepeatMask,
-            boolean troubleEvent, boolean validationEvent, java.util.Date dateCreated, String description,
-            String technologyType ) {
+            java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed, Boolean isSubsumer,
+            Boolean isMerged, Boolean isMergee, java.util.Date lastRepeatMask, boolean troubleEvent,
+            boolean validationEvent, java.util.Date dateCreated, String description, String technologyType ) {
         this.name = name;
         this.shortName = shortName;
         this.designElementCount = designElementCount;
@@ -455,7 +454,10 @@ public class ArrayDesignValueObject implements java.io.Serializable, Comparable<
 
     /**
      * The last uncleared TroubleEvent associated with this ArrayDesign.
+     * 
+     * @deprecated use {@link(getTroubled())} instead.
      */
+    @Deprecated
     public Boolean getTroubleEvent() {
         return this.troubled;
     }

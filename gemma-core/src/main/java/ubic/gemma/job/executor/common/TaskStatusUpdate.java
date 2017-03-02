@@ -24,6 +24,10 @@ import java.util.Date;
  */
 public class TaskStatusUpdate implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4588971216164467492L;
     //TODO: maybe add message as well. ex: Cancelled due to running for too long.
     private SubmittedTask.Status status;
     private Date statusChangeTime;

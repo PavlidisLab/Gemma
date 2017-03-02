@@ -31,6 +31,11 @@ import ubic.gemma.model.common.auditAndSecurity.Status;
 public abstract class Characteristic extends Auditable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7242166109264718620L;
+
+    /**
      * Constructs new instances of {@link Characteristic}.
      */
     public static final class Factory {
@@ -45,8 +50,8 @@ public abstract class Characteristic extends Auditable {
          * Constructs a new instance of {@link Characteristic}, taking all possible properties (except the
          * identifier(s))as arguments.
          */
-        public static Characteristic newInstance( String name, String description, AuditTrail auditTrail,
-                Status status, String value, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
+        public static Characteristic newInstance( String name, String description, AuditTrail auditTrail, Status status,
+                String value, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
             final Characteristic entity = new CharacteristicImpl();
             entity.setName( name );
             entity.setDescription( description );

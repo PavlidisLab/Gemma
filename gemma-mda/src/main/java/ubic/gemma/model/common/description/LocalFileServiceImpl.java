@@ -142,9 +142,8 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.common.description.LocalFileServiceBase#handleUpdate(ubic.gemma.model.common.description.LocalFile
-     * )
+     * @see ubic.gemma.model.common.description.LocalFileServiceBase#handleUpdate(ubic.gemma.model.common.description.
+     * LocalFile )
      */
     @Override
     protected void handleUpdate( LocalFile localFile ) {
@@ -156,6 +155,7 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
      * 
      * @see ubic.gemma.model.common.description.LocalFileService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<LocalFile> loadAll() {
         return ( Collection<LocalFile> ) this.getLocalFileDao().loadAll();

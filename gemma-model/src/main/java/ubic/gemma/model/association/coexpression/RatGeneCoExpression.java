@@ -26,6 +26,11 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 public abstract class RatGeneCoExpression extends Gene2GeneCoexpression {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -151363121627382446L;
+
+    /**
      * Constructs new instances of {@link RatGeneCoExpression}.
      */
     public static final class Factory {

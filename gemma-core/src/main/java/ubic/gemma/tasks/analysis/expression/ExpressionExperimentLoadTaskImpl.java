@@ -33,6 +33,7 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
     @Autowired
     private PreprocessorService preprocessorService;
 
+    @SuppressWarnings("unchecked")
     @Override
     public TaskResult execute() {
         // ExpressionExperimentLoadTaskCommand taskCommand = this.taskCommand;
@@ -47,8 +48,8 @@ public class ExpressionExperimentLoadTaskImpl extends AbstractTask<TaskResult, E
 
         TaskResult result;
         if ( loadPlatformOnly ) {
-            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService.fetchAndLoad(
-                    accession, true, doSampleMatching, aggressiveQtRemoval, splitByPlatform );
+            Collection<ArrayDesign> arrayDesigns = ( Collection<ArrayDesign> ) geoDatasetService
+                    .fetchAndLoad( accession, true, doSampleMatching, aggressiveQtRemoval, splitByPlatform );
             ArrayList<ArrayDesign> minimalDesigns = null;
             if ( arrayDesigns != null ) {
                 /* Don't send the full array designs to space. Instead, create a minimal result. */

@@ -208,7 +208,8 @@ public class ShellDelegatingBlat implements Blat {
         }
         String outputPath = getTmpPslFilePath( seqName );
 
-        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath, choosePortForQuery( taxon, sensitive ) );
+        Collection<BlatResult> results = gfClient( querySequenceFile, outputPath,
+                choosePortForQuery( taxon, sensitive ) );
 
         ExternalDatabase searchedDatabase = getSearchedGenome( taxon );
         for ( BlatResult result : results ) {
@@ -416,10 +417,10 @@ public class ShellDelegatingBlat implements Blat {
      * @see ubic.gemma.apps.Blat#startServer(ubic.gemma.apps.ShellDelegatingBlat.BlattableGenome, int)
      */
     @Override
-    @SuppressWarnings("unused")
     public void startServer( BlattableGenome genome, int port ) throws IOException {
+        Socket socket = null;
         try {
-            new Socket( host, port );
+            socket = new Socket( host, port );
             log.info( "There is already a server on port " + port );
             this.doShutdown = false;
         } catch ( UnknownHostException e ) {
@@ -442,6 +443,10 @@ public class ShellDelegatingBlat implements Blat {
 
             }
 
+        } finally {
+            if ( socket != null ) {
+                socket.close();
+            }
         }
     }
 
@@ -461,7 +466,8 @@ public class ShellDelegatingBlat implements Blat {
         // serverProcess.destroy();
         try {
             // this doesn't work unless the server was invoked with the option "-canStop"
-            Process server = Runtime.getRuntime().exec( this.getGfServerExe() + " stop " + this.getHost() + " " + port );
+            Process server = Runtime.getRuntime()
+                    .exec( this.getGfServerExe() + " stop " + this.getHost() + " " + port );
             server.waitFor();
             int exit = server.exitValue();
             log.info( "Server on port " + port + " shut down with exit value " + exit );
@@ -524,8 +530,8 @@ public class ShellDelegatingBlat implements Blat {
      */
     private Collection<BlatResult> execGfClient( File querySequenceFile, String outputPath, int portToUse )
             throws IOException {
-        final String cmd = gfClientExe + " -nohead -minScore=" + MIN_SCORE + " " + host + " " + portToUse + " "
-                + seqDir + " " + querySequenceFile.getAbsolutePath() + " " + outputPath;
+        final String cmd = gfClientExe + " -nohead -minScore=" + MIN_SCORE + " " + host + " " + portToUse + " " + seqDir
+                + " " + querySequenceFile.getAbsolutePath() + " " + outputPath;
         log.info( cmd );
 
         final Process run = Runtime.getRuntime().exec( cmd );
@@ -664,7 +670,8 @@ public class ShellDelegatingBlat implements Blat {
             FutureTask<Boolean> blatThread = new FutureTask<Boolean>( new Callable<Boolean>() {
                 @Override
                 public Boolean call() {
-                    GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(), outputPath );
+                    GfClientCall( host, Integer.toString( portToUse ), seqDir, querySequenceFile.getPath(),
+                            outputPath );
                     return true;
                 }
             } );

@@ -18,6 +18,14 @@
  */
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.collections.CollectionUtils;
@@ -41,14 +49,6 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.EntityUtils;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
  * them in:
@@ -69,13 +69,13 @@ import java.util.Set;
  * In addition, EEs can be excluded based on a list given in a separate file.
  * 
  * @author Paul
- * @version $Id$
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
+
     protected ExpressionExperimentService eeService;
 
     protected Collection<BioAssaySet> excludeExperiments;
@@ -113,9 +113,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option expOption = OptionBuilder
-                .hasArg()
-                .withArgName( "shortname" )
+        Option expOption = OptionBuilder.hasArg().withArgName( "shortname" )
                 .withDescription(
                         "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
                                 + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
@@ -123,9 +121,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         addOption( expOption );
 
-        Option eeFileListOption = OptionBuilder
-                .hasArg()
-                .withArgName( "file" )
+        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "file" )
                 .withDescription(
                         "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
@@ -137,7 +133,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         addOption( eeSetOption );
 
         Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
-                .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
+                .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" )
+                .create( 't' );
         addOption( taxonOption );
 
         Option excludeEeOption = OptionBuilder.hasArg().withArgName( "file" )
@@ -167,7 +164,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     /**
      * @param ee
-     * @return true if the expression experiment has an active 'trouble' flag
+     * @return true if the expression experiment has troubled status, or its parent array design has troubled status.
      */
     protected boolean isTroubled( BioAssaySet ee ) {
         Collection<BioAssaySet> eec = new HashSet<BioAssaySet>();
@@ -373,8 +370,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
         Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
-        Collection<SearchResult> eeSearchResults = searchService.search(
-                SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
+        Collection<SearchResult> eeSearchResults = searchService
+                .search( SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
         log.info( ees.size() + " Expression experiments matched '" + query + "'" );
 
@@ -442,6 +439,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     /**
+     * removes EEs that are troubled, or their parent Array design is troubled.
+     * 
      * @param ees
      */
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {

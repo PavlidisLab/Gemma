@@ -76,6 +76,7 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
 
         // Negative limit, assumes IDs have been sorted in decreasing order
         limit = -1;
+        @SuppressWarnings("unchecked")
         List<Long> idsRev = ( ArrayList<Long> ) ids.clone();
         Collections.reverse( idsRev );
         ret = eeController.loadStatusSummaries( -1L, idsRev, limit, null, true );

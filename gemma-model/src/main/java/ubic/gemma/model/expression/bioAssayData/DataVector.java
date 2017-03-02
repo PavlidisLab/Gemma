@@ -25,6 +25,10 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
  */
 public abstract class DataVector implements java.io.Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5823802521832643417L;
     private byte[] data;
     private Long id;
 

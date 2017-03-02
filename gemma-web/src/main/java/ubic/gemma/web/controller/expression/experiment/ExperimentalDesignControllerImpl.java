@@ -516,6 +516,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         request.setAttribute( "id", designId );
 
         ee = expressionExperimentService.thawLite( ee );
+        
+        // strip white spaces
+        String desc = ee.getDescription();
+        ee.setDescription( StringUtils.strip( desc ) );
 
         ModelAndView mnv = new ModelAndView( "experimentalDesign.detail" );
         mnv.addObject( "taxonId", expressionExperimentService.getTaxon( ee ).getId() );

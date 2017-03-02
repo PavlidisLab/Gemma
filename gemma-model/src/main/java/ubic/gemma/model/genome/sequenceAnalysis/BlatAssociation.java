@@ -24,6 +24,11 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 public abstract class BlatAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -4620329339018727407L;
+
+    /**
      * Constructs new instances of {@link BlatAssociation}.
      */
     public static final class Factory {

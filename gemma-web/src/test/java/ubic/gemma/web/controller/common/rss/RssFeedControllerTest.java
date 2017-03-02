@@ -88,6 +88,7 @@ public class RssFeedControllerTest extends BaseSpringWebTest {
         Map<String, Object> model = mav.getModel();
         assertNotNull( model );
 
+        @SuppressWarnings("unchecked")
         Map<ExpressionExperiment, String> retreivedExperiments = ( Map<ExpressionExperiment, String> ) model
                 .get( "feedContent" );
         Integer retreivedUpdateCount = ( Integer ) model.get( "updateCount" );

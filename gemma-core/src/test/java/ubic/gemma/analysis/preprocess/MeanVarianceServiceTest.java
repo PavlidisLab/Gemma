@@ -143,31 +143,21 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // warning: order may have changed
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
         double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        double[] lowessX = bac.byteArrayToDoubles( mvr.getLowessX() );
-        double[] lowessY = bac.byteArrayToDoubles( mvr.getLowessY() );
         Arrays.sort( means );
         Arrays.sort( variances );
-        Arrays.sort( lowessX );
-        Arrays.sort( lowessY );
 
         int expectedLength = 97; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
         expectedLength = 95; // duplicate rows removed
-        assertEquals( expectedLength, lowessX.length );
-        assertEquals( expectedLength, lowessY.length );
 
         int idx = 0;
         assertEquals( -1.9858, means[idx], 0.0001 );
         assertEquals( 0, variances[idx], 0.0001 );
-        assertEquals( -1.9858, lowessX[idx], 0.0001 );
-        assertEquals( 0.006861, lowessY[idx], 0.0001 );
 
         idx = expectedLength - 1;
         assertEquals( 0.02509, means[idx], 0.0001 );
         assertEquals( 0.09943, variances[idx], 0.0001 );
-        assertEquals( 0.05115, lowessX[idx], 0.0001 );
-        assertEquals( 0.03033, lowessY[idx], 0.0001 );
 
     }
 
@@ -203,30 +193,20 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // warning: order may have changed
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
         double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        double[] lowessX = bac.byteArrayToDoubles( mvr.getLowessX() );
-        double[] lowessY = bac.byteArrayToDoubles( mvr.getLowessY() );
         Arrays.sort( means );
         Arrays.sort( variances );
-        Arrays.sort( lowessX );
-        Arrays.sort( lowessY );
 
         int expectedLength = 75; // after filtering
         assertEquals( expectedLength, means.length );
         assertEquals( expectedLength, variances.length );
-        assertEquals( expectedLength, lowessX.length );
-        assertEquals( expectedLength, lowessY.length );
 
         int idx = 0;
         assertEquals( -0.34836, means[idx], 0.0001 );
         assertEquals( 0.001569, variances[idx], 0.0001 );
-        assertEquals( -0.34836, lowessX[idx], 0.0001 );
-        assertEquals( 0.00925, lowessY[idx], 0.0001 );
 
         idx = expectedLength - 1;
         assertEquals( 0.05115, means[idx], 0.0001 );
         assertEquals( 0.12014, variances[idx], 0.0001 );
-        assertEquals( 0.05115, lowessX[idx], 0.0001 );
-        assertEquals( 0.03532, lowessY[idx], 0.0001 );
 
     }
 
@@ -284,33 +264,23 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // warning: order may have changed
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
         double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        double[] lowessX = bac.byteArrayToDoubles( mvr.getLowessX() );
-        double[] lowessY = bac.byteArrayToDoubles( mvr.getLowessY() );
         Arrays.sort( means );
         Arrays.sort( variances );
-        Arrays.sort( lowessX );
-        Arrays.sort( lowessY );
 
         // check sizes
         int expectedMeanVarianceLength = 75;
         int expectedLowessLength = 75; // NAs removed
         assertEquals( expectedMeanVarianceLength, means.length );
         assertEquals( expectedMeanVarianceLength, variances.length );
-        assertEquals( expectedLowessLength, lowessX.length );
-        assertEquals( expectedLowessLength, lowessY.length );
 
         // check results
         int idx = 0;
         assertEquals( -0.3484, means[idx], 0.0001 );
         assertEquals( 0.001569, variances[idx], 0.0001 );
-        assertEquals( -0.3484, lowessX[idx], 0.0001 );
-        assertEquals( 0.0092484, lowessY[idx], 0.0001 );
 
         idx = expectedLowessLength - 1;
         assertEquals( 0.05115, means[idx], 0.0001 );
         assertEquals( 0.12014, variances[idx], 0.0001 );
-        assertEquals( 0.05115, lowessX[idx], 0.0001 );
-        assertEquals( 0.03532, lowessY[idx], 0.0001 );
 
     }
 
@@ -341,8 +311,8 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        try (InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
+        try (InputStream countData = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );
 
                 InputStream rpkmData = this.getClass().getResourceAsStream(
                         "/data/loader/expression/flatfileload/GSE29006_expression_RPKM.test.txt" );) {
@@ -375,32 +345,22 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         // warning: order may have changed
         double[] means = bac.byteArrayToDoubles( mvr.getMeans() );
         double[] variances = bac.byteArrayToDoubles( mvr.getVariances() );
-        double[] lowessX = bac.byteArrayToDoubles( mvr.getLowessX() );
-        double[] lowessY = bac.byteArrayToDoubles( mvr.getLowessY() );
         Arrays.sort( means );
         Arrays.sort( variances );
-        Arrays.sort( lowessX );
-        Arrays.sort( lowessY );
 
         // check sizes
         int expectedMeanVarianceLength = 199;
         int expectedLowessLength = 197; // NAs removed
         assertEquals( expectedMeanVarianceLength, means.length );
         assertEquals( expectedMeanVarianceLength, variances.length );
-        assertEquals( expectedLowessLength, lowessX.length );
-        assertEquals( expectedLowessLength, lowessY.length );
 
         int idx = 0;
         assertEquals( 1.037011, means[idx], 0.0001 );
         assertEquals( 0.00023724336, variances[idx], 0.000001 );
-        assertEquals( 1.03701, lowessX[idx], 0.0001 );
-        assertEquals( 0.02774, lowessY[idx], 0.0001 );
 
         idx = expectedLowessLength - 1;
         assertEquals( 15.23313, means[idx], 0.0001 );
         assertEquals( 4.84529, variances[idx], 0.0001 );
-        assertEquals( 15.59225, lowessX[idx], 0.0001 );
-        assertEquals( 0.96647, lowessY[idx], 0.0001 );
     }
 
     @Test

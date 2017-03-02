@@ -19,8 +19,6 @@
 
 package ubic.gemma.analysis.expression.diff;
 
-import gemma.gsec.SecurityService;
-
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -53,9 +51,6 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-    @Autowired
-    private SecurityService securityService;
-
     /*
      * (non-Javadoc)
      * 
@@ -76,8 +71,8 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
 
         Collection<ExpressionAnalysisResultSet> resultSetsIncluded = metaAnalysis.getResultSetsIncluded();
 
-        analysisVO
-                .setIncludedResultSetsInfo( new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(
+        analysisVO.setIncludedResultSetsInfo(
+                new HashSet<GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject>(
                         resultSetsIncluded.size() ) );
 
         for ( ExpressionAnalysisResultSet resultSetIncluded : resultSetsIncluded ) {
@@ -88,8 +83,8 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
             analysisVO.getIncludedResultSetsInfo().add( includedResultSetInfo );
         }
 
-        analysisVO.setResults( new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>( metaAnalysis
-                .getResults().size() ) );
+        analysisVO.setResults( new HashSet<GeneDifferentialExpressionMetaAnalysisResultValueObject>(
+                metaAnalysis.getResults().size() ) );
 
         for ( GeneDifferentialExpressionMetaAnalysisResult result : metaAnalysis.getResults() ) {
             GeneDifferentialExpressionMetaAnalysisResultValueObject resultVO = new GeneDifferentialExpressionMetaAnalysisResultValueObject();
@@ -122,8 +117,8 @@ public class GeneDiffExMetaAnalysisHelperServiceImpl implements GeneDiffExMetaAn
             analysisVO = null;
         } else {
             analysisVO = new GeneDifferentialExpressionMetaAnalysisDetailValueObject();
-            analysisVO.setIncludedResultSetsInfo( this.geneDiffExMetaAnalysisService
-                    .findIncludedResultSetsInfoById( analysisId ) );
+            analysisVO.setIncludedResultSetsInfo(
+                    this.geneDiffExMetaAnalysisService.findIncludedResultSetsInfoById( analysisId ) );
             analysisVO.setResults( this.geneDiffExMetaAnalysisService.findResultsById( analysisId ) );
         }
 

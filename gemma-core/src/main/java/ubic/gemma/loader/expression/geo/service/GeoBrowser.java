@@ -75,14 +75,14 @@ public class GeoBrowser {
     // mode=tsv : tells GEO to give us tab delimited file -- PP changed to csv
     // because of garbled tabbed lines returned
     // from GEO.
-    private String GEO_BROWSE_URL = "http://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
+    private String GEO_BROWSE_URL = "https://www.ncbi.nlm.nih.gov/geo/browse/?view=series&zsort=date&mode=csv&page=";
     private String GEO_BROWSE_SUFFIX = "&display=";
 
     private String[] DATE_FORMATS = new String[] { "MMM dd, yyyy" };
 
     // Used by getGeoRecordsBySearchTerm (will look for GSE entries only)
-    private static String ESEARCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
-    private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
+    private static String ESEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=gds&term=gse[ETYP]+AND+";
+    private static String EFETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=gds&";
 
     static DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 

@@ -25,97 +25,154 @@
       } );
 
    } );
+
+   $( document ).ready( function() {
+      $( 'i[title]' ).qtip();
+   } );
 </script>
 </head>
-<body style="padding: 20px; margin: 20px;">
-	<h2 style="margin: 10px;">
-		<fmt:message key="compositeSequence.title" />
-		: ${ compositeSequence.name} on <a href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }">
-			${compositeSequence.arrayDesign.shortName} </a> [${ compositeSequence.arrayDesign.name}]
+<body>
+	<div class="padded">
+		<div class="v-padded">
+			<h2>
+				<fmt:message key="compositeSequence.title" />
+				: ${ compositeSequence.name} on
+				<a
+					href="/Gemma/arrays/showArrayDesign.html?id=${ compositeSequence.arrayDesign.id }">
+					${compositeSequence.arrayDesign.shortName} </a>
+				[${ compositeSequence.arrayDesign.name}]
 
-	</h2>
+			</h2>
+		</div>
 
-	<table style="margin: 20px;">
-		<tr>
-			<td valign="top"><b> <fmt:message key="compositeSequence.description" /> <a class="helpLink" href="#"
-					onClick="showHelpTip(event, 'Description for the probe, usually provided by the manufacturer. It might not match the sequence annotation!'); return false"><img
-						src="/Gemma/images/help.png" /> </a>
-			</b></td>
-			<td><c:choose>
-					<c:when test="${not empty compositeSequence.description}">${compositeSequence.description}</c:when>
-					<c:otherwise>No description available</c:otherwise>
-				</c:choose></td>
-		</tr>
+		<table class="detail row-separated pad-cols info-boxes">
+			<tr>
+				<td valign="top" align="right">
+					<b> <fmt:message key="compositeSequence.description" /> :
+					</b>
+				</td>
+				<td>
+					<i class="qtp fa fa-question-circle fa-fw"
+						title="Description for the probe, usually provided by the manufacturer. It might not match the sequence annotation!">
+					</i>
+				</td>
+				<td>
+					<c:choose>
+						<c:when test="${not empty compositeSequence.description}">${compositeSequence.description}</c:when>
+						<c:otherwise>No description available</c:otherwise>
+					</c:choose>
+				</td>
+			</tr>
 
-		<tr>
-			<td valign="top"><b> Taxon </b></td>
-			<td><c:choose>
-					<c:when test="${not empty compositeSequence.biologicalCharacteristic.taxon}">
+			<tr>
+				<td valign="top" align="right">
+					<b> Taxon : </b>
+				</td>
+				<td></td>
+				<td>
+					<c:choose>
+						<c:when
+							test="${not empty compositeSequence.biologicalCharacteristic.taxon}">
 						${compositeSequence.biologicalCharacteristic.taxon.commonName} - 	${compositeSequence.biologicalCharacteristic.taxon.scientificName}
 						</c:when>
-					<c:otherwise>
+						<c:otherwise>
 						[Taxon missing]
 						</c:otherwise>
-				</c:choose></td>
-		</tr>
-		<tr>
-			<td valign="top"><b> Sequence Type </b> <a class="helpLink" href="#"
-				onClick="showHelpTip(event, 'The type of this sequence as recorded in our system'); return false"><img
-					src="/Gemma/images/help.png" /> </a></td>
-			<td><c:choose>
-					<c:when test="${not empty compositeSequence.biologicalCharacteristic}">
-						<spring:bind path="compositeSequence.biologicalCharacteristic.type">
-							<spring:transform value="${compositeSequence.biologicalCharacteristic.type}">
-							</spring:transform>
-						</spring:bind>
-					</c:when>
-					<c:otherwise>
+					</c:choose>
+				</td>
+			</tr>
+			<tr>
+				<td valign="top" align="right">
+					<b> Sequence Type : </b>
+				</td>
+				<td>
+					<i class="qtp fa fa-question-circle fa-fw"
+						title="The type of this sequence as recorded in our system"> </i>
+				</td>
+				<td>
+					<c:choose>
+						<c:when
+							test="${not empty compositeSequence.biologicalCharacteristic}">
+							<spring:bind
+								path="compositeSequence.biologicalCharacteristic.type">
+								<spring:transform
+									value="${compositeSequence.biologicalCharacteristic.type}">
+								</spring:transform>
+							</spring:bind>
+						</c:when>
+						<c:otherwise>
 									 [Not available] 
 								</c:otherwise>
-				</c:choose></td>
-		</tr>
-		<tr>
-			<td valign="top"><b> Sequence name <a class="helpLink" href="#"
-					onClick="return showHelpTip(event, 'Name of the sequence in our system.')"><img src="/Gemma/images/help.png" />
-				</a>
-			</b></td>
-			<td><c:choose>
-					<c:when test="${not empty compositeSequence.biologicalCharacteristic.name}">${ compositeSequence.biologicalCharacteristic.name}</c:when>
-					<c:otherwise>No name availaable</c:otherwise>
-				</c:choose></td>
-		</tr>
-		<tr>
-			<td valign="top"><b> Sequence description </b><a class="helpLink" href="#"
-				onClick="return showHelpTip(event, 'Description of the sequence in our system.')"><img
-					src="/Gemma/images/help.png" /> </a></td>
-			<td><c:choose>
-					<c:when test="${not empty compositeSequence.biologicalCharacteristic.description}">
+					</c:choose>
+				</td>
+			</tr>
+			<tr>
+				<td valign="top" align="right">
+					<b> Sequence name : </b>
+				</td>
+				<td>
+					<i class="qtp fa fa-question-circle fa-fw"
+						title='Name of the sequence in our system.'> </i>
+				</td>
+				<td>
+					<c:choose>
+						<c:when
+							test="${not empty compositeSequence.biologicalCharacteristic.name}">${ compositeSequence.biologicalCharacteristic.name}</c:when>
+						<c:otherwise>No name available</c:otherwise>
+					</c:choose>
+				</td>
+			</tr>
+			<tr>
+				<td valign="top" align="right">
+					<b> Sequence description : </b>
+				</td>
+				<td>
+					<i class="qtp fa fa-question-circle fa-fw"
+						title='Description of the sequence in our system.'> </i>
+				</td>
+				<td>
+					<c:choose>
+						<c:when
+							test="${not empty compositeSequence.biologicalCharacteristic.description}">
 						${ compositeSequence.biologicalCharacteristic.description}
 						</c:when>
-					<c:otherwise>No description availaable</c:otherwise>
-				</c:choose></td>
-		</tr>
-		<tr>
-			<td valign="top"><b> Sequence accession <a class="helpLink" href="#"
-					onClick="return showHelpTip(event, 'External accession for this sequence, if known')"><img
-						src="/Gemma/images/help.png" /> </a>
-			</b></td>
+						<c:otherwise>No description available</c:otherwise>
+					</c:choose>
+				</td>
+			</tr>
+			<tr>
+				<td valign="top" align="right">
+					<b> Sequence accession : </b>
+				</td>
+				<td>
+					<i class="qtp fa fa-question-circle fa-fw"
+						title='External accession for this sequence, if known'> </i>
+				</td>
+				<td></td>
+			</tr>
 
-		</tr>
-
-		<tr>
-			<td valign="top"><b> Sequence length </b></td>
-			<td><c:choose>
-					<c:when test="${not empty compositeSequence.biologicalCharacteristic.sequence}">
+			<tr>
+				<td valign="top" align="right">
+					<b> Sequence length : </b>
+				</td>
+				<td></td>
+				<td>
+					<c:choose>
+						<c:when
+							test="${not empty compositeSequence.biologicalCharacteristic.sequence}">
 						${fn:length(compositeSequence.biologicalCharacteristic.sequence)}
 						</c:when>
-					<c:otherwise>No sequence available</c:otherwise>
-				</c:choose></td>
-		</tr>
-	</table>
+						<c:otherwise>No sequence available</c:otherwise>
+					</c:choose>
+				</td>
+			</tr>
+		</table>
+
+		<hr class="normal">
 
 
-	<h3 style="padding: 5px;">Alignment information</h3>
-	<div style="padding: 10px;" id="probe-details"></div>
-	<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
+		<h3 style="padding: 5px;">Alignment information</h3>
+		<div style="padding: 10px;" id="probe-details"></div>
+		<input type="hidden" name="cs" id="cs" value="${compositeSequence.id}" />
+	</div>
 </body>

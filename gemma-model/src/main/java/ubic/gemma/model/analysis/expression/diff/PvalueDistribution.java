@@ -24,6 +24,11 @@ package ubic.gemma.model.analysis.expression.diff;
 public abstract class PvalueDistribution implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -4783507721422402289L;
+
+    /**
      * Constructs new instances of {@link PvalueDistribution}.
      */
     public static final class Factory {

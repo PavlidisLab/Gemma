@@ -27,6 +27,7 @@ import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -53,6 +54,11 @@ public class GeneOntologyServiceTest {
                         .getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) );
         assert is != null;
         gos.loadTermsInNameSpace( is );
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+        gos.shutDown();
     }
 
     @Test

@@ -43,6 +43,7 @@ public class ExternalDatabaseServiceImpl extends ubic.gemma.model.common.descrip
         return this.getExternalDatabaseDao().findOrCreate( externalDatabase );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExternalDatabase> handleLoadAll() {
         return ( Collection<ExternalDatabase> ) this.getExternalDatabaseDao().loadAll();

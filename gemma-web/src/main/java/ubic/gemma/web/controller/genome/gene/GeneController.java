@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.SortedSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -128,8 +127,8 @@ public class GeneController extends BaseController {
                 String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
 
                 Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject(
-                        mouseGene ), queryGeneSymbol, usingHomologue );
+                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl,
+                        new GeneValueObject( mouseGene ), queryGeneSymbol, usingHomologue );
 
             } catch ( IOException e ) {
                 log.warn( "Could not get ABA data: " + e );
@@ -144,34 +143,30 @@ public class GeneController extends BaseController {
      * @param geneId
      * @return
      */
-    public GeneValueObject loadGeneDetails( Long geneId ) {    	
-        //return geneCoreService.loadGeneDetails( geneId );
-    	GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
-    	Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService.findEvidenceByGeneId(
-                geneId, new HashSet<String>(), new EvidenceFilter( gvo.getTaxonId(), false, null ) );
-    	Iterator<EvidenceValueObject> iter = collEVO.iterator();
-    	Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<CharacteristicValueObject>();
-    	while(iter.hasNext())
-    	{
-    	    EvidenceValueObject evo = iter.next();
-    	    if(!evo.isHomologueEvidence())
-    	        collFilteredDVO.addAll(evo.getPhenotypes());
-    	}
-    	gvo.setPhenotypes(collFilteredDVO);
+    public GeneValueObject loadGeneDetails( Long geneId ) {
+        // return geneCoreService.loadGeneDetails( geneId );
+        GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
+        Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService.findEvidenceByGeneId( geneId,
+                new HashSet<String>(), new EvidenceFilter( gvo.getTaxonId(), false, null ) );
+        Iterator<EvidenceValueObject> iter = collEVO.iterator();
+        Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<CharacteristicValueObject>();
+        while ( iter.hasNext() ) {
+            EvidenceValueObject evo = iter.next();
+            if ( !evo.isHomologueEvidence() ) collFilteredDVO.addAll( evo.getPhenotypes() );
+        }
+        gvo.setPhenotypes( collFilteredDVO );
         return gvo;
     }
 
     /**
-     * AJAX
-     * used to show gene info in the phenotype tab 
-     * FIXME Why is the taxonId a parameter, since we have the gene ID?
+     * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?
      */
     public Collection<EvidenceValueObject> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId(
-                geneId,
-                phenotypeValueUris == null ? new HashSet<String>() : new HashSet<String>( Arrays
-                        .asList( phenotypeValueUris ) ), new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
+        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId,
+                phenotypeValueUris == null ? new HashSet<String>()
+                        : new HashSet<String>( Arrays.asList( phenotypeValueUris ) ),
+                new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
     }
 
     /**
@@ -214,6 +209,7 @@ public class GeneController extends BaseController {
                 geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
 
             } else if ( StringUtils.isNotBlank( ensemblId ) ) {
+                @SuppressWarnings("unchecked")
                 Collection<Gene> foundGenes = ( Collection<Gene> ) geneService.findByEnsemblId( ensemblId );
 
                 if ( foundGenes.size() == 1 ) {
@@ -365,8 +361,8 @@ public class GeneController extends BaseController {
 
         ModelAndView mav = new ModelAndView( new TextView() );
         if ( ( geneIds == null || geneIds.isEmpty() ) && ( geneSetIds == null || geneSetIds.isEmpty() ) ) {
-            mav.addObject( "text", "Could not find genes to match gene ids: {" + geneIds + "} or gene set ids {"
-                    + geneSetIds + "}" );
+            mav.addObject( "text",
+                    "Could not find genes to match gene ids: {" + geneIds + "} or gene set ids {" + geneSetIds + "}" );
             return mav;
         }
         Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();

@@ -27,6 +27,11 @@ import ubic.gemma.model.common.search.SearchSettings;
 public abstract class UserQuery implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -2790140985613402440L;
+
+    /**
      * Constructs new instances of {@link UserQuery}.
      */
     public static final class Factory {

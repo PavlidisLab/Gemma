@@ -331,7 +331,8 @@ public class OntologyServiceImpl implements OntologyService {
             // flag to let know that it was found in the database
             characteristicInDatabase.setAlreadyPresentInDatabase( true );
 
-            if ( characteristicInDatabase.getValueUri() != null && !characteristicInDatabase.getValueUri().equals( "" ) ) {
+            if ( characteristicInDatabase.getValueUri() != null
+                    && !characteristicInDatabase.getValueUri().equals( "" ) ) {
                 characteristicFromDatabaseWithValueUri.put( characteristicInDatabase.getValueUri(),
                         characteristicInDatabase );
             } else {
@@ -488,11 +489,10 @@ public class OntologyServiceImpl implements OntologyService {
             results = serv.findResources( queryString );
 
             if ( results.isEmpty() ) continue;
-            if ( log.isDebugEnabled() )
-                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in "
-                        + watch.getTime() + " ms" );
-            searchResults.addAll( CharacteristicValueObject
-                    .characteristic2CharacteristicVO( termsToCharacteristics( results ) ) );
+            if ( log.isDebugEnabled() ) log.debug( "found " + results.size() + " from "
+                    + serv.getClass().getSimpleName() + " in " + watch.getTime() + " ms" );
+            searchResults.addAll(
+                    CharacteristicValueObject.characteristic2CharacteristicVO( termsToCharacteristics( results ) ) );
 
             if ( searchResults.size() > MAX_TERMS_TO_FETCH ) {
                 break;
@@ -503,13 +503,13 @@ public class OntologyServiceImpl implements OntologyService {
 
         // get GO terms, if we don't already have a lot of possibilities. (might have to adjust this)
         if ( searchResults.size() < MAX_TERMS_TO_FETCH && geneOntologyService.isReady() ) {
-            searchResults.addAll( CharacteristicValueObject
-                    .characteristic2CharacteristicVO( termsToCharacteristics( geneOntologyService
-                            .findTerm( queryString ) ) ) );
+            searchResults.addAll( CharacteristicValueObject.characteristic2CharacteristicVO(
+                    termsToCharacteristics( geneOntologyService.findTerm( queryString ) ) ) );
         }
 
         // Sort the results rather elaborately.
-        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults, queryString );
+        Collection<CharacteristicValueObject> sortedResults = sort( previouslyUsedInSystem, searchResults,
+                queryString );
 
         if ( watch.getTime() > 1000 ) {
             log.info( "Ontology term query for: " + givenQueryString + ": " + watch.getTime() + "ms" );
@@ -866,7 +866,7 @@ public class OntologyServiceImpl implements OntologyService {
                 previouslyUsedInSystem.get( key ).incrementOccurrenceCount();
                 continue;
             }
-            log.info( "saw " + key + " (" + key + ") for " + characteristic );
+            if ( log.isDebugEnabled() ) log.debug( "saw " + key + " (" + key + ") for " + characteristic );
             CharacteristicValueObject vo = new CharacteristicValueObject( characteristic );
             vo.setCategory( null );
             vo.setCategoryUri( null ); // to avoid us counting separately by category.
@@ -883,7 +883,8 @@ public class OntologyServiceImpl implements OntologyService {
 
     /** given a collection of characteristics add them to the correct List */
     private Collection<CharacteristicValueObject> findCharacteristicsFromOntology( String searchQuery,
-            boolean useNeuroCartaOntology, Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
+            boolean useNeuroCartaOntology,
+            Map<String, CharacteristicValueObject> characteristicFromDatabaseWithValueUri ) {
 
         Collection<CharacteristicValueObject> characteristicsFromOntology = new HashSet<>();
 
@@ -909,8 +910,8 @@ public class OntologyServiceImpl implements OntologyService {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
 
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel()
-                            .toLowerCase(), ontologyTerm.getUri() );
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject(
+                            ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
 
                     characteristicsFromOntology.add( phenotype );
                 }
@@ -1036,7 +1037,8 @@ public class OntologyServiceImpl implements OntologyService {
      * @param taxon okay if null, but then all matches returned.
      * @param searchResults added to this
      */
-    private void searchForGenes( String queryString, Taxon taxon, Collection<CharacteristicValueObject> searchResults ) {
+    private void searchForGenes( String queryString, Taxon taxon,
+            Collection<CharacteristicValueObject> searchResults ) {
         // if ( categoryUri == null ) return;
         //
         // // genotype, genetic modification, molecular entity.
@@ -1136,7 +1138,8 @@ public class OntologyServiceImpl implements OntologyService {
      * @param filterTerm
      * @return
      */
-    private Collection<VocabCharacteristic> termsToCharacteristics( final Collection<? extends OntologyResource> terms ) {
+    private Collection<VocabCharacteristic> termsToCharacteristics(
+            final Collection<? extends OntologyResource> terms ) {
 
         Collection<VocabCharacteristic> results = new HashSet<>();
 

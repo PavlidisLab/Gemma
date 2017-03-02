@@ -83,20 +83,29 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
     public Document getAtlasImageMap( Integer imageseriesId ) {
         File outputFile = getFile( "atlasImageMap" + imageseriesId.toString() );
         Document atlasImageMapDoc = null;
+        FileInputStream in = null;
 
         try (FileOutputStream out = new FileOutputStream( outputFile );) {
             this.getAtlasImageMap( imageseriesId, out );
 
-            atlasImageMapDoc = XMLUtils.openAndParse( new FileInputStream( outputFile ) );
+            in = new FileInputStream( outputFile );
+            atlasImageMapDoc = XMLUtils.openAndParse( in );
         } catch ( ParserConfigurationException pce ) {
             log.error( pce );
-            return null;
         } catch ( SAXException se ) {
             log.error( se );
         } catch ( FileNotFoundException fnfe ) {
             log.error( fnfe );
         } catch ( IOException io ) {
 
+        } finally {
+            if ( in != null ) {
+                try {
+                    in.close();
+                } catch ( IOException e ) {
+                    log.error( "Failed to close FileInputStream" );
+                }
+            }
         }
 
         return atlasImageMapDoc;
@@ -109,8 +118,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
      * @see ubic.gemma.image.aba.AllenBrainAtlasService#getAtlasImageMap(java.lang.Integer, java.io.OutputStream)
      */
     @Override
-    public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out ) throws MalformedURLException,
-            IOException {
+    public boolean getAtlasImageMap( Integer imageseriesid, OutputStream out )
+            throws MalformedURLException, IOException {
 
         String args[] = { imageseriesid.toString() };
         String getImageMapUrl = buildUrlString( GET_ATLAS_IMAGE_MAP_URL, args );
@@ -168,8 +177,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
      * @see ubic.gemma.image.aba.AllenBrainAtlasService#getExpressionInfo(java.lang.Integer, java.io.OutputStream)
      */
     @Override
-    public boolean getExpressionInfo( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException {
+    public boolean getExpressionInfo( Integer imageseriesId, OutputStream out )
+            throws MalformedURLException, IOException {
 
         String args[] = { imageseriesId.toString() };
         String getExpressionInfoUrl = buildUrlString( GET_EXPRESSION_INFO_URL, args );
@@ -183,8 +192,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
      * @see ubic.gemma.image.aba.AllenBrainAtlasService#getExpressionVolume(java.lang.Integer, java.io.OutputStream)
      */
     @Override
-    public boolean getExpressionVolume( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException {
+    public boolean getExpressionVolume( Integer imageseriesId, OutputStream out )
+            throws MalformedURLException, IOException {
 
         String args[] = { imageseriesId.toString() };
         String getVolumeUrl = buildUrlString( GET_EXPRESSION_VOLUME_URL, args );
@@ -323,14 +332,16 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
                     } catch ( IOException ioe ) {
                         log.warn( ioe );
                     }
-                }// for loop
+                } // for loop
 
                 if ( imageId != null && downloadImagePath != null ) {
                     Image img = new Image( displayName, imageId, position, referenceAtlasIndex, thumbnailUrl,
-                            zoomifiedNisslUrl, expressionThumbnailUrl, downloadImagePath, downloadExpressionPath, 0, 0 );
+                            zoomifiedNisslUrl, expressionThumbnailUrl, downloadImagePath, downloadExpressionPath, 0,
+                            0 );
                     results.add( img );
                 } else {
-                    log.info( "Skipping adding image to collection cause necessary data missing after parsing image xml" );
+                    log.info(
+                            "Skipping adding image to collection cause necessary data missing after parsing image xml" );
                 }
 
             }
@@ -358,8 +369,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
                     // Convert the urls into fully qualified ones for ez displaying
                     String args[] = { "2", "2", img.getDownloadExpressionPath() };
                     img.setDownloadExpressionPath( this.buildUrlString( AllenBrainAtlasService.GET_IMAGE_URL, args ) );
-                    img.setExpressionThumbnailUrl( AllenBrainAtlasService.API_BASE_URL
-                            + img.getExpressionThumbnailUrl() );
+                    img.setExpressionThumbnailUrl(
+                            AllenBrainAtlasService.API_BASE_URL + img.getExpressionThumbnailUrl() );
                     representativeImages.add( img );
                 }
             }
@@ -566,7 +577,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
 
         if ( geneId == null && geneSymbol == null ) return null;
 
-        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl, null );
+        AbaGene geneData = new AbaGene( geneId, geneSymbol, geneName, entrezGeneId, ncbiAccessionNumber, geneUrl,
+                null );
 
         NodeList idList = geneDoc.getChildNodes().item( 0 ).getChildNodes();
 
@@ -663,8 +675,8 @@ public class AllenBrainAtlasServiceImpl implements AllenBrainAtlasService {
         return ( doPageDownload( getImageInfoUrl, out ) );
     }
 
-    protected boolean getImageseries( Integer imageseriesId, OutputStream out ) throws MalformedURLException,
-            IOException {
+    protected boolean getImageseries( Integer imageseriesId, OutputStream out )
+            throws MalformedURLException, IOException {
 
         String args[] = { imageseriesId.toString() };
         String getImageseriesUrl = buildUrlString( GET_IMAGESERIES_URL, args );

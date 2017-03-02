@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.report;
 
-import gemma.gsec.SecurityService;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +27,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -41,19 +47,9 @@ import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
 import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
-import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Component;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
@@ -114,13 +110,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
-    private CoexpressionService geneCoexpressionService;
-
-    @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
-
-    @Autowired
-    private SecurityService securityService;
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -165,9 +155,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
             this.statsCache = new Cache( config );
         } else {
-            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
-                    overFlowToDisk, null, eternal, secondsToLive, 0, diskPersistent, diskExpiryThreadIntervalSeconds,
-                    null );
+            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
+                    null, eternal, secondsToLive, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
         }
 
         cacheManager.addCache( statsCache );
@@ -294,8 +283,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         }
 
         Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
-
-        Collection<Long> troubledEEs = getTroubled( ees );
         Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
@@ -304,8 +291,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
         Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
-
-        Collection<Long> validatedEEs = getValidated( vos );
 
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
@@ -397,12 +382,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setDateArrayDesignLastUpdated( date );
             }
 
-            if ( validatedEEs.contains( ee.getId() ) ) {
-
-                eeVo.setValidated( true );
-
-            }
-
             if ( autotaggerEvents.containsKey( ee ) ) {
                 AuditEvent taggerEvent = autotaggerEvents.get( ee );
 
@@ -430,22 +409,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 // we find we are getting lazy-load exceptions from this guy.
                 eeVo.auditEvents2SampleRemovedFlags( removalEvents );
 
-            }
-
-            if ( troubledEEs.contains( id ) ) {
-                Collection<Long> tids = new HashSet<>();
-                tids.add( id );
-                Map<Long, AuditEvent> troublM = expressionExperimentService.getLastTroubleEvent( tids );
-                if ( !troublM.isEmpty() ) {
-                    eeVo.setTroubleDetails( troublM.get( id ).getDate() + ": " + troublM.get( id ).getNote() );
-                    eeVo.setTroubled( true );
-                } else {
-                    log.warn( "Status was out of date? for EE=" + id );
-                }
-            }
-
-            if ( validatedEEs.contains( id ) ) {
-                eeVo.setValidated( true );
             }
 
             if ( mostRecentDate.after( new Date( 0 ) ) ) results.put( ee.getId(), mostRecentDate );
@@ -603,24 +566,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         assert eeVo.getDateCreated() != null;
         assert eeVo.getDateLastUpdated() != null;
 
-    }
-
-    private Collection<Long> getTroubled( Collection<ExpressionExperiment> ees ) {
-        Collection<Long> ids = EntityUtils.getIds( ees );
-        Collection<Long> untroubled = expressionExperimentService.getUntroubled( ids );
-        ids.removeAll( untroubled );
-        return ids;
-    }
-
-    private Collection<Long> getValidated( Collection<ExpressionExperimentValueObject> vos ) {
-        Collection<Long> result = new HashSet<Long>();
-        for ( ExpressionExperimentValueObject ee : vos ) {
-
-            if ( ee.getValidated() ) {
-                result.add( ee.getId() );
-            }
-        }
-        return result;
     }
 
     /**

@@ -18,7 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.apache.commons.lang3.ObjectUtils;
+import java.util.Objects;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -46,8 +47,8 @@ public class CharacteristicImpl extends Characteristic {
          * the fields; we can't just compare the hashcodes because they also look at the id, so comparing one transient
          * and one persistent would always fail...
          */
-        return ObjectUtils.equals( this.getCategory(), that.getCategory() )
-                && ObjectUtils.equals( this.getValue(), that.getValue() );
+        return Objects.equals( this.getCategory(), that.getCategory() )
+                && Objects.equals( this.getValue(), that.getValue() );
     }
 
     @Override
@@ -58,7 +59,7 @@ public class CharacteristicImpl extends Characteristic {
 
     @Override
     public String toString() {
-        if (StringUtils.isBlank( this.getCategory())) {
+        if ( StringUtils.isBlank( this.getCategory() ) ) {
             return "[No category] Value = " + this.getValue();
         }
         return "Category = " + this.getCategory() + " Value = " + this.getValue();

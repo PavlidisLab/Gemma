@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.report;
 
-import gemma.gsec.SecurityService;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,11 +34,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.TreeMap;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,9 +41,14 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
+
+import gemma.gsec.SecurityService;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -81,9 +79,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     @Autowired
     private SecurityService securityService = null;
-
-    @Autowired
-    private TaxonService taxonService = null;
 
     @Autowired
     private CacheManager cacheManager = null;
@@ -174,10 +169,10 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     public WhatsNew retrieveReport() {
         WhatsNew wn = new WhatsNew();
         try {
-            File newObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
-                    + WHATS_NEW_FILE + ".new" );
-            File updatedObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
-                    + WHATS_NEW_FILE + ".updated" );
+            File newObjects = new File(
+                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".new" );
+            File updatedObjects = new File(
+                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".updated" );
             if ( !newObjects.exists() && !updatedObjects.exists() ) {
                 return null;
             }
@@ -444,10 +439,11 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    private Collection<AuditableObject> loadAuditableObjects( File newObjects ) throws FileNotFoundException,
-            IOException, ClassNotFoundException {
+    private Collection<AuditableObject> loadAuditableObjects( File newObjects )
+            throws FileNotFoundException, IOException, ClassNotFoundException {
         try (FileInputStream fis = new FileInputStream( newObjects );
                 ObjectInputStream ois = new ObjectInputStream( fis );) {
+            @SuppressWarnings("unchecked")
             Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
             return aos;
         }
@@ -460,10 +456,10 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private boolean saveFile( WhatsNew wn ) {
         try {
             // remove file first
-            File newOutput = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
-                    + WHATS_NEW_FILE + ".new" );
-            File updatedOutput = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
-                    + WHATS_NEW_FILE + ".updated" );
+            File newOutput = new File(
+                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".new" );
+            File updatedOutput = new File(
+                    HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar + WHATS_NEW_FILE + ".updated" );
             if ( newOutput.exists() ) {
                 newOutput.delete();
             }

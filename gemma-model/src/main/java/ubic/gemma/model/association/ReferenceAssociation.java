@@ -26,6 +26,11 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -6338026603382275762L;
+
+    /**
      * Constructs new instances of {@link ReferenceAssociation}.
      */
     public static final class Factory {

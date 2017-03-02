@@ -138,10 +138,11 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
         ExpressionExperiment newee;
         try {
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gse432Short" ) ) );
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-                    "GSE432", false, true, false, false );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse432Short" ) ) );
+            @SuppressWarnings("unchecked")
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+                    .fetchAndLoad( "GSE432", false, true, false, false );
             newee = results.iterator().next();
 
             TwoChannelMissingValues tcmv = this.getBean( TwoChannelMissingValues.class );

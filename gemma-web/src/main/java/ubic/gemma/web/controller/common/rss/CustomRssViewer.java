@@ -32,13 +32,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.feed.AbstractRssFeedView;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.StatusService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-
 import com.sun.syndication.feed.rss.Channel;
 import com.sun.syndication.feed.rss.Content;
 import com.sun.syndication.feed.rss.Item;
+
+import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.auditAndSecurity.StatusService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author sshao
@@ -62,7 +62,9 @@ public class CustomRssViewer extends AbstractRssFeedView {
     protected List<Item> buildFeedItems( Map<String, Object> model, HttpServletRequest request,
             HttpServletResponse response ) throws Exception {
 
-        Map<ExpressionExperiment, String> experiments = ( Map<ExpressionExperiment, String> ) model.get( "feedContent" );
+        @SuppressWarnings("unchecked")
+        Map<ExpressionExperiment, String> experiments = ( Map<ExpressionExperiment, String> ) model
+                .get( "feedContent" );
         List<Item> items = new ArrayList<Item>( experiments.size() );
 
         // Set content of each expression experiment

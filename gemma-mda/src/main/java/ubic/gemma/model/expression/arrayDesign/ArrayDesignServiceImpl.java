@@ -15,6 +15,7 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -151,9 +152,8 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCreate(ubic.gemma.model.expression.arrayDesign
-     * .ArrayDesign)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCreate(ubic.gemma.model.expression.
+     * arrayDesign .ArrayDesign)
      */
     @Override
     protected ArrayDesign handleCreate( ArrayDesign arrayDesign ) {
@@ -447,6 +447,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ArrayDesign> handleLoadAll() {
         return ( Collection<ArrayDesign> ) this.getArrayDesignDao().loadAll();
@@ -459,7 +460,15 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
      */
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() {
-        return this.getArrayDesignDao().loadAllValueObjects();
+        Collection<ArrayDesignValueObject> ads = this.getArrayDesignDao().loadAllValueObjects();
+        try {
+            for ( ArrayDesignValueObject ad : ads ) {
+                this.populateTroubleDetails( ad );
+            }
+        } catch ( Exception e ) {
+            log.error( e );
+        }
+        return ads;
     }
 
     /*
@@ -474,6 +483,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) {
         return ( Collection<ArrayDesign> ) this.getArrayDesignDao().load( ids );
@@ -486,7 +496,38 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
      */
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) {
-        return this.getArrayDesignDao().loadValueObjects( ids );
+        Collection<ArrayDesignValueObject> ads = this.getArrayDesignDao().loadValueObjects( ids );
+        try {
+            for ( ArrayDesignValueObject ad : ads ) {
+                this.populateTroubleDetails( ad );
+            }
+        } catch ( Exception e ) {
+            log.error( e );
+        }
+        return ads;
+    }
+
+    /**
+     * Populates the troubleDetails property of the ADValueObject, which has to be done separately since the last
+     * trouble event has to be retrieved.
+     * 
+     * @param ad
+     * @return
+     */
+    private ArrayDesignValueObject populateTroubleDetails( ArrayDesignValueObject ad ) {
+        java.util.Map<Long, AuditEvent> events = this.getLastTroubleEvent( Collections.singleton( ad.getId() ) );
+        AuditEvent e = events.get( ad.getId() );
+        if ( e != null ) {
+            if ( !ad.getTroubled() ) {
+                log.error( "Loaded ArrayDesign has troubled event but not status. ID: " + ad.getId() );
+            }
+            ad.setTroubleDetails( e.toString() );
+        } else {
+            if ( ad.getTroubled() ) {
+                log.error( "Loaded ArrayDesign is troubled but has no outstanding trouble event. ID: " + ad.getId() );
+            }
+        }
+        return ad;
     }
 
     /*

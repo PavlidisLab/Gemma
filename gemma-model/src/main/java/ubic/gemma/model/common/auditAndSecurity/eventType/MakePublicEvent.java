@@ -27,4 +27,9 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  */
 public class MakePublicEvent extends PermissionChangeEvent {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -2250506177437626685L;
+
 }

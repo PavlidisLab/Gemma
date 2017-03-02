@@ -1,629 +1,1613 @@
 <html>
-  <head>
-	<meta name="keywords" content="NCBI, GDS, GEO Datasets">
+<head>
+<meta name="keywords" content="NCBI, GDS, GEO Datasets">
 <meta name="author" content="geo">
-<meta name="description" content="Comparable experimental sample sets 
-    assembled from the Gene Expression Omnibus (GEO) repository.">
+<meta name="description"
+	content="Comparable experimental sample sets 
+		    assembled from the Gene Expression Omnibus (GEO) repository.">
 <meta name="robots" content="index,nofollow">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<title>GDS - GEO DataSets
-</title>
-	<base href="http://www.ncbi.nlm.nih.gov">
-	<link type="text/css" rel="stylesheet" href="/corehtml/ncbi_test.css">
+<title>GDS - GEO DataSets</title>
 
-	<script type="text/javascript" language="JavaScript" src="/corehtml/query/query.js"></script><style type="text/css">
-  a { text-decoration: none; }
-  .small8b { font-size:8pt;
-            font-family: ariel,helvetica,sans-serif;
-            color:#6633cc;
-           }
-  .small8db { font-size:8pt;
-              font-family: ariel,helvetica,sans-serif;
-              color:#4411aa;
-            }
-  .small8lnk { font-size:8pt;
-              font-family: ariel,helvetica,sans-serif;
-              color:#444444;
-            }
-</style>
-<SCRIPT LANGUAGE="JavaScript">
-<!--//
-function show_record(gds) {
-  var tocgi = "http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=" + gds;
-  var open_cmd = '"width=635,height=700,resizable,scrollbars,toolbar"'
-  recordWin = window.open(tocgi,"gds",eval(open_cmd)); 
-  recordWin.focus();
+<base href="http://www.ncbi.nlm.nih.gov">
+
+<link type="text/css" rel="stylesheet" href="/corehtml/ncbi_test.css">
+
+<script type="text/javascript" src="/corehtml/query/query.js"></script>
+
+<style type="text/css">
+a {
+	text-decoration: none;
 }
-//-->
-</SCRIPT> 
 
-    <script type="text/javascript" language="JavaScript">
-    <!--
-        if (document.layers) { origWidth = window.innerWidth; origHeight = window.innerHeight; window.onresize = resizeFix; }
-        function resizeFix() {
-            if (document.layers && (window.innerWidth != origWidth || window.innerHeight != origHeight)) { window.history.go(0); }
-        }
-    // -->
-    </script>  
-    <script language="JavaScript1.2">
-<!--
-var PopUpMenu2_GlobalConfig = [
-  ["UseThisGlobalConfig","yes"]
-]
+.small8b {
+	font-size: 8pt;
+	font-family: ariel, helvetica, sans-serif;
+	color: #6633cc;
+}
+
+.small8db {
+	font-size: 8pt;
+	font-family: ariel, helvetica, sans-serif;
+	color: #4411aa;
+}
+
+.small8lnk {
+	font-size: 8pt;
+	font-family: ariel, helvetica, sans-serif;
+	color: #444444;
+}
+
+table {
+	width: 100%;
+	border: none;
+	border-spacing: 0px; /* cellspacing */
+}
+
+th, td {
+	padding: 0px; /* cellpadding */
+}
+
+table.medium1 {
+	border: 1px #336699;
+	border-spacing: 0px;
+}
+
+table.spaced {
+	border-spacing: 3px;
+}
+
+table.padded th, td {
+	padding: 2px;
+}
+
+table.padded-small th, td {
+	padding: 1px;
+}
+
+.gray {
+	background-color: #cccccc;
+}
+
+.darkgray {
+	background-color: #bbbbbb;
+}
+
+.border-blue {
+	border-color: #00ffff;
+}
+
+.align-top {
+	vartical-align: top;
+}
+</style>
+
+<script>
+<!--//
+   function show_record(gds) {
+      var tocgi = "http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=" + gds;
+      var open_cmd = '"width=635,height=700,resizable,scrollbars,toolbar"'
+      recordWin = window.open( tocgi, "gds", eval( open_cmd ) );
+      recordWin.focus();
+   }
 //-->
 </script>
-<script language="JavaScript1.2" src="http://www.ncbi.nlm.nih.gov/coreweb/javascript/popupmenu2/popupmenu2_5loader.js"></script>
+<script>
+<!--
+   if ( document.layers ) {
+      origWidth = window.innerWidth;
+      origHeight = window.innerHeight;
+      window.onresize = resizeFix;
+   }
+   function resizeFix() {
+      if ( document.layers && (window.innerWidth != origWidth || window.innerHeight != origHeight) ) {
+         window.history.go( 0 );
+      }
+   }
+// -->
+</script>
+<script>
+<!--
+   var PopUpMenu2_GlobalConfig = [ [ "UseThisGlobalConfig", "yes" ] ]
+//-->
+</script>
+<script type="text/javascript"
+	src="http://www.ncbi.nlm.nih.gov/coreweb/javascript/popupmenu2/popupmenu2_5loader.js"></script>
 </head>
-    <body bgcolor="#FFFFFF" background="/corehtml/bkgd.gif" text="#000000" link="#0033CC" vlink="#CC3300">
-        <form enctype="application/x-www-form-urlencoded" name="frmQueryBox" action="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=search&DB=gds" method="POST" >
-
-            <input name="WebEnv" type="hidden" value="0hULnCP6aD1G5Kte8mZK-zug6DNZyD0aA9Q5O9K-Ewc20lVNItcP@zxU2HIIOFkYAAE65ChAAAAAE">
-		    <input name="CMD" type="hidden" disabled>
-		    <!-- 1st table start -->
-            <table width="100%" border="0" cellpadding="0" cellspacing="0" id="logo">
-                <tr><!-- logo -->
-			        <td>
-				        <table width="100%" border="0" cellpadding="0" cellspacing="0">
-				            <tr align="left">
-					            <td><a href="http://www.ncbi.nlm.nih.gov"><img src="/corehtml/left.GIF" width="130" height="45" border="0" alt="NCBI"></a></td>
-
-					            <td><img src="/entrez/query/static/gifs/gds_banner.jpg" alt="GEO DataSets" border="0"> 
-
-</td>
-						    <td align="right"><script language="JavaScript" type="text/javascript"><!--
-    var myncbi_xo = 0;
-    var myncbi_x = MyNCBI_find();
-    var myncbi_cu = unescape('http%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Fentrez%2Fquery%2Efcgi%3Fcmd%3Dsearch%26amp%3Bdb%3Dgds%26amp%3Bfmt%3Dxml%26amp%3Bterm%3DGSE3%5BAccession%5D');
-    function MyNCBI_find()
-    {
-        var cs = document.cookie.split('; ');
-        for(var i = 0; i < cs.length; i++) {
-            // a name/value pair (a crumb) is separated by an equal sign
-            var c = cs[i].split('=');
-            if(c[0] == 'WebCubbyUser' && c[1] != '') { return true; }
-        }
-        return false;
-    }
-
-    function MyNCBI_r()
-    {
-        if( myncbi_xo == 0 ) {
-            var x = MyNCBI_find();
-            if( x != myncbi_x ) {
-                myncbi_x = x;
-                myncbi_xo = 0;
-                window.location.replace(myncbi_cu);
-            } else {
-                window.setTimeout(MyNCBI_r, 500);
-            }
-        }
-    }
-    window.setTimeout(MyNCBI_r, 500);
-
-// --></script><table class="medium1" border="1" bordercolor="#336699" cellpadding="2" cellspacing="0" id="myncbi_off"><tr><td
-    bgcolor="#336699" align="right"><a href="http://www.ncbi.nlm.nih.gov/entrez/cubby.fcgi?call=QueryExt.CubbyQuery..ShowAll&db=gds"><font color="#FFFFFF"><b>My NCBI</b></font></a></td></tr><tr><td><a
-    href="http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Login&currentURL=http%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Fentrez%2Fquery%2Efcgi%3Fcmd%3Dsearch%26amp%3Bdb%3Dgds%26amp%3Bfmt%3Dxml%26amp%3Bterm%3DGSE3%5BAccession%5D"
-    onClick="if(myncbi_xo == 0){window.open('http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Login&tmpl=MiniBaseFile','Save2Cubby',
-                         'resizable=yes,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=yes,depend=yes,top=50,left=200,width=400,height=100');
-                         return false;}return true;" title="Click to sign in">[Sign&nbsp;In]</a>&nbsp;<a
-    href="http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Register&currentURL=http%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Fentrez%2Fquery%2Efcgi%3Fcmd%3Dsearch%26amp%3Bdb%3Dgds%26amp%3Bfmt%3Dxml%26amp%3Bterm%3DGSE3%5BAccession%5D"
-    onClick="if(myncbi_xo == 0){window.open('http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Register&tmpl=MiniBaseFile','Save2Cubby',
-                         'resizable=yes,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=yes,depend=yes,top=50,left=200,width=400,height=100');
-                         return false;}return true;" title="Click to register for an account">[Register]</a></td></tr></table>
-</td>
-				            </tr>
-				        </table>
-			        </td>
-
-		        </tr>
-		        <tr><!--site map-->
-			        <td><table class="TEXT" border="0" cellspacing="0" cellpadding="2" bgcolor="#000000" width="100%">
-<tr class="TEXT" align="CENTER">
-
-<td><a href="/gquery/gquery.fcgi?itool=toolbar" class="GUTTER3"><FONT COLOR="#FFFFFF">All&nbsp;Databases</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=PubMed" class="GUTTER3"><FONT COLOR="#FFFFFF">PubMed</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=Nucleotide" class="GUTTER3"><FONT COLOR="#FFFFFF">Nucleotide</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=Protein" class="GUTTER3"><FONT COLOR="#FFFFFF">Protein</FONT></a></td>
-
-<td><a href="/entrez/query.fcgi?db=Genome" class="GUTTER3"><FONT COLOR="#FFFFFF">Genome</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=Structure" class="GUTTER3"><FONT COLOR="#FFFFFF">Structure</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=PMC" class="GUTTER3"><FONT COLOR="#FFFFFF">PMC</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=Journals" class="GUTTER3"><FONT COLOR="#FFFFFF">Journals</FONT></a></td>
-<td><a href="/entrez/query.fcgi?db=Books" class="GUTTER3"><FONT COLOR="#FFFFFF">Books</FONT></a></td>
-
-</tr></table></td>
-                </tr>
-                <tr><!--query box-->
-                    <td>
-
-                        <table width="100%" border="0" bgcolor="#CCCCCC" cellspacing="0" cellpadding="1" id="searchbar">     
-				            <tr> 
-					            <td class="SMALL1" nowrap>&nbsp;Search
-						            <small><select name="db" onChange="DbChange(this);"><option value="pubmed">PubMed</option>
-<option value="protein">Protein</option>
-<option value="nucleotide">Nucleotide</option>
-<option value="structure">Structure</option>
-<option value="genome">Genome</option>
-<option value="books">Books</option>
-<option value="cancerchromosomes">CancerChromosomes</option>
-
-<option value="cdd">Conserved Domains</option>
-<option value="domains">3D Domains</option>
-<option value="gene">Gene</option>
-<option value="genomeprj">Genome Project</option>
-<option value="gensat">GENSAT</option>
-<option value="geo">GEO Profiles</option>
-<option selected value="gds">GEO DataSets</option>
-<option value="homologene">HomoloGene</option>
-<option value="journals">Journals</option>
-
-<option value="mesh">MeSH</option>
-<option value="ncbisearch">NCBI Web Site</option>
-<option value="nlmcatalog">NLM Catalog</option>
-<option value="omia">OMIA</option>
-<option value="omim">OMIM</option>
-<option value="pmc">PMC</option>
-<option value="popset">PopSet</option>
-<option value="probe">Probe</option>
-<option value="pcassay">PubChem BioAssay</option>
-
-<option value="pccompound">PubChem Compound</option>
-<option value="pcsubstance">PubChem Substance</option>
-<option value="snp">SNP</option>
-<option value="taxonomy">Taxonomy</option>
-<option value="unigene">UniGene</option>
-<option value="unists">UniSTS</option>
-</select>
-<input name="orig_db" type="hidden" value="gds"></small>
-						            for
-						            <input name="term" size="45" type="TEXT" value="GSE3[Accession]">
-
-						            <!-- internal use only! -->
-						            <input type="submit" value="Go" onClick="Go('search');">
-						            <input name="Clear" type="button" value="Clear" onClick="this.form.term.value='';this.form.term.focus();">
-                                    <a href="/entrez/cubby.fcgi?call=QueryExt.Query.1.Store;QueryExt.CubbyQuery.0.Details&tmpl=MiniBaseFile" onClick="window.open('/entrez/cubby.fcgi?call=QueryExt.Query.1.Store;QueryExt.CubbyQuery.0.Details&tmpl=MiniBaseFile','Save2Cubby','resizable=yes,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=yes,depend=yes,top=50,left=200,width=400,height=100');return false;" title="Click to save search strategy in My NCBI">Save Search</a><!-- internal use only! -->
-						            <input name="cmd" type="hidden" value="Search">
-                                </td>
-					            				
-				            </tr>
-				        </table>
-
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-			            <table width="100%" border="0" cellspacing="0" cellpadding="0">  		
-                            <tr>
-				                <td>
-				                    <img src="/corehtml/transparent.gif" width="134" height="1" border="0">
-				                </td>
-
-				                <td width="100%" bgcolor="#CCCCCC"><!-- tabstoolbar -->
-					                <input name="cmd_current" type="hidden" value=""><table width="100%" bgcolor="#CCCCCC" cellpadding="0" cellspacing="0" id="Tabs_TabsToolbar"><tr>
-<td><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="3" height="1" alt="" border="0"></td><td width="100%">
-<table border="0" bgcolor="#CCCCCC" bordercolor="#00FFFF" cellpadding="0" cellspacing="0" id="TabsToolbar">
-  <tr>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_1st_left_top.gif" width="6" height="13" alt="" border="0"></td>
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif" width="11" height="13" alt="" border="0"></td>
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif" width="11" height="13" alt="" border="0"></td>
-
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif" width="11" height="13" alt="" border="0"></td>
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif" width="11" height="13" alt="" border="0"></td>
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_last_right_top.gif" width="6" height="13" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-  </tr>
-  <tr>
-
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_1st_left_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="Go('Limits')" title="Click to select options to limit retrieval"><center><a href="javascript:Go('Limits')" class="pmlinkna">Limits&nbsp;</a></center></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="Go('Index')" title="Click to preview results and browse search terms"><center><a href="javascript:Go('Index')" class="pmlinkna">Preview/Index&nbsp;</a></center></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="Go('History')" title="Click to display your previous searches"><center><a href="javascript:Go('History')" class="pmlinkna">History&nbsp;</a></center></td>
-
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="Go('Clipboard')" title="Click to see items you have collected"><center><a href="javascript:Go('Clipboard')" class="pmlinkna">Clipboard&nbsp;</a></center></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="Go('Details')" title="Click to see how your search was enhanced"><center><a href="javascript:Go('Details')" class="pmlinkna">Details&nbsp;</a></center></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td></td>
-
-  </tr>
-  <tr>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-  </tr>
-</table></td></tr></table>
-
-				                </td>
-                            </tr>
-
-                        </table>
-			        </td>
-                </tr>
-            </table>
-		    <!-- 1st table end -->
-		    <!-- 2nd table start -->
-		    <table border="0" cellspacing="0" cellpadding="0" width="100%" id="resultview">
-                <tr>
-                    <td colspan="3"><img src="/corehtml/transparent.gif" height="5" border="0"></td>
-
-                </tr>
-                <tr valign="top"><!--  left column   -->
-                    <td>
-                        <img src="/corehtml/transparent.gif" width="125" height="1" border="0">
-                        <!-- sidebar start -->
-                            <A href="/Database/index.html" class="GUTTER3"><FONT COLOR="#FFFFFF">About Entrez</FONT></a><br>
-
-    <BR>
-
-    <SPAN class="GUTTER3"><a href="http://www.ncbi.nlm.nih.gov/geo/" class="GUTTER3"><FONT COLOR="#FFFFFF">The GEO site</FONT></a></span><BR><BR>
-
-    <SPAN class="GUTTER3"><a href="http://www.ncbi.nlm.nih.gov/geo/info/faq.html" class="GUTTER3"><FONT COLOR="#FFFFFF">GEO FAQ</FONT></a></span><BR><BR>
-
-    <SPAN class="GUTTER3"><a href="http://www.ncbi.nlm.nih.gov/geo/info/print_stats.cgi" class="GUTTER3"><FONT COLOR="#FFFFFF">Listing of Contents</FONT></a></span><BR><BR>
-
-    <span class="GUTTER1"><FONT COLOR="#ffcc66">Entrez </FONT></span><br>
-    <A HREF="/entrez/query/static/help/helpdoc.html" class="GUTTER3"><FONT COLOR="#FFFFFF">Help</FONT></A><FONT COLOR="#FFFFFF"> |</FONT>
-
-    <A HREF="/entrez/query/static/entrezfaq.html" class="GUTTER3"><FONT COLOR="#FFFFFF">FAQ</FONT></A>
-
-                        <!-- sidebar end -->
-                    </td>
-			        <td><img src="/corehtml/transparent.gif" width="15" height="1" border="0"></td>
-			        <!-- right content column  -->
-			        <td width="100%" bgcolor="#FFFFFF">
-				    <!-- -------- view --------- -->
-    		   		    <input name="query_key" type="hidden" value="1"><input name="query_hl" type="hidden" value="1">
-
-<!-- Display Bar -->
-<table id="DisplayBar" bgcolor="#cccccc" cellpadding="0" cellspacing="0" width="100%">
-<tr><td
-    align="left" nowrap><small>&nbsp;Display&nbsp;<select
-    name="dopt" onChange="if(options[selectedIndex].value.search('_') != -1 && form.sort){form.sort.selectedIndex=0};ControlSync(form,name,'dopt1');Go('Display');">
-        <option selected value="DocSum">Summary</option>
-<option value="Brief">Brief</option>
-<option value="gds_gds">Related DataSets</option>
-<option value="gds_geo">GEO Profile Links</option>
-<option value="gds_pmc">PMC Links</option>
-<option value="gds_pubmed">PubMed Links</option>
-
-<option value="gds_taxonomy">Taxonomy Links</option>
-
-    </select>&nbsp;Show&nbsp;<select
-    name="dispmax" onChange="ControlSync(form,name,'dispmax1');Go('Display');">
-        <option value="5">5</option>
-<option value="10">10</option>
-<option selected value="20">20</option>
-<option value="50">50</option>
-<option value="100">100</option>
-
-<option value="200">200</option>
-<option value="500">500</option>
-
-    </select><!--<select
-    name="sort" onChange="if(form.dopt.options[form.dopt.selectedIndex].value.search('_') != -1){form.dopt.selectedIndex=0};ControlSync(form,name,'sort1');Go('Display');">
-        
-    </select>--><select
-    name="SendTo" onChange="ControlSync(form,name,'SendTo1');if(options[selectedIndex].value != ''){Go(options[selectedIndex].value);}">
-        <option selected value="">Send to</option>
-<option value="Text">Text</option>
-<option value="File">File</option>
-<option value="Add to Clipboard">Clipboard</option>
-
-    </select></small></td></tr>
-    <tr><td><img
-        height="3" src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1"></td></tr></table>
-<!-- /Display Bar -->
-<input name="filter_current" type="hidden" value=""><input name="filter" type="hidden" value=""><table width="100%" bgcolor="#CCCCCC" cellpadding="0" cellspacing="0" id="Tabs_FILTER_SELECTOR"><tr>
-<td><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="3" height="1" alt="" border="0"></td><td width="100%">
-<table border="0" bgcolor="#CCCCCC" bordercolor="#00FFFF" cellpadding="0" cellspacing="0" id="FILTER_SELECTOR">
-  <tr>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_left_top.gif" alt="" width="6" height="13" border="0"></td>
-    <td background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_top_bg.gif" alt="" width="2" height="13" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_right_top.gif" alt="" width="6" height="13" border="0"></td>
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif" width="11" height="13" alt="" border="0"></td>
-    <td colspan="3" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_last_right_top.gif" width="6" height="13" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-  </tr>
-  <tr>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_left_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="top" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_main_bg.gif" title="Total Results"><center><font class="pmlinkna"><b>All: 3</b>&nbsp;</font></center></td>
-
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_right_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="document.frmQueryBox.filter.value='gds';Go('DisplayFiltered');" title="Curated GEO DataSets"><center><a href="javascript:document.frmQueryBox.filter.value='gds';Go('DisplayFiltered');" class="pmlinkna">DataSets: 2&nbsp;</a></center></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td align="center" valign="middle" style="cursor:pointer" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif" onClick="document.frmQueryBox.filter.value='gse';Go('DisplayFiltered');" title="Submitter provided experiment description"><center><a href="javascript:document.frmQueryBox.filter.value='gse';Go('DisplayFiltered');" class="pmlinkna">Series: 1&nbsp;</a></center></td>
-    <td width="6" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
-        <img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1" background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="6" height="1" alt="" border="0"></td>
-    <td>    <a href="/entrez/cubby.fcgi?call=QueryExt.EFilt.gds~0.Choose&db=gds&term=GSE3[Accession]"><img
-            title="Click to change filter selection through My NCBI." border="0"
-            src="/corehtml/query/def/tabsgraph/conf_icon.gif"></a>
-</td>
-  </tr>
-
-  <tr>
-    <td bgcolor="white"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="white"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="white"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td colspan="3" bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td bgcolor="#8A8D9C"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-    <td width="1"><img src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif" width="1" height="1" alt="" border="0"></td>
-
-  </tr>
-</table></td></tr></table>
-<input name="CrntRpt" type="hidden" value="DocSum">
-<!---- Pager -- (page header) -- begin ---->
-<table cellpadding="0" cellspacing="0" id="PaginationNode" width="100%"><tr><td align="center" nowrap><div class="medium2">Items 1 - 3 of 3</div></td>
-<td align="right" width="100%">One&nbsp;page.</td>
-</tr></table>
-<!---- Pager -- (page header) -- end ------>
-<dl><dt><table bgcolor="BBBBBB" cellpadding="0" cellspacing="0" class="SMALL1" valign="top" width="100%"><tr><td><input name="uid" type="checkbox" value="8"><b>1: </b><a href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=8">GDS8 record</a><strong>: Kidney cancer progression (I)</strong> [Homo sapiens]</td>
-
-<td align="right"><SPAN><a CLASS="dblinks" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_geo&from_uid=8">GEO Profiles,</a><script language="JavaScript1.2">
-<!--
-var PopUpMenu2_LocalConfig_jsmenu3Config = [
-  ["ShowCloseIcon","yes"],
-  ["Help","window.open('/entrez/query/static/popup.html','Links_Help','resizable=no,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=no,depend=no,width=400,height=500');"],
-  ["TitleText"," Links "]
-]
-//-->
-</script>
-<script language="JavaScript1.2">
-<!--
-var Menu8 = [
-  ["UseLocalConfig","jsmenu3Config","",""],
-  ["GEO DataSets","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_gds&from_uid=8'","",""],
-  ["Full text in PMC","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pmc&from_uid=8'","",""],
-  ["PubMed","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pubmed&from_uid=8'","",""],
-  ["Taxonomy","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_taxonomy&from_uid=8'","",""]
-]
-//-->
-</script>
-<a class="dblinks" href="javascript:PopUpMenu2_Set(Menu8);" onMouseOut="PopUpMenu2_Hide();" TARGET="_self">Links</a> </SPAN></td>
-</tr></table></dt></dl>
-<table cellpadding="0" cellspacing="3" width="100%"><tr><td valign="top">Summary:</td>
-<td align="left">Paired neoplastic and noncancerous renal epithelium samples from 37 individuals analyzed. Identifies gene expression changes shared with other epithelial tumors, activities of specific biological pathways and a unique signature for renal cell carcinoma.<br>Parent platform: <a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL9">GPL9</a>, reference series: <a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">GSE3</a></td>
-
-<td><a href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=8"><img border="0" src="http://www.ncbi.nlm.nih.gov/projects/geo/img/UPGMA/UCorrelated/GDS8i.png"></a></td>
-</tr>
-<tr><td align="left">Type:</td>
-<td align="left">single channel count</td>
-</tr>
-<tr><td align="left">Subsets:</td>
-<td>6 disease state sets.</td>
-</tr>
-<tr><td nowrap>Samples:</td>
-<td align="left">171 (listing 18)</td>
-</tr>
-
-<tr><td></td>
-<td><table cellpedding="1" cellspacing="5" span class="small8b"><tr></tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM81">GSM81</a>: Renal cell carcinoma: rccc-1, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM83">GSM83</a>: Renal cell carcinoma: rccc-1, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM85">GSM85</a>: Renal cell carcinoma: rccc-2, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM87">GSM87</a>: Renal cell carcinoma: rccc-2, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM89">GSM89</a>: Renal cell carcinoma: rccc-3, nor..</td>
-
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM91">GSM91</a>: Renal cell carcinoma: rccc-3, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM93">GSM93</a>: Renal cell carcinoma: rccc-4, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM95">GSM95</a>: Renal cell carcinoma: rccc-4, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM97">GSM97</a>: Renal cell carcinoma: rccc-5, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM99">GSM99</a>: Renal cell carcinoma: rccc-5, nor..</td>
-
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM101">GSM101</a>: Renal cell carcinoma: rccc-6, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM103">GSM103</a>: Renal cell carcinoma: rccc-6, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM105">GSM105</a>: Renal cell carcinoma: rccc-7, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM107">GSM107</a>: Renal cell carcinoma: rccc-7, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM109">GSM109</a>: Renal cell carcinoma: rccc-8, nor..</td>
-
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM111">GSM111</a>: Renal cell carcinoma: rccc-8, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM113">GSM113</a>: Renal cell carcinoma: rccc-9, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM115">GSM115</a>: Renal cell carcinoma: rccc-9, nor..</td>
-</tr>
-</table></td>
-</tr>
-</table>
-<dl><dt><table bgcolor="BBBBBB" cellpadding="0" cellspacing="0" class="SMALL1" valign="top" width="100%"><tr><td><input name="uid" type="checkbox" value="9"><b>2: </b><a href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=9">GDS9 record</a><strong>: Kidney cancer progression (II)</strong> [Homo sapiens]</td>
-
-<td align="right"><SPAN><a CLASS="dblinks" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_geo&from_uid=9">GEO Profiles,</a><script language="JavaScript1.2">
-<!--
-var Menu9 = [
-  ["UseLocalConfig","jsmenu3Config","",""],
-  ["GEO DataSets","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_gds&from_uid=9'","",""],
-  ["Full text in PMC","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pmc&from_uid=9'","",""],
-  ["PubMed","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pubmed&from_uid=9'","",""],
-  ["Taxonomy","window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_taxonomy&from_uid=9'","",""]
-]
-//-->
-</script>
-<a class="dblinks" href="javascript:PopUpMenu2_Set(Menu9);" onMouseOut="PopUpMenu2_Hide();" TARGET="_self">Links</a> </SPAN></td>
-</tr></table></dt></dl>
-<table cellpadding="0" cellspacing="3" width="100%"><tr><td valign="top">Summary:</td>
-<td align="left">Paired neoplastic and noncancerous renal epithelium samples from 37 individuals analyzed. Identifies gene expression changes shared with other epithelial tumors, activities of specific biological pathways and a unique signature for renal cell carcinoma.<br>Parent platform: <a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL10">GPL10</a>, reference series: <a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">GSE3</a></td>
-<td><a href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=9"><img border="0" src="http://www.ncbi.nlm.nih.gov/projects/geo/img/UPGMA/UCorrelated/GDS9i.png"></a></td>
-</tr>
-
-<tr><td align="left">Type:</td>
-<td align="left">single channel count</td>
-</tr>
-<tr><td align="left">Subsets:</td>
-<td>6 disease state sets.</td>
-</tr>
-<tr><td nowrap>Samples:</td>
-<td align="left">171 (listing 18)</td>
-</tr>
-<tr><td></td>
-<td><table cellpedding="1" cellspacing="5" span class="small8b"><tr></tr>
-
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM181">GSM181</a>: Renal cell carcinoma: rccc-1, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM183">GSM183</a>: Renal cell carcinoma: rccc-1, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM185">GSM185</a>: Renal cell carcinoma: rccc-2, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM187">GSM187</a>: Renal cell carcinoma: rccc-2, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM189">GSM189</a>: Renal cell carcinoma: rccc-3, nor..</td>
-
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM192">GSM192</a>: Renal cell carcinoma: rccc-3, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM194">GSM194</a>: Renal cell carcinoma: rccc-4, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM196">GSM196</a>: Renal cell carcinoma: rccc-4, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM198">GSM198</a>: Renal cell carcinoma: rccc-5, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM200">GSM200</a>: Renal cell carcinoma: rccc-5, nor..</td>
-
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM203">GSM203</a>: Renal cell carcinoma: rccc-6, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM205">GSM205</a>: Renal cell carcinoma: rccc-6, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM207">GSM207</a>: Renal cell carcinoma: rccc-7, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM209">GSM209</a>: Renal cell carcinoma: rccc-7, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM211">GSM211</a>: Renal cell carcinoma: rccc-8, nor..</td>
-
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM214">GSM214</a>: Renal cell carcinoma: rccc-8, nor..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM216">GSM216</a>: Renal cell carcinoma: rccc-9, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM218">GSM218</a>: Renal cell carcinoma: rccc-9, nor..</td>
-</tr>
-</table></td>
-</tr>
-</table>
-<dl><dt><table bgcolor="EEEEEE" cellpadding="0" cellspacing="0" class="SMALL1" valign="top" width="100%"><tr><td><input name="uid" type="checkbox" value="2749"><b>3: </b><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">GSE3 record</a><strong>: Renal Cell Carcinoma Differential Expression</strong> [Homo sapiens]</td>
-
-<td align="right"><SPAN></SPAN></td>
-</tr></table></dt></dl>
-<table cellpadding="0" cellspacing="3" width="100%"><tr><td valign="top">Summary:</td>
-<td align="left">(Submitter supplied) We investigated the changes in gene expression accompanying the development and progression of kidney cancer using 31,500 element complementary DNA arrays. We measured expression profiles for paired neoplastic and non-cancerous renal epithelium samples from 37 individuals. Using an experimental design optimized for factoring out technological and biological noise, and an adapted statistical test, we find 1738 differentially expressed cDNAs with an expected number of 6 false positives. Functional annotation of these genes provided views of the changes in the activities of specific biological pathways in renal cancer. Cell adhesion, signal transduction, and nucleotide metabolism were among the biological processes with a large proportion of genes overexpressed in renal cell carcinoma. Downregulated pathways in the kidney tumor cells included small molecule transport, ion homeostasis, and oxygen and radical metabolism.<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3"> more...</a><br>Parent platform: <a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL10">GPL10</a>, reference datasets: <a href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=8">GDS8</a> <a href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=9">GDS9</a></td>
-</tr>
-<tr><td nowrap>Samples:</td>
-
-<td align="left">342 (listing 18)</td>
-</tr>
-<tr><td></td>
-<td><table cellpedding="1" cellspacing="5" span class="small8b"><tr></tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM81">GSM81</a>: Renal cell carcinoma: rccc-1, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM82">GSM82</a>: Renal cell carcinoma: rccc-1, tum..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM83">GSM83</a>: Renal cell carcinoma: rccc-1, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM84">GSM84</a>: Renal cell carcinoma: rccc-1, tum..</td>
-
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM85">GSM85</a>: Renal cell carcinoma: rccc-2, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM86">GSM86</a>: Renal cell carcinoma: rccc-2, tum..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM87">GSM87</a>: Renal cell carcinoma: rccc-2, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM88">GSM88</a>: Renal cell carcinoma: rccc-2, tum..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM89">GSM89</a>: Renal cell carcinoma: rccc-3, nor..</td>
-
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM90">GSM90</a>: Renal cell carcinoma: rccc-3, tum..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM91">GSM91</a>: Renal cell carcinoma: rccc-3, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM92">GSM92</a>: Renal cell carcinoma: rccc-3, tum..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM93">GSM93</a>: Renal cell carcinoma: rccc-4, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM94">GSM94</a>: Renal cell carcinoma: rccc-4, tum..</td>
-
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM95">GSM95</a>: Renal cell carcinoma: rccc-4, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM96">GSM96</a>: Renal cell carcinoma: rccc-4, tum..</td>
-</tr>
-<tr><td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM97">GSM97</a>: Renal cell carcinoma: rccc-5, nor..</td>
-<td align="left" span class="small8lnk"><a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM98">GSM98</a>: Renal cell carcinoma: rccc-5, tum..</td>
-</tr>
-</table></td>
-</tr>
-
-</table>
-<input name="showndispmax" type="hidden" value="20"><input name="page" type="hidden" value="0">
-				    <!-- -------- end of view --------- -->
-			        <!-- end of right content column  -->
-                    </td>
-		        </tr>
-		        <tr valign="top">
-			        <td colspan="2"><img src="/corehtml/transparent.gif" width="140" height="1" border="0"></td>
-			        <td width="100%"><br/>	 <div align="center" class="SMALL1">
-
-		<p><a href="http://www.ncbi.nlm.nih.gov/About/disclaimer.html">Disclaimer
-		 </a> | <a href="mailto:info@ncbi.nlm.nih.gov">Write to the Help Desk<br>
-		  </a> <a href="http://www.ncbi.nlm.nih.gov">NCBI</a> | <a href="http://www.nlm.nih.gov">NLM</a>
-		  | <a href="http://www.nih.gov">NIH</a> </p>
-
-		<p>&nbsp;</p>
-	 </div>
-</td>
-                </tr>
-            </table>
-		    <!-- 2nd table end -->
-        </form>
-        <script type="text/javascript" language="JavaScript">
-            <!--
-            document.frmQueryBox.term.focus();
-            -->
-        </script>
-        <p class="dblinks" align="right"><font color="#eeeeee" size="-5">Aug 16 2005 14:03:09</font></p>
-
-        <!-- host:ipubmed32 -->
-    </body>
+
+<body bgcolor="#FFFFFF" background="/corehtml/bkgd.gif" text="#000000"
+	link="#0033CC" vlink="#CC3300">
+	<form enctype="application/x-www-form-urlencoded" name="frmQueryBox"
+		action="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?CMD=search&DB=gds"
+		method="POST">
+
+		<input name="WebEnv" type="hidden"
+			value="0hULnCP6aD1G5Kte8mZK-zug6DNZyD0aA9Q5O9K-Ewc20lVNItcP@zxU2HIIOFkYAAE65ChAAAAAE">
+		<input name="CMD" type="hidden" disabled>
+		<!-- 1st table start -->
+		<table id="logo">
+			<tr>
+				<!-- logo -->
+				<td>
+					<table>
+						<tr align="left">
+							<td>
+								<a href="http://www.ncbi.nlm.nih.gov">
+									<img src="/corehtml/left.GIF" width="130" height="45"
+										border="0" alt="NCBI">
+								</a>
+							</td>
+							<td>
+								<img src="/entrez/query/static/gifs/gds_banner.jpg"
+									alt="GEO DataSets" border="0">
+							</td>
+							<td align="right">
+								<script type="text/javascript">
+                        <!--
+                           var myncbi_xo = 0;
+                           var myncbi_x = MyNCBI_find();
+                           var myncbi_cu = unescape( 'http%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Fentrez%2Fquery%2Efcgi%3Fcmd%3Dsearch%26amp%3Bdb%3Dgds%26amp%3Bfmt%3Dxml%26amp%3Bterm%3DGSE3%5BAccession%5D' );
+                           function MyNCBI_find() {
+                              var cs = document.cookie.split( '; ' );
+                              for (var i = 0; i < cs.length; i++) {
+                                 // a name/value pair (a crumb) is separated by an equal sign
+                                 var c = cs[i].split( '=' );
+                                 if ( c[0] == 'WebCubbyUser' && c[1] != '' ) {
+                                    return true;
+                                 }
+                              }
+                              return false;
+                           }
+
+                           function MyNCBI_r() {
+                              if ( myncbi_xo == 0 ) {
+                                 var x = MyNCBI_find();
+                                 if ( x != myncbi_x ) {
+                                    myncbi_x = x;
+                                    myncbi_xo = 0;
+                                    window.location.replace( myncbi_cu );
+                                 } else {
+                                    window.setTimeout( MyNCBI_r, 500 );
+                                 }
+                              }
+                           }
+                           window.setTimeout( MyNCBI_r, 500 );
+                        // -->
+                        </script>
+
+								<table class="medium1 padded" id="myncbi_off">
+									<tr>
+										<td bgcolor="#336699" align="right">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/entrez/cubby.fcgi?call=QueryExt.CubbyQuery..ShowAll&db=gds">
+												<font color="#FFFFFF">
+													<b>My NCBI</b>
+												</font>
+											</a>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<script>
+                                    function openLogin() {
+                                       if ( myncbi_xo == 0 ) {
+                                          window
+                                             .open(
+                                                'http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Login&tmpl=MiniBaseFile',
+                                                'Save2Cubby',
+                                                'resizable=yes,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=yes,depend=yes,top=50,left=200,width=400,height=100' );
+                                          return false;
+                                       }
+                                       return true;
+                                    }
+
+                                    function openRegister() {
+                                       if ( myncbi_xo == 0 ) {
+                                          window
+                                             .open(
+                                                'http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Register&tmpl=MiniBaseFile',
+                                                'Save2Cubby',
+                                                'resizable=yes,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=yes,depend=yes,top=50,left=200,width=400,height=100' );
+                                          return false;
+                                       }
+                                       return true;
+                                    }
+                                 </script>
+											<a
+												href="http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Login&currentURL=http%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Fentrez%2Fquery%2Efcgi%3Fcmd%3Dsearch%26amp%3Bdb%3Dgds%26amp%3Bfmt%3Dxml%26amp%3Bterm%3DGSE3%5BAccession%5D"
+												onClick="openLogin()" title="Click to sign in">
+												[Sign&nbsp;In] </a>
+											&nbsp;
+											<a
+												href="http://www.ncbi.nlm.nih.gov/entrez/login.fcgi?call=so.SignOn..Register&currentURL=http%3A%2F%2Fwww%2Encbi%2Enlm%2Enih%2Egov%2Fentrez%2Fquery%2Efcgi%3Fcmd%3Dsearch%26amp%3Bdb%3Dgds%26amp%3Bfmt%3Dxml%26amp%3Bterm%3DGSE3%5BAccession%5D"
+												onClick="openRegister()"
+												title="Click to register for an account"> [Register] </a>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+
+			<!--site map-->
+			<tr>
+				<td>
+					<table class="TEXT padded" style="background-color: #000000">
+						<tr class="TEXT" align="CENTER">
+							<td>
+								<a href="/gquery/gquery.fcgi?itool=toolbar" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">All&nbsp;Databases</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=PubMed" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">PubMed</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=Nucleotide" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">Nucleotide</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=Protein" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">Protein</FONT>
+								</a>
+							</td>
+
+							<td>
+								<a href="/entrez/query.fcgi?db=Genome" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">Genome</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=Structure" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">Structure</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=PMC" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">PMC</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=Journals" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">Journals</FONT>
+								</a>
+							</td>
+							<td>
+								<a href="/entrez/query.fcgi?db=Books" class="GUTTER3">
+									<FONT COLOR="#FFFFFF">Books</FONT>
+								</a>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+
+			<!--query box-->
+			<tr>
+				<td>
+					<table class="padded-small gray" id="searchbar">
+						<tr>
+							<td class="SMALL1" nowrap>
+								&nbsp;Search
+								<small>
+									<select name="db" onChange="DbChange(this);">
+										<option value="pubmed">PubMed</option>
+										<option value="protein">Protein</option>
+										<option value="nucleotide">Nucleotide</option>
+										<option value="structure">Structure</option>
+										<option value="genome">Genome</option>
+										<option value="books">Books</option>
+										<option value="cancerchromosomes">CancerChromosomes</option>
+
+										<option value="cdd">Conserved Domains</option>
+										<option value="domains">3D Domains</option>
+										<option value="gene">Gene</option>
+										<option value="genomeprj">Genome Project</option>
+										<option value="gensat">GENSAT</option>
+										<option value="geo">GEO Profiles</option>
+										<option selected value="gds">GEO DataSets</option>
+										<option value="homologene">HomoloGene</option>
+										<option value="journals">Journals</option>
+
+										<option value="mesh">MeSH</option>
+										<option value="ncbisearch">NCBI Web Site</option>
+										<option value="nlmcatalog">NLM Catalog</option>
+										<option value="omia">OMIA</option>
+										<option value="omim">OMIM</option>
+										<option value="pmc">PMC</option>
+										<option value="popset">PopSet</option>
+										<option value="probe">Probe</option>
+										<option value="pcassay">PubChem BioAssay</option>
+
+										<option value="pccompound">PubChem Compound</option>
+										<option value="pcsubstance">PubChem Substance</option>
+										<option value="snp">SNP</option>
+										<option value="taxonomy">Taxonomy</option>
+										<option value="unigene">UniGene</option>
+										<option value="unists">UniSTS</option>
+									</select>
+									<input name="orig_db" type="hidden" value="gds">
+								</small>
+								for
+								<input name="term" size="45" type="TEXT" value="GSE3[Accession]">
+								<!-- internal use only! -->
+								<input type="submit" value="Go" onClick="Go('search');">
+								<input name="Clear" type="button" value="Clear"
+									onClick="this.form.term.value='';this.form.term.focus();">
+								<a
+									href="/entrez/cubby.fcgi?call=QueryExt.Query.1.Store;QueryExt.CubbyQuery.0.Details&tmpl=MiniBaseFile"
+									onClick="window.open('/entrez/cubby.fcgi?call=QueryExt.Query.1.Store;QueryExt.CubbyQuery.0.Details&tmpl=MiniBaseFile','Save2Cubby','resizable=yes,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=yes,depend=yes,top=50,left=200,width=400,height=100');return false;"
+									title="Click to save search strategy in My NCBI">Save
+									Search</a>
+								<!-- internal use only! -->
+								<input name="cmd" type="hidden" value="Search">
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<table>
+						<tr>
+							<td>
+								<img src="/corehtml/transparent.gif" width="134" height="1"
+									border="0">
+							</td>
+
+							<td width="100%" class="gray">
+								<!-- tabstoolbar -->
+								<input name="cmd_current" type="hidden" value=""></input>
+								<table class="gray" id="Tabs_TabsToolbar">
+									<tr>
+										<td>
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="3" height="1" alt="" border="0">
+										</td>
+										<td width="100%">
+											<table style="border-color: #00ffff" class="gray"
+												id="TabsToolbar">
+												<tr>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_1st_left_top.gif"
+															width="6" height="13" alt="" border="0">
+													</td>
+													<td colspan="3"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif"
+															width="11" height="13" alt="" border="0">
+													</td>
+													<td colspan="3"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif"
+															width="11" height="13" alt="" border="0">
+													</td>
+
+													<td colspan="3"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif"
+															width="11" height="13" alt="" border="0">
+													</td>
+													<td colspan="3"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif"
+															width="11" height="13" alt="" border="0">
+													</td>
+													<td colspan="3"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_last_right_top.gif"
+															width="6" height="13" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+												</tr>
+												<tr>
+
+													<td width="1"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_1st_left_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="6" height="1" alt="" border="0">
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td align="center" valign="middle" style="cursor: pointer"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+														onClick="Go('Limits')"
+														title="Click to select options to limit retrieval">
+														<a href="javascript:Go('Limits')" class="pmlinkna">Limits&nbsp;</a>
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="6" height="1" alt="" border="0">
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td align="center" valign="middle" style="cursor: pointer"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+														onClick="Go('Index')"
+														title="Click to preview results and browse search terms">
+														<a href="javascript:Go('Index')" class="pmlinkna">Preview/Index&nbsp;</a>
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="6" height="1" alt="" border="0">
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td align="center" valign="middle" style="cursor: pointer"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+														onClick="Go('History')"
+														title="Click to display your previous searches">
+														<a href="javascript:Go('History')" class="pmlinkna">History&nbsp;</a>
+													</td>
+
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="6" height="1" alt="" border="0">
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td align="center" valign="middle" style="cursor: pointer"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+														onClick="Go('Clipboard')"
+														title="Click to see items you have collected">
+														<a href="javascript:Go('Clipboard')" class="pmlinkna">Clipboard&nbsp;</a>
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+
+													<td width="1"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="6" height="1" alt="" border="0">
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td align="center" valign="middle" style="cursor: pointer"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+														onClick="Go('Details')"
+														title="Click to see how your search was enhanced">
+														<a href="javascript:Go('Details')" class="pmlinkna">Details&nbsp;</a>
+													</td>
+													<td width="6"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1"
+														background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="6" height="1" alt="" border="0">
+													</td>
+													<td></td>
+
+												</tr>
+												<tr>
+													<td bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td colspan="3" bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td colspan="3" bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td colspan="3" bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+
+													<td colspan="3" bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td colspan="3" bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td bgcolor="#8A8D9C">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+													<td width="1">
+														<img
+															src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+															width="1" height="1" alt="" border="0">
+													</td>
+												</tr>
+											</table>
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		<!-- 1st table end -->
+		<!-- 2nd table start -->
+		<table id="resultview">
+			<tr>
+				<td colspan="3">
+					<img src="/corehtml/transparent.gif" height="5" border="0">
+				</td>
+			</tr>
+			<tr valign="top">
+				<!--  left column   -->
+				<td>
+					<img src="/corehtml/transparent.gif" width="125" height="1"
+						border="0">
+					<!-- sidebar start -->
+					<a href="/Database/index.html" class="GUTTER3">
+						<FONT COLOR="#FFFFFF">About Entrez</FONT>
+					</a>
+					<br>
+					<br>
+					<span class="GUTTER3">
+						<a href="http://www.ncbi.nlm.nih.gov/geo/" class="GUTTER3">
+							<FONT COLOR="#FFFFFF">The GEO site</FONT>
+						</a>
+					</span>
+					<br>
+					<br>
+					<span class="GUTTER3">
+						<a href="http://www.ncbi.nlm.nih.gov/geo/info/faq.html"
+							class="GUTTER3">
+							<FONT COLOR="#FFFFFF">GEO FAQ</FONT>
+						</a>
+					</span>
+					<BR>
+					<BR>
+					<span class="GUTTER3">
+						<a href="http://www.ncbi.nlm.nih.gov/geo/info/print_stats.cgi"
+							class="GUTTER3">
+							<FONT COLOR="#FFFFFF">Listing of Contents</FONT>
+						</a>
+					</span>
+					<BR>
+					<BR>
+					<span class="GUTTER1">
+						<FONT COLOR="#ffcc66">Entrez </FONT>
+					</span>
+					<br>
+					<A HREF="/entrez/query/static/help/helpdoc.html" class="GUTTER3">
+						<FONT COLOR="#FFFFFF">Help</FONT>
+					</A>
+					<FONT COLOR="#FFFFFF"> |</FONT>
+					<A HREF="/entrez/query/static/entrezfaq.html" class="GUTTER3">
+						<FONT COLOR="#FFFFFF">FAQ</FONT>
+					</A>
+					<!-- sidebar end -->
+				</td>
+				<td>
+					<img src="/corehtml/transparent.gif" width="15" height="1"
+						border="0">
+				</td>
+
+				<!-- right content column  -->
+				<td width="100%" bgcolor="#FFFFFF">
+					<!-- -------- view --------- -->
+					<input name="query_key" type="hidden" value="1">
+					<input name="query_hl" type="hidden" value="1">
+					<!-- Display Bar -->
+					<table id="DisplayBar" class="gray">
+						<tr>
+							<td align="left" nowrap>
+								<small>
+									&nbsp;Display&nbsp;
+									<select name="dopt"
+										onChange="if(options[selectedIndex].value.search('_') != -1 && form.sort){form.sort.selectedIndex=0};ControlSync(form,name,'dopt1');Go('Display');">
+										<option selected value="DocSum">Summary</option>
+										<option value="Brief">Brief</option>
+										<option value="gds_gds">Related DataSets</option>
+										<option value="gds_geo">GEO Profile Links</option>
+										<option value="gds_pmc">PMC Links</option>
+										<option value="gds_pubmed">PubMed Links</option>
+
+										<option value="gds_taxonomy">Taxonomy Links</option>
+									</select>
+									&nbsp;Show&nbsp;
+									<select name="dispmax"
+										onChange="ControlSync(form,name,'dispmax1');Go('Display');">
+										<option value="5">5</option>
+										<option value="10">10</option>
+										<option selected value="20">20</option>
+										<option value="50">50</option>
+										<option value="100">100</option>
+
+										<option value="200">200</option>
+										<option value="500">500</option>
+									</select>
+									<!--<select name="sort" onChange="if(form.dopt.options[form.dopt.selectedIndex].value.search('_') != -1){form.dopt.selectedIndex=0};ControlSync(form,name,'sort1');Go('Display');">    
+										   		</select>-->
+									<select name="SendTo"
+										onChange="ControlSync(form,name,'SendTo1');if(options[selectedIndex].value != ''){Go(options[selectedIndex].value);}">
+										<option selected value="">Send to</option>
+										<option value="Text">Text</option>
+										<option value="File">File</option>
+										<option value="Add to Clipboard">Clipboard</option>
+									</select>
+								</small>
+							</td>
+						</tr>
+						<tr>
+							<td>
+								<img height="3"
+									src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+									width="1">
+							</td>
+						</tr>
+					</table>
+					<!-- /Display Bar -->
+					<input name="filter_current" type="hidden" value="">
+					<input name="filter" type="hidden" value="">
+					<table class="gray" id="Tabs_FILTER_SELECTOR">
+						<tr>
+							<td>
+								<img
+									src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+									width="3" height="1" alt="" border="0">
+							</td>
+							<td width="100%">
+								<table class="gray" id="FILTER_SELECTOR">
+									<tr>
+										<td width="1">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_left_top.gif"
+												alt="" width="6" height="13" border="0">
+										</td>
+										<td
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_top_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_top_bg.gif"
+												alt="" width="2" height="13" border="0">
+										</td>
+										<td width="1">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_right_top.gif"
+												alt="" width="6" height="13" border="0">
+										</td>
+										<td colspan="3"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+
+										<td width="1">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_top.gif"
+												width="11" height="13" alt="" border="0">
+										</td>
+										<td colspan="3"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_top_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td width="1">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_last_right_top.gif"
+												width="6" height="13" alt="" border="0">
+										</td>
+										<td width="1">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+									</tr>
+									<tr>
+										<td width="1"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_left_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td align="center" valign="top"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_main_bg.gif"
+											title="Total Results">
+											<font class="pmlinkna">
+												<b>All: 3</b>&nbsp;
+											</font>
+										</td>
+
+										<td width="1"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_active_right_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td width="6"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td align="center" valign="middle" style="cursor: pointer"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+											onClick="document.frmQueryBox.filter.value='gds';Go('DisplayFiltered');"
+											title="Curated GEO DataSets">
+											<a
+												href="javascript:document.frmQueryBox.filter.value='gds';Go('DisplayFiltered');"
+												class="pmlinkna"> DataSets: 2&nbsp; </a>
+
+										</td>
+										<td width="6"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td width="1"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="6" height="1" alt="" border="0">
+										</td>
+										<td width="6"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td align="center" valign="middle" style="cursor: pointer"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif"
+											onClick="document.frmQueryBox.filter.value='gse';Go('DisplayFiltered');"
+											title="Submitter provided experiment description">
+											<a
+												href="javascript:document.frmQueryBox.filter.value='gse';Go('DisplayFiltered');"
+												class="pmlinkna"> Series: 1&nbsp; </a>
+										</td>
+										<td width="6"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_main_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td width="1"
+											background="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/tab_middle_bg.gif">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="6" height="1" alt="" border="0">
+										</td>
+										<td>
+											<a
+												href="/entrez/cubby.fcgi?call=QueryExt.EFilt.gds~0.Choose&db=gds&term=GSE3[Accession]">
+												<img
+													title="Click to change filter selection through My NCBI."
+													border="0"
+													src="/corehtml/query/def/tabsgraph/conf_icon.gif">
+											</a>
+										</td>
+									</tr>
+
+									<tr>
+										<td bgcolor="white">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td bgcolor="white">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td bgcolor="white">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td colspan="3" bgcolor="#8A8D9C">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td bgcolor="#8A8D9C">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td colspan="3" bgcolor="#8A8D9C">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td bgcolor="#8A8D9C">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+										<td width="1">
+											<img
+												src="http://www.ncbi.nlm.nih.gov/coreweb/images/tabs/pixel.gif"
+												width="1" height="1" alt="" border="0">
+										</td>
+
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+					<input name="CrntRpt" type="hidden" value="DocSum">
+					<!---- Pager -- (page header) -- begin ---->
+					<table id="PaginationNode">
+						<tr>
+							<td align="center" nowrap>
+								<div class="medium2">Items 1 - 3 of 3</div>
+							</td>
+							<td align="right" width="100%">One&nbsp;page.</td>
+						</tr>
+					</table>
+					<!---- Pager -- (page header) -- end ------>
+
+					<div class="padded">
+						<table class="SMALL1 darkgray align-top">
+							<tr>
+								<td>
+									<input name="uid" type="checkbox" value="8">
+									<b>1: </b>
+									<a
+										href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=8">
+										GDS8 record</a>
+									<strong>: Kidney cancer progression (I)</strong> [Homo sapiens]
+								</td>
+
+								<td align="right">
+									<SPAN>
+										<a CLASS="dblinks"
+											href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_geo&from_uid=8">
+											GEO Profiles, </a>
+										<script>
+                              <!--
+                                 var PopUpMenu2_LocalConfig_jsmenu3Config = [
+                                                                             [ "ShowCloseIcon", "yes" ],
+                                                                             [
+                                                                              "Help",
+                                                                              "window.open('/entrez/query/static/popup.html','Links_Help','resizable=no,scrollbars=yes,toolbar=no,location=no,directories=no,status=no,menubar=no,copyhistory=no,alwaysRaised=no,depend=no,width=400,height=500');" ],
+                                                                             [ "TitleText", " Links " ] ]
+                              //-->
+                              </script>
+										<script>
+                              <!--
+                                 var Menu8 = [
+                                              [ "UseLocalConfig", "jsmenu3Config", "", "" ],
+                                              [
+                                               "GEO DataSets",
+                                               "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_gds&from_uid=8'",
+                                               "", "" ],
+                                              [
+                                               "Full text in PMC",
+                                               "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pmc&from_uid=8'",
+                                               "", "" ],
+                                              [
+                                               "PubMed",
+                                               "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pubmed&from_uid=8'",
+                                               "", "" ],
+                                              [
+                                               "Taxonomy",
+                                               "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_taxonomy&from_uid=8'",
+                                               "", "" ] ]
+                              //-->
+                              </script>
+										<a class="dblinks" href="javascript:PopUpMenu2_Set(Menu8);"
+											onMouseOut="PopUpMenu2_Hide();" TARGET="_self">Links</a>
+									</SPAN>
+								</td>
+							</tr>
+						</table>
+					</div>
+					<table class="spaced">
+						<tr>
+							<td valign="top">Summary:</td>
+							<td align="left">
+								Paired neoplastic and noncancerous renal epithelium samples from
+								37 individuals analyzed. Identifies gene expression changes
+								shared with other epithelial tumors, activities of specific
+								biological pathways and a unique signature for renal cell
+								carcinoma.
+								<br>
+								Parent platform:
+								<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL9">GPL9</a>
+								, reference series:
+								<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">GSE3</a>
+							</td>
+
+							<td>
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=8">
+									<img border="0"
+										src="http://www.ncbi.nlm.nih.gov/projects/geo/img/UPGMA/UCorrelated/GDS8i.png">
+								</a>
+							</td>
+						</tr>
+						<tr>
+							<td align="left">Type:</td>
+							<td align="left">single channel count</td>
+						</tr>
+						<tr>
+							<td align="left">Subsets:</td>
+							<td>6 disease state sets.</td>
+						</tr>
+						<tr>
+							<td nowrap>Samples:</td>
+							<td align="left">171 (listing 18)</td>
+						</tr>
+
+						<tr>
+							<td></td>
+							<td>
+								<table class="small8b spaced">
+									<tr></tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM81">GSM81</a>
+											: Renal cell carcinoma: rccc-1, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM83">GSM83</a>
+											: Renal cell carcinoma: rccc-1, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM85">GSM85</a>
+											: Renal cell carcinoma: rccc-2, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM87">GSM87</a>
+											: Renal cell carcinoma: rccc-2, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM89">GSM89</a>
+											: Renal cell carcinoma: rccc-3, nor..
+										</td>
+
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM91">GSM91</a>
+											: Renal cell carcinoma: rccc-3, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM93">GSM93</a>
+											: Renal cell carcinoma: rccc-4, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM95">GSM95</a>
+											: Renal cell carcinoma: rccc-4, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM97">GSM97</a>
+											: Renal cell carcinoma: rccc-5, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM99">GSM99</a>
+											: Renal cell carcinoma: rccc-5, nor..
+										</td>
+
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM101">GSM101</a>
+											: Renal cell carcinoma: rccc-6, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM103">GSM103</a>
+											: Renal cell carcinoma: rccc-6, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM105">GSM105</a>
+											: Renal cell carcinoma: rccc-7, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM107">GSM107</a>
+											: Renal cell carcinoma: rccc-7, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM109">GSM109</a>
+											: Renal cell carcinoma: rccc-8, nor..
+										</td>
+
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM111">GSM111</a>
+											: Renal cell carcinoma: rccc-8, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM113">GSM113</a>
+											: Renal cell carcinoma: rccc-9, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM115">GSM115</a>
+											: Renal cell carcinoma: rccc-9, nor..
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+
+					<table class="SMALL1 darkgray align-top">
+						<tr>
+							<td>
+								<input name="uid" type="checkbox" value="9">
+								<b>2: </b>
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=9">GDS9
+									record</a>
+								<strong>: Kidney cancer progression (II)</strong> [Homo sapiens]
+							</td>
+
+							<td align="right">
+								<SPAN>
+									<a CLASS="dblinks"
+										href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_geo&from_uid=9">GEO
+										Profiles,</a>
+									<script>
+			                           <!--
+			                              var Menu9 = [
+			                                           [ "UseLocalConfig", "jsmenu3Config", "", "" ],
+			                                           [
+			                                            "GEO DataSets",
+			                                            "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_gds&from_uid=9'",
+			                                            "", "" ],
+			                                           [
+			                                            "Full text in PMC",
+			                                            "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pmc&from_uid=9'",
+			                                            "", "" ],
+			                                           [
+			                                            "PubMed",
+			                                            "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_pubmed&from_uid=9'",
+			                                            "", "" ],
+			                                           [
+			                                            "Taxonomy",
+			                                            "window.top.location='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&cmd=Display&dopt=gds_taxonomy&from_uid=9'",
+			                                            "", "" ] ]
+			                           //-->
+		                            </script>
+									<a class="dblinks" href="javascript:PopUpMenu2_Set(Menu9);"
+										onMouseOut="PopUpMenu2_Hide();" TARGET="_self">Links</a>
+								</SPAN>
+							</td>
+						</tr>
+					</table>
+
+					<table class="spaced">
+						<tr>
+							<td valign="top">Summary:</td>
+							<td align="left">
+								Paired neoplastic and noncancerous renal epithelium samples from
+								37 individuals analyzed. Identifies gene expression changes
+								shared with other epithelial tumors, activities of specific
+								biological pathways and a unique signature for renal cell
+								carcinoma.
+								<br>
+								Parent platform:
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL10">GPL10</a>
+								, reference series:
+								<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">GSE3</a>
+							</td>
+							<td>
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=9">
+									<img border="0"
+										src="http://www.ncbi.nlm.nih.gov/projects/geo/img/UPGMA/UCorrelated/GDS9i.png">
+								</a>
+							</td>
+						</tr>
+
+						<tr>
+							<td align="left">Type:</td>
+							<td align="left">single channel count</td>
+						</tr>
+						<tr>
+							<td align="left">Subsets:</td>
+							<td>6 disease state sets.</td>
+						</tr>
+						<tr>
+							<td nowrap>Samples:</td>
+							<td align="left">171 (listing 18)</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<table class="small8b spaced">
+									<tr></tr>
+
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM181">GSM181</a>
+											: Renal cell carcinoma: rccc-1, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM183">GSM183</a>
+											: Renal cell carcinoma: rccc-1, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM185">GSM185</a>
+											: Renal cell carcinoma: rccc-2, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM187">GSM187</a>
+											: Renal cell carcinoma: rccc-2, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM189">GSM189</a>
+											: Renal cell carcinoma: rccc-3, nor..
+										</td>
+
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM192">GSM192</a>
+											: Renal cell carcinoma: rccc-3, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM194">GSM194</a>
+											: Renal cell carcinoma: rccc-4, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM196">GSM196</a>
+											: Renal cell carcinoma: rccc-4, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM198">GSM198</a>
+											: Renal cell carcinoma: rccc-5, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM200">GSM200</a>
+											: Renal cell carcinoma: rccc-5, nor..
+										</td>
+
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM203">GSM203</a>
+											: Renal cell carcinoma: rccc-6, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM205">GSM205</a>
+											: Renal cell carcinoma: rccc-6, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM207">GSM207</a>
+											: Renal cell carcinoma: rccc-7, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM209">GSM209</a>
+											: Renal cell carcinoma: rccc-7, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM211">GSM211</a>
+											: Renal cell carcinoma: rccc-8, nor..
+										</td>
+
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM214">GSM214</a>
+											: Renal cell carcinoma: rccc-8, nor..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM216">GSM216</a>
+											: Renal cell carcinoma: rccc-9, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM218">GSM218</a>
+											: Renal cell carcinoma: rccc-9, nor..
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+					</table>
+					
+							<table class="SMALL1 gray align-top">
+								<tr>
+									<td>
+										<input name="uid" type="checkbox" value="2749">
+										<b>3: </b>
+										<a
+											href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">GSE3
+											record</a>
+										<strong>: Renal Cell Carcinoma Differential
+											Expression</strong> [Homo sapiens]
+									</td>
+
+									<td align="right">
+										<SPAN></SPAN>
+									</td>
+								</tr>
+							</table>
+						
+					<table class="spaced">
+						<tr>
+							<td valign="top">Summary:</td>
+							<td align="left">
+								(Submitter supplied) We investigated the changes in gene
+								expression accompanying the development and progression of
+								kidney cancer using 31,500 element complementary DNA arrays. We
+								measured expression profiles for paired neoplastic and
+								non-cancerous renal epithelium samples from 37 individuals.
+								Using an experimental design optimized for factoring out
+								technological and biological noise, and an adapted statistical
+								test, we find 1738 differentially expressed cDNAs with an
+								expected number of 6 false positives. Functional annotation of
+								these genes provided views of the changes in the activities of
+								specific biological pathways in renal cancer. Cell adhesion,
+								signal transduction, and nucleotide metabolism were among the
+								biological processes with a large proportion of genes
+								overexpressed in renal cell carcinoma. Downregulated pathways in
+								the kidney tumor cells included small molecule transport, ion
+								homeostasis, and oxygen and radical metabolism.
+								<a href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE3">
+									more...</a>
+								<br>
+								Parent platform:
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL10">GPL10</a>
+								, reference datasets:
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=8">GDS8</a>
+								<a
+									href="http://www.ncbi.nlm.nih.gov/geo/gds/gds_browse.cgi?gds=9">GDS9</a>
+							</td>
+						</tr>
+						<tr>
+							<td nowrap>Samples:</td>
+
+							<td align="left">342 (listing 18)</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td>
+								<table class="small8b spaced">
+									<tr></tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM81">GSM81</a>
+											: Renal cell carcinoma: rccc-1, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM82">GSM82</a>
+											: Renal cell carcinoma: rccc-1, tum..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM83">GSM83</a>
+											: Renal cell carcinoma: rccc-1, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM84">GSM84</a>
+											: Renal cell carcinoma: rccc-1, tum..
+										</td>
+
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM85">GSM85</a>
+											: Renal cell carcinoma: rccc-2, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM86">GSM86</a>
+											: Renal cell carcinoma: rccc-2, tum..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM87">GSM87</a>
+											: Renal cell carcinoma: rccc-2, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM88">GSM88</a>
+											: Renal cell carcinoma: rccc-2, tum..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM89">GSM89</a>
+											: Renal cell carcinoma: rccc-3, nor..
+										</td>
+
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM90">GSM90</a>
+											: Renal cell carcinoma: rccc-3, tum..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM91">GSM91</a>
+											: Renal cell carcinoma: rccc-3, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM92">GSM92</a>
+											: Renal cell carcinoma: rccc-3, tum..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM93">GSM93</a>
+											: Renal cell carcinoma: rccc-4, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM94">GSM94</a>
+											: Renal cell carcinoma: rccc-4, tum..
+										</td>
+
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM95">GSM95</a>
+											: Renal cell carcinoma: rccc-4, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM96">GSM96</a>
+											: Renal cell carcinoma: rccc-4, tum..
+										</td>
+									</tr>
+									<tr>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM97">GSM97</a>
+											: Renal cell carcinoma: rccc-5, nor..
+										</td>
+										<td align="left" class="small8lnk">
+											<a
+												href="http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM98">GSM98</a>
+											: Renal cell carcinoma: rccc-5, tum..
+										</td>
+									</tr>
+								</table>
+							</td>
+						</tr>
+
+					</table>
+					<input name="showndispmax" type="hidden" value="20">
+					<input name="page" type="hidden" value="0">
+					<!-- -------- end of view --------- -->
+					<!-- end of right content column  -->
+				</td>
+			</tr>
+			<tr valign="top">
+				<td colspan="2">
+					<img src="/corehtml/transparent.gif" width="140" height="1"
+						border="0">
+				</td>
+				<td width="100%">
+					<br />
+					<div align="center" class="SMALL1">
+
+						<p>
+							<a href="http://www.ncbi.nlm.nih.gov/About/disclaimer.html">Disclaimer
+							</a>
+							|
+							<a href="mailto:info@ncbi.nlm.nih.gov">
+								Write to the Help Desk
+								<br>
+							</a>
+							<a href="http://www.ncbi.nlm.nih.gov">NCBI</a>
+							|
+							<a href="http://www.nlm.nih.gov">NLM</a>
+							|
+							<a href="http://www.nih.gov">NIH</a>
+						</p>
+
+						<p>&nbsp;</p>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<!-- 2nd table end -->
+	</form>
+	<script type="text/javascript">
+   <!--
+      document.frmQueryBox.term.focus();
+      -->
+   </script>
+	<p class="dblinks" align="right">
+		<font color="#eeeeee" size="-5">Aug 16 2005 14:03:09</font>
+	</p>
+
+	<!-- host:ipubmed32 -->
+</body>
 </html>
+

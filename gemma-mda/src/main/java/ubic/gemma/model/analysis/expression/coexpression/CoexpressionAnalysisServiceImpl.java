@@ -170,6 +170,7 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
         return this.getCoexpressionAnalysisDao().load( id );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<CoexpressionAnalysis> loadAll() {

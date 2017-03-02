@@ -28,6 +28,11 @@ public abstract class GeneDifferentialExpressionMetaAnalysis extends
         ubic.gemma.model.analysis.expression.ExpressionAnalysis implements gemma.gsec.model.Securable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -2588180973962410595L;
+
+    /**
      * Constructs new instances of {@link GeneDifferentialExpressionMetaAnalysis}.
      */
     public static final class Factory {

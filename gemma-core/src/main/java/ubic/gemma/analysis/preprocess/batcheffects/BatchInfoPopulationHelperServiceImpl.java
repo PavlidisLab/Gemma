@@ -40,7 +40,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
@@ -67,9 +66,6 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
     protected static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 8;
 
     private static Log log = LogFactory.getLog( BatchInfoPopulationHelperServiceImpl.class );
-
-    @Autowired
-    private BioAssayService bioAssayService;
 
     @Autowired
     private BioMaterialService bioMaterialService = null;
@@ -208,7 +204,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
                      */
                     log.warn( "Singleton at the end of the series, combining with the last batch: gap is "
                             + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() )
-                                    / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
+                                    / ( double ) ( 1000 * 60 * 60 * 24 ) )
+                            + " hours." );
                     mergedAnySingletons = true;
                 } else if ( gapIsLarge( currentDate, nextDate ) ) {
                     /*
@@ -220,17 +217,17 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
 
                     if ( forwards < backwards ) {
                         // Start a new batch.
-                        log.warn( "Singleton resolved by waiting for the next batch: gap is "
-                                + String.format( "%.2f", ( nextDate.getTime() - currentDate.getTime() )
-                                        / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
+                        log.warn( "Singleton resolved by waiting for the next batch: gap is " + String.format( "%.2f",
+                                ( nextDate.getTime() - currentDate.getTime() ) / ( double ) ( 1000 * 60 * 60 * 24 ) )
+                                + " hours." );
                         batchNum++;
                         batchDateString = formatBatchName( batchNum, df, currentDate );
                         result.put( batchDateString, new HashSet<Date>() );
                         mergedAnySingletons = true;
                     } else {
-                        log.warn( "Singleton resolved by adding to the last batch: gap is "
-                                + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() )
-                                        / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
+                        log.warn( "Singleton resolved by adding to the last batch: gap is " + String.format( "%.2f",
+                                ( currentDate.getTime() - lastDate.getTime() ) / ( double ) ( 1000 * 60 * 60 * 24 ) )
+                                + " hours." );
                         // don't start a new batch, fall through.
                     }
 
@@ -274,8 +271,8 @@ public class BatchInfoPopulationHelperServiceImpl implements BatchInfoPopulation
         ef.setCategory( getBatchFactorCategory() );
         ef.setExperimentalDesign( ed );
         ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
-        ef.setDescription( "Scan date or similar proxy for 'sample processing batch'"
-                + " extracted from the raw data files." );
+        ef.setDescription(
+                "Scan date or similar proxy for 'sample processing batch'" + " extracted from the raw data files." );
 
         ef = persistFactor( ee, ef );
         return ef;

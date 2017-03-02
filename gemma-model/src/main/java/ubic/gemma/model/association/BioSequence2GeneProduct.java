@@ -32,6 +32,11 @@ import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
  */
 public abstract class BioSequence2GeneProduct implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 8361432485953690591L;
+
     private Long id = null;
 
     private Analysis sourceAnalysis = null;

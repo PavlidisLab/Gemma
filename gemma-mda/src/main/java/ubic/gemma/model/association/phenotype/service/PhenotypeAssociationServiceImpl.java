@@ -66,7 +66,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
     @Override
     @Transactional(readOnly = true)
-    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
+    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId ) {
         return this.phenotypeAssociationDao
                 .countEvidenceWithGeneDifferentialExpressionMetaAnalysis( geneDifferentialExpressionMetaAnalysisId );
     }
@@ -152,7 +153,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
             Collection<Long> externalDatabaseIds ) {
-        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneIdAndDatabases( geneId, externalDatabaseIds );
+        return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneIdAndDatabases( geneId,
+                externalDatabaseIds );
     }
 
     /** find all PhenotypeAssociation for a specific NCBI id */
@@ -165,7 +167,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
     @Override
     @Transactional(readOnly = true)
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype ) {
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,
+            Set<String> phenotype ) {
         return this.phenotypeAssociationDao.findPhenotypeAssociationForGeneNCBI( geneNCBI, phenotype );
     }
 
@@ -220,6 +223,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /** find all phenotypes */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<PhenotypeAssociation> loadAll() {

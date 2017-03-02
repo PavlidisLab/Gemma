@@ -58,7 +58,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultSer
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
-import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -75,7 +74,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.EntityUtils;
@@ -185,12 +183,6 @@ public class DEDVController {
 
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-
-    @Autowired
-    private FactorValueService factorValueService;
-
-    @Autowired
-    private CoexpressionService geneCoexpressionService;
 
     @Autowired
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
@@ -453,7 +445,8 @@ public class DEDVController {
      * @param threshold for 'significance'
      * @return collection of visualization value objects
      */
-    public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId, Double givenThreshold ) {
+    public VisualizationValueObject[] getDEDVForDiffExVisualizationByThreshold( Long resultSetId,
+            Double givenThreshold ) {
 
         if ( resultSetId == null ) {
             throw new IllegalArgumentException( "Results    etId cannot be null" );
@@ -578,7 +571,8 @@ public class DEDVController {
      * @param factorMap Collection of DiffExpressionSelectedFactorCommand showing which factors to use.
      * @return
      */
-    public VisualizationValueObject[] getDEDVForVisualizationByProbe( Collection<Long> eeIds, Collection<Long> probeIds ) {
+    public VisualizationValueObject[] getDEDVForVisualizationByProbe( Collection<Long> eeIds,
+            Collection<Long> probeIds ) {
 
         if ( eeIds.isEmpty() || probeIds.isEmpty() ) return null;
 
@@ -590,8 +584,8 @@ public class DEDVController {
         Collection<CompositeSequence> probes = this.compositeSequenceService.loadMultiple( probeIds );
         if ( probes == null || probes.isEmpty() ) return null;
 
-        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
-                ees, probes );
+        Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService
+                .getProcessedDataArraysByProbe( ees, probes );
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
                 .sortVectorDataByDesign( dedvs );
@@ -683,7 +677,7 @@ public class DEDVController {
             resultSetId = Long.parseLong( resultSetIdSt );
         }
 
-        if ( thresh != null && resultSetId != null ) {
+        if ( resultSetId != null ) {
 
             /*
              * Diff ex case.
@@ -731,10 +725,10 @@ public class DEDVController {
         Long time = watch.getTime();
 
         if ( time > 100 ) {
-            log.info( "Retrieved and Formated" + result.keySet().size() + " DEDVs for eeIDs: " + eeIds
-                    + " and GeneIds: "
+            log.info(
+                    "Retrieved and Formated" + result.keySet().size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: "
 
-                    + geneIds + " in : " + time + " ms." );
+                            + geneIds + " in : " + time + " ms." );
         }
         return mav;
 
@@ -844,7 +838,8 @@ public class DEDVController {
      * @param threshold
      * @return
      */
-    private List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold, int minNumberOfResults ) {
+    private List<DoubleVectorValueObject> getDiffExVectors( Long resultSetId, Double threshold,
+            int minNumberOfResults ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -862,8 +857,8 @@ public class DEDVController {
 
         BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
-        List<DifferentialExpressionValueObject> ee2probeResults = differentialExpressionResultService.findInResultSet(
-                ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
+        List<DifferentialExpressionValueObject> ee2probeResults = differentialExpressionResultService
+                .findInResultSet( ar, threshold, MAX_RESULTS_TO_RETURN, minNumberOfResults );
 
         Collection<Long> probes = new HashSet<>();
         // Map<CompositeSequenceId, pValue>
@@ -942,8 +937,8 @@ public class DEDVController {
             facValsStrBuff.delete( facValsStrBuff.length() - 2, facValsStrBuff.length() );
         }
         if ( facValsStrBuff.length() == 0 ) {
-            facValsStrBuff.append( "FactorValue id:" + Math.round( facVal.getId() )
-                    + " was not null but no value was found." );
+            facValsStrBuff.append(
+                    "FactorValue id:" + Math.round( facVal.getId() ) + " was not null but no value was found." );
         }
 
         return facValsStrBuff.toString();
@@ -991,8 +986,8 @@ public class DEDVController {
     private Map<Long, Collection<DifferentialExpressionValueObject>> getProbeDiffExValidation( Collection<Gene> genes,
             Double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
 
-        if ( factorMap == null )
-            throw new IllegalArgumentException( "Factor information is missing, please make sure factors are selected." );
+        if ( factorMap == null ) throw new IllegalArgumentException(
+                "Factor information is missing, please make sure factors are selected." );
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
 
@@ -1278,8 +1273,8 @@ public class DEDVController {
         int i = 0;
         for ( EE2PValue ee2P : sortedEE ) {
 
-            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ),
-                    geneValueObjects, ee2P.getPValue(), validatedProbes.get( ee2P.getEEId() ) );
+            VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), geneValueObjects,
+                    ee2P.getPValue(), validatedProbes.get( ee2P.getEEId() ) );
 
             getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
 
@@ -1422,7 +1417,8 @@ public class DEDVController {
             }
             Collection<DoubleVectorValueObject> vectors = vvoMap.get( ee );
 
-            VisualizationValueObject vvo = new VisualizationValueObject( vectors, geneValueObjects, validatedProbeList );
+            VisualizationValueObject vvo = new VisualizationValueObject( vectors, geneValueObjects,
+                    validatedProbeList );
 
             if ( vectors.size() > 0 ) {
                 getSampleNames( vectors, vvo, layouts );
@@ -1523,7 +1519,8 @@ public class DEDVController {
                  * ExpressionExperiment, BioAssayDimension)
                  */
                 if ( valueOrId == null || factor.getType() == null
-                        || ( factor.getType().equals( FactorType.CATEGORICAL ) && factor.getFactorValues().isEmpty() ) ) {
+                        || ( factor.getType().equals( FactorType.CATEGORICAL )
+                                && factor.getFactorValues().isEmpty() ) ) {
                     factorsMissingValues.add( getUniqueFactorName( factor ) );
                     continue;
                 }

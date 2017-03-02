@@ -112,7 +112,8 @@ Gemma.AnalysesSearchUtils = {
       trimmedValObj.name = "Trimmed " + valObj.name;
       trimmedValObj.description = "Trimmed " + valObj.name + " for search";
       trimmedValObj.modified = true;
-      return trimmedValueObj;
+      trimmedValObj.size = trimmedValObj.geneIds.length;
+      return trimmedValObj;
 
    },
 

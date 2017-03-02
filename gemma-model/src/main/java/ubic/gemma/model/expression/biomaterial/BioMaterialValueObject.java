@@ -39,6 +39,10 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
  */
 public class BioMaterialValueObject implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -145137827948521045L;
     public static final String CHARACTERISTIC_DELIMITER = "::::";
     private String assayDescription;
     private String assayName;

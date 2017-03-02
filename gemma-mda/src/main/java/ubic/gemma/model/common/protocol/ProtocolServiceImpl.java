@@ -36,6 +36,7 @@ public class ProtocolServiceImpl implements ProtocolService {
     @Autowired
     private ProtocolDao protocolDao;
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<Protocol> loadAll() {
@@ -53,7 +54,8 @@ public class ProtocolServiceImpl implements ProtocolService {
         } catch ( Throwable th ) {
             throw new ProtocolServiceException(
                     "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.find(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -68,7 +70,8 @@ public class ProtocolServiceImpl implements ProtocolService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
                     "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.findOrCreate(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -83,7 +86,8 @@ public class ProtocolServiceImpl implements ProtocolService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
                     "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.remove(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 
@@ -98,7 +102,8 @@ public class ProtocolServiceImpl implements ProtocolService {
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.protocol.ProtocolServiceException(
                     "Error performing 'ubic.gemma.model.common.protocol.ProtocolService.update(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th, th );
+                            + th,
+                    th );
         }
     }
 

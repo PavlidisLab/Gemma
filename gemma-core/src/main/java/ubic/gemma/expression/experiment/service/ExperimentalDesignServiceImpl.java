@@ -63,6 +63,7 @@ public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase
     /**
      * @see ubic.gemma.expression.experiment.service.ExperimentalDesignService#getExperimentalDesigns()
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ExperimentalDesign> handleLoadAll() {
         return ( Collection<ExperimentalDesign> ) this.getExperimentalDesignDao().loadAll();

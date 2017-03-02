@@ -21,4 +21,9 @@ package ubic.gemma.model.expression.biomaterial;
  */
 public class BioMaterialImpl extends BioMaterial {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -7892217074183258185L;
+
 }

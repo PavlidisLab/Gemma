@@ -28,6 +28,11 @@ import java.util.Collection;
 public abstract class LocalFile implements java.io.Serializable, gemma.gsec.model.Securable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 5057142607188347151L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.common.description.LocalFile}.
      */
     public static final class Factory {

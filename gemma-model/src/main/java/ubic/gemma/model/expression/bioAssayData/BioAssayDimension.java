@@ -32,6 +32,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 public abstract class BioAssayDimension extends Describable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 34226197127833406L;
+
+    /**
      * Constructs new instances of {@link BioAssayDimension}.
      */
     public static final class Factory {

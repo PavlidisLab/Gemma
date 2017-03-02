@@ -24,6 +24,11 @@ package ubic.gemma.model.genome.gene;
 public abstract class Multifunctionality implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1842256912459855071L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.genome.gene.Multifunctionality}.
      */
     public static final class Factory {

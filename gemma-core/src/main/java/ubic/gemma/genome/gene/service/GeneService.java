@@ -101,6 +101,14 @@ public interface GeneService {
     public GeneValueObject findByNCBIIdValueObject( Integer accession );
 
     /**
+     * Quickly load exact matches.
+     * 
+     * @param ncbiIds
+     * @return map of NCBI Id to the gene.
+     */
+    public Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds );
+
+    /**
      * @param officialName
      * @return
      */
@@ -296,7 +304,9 @@ public interface GeneService {
      * @param gene
      */
     @Secured({ "GROUP_ADMIN" })
-    /* we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that */
+    /*
+     * we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that
+     */
     public void update( Gene gene );
 
 }

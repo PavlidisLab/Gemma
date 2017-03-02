@@ -66,7 +66,7 @@ Gemma.SequenceDetailsPanel = Ext
                         var cs = record.get( "compositeSequence" );
                         var ar = cs.arrayDesign;
 
-                        var csDesc = cs.description.length > 0 ? "<span style='font-size:smaller'>(" + cs.description
+                        var csDesc = (cs.description != null && cs.description.length > 0) ? "<span style='font-size:smaller'>(" + cs.description
                            + ")</span>" : "";
 
                         pan.add( {

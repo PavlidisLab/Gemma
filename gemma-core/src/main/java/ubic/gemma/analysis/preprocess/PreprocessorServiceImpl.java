@@ -29,12 +29,10 @@ import ubic.gemma.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -84,9 +82,6 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
     @Autowired
     private ExpressionDataFileService dataFileService;
-
-    @Autowired
-    private DataUpdater dataUpdater;
 
     @Autowired
     private ProcessedExpressionDataVectorService dataVectorService;
@@ -146,15 +141,18 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         if ( !correctable ) {
             // throwing exception kind of annoying but not a big deal.
-            throw new PreprocessingException(
-                    ee.getShortName()
-                            + " could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
+            throw new PreprocessingException( ee.getShortName()
+                    + " could not be batch-corrected (either already batch-corrected, no batch information, or invalid design)" );
         }
 
+        /*
+         * FIXME make sure this detects all flagged outliers, and if the outliers have been removed proceed, but deal
+         * with missing values. See issue 4413 and 4276
+         */
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee );
         if ( !outliers.isEmpty() ) {
-            throw new PreprocessingException( ee.getShortName()
-                    + " could not be batch-corrected because it has outliers" );
+            throw new PreprocessingException(
+                    ee.getShortName() + " could not be batch-corrected because it has outliers" );
         }
 
         try {

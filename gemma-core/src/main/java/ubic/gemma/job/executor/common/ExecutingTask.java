@@ -56,6 +56,7 @@ public class ExecutingTask<T extends TaskResult> implements Callable<T> {
         this.taskCommand = taskCommand;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public final T call() throws Exception {
         setup();

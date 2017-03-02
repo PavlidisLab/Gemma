@@ -18,15 +18,6 @@
  */
 package ubic.gemma.security.authentication;
 
-import gemma.gsec.AuthorityConstants;
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserExistsException;
-import gemma.gsec.authentication.UserManager;
-import gemma.gsec.authentication.UserService;
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-import gemma.gsec.model.UserGroup;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -56,6 +47,15 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.cache.NullUserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import gemma.gsec.AuthorityConstants;
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserExistsException;
+import gemma.gsec.authentication.UserManager;
+import gemma.gsec.authentication.UserService;
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
+import gemma.gsec.model.UserGroup;
 
 /**
  * Implementation for Spring Security, plus some other handy methods.
@@ -124,8 +124,8 @@ public class UserManagerImpl implements UserManager {
 
         if ( currentAuthentication == null ) {
             // This would indicate bad coding somewhere
-            throw new AccessDeniedException( "Can't change password as no Authentication object found in context "
-                    + "for current user." );
+            throw new AccessDeniedException(
+                    "Can't change password as no Authentication object found in context " + "for current user." );
         }
 
         String username = currentAuthentication.getName();
@@ -138,8 +138,8 @@ public class UserManagerImpl implements UserManager {
         u.setPassword( newPassword );
         userService.update( u );
 
-        SecurityContextHolder.getContext().setAuthentication(
-                createNewAuthentication( currentAuthentication, newPassword ) );
+        SecurityContextHolder.getContext()
+                .setAuthentication( createNewAuthentication( currentAuthentication, newPassword ) );
 
         userCache.removeUserFromCache( username );
     }
@@ -153,8 +153,8 @@ public class UserManagerImpl implements UserManager {
 
         if ( currentAuthentication == null ) {
             // This would indicate bad coding somewhere
-            throw new AccessDeniedException( "Can't change password as no Authentication object found in context "
-                    + "for current user." );
+            throw new AccessDeniedException(
+                    "Can't change password as no Authentication object found in context " + "for current user." );
         }
 
         User u = userService.findByEmail( email );

@@ -105,7 +105,7 @@ public class DatasetCombiner {
     /**
      * 
      */
-    private static final String ENTREZ_GEO_QUERY_URL_BASE = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=";
+    private static final String ENTREZ_GEO_QUERY_URL_BASE = "https://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gds&term=";
 
     private boolean doSampleMatching = true;
 

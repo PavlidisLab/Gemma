@@ -23,6 +23,11 @@ package ubic.gemma.util;
  * date: 27/03/13
  */
 public class TaskCancelledException extends RuntimeException {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 7343146551545342910L;
+
     public TaskCancelledException() {
         super();
     }

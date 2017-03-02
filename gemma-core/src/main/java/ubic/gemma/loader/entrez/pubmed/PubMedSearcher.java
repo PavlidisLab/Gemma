@@ -18,16 +18,16 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import java.io.IOException;
+import java.util.Collection;
+
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.xml.sax.SAXException;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.util.AbstractCLIContextCLI;
-
-import javax.xml.parsers.ParserConfigurationException;
-
-import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Simple application to perform pubmed searches from a list of terms, and persist the results in the database.
@@ -50,10 +50,12 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
     public PubMedSearcher() {
         super();
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.MISC;
     }
+
     @Override
     public String getCommandName() {
         return "pubmedSearchAndSave";
@@ -82,7 +84,9 @@ public class PubMedSearcher extends AbstractCLIContextCLI {
         if ( err != null ) return err;
 
         try {
-            Collection<BibliographicReference> refs = pms.searchAndRetrieveByHTTP( ( Collection<String> ) getArgList() );
+            @SuppressWarnings("unchecked")
+            Collection<BibliographicReference> refs = pms
+                    .searchAndRetrieveByHTTP( ( Collection<String> ) getArgList() );
 
             System.out.println( refs.size() + " references found" );
 

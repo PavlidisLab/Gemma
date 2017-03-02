@@ -18,8 +18,6 @@
  */
 package ubic.gemma.genome.gene.service;
 
-import gemma.gsec.SecurityService;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,6 +30,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import gemma.gsec.SecurityService;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -81,6 +80,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional
     public Collection<GeneSet> create( Collection<GeneSet> sets ) {
@@ -436,6 +436,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> load( Collection<Long> ids ) {
@@ -459,6 +460,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadAll() {
@@ -481,6 +483,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets() {
@@ -492,18 +495,21 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets(ubic.gemma.model.genome.Taxon)
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMyGeneSets( Taxon tax ) {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMyGeneSets( tax );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadMySharedGeneSets();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneSet> loadMySharedGeneSets( Taxon tax ) {
@@ -614,8 +620,8 @@ public class GeneSetServiceImpl implements GeneSetService {
             Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
             if ( genes.isEmpty() ) {
-                throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
-                        + " provided)" );
+                throw new IllegalArgumentException(
+                        "None of the gene ids were valid (out of " + geneIds.size() + " provided)" );
             }
             if ( genes.size() < geneIds.size() ) {
                 throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
@@ -682,8 +688,8 @@ public class GeneSetServiceImpl implements GeneSetService {
         Collection<Gene> genes = geneService.loadMultiple( geneIds );
 
         if ( genes.isEmpty() ) {
-            throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
-                    + " provided)" );
+            throw new IllegalArgumentException(
+                    "None of the gene ids were valid (out of " + geneIds.size() + " provided)" );
         }
         if ( genes.size() < geneIds.size() ) {
             throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()

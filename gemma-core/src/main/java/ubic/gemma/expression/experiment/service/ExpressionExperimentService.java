@@ -411,9 +411,20 @@ public interface ExpressionExperimentService {
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( Collection<Long> ids );
 
     /**
+     * @param id
+     * @return trouble event for the given id, if this event is still in effect. NUll if no such event is found.
+     */
+    public AuditEvent getOustandingTroubleEvent( Long id );
+
+    /**
      * @param ids
      * @return
+     * @deprecated this method was used for event tracing to set TROUBLE flag. We should now be using the
+     *             {@link ExpressionExperimentService.getTroubled(Collection<Long>)} for this purpose. To retrieve a
+     *             trouble event that is still in effect, use
+     *             {@link ExpressionExperimentService.getOustandingTroubleEvent(Long)}
      */
+    @Deprecated
     public Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
 
     /**
@@ -513,6 +524,14 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Taxon getTaxon( BioAssaySet bioAssaySet );
+
+    /**
+     * Of the given EE ids, get the ones which are troubled.
+     * 
+     * @param ids
+     * @return
+     */
+    public Collection<Long> getTroubled( Collection<Long> ids );
 
     /**
      * Of the given EE ids, get the ones which are not troubled.

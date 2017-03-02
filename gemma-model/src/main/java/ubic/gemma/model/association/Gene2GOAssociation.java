@@ -29,6 +29,11 @@ import ubic.gemma.model.genome.Gene;
 public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -8503436886033033975L;
+
+    /**
      * Constructs new instances of {@link ubic.gemma.model.association.Gene2GOAssociation}.
      */
     public static final class Factory {

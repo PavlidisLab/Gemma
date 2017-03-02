@@ -171,10 +171,6 @@ public class BioAssayController {
             return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", identifierNotFound );
         }
 
-        if ( id == null ) {
-            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", identifierNotFound );
-        }
-
         BioAssay bioAssay = bioAssayService.load( id );
         if ( bioAssay == null ) {
             throw new EntityNotFoundException( id + " not found" );

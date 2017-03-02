@@ -26,6 +26,11 @@ import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaA
 public abstract class DifferentialExpressionEvidence extends DataAnalysisEvidence {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1056186800210320618L;
+
+    /**
      * Constructs new instances of {@link DifferentialExpressionEvidence}.
      */
     public static final class Factory {

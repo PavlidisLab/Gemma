@@ -71,6 +71,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             try {
+                @SuppressWarnings("unchecked")
                 final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( ACCESSION,
                         true, true, false, false, true, true );
 

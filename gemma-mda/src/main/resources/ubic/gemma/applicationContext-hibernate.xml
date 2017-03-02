@@ -45,12 +45,16 @@
 	</bean>
 
 	<tx:annotation-driven order="3" />
+	
+	<!-- Required for org.springframework.orm.hibernate3.support.ClobStringType -->
+	<bean id="defaultLobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler" lazy-init="true"/>
 
 	<!-- Hibernate SessionFactory -->
 	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean" lazy-init="true">
 		<property name="dataSource">
 			<ref bean="dataSource" />
 		</property>
+		<property name="lobHandler" ref="defaultLobHandler"/>
 		<property name="mappingLocations">
 			<list>
 				<value>classpath:gemma/gsec/model/AclEntry.hbm.xml</value>

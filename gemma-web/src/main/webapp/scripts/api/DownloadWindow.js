@@ -86,8 +86,8 @@ Gemma.DownloadWindow = Ext.extend( Ext.Window, {
             // (using <br> instead will work in IE9, but not in FF or excel)
             tpl : new Ext.XTemplate( '<tpl>', '{text}', '</tpl>' ),
             // tplWriteMode: 'append',
-            bodyStyle : 'white-space: nowrap',
-            style : 'white-space: nowrap',
+            bodyStyle : 'white-space: pre; word-wrap:normal;',
+            style : 'white-space: pre; word-wrap:normal;',
             wordWrap : false,
             padding : 7,
             autoScroll : true

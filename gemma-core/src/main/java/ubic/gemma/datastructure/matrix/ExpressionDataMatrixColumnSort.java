@@ -330,7 +330,8 @@ public class ExpressionDataMatrixColumnSort {
         /*
          * Recurse in and order each chunk. First split it up, but retaining the order we just made.
          */
-        LinkedHashMap<FactorValueValueObject, List<BioMaterialValueObject>> chunks = chunkOnFactorVO( simplest, ordered );
+        LinkedHashMap<FactorValueValueObject, List<BioMaterialValueObject>> chunks = chunkOnFactorVO( simplest,
+                ordered );
 
         if ( chunks == null ) {
             // this means we should bail, gracefully.
@@ -347,7 +348,8 @@ public class ExpressionDataMatrixColumnSort {
             if ( chunk.size() < 2 ) {
                 result.addAll( chunk );
             } else {
-                List<BioMaterialValueObject> orderedChunk = orderBiomaterialsBySortedFactorsVO( chunk, factorsStillToDo );
+                List<BioMaterialValueObject> orderedChunk = orderBiomaterialsBySortedFactorsVO( chunk,
+                        factorsStillToDo );
                 result.addAll( orderedChunk );
             }
         }
@@ -397,7 +399,7 @@ public class ExpressionDataMatrixColumnSort {
         // Collection<ExperimentalFactor> efs = getFactors( ordered );
         //
         // for ( BioMaterial bioMaterial : ordered ) {
-        // buf2.append( StringUtils.leftPad( bioMaterial.getId().toString(), 3 ) + "  " );
+        // buf2.append( StringUtils.leftPad( bioMaterial.getId().toString(), 3 ) + " " );
         //
         // for ( ExperimentalFactor ef : efs ) {
         // for ( FactorValue fv : bioMaterial.getFactorValues() ) {
@@ -1263,6 +1265,9 @@ public class ExpressionDataMatrixColumnSort {
 
     }
 
+    /**
+     * @param factorValues
+     */
     private static void sortByControlVO( List<FactorValueValueObject> factorValues ) {
         Collections.sort( factorValues, new Comparator<FactorValueValueObject>() {
             @Override
@@ -1282,6 +1287,15 @@ public class ExpressionDataMatrixColumnSort {
 
         } );
 
+    }
+
+    /**
+     * @param factorValues
+     */
+    @SuppressWarnings("unused")
+    private static void sortByTimepoint( List<FactorValue> factorValues ) {
+        // TODO
+        sortByControl( factorValues ); // temporary. See issue 4435 - also support for valueobjects
     }
 
     /**

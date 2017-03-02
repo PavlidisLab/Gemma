@@ -42,8 +42,7 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
     @Override
     public Date extract( InputStream is ) throws IOException {
         Date date = null;
-        try (@SuppressWarnings("resource")
-        BufferedReader reader = new BufferedReader( new InputStreamReader( is ) )) {
+        try (BufferedReader reader = new BufferedReader( new InputStreamReader( is ) )) {
             String line = null;
             int count = 0;
             while ( ( line = reader.readLine() ) != null ) {
@@ -68,8 +67,8 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
                 if ( date != null || ++count > MAX_HEADER_LINES ) {
 
                     if ( date != null && date.after( new Date() ) ) {
-                        throw new RuntimeException( "Did not get a valid date (Line was:" + line
-                                + ", extracted date was " + date + ")" );
+                        throw new RuntimeException(
+                                "Did not get a valid date (Line was:" + line + ", extracted date was " + date + ")" );
                     }
 
                     break;

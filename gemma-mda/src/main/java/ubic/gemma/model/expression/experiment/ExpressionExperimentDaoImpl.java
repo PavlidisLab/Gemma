@@ -104,11 +104,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        Query query = this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "from ExpressionExperimentImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
+        Query query = this.getSessionFactory().getCurrentSession().createQuery(
+                "from ExpressionExperimentImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
         query.setMaxResults( limit );
         query.setFirstResult( start );
         return query.list();
@@ -128,12 +125,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
             boolean descending, Collection<Long> ids ) {
 
-        Query query = this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "from ExpressionExperimentImpl where id in (:ids) order by " + orderField + " "
-                                + ( descending ? "desc" : "" ) );
+        Query query = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from ExpressionExperimentImpl where id in (:ids) order by " + orderField + " "
+                        + ( descending ? "desc" : "" ) );
         query.setParameterList( "ids", ids );
         query.setMaxResults( limit );
         query.setFirstResult( start );
@@ -175,9 +169,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + ExpressionExperiment.class.getName()
-                                + "' was found when executing query" );
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException( "More than one instance of '"
+                        + ExpressionExperiment.class.getName() + "' was found when executing query" );
 
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
@@ -299,8 +292,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         assert ee != null;
 
-        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( ee, this.getSessionFactory()
-                .getCurrentSession() );
+        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( ee,
+                this.getSessionFactory().getCurrentSession() );
         return ADs;
     }
 
@@ -318,32 +311,51 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     @Override
     public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
-        return this.getHibernateTemplate().find(
-                "select distinct e from ExpressionExperimentImpl e join e.bioAssays b where b.isOutlier = 1" );
+        return this.getHibernateTemplate()
+                .find( "select distinct e from ExpressionExperimentImpl e join e.bioAssays b where b.isOutlier = 1" );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedDataVectors(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#getProcessedDataVectors(ubic.gemma.model.
+     * expression .experiment.ExpressionExperiment)
      */
     @Override
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment ) {
+    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors(
+            ExpressionExperiment expressionExperiment ) {
         final String queryString = "from ProcessedExpressionDataVectorImpl where expressionExperiment = :ee";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
     }
 
     @Override
+    public Collection<Long> getTroubled( Collection<Long> ids ) {
+        return this.getByTroubledFlag( ids, true );
+    }
+
+    @Override
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
+        return this.getByTroubledFlag( ids, false );
+    }
+
+    /**
+     * This method checks the EEs with given IDs for trouble, and also checks their parent array designs for trouble.
+     * 
+     * @param ids
+     * @param troubled whether you want to find EEs that are troubled (true) or that are not troubled (false).
+     * @return
+     */
+    private Collection<Long> getByTroubledFlag( Collection<Long> ids, boolean troubled ) {
         Collection<Long> batch = new HashSet<Long>();
         Collection<Long> firstPass = new HashSet<Long>();
+
+        int tState = troubled ? 1 : 0;
 
         /*
          * First check the EEs themselves.
          */
-        String eeQueryString = "select e.id from ExpressionExperimentImpl e join e.status s where s.troubled = 0 and e.id in (:ids)";
+        String eeQueryString = "select e.id from ExpressionExperimentImpl e join e.status s where s.troubled = "
+                + tState + " and e.id in (:ids)";
         for ( Long id : ids ) {
             batch.add( id );
             if ( batch.size() == BATCH_SIZE ) {
@@ -362,7 +374,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Collection<Long> result = new HashSet<Long>();
         final String eeAdQuery = "select ee.id from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad inner join ad.status s where ee.id in (:ees) and s.troubled = 0";
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad inner join ad.status s where ee.id in (:ees) and s.troubled = "
+                + tState;
 
         batch.clear();
         for ( Long id : firstPass ) {
@@ -485,8 +498,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     }
 
     @Override
-    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField,
-            boolean descending, Taxon taxon ) {
+    public List<ExpressionExperimentValueObject> loadAllValueObjectsTaxonOrdered( String orderField, boolean descending,
+            Taxon taxon ) {
         String orderByClause = "";
         if ( orderField.equals( "bioAssayCount" ) ) {
             orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
@@ -537,9 +550,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
-        return this
-                .getHibernateTemplate()
-                .find( "select e from ExpressionExperimentImpl e join e.experimentalDesign d where d.experimentalFactors.size =  0" );
+        return this.getHibernateTemplate().find(
+                "select e from ExpressionExperimentImpl e join e.experimentalDesign d where d.experimentalFactors.size =  0" );
     }
 
     /*
@@ -549,8 +561,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public Collection<ExpressionExperiment> loadLackingTags() {
-        return this.getHibernateTemplate().find(
-                "select e from ExpressionExperimentImpl e where e.characteristics.size = 0" );
+        return this.getHibernateTemplate()
+                .find( "select e from ExpressionExperimentImpl e where e.characteristics.size = 0" );
     }
 
     @Override
@@ -675,13 +687,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#loadWithEvent(java.lang.Class)
      */
     public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
-        String className = eventType.getSimpleName().endsWith( "Impl" ) ? eventType.getSimpleName() : eventType
-                .getSimpleName() + "Impl";
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct e from ExpressionExperimentImpl e join e.auditTrail a join a.events ae join ae.eventType t where t.class = :type ",
-                        "type", className );
+        String className = eventType.getSimpleName().endsWith( "Impl" ) ? eventType.getSimpleName()
+                : eventType.getSimpleName() + "Impl";
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct e from ExpressionExperimentImpl e join e.auditTrail a join a.events ae join ae.eventType t where t.class = :type ",
+                "type", className );
     }
 
     /*
@@ -1031,9 +1041,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( fvs.isEmpty() ) return new HashSet<ExpressionExperiment>();
 
         // thaw the factor values.
-        Collection<ExperimentalDesign> eds = this.getHibernateTemplate().findByNamedParam(
-                "select ed from FactorValueImpl f join f.experimentalFactor ef "
-                        + " join ef.experimentalDesign ed where f.id in (:ids)", "ids", EntityUtils.getIds( fvs ) );
+        Collection<ExperimentalDesign> eds = this.getHibernateTemplate()
+                .findByNamedParam(
+                        "select ed from FactorValueImpl f join f.experimentalFactor ef "
+                                + " join ef.experimentalDesign ed where f.id in (:ids)",
+                        "ids", EntityUtils.getIds( fvs ) );
 
         if ( eds.isEmpty() ) {
             return new HashSet<ExpressionExperiment>();
@@ -1095,9 +1107,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome
-     * . Taxon)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.
+     * genome . Taxon)
      */
     @Override
     protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) {
@@ -1416,7 +1427,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             return ( QuantitationType ) k.iterator().next();
         } else if ( k.size() > 1 ) {
             throw new IllegalStateException(
-                    "There should only be one masked preferred quantitationtype per expressionexperiment (" + ee + ")" );
+                    "There should only be one masked preferred quantitationtype per expressionexperiment (" + ee
+                            + ")" );
         }
         return null;
     }
@@ -1430,8 +1442,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     protected Map<Taxon, Long> handleGetPerTaxonCount() {
 
         Map<Taxon, Taxon> taxonParents = new HashMap<Taxon, Taxon>();
-        List<Object[]> tp = super.getHibernateTemplate().find(
-                "select t, p from TaxonImpl t left outer join t.parentTaxon p" );
+        List<Object[]> tp = super.getHibernateTemplate()
+                .find( "select t, p from TaxonImpl t left outer join t.parentTaxon p" );
         for ( Object[] o : tp ) {
             taxonParents.put( ( Taxon ) o[0], ( Taxon ) o[1] );
         }
@@ -1558,7 +1570,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<QuantitationType> handleGetQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
+    protected Collection<QuantitationType> handleGetQuantitationTypes(
+            final ExpressionExperiment expressionExperiment ) {
         final String queryString = "select distinct quantType "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
@@ -1587,9 +1600,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSampleRemovalEvents(java.util.Collection
-     * )
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSampleRemovalEvents(java.util.
+     * Collection )
      */
     @Override
     protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
@@ -1676,8 +1688,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             List<?> list = tp.findByNamedParam( queryString, "ee", ee );
             if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
         } else {
-            throw new UnsupportedOperationException( "Can't get taxon of BioAssaySet of class "
-                    + ee.getClass().getName() );
+            throw new UnsupportedOperationException(
+                    "Can't get taxon of BioAssaySet of class " + ee.getClass().getName() );
         }
 
         return null;
@@ -1709,8 +1721,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                     + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
             list = tp.findByNamedParam( queryString, "ees", bioAssaySets );
         } else {
-            throw new UnsupportedOperationException( "Can't get taxon of BioAssaySet of class "
-                    + example.getClass().getName() );
+            throw new UnsupportedOperationException(
+                    "Can't get taxon of BioAssaySet of class " + example.getClass().getName() );
         }
 
         for ( Object o : list ) {
@@ -1764,9 +1776,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleThaw(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, boolean)
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleThaw(ubic.gemma.model.expression.
+     * experiment .ExpressionExperiment, boolean)
      */
     @Override
     protected ExpressionExperiment handleThaw( ExpressionExperiment ee, boolean vectorsAlso ) {
@@ -1867,6 +1878,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
         Hibernate.initialize( result.getPrimaryPublication() );
+        Hibernate.initialize( result.getStatus() );
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
         if ( experimentalDesign != null ) {
@@ -1996,6 +2008,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setShortName( ( String ) res[10] );
             v.setDateCreated( ( ( Date ) res[11] ) );
             v.setTroubled( ( ( Boolean ) res[17] ) );
+            v.setValidated( ( Boolean ) res[18] );
             v.setParentTaxonId( ( Long ) res[21] );
 
             if ( ( ( Boolean ) res[17] ) ) {
@@ -2037,9 +2050,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        List<Long> withCoex = this
-                .getSessionFactory()
-                .getCurrentSession()
+        List<Long> withCoex = this.getSessionFactory().getCurrentSession()
                 .createQuery(
                         "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", vo.keySet() ).list();
@@ -2048,9 +2059,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             vo.get( id ).setHasCoexpressionAnalysis( true );
         }
 
-        List<Long> withDiffEx = this
-                .getSessionFactory()
-                .getCurrentSession()
+        List<Long> withDiffEx = this.getSessionFactory().getCurrentSession()
                 .createQuery(
                         "select experimentAnalyzed.id from DifferentialExpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", vo.keySet() ).list();
@@ -2087,8 +2096,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " count(distinct SU), " // 19
                 + " ee.numberOfDataVectors, " // 20
                 + " ptax.id " // 21
-                + " from ExpressionExperimentImpl as ee "
-                + " inner join ee.bioAssays as BA  "
+                + " from ExpressionExperimentImpl as ee " + " inner join ee.bioAssays as BA  "
                 + " left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
                 + " left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
                 + " left join taxon.parentTaxon as ptax "
@@ -2156,7 +2164,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( expressionExperiment.getPrimaryPublication() != null ) {
             Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
-            Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
+            Hibernate
+                    .initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPublicationTypes() );
         }
         if ( expressionExperiment.getOtherRelevantPublications() != null ) {
@@ -2177,8 +2186,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation() );
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getMeans() );
             Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getVariances() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessX() );
-            Hibernate.initialize( expressionExperiment.getMeanVarianceRelation().getLowessY() );
         }
     }
 

@@ -24,11 +24,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import net.sf.ehcache.Element;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import net.sf.ehcache.Element;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -41,6 +40,7 @@ import ubic.gemma.model.genome.Taxon;
 @Service
 public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase {
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes ) {
@@ -93,6 +93,7 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
      * 
      * @see Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<VocabCharacteristic> handleFindByGene( Gene gene ) {
 

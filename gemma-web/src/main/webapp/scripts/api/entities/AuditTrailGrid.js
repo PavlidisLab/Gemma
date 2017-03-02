@@ -67,12 +67,12 @@ Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
 
       var ret = value.replace( /.*\./, '' ).replace( "Impl", '' ).replace( /([A-Z])/g, ' $1' );
 
-      if ( value === 'TroubleStatusFlagEventImpl' || value === 'ExperimentalDesignTroubleImpl' ) {
+      if ( value.indexOf("Trouble") !== -1) {
          ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
-      } else if ( value === 'ValidatedFlagEventImpl' ) {
+      } else if ( value.indexOf("Validated") !== -1 ){
          ret = '<img  src="/Gemma/images/icons/emoticon_smile.png">&nbsp;' + ret;
-      } else if ( value === 'OkStatusEventFlagImpl' ) {
-         ret = '<img  src="/Gemma/images/icons/checked.gif">&nbsp;' + ret;
+      } else if ( value === 'OKStatusFlagEventImpl' ) {
+         ret = '<img  src="/Gemma/images/icons/ok.png">&nbsp;' + ret;
       }
 
       return ret;

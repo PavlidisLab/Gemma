@@ -27,6 +27,10 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 4243531745086284715L;
     private Collection<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
 
     public ExperimentalEvidenceValueObject() {

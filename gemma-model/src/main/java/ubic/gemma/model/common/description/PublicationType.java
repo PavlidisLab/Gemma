@@ -23,6 +23,11 @@ package ubic.gemma.model.common.description;
 public abstract class PublicationType implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7520632580702206897L;
+
+    /**
      * Constructs new instances of {@link PublicationType}.
      */
     public static final class Factory {

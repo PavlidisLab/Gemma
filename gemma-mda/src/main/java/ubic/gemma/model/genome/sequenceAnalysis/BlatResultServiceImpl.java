@@ -46,9 +46,8 @@ public class BlatResultServiceImpl extends BlatResultServiceBase {
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatResult
-     * )
+     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultService#thaw(ubic.gemma.model.genome.sequenceAnalysis.
+     * BlatResult )
      */
     @Override
     @Transactional(readOnly = true)
@@ -92,6 +91,7 @@ public class BlatResultServiceImpl extends BlatResultServiceBase {
      * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceBase#handleLoad(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BlatResult> handleLoad( Collection<Long> ids ) {
         return ( Collection<BlatResult> ) this.getBlatResultDao().load( ids );

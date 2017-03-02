@@ -60,6 +60,7 @@ public class UserQueryServiceImpl implements UserQueryService {
         return userQueryDao.load( id );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<UserQuery> loadAll() {

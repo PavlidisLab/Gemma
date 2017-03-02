@@ -100,9 +100,14 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
             mat = create( ee, processedVectors );
         }
 
-        mat = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
-        mat = mat.subsetRows( mat.getColNames() ); // enforce same order on rows.
-        return mat;
+        try {
+            mat = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
+            mat = mat.subsetRows( mat.getColNames() ); // enforce same order on rows.
+            return mat;
+        } catch ( Exception e ) {
+            log.error( "Could not reformat the sample correlation matrix: " + e.getMessage() );
+            return mat;
+        }
 
     }
 
@@ -136,7 +141,8 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
             throw new IllegalStateException( "Number of bioassays doesn't match length of the bioassaydimension" );
         }
 
-        sampleCoexpressionMatrixHelperService.create( mat, bestBioAssayDimension, datamatrix.getExpressionExperiment() );
+        sampleCoexpressionMatrixHelperService.create( mat, bestBioAssayDimension,
+                datamatrix.getExpressionExperiment() );
 
         return mat;
     }
@@ -156,9 +162,8 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#findOrCreate(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
+     * @see ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService#findOrCreate(ubic.gemma.model.expression.
+     * experiment .ExpressionExperiment)
      */
     @Override
     public DoubleMatrix<BioAssay, BioAssay> findOrCreate( ExpressionExperiment expressionExperiment ) {

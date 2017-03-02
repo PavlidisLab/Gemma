@@ -65,7 +65,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * @param auditables
-     * @return map of Auditable to AuditEvent. NOTE: for EEs, this DOES look at the ADs.
+     * @return map of Auditable to AuditEvent. NOTE: for EEs, this does NOT look at the ADs.
      */
     public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables );
 

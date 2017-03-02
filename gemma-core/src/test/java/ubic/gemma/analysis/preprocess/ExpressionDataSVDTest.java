@@ -34,8 +34,8 @@ import org.junit.Test;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.RegressionTesting;
 import ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD;
-import ubic.gemma.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataTestMatrix;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
 import ubic.gemma.loader.expression.geo.GeoConverterImpl;
@@ -139,13 +139,13 @@ public class ExpressionDataSVDTest {
 
         double[] eigenvalues = svd.getEigenvalues();
 
-        double[] actualEigenValues = new double[] { 9.876418, 8.827503, 8.154231, 5.118728, 3.346094, 2.887258,
-                2.13741, 2.014482, 1.577620, 1.387581, 1.317728, 1.094936, 0.9668133, 0.8624328, 0.7912195, 0.667791,
-                0.621372, 0.5397819, 0.5126067, 0.4719545, 0.4210288, 0.3746118, 0.3121450, 0.3021694, 0.2638054,
-                0.2457431, 0.2345975, 0.2321725, 0.1962941, 0.1904161, 0.1813688, 0.1714884, 0.1536916, 0.1415709,
-                0.1345923, 0.1325116, 0.1232082, 0.1145964, 0.1103885, 0.09940891, 0.09301872, 0.08847049, 0.0789801,
-                0.07290015, 0.07095141, 0.06885395, 0.0636164, 0.06112447, 0.05595763, 0.05388808, 0.04764272,
-                0.04593939, 0.04044683, 0.03636818, 0.03350205, 0.02778140, 0.02369217, 0.01771328, 2.365972e-16 };
+        double[] actualEigenValues = new double[] { 9.876418, 8.827503, 8.154231, 5.118728, 3.346094, 2.887258, 2.13741,
+                2.014482, 1.577620, 1.387581, 1.317728, 1.094936, 0.9668133, 0.8624328, 0.7912195, 0.667791, 0.621372,
+                0.5397819, 0.5126067, 0.4719545, 0.4210288, 0.3746118, 0.3121450, 0.3021694, 0.2638054, 0.2457431,
+                0.2345975, 0.2321725, 0.1962941, 0.1904161, 0.1813688, 0.1714884, 0.1536916, 0.1415709, 0.1345923,
+                0.1325116, 0.1232082, 0.1145964, 0.1103885, 0.09940891, 0.09301872, 0.08847049, 0.0789801, 0.07290015,
+                0.07095141, 0.06885395, 0.0636164, 0.06112447, 0.05595763, 0.05388808, 0.04764272, 0.04593939,
+                0.04044683, 0.03636818, 0.03350205, 0.02778140, 0.02369217, 0.01771328, 2.365972e-16 };
         assertEquals( 59, eigenvalues.length );
         assertTrue( RegressionTesting.closeEnough( actualEigenValues, eigenvalues, 0.01 ) );
     }
@@ -180,21 +180,22 @@ public class ExpressionDataSVDTest {
     @Test
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverterImpl();
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
+        InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE1623" );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
+        @SuppressWarnings("unchecked")
         Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) gc.convert( series );
         assertNotNull( result );
         assertEquals( 1, result.size() );
         ExpressionExperiment ee = result.iterator().next();
 
-        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee.getRawExpressionDataVectors(), ee
-                .getQuantitationTypes().iterator().next() );
+        ExpressionDataDoubleMatrix matrix = new ExpressionDataDoubleMatrix( ee.getRawExpressionDataVectors(),
+                ee.getQuantitationTypes().iterator().next() );
 
         svd = new ExpressionDataSVD( matrix, false );
 

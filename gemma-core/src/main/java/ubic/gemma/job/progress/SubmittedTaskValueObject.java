@@ -12,13 +12,18 @@ import ubic.gemma.job.TaskResult;
 
 public class SubmittedTaskValueObject implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6757089319713433356L;
+
     public static Collection<SubmittedTaskValueObject> convert2ValueObjects(
             Collection<SubmittedTask<? extends TaskResult>> submittedTasks ) {
 
         Collection<SubmittedTaskValueObject> converted = new HashSet<SubmittedTaskValueObject>();
         if ( submittedTasks == null ) return converted;
 
-        for ( SubmittedTask submittedTask : submittedTasks ) {
+        for ( SubmittedTask<?> submittedTask : submittedTasks ) {
             converted.add( new SubmittedTaskValueObject( submittedTask ) );
         }
 
@@ -43,10 +48,10 @@ public class SubmittedTaskValueObject implements Serializable {
     public SubmittedTaskValueObject() {
     }
 
-    public SubmittedTaskValueObject( SubmittedTask submittedTask ) {
+    public SubmittedTaskValueObject( SubmittedTask<?> submittedTask ) {
         this.taskId = submittedTask.getTaskId();
-        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ? "Not specified" : submittedTask
-                .getTaskCommand().getTaskClass().getSimpleName();
+        this.taskType = submittedTask.getTaskCommand().getTaskClass() == null ? "Not specified"
+                : submittedTask.getTaskCommand().getTaskClass().getSimpleName();
         this.submitter = submittedTask.getTaskCommand().getSubmitter();
         this.submissionTime = submittedTask.getSubmissionTime();
         this.startTime = submittedTask.getStartTime();

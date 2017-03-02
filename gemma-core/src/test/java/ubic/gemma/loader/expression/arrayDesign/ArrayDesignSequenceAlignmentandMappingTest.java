@@ -44,18 +44,14 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     @Autowired
     private ArrayDesignSequenceAlignmentService aligner;
 
-    @Autowired
-    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
-
     @Test
     public final void testProcessArrayDesign() throws Exception {
 
         ad = arrayDesignService.thaw( ad );
 
-        Collection<BioSequence> seqs = app
-                .processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
-                        FileTools.resourceToPath( "/data/loader/genome/blast" ), true,
-                        new MockFastaCmd( ad.getPrimaryTaxon() ) );
+        Collection<BioSequence> seqs = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
+                FileTools.resourceToPath( "/data/loader/genome/blast" ), true,
+                new MockFastaCmd( ad.getPrimaryTaxon() ) );
 
         assertNotNull( seqs );
         assertTrue( !seqs.isEmpty() );

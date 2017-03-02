@@ -13,8 +13,8 @@ import ubic.gemma.model.genome.Gene;
  * @version $Id$
  */
 @Service
-public class Gene2GeneProteinAssociationServiceImpl extends
-        ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase {
+public class Gene2GeneProteinAssociationServiceImpl
+        extends ubic.gemma.model.association.Gene2GeneProteinAssociationServiceBase {
 
     @Override
     protected Gene2GeneProteinAssociation handleCreate( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
@@ -42,6 +42,7 @@ public class Gene2GeneProteinAssociationServiceImpl extends
         return this.gene2GeneProteinAssociationDao().findProteinInteractionsForGene( gene );
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene2GeneProteinAssociation> handleLoadAll() {
         return ( Collection<Gene2GeneProteinAssociation> ) this.gene2GeneProteinAssociationDao().loadAll();

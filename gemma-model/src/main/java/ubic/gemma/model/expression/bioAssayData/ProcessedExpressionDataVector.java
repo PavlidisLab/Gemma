@@ -27,6 +27,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public abstract class ProcessedExpressionDataVector extends DesignElementDataVector {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 6524582647944439375L;
+
+    /**
      * Constructs new instances of {@link ProcessedExpressionDataVector}.
      */
     public static final class Factory {

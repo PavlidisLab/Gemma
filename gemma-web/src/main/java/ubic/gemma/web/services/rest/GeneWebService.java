@@ -15,7 +15,9 @@
 package ubic.gemma.web.services.rest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -25,6 +27,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import com.google.common.collect.Lists;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneCoreService;
@@ -74,6 +78,55 @@ public class GeneWebService {
         ArrayList<GeneValueObject> valueObjects = new ArrayList<>( 1 ); // Contain only 1 element.
         valueObjects.add( geneCoreService.loadGeneDetails( geneId ) );
         return valueObjects;
+    }
+
+    @GET
+    @Path("/find-genes-by-ncbi")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<Integer, GeneValueObject> findGenesByNcbiId( @QueryParam("ncbiIds") String ncbiIdsQuery ) {
+        if ( ncbiIdsQuery == null )
+            throw new NotFoundException( "Requires: ncbiIds = comma separated list of NCBI Ids" );
+
+        Collection<Integer> ncbiIds = Lists.newArrayList();
+        for ( String ncbiId : ncbiIdsQuery.split( "," ) ) {
+            try {
+                ncbiIds.add( Integer.valueOf( ncbiId ) );
+            } catch ( NumberFormatException e ) {
+                throw new NotFoundException( "Cannot convert given NCBI Id to integer: " + ncbiId );
+            }
+        }
+
+        Map<Integer, GeneValueObject> result = geneService.findByNcbiIds( ncbiIds );
+        for ( Integer ncbiId : ncbiIds ) {
+            if ( !result.containsKey( ncbiId ) ) {
+                result.put( ncbiId, null );
+            }
+        }
+        return result;
+
+    }
+
+    @GET
+    @Path("/find-genes-by-symbol")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, GeneValueObject> findGenesBySymbol( @QueryParam("taxonId") Long taxonId,
+            @QueryParam("symbols") String symbolsQuery ) {
+        if ( symbolsQuery == null )
+            throw new NotFoundException( "Requires: symbols = comma separated list of Gene Symbols" );
+
+        if ( taxonId == null )
+            throw new NotFoundException( "Requires: taxonId" );
+
+        Collection<String> symbols = Arrays.asList( symbolsQuery.split( "," ) );
+
+        Map<String, GeneValueObject> result = geneService.findByOfficialSymbols( symbols, taxonId );
+        for ( String symbol : symbols ) {
+            if ( !result.containsKey( symbol.toLowerCase() ) ) {
+                result.put( symbol, null );
+            }
+        }
+        return result;
+
     }
 
     /**

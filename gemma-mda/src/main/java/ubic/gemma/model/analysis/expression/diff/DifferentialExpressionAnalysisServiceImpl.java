@@ -28,7 +28,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -128,8 +127,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     @Transactional(readOnly = true)
     public Map<Investigation, Collection<DifferentialExpressionAnalysis>> findByInvestigations(
             Collection<? extends Investigation> investigations ) {
-        return this.getDifferentialExpressionAnalysisDao().findByInvestigations(
-                ( Collection<Investigation> ) investigations );
+        return this.getDifferentialExpressionAnalysisDao()
+                .findByInvestigations( ( Collection<Investigation> ) investigations );
     }
 
     /*
@@ -157,7 +156,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis findByUniqueInvestigations( Collection<? extends Investigation> investigations ) {
+    public DifferentialExpressionAnalysis findByUniqueInvestigations(
+            Collection<? extends Investigation> investigations ) {
         if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
             return null;
         }
@@ -247,6 +247,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> loadAll() {
@@ -314,8 +315,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         Map<Long, Collection<DifferentialExpressionAnalysisValueObject>> analysesByExperimentIds = this
                 .getDifferentialExpressionAnalysisDao().getAnalysesByExperimentIds( ids );
 
-        Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( expressionExperimentDao
-                .loadValueObjects( analysesByExperimentIds.keySet(), false ) );
+        Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils
+                .getIdMap( expressionExperimentDao.loadValueObjects( analysesByExperimentIds.keySet(), false ) );
 
         Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
 

@@ -35,14 +35,14 @@ public class Ensembl2NcbiValueObject implements Serializable {
 
     private static final long serialVersionUID = -859220901359582113L;
 
-    private Integer ncbiTaxonId = 0;
-    private String ensembleGeneId = "";
     private String enemblTranscriptId = "";
+
+    private String ensembleGeneId = "";
+    private String ensemblPeptideId = "";
+    private String hgcnId = "";
     private Collection<String> ncbiGenes = new HashSet<String>();
 
-    private String ensemblPeptideId = "";
-
-    private String hgcnId = "";
+    private Integer ncbiTaxonId = 0;
 
     public String getEnsemblGeneId() {
         return ensembleGeneId;
@@ -90,6 +90,11 @@ public class Ensembl2NcbiValueObject implements Serializable {
 
     public void setNcbiTaxonId( Integer ncbiTaxonId ) {
         this.ncbiTaxonId = ncbiTaxonId;
+    }
+
+    @Override
+    public String toString() {
+        return "Ensembl2NcbiValueObject [ncbiTaxonId=" + ncbiTaxonId + ", ensembleGeneId=" + ensembleGeneId + "]";
     }
 
 }

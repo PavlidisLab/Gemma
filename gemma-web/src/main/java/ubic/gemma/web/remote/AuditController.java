@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.remote;
 
-import java.awt.Desktop.Action;
 import java.util.Collection;
 import java.util.HashSet;
 

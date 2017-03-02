@@ -274,8 +274,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ef.setType( FactorType.CATEGORICAL );
         ef = expressionExperimentService.addFactor( ee, ef );
 
-        aclTestUtils.checkEEAcls( ee );
-
         FactorValue fv = FactorValue.Factory.newInstance( ef );
         fv.setValue( "ack" );
         fv = FactorValue.Factory.newInstance( ef );

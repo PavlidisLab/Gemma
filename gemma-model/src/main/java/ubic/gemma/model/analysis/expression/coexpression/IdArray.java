@@ -35,6 +35,11 @@ import com.googlecode.javaewah.EWAHCompressedBitmap;
  */
 public abstract class IdArray implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -7563304392793946778L;
+
     static byte[] pack( EWAHCompressedBitmap bitmap ) {
         ByteArrayDataOutput os = ByteStreams.newDataOutput();
         try {

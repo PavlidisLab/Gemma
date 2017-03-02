@@ -60,7 +60,6 @@ import ubic.gemma.persistence.Persister;
  * @author ldonnison
  * @version $Id$
  */
-
 public class StringProteinInteractionLoader {
 
     private static Log log = LogFactory.getLog( StringProteinInteractionLoader.class );
@@ -96,8 +95,8 @@ public class StringProteinInteractionLoader {
      * 
      * @param stringProteinFileNameLocal The name of the string file on the local system
      * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
-     *        proves to be too variable)
-     * @param localEnsembl2EntrezMappingFile The name of the local biomart file
+     *        proves to be too variable) - can be null
+     * @param localEnsembl2EntrezMappingFile The name of the local biomart file - can be null?
      * @param taxa taxa to load data for. List of taxon to process
      * @throws IOException
      */
@@ -121,10 +120,10 @@ public class StringProteinInteractionLoader {
                 localEnsembl2EntrezMappingFile, taxa );
 
         // To one taxon at a time to reduce memory use
-        for ( Taxon key : map.keySet() ) {
-            log.debug( "Loading for taxon " + key );
-            Collection<StringProteinProteinInteraction> proteinInteractions = map.get( key );
-            log.info( "Found " + proteinInteractions.size() + " STRING interactions for taxon" + key );
+        for ( Taxon taxon : map.keySet() ) {
+            log.debug( "Loading for taxon " + taxon );
+            Collection<StringProteinProteinInteraction> proteinInteractions = map.get( taxon );
+            log.info( "Found " + proteinInteractions.size() + " STRING interactions for: " + taxon );
             loadOneTaxonAtATime( bioMartStringEntreGeneMapping, proteinInteractions );
         }
 

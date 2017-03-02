@@ -25,6 +25,11 @@ package ubic.gemma.model.common.auditAndSecurity;
 public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -4998165708433543706L;
+
+    /**
      * Constructs new instances of {@link JobInfo}.
      */
     public static final class Factory {

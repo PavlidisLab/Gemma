@@ -100,6 +100,7 @@ public class BioAssayServiceImpl implements BioAssayService {
 
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssay> load( Collection<Long> ids ) {
@@ -272,6 +273,7 @@ public class BioAssayServiceImpl implements BioAssayService {
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
      */
+    @SuppressWarnings("unchecked")
     protected Collection<BioAssay> handleLoadAll() {
         return ( Collection<BioAssay> ) this.getBioAssayDao().loadAll();
     }

@@ -27,6 +27,11 @@ package ubic.gemma.model.analysis.expression.coexpression;
  */
 public class IdArrayValueObject extends IdArray {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 3449107398932831708L;
+
     public IdArrayValueObject( byte[] data ) {
         this.setBytes( data );
     }

@@ -18,21 +18,6 @@
  */
 package ubic.gemma.job.executor.worker;
 
-import com.google.common.util.concurrent.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ubic.gemma.infrastructure.common.MessageSender;
-import ubic.gemma.infrastructure.jms.JMSHelper;
-import ubic.gemma.infrastructure.jms.JmsMessageSender;
-import ubic.gemma.job.SubmittedTask;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.common.*;
-import ubic.gemma.tasks.Task;
-import ubic.gemma.util.Settings;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +25,32 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import ubic.gemma.infrastructure.common.MessageSender;
+import ubic.gemma.infrastructure.jms.JMSHelper;
+import ubic.gemma.infrastructure.jms.JmsMessageSender;
+import ubic.gemma.job.SubmittedTask;
+import ubic.gemma.job.TaskCommand;
+import ubic.gemma.job.TaskResult;
+import ubic.gemma.job.executor.common.ExecutingTask;
+import ubic.gemma.job.executor.common.LogBasedProgressAppender;
+import ubic.gemma.job.executor.common.ProgressUpdateCallback;
+import ubic.gemma.job.executor.common.TaskCommandToTaskMatcher;
+import ubic.gemma.job.executor.common.TaskPostProcessing;
+import ubic.gemma.job.executor.common.TaskStatusUpdate;
+import ubic.gemma.tasks.Task;
+import ubic.gemma.util.Settings;
 
 /**
  * This will run on remote worker jvm CompletionService backed by ThreadPoolExecutor is used to execute tasks. TODO:
@@ -63,8 +74,8 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
     /*
      * TODO: configure me through properties/constants thread pool with 10 core threads and a maximum of 15 threads.
      */
-    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator( new ThreadPoolExecutor(
-            10, 15, 10, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>() ) );
+    private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(
+            new ThreadPoolExecutor( 10, 15, 10, TimeUnit.MINUTES, new LinkedBlockingQueue<Runnable>() ) );
 
     // Take completed Task and send its result to the SubmittedTaskProxy via JMS queue.
     private FutureCallback<TaskResult> sendTaskResultCallback = new FutureCallback<TaskResult>() {
@@ -87,7 +98,7 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         checkTaskCommand( taskCommand );
 
         final String taskId = taskCommand.getTaskId();
-        final Task task = getTask( taskCommand );
+        final Task<?, ?> task = getTask( taskCommand );
 
         final List<String> localProgressUpdates = new LinkedList<String>();
         final SubmittedTaskRemote submittedTask = constructSubmittedTaskRemote( taskCommand, taskId,
@@ -103,7 +114,9 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
             }
         };
 
-        final ExecutingTask<TaskResult> executingTask = new ExecutingTask<>( task, taskCommand );
+        @SuppressWarnings("unchecked")
+        final ExecutingTask<TaskResult> executingTask = ( ExecutingTask<TaskResult> ) new ExecutingTask<>( task,
+                taskCommand );
         executingTask.setProgressAppender( new LogBasedProgressAppender( taskId, progressUpdateCallback ) );
         executingTask.setStatusCallback( new ExecutingTask.TaskLifecycleHandler() {
             @Override
@@ -142,11 +155,12 @@ public class RemoteTaskRunningServiceImpl implements RemoteTaskRunningService {
         assert taskCommand.getTaskClass() != null;
     }
 
-    private Task getTask( TaskCommand taskCommand ) {
-        final Task task = taskCommandToTaskMatcher.match( taskCommand );
-        if ( task == null )
-            throw new IllegalArgumentException( "Can't find bean for Task "
-                    + taskCommand.getTaskClass().getSimpleName() );
+    private Task<TaskResult, TaskCommand> getTask( TaskCommand taskCommand ) {
+        @SuppressWarnings("unchecked")
+        final Task<TaskResult, TaskCommand> task = ( Task<TaskResult, TaskCommand> ) taskCommandToTaskMatcher
+                .match( taskCommand );
+        if ( task == null ) throw new IllegalArgumentException(
+                "Can't find bean for Task " + taskCommand.getTaskClass().getSimpleName() );
         task.setTaskCommand( taskCommand );
         return task;
     }

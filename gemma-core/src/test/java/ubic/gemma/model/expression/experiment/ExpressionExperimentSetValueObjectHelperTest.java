@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.experiment;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import gemma.gsec.authentication.UserManager;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,6 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import gemma.gsec.authentication.UserManager;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -44,7 +44,6 @@ import ubic.gemma.util.EntityUtils;
  * Tests for methods that create ExpressionExperimentSetValueObjects from expressionExperiment entities
  * 
  * @author tvrossum
- * @version $Id$
  */
 public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringContextTest {
 
@@ -136,36 +135,49 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
     }
 
+    /**
+     * Tests loading 'light' value objects - VOs without EEIds
+     */
     @Test
     public void testConvertToLightValueObject() {
 
         Long id = eeSet.getId();
+        ExpressionExperimentSetValueObject eesvo;
         assertNotNull( id );
 
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
-
+        // test loading without EEIds.
+        eesvo = expressionExperimentSetService.loadValueObject( id );
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
+        this.equalValuesCheck( eesvo );
 
-        assertEquals( eeSet.getId(), eesvo.getId() );
-        assertEquals( eeSet.getExperiments().size(), eesvo.getSize().intValue() );
-        assertEquals( eeSet.getName(), eesvo.getName() );
-        assertEquals( eeSet.getDescription(), eesvo.getDescription() );
-        assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
+        // test the same thing, without using the overloaded method.
+        eesvo = expressionExperimentSetService.loadValueObject( id, false );
+        assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
+        this.equalValuesCheck( eesvo );
 
     }
 
+    /**
+     * Tests loading value objects with EEIds.
+     */
     @Test
     public void testConvertToValueObject() {
 
         Long id = eeSet.getId();
+        ExpressionExperimentSetValueObject eesvo;
         assertNotNull( id );
 
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
+        // test loading with EEIds.
+        eesvo = expressionExperimentSetService.loadValueObject( id, true );
+        assertEquals( 1, eesvo.getExpressionExperimentIds().size() );
+        this.equalValuesCheck( eesvo );
+    }
 
-        assertEquals( eesvo.getId(), eeSet.getId() );
-        assertEquals( eesvo.getSize().intValue(), eeSet.getExperiments().size() );
-        assertEquals( eesvo.getName(), eeSet.getName() );
-        assertEquals( eesvo.getDescription(), eeSet.getDescription() );
+    private void equalValuesCheck( ExpressionExperimentSetValueObject eesvo ) {
+        assertEquals( eeSet.getId(), eesvo.getId() );
+        assertEquals( eeSet.getExperiments().size(), eesvo.getSize().intValue() );
+        assertEquals( eeSet.getName(), eesvo.getName() );
+        assertEquals( eeSet.getDescription(), eesvo.getDescription() );
         assertEquals( eesvo.getTaxonId(), eeSet.getTaxon().getId() );
     }
 }

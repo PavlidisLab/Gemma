@@ -147,8 +147,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
-            return processErrors( request, response, command, errors, "No expression experiment with id " + id
-                    + " found" );
+            return processErrors( request, response, command, errors,
+                    "No expression experiment with id " + id + " found" );
         }
         //
         // for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
@@ -214,8 +214,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @throws Exception
      */
     @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
         ExpressionExperimentVisualizationCommand eevc = ( ( ExpressionExperimentVisualizationCommand ) command );
         Long id = eevc.getExpressionExperimentId();
@@ -224,12 +224,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             log.info( "Cancelled" );
 
             if ( id != null ) {
-                return new ModelAndView( new RedirectView(
-                        "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                return new ModelAndView(
+                        new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
+            return new ModelAndView(
+                    new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) );
 
         }
 
@@ -287,7 +288,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         ExpressionExperiment ee = null;
         ExpressionExperimentVisualizationCommand eevc = new ExpressionExperimentVisualizationCommand();
 
-        if ( id != null && StringUtils.isNotBlank( id.toString() ) ) {
+        if ( StringUtils.isNotBlank( id.toString() ) ) {
             ee = expressionExperimentService.load( id );
         } else {
             ee = ExpressionExperiment.Factory.newInstance();
@@ -350,7 +351,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
                     return null;
                 }
 
-                compositeSequences = compositeSequenceService.findByNamesInArrayDesigns( searchIdsAsList, arrayDesigns );
+                compositeSequences = compositeSequenceService.findByNamesInArrayDesigns( searchIdsAsList,
+                        arrayDesigns );
 
             } else if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
                 /* search by gene */
@@ -386,8 +388,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     @InitBinder
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
         super.initBinder( binder );
-        binder.registerCustomEditor( QuantitationType.class, new QuantitationTypePropertyEditor(
-                getContinuousQuantitationTypes( request ) ) );
+        binder.registerCustomEditor( QuantitationType.class,
+                new QuantitationTypePropertyEditor( getContinuousQuantitationTypes( request ) ) );
     }
 
     /**

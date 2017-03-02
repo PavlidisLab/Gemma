@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.text.DateFormat;
+import java.util.Locale;
+
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -29,21 +32,39 @@ public class AuditEventImpl extends AuditEvent {
      */
     private static final long serialVersionUID = 6713721089643871509L;
 
+    private static final String TROUBLE_UNKWNOWN_NAME = "Unknown performer";
+
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent#toString()
      */
     @Override
     public String toString() {
         StringBuffer buf = new StringBuffer();
-        buf.append( this.getDate() );
-        buf.append( " by " );
-        buf.append( this.getPerformer().getUserName() );
+        if ( this.getPerformer().getUserName() == null ) {
+            buf.append( TROUBLE_UNKWNOWN_NAME );
+        } else {
+            buf.append( this.getPerformer().getUserName() );
+        }
+
+        try {
+            buf.append( " on "
+                    + DateFormat.getDateInstance( DateFormat.LONG, Locale.getDefault() ).format( this.getDate() ) );
+        } catch ( Exception ex ) {
+            System.err.println( "AuditEventImpl toString problem." );
+            System.err.println( ex );
+        }
+        buf.append( ": " );
+
+        boolean hasNote = false;
+
         if ( !StringUtils.isEmpty( this.getNote() ) ) {
-            buf.append( "\n" );
             buf.append( this.getNote() );
+            hasNote = true;
         }
         if ( !StringUtils.isEmpty( this.getDetail() ) ) {
-            buf.append( "\n" );
+            if ( hasNote ) {
+                buf.append( " - " );
+            }
             buf.append( this.getDetail() );
         }
         return buf.toString();

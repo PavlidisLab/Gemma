@@ -38,6 +38,13 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
+import com.sdicons.json.model.JSONInteger;
+import com.sdicons.json.model.JSONObject;
+import com.sdicons.json.model.JSONString;
+import com.sdicons.json.model.JSONValue;
+import com.sdicons.json.parser.JSONParser;
+
+import antlr.ANTLRException;
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
@@ -63,13 +70,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.web.controller.BaseFormController;
-import antlr.ANTLRException;
-
-import com.sdicons.json.model.JSONInteger;
-import com.sdicons.json.model.JSONObject;
-import com.sdicons.json.model.JSONString;
-import com.sdicons.json.model.JSONValue;
-import com.sdicons.json.parser.JSONParser;
 
 /**
  * Handle editing of expression experiments.
@@ -134,9 +134,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
             }
         }
 
-        return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
-                + request.getContextPath() + "/expressionExperiment/showExpressionExperiment.html?id="
-                + eeCommand.getId() ) );
+        return new ModelAndView( new RedirectView(
+                "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                        + "/expressionExperiment/showExpressionExperiment.html?id=" + eeCommand.getId() ) );
     }
 
     /**
@@ -148,8 +148,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @throws Exception
      */
     @Override
-    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
-            Object command, BindException errors ) throws Exception {
+    public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
+            BindException errors ) throws Exception {
 
         log.debug( "entering processFormSubmission" );
 
@@ -157,15 +157,15 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             if ( id != null ) {
-                return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                        + request.getServerPort() + request.getContextPath()
-                        + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
+                return new ModelAndView( new RedirectView(
+                        "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
+                                + "/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
             }
 
             log.warn( "Cannot find details view due to null id.  Redirecting to overview" );
-            return new ModelAndView( new RedirectView( "http://" + request.getServerName() + ":"
-                    + request.getServerPort() + request.getContextPath()
-                    + "/expressionExperiment/showAllExpressionExperiments.html" ) );
+            return new ModelAndView(
+                    new RedirectView( "http://" + request.getServerName() + ":" + request.getServerPort()
+                            + request.getContextPath() + "/expressionExperiment/showAllExpressionExperiments.html" ) );
         }
 
         ModelAndView mav = super.processFormSubmission( request, response, command, errors );
@@ -245,29 +245,23 @@ public class ExpressionExperimentFormController extends BaseFormController {
         List<QuantitationTypeValueObject> qts = new ArrayList<>();
         log.debug( id );
         ExpressionExperimentEditValueObject obj;
-        if ( id != null ) {
-            ExpressionExperiment ee = expressionExperimentService.load( id );
-            if ( ee == null ) {
-                throw new IllegalArgumentException( "Could not load experiment with id=" + id );
-            }
 
-            ee = expressionExperimentService.thawLite( ee );
-
-            qts.addAll( QuantitationTypeValueObject.convert2ValueObjects( expressionExperimentService
-                    .getQuantitationTypes( ee ) ) );
-
-            obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( id ) );
-
-            obj.setQuantitationTypes( qts );
-            obj.setBioAssays( BioAssayValueObject.convert2ValueObjects( ee.getBioAssays() ) );
-
-        } else {
-            obj = new ExpressionExperimentEditValueObject();
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not load experiment with id=" + id );
         }
 
-        if ( id != null ) {
-            this.saveMessage( request, "Editing dataset" );
-        }
+        ee = expressionExperimentService.thawLite( ee );
+
+        qts.addAll( QuantitationTypeValueObject
+                .convert2ValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
+
+        obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( id ) );
+
+        obj.setQuantitationTypes( qts );
+        obj.setBioAssays( BioAssayValueObject.convert2ValueObjects( ee.getBioAssays() ) );
+
+        this.saveMessage( request, "Editing dataset" );
 
         return obj;
     }
@@ -359,8 +353,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
             // this load to avoid stale data?
 
             if ( bioAssay == null ) {
-                throw new IllegalArgumentException( "Bioassay with id=" + bioAssayId
-                        + " was not associated with the experiment" );
+                throw new IllegalArgumentException(
+                        "Bioassay with id=" + bioAssayId + " was not associated with the experiment" );
             }
 
             BioMaterial currentBioMaterial = bioAssay.getSampleUsed();
@@ -382,7 +376,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 // FIXME can we just use this from the experiment, probably no need to fetch it again.
                 newMaterial = bioMaterialService.load( newMaterialId );
                 if ( newMaterial == null ) {
-                    throw new IllegalArgumentException( "BioMaterial with id=" + newMaterialId + " could not be loaded" );
+                    throw new IllegalArgumentException(
+                            "BioMaterial with id=" + newMaterialId + " could not be loaded" );
                 }
             }
             anyChanges = true;
@@ -396,8 +391,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
              * fouled up.
              */
             log.info( "There were changes to the BioMaterial -> BioAssay map" );
-            audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(), newBioMaterialCount
-                    + " biomaterials" ); // remove unnecessary biomaterial associations
+            audit( expressionExperiment, BioMaterialMappingUpdate.Factory.newInstance(),
+                    newBioMaterialCount + " biomaterials" ); // remove unnecessary biomaterial associations
             Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
             for ( BioAssay assay : deleteKeys ) {
                 /*

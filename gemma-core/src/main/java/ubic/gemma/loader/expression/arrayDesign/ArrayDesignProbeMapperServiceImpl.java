@@ -78,6 +78,60 @@ import ubic.gemma.persistence.Persister;
 @Component
 public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapperService {
 
+    // wrapper
+    private class BACS {
+        BlatAssociation ba;
+
+        CompositeSequence cs;
+
+        /**
+         * @param compositeSequence
+         * @param association
+         */
+        public BACS( CompositeSequence compositeSequence, BlatAssociation association ) {
+            this.cs = compositeSequence;
+            this.ba = association;
+        }
+
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) {
+                return true;
+            }
+            if ( obj == null ) {
+                return false;
+            }
+            if ( getClass() != obj.getClass() ) {
+                return false;
+            }
+            BACS other = ( BACS ) obj;
+            if ( ba == null ) {
+                if ( other.ba != null ) {
+                    return false;
+                }
+            } else if ( !ba.equals( other.ba ) ) {
+                return false;
+            }
+            if ( cs == null ) {
+                if ( other.cs != null ) {
+                    return false;
+                }
+            } else if ( !cs.equals( other.cs ) ) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ( ( ba == null ) ? 0 : ba.hashCode() );
+            result = prime * result + ( ( cs == null ) ? 0 : cs.hashCode() );
+            return result;
+        }
+    }
+
     private static Log log = LogFactory.getLog( ArrayDesignProbeMapperServiceImpl.class.getName() );
 
     private static final int QUEUE_SIZE = 20000;
@@ -136,7 +190,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.
+     * expression
      * .arrayDesign.ArrayDesign)
      */
     @Override
@@ -148,7 +203,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * (non-Javadoc) - mapping to the genome ourselves.
      * 
      * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.
+     * expression
      * .arrayDesign.ArrayDesign, ubic.gemma.analysis.sequence.ProbeMapperConfig, boolean)
      */
     @Override
@@ -171,11 +227,11 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
 
-        BlockingQueue<BlatAssociation> persistingQueue = new ArrayBlockingQueue<BlatAssociation>( QUEUE_SIZE );
+        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
         AtomicBoolean loaderDone = new AtomicBoolean( false );
 
-        load( persistingQueue, generatorDone, loaderDone );
+        load( persistingQueue, generatorDone, loaderDone, useDB );
 
         if ( useDB ) {
             log.info( "Removing any old associations" );
@@ -187,6 +243,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         log.info( "Start processing " + arrayDesign.getCompositeSequences().size() + " probes ..." );
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
+            if ( compositeSequence.getName().equals( "1431126_a_at" ) ) {
+                log.debug( "HERE" );
+            }
+
             Map<String, Collection<BlatAssociation>> results = processCompositeSequence( config, taxon, goldenPathDb,
                     compositeSequence );
 
@@ -195,13 +255,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
                     if ( log.isDebugEnabled() ) log.debug( association );
-                }
+                    persistingQueue.add( new BACS( compositeSequence, association ) );
 
-                if ( useDB ) {
-                    // persisting is done in a separate thread.
-                    persistingQueue.addAll( col );
-                } else {
-                    printResult( compositeSequence, col );
                 }
                 ++hits;
             }
@@ -240,7 +295,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * (non-Javadoc) - from an input file, not mapped with sequences.
      * 
      * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.expression
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.
+     * expression
      * .arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon, java.io.File,
      * ubic.gemma.model.common.description.ExternalDatabase, boolean)
      */
@@ -301,7 +357,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 // a probe can have more than one gene associated with it if so they are piped |
-                Collection<Gene> geneListProbe = new HashSet<Gene>();
+                Collection<Gene> geneListProbe = new HashSet<>();
 
                 // indicate multiple genes
                 Gene geneDetails = null;
@@ -403,7 +459,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processCompositeSequence(ubic.gemma.analysis
+     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processCompositeSequence(ubic.gemma.
+     * analysis
      * .sequence.ProbeMapperConfig, ubic.gemma.model.genome.Taxon, ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
      * ubic.gemma.model.expression.designElement.CompositeSequence)
      */
@@ -444,18 +501,25 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * @param queue
      * @param generatorDone
      * @param loaderDone
+     * @param persist
      */
-    void doLoad( final BlockingQueue<BlatAssociation> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone ) {
+    void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
+            boolean persist ) {
         int loadedAssociationCount = 0;
         while ( !( generatorDone.get() && queue.isEmpty() ) ) {
 
             try {
-                BlatAssociation ba = queue.poll();
-                if ( ba == null ) {
+                BACS bacs = queue.poll();
+                if ( bacs == null ) {
                     continue;
                 }
 
-                GeneProduct geneProduct = ba.getGeneProduct();
+                GeneProduct geneProduct = bacs.ba.getGeneProduct();
+
+                if ( geneProduct.getName().equals( "NM_026686" ) ) {
+                    log.debug( "HERE" );
+                }
+
                 if ( geneProduct.getId() == null ) {
                     GeneProduct existing = geneProductService.find( geneProduct );
 
@@ -470,19 +534,23 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                              */
                             if ( log.isDebugEnabled() )
                                 log.debug( "New gene product from GoldenPath is not in Gemma: " + geneProduct
-                                        + " skipping association to " + ba.getBioSequence()
+                                        + " skipping association to " + bacs.ba.getBioSequence()
                                         + " [skipping policy in place]" );
                             continue;
                         }
                     }
-                    ba.setGeneProduct( existing );
+                    bacs.ba.setGeneProduct( existing );
                 }
 
-                persisterHelper.persist( ba );
+                if ( persist ) {
+                    persisterHelper.persist( bacs.ba );
 
-                if ( ++loadedAssociationCount % 1000 == 0 ) {
-                    log.info( "Persisted " + loadedAssociationCount + " blat associations. " + "Current queue has "
-                            + queue.size() + " items." );
+                    if ( ++loadedAssociationCount % 1000 == 0 ) {
+                        log.info( "Persisted " + loadedAssociationCount + " blat associations. " + "Current queue has "
+                                + queue.size() + " items." );
+                    }
+                } else {
+                    printResult( bacs.cs, bacs.ba );
                 }
 
             } catch ( Exception e ) {
@@ -547,9 +615,10 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * @param queue
      * @param generatorDone
      * @param loaderDone
+     * @param persist true to get results saved to database; otherwise output is to standard out.
      */
-    private void load( final BlockingQueue<BlatAssociation> queue, final AtomicBoolean generatorDone,
-            final AtomicBoolean loaderDone ) {
+    private void load( final BlockingQueue<BACS> queue, final AtomicBoolean generatorDone,
+            final AtomicBoolean loaderDone, final boolean persist ) {
         final SecurityContext context = SecurityContextHolder.getContext();
         assert context != null;
 
@@ -557,7 +626,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
-                doLoad( queue, generatorDone, loaderDone );
+                doLoad( queue, generatorDone, loaderDone, persist );
             }
 
         }, "PersistBlatAssociations" );
@@ -573,7 +642,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * @param blatAssociation
      */
     private void printResult( CompositeSequence cs, BlatAssociation blatAssociation ) {
-
         GeneProduct geneProduct = blatAssociation.getGeneProduct();
         Gene gene = geneProduct.getGene();
         System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'

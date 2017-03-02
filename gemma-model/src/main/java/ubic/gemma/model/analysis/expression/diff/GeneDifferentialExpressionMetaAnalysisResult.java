@@ -28,6 +28,11 @@ import ubic.gemma.model.genome.Gene;
 public abstract class GeneDifferentialExpressionMetaAnalysisResult implements java.io.Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 4971245573216792849L;
+
+    /**
      * Constructs new instances of {@link GeneDifferentialExpressionMetaAnalysisResult}.
      */
     public static final class Factory {

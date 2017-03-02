@@ -26,6 +26,11 @@ import java.util.Collection;
 public abstract class MedicalSubjectHeading extends BibRefAnnotationImpl {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 7820807342851172028L;
+
+    /**
      * Constructs new instances of {@link MedicalSubjectHeading}.
      */
     public static final class Factory {

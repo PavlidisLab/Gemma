@@ -35,7 +35,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.ContrastVO;
 import ubic.gemma.model.analysis.expression.diff.ContrastsValueObject;
@@ -83,9 +82,6 @@ public class DifferentialExpressionSearchTaskImpl extends
 
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
-
-    @Autowired
-    private ExpressionExperimentService eeService;
 
     private String experimentGroupName;
 
@@ -161,8 +157,8 @@ public class DifferentialExpressionSearchTaskImpl extends
 
         experiment: for ( ExpressionExperimentValueObject bas : analyses.keySet() ) {
 
-            Collection<DifferentialExpressionAnalysisValueObject> analysesForExperiment = filterAnalyses( analyses
-                    .get( bas ) );
+            Collection<DifferentialExpressionAnalysisValueObject> analysesForExperiment = filterAnalyses(
+                    analyses.get( bas ) );
 
             if ( analysesForExperiment.isEmpty() ) {
                 continue;
@@ -216,7 +212,8 @@ public class DifferentialExpressionSearchTaskImpl extends
                         }
                         if ( condition.getNumberOfProbesOnArray() == null
                                 || condition.getNumberDiffExpressedProbes() == null ) {
-                            log.error( bas + ": Error: Null counts for # diff ex probe or # probes on array, Skipping" );
+                            log.error(
+                                    bas + ": Error: Null counts for # diff ex probe or # probes on array, Skipping" );
                             continue experiment;
                         } else if ( condition.getNumberOfProbesOnArray() < condition.getNumberDiffExpressedProbes() ) {
                             log.error( bas + ": Error: More diff expressed probes than probes on array. Skipping." );
@@ -235,8 +232,8 @@ public class DifferentialExpressionSearchTaskImpl extends
         watch.stop();
         if ( watch.getTotalTimeMillis() > 100 ) {
             // This does not include getting the actual diff ex results.
-            log.info( "Get information on conditions/analyses for " + i + " factorValues: "
-                    + watch.getTotalTimeMillis() + "ms" );
+            log.info( "Get information on conditions/analyses for " + i + " factorValues: " + watch.getTotalTimeMillis()
+                    + "ms" );
         }
 
         return usedResultSets;
@@ -379,7 +376,8 @@ public class DifferentialExpressionSearchTaskImpl extends
         assert !analysisFactorsUsed.isEmpty();
         DifferentialExpressionAnalysisValueObject best = null;
         for ( DifferentialExpressionAnalysisValueObject candidate : analysisFactorsUsed.keySet() ) {
-            if ( best == null || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate ).size() ) {
+            if ( best == null
+                    || analysisFactorsUsed.get( best ).size() < analysisFactorsUsed.get( candidate ).size() ) {
                 best = candidate;
             }
         }
@@ -403,8 +401,8 @@ public class DifferentialExpressionSearchTaskImpl extends
             Collection<FactorValueValueObject> factorValues, long baselineFactorValueId ) {
         List<FactorValueValueObject> filteredFactorValues = new LinkedList<>();
 
-        Collection<FactorValueValueObject> keepForSubSet = maybeGetSubSetFactorValuesToKeep( analysis, factorValues
-                .iterator().next().getFactorId() );
+        Collection<FactorValueValueObject> keepForSubSet = maybeGetSubSetFactorValuesToKeep( analysis,
+                factorValues.iterator().next().getFactorId() );
 
         for ( FactorValueValueObject factorValue : factorValues ) {
             if ( factorValue.getId().equals( baselineFactorValueId ) ) continue; // Skip baseline
@@ -425,7 +423,8 @@ public class DifferentialExpressionSearchTaskImpl extends
      * @param resultSets
      * @return
      */
-    private List<DiffExResultSetSummaryValueObject> filterResultSets( DifferentialExpressionAnalysisValueObject analysis ) {
+    private List<DiffExResultSetSummaryValueObject> filterResultSets(
+            DifferentialExpressionAnalysisValueObject analysis ) {
         List<DiffExResultSetSummaryValueObject> filteredResultSets = new LinkedList<>();
 
         for ( DiffExResultSetSummaryValueObject resultSet : analysis.getResultSets() ) {
@@ -463,7 +462,8 @@ public class DifferentialExpressionSearchTaskImpl extends
      * @param geneToProbeResult
      * @return
      */
-    private Map<Long, ContrastsValueObject> getDetailsForContrasts( Collection<DiffExprGeneSearchResult> diffExResults ) {
+    private Map<Long, ContrastsValueObject> getDetailsForContrasts(
+            Collection<DiffExprGeneSearchResult> diffExResults ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -548,9 +548,10 @@ public class DifferentialExpressionSearchTaskImpl extends
         ExperimentalFactorValueObject experimentalFactor = resultSet.getExperimentalFactors().iterator().next();
         Collection<FactorValueValueObject> factorValues = experimentalFactor.getValues();
         for ( FactorValueValueObject factorValue : factorValues ) {
-            String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
-                    resultSet.getResultSetId(), factorValue.getId() );
-            searchResult.addBlackCell( geneId, conditionId, correctedPvalue, pValue, numProbes, numProbesDiffExpressed );
+            String conditionId = DifferentialExpressionGenesConditionsValueObject
+                    .constructConditionId( resultSet.getResultSetId(), factorValue.getId() );
+            searchResult.addBlackCell( geneId, conditionId, correctedPvalue, pValue, numProbes,
+                    numProbesDiffExpressed );
         }
     }
 
@@ -584,10 +585,12 @@ public class DifferentialExpressionSearchTaskImpl extends
      */
     private void processHits( DifferentialExpressionGenesConditionsValueObject searchResult,
             Map<Long, Map<Long, DiffExprGeneSearchResult>> resultSetToGeneResults,
-            Collection<DiffExResultSetSummaryValueObject> resultSets, Map<Long, ContrastsValueObject> detailedResults ) {
+            Collection<DiffExResultSetSummaryValueObject> resultSets,
+            Map<Long, ContrastsValueObject> detailedResults ) {
 
         int i = 0;
-        Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = EntityUtils.getIdMap( resultSets, "getResultSetId" );
+        Map<Long, DiffExResultSetSummaryValueObject> resultSetMap = EntityUtils.getIdMap( resultSets,
+                "getResultSetId" );
 
         for ( Entry<Long, Map<Long, DiffExprGeneSearchResult>> resultSetEntry : resultSetToGeneResults.entrySet() ) {
 
@@ -666,11 +669,8 @@ public class DifferentialExpressionSearchTaskImpl extends
                     Long factorValue = cr.getFactorValueId();
                     if ( factorValue == null ) {
                         if ( !warned ) {
-                            log.error( "Data Integrity error: Null factor value for contrast with id="
-                                    + cr.getId()
-                                    + " associated with diffexresult "
-                                    + deaResult.getResultId()
-                                    + " for resultset "
+                            log.error( "Data Integrity error: Null factor value for contrast with id=" + cr.getId()
+                                    + " associated with diffexresult " + deaResult.getResultId() + " for resultset "
                                     + resultSet.getResultSetId()
                                     + ". (additional warnings may be suppressed but additional results will be omitted)" );
                             warned = true;
@@ -678,8 +678,8 @@ public class DifferentialExpressionSearchTaskImpl extends
                         continue;
                     }
 
-                    String conditionId = DifferentialExpressionGenesConditionsValueObject.constructConditionId(
-                            resultSet.getResultSetId(), factorValue );
+                    String conditionId = DifferentialExpressionGenesConditionsValueObject
+                            .constructConditionId( resultSet.getResultSetId(), factorValue );
 
                     if ( cr.getLogFoldChange() == null && !warned ) {
                         log.warn( "Fold change was null for contrast " + cr.getId() + " associated with diffexresult "

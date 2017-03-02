@@ -68,9 +68,8 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.analysis.sequence.ArrayDesignMapResultService#summarizeMapResults(ubic.gemma.model.expression.arrayDesign
-     * .ArrayDesign)
+     * @see ubic.gemma.analysis.sequence.ArrayDesignMapResultService#summarizeMapResults(ubic.gemma.model.expression.
+     * arrayDesign .ArrayDesign)
      */
     @Override
     public Collection<CompositeSequenceMapSummary> summarizeMapResults( ArrayDesign arrayDesign ) {
@@ -242,21 +241,19 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                 Integer geneAccession = ( Integer ) row[12]; // NCBI
 
                 // fill in value object for geneProducts
-                if ( geneProductId != null ) {
-                    Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
-                    // if the geneProduct is already in the map, do not do anything.
-                    // if it isn't there, put it in the map
-                    if ( !geneProductSet.containsKey( geneProductId ) ) {
-                        GeneProductValueObject gpVo = new GeneProductValueObject();
-                        gpVo.setId( geneProductId.longValue() );
-                        gpVo.setName( geneProductName );
-                        gpVo.setNcbiId( geneProductAccession );
-                        if ( geneProductGeneId != null ) {
-                            gpVo.setGeneId( ( ( BigInteger ) geneProductGeneId ).longValue() );
-                        }
-                        gpVo.setType( geneProductType );
-                        geneProductSet.put( geneProductId.toString(), gpVo );
+                Map<String, GeneProductValueObject> geneProductSet = vo.getGeneProducts();
+                // if the geneProduct is already in the map, do not do anything.
+                // if it isn't there, put it in the map
+                if ( !geneProductSet.containsKey( geneProductId ) ) {
+                    GeneProductValueObject gpVo = new GeneProductValueObject();
+                    gpVo.setId( geneProductId.longValue() );
+                    gpVo.setName( geneProductName );
+                    gpVo.setNcbiId( geneProductAccession );
+                    if ( geneProductGeneId != null ) {
+                        gpVo.setGeneId( ( ( BigInteger ) geneProductGeneId ).longValue() );
                     }
+                    gpVo.setType( geneProductType );
+                    geneProductSet.put( geneProductId.toString(), gpVo );
                 }
 
                 Map<String, GeneValueObject> geneSet = vo.getGenes();
@@ -307,7 +304,8 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
      * @see ubic.gemma.analysis.sequence.ArrayDesignMapResultService#summarizeMapResults(java.util.Collection)
      */
     @Override
-    public Collection<CompositeSequenceMapSummary> summarizeMapResults( Collection<CompositeSequence> compositeSequences ) {
+    public Collection<CompositeSequenceMapSummary> summarizeMapResults(
+            Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapSummary> result = new HashSet<CompositeSequenceMapSummary>();
 
         int count = 0;

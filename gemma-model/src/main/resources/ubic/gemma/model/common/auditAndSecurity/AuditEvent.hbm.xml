@@ -15,10 +15,10 @@
   <property access="field" generated="never" lazy="false" name="action" type="ubic.gemma.model.common.auditAndSecurity.AuditActionEnum">
    <column name="ACTION" not-null="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
   </property>
-  <property access="field" generated="never" lazy="false" name="note" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+  <property access="field" generated="never" lazy="false" name="note" type="org.springframework.orm.hibernate3.support.ClobStringType">
    <column name="NOTE" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
   </property>
-  <property access="field" generated="never" lazy="false" name="detail" type="ubic.gemma.persistence.hibernate.usertypes.HibernateStringClobType">
+  <property access="field" generated="never" lazy="false" name="detail" type="org.springframework.orm.hibernate3.support.ClobStringType">
    <column name="DETAIL" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
   </property>
   <many-to-one access="field"

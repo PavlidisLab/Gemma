@@ -35,6 +35,11 @@ import ubic.gemma.model.common.auditAndSecurity.Status;
 public abstract class VocabCharacteristic extends CharacteristicImpl {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 9108913504702857653L;
+
+    /**
      * Constructs new instances of {@link VocabCharacteristic}.
      */
     public static final class Factory {

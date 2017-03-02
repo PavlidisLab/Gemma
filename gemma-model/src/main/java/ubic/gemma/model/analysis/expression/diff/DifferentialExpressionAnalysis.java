@@ -30,6 +30,11 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public abstract class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -7855180617739271699L;
+
+    /**
      * Constructs new instances of {@link DifferentialExpressionAnalysis}.
      */
     public static final class Factory {

@@ -28,6 +28,11 @@ import ubic.gemma.model.genome.Gene;
  */
 public abstract class Gene2OntologyEntryAssociation implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -6097916172357707966L;
+
     final private Long id = null;
 
     final private Gene gene = null;

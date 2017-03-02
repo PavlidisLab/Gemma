@@ -31,6 +31,11 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * @author Paul
  */
 public abstract class Gene2GeneCoexpression extends Gene2GeneIdAssociation implements Comparable<Gene2GeneCoexpression> {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6088623734153830393L;
+
     public SupportDetails supportDetails;
 
     // we assume 1 in case we don't yet have it populated directly from the db - it has to be at least 1...

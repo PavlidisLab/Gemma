@@ -14,6 +14,10 @@ import ubic.gemma.tasks.Task;
  */
 public class DifferentialExpressionSearchTaskCommand extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -8510536003059837349L;
     private final Collection<GeneValueObject> geneGroup;
     private final Collection<ExpressionExperimentValueObject> experimentGroup;
     private final String geneGroupName;

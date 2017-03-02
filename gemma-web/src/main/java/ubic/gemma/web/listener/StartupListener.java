@@ -37,8 +37,8 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.util.CompassUtils;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.QuartzUtils;
+import ubic.gemma.util.Settings;
 import ubic.gemma.web.util.Constants;
 
 /**
@@ -128,6 +128,7 @@ public class StartupListener extends ContextLoaderListener {
     private Map<String, Object> initializeConfiguration( ServletContext context ) {
         // Check if the config
         // object already exists
+        @SuppressWarnings("unchecked")
         Map<String, Object> config = ( Map<String, Object> ) context.getAttribute( Constants.CONFIG );
 
         if ( config == null ) {
@@ -181,7 +182,8 @@ public class StartupListener extends ContextLoaderListener {
             if ( StringUtils.isNotBlank( gaTrackerDomain ) ) {
                 log.debug( "Tracker domain is " + gaTrackerDomain );
                 config.put( "ga.domain", gaTrackerDomain );
-                log.info( "Enabled Google analytics tracking with key " + gaTrackerKey + ", domain=" + gaTrackerDomain );
+                log.info(
+                        "Enabled Google analytics tracking with key " + gaTrackerKey + ", domain=" + gaTrackerDomain );
 
             } else {
                 log.warn( "Google analytics will not work unless you also define the domain." );

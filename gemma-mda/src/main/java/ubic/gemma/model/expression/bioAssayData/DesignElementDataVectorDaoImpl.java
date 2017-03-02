@@ -49,8 +49,8 @@ import ubic.gemma.util.NativeQueryUtils;
  * @version $Id$
  */
 @Repository
-public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector> extends
-        DesignElementDataVectorDaoBase<T> {
+public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementDataVector>
+        extends DesignElementDataVectorDaoBase<T> {
 
     private static Log log = LogFactory.getLog( DesignElementDataVectorDaoImpl.class.getName() );
 
@@ -185,12 +185,12 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         // thaw the bioassaydimensions we saw -- usually one, more rarely two.
         for ( BioAssayDimension bad : dims.keySet() ) {
 
-            BioAssayDimension tbad = ( BioAssayDimension ) this
-                    .getHibernateTemplate()
+            BioAssayDimension tbad = ( BioAssayDimension ) this.getHibernateTemplate()
                     .findByNamedParam(
                             "select distinct bad from BioAssayDimensionImpl bad fetch all properties join fetch bad.bioAssays ba join fetch ba.sampleUsed "
                                     + "bm join fetch ba.arrayDesignUsed left join fetch bm.factorValues where bad.id= :bad",
-                            "bad", bad.getId() ).get( 0 );
+                            "bad", bad.getId() )
+                    .get( 0 );
 
             assert tbad != null;
 
@@ -322,6 +322,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
         while ( results.next() ) {
+            @SuppressWarnings("unchecked")
             T dedv = ( T ) results.get( 0 );
             Long cs = ( Long ) results.get( 1 );
             Collection<Long> associatedGenes = cs2gene.get( cs );

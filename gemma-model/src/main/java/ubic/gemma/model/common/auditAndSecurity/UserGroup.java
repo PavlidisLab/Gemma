@@ -19,11 +19,11 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-
 import java.util.Collection;
 import java.util.HashSet;
+
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
 
 /**
  * An organized group of researchers with an identifiable leader and group members.
@@ -75,11 +75,13 @@ public abstract class UserGroup extends ubic.gemma.model.common.Auditable implem
         return this.groupMembers;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends GroupAuthority> void setAuthorities( Collection<T> authorities ) {
         this.authorities = ( Collection<GroupAuthority> ) authorities;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
         this.groupMembers = ( Collection<User> ) groupMembers;

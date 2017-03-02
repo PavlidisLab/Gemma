@@ -17,11 +17,5 @@
       <property name="variances" type="byte[]">
          <column name="VARIANCES" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
       </property>
-      <property name="lowessX" type="byte[]">
-         <column name="LOWESS_X" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
-      </property>
-      <property name="lowessY" type="byte[]">
-         <column name="LOWESS_Y" not-null="false" unique="false" sql-type="MEDIUMBLOB"/>
-      </property>
    </class>
 </hibernate-mapping>
