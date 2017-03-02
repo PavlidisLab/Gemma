@@ -117,7 +117,7 @@
 										<artifactItem>
 											<groupId>pavlab</groupId>
 											<artifactId>gemma-gsec</artifactId>
-											<version>0.0.1-SNAPSHOT</version>
+											<version>0.0.1</version>
 											<type>jar</type>
 											<overWrite>true</overWrite>
 											<outputDirectory>${project.build.directory}/schema</outputDirectory>
