@@ -172,6 +172,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
 
         if ( limit != null ) {
+            tpl.setMaxResults( limit );
+        } else {
             tpl.setMaxResults( 10000 );
         }
         return tpl
