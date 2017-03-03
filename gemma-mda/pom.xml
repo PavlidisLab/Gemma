@@ -126,7 +126,7 @@
 										<artifactItem>
 											<groupId>gemma</groupId>
 											<artifactId>gemma-model</artifactId>
-											<version>1.8-SNAPSHOT</version>
+											<version>1.9</version>
 											<type>jar</type>
 											<overWrite>true</overWrite>
 											<outputDirectory>${project.build.directory}/schema</outputDirectory>
