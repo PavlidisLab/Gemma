@@ -247,6 +247,7 @@ public class PhenotypeController extends BaseController {
 
         mav.addObject( "phenotypeUrlId", request.getParameter( "phenotypeUrlId" ) );
         mav.addObject( "geneId", request.getParameter( "geneId" ) );
+        mav.addObject( "ncbiId", request.getParameter( "ncbiId" ) );
 
         return mav;
     }
