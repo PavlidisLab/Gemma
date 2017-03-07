@@ -19,7 +19,6 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -31,9 +30,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * @version $Id$
- */
 public interface ArrayDesignService {
 
     @Secured({ "GROUP_ADMIN" })
@@ -62,9 +58,6 @@ public interface ArrayDesignService {
      */
     Integer countAll();
 
-    /**
-     *
-     */
     @Secured({ "GROUP_USER" })
     ArrayDesign create( ArrayDesign arrayDesign );
 
@@ -93,17 +86,14 @@ public interface ArrayDesignService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByName( String name );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ArrayDesign findByShortName( String shortName );
 
     /**
      * Find by the primary taxon.
-     *
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ArrayDesign> findByTaxon( Taxon taxon );
-
 
     @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     ArrayDesign findOrCreate( ArrayDesign arrayDesign );
@@ -117,29 +107,21 @@ public interface ArrayDesignService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign );
 
-    /**
-     *
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     /**
      * Return all the (unique) biosequences associated with the array design. Composite sequences that don't have
      * sequences are also returned, so this can be used to do a thaw, in effect.
-     *
-
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Integer getCompositeSequenceCount( ArrayDesign arrayDesign );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );
-
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
@@ -156,7 +138,6 @@ public interface ArrayDesignService {
      */
     Map<Long, AuditEvent> getLastGeneMapping( Collection<Long> ids );
 
-
     Map<Long, AuditEvent> getLastRepeatAnalysis( Collection<Long> ids );
 
     /**
@@ -170,10 +151,6 @@ public interface ArrayDesignService {
      * -> AuditEvent. If the events do not exist, the map entry will point to null.
      */
     Map<Long, AuditEvent> getLastSequenceUpdate( Collection<Long> ids );
-
-    Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
-
-    Map<Long, AuditEvent> getLastValidationEvent( Collection<Long> ids );
 
     /**
      * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
@@ -189,19 +166,15 @@ public interface ArrayDesignService {
      */
     Collection<Taxon> getTaxa( Long id );
 
-
     Taxon getTaxon( Long id );
 
     Map<Long, Boolean> isMerged( Collection<Long> ids );
-
 
     Map<Long, Boolean> isMergee( Collection<Long> ids );
 
     Map<Long, Boolean> isSubsumed( Collection<Long> ids );
 
-
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
-
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ArrayDesign load( long id );
@@ -285,10 +258,8 @@ public interface ArrayDesignService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
 
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign );
-
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
@@ -304,7 +275,6 @@ public interface ArrayDesignService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     long numGenes( ArrayDesign arrayDesign );
 
-
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ArrayDesign arrayDesign );
 
@@ -317,7 +287,6 @@ public interface ArrayDesignService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
-
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     ArrayDesign thaw( ArrayDesign arrayDesign );

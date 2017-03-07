@@ -282,28 +282,6 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastTroubleEvent(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Map<Long, AuditEvent> getLastTroubleEvent( final java.util.Collection<Long> ids ) {
-
-        return this.handleGetLastTroubleEvent( ids );
-
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastValidationEvent(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Map<Long, AuditEvent> getLastValidationEvent( final java.util.Collection<Long> ids ) {
-
-        return this.handleGetLastValidationEvent( ids );
-
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
      */
     @Override
@@ -800,16 +778,6 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      * Performs the core logic for {@link #getLastSequenceUpdate(java.util.Collection)}
      */
     protected abstract java.util.Map<Long, AuditEvent> handleGetLastSequenceUpdate( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #getLastTroubleEvent(java.util.Collection)}
-     */
-    protected abstract java.util.Map<Long, AuditEvent> handleGetLastTroubleEvent( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #getLastValidationEvent(java.util.Collection)}
-     */
-    protected abstract java.util.Map<Long, AuditEvent> handleGetLastValidationEvent( java.util.Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getTaxa(java.lang.Long)} Lmd 29/07/09 Fishmanomics provide support multi

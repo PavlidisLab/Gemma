@@ -222,61 +222,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
-    protected java.util.Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-
-        Set<Long> aaIds = eventMap.keySet();
-        for ( Long arrayDesignId : aaIds ) {
-
-            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent;
-
-            if ( events != null ) {
-                lastEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
-                if ( lastEvent != null ) {
-                    lastEventMap.put( arrayDesignId, lastEvent );
-                }
-
-                /*
-                 * TODO how to deal with merged/subsumed arrays in this case?
-                 */
-            }
-
-        }
-
-        return lastEventMap;
-    }
-
-    @Override
-    protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
-
-        Set<Long> aaIds = eventMap.keySet();
-        for ( Long arrayDesignId : aaIds ) {
-
-            Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent;
-
-            if ( events != null ) {
-                ArrayDesign ad = this.load( arrayDesignId );
-
-                lastEvent = this.getAuditEventDao().getLastEvent( ad, DoesNotNeedAttentionEvent.class );
-                if ( lastEvent != null )
-                    lastEventMap.put( arrayDesignId, lastEvent );
-
-                /*
-                 * TODO how to deal with merged/subsumed arrays in this case?
-                 */
-            }
-
-        }
-
-        return lastEventMap;
-    }
-
-    @Override
     protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxa( id );
     }
@@ -319,15 +264,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() {
-        Collection<ArrayDesignValueObject> ads = this.getArrayDesignDao().loadAllValueObjects();
-        try {
-            for ( ArrayDesignValueObject ad : ads ) {
-                this.populateTroubleDetails( ad );
-            }
-        } catch ( Exception e ) {
-            log.error( e );
-        }
-        return ads;
+        return this.getArrayDesignDao().loadAllValueObjects();
     }
 
     @Override
@@ -343,34 +280,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) {
-        Collection<ArrayDesignValueObject> ads = this.getArrayDesignDao().loadValueObjects( ids );
-        try {
-            for ( ArrayDesignValueObject ad : ads ) {
-                this.populateTroubleDetails( ad );
-            }
-        } catch ( Exception e ) {
-            log.error( e );
-        }
-        return ads;
-    }
-
-    /**
-     * Populates the troubleDetails property of the ADValueObject, which has to be done separately since the last
-     * trouble event has to be retrieved.
-     */
-    private void populateTroubleDetails( ArrayDesignValueObject ad ) {
-        java.util.Map<Long, AuditEvent> events = this.getLastTroubleEvent( Collections.singleton( ad.getId() ) );
-        AuditEvent e = events.get( ad.getId() );
-        if ( e != null ) {
-            if ( !ad.getTroubled() ) {
-                log.error( "Loaded ArrayDesign has troubled event but not status. ID: " + ad.getId() );
-            }
-            ad.setTroubleDetails( e.toString() );
-        } else {
-            if ( ad.getTroubled() ) {
-                log.error( "Loaded ArrayDesign is troubled but has no outstanding trouble event. ID: " + ad.getId() );
-            }
-        }
+        return this.getArrayDesignDao().loadValueObjects( ids );
     }
 
     @Override
