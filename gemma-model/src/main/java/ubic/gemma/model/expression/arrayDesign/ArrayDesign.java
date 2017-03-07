@@ -19,60 +19,40 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+
 import java.util.Collection;
 
 /**
  * Represents an assembly of design elements that are assayed all at once.
+ *
+ * @author Paul
  */
-public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredNotChild {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
-         */
-        public static ubic.gemma.model.expression.arrayDesign.ArrayDesign newInstance() {
-            return new ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl();
-        }
-
-    }
+public class ArrayDesign extends ubic.gemma.model.common.Auditable
+        implements gemma.gsec.model.SecuredNotChild, Curatable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -7566439134502613470L;
     private Integer advertisedNumberOfDesignElements;
-
     private String shortName;
-
     private ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType;
-
     private ubic.gemma.model.genome.Taxon primaryTaxon;
-
-    private Collection<ubic.gemma.model.common.description.DatabaseEntry> externalReferences = new java.util.HashSet<ubic.gemma.model.common.description.DatabaseEntry>();
-
-    private Collection<ubic.gemma.model.expression.designElement.CompositeSequence> compositeSequences = new java.util.HashSet<ubic.gemma.model.expression.designElement.CompositeSequence>();
-
+    private Collection<ubic.gemma.model.common.description.DatabaseEntry> externalReferences = new java.util.HashSet<>();
+    private Collection<ubic.gemma.model.expression.designElement.CompositeSequence> compositeSequences = new java.util.HashSet<>();
     private ubic.gemma.model.expression.arrayDesign.ArrayDesign mergedInto;
-
     private ubic.gemma.model.expression.arrayDesign.ArrayDesign subsumingArrayDesign;
-
-    private Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> subsumedArrayDesigns = new java.util.HashSet<ubic.gemma.model.expression.arrayDesign.ArrayDesign>();
-
-    private Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> mergees = new java.util.HashSet<ubic.gemma.model.expression.arrayDesign.ArrayDesign>();
-
+    private Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> subsumedArrayDesigns = new java.util.HashSet<>();
+    private Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> mergees = new java.util.HashSet<>();
     private ubic.gemma.model.common.auditAndSecurity.Contact designProvider;
-
-    private Collection<ubic.gemma.model.common.description.LocalFile> localFiles = new java.util.HashSet<ubic.gemma.model.common.description.LocalFile>();
-
-    private Collection<ubic.gemma.model.expression.arrayDesign.AlternateName> alternateNames = new java.util.HashSet<ubic.gemma.model.expression.arrayDesign.AlternateName>();
+    private Collection<ubic.gemma.model.common.description.LocalFile> localFiles = new java.util.HashSet<>();
+    private Collection<ubic.gemma.model.expression.arrayDesign.AlternateName> alternateNames = new java.util.HashSet<>();
+    private CurationDetails curationDetails;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public ArrayDesign() {
     }
@@ -88,25 +68,33 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
         return this.advertisedNumberOfDesignElements;
     }
 
-    /**
-     * 
-     */
+    public void setAdvertisedNumberOfDesignElements( Integer advertisedNumberOfDesignElements ) {
+        this.advertisedNumberOfDesignElements = advertisedNumberOfDesignElements;
+    }
+
     public Collection<ubic.gemma.model.expression.arrayDesign.AlternateName> getAlternateNames() {
         return this.alternateNames;
     }
 
-    /**
-     * 
-     */
+    public void setAlternateNames( Collection<ubic.gemma.model.expression.arrayDesign.AlternateName> alternateNames ) {
+        this.alternateNames = alternateNames;
+    }
+
     public Collection<ubic.gemma.model.expression.designElement.CompositeSequence> getCompositeSequences() {
         return this.compositeSequences;
     }
 
-    /**
-     * 
-     */
+    public void setCompositeSequences(
+            Collection<ubic.gemma.model.expression.designElement.CompositeSequence> compositeSequences ) {
+        this.compositeSequences = compositeSequences;
+    }
+
     public ubic.gemma.model.common.auditAndSecurity.Contact getDesignProvider() {
         return this.designProvider;
+    }
+
+    public void setDesignProvider( ubic.gemma.model.common.auditAndSecurity.Contact designProvider ) {
+        this.designProvider = designProvider;
     }
 
     /**
@@ -118,6 +106,11 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
         return this.externalReferences;
     }
 
+    public void setExternalReferences(
+            Collection<ubic.gemma.model.common.description.DatabaseEntry> externalReferences ) {
+        this.externalReferences = externalReferences;
+    }
+
     /**
      * <p>
      * Files containing data that were loaded to create this ArrayDesign
@@ -127,18 +120,24 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
         return this.localFiles;
     }
 
-    /**
-     * 
-     */
+    public void setLocalFiles( Collection<ubic.gemma.model.common.description.LocalFile> localFiles ) {
+        this.localFiles = localFiles;
+    }
+
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign getMergedInto() {
         return this.mergedInto;
     }
 
-    /**
-     * 
-     */
+    public void setMergedInto( ubic.gemma.model.expression.arrayDesign.ArrayDesign mergedInto ) {
+        this.mergedInto = mergedInto;
+    }
+
     public Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> getMergees() {
         return this.mergees;
+    }
+
+    public void setMergees( Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> mergees ) {
+        this.mergees = mergees;
     }
 
     /**
@@ -152,6 +151,10 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
         return this.primaryTaxon;
     }
 
+    public void setPrimaryTaxon( ubic.gemma.model.genome.Taxon primaryTaxon ) {
+        this.primaryTaxon = primaryTaxon;
+    }
+
     /**
      * <p>
      * A brief unique (but optional) human-readable name for the expression experiment. For example in the past we often
@@ -160,6 +163,10 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
      */
     public String getShortName() {
         return this.shortName;
+    }
+
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
     }
 
     /**
@@ -172,6 +179,11 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
         return this.subsumedArrayDesigns;
     }
 
+    public void setSubsumedArrayDesigns(
+            Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> subsumedArrayDesigns ) {
+        this.subsumedArrayDesigns = subsumedArrayDesigns;
+    }
+
     /**
      * <p>
      * An array design that subsumes this one (contains DesignElements that are equivalent to the ones on this
@@ -182,65 +194,65 @@ public abstract class ArrayDesign extends ubic.gemma.model.common.Auditable impl
         return this.subsumingArrayDesign;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.TechnologyType getTechnologyType() {
-        return this.technologyType;
-    }
-
-    public void setAdvertisedNumberOfDesignElements( Integer advertisedNumberOfDesignElements ) {
-        this.advertisedNumberOfDesignElements = advertisedNumberOfDesignElements;
-    }
-
-    public void setAlternateNames( Collection<ubic.gemma.model.expression.arrayDesign.AlternateName> alternateNames ) {
-        this.alternateNames = alternateNames;
-    }
-
-    public void setCompositeSequences(
-            Collection<ubic.gemma.model.expression.designElement.CompositeSequence> compositeSequences ) {
-        this.compositeSequences = compositeSequences;
-    }
-
-    public void setDesignProvider( ubic.gemma.model.common.auditAndSecurity.Contact designProvider ) {
-        this.designProvider = designProvider;
-    }
-
-    public void setExternalReferences( Collection<ubic.gemma.model.common.description.DatabaseEntry> externalReferences ) {
-        this.externalReferences = externalReferences;
-    }
-
-    public void setLocalFiles( Collection<ubic.gemma.model.common.description.LocalFile> localFiles ) {
-        this.localFiles = localFiles;
-    }
-
-    public void setMergedInto( ubic.gemma.model.expression.arrayDesign.ArrayDesign mergedInto ) {
-        this.mergedInto = mergedInto;
-    }
-
-    public void setMergees( Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> mergees ) {
-        this.mergees = mergees;
-    }
-
-    public void setPrimaryTaxon( ubic.gemma.model.genome.Taxon primaryTaxon ) {
-        this.primaryTaxon = primaryTaxon;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    public void setSubsumedArrayDesigns(
-            Collection<ubic.gemma.model.expression.arrayDesign.ArrayDesign> subsumedArrayDesigns ) {
-        this.subsumedArrayDesigns = subsumedArrayDesigns;
-    }
-
     public void setSubsumingArrayDesign( ubic.gemma.model.expression.arrayDesign.ArrayDesign subsumingArrayDesign ) {
         this.subsumingArrayDesign = subsumingArrayDesign;
     }
 
+    public ubic.gemma.model.expression.arrayDesign.TechnologyType getTechnologyType() {
+        return this.technologyType;
+    }
+
     public void setTechnologyType( ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType ) {
         this.technologyType = technologyType;
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( !( object instanceof ArrayDesign ) )
+            return false;
+        ArrayDesign that = ( ArrayDesign ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+
+        return this.getName() != null && that.getName() != null && this.getName().equals( that.getName() );
+
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null )
+            return 29 * getId().hashCode();
+        if ( this.getName() != null )
+            return 29 * getName().hashCode();
+        return super.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + ( this.getShortName() == null ? "" : " (" + this.getShortName() + ")" );
+    }
+
+    @Override
+    public CurationDetails getCurationDetails() {
+        return this.curationDetails;
+    }
+
+    @Override
+    public void setCurationDetails(CurationDetails curationDetails) {
+        this.curationDetails = curationDetails;
+    }
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.expression.arrayDesign.ArrayDesign}.
+         */
+        public static ubic.gemma.model.expression.arrayDesign.ArrayDesign newInstance() {
+            return new ubic.gemma.model.expression.arrayDesign.ArrayDesign();
+        }
+
     }
 
 }

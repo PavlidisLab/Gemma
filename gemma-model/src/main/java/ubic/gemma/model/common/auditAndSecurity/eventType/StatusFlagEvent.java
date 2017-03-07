@@ -20,8 +20,10 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Flags used to indicate the status of an object (trouble, OK, validated, etc)
+ *
+ * @author Paul
  */
-public abstract class StatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+public class StatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -30,8 +32,6 @@ public abstract class StatusFlagEvent extends ubic.gemma.model.common.auditAndSe
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public StatusFlagEvent() {
     }

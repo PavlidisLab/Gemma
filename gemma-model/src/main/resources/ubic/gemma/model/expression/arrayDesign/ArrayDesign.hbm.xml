@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" table="ARRAY_DESIGN" dynamic-insert="false" dynamic-update="false">
+   <class name="ubic.gemma.model.expression.arrayDesign.ArrayDesign" table="ARRAY_DESIGN" dynamic-insert="false" dynamic-update="false">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -14,7 +14,7 @@
       <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
          <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl"  cascade="all" lazy="proxy" fetch="select">
+      <many-to-one name="curationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false" fetch="select">
          <column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <property name="name" type="java.lang.String">
@@ -32,7 +32,7 @@
       <property name="technologyType" type="ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum">
          <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.TaxonImpl" lazy="proxy" fetch="select">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="externalReferences"  lazy="true" fetch="select" inverse="false" cascade="all">
@@ -49,10 +49,10 @@
          </key>
          <one-to-many class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl"/>
       </set>
-      <many-to-one name="mergedInto" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="mergedInto" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="MERGED_INTO_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="subsumingArrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="subsumingArrayDesign" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="SUBSUMING_ARRAY_DESIGN_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <set name="subsumedArrayDesigns" lazy="true" fetch="select" inverse="true">
@@ -60,14 +60,14 @@
          <key foreign-key="ARRAY_DESIGN_SUBSUMING_ARRAY_DESIGN_FKC">
             <column name="SUBSUMING_ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"/>
       </set>
       <set name="mergees"  lazy="true" fetch="select" inverse="true" cascade="save-update">
          <cache usage="read-write" />
          <key foreign-key="ARRAY_DESIGN_MERGED_INTO_FKC">
             <column name="MERGED_INTO_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"/>
       </set>
       <many-to-one name="designProvider" class="ubic.gemma.model.common.auditAndSecurity.ContactImpl"  lazy="proxy" fetch="select">
          <column name="DESIGN_PROVIDER_FK" not-null="false" sql-type="BIGINT"/>

@@ -19,10 +19,11 @@
 package ubic.gemma.model.common;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.Status;
 
 /**
  * An entity which can have an audit trail attached to it.
+ *
+ * @author Paul
  */
 public abstract class Auditable extends Describable {
 
@@ -32,12 +33,10 @@ public abstract class Auditable extends Describable {
     private static final long serialVersionUID = 2797229483150957490L;
 
     private AuditTrail auditTrail;
-    private Status status;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
+     *
      */
     public Auditable() {
     }
@@ -49,19 +48,8 @@ public abstract class Auditable extends Describable {
         return this.auditTrail;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.auditAndSecurity.Status getStatus() {
-        return this.status;
-    }
-
     public void setAuditTrail( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
         this.auditTrail = auditTrail;
-    }
-
-    public void setStatus( ubic.gemma.model.common.auditAndSecurity.Status status ) {
-        this.status = status;
     }
 
 }

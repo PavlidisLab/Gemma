@@ -22,9 +22,22 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * <p>
  * Indicates that the study has a problem with the experimental design.
  * </p>
+ *
+ * @author Paul
  */
-public abstract class ExperimentalDesignTrouble extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl {
+public class ExperimentalDesignTrouble
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 6316237176444707109L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public ExperimentalDesignTrouble() {
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble}.
@@ -35,22 +48,9 @@ public abstract class ExperimentalDesignTrouble extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTroubleImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 6316237176444707109L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExperimentalDesignTrouble() {
     }
 
 }

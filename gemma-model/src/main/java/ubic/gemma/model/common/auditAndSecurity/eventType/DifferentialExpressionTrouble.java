@@ -22,9 +22,22 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * <p>
  * Indicates the dataset has problems preventing a valid differential expression analysis.
  * </p>
+ *
+ * @author Paul
  */
-public abstract class DifferentialExpressionTrouble extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl {
+public class DifferentialExpressionTrouble
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 1710107213005397574L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public DifferentialExpressionTrouble() {
+    }
 
     /**
      * Constructs new instances of
@@ -36,22 +49,9 @@ public abstract class DifferentialExpressionTrouble extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 1710107213005397574L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public DifferentialExpressionTrouble() {
     }
 
 }

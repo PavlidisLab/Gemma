@@ -22,9 +22,21 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * <p>
  * Indicates a dataset has problems preventing coexpression analysis.
  * </p>
+ *
+ * @author Paul
  */
-public abstract class CoexpressionTrouble extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl {
+public class CoexpressionTrouble extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -195264673791574020L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public CoexpressionTrouble() {
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble}.
@@ -34,22 +46,9 @@ public abstract class CoexpressionTrouble extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -195264673791574020L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public CoexpressionTrouble() {
     }
 
 }

@@ -17,11 +17,6 @@
 			lazy="proxy" fetch="select">
 			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
-		<many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl" cascade="all" lazy="proxy"
-			fetch="select">
-			<column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true" />
-		</many-to-one>
-
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
@@ -60,7 +55,7 @@
 		</set>
 		<subclass name="ubic.gemma.model.expression.experiment.BioAssaySet" dynamic-insert="false" dynamic-update="false"
 			abstract="true">
-			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" discriminator-value="ExpressionExperimentImpl"
+			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment" discriminator-value="ExpressionExperimentImpl"
 				dynamic-insert="false" dynamic-update="false" abstract="false">
 				<property name="source" type="java.lang.String">
 					<column name="SOURCE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
@@ -77,7 +72,7 @@
 				</property>
 				<many-to-one name="geeq" class="ubic.gemma.model.expression.experiment.GeeqImpl" cascade="all"
 					lazy="proxy" fetch="select">
-					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true"></column>
+					<column name="GEEQ_FK" not-null="false" sql-type="BIGINT" unique="true"/>
 				</many-to-one>
 				<set name="quantitationTypes" lazy="true" fetch="select" inverse="false">
 					<cache usage="read-write" />
@@ -109,6 +104,10 @@
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
+				<many-to-one name="CurationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false"
+							 fetch="select">
+					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true" />
+				</many-to-one>
 				<set name="rawExpressionDataVectors" lazy="true" fetch="select" inverse="true" cascade="all">
 					<cache usage="read-write" />
 					<key foreign-key="RAW_EXPRESSION_DATA_VECTOR_EXPRESSION_EXPERIMENT_FKC">
@@ -126,7 +125,7 @@
 			</subclass>
 			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" discriminator-value="ExpressionExperimentSubSetImpl"
 				dynamic-insert="false" dynamic-update="false" abstract="false">
-				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
 					cascade="none" lazy="false" fetch="select">
 					<column name="SOURCE_EXPERIMENT_FK" not-null="false" sql-type="BIGINT" />
 				</many-to-one>

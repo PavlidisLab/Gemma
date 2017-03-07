@@ -70,7 +70,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
     private String originalPhenotype = "";
     private String phenotypeMapping = "";
 
-    private SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<PhenotypeAssPubValueObject>();
+    private SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<>();
 
     private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
@@ -110,7 +110,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
             this.evidenceSource = new EvidenceSourceValueObject( phenotypeAssociation.getEvidenceSource() );
         }
 
-        this.phenotypes = new TreeSet<CharacteristicValueObject>();
+        this.phenotypes = new TreeSet<>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
@@ -126,7 +126,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
             this.phenotypeAssPubVO.add( phenotypeAss );
         }
 
-        this.lastUpdated = phenotypeAssociation.getStatus().getLastUpdateDate().getTime();
+        this.lastUpdated = phenotypeAssociation.getLastUdpated().getTime();
         this.geneId = phenotypeAssociation.getGene().getId();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
         this.geneOfficialSymbol = phenotypeAssociation.getGene().getOfficialSymbol();
@@ -145,7 +145,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         }
     }
 
-    public int compareEvidenceSource( EvidenceValueObject evidenceValueObject ) {
+    private int compareEvidenceSource( EvidenceValueObject evidenceValueObject ) {
 
         if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() != null ) {
 
@@ -270,7 +270,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
 
     public Set<String> getPhenotypesValueUri() {
 
-        Set<String> phenotypesValueUri = new HashSet<String>();
+        Set<String> phenotypesValueUri = new HashSet<>();
 
         for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
             phenotypesValueUri.add( characteristicValueObject.getValueUri() );
@@ -396,7 +396,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
                 + scoreValueObject + "]";
     }
 
-    protected int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
+    private int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
         if ( this == evidenceValueObject ) return 0;
 
         if ( this.containQueryPhenotype && !evidenceValueObject.isContainQueryPhenotype() ) {
@@ -438,7 +438,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
             return 1;
         }
 
-        int comparison = 0;
+        int comparison;
 
         if ( this.phenotypes != null && evidenceValueObject.phenotypes != null ) {
             Iterator<CharacteristicValueObject> thisIterator = this.phenotypes.iterator();

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping default-cascade="none">
+    <class name="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" table="CURATION_DETAILS"
+           dynamic-insert="false" dynamic-update="false">
+        <cache usage="read-write"/>
+        <id name="id" type="java.lang.Long" unsaved-value="null">
+            <column name="ID" sql-type="BIGINT"/>
+            <generator class="native">
+            </generator>
+        </id>
+        <many-to-one name="lastTroubledEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl"
+                     cascade="all" lazy="false">
+            <column name="AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <many-to-one name="lastNeedsAttentionEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl"
+                     cascade="all" lazy="false">
+            <column name="AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <many-to-one name="lastNoteUpdateEvent" class="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl"
+                     cascade="all" lazy="false">
+            <column name="AUDIT_EVENT_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+        </many-to-one>
+        <property name="troubled" type="java.lang.Boolean">
+            <column name="TROUBLED" not-null="true" unique="false" sql-type="TINYINT"/>
+        </property>
+        <property name="needsAttention" type="java.lang.Boolean">
+            <column name="NEEDS_ATTENTION" not-null="true" unique="false" sql-type="TINYINT"/>
+        </property>
+        <property name="note" type="java.lang.String">
+            <column name="NOTE" not-null="false" unique="false"
+                    sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
+        </property>
+    </class>
+</hibernate-mapping>

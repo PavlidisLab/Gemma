@@ -109,35 +109,27 @@
 		<subclass abstract="false" discriminator-value="CommentedEventImpl"
 			name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl" select-before-update="false" />
 		<subclass abstract="true" discriminator-value="StatusFlagEventImpl"
-			name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventImpl" select-before-update="false">
-			<subclass abstract="false" discriminator-value="TroubleStatusFlagEventImpl"
-				name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl" select-before-update="false">
+			name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent" select-before-update="false">
+			<subclass abstract="false" discriminator-value="TroubledStatusFlagEventImpl"
+				name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent" select-before-update="false">
 				<subclass abstract="false" discriminator-value="CoexpressionTroubleImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleImpl" select-before-update="false" />
+					name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble" select-before-update="false" />
 				<subclass abstract="false" discriminator-value="DifferentialExpressionTroubleImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleImpl" select-before-update="false" />
+					name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble" select-before-update="false" />
 				<subclass abstract="false" discriminator-value="OutlierSampleTroubleImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTroubleImpl" select-before-update="false" />
+					name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTrouble" select-before-update="false" />
 				<subclass abstract="false" discriminator-value="ExperimentalDesignTroubleImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTroubleImpl" select-before-update="false" />
+					name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble" select-before-update="false" />
 				<subclass abstract="false" discriminator-value="SampleLayoutTroubleImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTroubleImpl" select-before-update="false" />
+					name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTrouble" select-before-update="false" />
 			</subclass>
-			<subclass abstract="false" discriminator-value="OKStatusFlagEventImpl"
-				name="ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl" select-before-update="false" />
-			<subclass abstract="false" discriminator-value="ValidatedFlagEventImpl"
-				name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl" select-before-update="false">
-				<subclass abstract="false" discriminator-value="ValidatedAnnotationsImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsImpl" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="ValidatedExperimentalDesignImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignImpl" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="ValidatedPreprocessingImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingImpl" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="ValidatedQualityControlImpl"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedQualityControlImpl" select-before-update="false" />
+			<subclass abstract="false" discriminator-value="NotTroubledStatusFlagEvent"
+				name="ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent" select-before-update="false" />
+			<subclass abstract="false" discriminator-value="DoesNotNeedAttentionEvent"
+					  name="ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent" select-before-update="false">
 			</subclass>
-			<subclass abstract="false" discriminator-value="InvalidatedEventImpl"
-				name="ubic.gemma.model.common.auditAndSecurity.eventType.InvalidatedEventImpl" select-before-update="false" />
+			<subclass abstract="false" discriminator-value="NeedsAttentionEvent"
+					  name="ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent" select-before-update="false" />
 		</subclass>
 		<subclass abstract="true" discriminator-value="AnnotationEventImpl"
 			name="ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEventImpl" select-before-update="false">

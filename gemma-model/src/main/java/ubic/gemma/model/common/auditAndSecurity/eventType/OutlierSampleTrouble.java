@@ -22,9 +22,21 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * <p>
  * To note that the data set has one or more outlier samples.
  * </p>
+ *
+ * @author Paul
  */
-public abstract class OutlierSampleTrouble extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl {
+public class OutlierSampleTrouble extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -7211120608210539559L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public OutlierSampleTrouble() {
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTrouble}.
@@ -34,22 +46,9 @@ public abstract class OutlierSampleTrouble extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTrouble}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTrouble newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTroubleImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTrouble();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7211120608210539559L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public OutlierSampleTrouble() {
     }
 
 }

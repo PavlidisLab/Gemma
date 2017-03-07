@@ -24,9 +24,21 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * biomaterials and bioassays is incomplete or problematic. This might mean that the array designs need to be merged,
  * vectors needs to be merged, etc.
  * </p>
+ *
+ * @author Paul
  */
-public abstract class SampleLayoutTrouble extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl {
+public class SampleLayoutTrouble extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 958266769759469574L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public SampleLayoutTrouble() {
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTrouble}.
@@ -36,22 +48,9 @@ public abstract class SampleLayoutTrouble extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTrouble}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTrouble newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTroubleImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTrouble();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 958266769759469574L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public SampleLayoutTrouble() {
     }
 
 }

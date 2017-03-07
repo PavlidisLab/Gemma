@@ -1,28 +1,23 @@
 /*
- * The Gemma project.
+ * The Gemma project
  * 
- * Copyright (c) 2006-2012 University of British Columbia
+ * Copyright (c) 2011 University of British Columbia
  * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.SecuredNotChild;
-
-import java.util.Collection;
-import java.util.HashSet;
-
+import org.hibernate.proxy.HibernateProxyHelper;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -31,86 +26,108 @@ import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
- * A gene expression study.
+ * @author paul
  */
-public abstract class ExpressionExperiment extends BioAssaySet implements SecuredNotChild {
+public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild, Curatable {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 6374751424316315527L;
+    private static final long serialVersionUID = -1342753625018841735L;
+    private DatabaseEntry accession;
+    private Collection<BioAssay> bioAssays = new HashSet<>();
+    private ExperimentalDesign experimentalDesign;
+    private Geeq geeq;
+    private MeanVarianceRelation meanVarianceRelation;
+    private Integer numberOfDataVectors;
+    private Integer numberOfSamples;
+    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
+    private Collection<QuantitationType> quantitationTypes = new HashSet<>();
+    private LocalFile rawDataFile;
+    private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
+    private String shortName;
+    private String source;
+    private CurationDetails curationDetails;
 
-    /**
-     * Constructs new instances of {@link ExpressionExperiment}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ExpressionExperiment}.
-         */
-        public static ExpressionExperiment newInstance() {
-            return new ExpressionExperimentImpl();
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
+    @Override
+    public boolean equals( Object object ) {
+        if ( object == null )
+            return false;
+        Class<?> thisClass = HibernateProxyHelper.getClassWithoutInitializingProxy( this );
+        Class<?> thatClass = HibernateProxyHelper.getClassWithoutInitializingProxy( object );
+        if ( !thisClass.equals( thatClass ) )
+            return false;
+
+        ExpressionExperiment that = ( ExpressionExperiment ) object;
+        if ( this.getId() != null && that.getId() != null ) {
+            return this.getId().equals( that.getId() );
+        } else if ( this.getShortName() != null && that.getShortName() != null ) {
+            return this.getShortName().equals( that.getShortName() );
         }
+        return false;
 
     }
 
-    private DatabaseEntry accession;
+    @Override
+    public int hashCode() {
+        int result = 1;
+        if ( this.getId() != null ) {
+            return this.getId().hashCode();
+        } else if ( this.getShortName() != null ) {
+            return this.getShortName().hashCode();
+        }
+        return result;
 
-    private Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
+    }
 
-    private ExperimentalDesign experimentalDesign;
+    @Override
+    public String toString() {
+        return super.toString() + " (" + this.getShortName() + ")";
+    }
 
-    private Geeq geeq;
-
-    private MeanVarianceRelation meanVarianceRelation;
-
-    private Integer numberOfDataVectors;
-
-    private Integer numberOfSamples;
-
-    private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
-
-    private Collection<QuantitationType> quantitationTypes = new HashSet<>();
-
-    private LocalFile rawDataFile;
-
-    private Collection<RawExpressionDataVector> rawExpressionDataVectors = new HashSet<>();
-
-    private String shortName;
-
-    private String source;
-
-    /**
-     * 
-     */
     public DatabaseEntry getAccession() {
         return this.accession;
     }
 
-    /**
-     * 
-     */
+    public void setAccession( DatabaseEntry accession ) {
+        this.accession = accession;
+    }
+
     @Override
     public Collection<BioAssay> getBioAssays() {
         return this.bioAssays;
     }
 
-    /**
-     * 
-     */
+    public void setBioAssays( Collection<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
+
     public ExperimentalDesign getExperimentalDesign() {
         return this.experimentalDesign;
     }
 
+    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
+        this.experimentalDesign = experimentalDesign;
+    }
+
+    @SuppressWarnings("unused")
     public Geeq getGeeq() {
         return geeq;
     }
 
-    /**
-     * 
-     */
+    @SuppressWarnings("unused")
+    public void setGeeq( Geeq geeq ) {
+        this.geeq = geeq;
+    }
+
     public MeanVarianceRelation getMeanVarianceRelation() {
         return this.meanVarianceRelation;
+    }
+
+    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
+        this.meanVarianceRelation = meanVarianceRelation;
     }
 
     /**
@@ -120,40 +137,55 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
         return this.numberOfDataVectors;
     }
 
+    public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
+        this.numberOfDataVectors = numberOfDataVectors;
+    }
+
     /**
      * The number of distinct BioMaterials associated with the experiment.
      */
+    @SuppressWarnings("unused")
     public Integer getNumberOfSamples() {
         // FIXME this is not set. See bug 4307
         return this.numberOfSamples;
     }
 
-    /**
-     * 
-     */
+    @SuppressWarnings("unused")
+    public void setNumberOfSamples( Integer numberOfSamples ) {
+        this.numberOfSamples = numberOfSamples;
+    }
+
     public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
         return this.processedExpressionDataVectors;
     }
 
-    /**
-     * 
-     */
+    public void setProcessedExpressionDataVectors(
+            Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
+        this.processedExpressionDataVectors = processedExpressionDataVectors;
+    }
+
     public Collection<QuantitationType> getQuantitationTypes() {
         return this.quantitationTypes;
     }
 
-    /**
-     * 
-     */
+    public void setQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
+        this.quantitationTypes = quantitationTypes;
+    }
+
     public LocalFile getRawDataFile() {
         return this.rawDataFile;
     }
 
-    /**
-     * 
-     */
+    public void setRawDataFile( LocalFile rawDataFile ) {
+        this.rawDataFile = rawDataFile;
+    }
+
     public Collection<RawExpressionDataVector> getRawExpressionDataVectors() {
         return this.rawExpressionDataVectors;
+    }
+
+    public void setRawExpressionDataVectors( Collection<RawExpressionDataVector> rawExpressionDataVectors ) {
+        this.rawExpressionDataVectors = rawExpressionDataVectors;
     }
 
     /**
@@ -164,6 +196,10 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
         return this.shortName;
     }
 
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
+    }
+
     /**
      * Represents the site where the data was downloaded from.
      */
@@ -171,57 +207,18 @@ public abstract class ExpressionExperiment extends BioAssaySet implements Secure
         return this.source;
     }
 
-    public void setAccession( DatabaseEntry accession ) {
-        this.accession = accession;
-    }
-
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    public void setExperimentalDesign( ExperimentalDesign experimentalDesign ) {
-        this.experimentalDesign = experimentalDesign;
-    }
-
-    public void setGeeq( Geeq geeq ) {
-        this.geeq = geeq;
-    }
-
-    public void setMeanVarianceRelation( MeanVarianceRelation meanVarianceRelation ) {
-        this.meanVarianceRelation = meanVarianceRelation;
-    }
-
-    public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
-        this.numberOfDataVectors = numberOfDataVectors;
-    }
-
-    public void setNumberOfSamples( Integer numberOfSamples ) {
-        this.numberOfSamples = numberOfSamples;
-    }
-
-    public void setProcessedExpressionDataVectors(
-            Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
-        this.processedExpressionDataVectors = processedExpressionDataVectors;
-    }
-
-    public void setQuantitationTypes( Collection<QuantitationType> quantitationTypes ) {
-        this.quantitationTypes = quantitationTypes;
-    }
-
-    public void setRawDataFile( LocalFile rawDataFile ) {
-        this.rawDataFile = rawDataFile;
-    }
-
-    public void setRawExpressionDataVectors( Collection<RawExpressionDataVector> rawExpressionDataVectors ) {
-        this.rawExpressionDataVectors = rawExpressionDataVectors;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
     public void setSource( String source ) {
         this.source = source;
+    }
+
+    @Override
+    public CurationDetails getCurationDetails() {
+        return this.curationDetails;
+    }
+
+    @Override
+    public void setCurationDetails( CurationDetails curationDetails ) {
+        this.curationDetails = curationDetails;
     }
 
 }

@@ -14,9 +14,6 @@
       <many-to-one name="auditTrail" class="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl"  cascade="all" lazy="proxy" fetch="select">
          <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl"  cascade="all" lazy="proxy" fetch="select">
-         <column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
-      </many-to-one>
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
@@ -38,7 +35,7 @@
       <property name="isOutlier" type="java.lang.Boolean">
          <column name="IS_OUTLIER" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
-      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="ARRAY_DESIGN_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="false" fetch="join">
