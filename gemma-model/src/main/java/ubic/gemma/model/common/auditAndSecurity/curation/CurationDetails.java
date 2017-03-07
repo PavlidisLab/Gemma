@@ -41,6 +41,19 @@ public class CurationDetails implements java.io.Serializable {
 
     private String note;
 
+    public CurationDetails() {
+    }
+
+    public CurationDetails( AuditEvent lastNeedsAttentionEvent, Boolean needsAttention, AuditEvent lastTroubledEvent,
+            Boolean troubled, AuditEvent lastNoteUpdateEvent, String note ) {
+        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
+        this.needsAttention = needsAttention;
+        this.lastTroubledEvent = lastTroubledEvent;
+        this.troubled = troubled;
+        this.lastNoteUpdateEvent = lastNoteUpdateEvent;
+        this.note = note;
+    }
+
     /**
      * Returns <code>true</code> if the argument is an Status instance and all identifiers for this entity equal the
      * identifiers of the argument entity. Returns <code>false</code> otherwise.

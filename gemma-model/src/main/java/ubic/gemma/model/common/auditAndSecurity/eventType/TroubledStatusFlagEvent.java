@@ -19,35 +19,33 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * <p>
- * Event indicating that the status of this entity is OK. This can be used after a troublestatusevent to indicate that
- * 'all is well'.
- * </p>
+ * Audit event added when some type of "problem" or "trouble" notice is added to the entity.
  *
  * @author Paul
  */
-public class NotTroubledStatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+public class TroubledStatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = -8586752080144045085L;
+    private static final long serialVersionUID = 7335601529423635731L;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
-    public NotTroubledStatusFlagEvent() {
+    public TroubledStatusFlagEvent() {
     }
 
     /**
-     * Constructs new instances of {@link NotTroubledStatusFlagEvent}.
+     * Constructs new instances of {@link TroubledStatusFlagEvent}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link NotTroubledStatusFlagEvent}.
+         * Constructs a new instance of
+         * {@link TroubledStatusFlagEvent}.
          */
-        public static NotTroubledStatusFlagEvent newInstance() {
-            return new NotTroubledStatusFlagEvent();
+        public static TroubledStatusFlagEvent newInstance() {
+            return new TroubledStatusFlagEvent();
         }
 
     }
