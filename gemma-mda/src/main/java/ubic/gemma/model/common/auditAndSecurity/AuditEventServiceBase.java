@@ -24,7 +24,7 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 
 /**
  * Spring Service base class for <code>AuditEventService</code>, provides access to all services and entities referenced
@@ -43,7 +43,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<Auditable> getNewSinceDate( final Date date ) {
+    public Collection<AbstractAuditable> getNewSinceDate( final Date date ) {
         return this.handleGetNewSinceDate( date );
     }
 
@@ -52,7 +52,7 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<Auditable> getUpdatedSinceDate( final Date date ) {
+    public Collection<AbstractAuditable> getUpdatedSinceDate( final Date date ) {
         return this.handleGetUpdatedSinceDate( date );
     }
 
@@ -73,12 +73,12 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     /**
      * Performs the core logic for {@link #getNewSinceDate(Date)}
      */
-    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date );
+    protected abstract Collection<AbstractAuditable> handleGetNewSinceDate( Date date );
 
     /**
      * Performs the core logic for {@link #getUpdatedSinceDate(Date)}
      */
-    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date );
+    protected abstract Collection<AbstractAuditable> handleGetUpdatedSinceDate( Date date );
 
     /**
      * Performs the core logic for {@link #thaw(AuditEvent)}

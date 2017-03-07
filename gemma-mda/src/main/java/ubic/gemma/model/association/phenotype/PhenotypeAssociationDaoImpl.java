@@ -336,7 +336,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
             for ( Long id : externalDatabaseIds ) {
 
-                // 1 is Manual Curation excluded
+                // 1 is Manual curation excluded
                 if ( id.equals( 1L ) ) {
                     excludeManualCuration = true;
                 } else {
@@ -770,7 +770,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Long numPublications = new Long( publications.size() );
 
         ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                "Manual Curation", "Evidence curated manually through literature review", "", numEvidence, numGenes,
+                "Manual curation", "Evidence curated manually through literature review", "", numEvidence, numGenes,
                 numPhenotypes, numPublications, lastUpdatedDate, downloadFile );
 
         return externalDatabaseStatisticsValueObject;

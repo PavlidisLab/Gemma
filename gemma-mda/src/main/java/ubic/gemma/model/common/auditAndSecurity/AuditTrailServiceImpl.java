@@ -18,36 +18,29 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.lang.reflect.Method;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl;
 
-// Currently, AuditTrail manages Status. That means apart from retrieving status, all operations should go through AuditTrailService.
-//FIXME: It's not ideal to have this manage Status. We should either make Status part of AuditTrail, ot AuditTrail part of Status, 
-// or have something a bit higher up to manage both Status and AuditTrail. There should be a single place with this logic.
+import java.lang.reflect.Method;
+import java.util.Date;
+import java.util.List;
+
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService
  * @author pavlidis
- * @version $Id$
+ * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService
  */
 @Service
 public class AuditTrailServiceImpl implements AuditTrailService {
 
     @SuppressWarnings("unused")
-    private static Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( AuditTrailServiceImpl.class.getName() );
 
     @Autowired
     private AuditTrailDao auditTrailDao;
@@ -55,78 +48,53 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Autowired
     private AuditEventDao auditEventDao;
 
-    @Autowired
-    private StatusDao statusDao;
-
     /**
-     * @see AuditTrailService#addComment(Auditable, String, String)
+     * @see AuditTrailService#addComment(AbstractAuditable, String, String)
      */
     @Override
     @Transactional
-    public void addComment( final Auditable auditable, final String comment, final String detail ) {
+    public void addComment( final AbstractAuditable auditable, final String comment, final String detail ) {
         AuditEventType type = new CommentedEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
-     * @see AuditTrailService#addOkFlag(Auditable, String, String)
+     * @see AuditTrailService#addUpdateEvent(AbstractAuditable, String)
      */
     @Override
     @Transactional
-    public void addOkFlag( final Auditable auditable, final String comment, final String detail ) {
-        // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
-        // should only be used to reverse "trouble".
-        AuditEventType type = new OKStatusFlagEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
+    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final String note ) {
+        return this.addUpdateEvent( auditable, null, note);
     }
 
     /**
-     * @see AuditTrailService#addTroubleFlag(Auditable, String, String)
+     * @see AuditTrailService#addUpdateEvent(AbstractAuditable, AuditEventType, String)
      */
     @Override
     @Transactional
-    public void addTroubleFlag( final Auditable auditable, final String comment, final String detail ) {
-        AuditEventType type = new TroubleStatusFlagEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
+    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final AuditEventType auditEventType,
+            final String note ) {
+        return this.addUpdateEvent( auditable, auditEventType, note, null );
     }
 
     /**
-     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
+     * @see AuditTrailService#addUpdateEvent(AbstractAuditable, AuditEventType, String, String)
      */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null,
-                auditEventType );
-        this.statusDao.update( auditable, auditEventType );
+    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final AuditEventType auditEventType, final String note,
+            final String detail ) {
+        AuditEvent auditEvent = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.UPDATE, note, detail, null, auditEventType );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
     }
 
-    /**
-     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
-     */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
-            final String note, final String detail ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, detail, null,
-                auditEventType );
-        this.statusDao.update( auditable, auditEventType );
-        return this.auditTrailDao.addEvent( auditable, auditEvent );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
-     * java.lang.Class, java.lang.String, java.lang.String)
-     */
-    @Override
-    @Transactional
-    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
+    public AuditEvent addUpdateEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type, String note,
             String detail ) {
 
-        AuditEventType auditEventType = null;
+        AuditEventType auditEventType;
 
         try {
             Class<?> factory = Class.forName( type.getName() + "$Factory" );
@@ -137,28 +105,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         }
 
         return this.addUpdateEvent( auditable, auditEventType, note, detail );
-    }
-
-    /**
-     * @see AuditTrailService#addUpdateEvent(Auditable, String)
-     */
-    @Override
-    @Transactional
-    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null, null );
-        this.statusDao.update( auditable, null );
-        return this.auditTrailDao.addEvent( auditable, auditEvent );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addValidatedFlag(ubic.gemma.model.common.Auditable,
-     *      java.lang.String, java.lang.String)
-     */
-    @Override
-    @Transactional
-    public void addValidatedFlag( final Auditable auditable, final String comment, final String detail ) {
-        AuditEventType type = new ValidatedFlagEventImpl();
-        this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
@@ -178,33 +124,15 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<? extends Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+    public List<Auditable> getEntitiesWithEvent( Class<Auditable> entityClass,
             Class<? extends AuditEventType> auditEventClass ) {
-        return ( List<? extends Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
+        return ( List<Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AuditEvent> getEvents( Auditable ad ) {
+    public List<AuditEvent> getEvents( AbstractAuditable ad ) {
         return this.auditEventDao.getEvents( ad );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastTroubleEvent(ubic.gemma.model.common.Auditable)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public AuditEvent getLastTroubleEvent( final Auditable auditable ) {
-        return this.auditEventDao.getLastOutstandingTroubleEvent( this.auditEventDao.getEvents( auditable ) );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getLastValidationEvent(Auditable)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public AuditEvent getLastValidationEvent( final Auditable auditable ) {
-        return this.auditEventDao.getLastEvent( auditable, ValidatedFlagEventImpl.class );
     }
 
 }

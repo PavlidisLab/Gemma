@@ -23,7 +23,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
 
@@ -36,17 +36,17 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     /**
      * @return events for the given auditable.
      */
-    public List<AuditEvent> getEvents( Auditable auditable );
+    public List<AuditEvent> getEvents( AbstractAuditable auditable );
 
     /**
      * Returns the last AuditEvent of the specified type from the given auditable.
      */
-    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
+    public AuditEvent getLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type );
 
     /**
      * Return a map of Auditables to AuditEvents for the given AuditEventType.
      */
-    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
+    public Map<AbstractAuditable, AuditEvent> getLastEvent( Collection<? extends AbstractAuditable> auditables,
             Class<? extends AuditEventType> type );
 
     /**
@@ -54,8 +54,8 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      * @param types
      * @return
      */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
+    public Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastEvents(
+            Collection<? extends AbstractAuditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * @param events
@@ -65,37 +65,37 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     /**
      * @param auditables
-     * @return map of Auditable to AuditEvent. NOTE: for EEs, this does NOT look at the ADs.
+     * @return map of AbstractAuditable to AuditEvent. NOTE: for EEs, this does NOT look at the ADs.
      */
-    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables );
+    public Map<AbstractAuditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends AbstractAuditable> auditables );
 
     /**
      * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
-     * map of AuditEventType.classes -> Auditable -> AuditEven
+     * map of AuditEventType.classes -> AbstractAuditable -> AuditEven
      */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables );
+    public Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastTypedAuditEvents(
+            Collection<? extends AbstractAuditable> auditables );
 
     /**
      * Get auditables that have been Created since the given date
      * 
      * @return
      */
-    public Collection<Auditable> getNewSinceDate( Date date );
+    public Collection<AbstractAuditable> getNewSinceDate( Date date );
 
     /**
      * Get auditables that have been Updated since the given date
      * 
      * @return
      */
-    public Collection<Auditable> getUpdatedSinceDate( Date date );
+    public Collection<AbstractAuditable> getUpdatedSinceDate( Date date );
 
     /**
      * @param a
      * @param type
      * @return
      */
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
+    public boolean hasEvent( AbstractAuditable a, Class<? extends AuditEventType> type );
 
     // not implementing yet.
     //
@@ -106,7 +106,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     // * @param limit
     // * @return
     // */
-    // public <T extends Auditable> java.util.Collection<T> getHavingEvent( Class<T> clazz,
+    // public <T extends AbstractAuditable> java.util.Collection<T> getHavingEvent( Class<T> clazz,
     // Class<? extends AuditEventType> type, int limit );
     //
     // /**
@@ -116,7 +116,7 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     // * @param limit
     // * @return
     // */
-    // public <T extends Auditable> java.util.Collection<T> getLackingEvent( Class<T> clazz,
+    // public <T extends AbstractAuditable> java.util.Collection<T> getLackingEvent( Class<T> clazz,
     // Class<? extends AuditEventType> type, int limit );
 
     /**
@@ -124,14 +124,14 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      * @param type
      * @return
      */
-    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+    public void retainHavingEvent( Collection<? extends AbstractAuditable> a, Class<? extends AuditEventType> type );
 
     /**
      * @param a
      * @param type
      * @return
      */
-    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+    public void retainLackingEvent( Collection<? extends AbstractAuditable> a, Class<? extends AuditEventType> type );
 
     /**
      * 

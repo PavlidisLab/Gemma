@@ -19,27 +19,11 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.collection.PersistentCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
@@ -47,12 +31,10 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
@@ -61,15 +43,16 @@ import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.NativeQueryUtils;
 
+import java.util.*;
+
 /**
  * @author pavlidis
- * @version $Id$
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
 @Repository
 public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesignDao {
 
-    static Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ArrayDesignDaoImpl.class.getName() );
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
 
     @Autowired
@@ -77,12 +60,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         super.setSessionFactory( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#addProbes(ubic.gemma.model.expression.arrayDesign.
-     * ArrayDesign , java.util.Collection)
-     */
     @Override
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
         for ( CompositeSequence compositeSequence : newprobes ) {
@@ -98,8 +75,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#arrayDesignValueObjectToEntity(ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     public void arrayDesignValueObjectToEntity( ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject source,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign target, boolean copyIfNull ) {
@@ -139,8 +114,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutBlatResults"
-                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th,
-                    th );
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 
@@ -155,8 +129,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.compositeSequenceWithoutGenes"
-                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th,
-                    th );
+                            + "(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> " + th, th );
         }
     }
 
@@ -175,7 +148,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(int, java.util.Collection)
      */
     @Override
     public java.util.Collection<? extends ArrayDesign> create(
@@ -188,9 +160,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                     @Override
                     public ArrayDesign doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends ArrayDesign> entityIterator = entities
-                                .iterator(); entityIterator.hasNext(); ) {
-                            create( entityIterator.next() );
+                        for ( ArrayDesign entity : entities ) {
+                            create( entity );
                         }
                         return null;
                     }
@@ -199,8 +170,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#create(int transform,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     public ArrayDesign create( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
@@ -265,11 +234,11 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     public ArrayDesign find( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( arrayDesign );
         argNames.add( "arrayDesign" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<>( this.getHibernateTemplate()
                 .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
@@ -301,16 +270,15 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     @Override
     public Collection<ArrayDesign> findByManufacturer( String queryString ) {
         if ( StringUtils.isBlank( queryString ) ) {
-            return new HashSet<ArrayDesign>();
+            return new HashSet<>();
         }
-        return this.getHibernateTemplate().find(
-                "select ad from ArrayDesignImpl ad inner join ad.designProvider n where n.name like ?",
-                queryString + "%" );
+        return this.getHibernateTemplate()
+                .find( "select ad from ArrayDesignImpl ad inner join ad.designProvider n where n.name like ?",
+                        queryString + "%" );
 
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String)
      */
     @Override
     public Collection<ArrayDesign> findByName( final java.lang.String name ) {
@@ -318,21 +286,19 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByName(int, java.lang.String, java.lang.String)
      */
 
     public Collection<ArrayDesign> findByName( final java.lang.String queryString, final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( name );
         argNames.add( "name" );
-        return this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        return this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(int, java.lang.String)
      */
     @Override
     public ArrayDesign findByShortName( final java.lang.String shortName ) {
@@ -340,16 +306,14 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByShortName(int, java.lang.String,
-     *      java.lang.String)
      */
 
     public ArrayDesign findByShortName( final java.lang.String queryString, final java.lang.String shortName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( shortName );
         argNames.add( "shortName" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<>( this.getHibernateTemplate()
                 .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ArrayDesign result = null;
 
@@ -388,17 +352,15 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
 
     public ArrayDesign findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
+        java.util.List<String> argNames = new java.util.ArrayList<>();
+        java.util.List<Object> args = new java.util.ArrayList<>();
         args.add( arrayDesign );
         argNames.add( "arrayDesign" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<>( this.getHibernateTemplate()
                 .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ArrayDesign result = null;
 
@@ -450,12 +412,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         StopWatch timer = new StopWatch();
         timer.start();
         // have to include ad in the select to be able to use fetch join
-        List<?> r = getHibernateTemplate()
-                .findByNamedParam(
-                        "select ad from ArrayDesignImpl ad inner join fetch ad.compositeSequences cs "
-                                + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad",
-                        "ad", arrayDesign );
-        Map<CompositeSequence, BioSequence> result = new HashMap<CompositeSequence, BioSequence>();
+        List<?> r = getHibernateTemplate().findByNamedParam(
+                "select ad from ArrayDesignImpl ad inner join fetch ad.compositeSequences cs "
+                        + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad", "ad", arrayDesign );
+        Map<CompositeSequence, BioSequence> result = new HashMap<>();
 
         if ( r.isEmpty() ) {
             return result;
@@ -490,7 +450,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      */
     @Override
     public Map<Taxon, Integer> getPerTaxonCount() {
-        Map<Taxon, Integer> result = new HashMap<Taxon, Integer>();
+        Map<Taxon, Integer> result = new HashMap<>();
 
         final String csString = "select t, count(ad) from ArrayDesignImpl ad inner join ad.primaryTaxon t group by t ";
         org.hibernate.Query csQueryObject = super.getSessionFactory().getCurrentSession().createQuery( csString );
@@ -499,7 +459,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
         List<?> csList = csQueryObject.list();
 
-        Taxon t = null;
+        Taxon t;
         for ( Object object : csList ) {
             Object[] oa = ( Object[] ) object;
             t = ( Taxon ) oa[0];
@@ -576,16 +536,13 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#load(int, java.lang.Long)
      */
     @Override
     public ArrayDesign load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ArrayDesign.load - 'id' can not be null" );
         }
-        final ArrayDesign entity = this.getHibernateTemplate()
-                .get( ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class, id );
-        return entity;
+        return this.getHibernateTemplate().get( ArrayDesign.class, id );
     }
 
     /**
@@ -608,11 +565,11 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     @Override
     public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign ) {
         List<Object[]> m = this.getHibernateTemplate().findByNamedParam( "select cs, br from CompositeSequenceImpl cs "
-                + " join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp"
-                + " join bs2gp.blatResult br " + "  where bs2gp.class='BlatAssociationImpl' and cs.arrayDesign=:ad",
+                        + " join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp"
+                        + " join bs2gp.blatResult br " + "  where bs2gp.class='BlatAssociationImpl' and cs.arrayDesign=:ad",
                 "ad", arrayDesign );
 
-        Map<CompositeSequence, Collection<BlatResult>> result = new HashMap<CompositeSequence, Collection<BlatResult>>();
+        Map<CompositeSequence, Collection<BlatResult>> result = new HashMap<>();
         for ( Object[] objects : m ) {
             CompositeSequence cs = ( CompositeSequence ) objects[0];
             BlatResult br = ( BlatResult ) objects[1];
@@ -625,11 +582,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadAll(int)
      */
     @Override
     public java.util.Collection<? extends ArrayDesign> loadAll() {
-        return this.getHibernateTemplate().loadAll( ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.class );
+        return this.getHibernateTemplate().loadAll( ubic.gemma.model.expression.arrayDesign.ArrayDesign.class );
     }
 
     /**
@@ -818,8 +774,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         Collection<Long> ids = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ad", arrayDesign ).list();
 
-        if ( ids.isEmpty() ) return 0;
-        return EntityUtils.securityFilterIds( ExpressionExperimentImpl.class, ids, false, true,
+        if ( ids.isEmpty() )
+            return 0;
+        return EntityUtils.securityFilterIds( ExpressionExperiment.class, ids, false, true,
                 this.getSessionFactory().getCurrentSession() ).size();
     }
 
@@ -848,7 +805,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
      */
     @Override
     public void remove( java.util.Collection<? extends ArrayDesign> entities ) {
@@ -926,9 +882,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             throw new IllegalArgumentException(
                     "No array design with id=" + arrayDesign.getId() + " could be loaded." );
         }
-        ArrayDesign result = ( ArrayDesign ) res.get( 0 );
 
-        return result;
+        return ( ArrayDesign ) res.get( 0 );
     }
 
     /*
@@ -938,19 +893,19 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      */
     @Override
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        if ( arrayDesigns.isEmpty() ) return arrayDesigns;
+        if ( arrayDesigns.isEmpty() )
+            return arrayDesigns;
         return this.getHibernateTemplate().findByNamedParam(
                 "select distinct a from ArrayDesignImpl a " + "left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
                         + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
-                        + " left join fetch a.mergedInto left join fetch a.localFiles where a.id in (:adids)",
-                "adids", EntityUtils.getIds( arrayDesigns ) );
+                        + " left join fetch a.mergedInto left join fetch a.localFiles where a.id in (:adids)", "adids",
+                EntityUtils.getIds( arrayDesigns ) );
 
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
     @Override
     public void update( final java.util.Collection<? extends ArrayDesign> entities ) {
@@ -962,9 +917,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                     @Override
                     public ArrayDesign doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends ArrayDesign> entityIterator = entities
-                                .iterator(); entityIterator.hasNext(); ) {
-                            update( entityIterator.next() );
+                        for ( ArrayDesign entity : entities ) {
+                            update( entity );
                         }
                         return null;
                     }
@@ -972,7 +926,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#update(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     public void update( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
@@ -983,8 +936,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     public java.lang.Boolean updateSubsumingStatus(
@@ -995,8 +946,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumer, ubic.gemma.model.expression.arrayDesign.ArrayDesign candidateSubsumee)' --> "
-                            + th,
-                    th );
+                            + th, th );
         }
     }
 
@@ -1008,8 +958,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * .model.expression.arrayDesign.ArrayDesign)
      */
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        final String queryString = "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL";
+        final String queryString =
+                "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL";
         return getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
     }
 
@@ -1034,8 +985,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         // final String queryString = "select distinct cs id from CompositeSequenceImpl cs, BlatAssociationImpl bs2gp
         // inner join bs2gp.blatResult";
 
-        return ( Collection<CompositeSequence> ) NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(),
-                nativeQueryString, "id", id );
+        return ( Collection<CompositeSequence> ) NativeQueryUtils
+                .findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
     }
 
     /*
@@ -1057,8 +1008,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 + "left join CHROMOSOME_FEATURE geneProduct on (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
                 + "left join CHROMOSOME_FEATURE gene on geneProduct.GENE_FK=gene.ID  "
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
-        return ( Collection<CompositeSequence> ) NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(),
-                nativeQueryString, "id", id );
+        return ( Collection<CompositeSequence> ) NativeQueryUtils
+                .findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
     }
 
     /*
@@ -1097,9 +1048,6 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     }
 
-    /**
-     * @param arrayDesign
-     */
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
@@ -1135,14 +1083,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         }
     }
 
-    /**
-     * @param queryString
-     * @return
-     */
     protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q", "q",
-                queryString );
+        return this.getHibernateTemplate()
+                .findByNamedParam( "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q",
+                        "q", queryString );
     }
 
     /*
@@ -1166,7 +1110,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 + " where ad.id in (:ids) ";
 
         List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
-        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
+        Map<Long, Collection<AuditEvent>> eventMap = new HashMap<>();
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];
             AuditEvent event = ( AuditEvent ) o[1];
@@ -1175,7 +1119,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
                 Collection<AuditEvent> events = eventMap.get( id );
                 events.add( event );
             } else {
-                Collection<AuditEvent> events = new ArrayList<AuditEvent>();
+                Collection<AuditEvent> events = new ArrayList<>();
                 events.add( event );
                 eventMap.put( id, events );
             }
@@ -1236,7 +1180,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     protected Map<Long, Boolean> handleIsMerged( Collection<Long> ids ) {
 
-        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
         }
@@ -1262,7 +1206,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     protected Map<Long, Boolean> handleIsMergee( final Collection<Long> ids ) {
 
-        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
         }
@@ -1287,7 +1231,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     protected Map<Long, Boolean> handleIsSubsumed( final Collection<Long> ids ) {
-        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
         }
@@ -1312,7 +1256,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     protected Map<Long, Boolean> handleIsSubsumer( Collection<Long> ids ) {
 
-        Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
+        Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
         }
@@ -1345,9 +1289,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
-        Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject );
-
-        return result;
+        return processADValueObjectQueryResults( eeCounts, queryObject );
 
     }
 
@@ -1367,7 +1309,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadMultiple(java.util.Collection)
      */
     protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) {
-        if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
+        if ( ids == null || ids.isEmpty() )
+            return new HashSet<>();
         final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
         return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
@@ -1381,7 +1324,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) {
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
-            return new ArrayList<ArrayDesignValueObject>();
+            return new ArrayList<>();
         }
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
@@ -1403,8 +1346,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences()
      */
     protected long handleNumAllCompositeSequenceWithBioSequences() {
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where cs.biologicalCharacteristic.sequence is not null";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " where cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
@@ -1416,8 +1360,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * .util.Collection)
      */
     protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
@@ -1427,8 +1372,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults()
      */
     protected long handleNumAllCompositeSequenceWithBlatResults() {
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
@@ -1443,8 +1389,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BlatResultImpl as blat where blat.querySequence= and ar.id in (:ids)";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + ", BlatResultImpl as blat where blat.querySequence= and ar.id in (:ids)";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
@@ -1454,9 +1401,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes()
      */
     protected long handleNumAllCompositeSequenceWithGenes() {
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and bs2gp.geneProduct=gp";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
@@ -1470,10 +1418,11 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp"
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                + "bs2gp.geneProduct=gp and ar.id in (:ids)";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp"
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                        + "bs2gp.geneProduct=gp and ar.id in (:ids)";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
@@ -1483,9 +1432,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes()
      */
     protected long handleNumAllGenes() {
-        final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
+        final String queryString =
+                "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and  bs2gp.geneProduct=gp";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
@@ -1493,23 +1443,26 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
-        final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
-                + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
+        final String queryString =
+                "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                        + "bs2gp.geneProduct=gp  and ar.id in (:ids)";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
     protected long handleNumBioSequences( ArrayDesign arrayDesign ) {
-        final String queryString = "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        final String queryString =
+                "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     protected long handleNumBlatResults( ArrayDesign arrayDesign ) {
-        final String queryString = "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProduct as bs2gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
+        final String queryString =
+                "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " , BioSequence2GeneProduct as bs2gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
@@ -1520,28 +1473,34 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
-        final String queryString = "select count (distinct cs) from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
+        final String queryString =
+                "select count (distinct cs) from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     protected long handleNumCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
-        final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
+        final String queryString =
+                "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                        + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
     protected long handleNumGenes( ArrayDesign arrayDesign ) {
-        final String queryString = "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
-                + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
-                + "where bs2gp.bioSequence=cs.biologicalCharacteristic and " + "bs2gp.geneProduct=gp and ar = :ar";
+        final String queryString =
+                "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
+                        + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
+                        + "where bs2gp.bioSequence=cs.biologicalCharacteristic and "
+                        + "bs2gp.geneProduct=gp and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
@@ -1592,18 +1551,20 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
             log.info( "Subsumee has more sequences than subsumer so probably cannot be subsumed ... checking anyway" );
         }
 
-        Collection<BioSequence> subsumerSeqs = new HashSet<BioSequence>();
-        Collection<BioSequence> subsumeeSeqs = new HashSet<BioSequence>();
+        Collection<BioSequence> subsumerSeqs = new HashSet<>();
+        Collection<BioSequence> subsumeeSeqs = new HashSet<>();
 
         for ( CompositeSequence cs : candidateSubsumee.getCompositeSequences() ) {
             BioSequence seq = cs.getBiologicalCharacteristic();
-            if ( seq == null ) continue;
+            if ( seq == null )
+                continue;
             subsumeeSeqs.add( seq );
         }
 
         for ( CompositeSequence cs : candidateSubsumer.getCompositeSequences() ) {
             BioSequence seq = cs.getBiologicalCharacteristic();
-            if ( seq == null ) continue;
+            if ( seq == null )
+                continue;
             subsumerSeqs.add( seq );
         }
 
@@ -1612,7 +1573,7 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         }
 
         int overlap = 0;
-        List<BioSequence> missing = new ArrayList<BioSequence>();
+        List<BioSequence> missing = new ArrayList<>();
         for ( BioSequence sequence : subsumeeSeqs ) {
             if ( subsumerSeqs.contains( sequence ) ) {
                 overlap++;
@@ -1652,9 +1613,9 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     /**
-     * 
+     *
      */
-    private void debug( List<? extends Object> results ) {
+    private void debug( List<?> results ) {
         for ( Object ad : results ) {
             log.error( ad );
         }
@@ -1703,8 +1664,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
         /*
          * Thaw the biosequences in batches
          */
-        Collection<CompositeSequence> thawed = new HashSet<CompositeSequence>();
-        Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> thawed = new HashSet<>();
+        Collection<CompositeSequence> batch = new HashSet<>();
         long lastTime = timer.getTime();
         for ( CompositeSequence cs : result.getCompositeSequences() ) {
             batch.add( cs );
@@ -1744,19 +1705,20 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     /**
      * Gets the number of expression experiments per ArrayDesign
-     * 
+     *
      * @return Map
      */
     private Map<Long, Integer> getExpressionExperimentCountMap() {
         final String queryString = "select ad.id, count(distinct ee) from   "
                 + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
 
-        Map<Long, Integer> eeCount = new HashMap<Long, Integer>();
+        Map<Long, Integer> eeCount = new HashMap<>();
         List<Object[]> list = getHibernateTemplate().find( queryString );
 
         // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records). Obviously
         // if we only have 1 array design this warning is spurious.
-        if ( list.size() < 2 ) log.warn( list.size() + " rows from getExpressionExperimentCountMap query" );
+        if ( list.size() < 2 )
+            log.warn( list.size() + " rows from getExpressionExperimentCountMap query" );
 
         for ( Object[] o : list ) {
             Long id = ( Long ) o[0];
@@ -1769,12 +1731,12 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     /**
      * Gets the number of expression experiments per ArrayDesign
-     * 
+     *
      * @return Map
      */
     private Map<Long, Integer> getExpressionExperimentCountMap( Collection<Long> arrayDesignIds ) {
 
-        Map<Long, Integer> result = new HashMap<Long, Integer>();
+        Map<Long, Integer> result = new HashMap<>();
 
         if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
             return result;
@@ -1801,15 +1763,10 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
 
     /**
      * Process query results for handleLoadAllValueObjects or handleLoadValueObjects
-     * 
-     * @param eeCounts
-     * @param queryString
-     * @param arrayToTaxon
-     * @return
      */
     private Collection<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
             final Query queryObject ) {
-        Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
+        Collection<ArrayDesignValueObject> result = new ArrayList<>();
 
         queryObject.setCacheable( true );
         ScrollableResults list = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -1851,9 +1808,8 @@ public class ArrayDesignDaoImpl extends HibernateDaoSupport implements ArrayDesi
     }
 
     private List<?> thawBatchOfProbes( Collection<CompositeSequence> batch ) {
-        List<?> bb = this.getHibernateTemplate().findByNamedParam(
+        return ( List<?> ) this.getHibernateTemplate().findByNamedParam(
                 "select cs from CompositeSequenceImpl cs left join fetch cs.biologicalCharacteristic where cs in (:batch)",
                 "batch", batch );
-        return bb;
     }
 }

@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
@@ -67,21 +67,21 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getEvents(ubic.gemma.model.common.Auditable)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getEvents(ubic.gemma.model.common.AbstractAuditable)
      */
     @Override
-    public List<AuditEvent> getEvents( Auditable auditable ) {
+    public List<AuditEvent> getEvents( AbstractAuditable auditable ) {
         return this.handleGetEvents( auditable );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(ubic.gemma.model.common.Auditable,
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(ubic.gemma.model.common.AbstractAuditable,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
     @Override
-    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
+    public AuditEvent getLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable, type );
     }
 
@@ -92,7 +92,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
     @Override
-    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
+    public Map<AbstractAuditable, AuditEvent> getLastEvent( Collection<? extends AbstractAuditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditables, type );
     }
@@ -103,8 +103,8 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastTypedAuditEvents(java.util.Collection)
      */
     @Override
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables ) {
+    public Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastTypedAuditEvents(
+            Collection<? extends AbstractAuditable> auditables ) {
         return this.handleGetLastTypedAuditEvents( auditables );
     }
 
@@ -112,7 +112,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
      */
     @Override
-    public java.util.Collection<Auditable> getNewSinceDate( final java.util.Date date ) {
+    public java.util.Collection<AbstractAuditable> getNewSinceDate( final java.util.Date date ) {
         try {
             return this.handleGetNewSinceDate( date );
         } catch ( Throwable th ) {
@@ -126,7 +126,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
      */
     @Override
-    public java.util.Collection<Auditable> getUpdatedSinceDate( final java.util.Date date ) {
+    public java.util.Collection<AbstractAuditable> getUpdatedSinceDate( final java.util.Date date ) {
         try {
             return this.handleGetUpdatedSinceDate( date );
         } catch ( Throwable th ) {
@@ -239,36 +239,36 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @param auditable
      * @return
      */
-    protected abstract List<AuditEvent> handleGetEvents( Auditable auditable );
+    protected abstract List<AuditEvent> handleGetEvents( AbstractAuditable auditable );
 
     /**
      * @param auditable
      * @param type
      * @return
      */
-    protected abstract AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
+    protected abstract AuditEvent handleGetLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type );
 
     /**
      * @param auditables
      * @param type
      * @return
      */
-    protected abstract Map<Auditable, AuditEvent> handleGetLastEvent( Collection<? extends Auditable> auditables,
+    protected abstract Map<AbstractAuditable, AuditEvent> handleGetLastEvent( Collection<? extends AbstractAuditable> auditables,
             Class<? extends AuditEventType> type );
 
-    protected abstract Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables );
+    protected abstract Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> handleGetLastTypedAuditEvents(
+            Collection<? extends AbstractAuditable> auditables );
 
     /**
      * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}
      */
-    protected abstract java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date )
+    protected abstract java.util.Collection<AbstractAuditable> handleGetNewSinceDate( java.util.Date date )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getUpdatedSinceDate(java.util.Date)}
      */
-    protected abstract java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date )
+    protected abstract java.util.Collection<AbstractAuditable> handleGetUpdatedSinceDate( java.util.Date date )
             throws java.lang.Exception;
 
     /**

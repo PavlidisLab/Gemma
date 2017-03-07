@@ -18,17 +18,7 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.springframework.orm.hibernate3.HibernateCallback;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -38,15 +28,16 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.*;
+
 /**
  * Is able to create, update, remove, load, and find objects of type <code>ExpressionExperiment</code>.
- * 
- * @see ExpressionExperiment
- * @version $Id$
+ *
  * @author paul based on generated code
+ * @see ExpressionExperiment
  */
-public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<ExpressionExperiment> implements
-        ExpressionExperimentDao {
+public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<ExpressionExperiment>
+        implements ExpressionExperimentDao {
 
     /**
      * @see ExpressionExperimentDao#countAll()
@@ -61,19 +52,19 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#create(int, Collection)
+     * @see ExpressionExperimentDao#create(Collection)
      */
     @Override
-    public Collection<? extends ExpressionExperiment> create( final Collection<? extends ExpressionExperiment> entities ) {
+    public Collection<? extends ExpressionExperiment> create(
+            final Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'entities' can not be null" );
         }
         this.getHibernateTemplate().executeWithNewSession( new HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
-                        .hasNext(); ) {
-                    create( entityIterator.next() );
+                for ( ExpressionExperiment entity : entities ) {
+                    create( entity );
                 }
                 return null;
             }
@@ -84,7 +75,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     @Override
     public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment.create - 'expressionExperiment' can not be null" );
+            throw new IllegalArgumentException(
+                    "ExpressionExperiment.create - 'expressionExperiment' can not be null" );
         }
         this.getHibernateTemplate().save( expressionExperiment );
         return expressionExperiment;
@@ -172,22 +164,21 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
 
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperiment> findByInvestigator( final String queryString, final Contact investigator ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
+        List<String> argNames = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
         args.add( investigator );
         argNames.add( "investigator" );
-        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        List<?> results = this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
         return ( Collection<ExpressionExperiment> ) results;
     }
 
     @Override
     public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        return this
-                .findByInvestigator(
-                        "from InvestigationImpl i inner join Contact c on c in elements(i.investigators) or c == i.owner where c == :investigator",
-                        investigator );
+        return this.findByInvestigator(
+                "from InvestigationImpl i inner join Contact c on c in elements(i.investigators) or c == i.owner where c == :investigator",
+                investigator );
     }
 
     @Override
@@ -196,12 +187,12 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     private Collection<ExpressionExperiment> findByName( final String queryString, final String name ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
+        List<String> argNames = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
         args.add( name );
         argNames.add( "name" );
-        return this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
+        return this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
     }
 
@@ -223,11 +214,11 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     public ExpressionExperiment findByShortName( final String queryString, final String shortName ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
+        List<String> argNames = new ArrayList<>();
+        List<Object> args = new ArrayList<>();
         args.add( shortName );
         argNames.add( "shortName" );
-        Set<ExpressionExperiment> results = new LinkedHashSet<ExpressionExperiment>( this.getHibernateTemplate()
+        Set<ExpressionExperiment> results = new LinkedHashSet<>( this.getHibernateTemplate()
                 .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
 
@@ -356,8 +347,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#getQuantitationTypes(ExpressionExperiment,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ExpressionExperimentDao#getQuantitationTypes(ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
@@ -378,8 +368,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      Integer)
      */
     @Override
     public Collection<DesignElementDataVector> getSamplingOfVectors(
@@ -398,7 +386,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#getTaxon(Long)
      */
     @Override
     public ubic.gemma.model.genome.Taxon getTaxon( final BioAssaySet ee ) {
@@ -407,7 +394,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#load(int, Long)
      */
 
     @Override
@@ -415,7 +401,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get( ExpressionExperimentImpl.class, id );
+        final Object entity = this.getHibernateTemplate().get( ExpressionExperiment.class, id );
         return ( ExpressionExperiment ) entity;
     }
 
@@ -429,20 +415,18 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#loadAll(int)
      */
 
     @Override
     @SuppressWarnings("unchecked")
     public Collection<ExpressionExperiment> loadAll() {
-        final Collection<?> results = this.getHibernateTemplate().loadAll( ExpressionExperimentImpl.class );
+        final Collection<?> results = this.getHibernateTemplate().loadAll( ExpressionExperiment.class );
         return ( Collection<ExpressionExperiment> ) results;
     }
 
     /**
      * @see ExpressionExperimentDao#remove(Long)
      */
-
     @Override
     public void remove( Long id ) {
         if ( id == null ) {
@@ -454,10 +438,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         }
     }
 
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(Collection)
-     */
-
     @Override
     public void remove( Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
@@ -466,13 +446,11 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         this.getHibernateTemplate().deleteAll( entities );
     }
 
-    /**
-     * @see ExpressionExperimentDao#remove(ExpressionExperiment)
-     */
     @Override
     public void remove( ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment.remove - 'expressionExperiment' can not be null" );
+            throw new IllegalArgumentException(
+                    "ExpressionExperiment.remove - 'expressionExperiment' can not be null" );
         }
         this.getHibernateTemplate().delete( expressionExperiment );
     }
@@ -501,20 +479,16 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
 
     }
 
-    /**
-     * @see ExpressionExperimentDao#toExpressionExperimentValueObject(ExpressionExperiment)
-     */
+
     public ExpressionExperimentValueObject toExpressionExperimentValueObject( final ExpressionExperiment entity ) {
         final ExpressionExperimentValueObject target = new ExpressionExperimentValueObject();
         this.toExpressionExperimentValueObject( entity, target );
         return target;
     }
 
-    /**
-     * @see ExpressionExperimentDao#toExpressionExperimentValueObject(ExpressionExperiment,
-     *      ExpressionExperimentValueObject)
-     */
-    public void toExpressionExperimentValueObject( ExpressionExperiment source, ExpressionExperimentValueObject target ) {
+
+    public void toExpressionExperimentValueObject( ExpressionExperiment source,
+            ExpressionExperimentValueObject target ) {
         target.setId( source.getId() );
         target.setName( source.getName() );
         target.setSource( source.getSource() );
@@ -536,7 +510,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     @Override
     public void update( ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "ExpressionExperiment.update - 'expressionExperiment' can not be null" );
+            throw new IllegalArgumentException(
+                    "ExpressionExperiment.update - 'expressionExperiment' can not be null" );
         }
         this.getSessionFactory().getCurrentSession().update( expressionExperiment );
     }
@@ -560,7 +535,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #findByBioMaterials(Collection)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByBioMaterials( Collection<BioMaterial> bioMaterials );
+    protected abstract Collection<ExpressionExperiment> handleFindByBioMaterials(
+            Collection<BioMaterial> bioMaterials );
 
     /**
      * Performs the core logic for {@link #findByExpressedGene(ubic.gemma.model.genome.Gene, Double)}
@@ -586,7 +562,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #findByFactorValues(Collection)}
      */
-    protected abstract Collection<ExpressionExperiment> handleFindByFactorValues( Collection<FactorValue> factorValues );
+    protected abstract Collection<ExpressionExperiment> handleFindByFactorValues(
+            Collection<FactorValue> factorValues );
 
     /**
      * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
@@ -611,7 +588,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     protected abstract Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids );
 
     /**
-     * Performs the core logic for {@link #getArrayDesignAuditEvents(Collection)}
+     * Performs the core logic for
      */
     protected abstract Map<Long, Map<Long, Collection<AuditEvent>>> handleGetArrayDesignAuditEvents(
             Collection<Long> ids );
@@ -622,7 +599,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     protected abstract Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids );
 
     /**
-     * Performs the core logic for {@link #getBioAssayCountById(long)}
+     * Performs the core logic for
      */
     protected abstract Integer handleGetBioAssayCountById( long id );
 
@@ -632,7 +609,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     protected abstract Integer handleGetBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     /**
-     * Performs the core logic for {@link #getDesignElementDataVectorCountById(long)}
+     * Performs the core logic for
      */
     protected abstract Integer handleGetDesignElementDataVectorCountById( long id );
 
@@ -651,13 +628,13 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             Collection<QuantitationType> quantitationTypes );
 
     /**
-     * Performs the core logic for {@link #getLastArrayDesignUpdate(Collection, Class)}
+     * Performs the core logic for
      */
     protected abstract Map<Long, Date> handleGetLastArrayDesignUpdate(
             Collection<ExpressionExperiment> expressionExperiments );
 
     /**
-     * Performs the core logic for {@link #getLastArrayDesignUpdate(ExpressionExperiment, Class)}
+     * Performs the core logic for
      */
     protected abstract Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee );
 
@@ -698,7 +675,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * {@link #getQuantitationTypes(ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
     protected abstract Collection<QuantitationType> handleGetQuantitationTypes(
-            ExpressionExperiment expressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+            ExpressionExperiment expressionExperiment,
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * Performs the core logic for {@link #getSampleRemovalEvents(Collection)}
@@ -732,7 +710,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #thaw(ExpressionExperiment)}
      */
-    protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors );
+    protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment,
+            boolean thawVectors );
 
     protected abstract ExpressionExperiment handleThawLiter( ExpressionExperiment expressionExperiment,
             boolean thawVectors );

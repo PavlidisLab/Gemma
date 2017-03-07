@@ -18,13 +18,9 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -33,18 +29,19 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * This class handles persisting array designs. This is a bit of a special case, because ArrayDesigns are very large
  * (with associated reporters, CompositeSequences, and BioSequences), and also very likely to be submitted more than
  * once to the system. Therefore we want to take care not to get multiple slightly different copies of them, but we also
  * don't want to have to spend an inordinate amount of time checking a submitted version against the database.
- * <p>
  * The association between ArrayDesign and DesignElement is compositional - the lifecycle of a designelement is tied to
  * the arraydesign. However, designelements have associations with biosequence, which have their own lifecycle, in
  * general.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 abstract public class ArrayDesignPersister extends GenomePersister {
 
@@ -78,19 +75,20 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     @Override
     @Transactional
     public Object persistOrUpdate( Object entity ) {
-        if ( entity == null ) return null;
+        if ( entity == null )
+            return null;
         return super.persistOrUpdate( entity );
     }
 
     /**
      * Persist an array design.
-     * 
-     * @param arrayDesign
      */
-    protected ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) return null;
+    private ArrayDesign findOrPersistArrayDesign( ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null )
+            return null;
 
-        if ( !isTransient( arrayDesign ) ) return arrayDesign;
+        if ( !isTransient( arrayDesign ) )
+            return arrayDesign;
 
         /*
          * Note we don't do a full find here.
@@ -122,13 +120,11 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     /**
      * Persist an entirely new array design, including composite sequences and any associated new sequences.
-     * 
-     * @param arrayDesign
-     * @return
      */
-    protected ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
+    private ArrayDesign persistNewArrayDesign( ArrayDesign arrayDesign ) {
 
-        if ( arrayDesign == null ) return null;
+        if ( arrayDesign == null )
+            return null;
 
         log.info( "Persisting new platform " + arrayDesign.getName() );
 
@@ -140,7 +136,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             if ( arrayDesign.getLocalFiles() != null ) {
                 for ( LocalFile file : arrayDesign.getLocalFiles() ) {
-                    file = persistLocalFile( file );
+                    persistLocalFile( file );
                 }
             }
 
@@ -159,7 +155,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             if ( arrayDesign.getAuditTrail() != null && isTransient( arrayDesign.getAuditTrail() ) )
                 arrayDesign.getAuditTrail().setId( null );
 
-            Collection<CompositeSequence> scs = new ArrayList<CompositeSequence>();
+            Collection<CompositeSequence> scs = new ArrayList<>();
             scs.addAll( arrayDesign.getCompositeSequences() );
             arrayDesign.getCompositeSequences().clear();
             arrayDesign = arrayDesignDao.create( arrayDesign );
@@ -173,12 +169,10 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         return arrayDesign;
     }
 
-    /**
-     * @param arrayDesign
-     */
     private ArrayDesign persistArrayDesignCompositeSequenceAssociations( ArrayDesign arrayDesign ) {
         int numElements = arrayDesign.getCompositeSequences().size();
-        if ( numElements == 0 ) return arrayDesign;
+        if ( numElements == 0 )
+            return arrayDesign;
         log.info( "Filling in or updating sequences in composite seqences for " + arrayDesign );
 
         int persistedBioSequences = 0;
@@ -207,7 +201,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         }
 
         if ( persistedBioSequences > 0 ) {
-            log.info( "Total of " + persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
+            log.info(
+                    "Total of " + persistedBioSequences + " compositeSequence sequences examined for " + arrayDesign );
         }
 
         return arrayDesign;

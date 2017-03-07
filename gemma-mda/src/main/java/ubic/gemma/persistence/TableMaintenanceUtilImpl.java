@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -124,9 +124,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             }
 
             if ( !needToRefresh && status != null ) {
-                Collection<Auditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
+                Collection<AbstractAuditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
 
-                for ( Auditable a : newObj ) {
+                for ( AbstractAuditable a : newObj ) {
                     if ( a instanceof ArrayDesign ) {
                         needToRefresh = true;
                         annotation = a + " is new since " + status.getLastUpdate();
@@ -137,8 +137,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             }
 
             if ( !needToRefresh && status != null ) {
-                Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
-                for ( Auditable a : updatedObj ) {
+                Collection<AbstractAuditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
+                for ( AbstractAuditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
                         for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
                             if ( ae == null ) continue; // legacy of ordered-list which could end up with gaps; should

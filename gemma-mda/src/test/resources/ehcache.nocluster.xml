@@ -336,13 +336,13 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEventImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventImpl"
@@ -354,10 +354,10 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTroubleImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTroubleImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsImpl" maxElementsInMemory="10000"
@@ -366,8 +366,8 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.InvalidatedEventImpl" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent" maxElementsInMemory="10000"
+		   eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -420,8 +420,8 @@
 	<cache name="ubic.gemma.model.common.SecurableImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.Auditable" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
-		timeToLiveSeconds="1200" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.common.AbstractAuditable" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
+           timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />

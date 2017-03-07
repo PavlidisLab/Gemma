@@ -14,23 +14,10 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -38,9 +25,10 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import java.util.*;
+
 /**
  * @author klc
- * @version $Id$
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
 @Service
@@ -48,26 +36,16 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     @Transactional
-    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes ) {
-        this.getArrayDesignDao().addProbes( arrayDesign, newprobes );
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
+        this.getArrayDesignDao().addProbes( arrayDesign, newProbes );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByManufacturer(java.lang.String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByManufacturer( String searchString ) {
         return this.getArrayDesignDao().findByManufacturer( searchString );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#findByTaxon(ubic.gemma.model.genome.Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
@@ -86,59 +64,28 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().getBioSequences( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getPerTaxonCount()
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Taxon, Integer> getPerTaxonCount() {
         return this.getArrayDesignDao().getPerTaxonCount();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#thawLite(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         return this.getArrayDesignDao().thawLite( arrayDesigns );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBioSequences(ubic
-     * .gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().compositeSequenceWithoutBioSequences( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutBlatResults(ubic
-     * .gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().compositeSequenceWithoutBlatResults( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCompositeSequenceWithoutGenes(ubic.gemma
-     * .model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().compositeSequenceWithoutGenes( arrayDesign );
@@ -149,12 +96,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().countAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleCreate(ubic.gemma.model.expression.
-     * arrayDesign .ArrayDesign)
-     */
     @Override
     protected ArrayDesign handleCreate( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().create( arrayDesign );
@@ -201,35 +142,19 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().findOrCreate( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.handleGetAllAssociatedBioAssays(long)
-     */
     @Override
     protected java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id ) {
         return this.getArrayDesignDao().getAllAssociatedBioAssays( id );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetCompositeSequenceCount(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected Integer handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) throw new IllegalArgumentException( "Array design cannot be null" );
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Array design cannot be null" );
         return this.getArrayDesignDao().numCompositeSequences( arrayDesign.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetExpressionExperimentsById(long)
-     */
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().getExpressionExperiments( arrayDesign );
@@ -241,17 +166,11 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().numExperiments( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastAnnotationFile(java.util.Collection)
-     */
     @Override
     protected Map<Long, AuditEvent> handleGetLastAnnotationFile( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
 
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not AnnotationFile events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignAnnotationFileEvent.class;
@@ -259,29 +178,20 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastGeneMapping(java.util.Collection)
-     */
     @Override
     protected Map<Long, AuditEvent> handleGetLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignGeneMappingEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     */
     @Override
     protected Map<Long, AuditEvent> handleGetLastRepeatAnalysis( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignRepeatAnalysisEvent.class;
@@ -289,17 +199,10 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceAnalysis(java.util.Collection
-     * )
-     */
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceAnalysis( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceAnalysisEvent.class;
@@ -307,16 +210,10 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceUpdate(java.util.Collection)
-     */
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceUpdate( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not Sequence update events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceUpdateEvent.class;
@@ -324,26 +221,18 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastTroubleEvent(java.util.Collection)
-     */
     @Override
     protected java.util.Map<Long, AuditEvent> handleGetLastTroubleEvent( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
 
         Set<Long> aaIds = eventMap.keySet();
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent = null;
+            AuditEvent lastEvent;
 
-            if ( events == null ) {
-                // lastEventMap.put( arrayDesignId, null );
-            } else {
+            if ( events != null ) {
                 lastEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
                 if ( lastEvent != null ) {
                     lastEventMap.put( arrayDesignId, lastEvent );
@@ -359,30 +248,23 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastValidationEvent(java.util.Collection)
-     */
     @Override
     protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
 
         Set<Long> aaIds = eventMap.keySet();
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent = null;
+            AuditEvent lastEvent;
 
-            if ( events == null ) {
-                // lastEventMap.put( arrayDesignId, null );
-            } else {
+            if ( events != null ) {
                 ArrayDesign ad = this.load( arrayDesignId );
 
-                lastEvent = this.getAuditEventDao().getLastEvent( ad, ValidatedFlagEvent.class );
-                if ( lastEvent != null ) lastEventMap.put( arrayDesignId, lastEvent );
+                lastEvent = this.getAuditEventDao().getLastEvent( ad, DoesNotNeedAttentionEvent.class );
+                if ( lastEvent != null )
+                    lastEventMap.put( arrayDesignId, lastEvent );
 
                 /*
                  * TODO how to deal with merged/subsumed arrays in this case?
@@ -394,21 +276,11 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return lastEventMap;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxa(long)
-     */
     @Override
     protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
         return this.getArrayDesignDao().getTaxa( id );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxon(long)
-     */
     @Override
     protected Taxon handleGetTaxon( java.lang.Long id ) {
         return this.getArrayDesignDao().load( id ).getPrimaryTaxon();
@@ -434,30 +306,17 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().isSubsumer( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoad(long)
-     */
     @Override
     protected ArrayDesign handleLoad( long id ) {
         return this.getArrayDesignDao().load( id );
     }
 
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getAllArrayDesigns()
-     */
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ArrayDesign> handleLoadAll() {
         return ( Collection<ArrayDesign> ) this.getArrayDesignDao().loadAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadAllValueObjects()
-     */
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() {
         Collection<ArrayDesignValueObject> ads = this.getArrayDesignDao().loadAllValueObjects();
@@ -471,13 +330,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return ads;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadCompositeSequences(ubic.gemma.model.
-     * expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected Collection<CompositeSequence> handleLoadCompositeSequences( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
@@ -489,11 +341,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return ( Collection<ArrayDesign> ) this.getArrayDesignDao().load( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadValueObjects(java.util.Collection)
-     */
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) {
         Collection<ArrayDesignValueObject> ads = this.getArrayDesignDao().loadValueObjects( ids );
@@ -510,11 +357,8 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     /**
      * Populates the troubleDetails property of the ADValueObject, which has to be done separately since the last
      * trouble event has to be retrieved.
-     * 
-     * @param ad
-     * @return
      */
-    private ArrayDesignValueObject populateTroubleDetails( ArrayDesignValueObject ad ) {
+    private void populateTroubleDetails( ArrayDesignValueObject ad ) {
         java.util.Map<Long, AuditEvent> events = this.getLastTroubleEvent( Collections.singleton( ad.getId() ) );
         AuditEvent e = events.get( ad.getId() );
         if ( e != null ) {
@@ -527,166 +371,78 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
                 log.error( "Loaded ArrayDesign is troubled but has no outstanding trouble event. ID: " + ad.getId() );
             }
         }
-        return ad;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences()
-     */
     @Override
     protected long handleNumAllCompositeSequenceWithBioSequences() {
         return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBioSequences(
-     * java.util.Collection)
-     */
     @Override
     protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
         return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults()
-     */
     @Override
     protected long handleNumAllCompositeSequenceWithBlatResults() {
         return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithBlatResults(java
-     * .util.Collection)
-     */
     @Override
     protected long handleNumAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
         return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes()
-     */
     @Override
     protected long handleNumAllCompositeSequenceWithGenes() {
         return this.getArrayDesignDao().numAllCompositeSequenceWithGenes();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllCompositeSequenceWithGenes(java.util
-     * .Collection)
-     */
     @Override
     protected long handleNumAllCompositeSequenceWithGenes( Collection<Long> ids ) {
         return this.getArrayDesignDao().numAllCompositeSequenceWithGenes( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes()
-     */
     @Override
     protected long handleNumAllGenes() {
         return this.getArrayDesignDao().numAllGenes();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumAllGenes(java.util.Collection)
-     */
     @Override
     protected long handleNumAllGenes( Collection<Long> ids ) {
         return this.getArrayDesignDao().numAllGenes( ids );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBioSequencesById(long)
-     */
     @Override
     protected long handleNumBioSequences( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().numBioSequences( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumBlatResultsById(long)
-     */
     @Override
     protected long handleNumBlatResults( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().numBlatResults( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithBioSequences(ubic
-     * .gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().numCompositeSequenceWithBioSequences( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithBlatResults(ubic
-     * .gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected long handleNumCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().numCompositeSequenceWithBlatResults( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumCompositeSequenceWithGenes(ubic.gemma
-     * .model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().numCompositeSequenceWithGenes( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleNumGeneProductsById(long)
-     */
     @Override
     protected long handleNumGenes( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().numGenes( arrayDesign );
     }
 
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#removeArrayDesign(java.lang.String)
-     */
     @Override
     protected void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         this.getArrayDesignDao().remove( arrayDesign );
@@ -708,20 +464,11 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
         return this.getArrayDesignDao().thawLite( arrayDesign );
     }
 
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#updateArrayDesign(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         this.getArrayDesignDao().update( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleUpdateSubsumingStatus(ubic.gemma.model.
-     * expression.arrayDesign.ArrayDesign, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
@@ -731,24 +478,18 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
             Class<? extends ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
         AuditEvent lastSubsumerEvent = this.getAuditEventDao().getLastEvent( subsumedInto, eventclass );
         if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
-                && lastEventMap.get( arrayDesignId ) != null
-                && lastEventMap.get( arrayDesignId ).getDate().before( lastSubsumerEvent.getDate() ) ) {
+                && lastEventMap.get( arrayDesignId ) != null && lastEventMap.get( arrayDesignId ).getDate()
+                .before( lastSubsumerEvent.getDate() ) ) {
             lastEventMap.put( arrayDesignId, lastSubsumerEvent );
         }
     }
 
-    /**
-     * @param eventMap
-     * @param lastEventMap
-     * @param aaIds
-     * @param eventclass
-     */
     private void getMostRecentEvents( Map<Long, Collection<AuditEvent>> eventMap, Map<Long, AuditEvent> lastEventMap,
             Set<Long> aaIds, Class<? extends ArrayDesignAnalysisEvent> eventclass ) {
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );
-            AuditEvent lastEvent = null;
+            AuditEvent lastEvent;
 
             if ( events == null ) {
                 lastEventMap.put( arrayDesignId, null );

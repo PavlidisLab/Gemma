@@ -14,20 +14,16 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.Auditable;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 /**
- * @author paul
- * @version $Id$
+ * @author tesarst
  */
-public interface StatusService {
+@Service
+public class CurationDetailsService {
 
-    // public void initializeStatus( Auditable auditable );
-
-    // public Status create();
-
-    // public void update( Status status );
-
-    public Status getStatus( Auditable auditable );
+    @Autowired
+    CurationDetailsDao curationDetailsDao;
 
 }

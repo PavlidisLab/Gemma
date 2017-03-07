@@ -25,7 +25,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
@@ -38,27 +38,27 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AuditEvent> getEvents( Auditable auditable ) {
+    public List<AuditEvent> getEvents( AbstractAuditable auditable ) {
         return this.getAuditEventDao().getEvents( auditable );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
+    public AuditEvent getLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type ) {
         return this.getAuditEventDao().getLastEvent( auditable, type );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
+    public Map<AbstractAuditable, AuditEvent> getLastEvent( Collection<? extends AbstractAuditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.getAuditEventDao().getLastEvent( auditables, type );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+    public Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastEvents(
+            Collection<? extends AbstractAuditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         return this.getAuditEventDao().getLastEvents( auditables, types );
     }
 
@@ -70,25 +70,25 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
+    public boolean hasEvent( AbstractAuditable a, Class<? extends AuditEventType> type ) {
         return this.getAuditEventDao().hasEvent( a, type );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean lacksEvent( Auditable a, Class<? extends AuditEventType> type ) {
+    public boolean lacksEvent( AbstractAuditable a, Class<? extends AuditEventType> type ) {
         return !this.hasEvent( a, type );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
+    public void retainHavingEvent( Collection<? extends AbstractAuditable> a, Class<? extends AuditEventType> type ) {
         this.getAuditEventDao().retainHavingEvent( a, type );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
+    public void retainLackingEvent( Collection<? extends AbstractAuditable> a, Class<? extends AuditEventType> type ) {
         this.getAuditEventDao().retainLackingEvent( a, type );
     }
 
@@ -96,7 +96,7 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
      */
     @Override
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
+    protected java.util.Collection<AbstractAuditable> handleGetNewSinceDate( java.util.Date date ) {
         return this.getAuditEventDao().getNewSinceDate( date );
     }
 
@@ -104,7 +104,7 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getUpdatedSinceDate(java.util.Date)
      */
     @Override
-    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
+    protected Collection<AbstractAuditable> handleGetUpdatedSinceDate( java.util.Date date ) {
         return this.getAuditEventDao().getUpdatedSinceDate( date );
     }
 

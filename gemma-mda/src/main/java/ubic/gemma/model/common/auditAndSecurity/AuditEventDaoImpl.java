@@ -40,11 +40,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
@@ -78,19 +78,19 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * java.util.Collection)
      */
     @Override
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+    public Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastEvents(
+            Collection<? extends AbstractAuditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
+        Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> results = new HashMap<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>>();
         if ( auditables.size() == 0 ) return results;
 
         for ( Class<? extends AuditEventType> t : types ) {
-            results.put( t, new HashMap<Auditable, AuditEvent>() );
+            results.put( t, new HashMap<AbstractAuditable, AuditEvent>() );
         }
 
-        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
+        final Map<AuditTrail, AbstractAuditable> atmap = getAuditTrailMap( auditables );
 
         List<String> classes = getClassHierarchy( types );
 
@@ -116,12 +116,12 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             for ( Class<? extends AuditEventType> ti : types ) {
                 if ( ti.isAssignableFrom( ty.getClass() ) ) {
                     // FIXME we need to distinguish subclasses of validation events, for example.
-                    Map<Auditable, AuditEvent> innerMap = results.get( ti );
+                    Map<AbstractAuditable, AuditEvent> innerMap = results.get( ti );
 
                     assert innerMap != null;
 
                     // only replace event if its date is more recent.
-                    Auditable ae = atmap.get( t );
+                    AbstractAuditable ae = atmap.get( t );
                     if ( !innerMap.containsKey( ae ) || innerMap.get( ae ).getDate().compareTo( e.getDate() ) < 0 ) {
                         innerMap.put( atmap.get( t ), e );
                     }
@@ -155,18 +155,18 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvents(java.util.Collection)
      */
     @Override
-    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables ) {
+    public Map<AbstractAuditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends AbstractAuditable> auditables ) {
         Collection<Class<? extends AuditEventType>> types = new HashSet<Class<? extends AuditEventType>>();
-        types.add( TroubleStatusFlagEvent.class );
-        types.add( ValidatedFlagEvent.class );
-        types.add( OKStatusFlagEvent.class );
+        types.add( TroubledStatusFlagEvent.class );
+        types.add( DoesNotNeedAttentionEvent.class );
+        types.add( NotTroubledStatusFlagEvent.class );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> lastEventsAll = this.getLastEvents( auditables,
+        Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> lastEventsAll = this.getLastEvents( auditables,
                 types );
 
-        Map<Auditable, AuditEvent> results = new HashMap<Auditable, AuditEvent>();
+        Map<AbstractAuditable, AuditEvent> results = new HashMap<AbstractAuditable, AuditEvent>();
 
-        for ( Auditable a : auditables ) {
+        for ( AbstractAuditable a : auditables ) {
 
             // Get events for the current auditable object
             Collection<AuditEvent> lastEvents = new HashSet<AuditEvent>();
@@ -192,11 +192,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#hasEvent(ubic.gemma.model.common.Auditable,
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#hasEvent(ubic.gemma.model.common.AbstractAuditable,
      * java.lang.Class)
      */
     @Override
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
+    public boolean hasEvent( AbstractAuditable a, Class<? extends AuditEventType> type ) {
         return this.getLastEvent( a, type ) != null;
     }
 
@@ -207,10 +207,10 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * java.lang.Class)
      */
     @Override
-    public void retainHavingEvent( final Collection<? extends Auditable> a,
+    public void retainHavingEvent( final Collection<? extends AbstractAuditable> a,
             final Class<? extends AuditEventType> type ) {
 
-        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
+        final Map<AbstractAuditable, AuditEvent> events = this.getLastEvent( a, type );
 
         CollectionUtils.filter( a, new Predicate() {
             @Override
@@ -228,11 +228,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * java.lang.Class)
      */
     @Override
-    public void retainLackingEvent( final Collection<? extends Auditable> a,
+    public void retainLackingEvent( final Collection<? extends AbstractAuditable> a,
             final Class<? extends AuditEventType> type ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
+        final Map<AbstractAuditable, AuditEvent> events = this.getLastEvent( a, type );
         log.info( "Phase I: " + timer.getTime() + "ms" );
 
         CollectionUtils.filter( a, new Predicate() {
@@ -248,14 +248,14 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetEvents(ubic.gemma.model.common.Auditable)
+     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetEvents(ubic.gemma.model.common.AbstractAuditable)
      */
     @Override
-    protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
-        if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
+    protected List<AuditEvent> handleGetEvents( final AbstractAuditable auditable ) {
+        if ( auditable == null ) throw new IllegalArgumentException( "AbstractAuditable cannot be null" );
 
         if ( auditable.getAuditTrail() == null ) {
-            throw new IllegalStateException( "Auditable did not have an audit trail: " + auditable );
+            throw new IllegalStateException( "AbstractAuditable did not have an audit trail: " + auditable );
         }
 
         Long id = auditable.getAuditTrail().getId();
@@ -268,11 +268,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetLastEvent(ubic.gemma.model.common.Auditable,
+     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetLastEvent(ubic.gemma.model.common.AbstractAuditable,
      * java.lang.Class)
      */
     @Override
-    protected AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
+    protected AuditEvent handleGetLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable.getAuditTrail(), type );
     }
 
@@ -327,13 +327,13 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
     @Override
-    protected Map<Auditable, AuditEvent> handleGetLastEvent( final Collection<? extends Auditable> auditables,
+    protected Map<AbstractAuditable, AuditEvent> handleGetLastEvent( final Collection<? extends AbstractAuditable> auditables,
             Class<? extends AuditEventType> type ) {
 
-        Map<Auditable, AuditEvent> result = new HashMap<Auditable, AuditEvent>();
+        Map<AbstractAuditable, AuditEvent> result = new HashMap<AbstractAuditable, AuditEvent>();
         if ( auditables.size() == 0 ) return result;
 
-        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
+        final Map<AuditTrail, AbstractAuditable> atmap = getAuditTrailMap( auditables );
 
         List<String> classes = getClassHierarchy( type );
 
@@ -407,11 +407,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables ) {
+    protected Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> handleGetLastTypedAuditEvents(
+            Collection<? extends AbstractAuditable> auditables ) {
 
-        Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
-        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
+        Map<AuditTrail, AbstractAuditable> atmap = new HashMap<AuditTrail, AbstractAuditable>();
+        for ( AbstractAuditable a : ( Collection<AbstractAuditable> ) auditables ) {
             atmap.put( a.getAuditTrail(), a );
         }
 
@@ -419,7 +419,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "inner join fetch trail.events event inner join event.eventType et inner join fetch event.performer "
                 + "where trail in (:trails) order by event.date,event.id desc ";
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> result = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
+        Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> result = new HashMap<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>>();
         try {
             org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setCacheable( true );
@@ -438,9 +438,9 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                  * Careful with subclasses. The key in the hashtable should really only be the superclass.
                  */
                 if ( !result.containsKey( ty.getClass() ) ) {
-                    result.put( ty.getClass(), new HashMap<Auditable, AuditEvent>() );
+                    result.put( ty.getClass(), new HashMap<AbstractAuditable, AuditEvent>() );
                 }
-                Map<Auditable, AuditEvent> amap = result.get( ty.getClass() );
+                Map<AbstractAuditable, AuditEvent> amap = result.get( ty.getClass() );
 
                 // only one event per object, please - the most recent.
                 if ( amap.containsKey( atmap.get( t ) ) ) continue;
@@ -462,8 +462,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @return Collection of Auditables
      */
     @Override
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
-        Collection<Auditable> result = new HashSet<Auditable>();
+    protected java.util.Collection<AbstractAuditable> handleGetNewSinceDate( java.util.Date date ) {
+        Collection<AbstractAuditable> result = new HashSet<AbstractAuditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
@@ -486,8 +486,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @return Collection of Auditables
      */
     @Override
-    protected java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
-        Collection<Auditable> result = new HashSet<Auditable>();
+    protected java.util.Collection<AbstractAuditable> handleGetUpdatedSinceDate( java.util.Date date ) {
+        Collection<AbstractAuditable> result = new HashSet<AbstractAuditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
@@ -523,17 +523,17 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection<? extends Auditable> auditables ) {
+    private Map<AuditTrail, AbstractAuditable> getAuditTrailMap( final Collection<? extends AbstractAuditable> auditables ) {
 
         /*
-         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
+         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because AbstractAuditable
          * is not mapped, we have to query for each class separately ... just in case the user has passed a
          * heterogeneous collection.
          */
-        final Map<AuditTrail, Auditable> atmap = new HashMap<AuditTrail, Auditable>();
-        Map<String, Collection<Auditable>> clazzmap = new HashMap<String, Collection<Auditable>>();
-        for ( Auditable a : ( Collection<Auditable> ) auditables ) {
-            Class<? extends Auditable> clazz = a.getClass();
+        final Map<AuditTrail, AbstractAuditable> atmap = new HashMap<AuditTrail, AbstractAuditable>();
+        Map<String, Collection<AbstractAuditable>> clazzmap = new HashMap<String, Collection<AbstractAuditable>>();
+        for ( AbstractAuditable a : ( Collection<AbstractAuditable> ) auditables ) {
+            Class<? extends AbstractAuditable> clazz = a.getClass();
 
             /*
              * proxy?
@@ -544,7 +544,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             }
 
             if ( !clazzmap.containsKey( clazzName ) ) {
-                clazzmap.put( clazzName, new HashSet<Auditable>() );
+                clazzmap.put( clazzName, new HashSet<AbstractAuditable>() );
             }
             clazzmap.get( clazzName ).add( a );
         }
@@ -562,7 +562,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
                 AuditTrail t = ( AuditTrail ) ar[1];
-                Auditable a = ( Auditable ) ar[0];
+                AbstractAuditable a = ( AbstractAuditable ) ar[0];
                 atmap.put( t, a );
             }
 
@@ -639,10 +639,10 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         for ( AuditEvent event : events ) {
             if ( event == null || event.getEventType() == null ) {
                 continue;
-            } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() )
-                    || ValidatedFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+            } else if ( NotTroubledStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() )
+                    || DoesNotNeedAttentionEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
                 if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) ) lastOKEvent = event;
-            } else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+            } else if ( TroubledStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
                 if ( lastTroubleEvent == null || lastTroubleEvent.getDate().before( event.getDate() ) )
                     lastTroubleEvent = event;
             }

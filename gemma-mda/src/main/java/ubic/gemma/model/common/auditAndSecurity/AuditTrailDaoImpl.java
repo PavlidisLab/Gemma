@@ -30,13 +30,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
  * @author pavlidis
- * @version $Id$
  */
 @Repository
 public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrailDao {
@@ -47,7 +46,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
     }
 
     @Override
-    public AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
+    public AuditEvent addEvent( final AbstractAuditable auditable, final AuditEvent auditEvent ) {
 
         if ( auditEvent.getAction() == null ) {
             throw new IllegalArgumentException( "auditEvent was missing a required field" );
@@ -115,13 +114,10 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
 
     /**
      * FIXME this returns a list, but there is no particular ordering enforced?
-     * 
-     * @param entityClass
-     * @param auditEventClass
-     * @return
+     *
      */
     @Override
-    public Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
+    public Collection<AbstractAuditable> getEntitiesWithEvent( Class<? extends AbstractAuditable> entityClass,
             Class<? extends AuditEventType> auditEventClass ) {
 
         String entityCanonicalName = entityClass.getName();
@@ -210,9 +206,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         }
     }
 
-    /**
-     * @return
-     */
     private String getPrincipalName() {
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -226,9 +219,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         return username;
     }
 
-    /**
-     * @return
-     */
     private User getUser() {
         String name = getPrincipalName();
         assert name != null; // might be anonymous

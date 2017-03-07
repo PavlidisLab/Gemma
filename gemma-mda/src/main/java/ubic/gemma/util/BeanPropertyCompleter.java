@@ -24,7 +24,7 @@ import java.lang.reflect.Method;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 
 /**
  * Class to help complete beans based on other beans
@@ -71,7 +71,7 @@ public class BeanPropertyCompleter {
         for ( int i = 0; i < props.length; i++ ) {
             PropertyDescriptor descriptor = props[i];
 
-            if ( targetObject instanceof Auditable && descriptor.getName().equals( "auditTrail" ) ) {
+            if ( targetObject instanceof AbstractAuditable && descriptor.getName().equals( "auditTrail" ) ) {
                 continue;
             }
 
