@@ -9,27 +9,27 @@ public abstract class AbstractCuratableValueObject {
 
     protected Boolean troubled;
 
-    protected AuditEvent troubledEvent;
+    protected AuditEvent lastTroubledEvent;
 
     protected Boolean needsAttention;
 
-    protected AuditEvent needsAttentionEvent;
+    protected AuditEvent lastNeedsAttentionEvent;
 
     protected String curationNote;
 
-    protected AuditEvent noteEvent;
+    protected AuditEvent lastCurationNoteEvent;
 
     public AbstractCuratableValueObject() {
     }
 
-    public AbstractCuratableValueObject( Boolean troubled, AuditEvent troubledEvent, Boolean needsAttention,
-            AuditEvent needsAttentionEvent, String curationNote, AuditEvent noteEvent ) {
+    public AbstractCuratableValueObject( Boolean troubled, AuditEvent lastTroubledEvent, Boolean needsAttention,
+            AuditEvent lastNeedsAttentionEvent, String curationNote, AuditEvent lastCurationNoteEvent ) {
         this.troubled = troubled;
-        this.setTroubledEvent( troubledEvent );
+        this.setLastTroubledEvent( lastTroubledEvent );
         this.setNeedsAttention( needsAttention );
-        this.setNeedsAttentionEvent( needsAttentionEvent );
+        this.setLastNeedsAttentionEvent( lastNeedsAttentionEvent );
         this.setCurationNote( curationNote );
-        this.setNoteEvent( noteEvent );
+        this.setLastCurationNoteEvent( lastCurationNoteEvent );
     }
 
     public Boolean getTroubled() {
@@ -40,12 +40,12 @@ public abstract class AbstractCuratableValueObject {
         this.troubled = troubled;
     }
 
-    public AuditEvent getTroubledEvent() {
-        return troubledEvent;
+    public AuditEvent getLastTroubledEvent() {
+        return lastTroubledEvent;
     }
 
-    public void setTroubledEvent( AuditEvent troubledEvent ) {
-        this.troubledEvent = troubledEvent;
+    public void setLastTroubledEvent( AuditEvent lastTroubledEvent ) {
+        this.lastTroubledEvent = lastTroubledEvent;
     }
 
     public Boolean getNeedsAttention() {
@@ -56,12 +56,12 @@ public abstract class AbstractCuratableValueObject {
         this.needsAttention = needsAttention;
     }
 
-    public AuditEvent getNeedsAttentionEvent() {
-        return needsAttentionEvent;
+    public AuditEvent getLastNeedsAttentionEvent() {
+        return lastNeedsAttentionEvent;
     }
 
-    public void setNeedsAttentionEvent( AuditEvent needsAttentionEvent ) {
-        this.needsAttentionEvent = needsAttentionEvent;
+    public void setLastNeedsAttentionEvent( AuditEvent lastNeedsAttentionEvent ) {
+        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
     }
 
     public String getCurationNote() {
@@ -72,11 +72,11 @@ public abstract class AbstractCuratableValueObject {
         this.curationNote = curationNote;
     }
 
-    public AuditEvent getNoteEvent() {
-        return noteEvent;
+    public AuditEvent getLastCurationNoteEvent() {
+        return lastCurationNoteEvent;
     }
 
-    public void setNoteEvent( AuditEvent noteEvent ) {
-        this.noteEvent = noteEvent;
+    public void setLastCurationNoteEvent( AuditEvent lastCurationNoteEvent ) {
+        this.lastCurationNoteEvent = lastCurationNoteEvent;
     }
 }

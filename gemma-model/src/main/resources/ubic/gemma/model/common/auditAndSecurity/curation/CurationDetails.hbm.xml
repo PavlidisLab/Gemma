@@ -30,7 +30,7 @@
         <property name="needsAttention" type="java.lang.Boolean">
             <column name="NEEDS_ATTENTION" not-null="true" unique="false" sql-type="TINYINT"/>
         </property>
-        <property name="note" type="java.lang.String">
+        <property name="curationNote" type="java.lang.String">
             <column name="NOTE" not-null="false" unique="false"
                     sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
         </property>

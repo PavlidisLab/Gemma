@@ -122,8 +122,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * @throws NullPointerException if the argument is <code>null</code>
      */
     public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
-        this( otherBean.troubled, otherBean.troubledEvent, otherBean.needsAttention, otherBean.needsAttentionEvent,
-                otherBean.curationNote, otherBean.noteEvent, otherBean.accession, otherBean.arrayDesignCount,
+        this( otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention, otherBean.lastNeedsAttentionEvent,
+                otherBean.curationNote, otherBean.lastCurationNoteEvent, otherBean.accession, otherBean.arrayDesignCount,
                 otherBean.autoTagDate, otherBean.batchFetchEventType, otherBean.bioAssayCount,
                 otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
                 otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,

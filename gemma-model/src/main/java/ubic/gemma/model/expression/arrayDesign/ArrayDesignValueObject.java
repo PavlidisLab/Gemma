@@ -41,8 +41,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     private String dateCached;
 
-    private java.util.Date dateCreated;
-
     private String description;
 
     private Integer designElementCount;
@@ -101,15 +99,15 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
      * @throws NullPointerException if the argument is <code>null</code>
      */
     public ArrayDesignValueObject( ArrayDesignValueObject otherBean ) {
-        this( otherBean.troubled, otherBean.troubledEvent, otherBean.needsAttention, otherBean.needsAttentionEvent,
-                otherBean.curationNote, otherBean.noteEvent, otherBean.color, otherBean.dateCached,
-                otherBean.dateCreated, otherBean.description, otherBean.designElementCount,
-                otherBean.expressionExperimentCount, otherBean.hasBlatAssociations, otherBean.hasGeneAssociations,
-                otherBean.hasSequenceAssociations, otherBean.id, otherBean.isMerged, otherBean.isMergee,
-                otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
-                otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
-                otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.technologyType, otherBean.hasAnnotationFile );
+        this( otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention, otherBean.lastNeedsAttentionEvent,
+                otherBean.curationNote, otherBean.lastCurationNoteEvent, otherBean.color, otherBean.dateCached,
+                otherBean.description, otherBean.designElementCount, otherBean.expressionExperimentCount,
+                otherBean.hasBlatAssociations, otherBean.hasGeneAssociations, otherBean.hasSequenceAssociations,
+                otherBean.id, otherBean.isMerged, otherBean.isMergee, otherBean.isSubsumed, otherBean.isSubsumer,
+                otherBean.lastGeneMapping, otherBean.lastRepeatMask, otherBean.lastSequenceAnalysis,
+                otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes, otherBean.numProbeAlignments,
+                otherBean.numProbeSequences, otherBean.numProbesToGenes, otherBean.shortName, otherBean.taxon,
+                otherBean.technologyType, otherBean.hasAnnotationFile );
     }
 
     /**
@@ -126,7 +124,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     public ArrayDesignValueObject( Boolean troubled, AuditEvent troubledEvent, Boolean needsAttention,
             AuditEvent needsAttentionEvent, String curationNote, AuditEvent noteEvent, String color, String dateCached,
-            Date dateCreated, String description, Integer designElementCount, Integer expressionExperimentCount,
+            String description, Integer designElementCount, Integer expressionExperimentCount,
             Boolean hasBlatAssociations, Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id,
             Boolean isMerged, Boolean isMergee, Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping,
             Date lastRepeatMask, Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes,
@@ -135,7 +133,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         super( troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
         this.dateCached = dateCached;
-        this.dateCreated = dateCreated;
         this.description = description;
         this.designElementCount = designElementCount;
         this.expressionExperimentCount = expressionExperimentCount;
@@ -172,12 +169,9 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     @Override
     public int compareTo( ArrayDesignValueObject arg0 ) {
-
-        if ( arg0.getDateCreated() == null || this.getDateCreated() == null )
+        if ( arg0.getId() == null || this.getId() == null )
             return 0;
-
-        return arg0.getDateCreated().compareTo( this.getDateCreated() );
-
+        return arg0.getId().compareTo( this.getId() );
     }
 
     @Override
@@ -217,19 +211,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     public void setDateCached( String dateCached ) {
         this.dateCached = dateCached;
-    }
-
-    /**
-     * <p>
-     * The date the Array Design was created
-     * </p>
-     */
-    public java.util.Date getDateCreated() {
-        return this.dateCreated;
-    }
-
-    public void setDateCreated( java.util.Date dateCreated ) {
-        this.dateCreated = dateCreated;
     }
 
     public String getDescription() {

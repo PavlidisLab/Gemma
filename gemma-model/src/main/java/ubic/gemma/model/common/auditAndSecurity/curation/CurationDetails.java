@@ -31,27 +31,27 @@ public class CurationDetails implements java.io.Serializable {
 
     private AuditEvent lastNeedsAttentionEvent;
 
-    private Boolean needsAttention = Boolean.FALSE;
+    private Boolean needsAttention;
 
     private AuditEvent lastTroubledEvent;
 
-    private Boolean troubled = Boolean.FALSE;
+    private Boolean troubled;
 
     private AuditEvent lastNoteUpdateEvent;
 
-    private String note;
+    private String curationNote;
 
     public CurationDetails() {
     }
 
     public CurationDetails( AuditEvent lastNeedsAttentionEvent, Boolean needsAttention, AuditEvent lastTroubledEvent,
-            Boolean troubled, AuditEvent lastNoteUpdateEvent, String note ) {
+            Boolean troubled, AuditEvent lastNoteUpdateEvent, String curationNote ) {
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
         this.needsAttention = needsAttention;
         this.lastTroubledEvent = lastTroubledEvent;
         this.troubled = troubled;
         this.lastNoteUpdateEvent = lastNoteUpdateEvent;
-        this.note = note;
+        this.curationNote = curationNote;
     }
 
     /**
@@ -133,11 +133,11 @@ public class CurationDetails implements java.io.Serializable {
         this.lastNoteUpdateEvent = lastNoteUpdateEvent;
     }
 
-    public String getNote() {
-        return note;
+    public String getCurationNote() {
+        return curationNote;
     }
 
-    public void setNote( String note ) {
-        this.note = note;
+    public void setCurationNote( String curationNote ) {
+        this.curationNote = curationNote;
     }
 }
