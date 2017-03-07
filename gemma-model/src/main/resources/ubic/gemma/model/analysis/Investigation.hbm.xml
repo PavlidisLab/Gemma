@@ -104,7 +104,7 @@
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
-				<many-to-one name="CurationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false"
+				<many-to-one name="curationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false"
 							 fetch="select">
 					<column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
