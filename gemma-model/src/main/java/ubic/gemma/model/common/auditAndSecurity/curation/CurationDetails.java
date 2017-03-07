@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
 /**
- * Represents the basic status of an Auditable, with possible information about state in workflows etc.
+ * Represents the basic status of an AbstractAuditable, with possible information about state in workflows etc.
  */
 public class CurationDetails implements java.io.Serializable {
 

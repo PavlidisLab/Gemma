@@ -24,13 +24,15 @@ import gemma.gsec.model.SecuredChild;
 
 import java.util.Collection;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 
 /**
  * ExperimentFactors are the dependent variables of an experiment (e.g., genotype, time, glucose concentration).
+ *
+ * @author Paul
  */
-public abstract class ExperimentalFactor extends Auditable implements SecuredChild {
+public abstract class ExperimentalFactor extends AbstractAuditable implements SecuredChild {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalFactor}.
@@ -50,12 +52,12 @@ public abstract class ExperimentalFactor extends Auditable implements SecuredChi
      */
     private static final long serialVersionUID = 4615731059510436891L;
 
-    private Collection<ubic.gemma.model.common.description.Characteristic> annotations = new java.util.HashSet<ubic.gemma.model.common.description.Characteristic>();
+    private Collection<ubic.gemma.model.common.description.Characteristic> annotations = new java.util.HashSet<>();
 
     private ubic.gemma.model.common.description.Characteristic category;
     private ubic.gemma.model.expression.experiment.ExperimentalDesign experimentalDesign;
 
-    private Collection<FactorValue> factorValues = new java.util.HashSet<ubic.gemma.model.expression.experiment.FactorValue>();
+    private Collection<FactorValue> factorValues = new java.util.HashSet<>();
 
     private ExpressionExperiment securityOwner;
 
@@ -63,8 +65,7 @@ public abstract class ExperimentalFactor extends Auditable implements SecuredChi
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
+     *
      */
     public ExperimentalFactor() {
     }
@@ -128,8 +129,7 @@ public abstract class ExperimentalFactor extends Auditable implements SecuredChi
 
     /**
      * Used to hint the security system about who 'owns' this,
-     * 
-     * @param factorValues
+     *
      */
     public void setSecurityOwner( ExpressionExperiment securityOwner ) {
         this.securityOwner = securityOwner;

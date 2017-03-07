@@ -20,18 +20,54 @@
 package ubic.gemma.model.analysis.expression;
 
 import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Taxon;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.Taxon;
-
 /**
  * A grouping of expression studies.
+ *
+ * @author Paul
  */
-public abstract class ExpressionExperimentSet extends Auditable implements Securable {
+public abstract class ExpressionExperimentSet extends AbstractAuditable implements Securable {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -1034074709420077917L;
+    private ubic.gemma.model.genome.Taxon taxon;
+    private Collection<BioAssaySet> experiments = new HashSet<>();
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public ExpressionExperimentSet() {
+    }
+
+    /**
+     *
+     */
+    public Collection<BioAssaySet> getExperiments() {
+        return this.experiments;
+    }
+
+    public void setExperiments( Collection<BioAssaySet> experiments ) {
+        this.experiments = experiments;
+    }
+
+    /**
+     *
+     */
+    public ubic.gemma.model.genome.Taxon getTaxon() {
+        return this.taxon;
+    }
+
+    public void setTaxon( Taxon taxon ) {
+        this.taxon = taxon;
+    }
 
     /**
      * Constructs new instances of {@link ExpressionExperimentSet}.
@@ -44,45 +80,6 @@ public abstract class ExpressionExperimentSet extends Auditable implements Secur
             return new ExpressionExperimentSetImpl();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1034074709420077917L;
-
-    private ubic.gemma.model.genome.Taxon taxon;
-
-    private Collection<BioAssaySet> experiments = new HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExpressionExperimentSet() {
-    }
-
-    /**
-     * 
-     */
-    public Collection<BioAssaySet> getExperiments() {
-        return this.experiments;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon() {
-        return this.taxon;
-    }
-
-    public void setExperiments( Collection<BioAssaySet> experiments ) {
-        this.experiments = experiments;
-    }
-
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
     }
 
 }

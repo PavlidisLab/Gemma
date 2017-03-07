@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
@@ -29,7 +30,7 @@ import java.util.Collection;
  *
  * @author Paul
  */
-public class ArrayDesign extends ubic.gemma.model.common.Auditable
+public class ArrayDesign extends AbstractAuditable
         implements gemma.gsec.model.SecuredNotChild, Curatable {
 
     /**

@@ -19,15 +19,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
  * @author pavlidis
- * @version $Id$
+ * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
  */
 public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrail {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5316032533526337630L;
 
     /**
@@ -35,14 +31,15 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
      */
     @Override
     public void addEvent( AuditEvent event ) {
-        if ( event == null ) throw new IllegalArgumentException( "AuditEvent cannot be null" );
+        if ( event == null )
+            throw new IllegalArgumentException( "AuditEvent cannot be null" );
         assert this.getEvents() != null;
         this.getEvents().add( event );
     }
 
     /**
-     * Use Auditable.getStatus().getCreateDate() if all you want is the date.
-     * 
+     * Use AbstractAuditable.getStatus().getCreateDate() if all you want is the date.
+     *
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#getCreationEvent()
      */
     @Override
@@ -70,34 +67,18 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
         return ( ( List<AuditEvent> ) this.getEvents() ).get( this.getEvents().size() - 1 );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read()
-     */
     @Override
     public void read() {
         this.read( null );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read(String)
-     */
     @Override
     public void read( String note ) {
         this.read( note, null );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#read(String,
-     * ubic.gemma.model.common.auditAndSecurity.User)
-     */
     @Override
     public void read( String note, User actor ) {
         assert this.getEvents() != null;
@@ -127,7 +108,7 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#start(String, Person)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#start(String, User)
      */
     @Override
     public void start( String note, User actor ) {
@@ -154,7 +135,7 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#update(String, Person)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#update(String, User)
      */
     @Override
     public void update( String note, User actor ) {
@@ -180,23 +161,9 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
 
     /**
      * Check whether the list of events doesn't exist yet.
-     * 
-     * @return
      */
     private boolean trailIsNull() {
         return this.getEvents() == null;
     }
-
-    // todo this has to be added to the model.F
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see Object#toString()
-    // */
-    // @Override
-    // public String toString() {
-    // return "AuditTrail: Id=" + getId()
-    // + ( this.getEvents() == null ? "" : ( ", " + this.getEvents().size() + " events" ) );
-    // }
 
 }

@@ -20,7 +20,7 @@
 package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 
 /**
@@ -29,7 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
  *
  * @author Paul
  */
-public abstract class Characteristic extends Auditable {
+public abstract class Characteristic extends AbstractAuditable {
 
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;

@@ -24,7 +24,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
-public abstract class BioAssay extends Auditable implements gemma.gsec.model.SecuredChild {
+public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
 
     /**
      * 
@@ -61,9 +61,9 @@ public abstract class BioAssay extends Auditable implements gemma.gsec.model.Sec
 
     private Integer sequenceReadLength;
 
-    private Boolean sequencePairedReads = Boolean.valueOf( false );
+    private Boolean sequencePairedReads = Boolean.FALSE;
 
-    private Boolean isOutlier = Boolean.valueOf( false );
+    private Boolean isOutlier = Boolean.FALSE;
 
     private ArrayDesign arrayDesignUsed;
 
@@ -71,7 +71,7 @@ public abstract class BioAssay extends Auditable implements gemma.gsec.model.Sec
 
     private LocalFile rawDataFile;
 
-    private Collection<LocalFile> derivedDataFiles = new HashSet<LocalFile>();
+    private Collection<LocalFile> derivedDataFiles = new HashSet<>();
 
     private BioMaterial sampleUsed;
 
