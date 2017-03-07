@@ -19,17 +19,6 @@
 
 package ubic.gemma.persistence;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -47,16 +35,21 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.MailEngine;
+import ubic.gemma.util.Settings;
+
+import java.io.*;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Functions for maintaining the database. This is intended for denormalized tables and statistics tables that need to
  * be generated periodically.
- * 
+ *
  * @author jsantos
  * @author paul
- * @version $Id$
  */
 @Service
 public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
@@ -66,21 +59,17 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
-    private static final String GENE2CS_REPOPULATE_QUERY = "INSERT INTO GENE2CS (GENE, CS, AD) "
-            + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
-            + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
-            + " WHERE geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
-            + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
-
-    private static Log log = LogFactory.getLog( TableMaintenanceUtilImpl.class.getName() );
-
+    private static final String GENE2CS_REPOPULATE_QUERY =
+            "INSERT INTO GENE2CS (GENE, CS, AD) " + "SELECT DISTINCT gene.ID, cs.ID, cs.ARRAY_DESIGN_FK "
+                    + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
+                    + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
+                    + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
     private static final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
-
     /**
      * The location where reports are stored.
      */
     private static final String DB_INFO_DIR = "DbReports";
-
+    private static final Log log = LogFactory.getLog( TableMaintenanceUtilImpl.class.getName() );
     @Autowired
     private AuditEventService auditEventService;
 
@@ -92,7 +81,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
 
     private boolean sendEmail = true;
 
-    /*
+    /**
      * For use in tests.
      */
     @Override
@@ -100,16 +89,12 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
         this.sendEmail = false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.TableMaintenenceUtilI#updateGene2CsEntries()
-     */
     @Override
     @Transactional
     public synchronized void updateGene2CsEntries() {
 
-        if ( running.get() ) return;
+        if ( running.get() )
+            return;
 
         log.debug( "Running Gene2CS status check" );
 
@@ -123,7 +108,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                 needToRefresh = true;
             }
 
-            if ( !needToRefresh && status != null ) {
+            if ( !needToRefresh ) {
                 Collection<AbstractAuditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
 
                 for ( AbstractAuditable a : newObj ) {
@@ -136,13 +121,15 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                 }
             }
 
-            if ( !needToRefresh && status != null ) {
-                Collection<AbstractAuditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
+            if ( !needToRefresh ) {
+                Collection<AbstractAuditable> updatedObj = auditEventService
+                        .getUpdatedSinceDate( status.getLastUpdate() );
                 for ( AbstractAuditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
                         for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
-                            if ( ae == null ) continue; // legacy of ordered-list which could end up with gaps; should
-                                                        // not be needed any more
+                            if ( ae == null )
+                                continue; // legacy of ordered-list which could end up with gaps; should
+                            // not be needed any more
                             if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
                                 needToRefresh = true;
@@ -152,7 +139,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                             }
                         }
                     }
-                    if ( needToRefresh == true ) break;
+                    if ( needToRefresh )
+                        break;
                 }
             }
 
@@ -182,10 +170,10 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     /**
      * Function to regenerate the GENE2CS entries. Gene2Cs is a denormalized join table that allows for a quick link
      * between Genes and CompositeSequences
-     * 
+     *
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
-    private void generateGene2CsEntries() throws Exception {
+    private void generateGene2CsEntries(){
         log.info( "Updating Gene2Cs ..." );
         Session session = this.sessionFactory.getCurrentSession();
         log.info( "Deleting all entries for Gene2Cs." );
@@ -207,7 +195,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     }
 
     /**
-     * 
+     *
      */
     private File getGene2CsInfopath() {
         return new File( HOME_DIR + File.separatorChar + DB_INFO_DIR + File.separatorChar + "gene2cs.info" );
@@ -215,10 +203,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
 
     /**
      * Reads previous run information from disk.
-     * 
+     *
      * @return null if there is no update information available.
-     * @throws IOException
-     * @throws ClassNotFoundException
      */
     private Gene2CsStatus getLastGene2CsUpdateStatus() throws IOException, ClassNotFoundException {
         File gene2CsInfopath = getGene2CsInfopath();
@@ -226,26 +212,20 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             return null;
         }
         try (FileInputStream fis = new FileInputStream( gene2CsInfopath );
-                ObjectInputStream ois = new ObjectInputStream( fis );) {
-            Gene2CsStatus d = ( Gene2CsStatus ) ois.readObject();
-            return d;
+                ObjectInputStream ois = new ObjectInputStream( fis )) {
+            return ( Gene2CsStatus ) ois.readObject();
         }
 
     }
 
-    /**
-     * @param deleteFiles
-     */
     private void initDirectories() {
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + File.separatorChar + DB_INFO_DIR );
     }
 
-    /**
-     * @param results
-     */
     private void sendEmail( Gene2CsStatus results ) {
-        if ( !sendEmail ) return;
+        if ( !sendEmail )
+            return;
         SimpleMailMessage msg = new SimpleMailMessage();
         String adminEmailAddress = Settings.getAdminEmailAddress();
         if ( StringUtils.isBlank( adminEmailAddress ) ) {
@@ -261,8 +241,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
 
     /**
      * @param annotation extra text that describes the status
-     * @param e
-     * @throws IOException
      */
     private Gene2CsStatus writeUpdateStatus( String annotation, Exception e ) throws IOException {
         initDirectories();
@@ -274,7 +252,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
         status.setAnnotation( annotation );
 
         try (FileOutputStream fos = new FileOutputStream( getGene2CsInfopath() );
-                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
             oos.writeObject( status );
         }
         return status;

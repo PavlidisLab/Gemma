@@ -15,32 +15,14 @@
 package ubic.gemma.model.association.phenotype;
 
 import gemma.gsec.util.SecurityUtil;
-
-import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.Query;
-import org.hibernate.SQLQuery;
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -53,20 +35,25 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
+import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.util.*;
+
 /**
  * deals with all basic queries used by Neurocarta
- * 
+ *
  * @author Nicolas
- * @version $Id$ TODO: change criteria queries
- *          to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
+ *         TODO: change criteria queries
+ *         to hql to be consistent, if parameter use findByNamedParam and StringUtils.join if needed
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
 
-    private static final String DISCRIMINATOR_CLAUSE = "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
-            + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
-            + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
-            + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
+    private static final String DISCRIMINATOR_CLAUSE =
+            "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
+                    + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
+                    + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
+                    + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
 
     private static Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
 
@@ -76,10 +63,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    /**
-     * @param sqlQuery
-     * @param queryObject
-     */
     public void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
         if ( SecurityUtil.isUserAnonymous() ) {
             return;
@@ -89,11 +72,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         // if user is member of any groups.
         if ( sqlQuery.contains( ":groups" ) ) {
-            Collection<String> groups = this
-                    .getSessionFactory()
-                    .getCurrentSession()
-                    .createQuery(
-                            "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
+            Collection<String> groups = this.getSessionFactory().getCurrentSession().createQuery(
+                    "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
                     .setParameter( "user", userName ).list();
             queryObject.setParameterList( "groups", groups );
         }
@@ -104,27 +84,30 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
+    /**
+     * counts the evidence that from neurocarta that came from a specific MetaAnalysis
+     */
     @Override
-    /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
-    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId ) {
-        Long numDifferentialExpressionEvidence = ( Long ) this
-                .getHibernateTemplate()
+    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+            Long geneDifferentialExpressionMetaAnalysisId ) {
+
+        return ( Long ) this.getHibernateTemplate()
                 .find( "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
                         + "in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" ).iterator().next();
-
-        return numDifferentialExpressionEvidence;
     }
 
-    /** find category terms currently used in the database by evidence */
+    /**
+     * find category terms currently used in the database by evidence
+     */
     @Override
     public Collection<CharacteristicValueObject> findEvidenceCategoryTerms() {
 
         Collection<CharacteristicValueObject> mgedCategory = new TreeSet<CharacteristicValueObject>();
 
-        String queryString = "SELECT distinct CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION "
-                + "join INVESTIGATION on PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID "
-                + "join CHARACTERISTIC on CHARACTERISTIC.INVESTIGATION_FK= INVESTIGATION.ID";
+        String queryString = "SELECT DISTINCT CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION "
+                + "JOIN INVESTIGATION ON PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID "
+                + "JOIN CHARACTERISTIC ON CHARACTERISTIC.INVESTIGATION_FK= INVESTIGATION.ID";
         org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -141,16 +124,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    /** return the list of the owners that have evidence in the system */
-    public Collection<String> findEvidenceOwners() {
+    /** return the list of the owners that have evidence in the system */ public Collection<String> findEvidenceOwners() {
 
         Set<String> owners = new HashSet<String>();
 
         // FIXME only shows owner who is a user, not a grantedauthority. That might be okay.
-        String sqlQuery = "select distinct sid.PRINCIPAL from ACLOBJECTIDENTITY aoi join ACLENTRY ace on ace.OBJECTIDENTITY_FK = "
-                + "aoi.ID join ACLSID sid on sid.ID = aoi.OWNER_SID_FK where aoi.OBJECT_CLASS "
-                + "in  "
-                + DISCRIMINATOR_CLAUSE;
+        String sqlQuery =
+                "SELECT DISTINCT sid.PRINCIPAL FROM ACLOBJECTIDENTITY aoi JOIN ACLENTRY ace ON ace.OBJECTIDENTITY_FK = "
+                        + "aoi.ID JOIN ACLSID sid ON sid.ID = aoi.OWNER_SID_FK WHERE aoi.OBJECT_CLASS " + "IN  "
+                        + DISCRIMINATOR_CLAUSE;
 
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
 
@@ -164,7 +146,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return owners;
     }
 
-    /** loads all evidences from a specific external database */
+    /**
+     * loads all evidences from a specific external database
+     */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
             Integer limit ) {
@@ -176,29 +160,31 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         } else {
             tpl.setMaxResults( 10000 );
         }
-        return tpl
-                .findByNamedParam(
-                        "select p from PhenotypeAssociation as p fetch all properties  join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
-                        "name", externalDatabaseName );
+        return tpl.findByNamedParam(
+                "select p from PhenotypeAssociation as p fetch all properties  join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
+                "name", externalDatabaseName );
 
     }
 
-    /** find all evidence that doesn't come from an external course */
+    /**
+     * find all evidence that doesn't come from an external course
+     */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
 
-        return this.getHibernateTemplate().find(
-                "select p from PhenotypeAssociation as p fetch all properties where p.evidenceSource is null" );
+        return this.getHibernateTemplate()
+                .find( "select p from PhenotypeAssociation as p fetch all properties where p.evidenceSource is null" );
 
     }
 
-    /** Gets all External Databases that are used with evidence */
+    /**
+     * Gets all External Databases that are used with evidence
+     */
     @Override
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence() {
 
-        Collection<ExternalDatabase> externalDatabasesNames = this.getHibernateTemplate().find(
-                "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociation as p" );
-        return externalDatabasesNames;
+        return ( Collection<ExternalDatabase> ) this.getHibernateTemplate()
+                .find( "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociation as p" );
     }
 
     /*
@@ -209,7 +195,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * model.OntologyTerm, ubic.gemma.model.genome.Taxon, boolean)
      */
     @Override
-    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon, boolean includeIEA ) {
+    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon,
+            boolean includeIEA ) {
 
         Collection<OntologyTerm> children = term.getChildren( false );
         Map<String, OntologyTerm> uris = new HashMap<>();
@@ -236,7 +223,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             Object[] oa = ( Object[] ) o;
             Gene g = ( Gene ) oa[0];
 
-            if ( !taxon.equals( g.getTaxon().getId() ) ) continue;
+            if ( !taxon.equals( g.getTaxon().getId() ) )
+                continue;
 
             String uri = ( String ) oa[1];
             GOEvidenceCode ev = ( GOEvidenceCode ) oa[2];
@@ -270,7 +258,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * <li>3- user logged in only showing what he has read access - public, shared + owned
      * <li>4- user logged in only showing what he has write access - owned.
      * </ul>
-     * 
+     *
      * @see ubic.gemma.model.association.phenotype.PhenotypeAssociationDao#findGeneWithPhenotypes
      */
     @Override
@@ -312,16 +300,21 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
+    /**
+     * find all PhenotypeAssociation for a specific gene id
+     */
     @Override
-    /** find all PhenotypeAssociation for a specific gene id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId ) {
 
-        return this.getHibernateTemplate().find(
-                "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id=" + geneId );
+        return this.getHibernateTemplate()
+                .find( "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id="
+                        + geneId );
     }
 
+    /**
+     * find all PhenotypeAssociation for a specific gene id and external Databases ids
+     */
     @Override
-    /** find all PhenotypeAssociation for a specific gene id and external Databases ids */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
             Collection<Long> externalDatabaseIds ) {
 
@@ -350,8 +343,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
             if ( !excludeManualCuration ) {
                 // get all manual curated evidence (the ones with no external source)
-                manualCuration = this.getHibernateTemplate().find(
-                        "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id="
+                manualCuration = this.getHibernateTemplate()
+                        .find( "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id="
                                 + geneId + "and p.evidenceSource is null" );
             }
 
@@ -361,8 +354,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             }
         }
 
-        evidenceWithSource = this.getHibernateTemplate().find(
-                "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id=" + geneId
+        evidenceWithSource = this.getHibernateTemplate()
+                .find( "select distinct p from PhenotypeAssociation as p fetch all properties where p.gene.id=" + geneId
                         + findByExternalDatabase );
 
         evidenceWithSource.addAll( manualCuration );
@@ -370,8 +363,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return evidenceWithSource;
     }
 
+    /**
+     * find all PhenotypeAssociation for a specific NCBI id
+     */
     @Override
-    /** find all PhenotypeAssociation for a specific NCBI id */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
 
         return this.getHibernateTemplate().findByNamedParam(
@@ -380,21 +375,24 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     }
 
+    /**
+     * find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
+     */
     @Override
-    /** find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype ) {
+    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI,
+            Set<String> phenotype ) {
 
-        Collection<PhenotypeAssociation> phenotypeAssociation = this.getHibernateTemplate().findByNamedParam(
+        return ( Collection<PhenotypeAssociation> ) this.getHibernateTemplate().findByNamedParam(
                 "select p from PhenotypeAssociation as p fetch all properties join p.phenotypes as phe join p.gene as g "
                         + "where phe.valueUri in (:p) and g.ncbiGeneId=:n", new String[] { "p", "n" },
                 new Object[] { phenotype, geneNCBI } );
 
-        return phenotypeAssociation;
-
     }
 
+    /**
+     * find PhenotypeAssociation satisfying the given filters: paIds, taxonId and limit
+     */
     @Override
-    /** find PhenotypeAssociation satisfying the given filters: paIds, taxonId and limit */
     public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> paIds ) {
 
         if ( paIds == null || paIds.isEmpty() ) {
@@ -408,13 +406,15 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return q.list();
     }
 
+    /**
+     * find PhenotypeAssociations associated with a BibliographicReference
+     */
     @Override
-    /** find PhenotypeAssociations associated with a BibliographicReference */
     public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select phe from PhenotypeAssociation as phe join phe.phenotypeAssociationPublications as pub "
-                        + "join pub.citation as c join c.pubAccession as acc where acc.accession=:pubMedID",
-                "pubMedID", pubMedID );
+                        + "join pub.citation as c join c.pubAccession as acc where acc.accession=:pubMedID", "pubMedID",
+                pubMedID );
     }
 
     @Override
@@ -471,7 +471,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return ids;
     }
 
-    /** find all private phenotypes associated with genes on a specific taxon and containing the valuesUri */
+    /**
+     * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
+     */
     @Override
     public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
@@ -486,8 +488,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += " and ";
         }
         sqlQuery += addGroupAndUserNameRestriction( showOnlyEditable, false );
-        sqlQuery += "and phen.ID not in "
-                + "(select phen.ID from CHARACTERISTIC as charac "
+        sqlQuery += "and phen.ID not in " + "(select phen.ID from CHARACTERISTIC as charac "
                 + " inner join PHENOTYPE_ASSOCIATION as phen on charac.PHENOTYPE_ASSOCIATION_FK = phen.ID "
                 + "inner join CHROMOSOME_FEATURE as gene on gene.ID = phen.GENE_FK "
                 + "inner join TAXON tax on tax.ID = gene.TAXON_FK "
@@ -575,7 +576,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     @Override
     public Collection<PhenotypeAssociation> load( Collection<Long> ids ) {
-        if ( ids.isEmpty() ) return new HashSet<>();
+        if ( ids.isEmpty() )
+            return new HashSet<>();
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from PhenotypeAssociation fetch all properties where id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
@@ -617,7 +619,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return phenotypeValueObjects;
     }
 
-    /** load all valueURI of Phenotype in the database */
+    /**
+     * load all valueURI of Phenotype in the database
+     */
     // TODO : both method could be the same and return PhenotypeValueObject, returning a set of uri makes the
     // manipulation easy when comparing it to other String uri
     @Override
@@ -640,15 +644,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         if ( maxResults != null ) {
             tpl.setMaxResults( maxResults.intValue() );
         }
-        List<DifferentialExpressionEvidence> differentialExpressionEvidenceCollection = tpl
+
+        return ( List<DifferentialExpressionEvidence> ) tpl
                 .find( "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
                         + "in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" );
-
-        return differentialExpressionEvidenceCollection;
     }
 
-    /** find statistics all evidences */
+    /**
+     * find statistics all evidences
+     */
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String downloadFile ) {
 
@@ -659,21 +664,18 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p" )
                 .iterator().next();
 
-        Long numPhenotypes = ( Long ) this
-                .getHibernateTemplate()
+        Long numPhenotypes = ( Long ) this.getHibernateTemplate()
                 .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c" )
                 .iterator().next();
 
-        Collection<String> publications = this.getHibernateTemplate().find(
-                "select distinct phe.citation.pubAccession.accession from PhenotypeAssociation as p"
+        Collection<String> publications = this.getHibernateTemplate()
+                .find( "select distinct phe.citation.pubAccession.accession from PhenotypeAssociation as p"
                         + " join p.phenotypeAssociationPublications as phe" );
 
         Long numPublications = new Long( publications.size() );
 
-        ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                "Total (unique)", "", "", numEvidence, numGenes, numPhenotypes, numPublications, null, downloadFile );
-
-        return externalDatabaseStatisticsValueObject;
+        return new ExternalDatabaseStatisticsValueObject( "Total (unique)", "", "", numEvidence, numGenes,
+                numPhenotypes, numPublications, null, downloadFile );
     }
 
     @Override
@@ -681,8 +683,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         HashMap<String, ExternalDatabaseStatisticsValueObject> externalDatabasesStatistics = new HashMap<String, ExternalDatabaseStatisticsValueObject>();
 
-        List<Object[]> numEvidence = this.getHibernateTemplate().find(
-                "select p.evidenceSource.externalDatabase, count (*), p.status.lastUpdateDate from PhenotypeAssociation "
+        List<Object[]> numEvidence = this.getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase, count (*), p.status.lastUpdateDate from PhenotypeAssociation "
                         + "as p group by p.evidenceSource.externalDatabase order by p.status.lastUpdateDate desc" );
 
         for ( Object[] o : numEvidence ) {
@@ -693,16 +695,16 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             ExternalDatabaseStatisticsValueObject externalDatabaseStatistics = new ExternalDatabaseStatisticsValueObject();
             externalDatabaseStatistics.setDescription( externalDatabase.getDescription() );
             externalDatabaseStatistics.setName( externalDatabase.getName() );
-            externalDatabaseStatistics.setPathToDownloadFile( downloadPath
-                    + externalDatabase.getName().replaceAll( " ", "" ) + ".tsv" );
+            externalDatabaseStatistics
+                    .setPathToDownloadFile( downloadPath + externalDatabase.getName().replaceAll( " ", "" ) + ".tsv" );
             externalDatabaseStatistics.setLastUpdateDate( ( Date ) o[2] );
             externalDatabaseStatistics.setWebUri( externalDatabase.getWebUri() );
             externalDatabaseStatistics.setNumEvidence( count );
             externalDatabasesStatistics.put( externalDatabase.getName(), externalDatabaseStatistics );
         }
 
-        List<Object[]> numGenes = this.getHibernateTemplate().find(
-                "select p.evidenceSource.externalDatabase.name, count (distinct g) from GeneImpl as g join g.phenotypeAssociations "
+        List<Object[]> numGenes = this.getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct g) from GeneImpl as g join g.phenotypeAssociations "
                         + "as p group by p.evidenceSource.externalDatabase" );
 
         for ( Object[] o : numGenes ) {
@@ -710,8 +712,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             externalDatabasesStatistics.get( externalDatabaseName ).setNumGenes( ( Long ) o[1] );
         }
 
-        List<Object[]> numPhenotypes = this.getHibernateTemplate().find(
-                "select p.evidenceSource.externalDatabase.name, count (distinct c.valueUri) "
+        List<Object[]> numPhenotypes = this.getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct c.valueUri) "
                         + "from PhenotypeAssociation as p join p.phenotypes as c "
                         + "group by p.evidenceSource.externalDatabase" );
 
@@ -720,8 +722,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             externalDatabasesStatistics.get( externalDatabaseName ).setNumPhenotypes( ( Long ) o[1] );
         }
 
-        List<Object[]> numPublications = this.getHibernateTemplate().find(
-                "select p.evidenceSource.externalDatabase.name, count (distinct pub.citation.pubAccession.accession) "
+        List<Object[]> numPublications = this.getHibernateTemplate()
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct pub.citation.pubAccession.accession) "
                         + "from PhenotypeAssociation as p join p.phenotypeAssociationPublications as pub"
                         + " group by p.evidenceSource.externalDatabase" );
 
@@ -733,7 +735,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return externalDatabasesStatistics.values();
     }
 
-    /** find statistics for manual curation (numGene, numPhenotypes, etc.) */
+    /**
+     * find statistics for manual curation (numGene, numPhenotypes, etc.)
+     */
     @Override
     public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String downloadFile ) {
 
@@ -741,13 +745,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .find( "select count (p) from PhenotypeAssociation as p where p.evidenceSource is null" ).iterator()
                 .next();
 
-        Long numGenes = ( Long ) this
-                .getHibernateTemplate()
+        Long numGenes = ( Long ) this.getHibernateTemplate()
                 .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource is null" )
                 .iterator().next();
 
-        Long numPhenotypes = ( Long ) this
-                .getHibernateTemplate()
+        Long numPhenotypes = ( Long ) this.getHibernateTemplate()
                 .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c where p.evidenceSource is null" )
                 .iterator().next();
 
@@ -763,31 +765,25 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         }
 
         // find all secondary pubmed for ExperimentalEvidence
-        Collection<String> publications = this.getHibernateTemplate().find(
-                "select distinct pub.citation.pubAccession.accession from PhenotypeAssociation as p "
+        Collection<String> publications = this.getHibernateTemplate()
+                .find( "select distinct pub.citation.pubAccession.accession from PhenotypeAssociation as p "
                         + "join p.phenotypeAssociationPublications as pub where p.evidenceSource is null" );
 
         Long numPublications = new Long( publications.size() );
 
-        ExternalDatabaseStatisticsValueObject externalDatabaseStatisticsValueObject = new ExternalDatabaseStatisticsValueObject(
-                "Manual curation", "Evidence curated manually through literature review", "", numEvidence, numGenes,
-                numPhenotypes, numPublications, lastUpdatedDate, downloadFile );
-
-        return externalDatabaseStatisticsValueObject;
+        return new ExternalDatabaseStatisticsValueObject( "Manual curation",
+                "Evidence curated manually through literature review", "", numEvidence, numGenes, numPhenotypes,
+                numPublications, lastUpdatedDate, downloadFile );
     }
 
     @Override
-    /** remove a PhenotypeAssociationPublication **/
-    public void removePhenotypePublication( Long phenotypeAssociationPublicationId ) {
+    /** remove a PhenotypeAssociationPublication **/ public void removePhenotypePublication(
+            Long phenotypeAssociationPublicationId ) {
         this.getHibernateTemplate().bulkUpdate( "delete from PhenotypeAssociationPublicationImpl p where p.id = ?",
                 phenotypeAssociationPublicationId );
     }
 
-    /**
-     * @param keyWord
-     * @param externalDatabaseIds
-     * @return
-     */
+
     private String addExternalDatabaseQuery( String keyWord, Collection<Long> externalDatabaseIds ) {
 
         String externalDatabaseSqlQuery = "";
@@ -872,11 +868,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return " and phen.EVIDENCE_CODE != 'IEA'";
     }
 
-    /**
-     * @param keyWord
-     * @param taxon
-     * @return
-     */
+
     private String addTaxonToQuery( String keyWord, Taxon taxon ) {
         String taxonSqlQuery = "";
         if ( taxon != null && taxon.getId() != null && !taxon.getId().equals( 0 ) ) {
@@ -887,10 +879,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /**
      * Add IN clause for contstraint on valueuris.
-     * 
-     * @param keyWord either 'and' or '' depending on whether this is the first clause...
-     * @param valuesUri
-     * @return
+     *
+     * @param keyWord   either 'and' or '' depending on whether this is the first clause...
      */
     private String addValuesUriToQuery( String keyWord, Set<String> valuesUris ) {
 
@@ -904,9 +894,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /**
      * basic sql command to deal with security; adds the where clause; delcare aliases charac, phen and gene; ace, aoi,
      * sid
-     * 
-     * @param force ??
-     * @param addStatus ??
+     *
      */
     private String getPhenotypesGenesAssociationsBeginQuery( boolean force, boolean addStatus ) {
         String queryString = "";
@@ -936,8 +924,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /**
      * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
-     * 
-     * @return
+     *
      */
     private Map<String, Set<Integer>> populateGenesAssociations( SQLQuery queryObject ) {
         Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
@@ -961,9 +948,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /**
      * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
-     * 
-     * @param queryObject
-     * @return
+     *
      */
     private Collection<GeneEvidenceValueObject> populateGenesWithPhenotypes( SQLQuery queryObject ) {
         StopWatch sw = new StopWatch();

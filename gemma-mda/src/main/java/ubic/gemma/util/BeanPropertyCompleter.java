@@ -30,7 +30,6 @@ import ubic.gemma.model.common.AbstractAuditable;
  * Class to help complete beans based on other beans
  * 
  * @author pavlidis
- * @version $Id$
  */
 public class BeanPropertyCompleter {
 
@@ -38,9 +37,7 @@ public class BeanPropertyCompleter {
      * Given a source Object and a source one of the same type, fill in any missing attributes of the target object with
      * ones from the source object. Any non-null values in the target are NOT overwritten by corresponding values in the
      * source.
-     * 
-     * @param targetObject
-     * @param sourceObject
+     *
      */
     public static void complete( Object targetObject, Object sourceObject ) {
         complete( targetObject, sourceObject, false );
@@ -56,21 +53,16 @@ public class BeanPropertyCompleter {
      * will not be changed, even if the sourceObject contains new members in the collection.
      * <p>
      * Note that Id, and AuditTrails on Auditables are NEVER clobbered by this method.
-     * 
-     * @param targetObject
-     * @param sourceObject
-     * @param update
+     *
      */
-    public static void complete( Object targetObject, Object sourceObject, boolean update ) {
+    private static void complete( Object targetObject, Object sourceObject, boolean update ) {
 
         if ( targetObject == null || sourceObject == null )
             throw new IllegalArgumentException( "Args must be non-null" );
         if ( targetObject.getClass() != sourceObject.getClass() )
             throw new IllegalArgumentException( "Args must be of the same type" );
         PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors( targetObject );
-        for ( int i = 0; i < props.length; i++ ) {
-            PropertyDescriptor descriptor = props[i];
-
+        for ( PropertyDescriptor descriptor : props ) {
             if ( targetObject instanceof AbstractAuditable && descriptor.getName().equals( "auditTrail" ) ) {
                 continue;
             }
@@ -80,20 +72,18 @@ public class BeanPropertyCompleter {
             }
 
             Method setter = descriptor.getWriteMethod();
-            if ( setter == null ) continue;
+            if ( setter == null )
+                continue;
             Method getter = descriptor.getReadMethod();
             try {
-                Object sourceValue = getter.invoke( sourceObject, new Object[] {} );
-                if ( sourceValue == null ) continue;
-                Object persistedValue = getter.invoke( targetObject, new Object[] {} );
+                Object sourceValue = getter.invoke( sourceObject );
+                if ( sourceValue == null )
+                    continue;
+                Object persistedValue = getter.invoke( targetObject );
                 if ( persistedValue == null || update ) {
-                    setter.invoke( targetObject, new Object[] { sourceValue } );
+                    setter.invoke( targetObject, sourceValue );
                 }
-            } catch ( IllegalArgumentException e ) {
-                throw new RuntimeException( e );
-            } catch ( IllegalAccessException e ) {
-                throw new RuntimeException( e );
-            } catch ( InvocationTargetException e ) {
+            } catch ( IllegalArgumentException | IllegalAccessException | InvocationTargetException e ) {
                 throw new RuntimeException( e );
             }
         }

@@ -18,24 +18,24 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.lang.reflect.Field;
-import java.util.Collection;
-
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
-
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
+import java.lang.reflect.Field;
+import java.util.Collection;
+
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
  * @author pavlidis
+ * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao
  */
 @Repository
 public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrailDao {
@@ -46,7 +46,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
     }
 
     @Override
-    public AuditEvent addEvent( final AbstractAuditable auditable, final AuditEvent auditEvent ) {
+    public AuditEvent addEvent( final Auditable auditable, final AuditEvent auditEvent ) {
 
         if ( auditEvent.getAction() == null ) {
             throw new IllegalArgumentException( "auditEvent was missing a required field" );
@@ -73,7 +73,8 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
              * Note: this step should be done by the AuditAdvice when the entity was first created, so this is just
              * defensive.
              */
-            logger.warn( "AuditTrail was null. It should have been initialized by the AuditAdvice when the entity was first created." );
+            logger.warn(
+                    "AuditTrail was null. It should have been initialized by the AuditAdvice when the entity was first created." );
             trail = AuditTrail.Factory.newInstance();
             auditable.setAuditTrail( trail );
         } else {
@@ -99,6 +100,11 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
     }
 
     @Override
+    public Collection<? extends AuditTrail> create( Collection<? extends AuditTrail> entities ) {
+        throw new NotYetImplementedException( "This method has not yet been implemented" );
+    }
+
+    @Override
     public AuditTrail create( final AuditTrail auditTrail ) {
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.create - 'auditTrail' can not be null" );
@@ -107,26 +113,22 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         return auditTrail;
     }
 
-    @Override
-    public Collection<? extends AuditTrail> create( final Collection<? extends AuditTrail> entities ) {
-        return create( entities );
-    }
-
     /**
      * FIXME this returns a list, but there is no particular ordering enforced?
-     *
      */
     @Override
-    public Collection<AbstractAuditable> getEntitiesWithEvent( Class<? extends AbstractAuditable> entityClass,
+    public Collection<Auditable> getEntitiesWithEvent( Class<Auditable> entityClass,
             Class<? extends AuditEventType> auditEventClass ) {
 
         String entityCanonicalName = entityClass.getName();
-        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ? entityClass.getName() : entityClass.getName()
-                + "Impl";
+        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ?
+                entityClass.getName() :
+                entityClass.getName() + "Impl";
 
         String eventCanonicalName = auditEventClass.getName();
-        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ? auditEventClass.getName() : auditEventClass
-                .getName() + "Impl";
+        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ?
+                auditEventClass.getName() :
+                auditEventClass.getName() + "Impl";
 
         String queryString = "select distinct auditableEntity from " + entityCanonicalName + " auditableEntity "
                 + " inner join auditableEntity.auditTrail trail inner join trail.events auditEvents "
@@ -209,7 +211,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
     private String getPrincipalName() {
         Object obj = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
-        String username = null;
+        String username;
         if ( obj instanceof UserDetails ) {
             username = ( ( UserDetails ) obj ).getUsername();
         } else {

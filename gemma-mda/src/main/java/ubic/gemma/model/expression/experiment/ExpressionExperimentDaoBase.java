@@ -163,7 +163,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     @SuppressWarnings("unchecked")
-    public Collection<ExpressionExperiment> findByInvestigator( final String queryString, final Contact investigator ) {
+    private Collection<ExpressionExperiment> findByInvestigator( final String queryString, final Contact investigator ) {
         List<String> argNames = new ArrayList<>();
         List<Object> args = new ArrayList<>();
         args.add( investigator );
@@ -487,7 +487,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
 
-    public void toExpressionExperimentValueObject( ExpressionExperiment source,
+    private void toExpressionExperimentValueObject( ExpressionExperiment source,
             ExpressionExperimentValueObject target ) {
         target.setId( source.getId() );
         target.setName( source.getName() );

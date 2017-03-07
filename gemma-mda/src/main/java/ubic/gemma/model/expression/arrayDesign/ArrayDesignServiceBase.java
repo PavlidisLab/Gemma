@@ -39,7 +39,7 @@ import java.util.Collection;
  */
 public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
-    private static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
+    protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
     @Autowired
     private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
@@ -192,7 +192,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     /**
      * @return the auditEventDao
      */
-    public AuditEventDao getAuditEventDao() {
+    AuditEventDao getAuditEventDao() {
         return auditEventDao;
     }
 
