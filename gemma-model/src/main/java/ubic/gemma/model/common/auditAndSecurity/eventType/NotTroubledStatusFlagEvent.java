@@ -26,8 +26,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * @author Paul
  */
-public class NotTroubledStatusFlagEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent {
+public class NotTroubledStatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.

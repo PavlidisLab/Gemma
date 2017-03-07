@@ -36,4 +36,18 @@ public class StatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.ev
     public StatusFlagEvent() {
     }
 
+    /**
+     * Constructs new instances of {@link StatusFlagEvent}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of
+         * {@link StatusFlagEvent}.
+         */
+        public static StatusFlagEvent newInstance() {
+            return new StatusFlagEvent();
+        }
+
+    }
+
 }
