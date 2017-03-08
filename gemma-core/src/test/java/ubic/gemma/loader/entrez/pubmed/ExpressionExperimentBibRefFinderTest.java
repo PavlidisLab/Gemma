@@ -31,6 +31,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 
 /**
  * @author pavlidis
@@ -43,7 +44,7 @@ public class ExpressionExperimentBibRefFinderTest {
     @Test
     public void testLocatePrimaryReference() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GEO" );
@@ -70,7 +71,7 @@ public class ExpressionExperimentBibRefFinderTest {
     @Test
     public void testLocatePrimaryReferenceInvalidGSE() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GEO" );

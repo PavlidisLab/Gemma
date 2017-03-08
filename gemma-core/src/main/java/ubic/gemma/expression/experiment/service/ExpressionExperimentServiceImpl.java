@@ -18,22 +18,12 @@
  */
 package ubic.gemma.expression.experiment.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
+import gemma.gsec.SecurityService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import gemma.gsec.SecurityService;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
@@ -48,18 +38,13 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisDao;
-import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -69,47 +54,32 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorDao;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueDao;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 
+import java.util.*;
+
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
  * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService
  */
+@SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Service
 @Transactional
 public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
+    private static final Log log = LogFactory.getLog( ExpressionExperimentServiceImpl.class.getName() );
 
     @Autowired
     private AuditEventDao auditEventDao;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
@@ -134,8 +104,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private RawExpressionDataVectorDao rawExpressionDataVectorDao;
-
-    private Log log = LogFactory.getLog( this.getClass() );
 
     @Autowired
     private OntologyService ontologyService;
@@ -164,12 +132,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Autowired
     private RawExpressionDataVectorDao vectorDao;
 
-    /**
-     * @param ee
-     * @param ad
-     * @param newVectors
-     * @return
-     */
     @Override
     @Transactional
     public ExpressionExperiment addVectors( ExpressionExperiment ee, ArrayDesign ad,
@@ -252,24 +214,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        return this.expressionExperimentDao.browseSpecificIds( start, limit, ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
-            boolean descending, Collection<Long> ids ) {
-        return this.expressionExperimentDao.browseSpecificIds( start, limit, orderField, descending, ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService#count()
-     */
-    @Override
-    @Transactional(readOnly = true)
     public Integer count() {
         return this.expressionExperimentDao.count();
     }
@@ -324,8 +268,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     /**
      * returns ids of search results
-     * 
-     * @param searchString
+     *
      * @return collection of ids or an empty collection
      */
     @Override
@@ -339,7 +282,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
         Collection<SearchResult> searchResults = searchResultsMap.get( ExpressionExperiment.class );
 
-        Collection<Long> ids = new ArrayList<Long>( searchResults.size() );
+        Collection<Long> ids = new ArrayList<>( searchResults.size() );
 
         for ( SearchResult s : searchResults ) {
             ids.add( s.getId() );
@@ -506,12 +449,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.findByShortName( shortName );
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
-        return this.expressionExperimentDao.findByTaxon( taxon, limit );
-    }
-
     /**
      * @see ExpressionExperimentService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
@@ -519,18 +456,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         return this.expressionExperimentDao.findByTaxon( taxon );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByUpdatedLimit(java.util.Collection,
-     * java.lang.Integer)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
-        return this.expressionExperimentDao.findByUpdatedLimit( ids, limit );
     }
 
     @Override
@@ -564,7 +489,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
         ExpressionExperiment expressionExperiment = load( eeId );
-        Collection<AnnotationValueObject> annotations = new ArrayList<AnnotationValueObject>();
+        Collection<AnnotationValueObject> annotations = new ArrayList<>();
         for ( Characteristic c : expressionExperiment.getCharacteristics() ) {
             AnnotationValueObject annotationValue = new AnnotationValueObject();
             annotationValue.setId( c.getId() );
@@ -575,10 +500,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                 VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 annotationValue.setClassUri( vc.getCategoryUri() );
                 String className = getLabelFromUri( vc.getCategoryUri() );
-                if ( className != null ) annotationValue.setClassName( className );
+                if ( className != null )
+                    annotationValue.setClassName( className );
                 annotationValue.setTermUri( vc.getValueUri() );
                 String termName = getLabelFromUri( vc.getValueUri() );
-                if ( termName != null ) annotationValue.setTermName( termName );
+                if ( termName != null )
+                    annotationValue.setTermName( termName );
                 annotationValue.setObjectClass( VocabCharacteristic.class.getSimpleName() );
             } else {
                 annotationValue.setObjectClass( Characteristic.class.getSimpleName() );
@@ -588,25 +515,18 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return annotations;
     }
 
-    /**
-     * @see ExpressionExperimentService#getArrayDesignsUsed(ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> getArrayDesignsUsed( final BioAssaySet expressionExperiment ) {
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
     }
 
-    /**
-     * @return the auditEventDao
-     */
     @Transactional(readOnly = true)
-    public AuditEventDao getAuditEventDao() {
+    private AuditEventDao getAuditEventDao() {
         return auditEventDao;
     }
 
     /**
-     * @param ee
      * @return String msg describing confound if it is present, null otherwise
      */
     @Override
@@ -623,20 +543,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         for ( BatchConfoundValueObject c : confounds ) {
             if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
                 String factorName = c.getEf().getName();
-                result = "Factor: " + factorName + " may be confounded with batches; p="
-                        + String.format( "%.2g", c.getP() ) + "<br />";
+                result = "Factor: " + factorName + " may be confounded with batches; p=" + String
+                        .format( "%.2g", c.getP() ) + "<br />";
             }
         }
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentService#getBatchEffect(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public BatchEffectDetails getBatchEffect( ExpressionExperiment ee ) {
@@ -656,7 +569,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             if ( BatchInfoPopulationServiceImpl.isBatchFactor( ef ) ) {
                 details.setHasBatchInformation( true );
                 SVDValueObject svd = svdService.getSvdFactorAnalysis( ee.getId() );
-                if ( svd == null ) break;
+                if ( svd == null )
+                    break;
                 double minp = 1.0;
 
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
@@ -677,12 +591,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return details;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#getBioAssayDimensions(ubic.gemma.model.
-     * expression .experiment.ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
@@ -704,9 +612,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getBioMaterialCount( expressionExperiment );
     }
 
-    /**
-     * @see ExpressionExperimentService#getDesignElementDataVectorCountById(long)
-     */
     @Override
     @Transactional(readOnly = true)
     public Integer getDesignElementDataVectorCountById( final Long id ) {
@@ -714,8 +619,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection,
-     *      ubic.gemma.model.common.quantitationtype.QuantitationType)
+     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     @Override
     @Transactional(readOnly = true)
@@ -735,66 +639,26 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getDesignElementDataVectors( quantitationTypes );
     }
 
-    /**
-     * @return the differentialExpressionAnalysisDao
-     */
-    public DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
+    private DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
         return differentialExpressionAnalysisDao;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> getExperimentsWithBatchEffect() {
-        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService
-                .getEntitiesWithEvent( ExpressionExperiment.class, BatchInformationFetchingEvent.class ) );
-        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
-        for ( ExpressionExperiment ee : entities ) {
-            if ( this.getBatchEffect( ee ) == null ) {
-                toRemove.add( ee );
-            }
-        }
-        entities.removeAll( toRemove );
-        return entities;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
         return this.expressionExperimentDao.getExperimentsWithOutliers();
-
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> getExperimentsWithEvent( Class<? extends AuditEventType> auditEventClass ) {
-        List<ExpressionExperiment> entities = new ArrayList<ExpressionExperiment>();
-        entities.addAll( ( Collection<? extends ExpressionExperiment> ) this.auditTrailService
-                .getEntitiesWithEvent( ExpressionExperiment.class, auditEventClass ) );
-        return entities;
-    }
-
-    /**
-     * @return the expressionExperimentSetDao
-     */
-    public ExpressionExperimentSetDao getExpressionExperimentSetDao() {
+    private ExpressionExperimentSetDao getExpressionExperimentSetDao() {
         return expressionExperimentSetDao;
     }
 
-    /**
-     * @see ExpressionExperimentService#getLastArrayDesignUpdate(Collection, java.lang.Class)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
         return this.expressionExperimentDao.getLastArrayDesignUpdate( expressionExperiments );
     }
 
-    /**
-     * @see ExpressionExperimentService#getLastArrayDesignUpdate(ExpressionExperiment, java.lang.Class)
-     */
     @Override
     @Transactional(readOnly = true)
     public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
@@ -829,59 +693,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getOustandingTroubleEvent(Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public AuditEvent getOustandingTroubleEvent( final Long id ) {
-        ExpressionExperiment ee = this.load( id );
-
-        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao()
-                .getLastOutstandingTroubleEvents( Collections.singleton( ee ) );
-
-        for ( Auditable a : directEvents.keySet() ) {
-            return directEvents.get( a );
-        }
-
-        return null;
-    }
-
-    /**
-     * @see ExpressionExperimentService#getLastTroubleEvent(Collection)
-     */
-    @Deprecated
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Long, AuditEvent> getLastTroubleEvent( final Collection<Long> ids ) {
-        return getLastEvent( this.loadMultiple( ids ), TroubleStatusFlagEvent.Factory.newInstance() );
-    }
-
-    /**
-     * @return
-     */
-    private Map<Long, AuditEvent> getLastTroubleEvents() {
-        return getLastEvent( this.loadAll(), TroubleStatusFlagEvent.Factory.newInstance() );
-    }
-
-    /**
-     * @see ExpressionExperimentService#getLastValidationEvent(Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Map<Long, AuditEvent> getLastValidationEvent( final Collection<Long> ids ) {
-        return getLastEvent( this.loadMultiple( ids ), ValidatedFlagEvent.Factory.newInstance() );
-    }
-
-    /**
-     * @param ids
-     * @param type
-     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
+     * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
+     * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
     private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
             last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
@@ -923,7 +740,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
-        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<QuantitationType>();
+        Collection<QuantitationType> preferredQuantitationTypes = new HashSet<>();
 
         Collection<QuantitationType> quantitationTypes = this.getQuantitationTypes( ee );
 
@@ -935,16 +752,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return preferredQuantitationTypes;
     }
 
-    public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
+    private PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
         return principalComponentAnalysisDao;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.expression.experiment.ExpressionExperimentService#getProcessedDataVectors(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
@@ -970,8 +781,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     @Transactional(readOnly = true)
@@ -980,7 +790,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
-    public SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
+    private SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
         return sampleCoexpressionAnalysisDao;
     }
 
@@ -994,10 +804,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getSampleRemovalEvents( expressionExperiments );
     }
 
-    /**
-     * @see ExpressionExperimentService#getSamplingOfVectors(ubic.gemma.model.common.quantitationtype.QuantitationType,
-     *      java.lang.Integer)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<DesignElementDataVector> getSamplingOfVectors( final QuantitationType quantitationType,
@@ -1014,9 +820,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getSubSets( expressionExperiment );
     }
 
-    /**
-     * @see ExpressionExperimentService#getTaxon(java.lang.Long)
-     */
+
     @Override
     @Transactional(readOnly = true)
     public Taxon getTaxon( final BioAssaySet bioAssaySet ) {
@@ -1027,18 +831,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public <T extends BioAssaySet> Map<T, Taxon> getTaxa( Collection<T> bioAssaySets ) {
         return this.expressionExperimentDao.getTaxa( bioAssaySets );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getTroubled( Collection<Long> ids ) {
-        return this.expressionExperimentDao.getTroubled( ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Long> getUntroubled( Collection<Long> ids ) {
-        return this.expressionExperimentDao.getUntroubled( ids );
     }
 
     /**
@@ -1057,7 +849,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAll() {
-        return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.loadAll();
+        return this.expressionExperimentDao.loadAll();
     }
 
     @Override
@@ -1087,12 +879,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment loadBySubsetId( Long id ) {
-        return this.expressionExperimentSubSetService.load( id ).getSourceExperiment();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadLackingFactors() {
         return this.expressionExperimentDao.loadLackingFactors();
     }
@@ -1110,43 +896,21 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadMultiple( final Collection<Long> ids ) {
-        return ( Collection<ExpressionExperiment> ) this.expressionExperimentDao.load( ids );
+        return this.expressionExperimentDao.load( ids );
     }
 
-    /*
-     * Note: implemented via SpringSecurity.
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMyExpressionExperiments()
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
         return loadAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadMySharedExpressionExperiments()
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadMySharedExpressionExperiments() {
         return loadAll();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadTroubled() {
-        Map<Long, AuditEvent> lastTroubleEvents = this.getLastTroubleEvents();
-        return this.loadMultiple( lastTroubleEvents.keySet() );
-    }
-
-    /*
-     * Note: implemented via SpringSecurity.
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadUserOwnedExpressionExperiments()
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments() {
@@ -1169,13 +933,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.loadValueObjects( ids, maintainOrder );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentService#loadValueObjectsOrdered(java.lang.String,
-     * boolean, java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<ExpressionExperimentValueObject> loadValueObjectsOrdered( String orderField, boolean descending,
@@ -1183,17 +940,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return new ArrayList<>( this.expressionExperimentDao.loadValueObjectsOrdered( orderField, descending, ids ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.expression.experiment.service.ExpressionExperimentService#removeData(ubic.gemma.model.expression.
-     * experiment.ExpressionExperiment, ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
     @Override
     @Transactional
     public int removeData( ExpressionExperiment ee, QuantitationType qt ) {
         ExpressionExperiment eeToUpdate = this.load( ee.getId() );
-        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> vecsToRemove = new ArrayList<>();
         for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
             if ( oldvec.getQuantitationType().equals( qt ) ) {
                 vecsToRemove.add( oldvec );
@@ -1210,13 +961,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return vecsToRemove.size();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentService#replaceVectors(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.util.Collection)
-     */
     @Override
     @Transactional
     public ExpressionExperiment replaceVectors( ExpressionExperiment ee, ArrayDesign ad,
@@ -1289,14 +1033,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         this.expressionExperimentDao.update( expressionExperiment );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleDelete(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
-    protected void handleDelete( ExpressionExperiment ee ) {
+    private void handleDelete( ExpressionExperiment ee ) {
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment cannot be null" );
@@ -1349,13 +1086,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         this.expressionExperimentDao.remove( ee );
     }
 
-    /**
-     * @param uri
-     * @return
-     */
     private String getLabelFromUri( String uri ) {
         OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null ) return resource.getLabel();
+        if ( resource != null )
+            return resource.getLabel();
 
         return null;
     }
@@ -1371,20 +1105,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         expressionExperimentDao.update( experiment );
         return factor;
     }
-
-    // @Override
-    // @Transactional
-    // public void addFactors( ExpressionExperiment ee, Collection<ExperimentalFactor> factors ) {
-    // ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
-    // for ( ExperimentalFactor ef : factors ) {
-    // ef.setSecurityOwner( experiment );
-    // ef.setExperimentalDesign( experiment.getExperimentalDesign() );
-    // experimentalFactorDao.create( ef );
-    // }
-    // experiment.getExperimentalDesign().getExperimentalFactors().addAll( factors );
-    // expressionExperimentDao.update( experiment );
-    // // FIXME this should return the factors, but I was having trouble with that.
-    // }
 
     @Override
     @Transactional
@@ -1404,24 +1124,5 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return fv;
 
     }
-
-    // @Override
-    // @Transactional
-    // public void addFactorValues( ExpressionExperiment ee, Collection<FactorValue> fvs ) {
-    // ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
-    // Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-    // for ( FactorValue fv : fvs ) {
-    // fv.setSecurityOwner( experiment );
-    // FactorValue pfv = this.factorValueDao.create( fv );
-    // for ( ExperimentalFactor ef : efs ) {
-    // if ( pfv.getExperimentalFactor().equals( ef ) ) {
-    // ef.getFactorValues().add( pfv );
-    // break;
-    // }
-    // }
-    // }
-    // expressionExperimentDao.update( experiment );
-    // // FIXME this should return the factorvalues, but I was having trouble with that.
-    // }
 
 }

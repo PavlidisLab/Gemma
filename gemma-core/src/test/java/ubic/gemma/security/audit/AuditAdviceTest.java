@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
@@ -55,6 +55,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -264,7 +265,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Test
     public void testSimpleAuditFindOrCreate() {
-        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+        ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ee = expressionExperimentService.findOrCreate( ee );
@@ -301,7 +302,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                     try {
                         for ( int j = 0; j < numExperimentsPerThread; j++ ) {
                             log.debug( "Starting experiment " + j );
-                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+                            ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
                             ee.setDescription( "From test" );
                             ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
@@ -364,7 +365,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
-    private void checkAuditTrail( Auditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {
+    private void checkAuditTrail( AbstractAuditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {
 
         AuditTrail auditTrail = c.getAuditTrail();
         assertNotNull( "No audit trail for " + c, auditTrail );

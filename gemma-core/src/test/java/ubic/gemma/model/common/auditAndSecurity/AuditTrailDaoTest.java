@@ -28,7 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -45,7 +45,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     @Autowired
     ArrayDesignService arrayDesignService;
 
-    Auditable auditable;
+    AbstractAuditable auditable;
     AuditTrail auditTrail;
     AuditEvent auditEvent0;
     AuditEvent auditEvent1;

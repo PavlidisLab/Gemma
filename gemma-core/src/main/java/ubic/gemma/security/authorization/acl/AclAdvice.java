@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.StatusImpl;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -54,7 +54,6 @@ import ubic.gemma.util.SystemArchitectureAspect;
  * changes to permissions will not work without modifying the source code. *
  * 
  * @author Paul
- * @version $Id$
  */
 @Component
 public class AclAdvice extends BaseAclAdvice {
@@ -69,7 +68,7 @@ public class AclAdvice extends BaseAclAdvice {
     @Override
     protected boolean canSkipAclCheck( Object object ) {
         return AuditTrail.class.isAssignableFrom( object.getClass() )
-                || StatusImpl.class.isAssignableFrom( object.getClass() );
+                || CurationDetails.class.isAssignableFrom( object.getClass() );
     }
 
     /*

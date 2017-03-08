@@ -64,6 +64,7 @@ import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -218,7 +219,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     public void testConstructExpressionDataDoubleMatrixWithGeoValues() {
         ByteArrayConverter bac = new ByteArrayConverter();
 
-        ee = ExpressionExperiment.Factory.newInstance();
+        ee = ExpressionExperimentImpl.Factory.newInstance();
 
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setName( "VALUE" );

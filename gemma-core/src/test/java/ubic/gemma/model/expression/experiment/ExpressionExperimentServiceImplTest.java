@@ -78,7 +78,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         nobody = Person.Factory.newInstance();
         admin = Person.Factory.newInstance();
 
-        ee = ExpressionExperiment.Factory.newInstance();
+        ee = ExpressionExperimentImpl.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );
         ee.setOwner( nobody );
@@ -102,12 +102,12 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         ee.getInvestigators().add( admin );
 
         c = new HashSet<ExpressionExperiment>();
-        ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
+        ExpressionExperiment numberTwelve = ExpressionExperimentImpl.Factory.newInstance();
         numberTwelve.setId( new Long( 12 ) );
 
         c.add( numberTwelve );
-        c.add( ExpressionExperiment.Factory.newInstance() );
-        c.add( ExpressionExperiment.Factory.newInstance() );
+        c.add( ExpressionExperimentImpl.Factory.newInstance() );
+        c.add( ExpressionExperimentImpl.Factory.newInstance() );
 
         cJustTwelve = new HashSet<ExpressionExperiment>();
         cJustTwelve.add( numberTwelve );

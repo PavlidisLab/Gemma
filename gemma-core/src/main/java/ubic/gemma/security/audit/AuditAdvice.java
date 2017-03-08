@@ -46,7 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -112,12 +112,12 @@ public class AuditAdvice {
 
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
-                if ( Auditable.class.isAssignableFrom( o.getClass() ) ) {
-                    process( methodName, ( Auditable ) o, user );
+                if ( AbstractAuditable.class.isAssignableFrom( o.getClass() ) ) {
+                    process( methodName, ( AbstractAuditable ) o, user );
                 }
             }
-        } else if ( ( Auditable.class.isAssignableFrom( object.getClass() ) ) ) {
-            process( methodName, ( Auditable ) object, user );
+        } else if ( ( AbstractAuditable.class.isAssignableFrom( object.getClass() ) ) ) {
+            process( methodName, ( AbstractAuditable ) object, user );
         }
     }
 
@@ -187,12 +187,12 @@ public class AuditAdvice {
     }
 
     /**
-     * Adds 'create' AuditEvent to audit trail of the passed Auditable.
+     * Adds 'create' AuditEvent to audit trail of the passed AbstractAuditable.
      * 
      * @param auditable
      * @param note Additional text to add to the automatically generated note.
      */
-    private void addCreateAuditEvent( final Auditable auditable, User user, final String note ) {
+    private void addCreateAuditEvent( final AbstractAuditable auditable, User user, final String note ) {
 
         if ( isNullOrTransient( auditable ) ) return;
 
@@ -226,7 +226,7 @@ public class AuditAdvice {
     /**
      * @param d
      */
-    private void addDeleteAuditEvent( Auditable d, User user ) {
+    private void addDeleteAuditEvent( AbstractAuditable d, User user ) {
         assert d != null;
         // what else could we do? But need to keep this record in a good place. See log4j.properties.
         if ( log.isInfoEnabled() ) {
@@ -241,7 +241,7 @@ public class AuditAdvice {
     /**
      * @param auditable
      */
-    private void addUpdateAuditEvent( final Auditable auditable, User user ) {
+    private void addUpdateAuditEvent( final AbstractAuditable auditable, User user ) {
         assert auditable != null;
 
         AuditTrail auditTrail = auditable.getAuditTrail();
@@ -302,7 +302,7 @@ public class AuditAdvice {
      * @param auditable
      * @return
      */
-    private boolean isNullOrTransient( final Auditable auditable ) {
+    private boolean isNullOrTransient( final AbstractAuditable auditable ) {
         return auditable == null || auditable.getId() == null;
     }
 
@@ -314,7 +314,7 @@ public class AuditAdvice {
      * @param auditable
      * @param auditTrail
      */
-    private void maybeAddCascadeCreateEvent( Object object, Auditable auditable, User user ) {
+    private void maybeAddCascadeCreateEvent( Object object, AbstractAuditable auditable, User user ) {
         if ( log.isDebugEnabled() )
             log.debug( "Checking for whether to cascade create event from " + auditable + " to " + object );
 
@@ -333,7 +333,7 @@ public class AuditAdvice {
      * @param methodName
      * @param object
      */
-    private void process( final String methodName, final Auditable auditable, User user ) {
+    private void process( final String methodName, final AbstractAuditable auditable, User user ) {
 
         // do this here, when we are sure to be in a transaction. But might be repetitive when working on a collection.
         this.sessionFactory.getCurrentSession().setReadOnly( user, true );
@@ -404,9 +404,9 @@ public class AuditAdvice {
 
                 Class<?> propertyType = descriptor.getPropertyType();
 
-                if ( Auditable.class.isAssignableFrom( propertyType ) ) {
+                if ( AbstractAuditable.class.isAssignableFrom( propertyType ) ) {
 
-                    Auditable auditable = ( Auditable ) associatedObject;
+                    AbstractAuditable auditable = ( AbstractAuditable ) associatedObject;
                     try {
 
                         maybeAddCascadeCreateEvent( object, auditable, user );
@@ -427,8 +427,8 @@ public class AuditAdvice {
                         Hibernate.initialize( associatedObjects );
                         for ( Object collectionMember : associatedObjects ) {
 
-                            if ( Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
-                                Auditable auditable = ( Auditable ) collectionMember;
+                            if ( AbstractAuditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
+                                AbstractAuditable auditable = ( AbstractAuditable ) collectionMember;
                                 try {
                                     Hibernate.initialize( auditable );
                                     maybeAddCascadeCreateEvent( object, auditable, user );

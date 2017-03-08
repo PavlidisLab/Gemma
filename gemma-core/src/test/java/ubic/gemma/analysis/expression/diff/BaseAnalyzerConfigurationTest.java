@@ -51,11 +51,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.Settings;
 
@@ -167,7 +163,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         arrayDesign.setName( "MG-U74Test_" + RandomStringUtils.randomAlphanumeric( 12 ) );
         arrayDesign.setPrimaryTaxon( getTaxon( "mouse" ) );
 
-        expressionExperiment = ExpressionExperiment.Factory.newInstance();
+        expressionExperiment = ExpressionExperimentImpl.Factory.newInstance();
         expressionExperiment.setName( "analysistest_" + RandomStringUtils.randomAlphanumeric( 12 ) );
         expressionExperiment.setId( 100009L );
         expressionExperiment.setShortName( RandomStringUtils.randomAlphanumeric( 12 ) );

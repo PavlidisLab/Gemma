@@ -18,22 +18,11 @@
  */
 package ubic.gemma.analysis.report;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.TreeMap;
-
+import gemma.gsec.SecurityService;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheException;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,12 +30,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-
-import gemma.gsec.SecurityService;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheException;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
@@ -57,40 +40,32 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.Settings;
 
+import java.io.*;
+import java.util.*;
+
 /**
  * Service to collect data on object that are new in the system.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
+    private static final String WHATS_NEW_CACHE = "WhatsNew";
+    private static final String WHATS_NEW_DIR = "WhatsNew";
+    private static final String WHATS_NEW_FILE = "WhatsNew";
     private static Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
-
     @Autowired
     private ArrayDesignService arrayDesignService = null;
-
     @Autowired
     private AuditEventService auditEventService;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
-
     @Autowired
     private SecurityService securityService = null;
-
     @Autowired
     private CacheManager cacheManager = null;
-
     private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
-
-    private static final String WHATS_NEW_CACHE = "WhatsNew";
-
-    private static final String WHATS_NEW_DIR = "WhatsNew";
-
-    private static final String WHATS_NEW_FILE = "WhatsNew";
-
     private Cache whatsNewCache;
 
     @Override
@@ -127,7 +102,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     }
 
     /**
-     * @param date
      * @return representing the updated or new objects.
      */
     @Override
@@ -162,7 +136,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     /**
      * Retrieve the latest WhatsNew report.
-     * 
+     *
      * @return WhatsNew the latest WhatsNew report cache.
      */
     @Override
@@ -184,7 +158,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
                 for ( AuditableObject object : aos ) {
                     Auditable auditable = fetch( wn, object );
 
-                    if ( auditable == null ) continue;
+                    if ( auditable == null )
+                        continue;
 
                     wn.addNewObjects( auditable );
                     updateDate( wn, object );
@@ -212,7 +187,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
                     Auditable auditable = fetch( wn, object );
 
-                    if ( auditable == null ) continue;
+                    if ( auditable == null )
+                        continue;
 
                     wn.addUpdatedObjects( auditable );
 
@@ -233,8 +209,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     /**
      * save the report from the date specified. This will be the report that will be used by the WhatsNew box.
-     * 
-     * @param date
      */
     @Override
     public void saveReport( Date date ) {
@@ -275,14 +249,10 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         this.securityService = securityService;
     }
 
-    /**
-     * @param wn
-     * @param object
-     * @return
-     */
     private Auditable fetch( WhatsNew wn, AuditableObject object ) {
 
-        if ( object == null ) return null;
+        if ( object == null )
+            return null;
 
         Auditable auditable = null;
         Element element = this.whatsNewCache.get( object );
@@ -328,7 +298,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      */
     private Collection<ArrayDesign> getArrayDesigns( Collection<Auditable> items ) {
 
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
         for ( Auditable auditable : items ) {
             if ( auditable instanceof ArrayDesign ) {
                 ads.add( ( ArrayDesign ) auditable );
@@ -344,23 +314,21 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private int getAssayCount( Collection<ExpressionExperiment> ees ) {
 
         int count = 0;
-        // for ( ExpressionExperiment ee : ees ) {
-        // count += ee.getBioAssays().size(); // TODO trying to access bio assays causes LazyInitializationException
-        // }
+        for ( ExpressionExperiment ee : ees ) {
+            //FIXME trying to access bio assays causes LazyInitializationException
+            count += ee.getBioAssays().size();
+        }
         return count;
     }
 
     /**
      * Give breakdown by taxon. "Private" experiments are not included.
-     * 
-     * @param ees
-     * @return
      */
     private Map<Taxon, Collection<Long>> getExpressionExperimentIdsByTaxon( Collection<ExpressionExperiment> ees ) {
         /*
          * Sort taxa by name.
          */
-        TreeMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<Taxon, Collection<Long>>( new Comparator<Taxon>() {
+        TreeMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<>( new Comparator<Taxon>() {
             @Override
             public int compare( Taxon o1, Taxon o2 ) {
                 if ( o1 == null ) {
@@ -373,7 +341,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             }
         } );
 
-        if ( ees.isEmpty() ) return eesPerTaxon;
+        if ( ees.isEmpty() )
+            return eesPerTaxon;
 
         Collection<ExpressionExperiment> publicEEs = securityService.choosePublic( ees );
 
@@ -382,11 +351,11 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         // invert the map.
         for ( ExpressionExperiment ee : taxa.keySet() ) {
             Taxon t = taxa.get( ee );
-            Collection<Long> ids = null;
+            Collection<Long> ids;
             if ( eesPerTaxon.containsKey( t ) ) {
                 ids = eesPerTaxon.get( t );
             } else {
-                ids = new ArrayList<Long>();
+                ids = new ArrayList<>();
             }
             ids.add( ee.getId() );
             eesPerTaxon.put( t, ids );
@@ -400,7 +369,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      */
     private Collection<ExpressionExperiment> getExpressionExperiments( Collection<Auditable> items ) {
 
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Collection<ExpressionExperiment> ees = new HashSet<>();
         for ( Auditable auditable : items ) {
             if ( auditable instanceof ExpressionExperiment ) {
                 // if ( securityService.isPrivate( ( ExpressionExperiment ) auditable ) ) {
@@ -412,47 +381,31 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         return ees;
     }
 
-    /**
-     * @param deleteFiles
-     */
     private void initDirectories( boolean deleteFiles ) {
         // check to see if the home directory exists. If it doesn't, create it.
         // check to see if the reports directory exists. If it doesn't, create it.
         FileTools.createDir( HOME_DIR );
         FileTools.createDir( HOME_DIR + File.separatorChar + WHATS_NEW_DIR );
         File f = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR );
-        Collection<File> files = new ArrayList<File>();
+        Collection<File> files = new ArrayList<>();
         File[] fileArray = f.listFiles();
-        for ( File file : fileArray ) {
-            files.add( file );
-        }
+        Collections.addAll( files, fileArray );
         // clear out all files
         if ( deleteFiles ) {
             FileTools.deleteFiles( files );
         }
     }
 
-    /**
-     * @param newObjects
-     * @return
-     * @throws FileNotFoundException
-     * @throws IOException
-     * @throws ClassNotFoundException
-     */
     private Collection<AuditableObject> loadAuditableObjects( File newObjects )
-            throws FileNotFoundException, IOException, ClassNotFoundException {
+            throws IOException, ClassNotFoundException {
         try (FileInputStream fis = new FileInputStream( newObjects );
-                ObjectInputStream ois = new ObjectInputStream( fis );) {
-            @SuppressWarnings("unchecked")
-            Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois.readObject();
+                ObjectInputStream ois = new ObjectInputStream( fis )) {
+            @SuppressWarnings("unchecked") Collection<AuditableObject> aos = ( Collection<AuditableObject> ) ois
+                    .readObject();
             return aos;
         }
     }
 
-    /**
-     * @param wn
-     * @return
-     */
     private boolean saveFile( WhatsNew wn ) {
         try {
             // remove file first
@@ -472,48 +425,24 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             Collection<ArrayDesign> ads = wn.getNewArrayDesigns();
             Collection<ExpressionExperiment> ees = wn.getNewExpressionExperiments();
             // save the IDs for new Auditables
-            Collection<AuditableObject> newObjects = new ArrayList<AuditableObject>();
-            for ( ArrayDesign ad : ads ) {
-                AuditableObject ao = new AuditableObject();
-                ao.date = date;
-                ao.type = "ArrayDesign";
-                ao.id = ad.getId();
-                newObjects.add( ao );
-            }
-            for ( ExpressionExperiment ee : ees ) {
-                AuditableObject ao = new AuditableObject();
-                ao.date = date;
-                ao.type = "ExpressionExperiment";
-                ao.id = ee.getId();
-                newObjects.add( ao );
-            }
+            Collection<AuditableObject> newObjects = new ArrayList<>();
+            addAllADs( date, ads, newObjects );
+            addAllEEs( date, ees, newObjects );
 
             // save the ids for updated Auditables
             ads = wn.getUpdatedArrayDesigns();
             ees = wn.getUpdatedExpressionExperiments();
             // save the IDs for new Auditables
-            Collection<AuditableObject> updatedObjects = new ArrayList<AuditableObject>();
-            for ( ArrayDesign ad : ads ) {
-                AuditableObject ao = new AuditableObject();
-                ao.date = date;
-                ao.type = "ArrayDesign";
-                ao.id = ad.getId();
-                updatedObjects.add( ao );
-            }
-            for ( ExpressionExperiment ee : ees ) {
-                AuditableObject ao = new AuditableObject();
-                ao.date = date;
-                ao.type = "ExpressionExperiment";
-                ao.id = ee.getId();
-                updatedObjects.add( ao );
-            }
+            Collection<AuditableObject> updatedObjects = new ArrayList<>();
+            addAllADs( date, ads, updatedObjects );
+            addAllEEs( date, ees, updatedObjects );
             try (FileOutputStream fos = new FileOutputStream( newOutput );
-                    ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+                    ObjectOutputStream oos = new ObjectOutputStream( fos )) {
                 oos.writeObject( newObjects );
             }
 
             try (FileOutputStream fos = new FileOutputStream( updatedOutput );
-                    ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+                    ObjectOutputStream oos = new ObjectOutputStream( fos )) {
                 oos.writeObject( updatedObjects );
             }
 
@@ -524,11 +453,28 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         return true;
     }
 
+    private void addAllADs( Date date, Collection<ArrayDesign> ads, Collection<AuditableObject> updatedObjects ) {
+        for ( ArrayDesign ad : ads ) {
+            AuditableObject ao = new AuditableObject();
+            ao.date = date;
+            ao.type = "ArrayDesign";
+            ao.id = ad.getId();
+            updatedObjects.add( ao );
+        }
+    }
+
+    private void addAllEEs( Date date, Collection<ExpressionExperiment> ees, Collection<AuditableObject> newObjects ) {
+        for ( ExpressionExperiment ee : ees ) {
+            AuditableObject ao = new AuditableObject();
+            ao.date = date;
+            ao.type = "ExpressionExperiment";
+            ao.id = ee.getId();
+            newObjects.add( ao );
+        }
+    }
+
     /**
      * Sets the date to the earliest update date of any object that has been retrieved so far.
-     * 
-     * @param wn
-     * @param object
      */
     private void updateDate( WhatsNew wn, AuditableObject object ) {
         if ( object.getDate() != null && ( wn.getDate() == null || wn.getDate().after( object.getDate() ) ) ) {

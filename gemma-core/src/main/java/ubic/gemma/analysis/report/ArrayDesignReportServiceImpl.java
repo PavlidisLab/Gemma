@@ -19,18 +19,6 @@
 
 package ubic.gemma.analysis.report;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -42,20 +30,18 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.util.Settings;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.util.Settings;
+
+import java.io.*;
+import java.util.*;
 
 /**
  * @author jsantos
- * @version $Id$
  */
 @Component
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
@@ -79,10 +65,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignSequenceUpdateEvent.class,
             ArrayDesignSequenceAnalysisEvent.class, ArrayDesignGeneMappingEvent.class,
             ArrayDesignRepeatAnalysisEvent.class };
-    /*
-     * ArrayDesignProbeRenamingEvent.class,ArrayDesignMergeEvent.class, ArrayDesignAnnotationFileEvent.class,
-     * ArrayDesignSubsumeCheckEvent.class
-     */
 
     private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
@@ -90,26 +72,27 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /**
      * Fill in event information
-     * 
-     * @param adVos
      */
     @Override
     public void fillEventInformation( Collection<ArrayDesignValueObject> adVos ) {
 
-        if ( adVos == null || adVos.size() == 0 ) return;
+        if ( adVos == null || adVos.size() == 0 )
+            return;
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         for ( Object object : adVos ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             Long id = adVo.getId();
-            if ( id == null ) continue;
+            if ( id == null )
+                continue;
             ids.add( id );
         }
 
-        if ( ids.size() == 0 ) return;
+        if ( ids.size() == 0 )
+            return;
 
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
@@ -117,8 +100,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         Map<Long, ArrayDesign> idMap = EntityUtils.getIdMap( arrayDesigns );
 
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService.getLastEvents(
-                arrayDesigns, typesToGet );
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService
+                .getLastEvents( arrayDesigns, typesToGet );
 
         Map<Auditable, AuditEvent> geneMappingEvents = events.get( ArrayDesignGeneMappingEvent.class );
         Map<Auditable, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
@@ -160,18 +143,14 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         }
 
         watch.stop();
-        if ( watch.getTime() > 1000 ) log.info( "Added event information in " + watch.getTime() + "ms" );
+        if ( watch.getTime() > 1000 )
+            log.info( "Added event information in " + watch.getTime() + "ms" );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ArrayDesignReportService#fillInSubsumptionInfo(java.util.Collection)
-     */
     @Override
     public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects ) {
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         for ( Object object : valueObjects ) {
             ArrayDesignValueObject adVo = ( ArrayDesignValueObject ) object;
             ids.add( adVo.getId() );
@@ -201,8 +180,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /**
      * Fill in the probe summary statistics
-     * 
-     * @param adVos
      */
     @Override
     public void fillInValueObjects( Collection<ArrayDesignValueObject> adVos ) {
@@ -219,11 +196,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateAllArrayDesignReport()
-     */
     @Override
     public void generateAllArrayDesignReport() {
         log.info( "Generating report summarizing all platforms ... " );
@@ -245,17 +217,17 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
         // remove file first
-        File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ARRAY_DESIGN_SUMMARY );
+        File f = new File(
+                HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY );
         if ( f.exists() ) {
             if ( !f.canWrite() || !f.delete() ) {
                 log.warn( "Cannot write to file." );
                 return;
             }
         }
-        try (FileOutputStream fos = new FileOutputStream( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR
-                + File.separatorChar + ARRAY_DESIGN_SUMMARY );
-                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+        try (FileOutputStream fos = new FileOutputStream(
+                HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY );
+                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
             oos.writeObject( adVo );
         } catch ( Throwable e ) {
             // cannot write to file. Just fail gracefully.
@@ -264,11 +236,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         log.info( "Done making reports" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport()
-     */
     @Override
     @Secured({ "GROUP_AGENT" })
     public void generateArrayDesignReport() {
@@ -284,18 +251,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         generateAllArrayDesignReport();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport(ubic.gemma.model.expression.arrayDesign
-     * .ArrayDesignValueObject)
-     */
     @Override
     public void generateArrayDesignReport( ArrayDesignValueObject adVo ) {
 
         ArrayDesign ad = arrayDesignService.load( adVo.getId() );
-        if ( ad == null ) return;
+        if ( ad == null )
+            return;
 
         // obtain time information (for timestamping)
         Date d = new Date( System.currentTimeMillis() );
@@ -321,8 +282,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             reportDirF.mkdirs();
         }
 
-        String reportFileName = reportDir + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
-                + adVo.getId();
+        String reportFileName =
+                reportDir + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + adVo.getId();
         File f = new File( reportFileName );
 
         if ( f.exists() ) {
@@ -333,7 +294,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         }
 
         try (FileOutputStream fos = new FileOutputStream( reportFileName );
-                ObjectOutputStream oos = new ObjectOutputStream( fos );) {
+                ObjectOutputStream oos = new ObjectOutputStream( fos )) {
             // remove old file first (possible todo: don't do this until after new file is okayed - maybe this delete
             // isn't needed, just clobber.)
 
@@ -345,14 +306,9 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         log.info( "Generated report for " + ad );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport(java.lang.Long)
-     */
     @Override
     public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         ids.add( id );
         Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
         if ( adVo != null && adVo.size() > 0 ) {
@@ -364,38 +320,22 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     }
 
-    /**
-     * @param id
-     * @return
-     */
     @Override
     public String getLastGeneMappingEvent( Long id ) {
         return getLastEvent( id, ArrayDesignGeneMappingEvent.class );
 
     }
 
-    /**
-     * @param id
-     * @return
-     */
     @Override
     public String getLastRepeatMaskEvent( Long id ) {
         return getLastEvent( id, ArrayDesignRepeatAnalysisEvent.class );
     }
 
-    /**
-     * @param id
-     * @return
-     */
     @Override
     public String getLastSequenceAnalysisEvent( Long id ) {
         return getLastEvent( id, ArrayDesignSequenceAnalysisEvent.class );
     }
 
-    /**
-     * @param id
-     * @return
-     */
     @Override
     public String getLastSequenceUpdateEvent( Long id ) {
         return getLastEvent( id, ArrayDesignSequenceUpdateEvent.class );
@@ -403,16 +343,16 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /**
      * Get the cached summary object that represents all platforms.
-     * 
+     *
      * @return arrayDesignValueObject the summary object that represents the grand total of all array designs
      */
     @Override
     public ArrayDesignValueObject getSummaryObject() {
         ArrayDesignValueObject adVo = null;
-        File f = new File( HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ARRAY_DESIGN_SUMMARY );
+        File f = new File(
+                HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_SUMMARY );
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis );) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
             } catch ( Throwable e ) {
                 return null;
@@ -423,12 +363,11 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /**
      * Get the cached summary objects
-     * 
-     * @param id
+     *
      * @return arrayDesignValueObjects the specified summary object
      */
     public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids ) {
-        Collection<ArrayDesignValueObject> adVos = new ArrayList<ArrayDesignValueObject>();
+        Collection<ArrayDesignValueObject> adVos = new ArrayList<>();
         for ( Long id : ids ) {
             ArrayDesignValueObject adVo = getSummaryObject( id );
             if ( adVo != null ) {
@@ -441,17 +380,17 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /**
      * Get a specific cached summary object
-     * 
-     * @param id
+     *
      * @return arrayDesignValueObject the specified summary object
      */
     @Override
     public ArrayDesignValueObject getSummaryObject( Long id ) {
         ArrayDesignValueObject adVo = null;
-        File f = new File( HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + id );
+        File f = new File(
+                HOME_DIR + "/" + ARRAY_DESIGN_REPORT_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX
+                        + "." + id );
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis );) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
 
                 adVo = ( ArrayDesignValueObject ) ois.readObject();
 
@@ -471,24 +410,22 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     /**
      * FIXME this could be refactored and used elsewhere. This is similar to code in the AuditableService/Dao.
-     * 
-     * @param id
-     * @param eventType
-     * @return
      */
     private String getLastEvent( Long id, Class<? extends AuditEventType> eventType ) {
         ArrayDesign ad = arrayDesignService.load( id );
 
-        if ( ad == null ) return "";
+        if ( ad == null )
+            return "";
 
         List<AuditEvent> events2 = auditEventService.getEvents( ad );
 
-        String analysisEventString = "";
-        List<AuditEvent> events = new ArrayList<AuditEvent>();
+        String analysisEventString;
+        List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : events2 ) {
-            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
-                                           // any more
+            if ( event == null )
+                continue; // legacy of ordered-list which could end up with gaps; should not be needed
+            // any more
             if ( event.getEventType() != null && eventType.isAssignableFrom( event.getEventType().getClass() ) ) {
                 events.add( event );
             }
