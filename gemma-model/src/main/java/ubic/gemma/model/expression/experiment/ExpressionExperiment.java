@@ -221,4 +221,17 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.curationDetails = curationDetails;
     }
 
+    /**
+     * Constructs new instances of {@link ExpressionExperiment}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ExpressionExperiment}.
+         */
+        public static ExpressionExperiment newInstance() {
+            return new ExpressionExperiment();
+        }
+
+    }
+
 }
