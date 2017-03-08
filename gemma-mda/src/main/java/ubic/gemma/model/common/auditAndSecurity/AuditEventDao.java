@@ -67,9 +67,6 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
-    /**
-     *
-     */
     void thaw( AuditEvent auditEvent );
 
 }

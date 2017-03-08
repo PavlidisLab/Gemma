@@ -190,11 +190,10 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
 
     protected abstract List<AuditEvent> handleGetEvents( Auditable auditable );
 
-    protected abstract AuditEvent handleGetLastEvent( Auditable auditable,
-            Class<? extends AuditEventType> type );
+    protected abstract AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
-    protected abstract Map<Auditable, AuditEvent> handleGetLastEvent(
-            Collection<? extends Auditable> auditables, Class<? extends AuditEventType> type );
+    protected abstract Map<Auditable, AuditEvent> handleGetLastEvent( Collection<? extends Auditable> auditables,
+            Class<? extends AuditEventType> type );
 
     /**
      * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}

@@ -25,7 +25,10 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author klc
@@ -275,7 +278,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) {
-        return ( Collection<ArrayDesign> ) this.getArrayDesignDao().load( ids );
+        return this.getArrayDesignDao().load( ids );
     }
 
     @Override

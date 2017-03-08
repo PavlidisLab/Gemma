@@ -30,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -65,7 +64,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                     + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
                     + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
                     + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
+    
     private static final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
+
     /**
      * The location where reports are stored.
      */
@@ -123,8 +124,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             }
 
             if ( !needToRefresh ) {
-                Collection<Auditable> updatedObj = auditEventService
-                        .getUpdatedSinceDate( status.getLastUpdate() );
+                Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
                         for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
@@ -174,7 +174,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      *
      * @see GeneDao for where the GENE2CS table is used extensively.
      */
-    private void generateGene2CsEntries(){
+    private void generateGene2CsEntries() {
         log.info( "Updating Gene2Cs ..." );
         Session session = this.sessionFactory.getCurrentSession();
         log.info( "Deleting all entries for Gene2Cs." );

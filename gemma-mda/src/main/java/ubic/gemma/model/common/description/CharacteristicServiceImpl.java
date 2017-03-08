@@ -18,14 +18,8 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
@@ -34,10 +28,14 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueImpl;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
- * @see ubic.gemma.model.common.description.CharacteristicService
  * @author Luke
- * @version $Id$
+ * @see ubic.gemma.model.common.description.CharacteristicService
  */
 @Service
 public class CharacteristicServiceImpl extends CharacteristicServiceBase {
@@ -71,7 +69,7 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
     @Transactional(readOnly = true)
     public Map<Characteristic, Object> getParents( Collection<Class<?>> classes,
             Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
+        Map<Characteristic, Object> charToParent = new HashMap<>();
         for ( Class<?> parentClass : classes ) {
             charToParent.putAll( this.getCharacteristicDao().getParents( parentClass, characteristics ) );
         }
@@ -111,14 +109,9 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
         return this.getCharacteristicDao().findByValue( search + '%' );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.CharacteristicServiceBase#handleGetParents(java.util.Collection)
-     */
     @Override
     protected Map<Characteristic, Object> handleGetParents( Collection<Characteristic> characteristics ) {
-        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
+        Map<Characteristic, Object> charToParent = new HashMap<>();
         for ( Class<?> parentClass : CLASSES_WITH_CHARACTERISTICS ) {
             charToParent.putAll( this.getCharacteristicDao().getParents( parentClass, characteristics ) );
         }

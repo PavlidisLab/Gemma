@@ -20,7 +20,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
 
 import java.util.Collection;

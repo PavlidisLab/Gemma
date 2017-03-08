@@ -62,12 +62,6 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         super.setSessionFactory( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastEvents(java.util.Collection,
-     * java.util.Collection)
-     */
     @Override
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
@@ -230,8 +224,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     }
 
     @Override
-    protected Map<Auditable, AuditEvent> handleGetLastEvent(
-            final Collection<? extends Auditable> auditables, Class<? extends AuditEventType> type ) {
+    protected Map<Auditable, AuditEvent> handleGetLastEvent( final Collection<? extends Auditable> auditables,
+            Class<? extends AuditEventType> type ) {
 
         Map<Auditable, AuditEvent> result = new HashMap<>();
         if ( auditables.size() == 0 )
@@ -293,8 +287,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         return result;
     }
 
-    private void putAllQrs( Map<Auditable, AuditEvent> result, List<?> qr,
-            Map<AuditTrail, Auditable> atmap ) {
+    private void putAllQrs( Map<Auditable, AuditEvent> result, List<?> qr, Map<AuditTrail, Auditable> atmap ) {
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
             AuditTrail t = ( AuditTrail ) ar[0];
@@ -368,8 +361,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
      */
     @SuppressWarnings("unchecked")
-    private Map<AuditTrail, Auditable> getAuditTrailMap(
-            final Collection<? extends Auditable> auditables ) {
+    private Map<AuditTrail, Auditable> getAuditTrailMap( final Collection<? extends Auditable> auditables ) {
 
         /*
          * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
