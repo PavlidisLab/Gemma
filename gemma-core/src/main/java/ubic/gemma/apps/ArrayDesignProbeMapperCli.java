@@ -1,33 +1,15 @@
 package ubic.gemma.apps;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -38,9 +20,14 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.util.Settings;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 /**
  * Process the blat results for an array design to map them onto genes.
- * <p>
  * Typical workflow would be to run:
  * <ol>
  * <li>Create the array design, perhaps by loading a GPL or via a GSE.
@@ -53,60 +40,42 @@ import ubic.gemma.util.Settings;
  * </ol>
  * This can also allow directly associating probes with genes (via products) based on an input file, without any
  * sequence analysis.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCli {
     private static final String CONFIG_OPTION = "config";
     private static final String MIRNA_ONLY_MODE_OPTION = "mirna";
-    private final static String OPTION_ACEMBLY = "a";
+    private final static String OPTION_ASEMBLY = "a";
     private final static String OPTION_ENSEMBL = "n";
     private final static String OPTION_EST = "e"; // usually off
     private final static String OPTION_KNOWNGENE = "k";
     private final static String OPTION_MICRORNA = "i";
     private final static String OPTION_MRNA = "m";
     private final static String OPTION_NSCAN = "s";
+    private final static String OPTION_REFSEQ = "r";
+
+    private String[] probeNames = null;
+    private ProbeMapperConfig config;
+    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
+    private String directAnnotationInputFileName = null;
+    private boolean ncbiIds = false;
+    private ExternalDatabase sourceDatabase = null;
+    private Taxon taxon = null;
+    private String taxonName;
+    private TaxonService taxonService;
+    private boolean useDB = true;
+
+    public static void main( String[] args ) {
+        ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
+        tryDoWorkNoExit( p, args );
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
 
-    private final static String OPTION_REFSEQ = "r";
-
-    public static void main( String[] args ) {
-        ArrayDesignProbeMapperCli p = new ArrayDesignProbeMapperCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    ProbeMapperConfig config;
-    protected String[] probeNames = null;
-    private ArrayDesignProbeMapperService arrayDesignProbeMapperService;
-    private String directAnnotationInputFileName = null;
-    private boolean ncbiIds = false;
-    private ExternalDatabase sourceDatabase = null;
-
-    private Taxon taxon = null;
-
-    private String taxonName;
-
-    private TaxonService taxonService;
-
-    private boolean useDB = true;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "mapPlatformToGenes";
@@ -117,82 +86,61 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return "Process the BLAT results for an array design to map them onto genes";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
-    @SuppressWarnings("static-access")
+    @SuppressWarnings("AccessStaticViaInstance")
     @Override
     protected void buildOptions() {
         super.buildOptions();
 
         requireLogin(); // actually only needed if using the db to save results (usual case)
 
-        addOption( OptionBuilder
-                .hasArg()
-                .withArgName( "value" )
-                .withDescription(
-                        "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
                 .withLongOpt( "identityThreshold" ).create( 'i' ) );
 
         addOption( OptionBuilder.hasArg().withArgName( "value" )
                 .withDescription( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
                 .withLongOpt( "scoreThreshold" ).create( 's' ) );
 
-        addOption( OptionBuilder
-                .hasArg()
-                .withArgName( "value" )
-                .withDescription(
-                        "Minimum fraction of probe overlap with exons, default = "
-                                + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
-                .withLongOpt( "overlapThreshold" ).create( 'o' ) );
+        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
+                "Minimum fraction of probe overlap with exons, default = "
+                        + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION ).withLongOpt( "overlapThreshold" )
+                .create( 'o' ) );
 
         addOption( OptionBuilder.withDescription(
                 "Assign non-gene mappings to a ProbeAlignedRegion including creation of new ones (default="
-                        + ProbeMapperConfig.DEFAULT_ALLOW_PARS + ")" )
-                .create( "usePars" ) );
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PARS + ")" ).create( "usePars" ) );
 
         addOption( OptionBuilder.withDescription(
                 "Allow mapping to predicted genes (overrides Acembly, Ensembl and Nscan; default="
-                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" )
-                .create( "usePred" ) );
+                        + ProbeMapperConfig.DEFAULT_ALLOW_PREDICTED + ")" ).create( "usePred" ) );
 
-        addOption( OptionBuilder
-                .hasArg()
-                .withArgName( "configstring" )
-                .withDescription(
-                        "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set,"
-                                + " all will be used except as listed below and in combination with the 'usePred' option:\n "
+        addOption( OptionBuilder.hasArg().withArgName( "configstring" ).withDescription(
+                "String describing which tracks to search, for example 'rkenmias' for all, 'rm' to limit search to Refseq with mRNA evidence. If this option is not set,"
+                        + " all will be used except as listed below and in combination with the 'usePred' option:\n "
 
-                                + OPTION_REFSEQ + " - search refseq track for genes (best to leave on)\n"
+                        + OPTION_REFSEQ + " - search refseq track for genes (best to leave on)\n"
 
-                                + OPTION_KNOWNGENE + " - search refseq track for genes (best to leave on)\n"
+                        + OPTION_KNOWNGENE + " - search refseq track for genes (best to leave on)\n"
 
-                                + OPTION_MICRORNA + " - search miRNA track for genes (doesn't hurt)\n"
+                        + OPTION_MICRORNA + " - search miRNA track for genes (doesn't hurt)\n"
 
-                                + OPTION_EST + " - search EST track for transcripts (Default=false)\n"
+                        + OPTION_EST + " - search EST track for transcripts (Default=false)\n"
 
-                                + OPTION_MRNA + " - search mRNA track for transcripts (Default=false)\n"
+                        + OPTION_MRNA + " - search mRNA track for transcripts (Default=false)\n"
 
-                                + OPTION_ACEMBLY + " - search Acembly track for predicted genes\n"
+                        + OPTION_ASEMBLY + " - search Acembly track for predicted genes\n"
 
-                                + OPTION_ENSEMBL + " - search Ensembl track for predicted genes \n"
+                        + OPTION_ENSEMBL + " - search Ensembl track for predicted genes \n"
 
-                                + OPTION_NSCAN + " - search NScan track for predicted genes\n" )
-                .create( CONFIG_OPTION ) );
+                        + OPTION_NSCAN + " - search NScan track for predicted genes\n" ).create( CONFIG_OPTION ) );
 
         addOption( OptionBuilder.withDescription(
-                "Only seek miRNAs; this is the same as '-config " + OPTION_MICRORNA + "; overrides -config." ).create(
-                        MIRNA_ONLY_MODE_OPTION ) );
+                "Only seek miRNAs; this is the same as '-config " + OPTION_MICRORNA + "; overrides -config." )
+                .create( MIRNA_ONLY_MODE_OPTION ) );
 
-        Option taxonOption = OptionBuilder
-                .hasArg()
-                .withArgName( "taxon" )
-                .withDescription(
-                        "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
-                                + " ArrayDesigns from that taxon (overrides -a)" )
-                .create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
+                "Taxon common name (e.g., human); if using '-import', this taxon will be assumed; otherwise analysis will be run for all"
+                        + " ArrayDesigns from that taxon (overrides -a)" ).create( 't' );
 
         addOption( taxonOption );
 
@@ -200,14 +148,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( force );
 
-        Option directAnnotation = OptionBuilder
-                .withDescription(
-                        "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
-                                + "File format: 2 columns with column 1= probe name in Gemma, "
-                                + "column 2=sequence name (not required, and not used for direct gene-based annotation)"
-                                + " column 3 = gene symbol (will be matched to that in Gemma)" )
-                .hasArg()
-                .withArgName( "file" ).create( "import" );
+        Option directAnnotation = OptionBuilder.withDescription(
+                "Import annotations from a file rather than our own analysis. You must provide the taxon option. "
+                        + "File format: 2 columns with column 1= probe name in Gemma, "
+                        + "column 2=sequence name (not required, and not used for direct gene-based annotation)"
+                        + " column 3 = gene symbol (will be matched to that in Gemma)" ).hasArg().withArgName( "file" )
+                .create( "import" );
 
         addOption( directAnnotation );
 
@@ -219,8 +165,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 .withArgName( "dbname" ).create( "source" );
         addOption( databaseOption );
 
-        Option noDatabaseOption = OptionBuilder.withDescription(
-                "Don't save the results to the database, print to stdout instead (not with -import)" ).create( "nodb" );
+        Option noDatabaseOption = OptionBuilder
+                .withDescription( "Don't save the results to the database, print to stdout instead (not with -import)" )
+                .create( "nodb" );
 
         addOption( noDatabaseOption );
 
@@ -234,25 +181,22 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         //   super.addThreadsOption();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
 
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
-        if ( directAnnotationInputFileName == null ) configure();
+        if ( directAnnotationInputFileName == null )
+            configure();
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
         allowSubsumedOrMerged = true;
 
-        if ( this.taxon != null && this.directAnnotationInputFileName == null
-                && this.arrayDesignsToProcess.isEmpty() ) {
+        if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignsToProcess
+                .isEmpty() ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName()
                     + " Array designs, troubled platforms may be skipped *** " );
         }
@@ -277,8 +221,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         if ( !f.canRead() ) {
                             throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
                         }
-                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase,
-                                this.ncbiIds );
+                        arrayDesignProbeMapperService
+                                .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEventImpl() );
                     } catch ( IOException e ) {
                         return e;
@@ -321,7 +265,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return null;
     }
 
-    /*
+    /**
      * Override to do additional checks to make sure the array design is in a state of readiness for probe mapping.
      */
     @Override
@@ -342,10 +286,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
          * (FIXME: this is a duplicate check)
          */
-        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE )
-                || !( arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE )
-                        || arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) || arrayDesign
-                                .getTechnologyType().equals( TechnologyType.TWOCOLOR ) ) ) {
+        if ( arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) || !(
+                arrayDesign.getTechnologyType().equals( TechnologyType.DUALMODE ) || arrayDesign.getTechnologyType()
+                        .equals( TechnologyType.ONECOLOR ) || arrayDesign.getTechnologyType()
+                        .equals( TechnologyType.TWOCOLOR ) ) ) {
             log.info( "Skipping because it is not a microarray platform" );
             return false;
         }
@@ -365,9 +309,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         log.debug( allEvents.size() + " to inspect" );
         for ( int j = allEvents.size() - 1; j >= 0; j-- ) {
             AuditEvent currentEvent = allEvents.get( j );
-            if ( currentEvent == null ) continue; // legacy of ordered-list which could end up with gaps; should not be
+            if ( currentEvent == null )
+                continue; // legacy of ordered-list which could end up with gaps; should not be
             // needed any more
-            if ( currentEvent.getEventType() == null ) continue;
+            if ( currentEvent.getEventType() == null )
+                continue;
 
             // we only care about ArrayDesignAnalysisEvent events.
             Class<? extends AuditEventType> currentEventClass = currentEvent.getEventType().getClass();
@@ -375,20 +321,20 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             log.debug( "Inspecting: " + currentEventClass );
 
             // Get the most recent event of each type.
-            if ( lastRepeatMask == null
-                    && ArrayDesignRepeatAnalysisEvent.class.isAssignableFrom( currentEventClass ) ) {
+            if ( lastRepeatMask == null && ArrayDesignRepeatAnalysisEvent.class
+                    .isAssignableFrom( currentEventClass ) ) {
                 lastRepeatMask = currentEvent;
                 log.debug( "Last repeat mask: " + lastRepeatMask.getDate() );
-            } else if ( lastSequenceUpdate == null
-                    && ArrayDesignSequenceUpdateEvent.class.isAssignableFrom( currentEventClass ) ) {
+            } else if ( lastSequenceUpdate == null && ArrayDesignSequenceUpdateEvent.class
+                    .isAssignableFrom( currentEventClass ) ) {
                 lastSequenceUpdate = currentEvent;
                 log.debug( "Last sequence update: " + lastSequenceUpdate.getDate() );
-            } else if ( lastSequenceAnalysis == null
-                    && ArrayDesignSequenceAnalysisEvent.class.isAssignableFrom( currentEventClass ) ) {
+            } else if ( lastSequenceAnalysis == null && ArrayDesignSequenceAnalysisEvent.class
+                    .isAssignableFrom( currentEventClass ) ) {
                 lastSequenceAnalysis = currentEvent;
                 log.debug( "Last sequence analysis: " + lastSequenceAnalysis.getDate() );
-            } else if ( lastProbeMapping == null
-                    && ArrayDesignGeneMappingEvent.class.isAssignableFrom( currentEventClass ) ) {
+            } else if ( lastProbeMapping == null && ArrayDesignGeneMappingEvent.class
+                    .isAssignableFrom( currentEventClass ) ) {
                 lastProbeMapping = currentEvent;
                 log.info( "Last probe mapping analysis: " + lastProbeMapping.getDate() );
             }
@@ -416,8 +362,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             }
 
-            if ( lastSequenceAnalysis != null
-                    && lastSequenceUpdate.getDate().after( lastSequenceAnalysis.getDate() ) ) {
+            if ( lastSequenceAnalysis != null && lastSequenceUpdate.getDate()
+                    .after( lastSequenceAnalysis.getDate() ) ) {
                 log.warn( arrayDesign + ": Sequences were updated more recently than the last sequence analysis" );
                 return false;
             }
@@ -439,8 +385,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return false;
         }
 
-        if ( skipIfLastRunLaterThan != null && lastProbeMapping != null
-                && lastProbeMapping.getDate().after( skipIfLastRunLaterThan ) ) {
+        if ( skipIfLastRunLaterThan != null && lastProbeMapping != null && lastProbeMapping.getDate()
+                .after( skipIfLastRunLaterThan ) ) {
             log.info( arrayDesign + " was probemapped since " + skipIfLastRunLaterThan + ", skipping." );
             return false;
         }
@@ -449,9 +395,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return true;
     }
 
-    /*
+    /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.apps.ArrayDesignSequenceManipulatingCli#processOptions()
      */
     @Override
@@ -485,11 +431,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             }
         }
         if ( this.hasOption( 't' ) ) {
-            this.taxonName = this.getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( this.taxonName );
-            if ( taxon == null ) {
-                throw new IllegalArgumentException( "No taxon named " + taxonName );
-            }
+            this.taxon = this.setTaxonByName( taxonService );
         }
 
         if ( this.hasOption( "nodb" ) ) {
@@ -512,17 +454,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note, ArrayDesignGeneMappingEvent eventType ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    /**
-     * @param skipIfLastRunLaterThan
-     */
     private void batchRun( final Date skipIfLastRunLaterThan ) {
         Collection<ArrayDesign> allArrayDesigns;
 
@@ -596,17 +532,14 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         summarizeProcessing();
     }
 
-    /**
-     * @return
-     */
     private void configure() {
         this.config = new ProbeMapperConfig();
 
         /*
          * Hackery to work around hg19 problems.; no longer an issue for miRNA
          */
-        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" )
-                && Settings.getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
+        boolean isMissingTracks = taxon != null && taxon.getCommonName().equals( "human" ) && Settings
+                .getString( "gemma.goldenpath.db.human" ).equals( "hg19" );
 
         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
             // if ( isMissingTracks ) {
@@ -619,11 +552,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             String configString = this.getOptionValue( CONFIG_OPTION );
 
-            if ( !configString.matches( "[" + OPTION_REFSEQ + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST
-                    + OPTION_MRNA + OPTION_ACEMBLY + OPTION_ENSEMBL + OPTION_NSCAN + "]+" ) ) {
-                throw new IllegalArgumentException( "Configuration string must only contain values [" + OPTION_REFSEQ
-                        + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST + OPTION_MRNA + OPTION_ACEMBLY
-                        + OPTION_ENSEMBL + OPTION_NSCAN + "]" );
+            if ( !configString.matches(
+                    "[" + OPTION_REFSEQ + OPTION_KNOWNGENE + OPTION_MICRORNA + OPTION_EST + OPTION_MRNA + OPTION_ASEMBLY
+                            + OPTION_ENSEMBL + OPTION_NSCAN + "]+" ) ) {
+                throw new IllegalArgumentException(
+                        "Configuration string must only contain values [" + OPTION_REFSEQ + OPTION_KNOWNGENE
+                                + OPTION_MICRORNA + OPTION_EST + OPTION_MRNA + OPTION_ASEMBLY + OPTION_ENSEMBL
+                                + OPTION_NSCAN + "]" );
             }
 
             config.setAllTracksOff();
@@ -635,7 +570,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             config.setUseNscan( configString.contains( OPTION_NSCAN ) );
             config.setUseRefGene( configString.contains( OPTION_REFSEQ ) );
             config.setUseKnownGene( configString.contains( OPTION_KNOWNGENE ) );
-            config.setUseAcembly( configString.contains( OPTION_ACEMBLY ) );
+            config.setUseAcembly( configString.contains( OPTION_ASEMBLY ) );
         }
 
         if ( hasOption( 's' ) ) {
@@ -684,10 +619,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     }
 
-    /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     */
     private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
         if ( taxon != null && !arrayDesignService.getTaxa( design.getId() ).contains( taxon ) ) {
             return;
@@ -734,10 +665,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
     }
 
-    /**
-     * 
-     * @param arrayDesign
-     */
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
         arrayDesign = arrayDesignService.thawLite( arrayDesign );
@@ -758,7 +685,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
-                    if ( log.isDebugEnabled() ) log.debug( association );
+                    if ( log.isDebugEnabled() )
+                        log.debug( association );
                 }
 
                 arrayDesignProbeMapperService.printResult( probe, col );

@@ -18,68 +18,44 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 
+import java.io.*;
+
 /**
  * Delete design elements (probes) that are invalid for one reason or another. The impetus for this was to delete probes
  * in the MG-U74 version 1 set, but this is of general use. Probes to be removed are given in a file.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingCli {
 
+    private CompositeSequenceService compositeSequenceService;
+    private DesignElementDataVectorService designElementDataVectorService;
+    private String file;
+
     public static void main( String[] args ) {
         ArrayDesignProbeCleanupCLI p = new ArrayDesignProbeCleanupCLI();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
 
-    private CompositeSequenceService compositeSequenceService;
-
-    private DesignElementDataVectorService designElementDataVectorService;
-
-    private String file;
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
+
     @Override
     public String getCommandName() {
         return "deletePlatformElements";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
@@ -92,16 +68,12 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
 
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         File f = new File( file );
         if ( !f.canRead() ) {
@@ -110,14 +82,15 @@ public class ArrayDesignProbeCleanupCLI extends ArrayDesignSequenceManipulatingC
         }
 
         if ( this.arrayDesignsToProcess.size() > 1 ) {
-            throw new IllegalArgumentException( "Cannot be applied to more than one platform given to the '-a' option" );
+            throw new IllegalArgumentException(
+                    "Cannot be applied to more than one platform given to the '-a' option" );
         }
 
         ArrayDesign arrayDesign = this.arrayDesignsToProcess.iterator().next();
         try (InputStream is = new FileInputStream( f );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-            String line = null;
+            String line;
             int count = 0;
             while ( ( line = br.readLine() ) != null ) {
 

@@ -18,33 +18,11 @@
  */
 package ubic.gemma.annotation.geommtx.evaluation;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QuerySolution;
-import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.*;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.DC_11;
-
 import ubic.GEOMMTx.LabelLoader;
 import ubic.GEOMMTx.OntologyTools;
 import ubic.GEOMMTx.ProjectRDFModelTools;
@@ -65,46 +43,42 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
+import java.io.*;
+import java.util.*;
+
 /**
- * TODO Document Me
- * 
+ *
  * @author lfrench
- * @version $Id$
  */
 public class CompareToManualCLI extends AbstractCLIContextCLI {
 
+    private String filename;
+    private Map<String, String> labels;
+    private Map<String, Set<String>> manualURLs;
+    private Map<String, Set<String>> mmtxURLs;
+    private HashSet<String> originalMMTxIDs;
+    private DescriptionExtractor de;
+    public CompareToManualCLI() {
+        labels = new HashMap<>();
+    }
+
     public static Map<String, Integer> listToFrequencyMap( List<String> input ) {
-        Map<String, Integer> result = new HashMap<String, Integer>();
+        Map<String, Integer> result = new HashMap<>();
         int i;
         for ( String s : input ) {
             Integer iO = result.get( s );
             if ( iO == null )
                 i = 0;
             else
-                i = iO.intValue();
+                i = iO;
             result.put( s, i + 1 );
         }
         return result;
     }
 
-    @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.METADATA;
-    }
-
     public static void main( String[] args ) {
         CompareToManualCLI p = new CompareToManualCLI();
-
-        // DocumentRange t = null;
-
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
 
     public static void printMap( Map<String, Integer> map ) {
@@ -118,25 +92,16 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         }
     }
 
-    String filename;
-    Map<String, String> labels;
-    Map<String, Set<String>> manualURLs;
-
-    Map<String, Set<String>> mmtxURLs;
-
-    HashSet<String> originalMMTxIDs;
-
-    DescriptionExtractor de;
-
-    public CompareToManualCLI() {
-        labels = new HashMap<String, String>();
+    @Override
+    public CommandGroup getCommandGroup() {
+        return CommandGroup.METADATA;
     }
 
     /*
      * Removes null URL's and also URL's from CHEBI Birnlex organismal taxonomy MGED Ontology
      */
     public void cleanURLs() {
-        Set<String> datasets = new HashSet<String>( mmtxURLs.keySet() );
+        Set<String> datasets = new HashSet<>( mmtxURLs.keySet() );
         datasets.addAll( manualURLs.keySet() );
         for ( String dataset : datasets ) {
             // Set<String> machineURLs = mmtxURLs.get( dataset );
@@ -146,7 +111,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
             humanURLs.remove( "" );
 
             // get rid of MGED URL's
-            List<String> removeMe = new LinkedList<String>();
+            List<String> removeMe = new LinkedList<>();
             for ( String url : humanURLs ) {
                 if ( url.contains( "MGEDOntology.owl" ) ) {
                     removeMe.add( url );
@@ -165,7 +130,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     }
 
     public Set<String> convertURLsToLabels( Set<String> URLs ) {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for ( String url : URLs )
             result.add( labels.get( url ) );
         return result;
@@ -227,7 +192,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     }
 
     public Set<String> getIntersectExperiments() {
-        Set<String> intersect = new HashSet<String>( manualURLs.keySet() );
+        Set<String> intersect = new HashSet<>( manualURLs.keySet() );
         intersect.retainAll( mmtxURLs.keySet() );
         return intersect;
     }
@@ -235,7 +200,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     public Set<String> getIntersection( String dataset ) {
         Set<String> machineURLs = mmtxURLs.get( dataset );
         Set<String> humanURLs = manualURLs.get( dataset );
-        Set<String> intersect = new HashSet<String>( humanURLs );
+        Set<String> intersect = new HashSet<>( humanURLs );
         intersect.retainAll( machineURLs );
         return intersect;
     }
@@ -243,7 +208,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     public Set<String> getIntersectionByName( String dataset ) {
         Set<String> machineLabels = convertURLsToLabels( mmtxURLs.get( dataset ) );
         Set<String> humanLabels = convertURLsToLabels( manualURLs.get( dataset ) );
-        Set<String> intersect = new HashSet<String>( humanLabels );
+        Set<String> intersect = new HashSet<>( humanLabels );
         intersect.retainAll( machineLabels );
         return intersect;
     }
@@ -251,7 +216,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     public Set<String> getMissed( String dataset ) {
         Set<String> machineURLs = mmtxURLs.get( dataset );
         Set<String> humanURLs = manualURLs.get( dataset );
-        Set<String> missed = new HashSet<String>( humanURLs );
+        Set<String> missed = new HashSet<>( humanURLs );
         missed.removeAll( machineURLs );
         return missed;
     }
@@ -281,7 +246,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     }
 
     public String lineSpacedSet( Set<String> input ) {
-        List<String> outputList = new LinkedList<String>();
+        List<String> outputList = new LinkedList<>();
         for ( String line : input ) {
             outputList.add( labels.get( line ) + "->" + line );
         }
@@ -295,7 +260,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     public void loadInFinalEvaluation() {
         CheckHighLevelSpreadSheetReader reader = new CheckHighLevelSpreadSheetReader();
-        Map<String, Set<String>> accepted = null;
+        Map<String, Set<String>> accepted;
 
         accepted = reader.getAcceptedAnnotations();
 
@@ -307,9 +272,9 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     }
 
     public void makeSpreadSheet() throws Exception {
-        Map<String, Set<String>> newPredictions = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> newPredictions = new HashMap<>();
         for ( String dataset : originalMMTxIDs ) {
-            Set<String> machineURLs = new HashSet<String>( mmtxURLs.get( dataset ) );
+            Set<String> machineURLs = new HashSet<>( mmtxURLs.get( dataset ) );
             Set<String> humanURLs = manualURLs.get( dataset );
             machineURLs.removeAll( humanURLs );
             newPredictions.put( dataset, machineURLs );
@@ -359,7 +324,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     public Collection<String> removeFromHumanSeen( Set<String> removeSet ) {
         // List<String> seenHumanURLs = new LinkedList<String>();
-        Set<String> seenHumanURLs = new HashSet<String>();
+        Set<String> seenHumanURLs = new HashSet<>();
 
         for ( Set<String> seenURLs : manualURLs.values() ) {
             seenHumanURLs.addAll( seenURLs );
@@ -370,7 +335,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     // if the dataset is not processed by humans or mmtx, then set its annotations to empty set
     public void setNullstoEmpty() {
-        Set<String> datasets = new HashSet<String>( mmtxURLs.keySet() );
+        Set<String> datasets = new HashSet<>( mmtxURLs.keySet() );
         datasets.addAll( manualURLs.keySet() );
         for ( String dataset : datasets ) {
             if ( mmtxURLs.get( dataset ) == null ) {
@@ -391,12 +356,12 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
                 "522", "524", "528", "533", "535", "54", "544", "548", "559", "571", "579", "587", "588", "591", "595",
                 "596", "597", "6", "602", "606", "609", "613", "617", "619", "625", "627", "633", "639", "64", "647",
                 "651", "653", "657", "66", "663", "667", "672", "699", "74", "76", "79", "80", "90", "95" };
-        originalMMTxIDs = new HashSet<String>( Arrays.asList( exps100 ) );
+        originalMMTxIDs = new HashSet<>( Arrays.asList( exps100 ) );
     }
 
     public void showMe( String experimentID ) {
-        Set<String> machineURLs = new HashSet<String>( mmtxURLs.get( experimentID ) );
-        Set<String> humanURLs = new HashSet<String>( manualURLs.get( experimentID ) );
+        Set<String> machineURLs = new HashSet<>( mmtxURLs.get( experimentID ) );
+        Set<String> humanURLs = new HashSet<>( manualURLs.get( experimentID ) );
         Set<String> intersect = getIntersection( experimentID );
 
         machineURLs.removeAll( intersect );
@@ -439,7 +404,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
         long totaltime = System.currentTimeMillis();
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         // System.exit( 1 );
 
@@ -456,7 +422,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         log.info( "gemma intersect mmtx size=" + getIntersectExperiments().size() );
         // log.info( intersect );
 
-        Set<String> minus = new HashSet<String>( mmtxURLs.keySet() );
+        Set<String> minus = new HashSet<>( mmtxURLs.keySet() );
         minus.removeAll( manualURLs.keySet() );
         log.info( "mmtx minus gemma size=" + minus.size() );
         log.info( minus );
@@ -568,15 +534,10 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         return null;
     }
 
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-    }
-
     private void filter( String keepString, Map<String, Set<String>> map ) {
         for ( String dataset : map.keySet() ) {
             Set<String> URLs = map.get( dataset );
-            List<String> removeMe = new LinkedList<String>();
+            List<String> removeMe = new LinkedList<>();
             for ( String url : URLs ) {
                 if ( url.contains( keepString ) ) {
                     // keep it
@@ -605,9 +566,10 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     private void filterForOneSource() {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
-            Set<String> oneSourceMachineURLs = new HashSet<String>();
+            Set<String> oneSourceMachineURLs = new HashSet<>();
             for ( String URI : machineURLs ) {
-                if ( de.getDecriptionType( dataset, URI ).size() != 1 ) continue;
+                if ( de.getDecriptionType( dataset, URI ).size() != 1 )
+                    continue;
                 oneSourceMachineURLs.add( URI );
             }
             mmtxURLs.put( dataset, oneSourceMachineURLs );
@@ -618,9 +580,10 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     private void filterForTwoOrMoreSources() {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
-            Set<String> notOneSourceMachineURLs = new HashSet<String>();
+            Set<String> notOneSourceMachineURLs = new HashSet<>();
             for ( String URI : machineURLs ) {
-                if ( de.getDecriptionType( dataset, URI ).size() < 2 ) continue;
+                if ( de.getDecriptionType( dataset, URI ).size() < 2 )
+                    continue;
                 notOneSourceMachineURLs.add( URI );
             }
             mmtxURLs.put( dataset, notOneSourceMachineURLs );
@@ -631,7 +594,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     private Map<String, Set<String>> getHumanMappingsFromDisk() throws Exception {
         Map<String, Set<String>> result;
         try (ObjectInputStream o = new ObjectInputStream(
-                new FileInputStream( SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) );) {
+                new FileInputStream( SetupParameters.getString( "gemma.annotator.cachedGemmaAnnotations" ) ) )) {
             result = ( Map<String, Set<String>> ) o.readObject();
         }
 
@@ -640,7 +603,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     }
 
     private Map<String, Set<String>> getHumanMappingsFromServer() {
-        Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> result = new HashMap<>();
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
         Collection<ExpressionExperiment> experiments = ees.loadAll();
 
@@ -660,7 +623,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
             Collection<Characteristic> characters = experiment.getCharacteristics();
 
-            Set<String> currentURL = new HashSet<String>();
+            Set<String> currentURL = new HashSet<>();
             result.put( experiment.getId() + "", currentURL );
 
             for ( Characteristic ch : characters ) {
@@ -698,14 +661,14 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
         mmtxURLs = ProjectRDFModelTools.getURLsExperiments( filename );
 
-        originalMMTxIDs = new HashSet<String>( mmtxURLs.keySet() );
+        originalMMTxIDs = new HashSet<>( mmtxURLs.keySet() );
 
         log.info( "mmtx size=" + mmtxURLs.size() );
         log.info( "gemma size=" + manualURLs.size() );
     }
 
     private Map<String, Set<String>> getMissedURLS() {
-        Map<String, Set<String>> result = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> result = new HashMap<>();
         for ( String dataset : originalMMTxIDs ) {
             result.put( dataset, getMissed( dataset ) );
         }
@@ -746,7 +709,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     @SuppressWarnings("unused")
     private void printMissedURLs() {
-        Map<String, Integer> missed = new HashMap<String, Integer>();
+        Map<String, Integer> missed = new HashMap<>();
         for ( Set<String> missedURLs : getMissedURLS().values() ) {
             for ( String URI : missedURLs ) {
                 Integer i = missed.get( URI );
@@ -766,8 +729,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     @SuppressWarnings("unused")
     private void printROCCurveValues( String f ) throws IOException {
         // table that has scores mapped to how many predictions were made at the score, and how many were correct
-        Map<Integer, Integer> intersections = new HashMap<Integer, Integer>();
-        Map<Integer, Integer> predictions = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> intersections = new HashMap<>();
+        Map<Integer, Integer> predictions = new HashMap<>();
         // from RDF
         String queryString = "PREFIX rdf: <http://www.w3.org/2000/01/rdf-schema#>"
                 + "PREFIX gemmaAnn: <http://bioinformatics.ubc.ca/Gemma/ws/xml/gemmaAnnotations.owl#>\n                              "
@@ -792,7 +755,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         log.info( "Query executed" );
 
         // put it into a set
-        Map<String, Integer> highest = new HashMap<String, Integer>();
+        Map<String, Integer> highest = new HashMap<>();
 
         while ( results.hasNext() ) {
             QuerySolution qTemp = results.nextSolution();
@@ -835,7 +798,8 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
                     predictions.put( score, 1 + predictionsForScore );
                 }
 
-                if ( intersections.get( score ) == null ) intersections.put( score, 0 );
+                if ( intersections.get( score ) == null )
+                    intersections.put( score, 0 );
 
                 // if it is correct
                 if ( manualURLs.get( dataset ).contains( URL ) ) {
@@ -851,20 +815,22 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     @SuppressWarnings("unused")
     private void printSourceStats() {
-        List<String> allSources = new LinkedList<String>();
-        List<String> intersectSources = new LinkedList<String>();
+        List<String> allSources = new LinkedList<>();
+        List<String> intersectSources = new LinkedList<>();
 
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
             Set<String> intersect = getIntersection( dataset );
 
             for ( String URI : machineURLs ) {
-                if ( de.getDecriptionType( dataset, URI ).size() != 1 ) continue;
+                if ( de.getDecriptionType( dataset, URI ).size() != 1 )
+                    continue;
                 allSources.addAll( de.getDecriptionType( dataset, URI ) );
             }
             // only look at those with one source
             for ( String URI : intersect ) {
-                if ( de.getDecriptionType( dataset, URI ).size() != 1 ) continue;
+                if ( de.getDecriptionType( dataset, URI ).size() != 1 )
+                    continue;
                 intersectSources.addAll( de.getDecriptionType( dataset, URI ) );
             }
         }
@@ -878,9 +844,9 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
 
     private void printStats() {
         int totalHuman = 0, totalMachine = 0, totalIntersect = 0;
-        Set<String> uniqueHuman = new HashSet<String>();
-        Set<String> uniqueMachine = new HashSet<String>();
-        Set<String> uniqueIntersect = new HashSet<String>();
+        Set<String> uniqueHuman = new HashSet<>();
+        Set<String> uniqueMachine = new HashSet<>();
+        Set<String> uniqueIntersect = new HashSet<>();
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
             Set<String> humanURLs = manualURLs.get( dataset );
@@ -893,10 +859,12 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
             totalHuman += humanURLs.size();
             totalIntersect += intersect.size();
         }
-        System.out.println( "Human total:" + totalHuman + " Unique:" + uniqueHuman.size() + "  percent unique:"
-                + ( int ) ( 100.0 * uniqueHuman.size() / totalHuman ) );
-        System.out.println( "Machine:" + totalMachine + " Unique:" + uniqueMachine.size() + "  percent unique:"
-                + ( int ) ( 100.0 * uniqueMachine.size() / totalMachine ) );
+        System.out.println(
+                "Human total:" + totalHuman + " Unique:" + uniqueHuman.size() + "  percent unique:" + ( int ) (
+                        100.0 * uniqueHuman.size() / totalHuman ) );
+        System.out.println(
+                "Machine:" + totalMachine + " Unique:" + uniqueMachine.size() + "  percent unique:" + ( int ) (
+                        100.0 * uniqueMachine.size() / totalMachine ) );
         System.out.println( "Intersect:" + totalIntersect + " Unique:" + uniqueIntersect.size() );
         float recall = totalIntersect / ( float ) totalHuman;
         System.out.println( "Recall:" + recall );
@@ -909,9 +877,10 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     private void removeAbstractSource() {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
-            Set<String> oneSourceMachineURLs = new HashSet<String>();
+            Set<String> oneSourceMachineURLs = new HashSet<>();
             for ( String URI : machineURLs ) {
-                if ( de.getDecriptionType( dataset, URI ).contains( "primaryReference/abstract" ) ) continue;
+                if ( de.getDecriptionType( dataset, URI ).contains( "primaryReference/abstract" ) )
+                    continue;
                 oneSourceMachineURLs.add( URI );
             }
             mmtxURLs.put( dataset, oneSourceMachineURLs );
@@ -928,7 +897,7 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
     private void removeExceptOneSource( String source ) {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
-            Set<String> oneSourceMachineURLs = new HashSet<String>();
+            Set<String> oneSourceMachineURLs = new HashSet<>();
             for ( String URI : machineURLs ) {
                 if ( de.getDecriptionType( dataset, URI ).contains( source )
                         && de.getDecriptionType( dataset, URI ).size() == 1 )
@@ -995,11 +964,6 @@ public class CompareToManualCLI extends AbstractCLIContextCLI {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         // TODO Auto-generated method stub

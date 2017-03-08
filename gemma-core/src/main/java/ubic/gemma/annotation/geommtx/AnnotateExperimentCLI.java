@@ -26,28 +26,16 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * A class that starts with a experiment ID and in the end outputs the predicted annotation URL's, after filtering
- * 
+ *
  * @author leon
- * @version $Id$
  */
 public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
-    /**
-     * @param args
-     */
+    private ExpressionExperimentAnnotator expressionExperimentAnnotator;
+
     public static void main( String[] args ) {
         AnnotateExperimentCLI p = new AnnotateExperimentCLI();
-
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
-
-    ExpressionExperimentAnnotator expressionExperimentAnnotator;
 
     @Override
     protected void buildOptions() {
@@ -59,10 +47,10 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         long time = System.currentTimeMillis();
-        time = System.currentTimeMillis();
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
 
@@ -104,6 +92,7 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
             try {
                 Thread.sleep( 10000 );
             } catch ( InterruptedException e ) {
+                log.error( "Thread sleep interrupted" );
             }
             log.info( "Waiting for MMTx..." );
         }
@@ -111,18 +100,11 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
         log.info( " **** MMTx ready ***" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "autoTagExperiments";
     }
-    /* (non-Javadoc)
-     * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
-     */
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;

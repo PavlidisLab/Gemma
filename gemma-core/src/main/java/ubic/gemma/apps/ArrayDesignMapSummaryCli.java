@@ -18,38 +18,25 @@
  */
 package ubic.gemma.apps;
 
-import java.util.Collection;
-
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.util.Collection;
+
 /**
  * CLI for ArrayDesignMapSummaryService
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli {
 
     public static void main( String[] args ) {
         ArrayDesignMapSummaryCli p = new ArrayDesignMapSummaryCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "platformMapSummary";
@@ -60,15 +47,11 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
         return CommandGroup.ANALYSIS;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
         ArrayDesignMapResultService arrayDesignMapResultService = this.getBean( ArrayDesignMapResultService.class );
 
         for ( ArrayDesign arrayDesign : this.arrayDesignsToProcess ) {
@@ -83,12 +66,6 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
             }
         }
         return null;
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        // FIXME: add HTML output option.
     }
 
 }

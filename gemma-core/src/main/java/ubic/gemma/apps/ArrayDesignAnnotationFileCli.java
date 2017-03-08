@@ -294,7 +294,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
                 // need to set these so processing ad works correctly (todo: make
                 // processtype take all 3 parameter)
-                ArrayDesign arrayDesign = locateArrayDesign( accession );
+                ArrayDesign arrayDesign = locateArrayDesign( accession, arrayDesignService );
 
                 try {
                     processAD( arrayDesign, annotationFileName, type );

@@ -18,20 +18,11 @@
  */
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -47,7 +38,14 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.util.AbstractCLIContextCLI;
-import ubic.gemma.util.EntityUtils;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -65,43 +63,30 @@ import ubic.gemma.util.EntityUtils;
  * </ul>
  * Some of these options can be (or should be) combined, and modified by a (optional) "force" option, and will have
  * customized behavior.
- * <p>
  * In addition, EEs can be excluded based on a list given in a separate file.
- * 
+ *
  * @author Paul
  */
 public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLIContextCLI {
+    protected ExpressionExperimentService eeService;
+    protected Set<BioAssaySet> expressionExperiments = new HashSet<>();
+    protected boolean force = false;
+    protected Taxon taxon = null;
+    protected TaxonService taxonService;
+    protected SearchService searchService;
+    private Collection<BioAssaySet> excludeExperiments;
+    private GeneService geneService;
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.EXPERIMENT;
     }
 
-    protected ExpressionExperimentService eeService;
-
-    protected Collection<BioAssaySet> excludeExperiments;
-
-    protected Set<BioAssaySet> expressionExperiments = new HashSet<BioAssaySet>();
-
-    protected ExpressionExperimentSet expressionExperimentSet;
-
-    protected boolean force = false;
-
-    protected GeneService geneService;
-
-    protected SearchService searchService;
-
-    protected Taxon taxon = null;
-
-    protected TaxonService taxonService;
-
     protected void addForceOption() {
         this.addForceOption( null );
     }
 
-    /**
-     * 
-     */
-    @SuppressWarnings("static-access")
+    @SuppressWarnings("AccessStaticViaInstance")
     protected void addForceOption( String explanation ) {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         String usedExpl = explanation == null ? defaultExplanation : explanation;
@@ -113,17 +98,15 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option expOption = OptionBuilder.hasArg().withArgName( "shortname" )
-                .withDescription(
-                        "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
-                                + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
+        Option expOption = OptionBuilder.hasArg().withArgName( "shortname" ).withDescription(
+                "Expression experiment short name. Most tools recognize comma-delimited values given on the command line, "
+                        + "and if this option is omitted (and none other provided), the tool will be applied to all expression experiments." )
                 .withLongOpt( "experiment" ).create( 'e' );
 
         addOption( expOption );
 
-        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "file" )
-                .withDescription(
-                        "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
+        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "file" ).withDescription(
+                "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
         addOption( eeFileListOption );
 
@@ -149,38 +132,24 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     }
 
-    /**
-     * @param symbol
-     * @param t
-     * @return
-     */
-    protected Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
+    private Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
         Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
         for ( Gene gene : genes ) {
-            if ( t.equals( gene.getTaxon() ) ) return gene;
+            if ( t.equals( gene.getTaxon() ) )
+                return gene;
         }
         return null;
     }
 
-    /**
-     * @param ee
-     * @return true if the expression experiment has troubled status, or its parent array design has troubled status.
-     */
+
     protected boolean isTroubled( BioAssaySet ee ) {
-        Collection<BioAssaySet> eec = new HashSet<BioAssaySet>();
+        Collection<BioAssaySet> eec = new HashSet<>();
         eec.add( ee );
         removeTroubledEes( eec );
-        if ( eec.size() == 0 ) {
-            return true;
-        }
-        return false;
+        return eec.size() == 0;
     }
 
-    /**
-     * @param short name of the experiment to find.
-     * @return
-     */
-    protected ExpressionExperiment locateExpressionExperiment( String name ) {
+    private ExpressionExperiment locateExpressionExperiment( String name ) {
 
         if ( name == null ) {
             errorObjects.add( "Expression experiment short name must be provided" );
@@ -202,14 +171,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
         eeService = this.getBean( ExpressionExperimentService.class );
         geneService = this.getBean( GeneService.class );
-        taxonService = getBean( TaxonService.class );
+        taxonService = this.getBean( TaxonService.class );
+        searchService = this.getBean( SearchService.class );
         this.auditEventService = getBean( AuditEventService.class );
         if ( hasOption( 't' ) ) {
-            String taxonName = getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( taxonName );
-            if ( taxon == null ) {
-                log.error( "ERROR: Cannot find taxon " + taxonName );
-            }
+            this.taxon = setTaxonByName( taxonService );
         }
 
         if ( hasOption( "force" ) ) {
@@ -276,20 +242,19 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     /**
      * Read in a list of genes
-     * 
+     *
      * @param inFile - file name to read
-     * @param t
      * @return collection of genes
-     * @throws IOException
      */
     protected Collection<Gene> readGeneListFile( String inFile, Taxon t ) throws IOException {
         log.info( "Reading " + inFile );
 
-        Collection<Gene> genes = new ArrayList<Gene>();
-        try (BufferedReader in = new BufferedReader( new FileReader( inFile ) );) {
+        Collection<Gene> genes = new ArrayList<>();
+        try (BufferedReader in = new BufferedReader( new FileReader( inFile ) )) {
             String line;
             while ( ( line = in.readLine() ) != null ) {
-                if ( line.startsWith( "#" ) ) continue;
+                if ( line.startsWith( "#" ) )
+                    continue;
                 String s = line.trim();
                 Gene gene = findGeneByOfficialSymbol( s, t );
                 if ( gene == null ) {
@@ -303,7 +268,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     /**
-     * 
+     *
      */
     private void excludeFromFile() {
         String excludeEeFileName = getOptionValue( 'x' );
@@ -319,11 +284,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         expressionExperiments.removeAll( excludeExperiments );
         int removed = before - expressionExperiments.size();
 
-        if ( removed > 0 ) log.info( "Excluded " + removed + " expression experiments" );
+        if ( removed > 0 )
+            log.info( "Excluded " + removed + " expression experiments" );
     }
 
     /**
-     * 
+     *
      */
     private void experimentsFromCliList() {
         String experimentShortNames = this.getOptionValue( 'e' );
@@ -358,18 +324,16 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             throw new IllegalArgumentException( "No EE set has name '" + optionValue + "'" );
         }
         ExpressionExperimentSet set = sets.iterator().next();
-        this.expressionExperimentSet = set;
-        this.expressionExperiments = new HashSet<BioAssaySet>( set.getExperiments() );
+        this.expressionExperiments = new HashSet<>( set.getExperiments() );
 
     }
 
     /**
      * Use the search engine to locate expression experiments.
-     * 
-     * @param query
+     *
      */
     private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
-        Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
+        Set<BioAssaySet> ees = new HashSet<>();
         Collection<SearchResult> eeSearchResults = searchService
                 .search( SearchSettingsImpl.expressionExperimentSearch( query ) ).get( ExpressionExperiment.class );
 
@@ -389,14 +353,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file.
-     * 
-     * @param fileName
-     * @return
-     * @throws IOException
+     *
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
-        Set<BioAssaySet> ees = new HashSet<BioAssaySet>();
-        for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
+        Set<BioAssaySet> ees = new HashSet<>();
+        for ( String eeName : readListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
 
@@ -420,28 +381,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     /**
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    private Collection<String> readExpressionExperimentListFileToStrings( String fileName ) throws IOException {
-        Collection<String> eeNames = new HashSet<String>();
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) );) {
-            while ( in.ready() ) {
-                String eeName = in.readLine().trim();
-                if ( eeName.startsWith( "#" ) ) {
-                    continue;
-                }
-                eeNames.add( eeName );
-            }
-            return eeNames;
-        }
-    }
-
-    /**
      * removes EEs that are troubled, or their parent Array design is troubled.
-     * 
-     * @param ees
+     *
      */
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {
         if ( ees == null || ees.size() == 0 ) {

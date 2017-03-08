@@ -19,6 +19,16 @@
 package ubic.gemma.util;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.genome.Taxon;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Spring configuration for CLI.
@@ -37,6 +47,66 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
+
+    }
+
+    protected static void tryDoWorkNoExit( AbstractCLIContextCLI p, String[] args ) {
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    protected static Collection<String> readListFileToStrings( String fileName ) throws IOException {
+        Collection<String> eeNames = new HashSet<>();
+        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
+            while ( in.ready() ) {
+                String eeName = in.readLine().trim();
+                if ( eeName.startsWith( "#" ) ) {
+                    continue;
+                }
+                eeNames.add( eeName );
+            }
+            return eeNames;
+        }
+    }
+
+    protected Taxon setTaxonByName( TaxonService taxonService ) {
+        String taxonName = getOptionValue( 't' );
+        ubic.gemma.model.genome.Taxon taxon = taxonService.findByCommonName( taxonName );
+        if ( taxon == null ) {
+            log.error( "ERROR: Cannot find taxon " + taxonName );
+        }
+        return taxon;
+    }
+
+    /**
+     * @param name of the array design to find.
+     */
+    protected ArrayDesign locateArrayDesign( String name, ArrayDesignService arrayDesignService ) {
+
+        ArrayDesign arrayDesign = null;
+
+        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
+        if ( byname.size() > 1 ) {
+            throw new IllegalArgumentException( "Ambiguous name: " + name );
+        } else if ( byname.size() == 1 ) {
+            arrayDesign = byname.iterator().next();
+        }
+
+        if ( arrayDesign == null ) {
+            arrayDesign = arrayDesignService.findByShortName( name );
+        }
+
+        if ( arrayDesign == null ) {
+            log.error( "No arrayDesign " + name + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return arrayDesign;
     }
 
     public abstract CommandGroup getCommandGroup();

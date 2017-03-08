@@ -35,10 +35,16 @@ import java.util.Set;
 
 /**
  * A class to extract Gemma experiment annotations and write them to a file in R data format.
- * 
+ *
  * @author leon
  */
 public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
+
+    public static void main( String[] args ) {
+        GetAnnotationMatrixCLI p = new GetAnnotationMatrixCLI();
+
+        tryDoWorkNoExit( p, args );
+    }
 
     @Override
     protected void buildOptions() {
@@ -53,14 +59,17 @@ public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
         // * experiment tilte vrs shortname
 
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.METADATA;
     }
+
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         StringToStringSetMap result = new StringToStringSetMap();
         StringToStringSetMap URIresult = new StringToStringSetMap();
@@ -77,15 +86,16 @@ public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
         int c = 0;
         for ( ExpressionExperiment experiment : experiments ) {
             c++;
-            log.info( "Experiment number:" + c + " of " + experiments.size() + " ID:" + experiment.getId()
-                    + " Shortname:" + experiment.getShortName() );
+            log.info(
+                    "Experiment number:" + c + " of " + experiments.size() + " ID:" + experiment.getId() + " Shortname:"
+                            + experiment.getShortName() );
 
             experiment = ees.thawLite( experiment );
 
             Collection<Characteristic> characters = experiment.getCharacteristics();
 
-            Set<String> currentLabelSet = new HashSet<String>();
-            Set<String> currentURISet = new HashSet<String>();
+            Set<String> currentLabelSet = new HashSet<>();
+            Set<String> currentURISet = new HashSet<>();
 
             result.put( experiment.getShortName() + "", currentLabelSet );
 
@@ -136,25 +146,6 @@ public class GetAnnotationMatrixCLI extends AbstractCLIContextCLI {
         return null;
     }
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        GetAnnotationMatrixCLI p = new GetAnnotationMatrixCLI();
-
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    /* (non-Javadoc)
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         // TODO Auto-generated method stub

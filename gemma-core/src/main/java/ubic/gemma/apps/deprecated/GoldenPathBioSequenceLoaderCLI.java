@@ -18,12 +18,9 @@
  */
 package ubic.gemma.apps.deprecated;
 
-import java.io.IOException;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.externalDb.GoldenPathDumper;
 import ubic.gemma.genome.taxon.service.TaxonService;
@@ -33,25 +30,26 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
+import java.io.IOException;
+
 /**
  * Bulk load BioSequence instances taken from GoldenPath.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @deprecated
  */
 @Deprecated
 public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
+    private BioSequenceService bioSequenceService;
+    private ExternalDatabaseService externalDatabaseService;
+    private String fileArg;
+    private int limitArg = -1;
+    private String taxonName;
+    private TaxonService taxonService;
+
     public static void main( String[] args ) {
         GoldenPathBioSequenceLoaderCLI p = new GoldenPathBioSequenceLoaderCLI();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
 
     @Override
@@ -59,19 +57,6 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
         return CommandGroup.DEPRECATED;
     }
 
-    private BioSequenceService bioSequenceService;
-
-    private ExternalDatabaseService externalDatabaseService;
-    private String fileArg;
-    private int limitArg = -1;
-    private String taxonName;
-    private TaxonService taxonService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "goldenPathSequenceLoad";
@@ -88,10 +73,8 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
 
     /**
      * Load BioSequences (ESTs and mRNAs) for given taxon from a dump from GoldenPath.
-     * 
+     *
      * @param taxonCommonName e.g., "rat", "human", "mouse".
-     * @param file
-     * @throws IOException
      */
     public void load( String taxonCommonName, String file, int limit ) throws IOException {
         Taxon taxon = taxonService.findByCommonName( taxonCommonName );
@@ -103,11 +86,6 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
 
     /**
      * Load BioSequences (ESTs and mRNAs) for given taxon.
-     * 
-     * @param taxon
-     * @param file
-     * @param limit
-     * @throws IOException
      */
     public void load( Taxon taxon, String file, int limit ) throws IOException {
         doLoad( file, taxon, limit );
@@ -138,7 +116,8 @@ public class GoldenPathBioSequenceLoaderCLI extends AbstractCLIContextCLI {
     protected Exception doWork( String[] args ) {
         try {
             Exception err = processCommandLine( args );
-            if ( err != null ) return err;
+            if ( err != null )
+                return err;
 
             if ( StringUtils.isNotBlank( fileArg ) ) {
                 this.load( taxonName, fileArg, limitArg );

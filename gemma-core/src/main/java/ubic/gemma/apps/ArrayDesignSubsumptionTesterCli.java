@@ -89,7 +89,7 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         arrayDesign = unlazifyArrayDesign( arrayDesign );
 
         for ( String otherArrayDesigName : otherArrayDesignNames ) {
-            ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName );
+            ArrayDesign otherArrayDesign = locateArrayDesign( otherArrayDesigName, arrayDesignService );
 
             if ( arrayDesign.equals( otherArrayDesign ) ) {
                 continue;

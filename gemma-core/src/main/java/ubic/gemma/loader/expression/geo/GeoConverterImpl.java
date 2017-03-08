@@ -131,9 +131,6 @@ public class GeoConverterImpl implements GeoConverter {
     private Collection<Object> results = new HashSet<>();
     private Map<String, ArrayDesign> seenPlatforms = new HashMap<>();
     private ExternalDatabase genbank;
-    /**
-     * `
-     */
     private boolean splitByPlatform = false;
     private boolean forceConvertElements = false;
 
@@ -492,7 +489,7 @@ public class GeoConverterImpl implements GeoConverter {
             if ( !tally.containsKey( clazz ) ) {
                 tally.put( clazz, 0 );
             }
-            tally.put( clazz, ( tally.get( clazz ) ).intValue() + 1 );
+            tally.put( clazz, tally.get( clazz ) + 1 );
         }
         for ( String clazz : tally.keySet() ) {
             buf.append( tally.get( clazz ) ).append( " " ).append( clazz ).append( "s\n" );
@@ -606,7 +603,7 @@ public class GeoConverterImpl implements GeoConverter {
         platformSpecific.setWebLinks( series.getWebLinks() );
         platformSpecific.setValues( series.getValues() );
 
-        converted.add( convertSeries( platformSpecific, null ) );
+        converted.add( convertSeriesSingle( platformSpecific ) );
 
     }
 
@@ -1639,7 +1636,7 @@ public class GeoConverterImpl implements GeoConverter {
                 i++;
             }
         } else {
-            ExpressionExperiment ee = this.convertSeries( series, null );
+            ExpressionExperiment ee = this.convertSeriesSingle( series );
             if ( ee != null )
                 converted.add( ee );
         }
@@ -1647,7 +1644,7 @@ public class GeoConverterImpl implements GeoConverter {
         return converted;
     }
 
-    private ExpressionExperiment convertSeries( GeoSeries series, ExpressionExperiment resultToAddTo ) {
+    private ExpressionExperiment convertSeriesSingle( GeoSeries series ) {
         if ( series == null )
             return null;
         log.info( "Converting series: " + series.getGeoAccession() );
@@ -1665,14 +1662,8 @@ public class GeoConverterImpl implements GeoConverter {
             return null;
         }
 
-        ExpressionExperiment expExp;
-
-        if ( resultToAddTo == null ) {
-            expExp = ExpressionExperiment.Factory.newInstance();
-            expExp.setDescription( "" );
-        } else {
-            expExp = resultToAddTo;
-        }
+        ExpressionExperiment expExp = ExpressionExperiment.Factory.newInstance();
+        expExp.setDescription( "" );
 
         expExp.setDescription( series.getSummaries() + ( series.getSummaries().endsWith( "\n" ) ? "" : "\n" ) );
         if ( series.getLastUpdateDate() != null ) {
@@ -1785,10 +1776,10 @@ public class GeoConverterImpl implements GeoConverter {
 
                         BioAssay ba = convertSample( sample, bioMaterial, expExp.getExperimentalDesign() );
 
+                        assert(ba != null);
                         LocalFile rawDataFile = convertSupplementaryFileToLocalFile( sample );
-                        if ( rawDataFile != null ) {
-                            ba.setRawDataFile( rawDataFile );// deal with null at UI
-                        }
+                        ba.setRawDataFile( rawDataFile );// deal with null at UI
+
 
                         // TODO these custom string prefixes should be made into constants, need to make public for use
                         // by ExpressionExperimentAnnotator
@@ -1917,7 +1908,7 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setWebLinks( series.getWebLinks() );
         speciesSpecific.setValues( series.getValues() );
 
-        converted.add( convertSeries( speciesSpecific, null ) );
+        converted.add( convertSeriesSingle( speciesSpecific ) );
     }
 
     /**
@@ -1966,7 +1957,7 @@ public class GeoConverterImpl implements GeoConverter {
         speciesSpecific.setWebLinks( series.getWebLinks() );
         speciesSpecific.setValues( series.getValues( speciesSpecific.getSamples() ) );
 
-        converted.add( convertSeries( speciesSpecific, null ) );
+        converted.add( convertSeriesSingle( speciesSpecific ) );
 
     }
 

@@ -18,12 +18,8 @@
  */
 package ubic.gemma.apps.deprecated;
 
-import java.io.InputStream;
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -34,43 +30,38 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
+import java.io.InputStream;
+import java.util.Collection;
+
 /**
  * Import genes from MirBASE files (http://microrna.sanger.ac.uk/sequences/ftp.shtml). You have to download the file.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @deprecated because we get these genes from NCBI
  */
 @Deprecated
 public class MirBaseLoader extends AbstractCLIContextCLI {
-    public static void main( String[] args ) {
-        MirBaseLoader p = new MirBaseLoader();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
     private String fileName;
-
     private GeneService geneService;
     private Persister persisterHelper;
-
     private String taxonName = null;
-
     private TaxonService taxonService;
+
+    public static void main( String[] args ) {
+        MirBaseLoader p = new MirBaseLoader();
+        tryDoWorkNoExit( p, args );
+    }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.DEPRECATED;
     }
+
     /* (non-Javadoc)
      * @see ubic.gemma.util.AbstractCLI#getCommandName()
      */
     @Override
-    public String getCommandName() { 
+    public String getCommandName() {
         return null;
     }
 
@@ -92,7 +83,8 @@ public class MirBaseLoader extends AbstractCLIContextCLI {
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
         try (InputStream gffFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( fileName )) {
             GffParser parser = new GffParser();
 
@@ -102,7 +94,7 @@ public class MirBaseLoader extends AbstractCLIContextCLI {
                 return null;
             }
 
-            Taxon taxon = null;
+            Taxon taxon;
             taxon = taxonService.findByCommonName( this.taxonName );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No taxon named " + taxonName );

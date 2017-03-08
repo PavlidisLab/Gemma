@@ -18,12 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.util.Collection;
-import java.util.Date;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.analysis.sequence.RepeatScan;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
@@ -33,41 +29,30 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 
+import java.util.Collection;
+import java.util.Date;
+
 /**
  * Runs repeatmasker on array designs.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli {
 
-    /**
-     * @param args
-     */
+    private BioSequenceService bsService;
+    private String inputFileName;
+
     public static void main( String[] args ) {
         ArrayDesignRepeatScanCli p = new ArrayDesignRepeatScanCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
 
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
-    BioSequenceService bsService;
-    private String inputFileName;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "platformRepeatScan";
@@ -90,7 +75,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     @Override
     protected Exception doWork( String[] args ) {
         Exception exception = processCommandLine( args );
-        if ( exception != null ) return exception;
+        if ( exception != null )
+            return exception;
 
         bsService = this.getBean( BioSequenceService.class );
 
@@ -125,8 +111,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
                 if ( isSubsumedOrMerged( design ) ) {
                     log.warn( design + " is subsumed or merged into another design, it will not be run." );
                     // not really an error, but nice to get notification.
-                    errorObjects.add( design + ": "
-                            + "Skipped because it is subsumed by or merged into another design." );
+                    errorObjects
+                            .add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
                     continue;
                 }
 
@@ -159,9 +145,6 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         }
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note ) {
         AuditEventType eventType = ArrayDesignRepeatAnalysisEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
@@ -184,8 +167,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
         log.info( "Saving..." );
         bsService.update( altered );
         if ( this.inputFileName != null ) {
-            audit( thawed, "Repeat scan data from file: " + inputFileName + ", updated " + altered.size()
-                    + " sequences." );
+            audit( thawed,
+                    "Repeat scan data from file: " + inputFileName + ", updated " + altered.size() + " sequences." );
         } else {
             audit( thawed, "Repeat scan done, updated " + altered.size() + " sequences." );
         }
