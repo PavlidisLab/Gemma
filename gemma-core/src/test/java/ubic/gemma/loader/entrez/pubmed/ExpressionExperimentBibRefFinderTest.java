@@ -18,33 +18,30 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
-
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ExpressionExperimentBibRefFinderTest {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
+    private static final Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
 
     @Test
     public void testLocatePrimaryReference() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
-        ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GEO" );
@@ -55,7 +52,8 @@ public class ExpressionExperimentBibRefFinderTest {
             BibliographicReference bibref = null;
             for ( int i = 0; i < 3; i++ ) {
                 bibref = finder.locatePrimaryReference( ee );
-                if ( bibref != null ) break;
+                if ( bibref != null )
+                    break;
                 Thread.sleep( 1000 );
             }
             assertNotNull( bibref );
@@ -63,7 +61,6 @@ public class ExpressionExperimentBibRefFinderTest {
                     bibref.getTitle() );
         } catch ( Exception e ) {
             checkCause( e );
-            return;
         }
 
     }
@@ -71,7 +68,7 @@ public class ExpressionExperimentBibRefFinderTest {
     @Test
     public void testLocatePrimaryReferenceInvalidGSE() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
-        ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         DatabaseEntry de = DatabaseEntry.Factory.newInstance();
         ExternalDatabase ed = ExternalDatabase.Factory.newInstance();
         ed.setName( "GEO" );
@@ -83,16 +80,12 @@ public class ExpressionExperimentBibRefFinderTest {
             assert ( bibref == null );
         } catch ( Exception e ) {
             checkCause( e );
-            return;
         }
     }
 
-    /**
-     * @param e
-     */
     private void checkCause( Exception e ) throws Exception {
 
-        Throwable k = null;
+        Throwable k;
         if ( e instanceof IOException ) {
             k = e;
         } else if ( e.getCause() instanceof IOException ) {

@@ -18,32 +18,26 @@
  */
 package ubic.gemma.model.common.description;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
+
 /**
  * @author luke
- * @version $Id$
  */
 public class CharacteristicServiceTest extends BaseSpringContextTest {
 
@@ -66,9 +60,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     private FactorValue fv;
     private boolean setupDone = false;
 
-    /**
-     * @exception Exception
-     */
+
     @Before
     public void setup() throws Exception {
 
@@ -105,7 +97,7 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     @Test
     public final void testGetParents() {
         Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.getParents( Arrays.asList( new Characteristic[] { eeChar1 } ) );
+        charToParent = characteristicService.getParents( Collections.singletonList( eeChar1 ) );
         assertEquals( ee, charToParent.get( eeChar1 ) );
         assertEquals( null, charToParent.get( eeChar2 ) );
     }
@@ -113,19 +105,14 @@ public class CharacteristicServiceTest extends BaseSpringContextTest {
     @Test
     public final void testGetParentsWithClazzConstraint() {
         Map<Characteristic, Object> charToParent;
-        charToParent = characteristicService.getParents(
-                Arrays.asList( new Class<?>[] { ExpressionExperimentImpl.class } ),
-                Arrays.asList( new Characteristic[] { eeChar1 } ) );
+        charToParent = characteristicService.getParents( Arrays.asList( new Class<?>[] { ExpressionExperiment.class } ),
+                Collections.singletonList( eeChar1 ) );
         assertEquals( ee, charToParent.get( eeChar1 ) );
         assertEquals( null, charToParent.get( eeChar2 ) );
     }
 
-    /**
-     * @param n
-     * @return
-     */
     private Collection<Characteristic> getTestPersistentCharacteristics( int n ) {
-        Collection<Characteristic> chars = new HashSet<Characteristic>();
+        Collection<Characteristic> chars = new HashSet<>();
         for ( int i = 0; i < n; ++i ) {
             Characteristic c = Characteristic.Factory.newInstance();
             c.setCategory( "test" );

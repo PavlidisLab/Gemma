@@ -18,54 +18,38 @@
  */
 package ubic.gemma.security.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.authentication.UserService;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.AbstractAuditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.*;
+
 /**
  * Test of adding audit events when objects are created, updated or deleted.
- * <p>
  * Note: this test used to use genes, but we removed auditability from genes.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class AuditAdviceTest extends BaseSpringContextTest {
 
@@ -94,8 +78,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     public void testAuditCreateAndDeleteExpressionExperiment() {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( true );
 
-        Collection<Long> trailIds = new HashSet<Long>();
-        Collection<Long> eventIds = new HashSet<Long>();
+        Collection<Long> trailIds = new HashSet<>();
+        Collection<Long> eventIds = new HashSet<>();
 
         checkEEAuditTrails( ee, trailIds, eventIds );
 
@@ -175,8 +159,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     /**
      * Test of simple case.
-     * 
-     * @throws Exception
      */
     @Test
     public void testCascadingCreateWithAssociatedAuditable() throws Exception {
@@ -194,9 +176,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         for ( BioAssay prod : ee.getBioAssays() ) {
             assertNotNull( prod.getAuditTrail() );
 
-            assertNotNull( prod.getStatus() );
-            assertNotNull( prod.getStatus().getId() );
-
             Collection<AuditEvent> events = this.auditTrailService.getEvents( prod );
             assertEquals( 1, events.size() );
             for ( AuditEvent e : events ) {
@@ -209,8 +188,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     /**
      * FIXME this test occasionally fails on bamboo.
-     * 
-     * @throws Exception
      */
     @Test
     public void testSimpleAuditCreateUpdateUser() throws Exception {
@@ -265,23 +242,21 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     @Test
     public void testSimpleAuditFindOrCreate() {
-        ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
+        ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ee = expressionExperimentService.findOrCreate( ee );
 
         assertNotNull( ee.getAuditTrail() );
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
-        assertNotNull( ee.getStatus() );
-        assertNotNull( ee.getStatus().getId() );
-        assertNotNull( ee.getStatus().getCreateDate() );
+        assertNotNull( ee.getCurationDetails() );
+        assertNotNull( ee.getCurationDetails().getId() );
+        assertNotNull( ee.getCurationDetails().getLastUpdated() );
         assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
     }
 
     /**
      * Torture test. Passes fine with a single thread.
-     * 
-     * @throws Exception
      */
     @Test
     public void testAuditFindOrCreateConcurrentTorture() throws Exception {
@@ -291,7 +266,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         final Random random = new Random();
         final AtomicInteger c = new AtomicInteger( 0 );
         final AtomicBoolean failed = new AtomicBoolean( false );
-        Collection<Thread> threads = new HashSet<Thread>();
+        Collection<Thread> threads = new HashSet<>();
         for ( int i = 0; i < numThreads; i++ ) {
 
             Thread.sleep( random.nextInt( 100 ) );
@@ -302,7 +277,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
                     try {
                         for ( int j = 0; j < numExperimentsPerThread; j++ ) {
                             log.debug( "Starting experiment " + j );
-                            ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
+                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
                             ee.setDescription( "From test" );
                             ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
@@ -310,9 +285,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
                             assertNotNull( ee.getAuditTrail() );
                             assertEquals( 1, ee.getAuditTrail().getEvents().size() );
-                            assertNotNull( ee.getStatus() );
-                            assertNotNull( ee.getStatus().getId() );
-                            assertNotNull( ee.getStatus().getCreateDate() );
+                            assertNotNull( ee.getCurationDetails() );
+                            assertNotNull( ee.getCurationDetails().getId() );
+                            assertNotNull( ee.getCurationDetails().getLastUpdated() );
                             assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
 
                             for ( int q = 0; q < numUpdates; q++ ) {
@@ -345,7 +320,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
             log.info( "Waiting ..." );
             if ( ++waits > maxWaits ) {
                 for ( Thread t : threads ) {
-                    if ( t.isAlive() ) t.interrupt();
+                    if ( t.isAlive() )
+                        t.interrupt();
                 }
                 fail( "Multithreaded failure: timed out." );
             }
@@ -354,7 +330,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         log.debug( " &&&&& DONE &&&&&" );
 
         for ( Thread thread : threads ) {
-            if ( thread.isAlive() ) thread.interrupt();
+            if ( thread.isAlive() )
+                thread.interrupt();
         }
 
         if ( failed.get() || c.get() != expectedEventCount ) {
@@ -381,13 +358,13 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     }
 
     private boolean checkDeletedAuditTrail( Long atid ) {
-        return this.simpleJdbcTemplate.queryForObject( "SELECT COUNT(*) FROM AUDIT_TRAIL WHERE ID = ?", Integer.class,
-                atid ) == 0;
+        return this.simpleJdbcTemplate
+                .queryForObject( "SELECT COUNT(*) FROM AUDIT_TRAIL WHERE ID = ?", Integer.class, atid ) == 0;
     }
 
     private boolean checkDeletedEvent( Long i ) {
-        return this.simpleJdbcTemplate.queryForObject( "SELECT COUNT(*) FROM AUDIT_EVENT WHERE ID = ?", Integer.class,
-                i ) == 0;
+        return this.simpleJdbcTemplate
+                .queryForObject( "SELECT COUNT(*) FROM AUDIT_EVENT WHERE ID = ?", Integer.class, i ) == 0;
     }
 
     private void checkDeletedTrails( Collection<Long> trailIds, Collection<Long> eventIds ) {
@@ -402,11 +379,6 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @param ee
-     * @param trailIds
-     * @param eventIds
-     */
     private void checkEEAuditTrails( ExpressionExperiment ee, Collection<Long> trailIds, Collection<Long> eventIds ) {
         checkAuditTrail( ee, trailIds, eventIds );
 

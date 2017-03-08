@@ -19,19 +19,11 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
+import gemma.gsec.authentication.UserManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import gemma.gsec.authentication.UserManager;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -40,9 +32,16 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.EntityUtils;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * Tests for methods that create ExpressionExperimentSetValueObjects from expressionExperiment entities
- * 
+ *
  * @author tvrossum
  */
 public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringContextTest {
@@ -69,7 +68,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         tax1 = this.getTaxon( "human" );
         ee = this.getTestPersistentExpressionExperiment( tax1 );
 
-        Collection<BioAssaySet> ees = new HashSet<BioAssaySet>();
+        Collection<BioAssaySet> ees = new HashSet<>();
         ees.add( ee );
 
         eeSet = ExpressionExperimentSet.Factory.newInstance();
@@ -122,15 +121,14 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertEquals( eeSet.getExperiments().size(), remadeEE.getExperiments().size() );
 
         // check that experiment members are the same
-        Set<Object> set1 = new HashSet<Object>();
+        Set<Object> set1 = new HashSet<>();
         set1.addAll( eeSet.getExperiments() );
-        Set<Object> set2 = new HashSet<Object>();
+        Set<Object> set2 = new HashSet<>();
         set2.addAll( remadeEE.getExperiments() );
         set1.equals( set2 );
 
         assertEquals( eeSet.getName(), remadeEE.getName() );
         assertEquals( eeSet.getDescription(), remadeEE.getDescription() );
-        assertEquals( eeSet.getStatus(), remadeEE.getStatus() );
         assertEquals( eeSet.getTaxon(), remadeEE.getTaxon() );
 
     }

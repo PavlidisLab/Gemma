@@ -36,11 +36,10 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 /**
  * @author daq2101
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentServiceImplTest extends TestCase {
-    Collection<ExpressionExperiment> c;
-    Collection<ExpressionExperiment> cJustTwelve;
+    private Collection<ExpressionExperiment> c;
+    private Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
     private Person nobody = null;
     private Person admin = null;
@@ -78,7 +77,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         nobody = Person.Factory.newInstance();
         admin = Person.Factory.newInstance();
 
-        ee = ExpressionExperimentImpl.Factory.newInstance();
+        ee = ExpressionExperiment.Factory.newInstance();
         ee.setDescription( "From test" );
         ee.setName( "Test experiment" );
         ee.setOwner( nobody );
@@ -101,15 +100,15 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
         ee.getInvestigators().add( admin );
 
-        c = new HashSet<ExpressionExperiment>();
-        ExpressionExperiment numberTwelve = ExpressionExperimentImpl.Factory.newInstance();
-        numberTwelve.setId( new Long( 12 ) );
+        c = new HashSet<>();
+        ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
+        numberTwelve.setId( 12L );
 
         c.add( numberTwelve );
-        c.add( ExpressionExperimentImpl.Factory.newInstance() );
-        c.add( ExpressionExperimentImpl.Factory.newInstance() );
+        c.add( ExpressionExperiment.Factory.newInstance() );
+        c.add( ExpressionExperiment.Factory.newInstance() );
 
-        cJustTwelve = new HashSet<ExpressionExperiment>();
+        cJustTwelve = new HashSet<>();
         cJustTwelve.add( numberTwelve );
 
     }
