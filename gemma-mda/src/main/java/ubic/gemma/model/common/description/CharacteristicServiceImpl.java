@@ -31,7 +31,7 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorImpl;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValueImpl;
 
 /**
@@ -45,7 +45,7 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
     /**
      * Classes examined when getting the "parents" of characteristics.
      */
-    private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperimentImpl.class,
+    private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
             BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactorImpl.class, Gene2GOAssociationImpl.class,
             PhenotypeAssociation.class, TreatmentImpl.class };
 

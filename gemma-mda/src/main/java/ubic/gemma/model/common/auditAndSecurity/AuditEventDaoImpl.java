@@ -32,7 +32,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.util.CommonQueries;
 
@@ -69,20 +69,20 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * java.util.Collection)
      */
     @Override
-    public Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastEvents(
-            Collection<? extends AbstractAuditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> results = new HashMap<>();
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<>();
         if ( auditables.size() == 0 )
             return results;
 
         for ( Class<? extends AuditEventType> t : types ) {
-            results.put( t, new HashMap<AbstractAuditable, AuditEvent>() );
+            results.put( t, new HashMap<Auditable, AuditEvent>() );
         }
 
-        final Map<AuditTrail, AbstractAuditable> atmap = getAuditTrailMap( auditables );
+        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
 
         List<String> classes = getClassHierarchy( types );
 
@@ -110,12 +110,12 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             for ( Class<? extends AuditEventType> ti : types ) {
                 if ( ti.isAssignableFrom( ty.getClass() ) ) {
                     // FIXME we need to distinguish subclasses of validation events, for example.
-                    Map<AbstractAuditable, AuditEvent> innerMap = results.get( ti );
+                    Map<Auditable, AuditEvent> innerMap = results.get( ti );
 
                     assert innerMap != null;
 
                     // only replace event if its date is more recent.
-                    AbstractAuditable ae = atmap.get( t );
+                    Auditable ae = atmap.get( t );
                     if ( !innerMap.containsKey( ae ) || innerMap.get( ae ).getDate().compareTo( e.getDate() ) < 0 ) {
                         innerMap.put( atmap.get( t ), e );
                     }
@@ -134,15 +134,15 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     }
 
     @Override
-    public boolean hasEvent( AbstractAuditable a, Class<? extends AuditEventType> type ) {
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
         return this.getLastEvent( a, type ) != null;
     }
 
     @Override
-    public void retainHavingEvent( final Collection<? extends AbstractAuditable> a,
+    public void retainHavingEvent( final Collection<? extends Auditable> a,
             final Class<? extends AuditEventType> type ) {
 
-        final Map<AbstractAuditable, AuditEvent> events = this.getLastEvent( a, type );
+        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
 
         CollectionUtils.filter( a, new Predicate() {
             @Override
@@ -154,11 +154,11 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     }
 
     @Override
-    public void retainLackingEvent( final Collection<? extends AbstractAuditable> a,
+    public void retainLackingEvent( final Collection<? extends Auditable> a,
             final Class<? extends AuditEventType> type ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        final Map<AbstractAuditable, AuditEvent> events = this.getLastEvent( a, type );
+        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
         log.info( "Phase I: " + timer.getTime() + "ms" );
 
         CollectionUtils.filter( a, new Predicate() {
@@ -171,12 +171,12 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     }
 
     @Override
-    protected List<AuditEvent> handleGetEvents( final AbstractAuditable auditable ) {
+    protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null )
-            throw new IllegalArgumentException( "AbstractAuditable cannot be null" );
+            throw new IllegalArgumentException( "Auditable cannot be null" );
 
         if ( auditable.getAuditTrail() == null ) {
-            throw new IllegalStateException( "AbstractAuditable did not have an audit trail: " + auditable );
+            throw new IllegalStateException( "Auditable did not have an audit trail: " + auditable );
         }
 
         Long id = auditable.getAuditTrail().getId();
@@ -186,7 +186,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     }
 
     @Override
-    protected AuditEvent handleGetLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type ) {
+    protected AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable.getAuditTrail(), type );
     }
 
@@ -230,14 +230,14 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
     }
 
     @Override
-    protected Map<AbstractAuditable, AuditEvent> handleGetLastEvent(
-            final Collection<? extends AbstractAuditable> auditables, Class<? extends AuditEventType> type ) {
+    protected Map<Auditable, AuditEvent> handleGetLastEvent(
+            final Collection<? extends Auditable> auditables, Class<? extends AuditEventType> type ) {
 
-        Map<AbstractAuditable, AuditEvent> result = new HashMap<>();
+        Map<Auditable, AuditEvent> result = new HashMap<>();
         if ( auditables.size() == 0 )
             return result;
 
-        final Map<AuditTrail, AbstractAuditable> atmap = getAuditTrailMap( auditables );
+        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
 
         List<String> classes = getClassHierarchy( type );
 
@@ -293,8 +293,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         return result;
     }
 
-    private void putAllQrs( Map<AbstractAuditable, AuditEvent> result, List<?> qr,
-            Map<AuditTrail, AbstractAuditable> atmap ) {
+    private void putAllQrs( Map<Auditable, AuditEvent> result, List<?> qr,
+            Map<AuditTrail, Auditable> atmap ) {
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
             AuditTrail t = ( AuditTrail ) ar[0];
@@ -315,8 +315,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
      */
     @Override
-    protected java.util.Collection<AbstractAuditable> handleGetNewSinceDate( java.util.Date date ) {
-        Collection<AbstractAuditable> result = new HashSet<>();
+    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
+        Collection<Auditable> result = new HashSet<>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
@@ -332,8 +332,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(Date)
      */
     @Override
-    protected java.util.Collection<AbstractAuditable> handleGetUpdatedSinceDate( Date date ) {
-        Collection<AbstractAuditable> result = new HashSet<>();
+    protected java.util.Collection<Auditable> handleGetUpdatedSinceDate( Date date ) {
+        Collection<Auditable> result = new HashSet<>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from " + clazz
                     + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
@@ -342,7 +342,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         return result;
     }
 
-    private void tryAddAllToResult( Collection<AbstractAuditable> result, String queryString, Date date ) {
+    private void tryAddAllToResult( Collection<Auditable> result, String queryString, Date date ) {
         try {
             org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "date", date );
@@ -368,18 +368,18 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * Essential thaw the auditables to the point we get the AuditTrail proxies for them.
      */
     @SuppressWarnings("unchecked")
-    private Map<AuditTrail, AbstractAuditable> getAuditTrailMap(
-            final Collection<? extends AbstractAuditable> auditables ) {
+    private Map<AuditTrail, Auditable> getAuditTrailMap(
+            final Collection<? extends Auditable> auditables ) {
 
         /*
-         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because AbstractAuditable
+         * This is the fastest way I've found to thaw the audit trails of a whole bunch of auditables. Because Auditable
          * is not mapped, we have to query for each class separately ... just in case the user has passed a
          * heterogeneous collection.
          */
-        final Map<AuditTrail, AbstractAuditable> atmap = new HashMap<>();
-        Map<String, Collection<AbstractAuditable>> clazzmap = new HashMap<>();
-        for ( AbstractAuditable a : auditables ) {
-            Class<? extends AbstractAuditable> clazz = a.getClass();
+        final Map<AuditTrail, Auditable> atmap = new HashMap<>();
+        Map<String, Collection<Auditable>> clazzmap = new HashMap<>();
+        for ( Auditable a : auditables ) {
+            Class<? extends Auditable> clazz = a.getClass();
 
             /*
              * proxy?
@@ -390,7 +390,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             }
 
             if ( !clazzmap.containsKey( clazzName ) ) {
-                clazzmap.put( clazzName, new HashSet<AbstractAuditable>() );
+                clazzmap.put( clazzName, new HashSet<Auditable>() );
             }
             clazzmap.get( clazzName ).add( a );
         }
@@ -408,7 +408,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
                 AuditTrail t = ( AuditTrail ) ar[1];
-                AbstractAuditable a = ( AbstractAuditable ) ar[0];
+                Auditable a = ( Auditable ) ar[0];
                 atmap.put( t, a );
             }
 

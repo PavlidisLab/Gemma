@@ -695,7 +695,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     }
 
-    private Collection<CompositeSequence> loadCompositeSequences( Long id ) {
+    protected Collection<CompositeSequence> loadCompositeSequences( Long id ) {
         final String queryString = "select cs from CompositeSequenceImpl as cs where cs.arrayDesign.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }

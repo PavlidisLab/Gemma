@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
 
@@ -35,37 +35,37 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     /**
      * @return events for the given auditable.
      */
-    List<AuditEvent> getEvents( AbstractAuditable auditable );
+    List<AuditEvent> getEvents( Auditable auditable );
 
     /**
      * Returns the last AuditEvent of the specified type from the given auditable.
      */
-    AuditEvent getLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type );
+    AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     /**
      * Return a map of Auditables to AuditEvents for the given AuditEventType.
      */
-    Map<AbstractAuditable, AuditEvent> getLastEvent( Collection<? extends AbstractAuditable> auditables,
+    Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type );
 
-    Map<Class<? extends AuditEventType>, Map<AbstractAuditable, AuditEvent>> getLastEvents(
-            Collection<? extends AbstractAuditable> auditables, Collection<Class<? extends AuditEventType>> types );
+    Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
      * Get auditables that have been Created since the given date
      */
-    Collection<AbstractAuditable> getNewSinceDate( Date date );
+    Collection<Auditable> getNewSinceDate( Date date );
 
     /**
      * Get auditables that have been Updated since the given date
      */
-    Collection<AbstractAuditable> getUpdatedSinceDate( Date date );
+    Collection<Auditable> getUpdatedSinceDate( Date date );
 
-    boolean hasEvent( AbstractAuditable a, Class<? extends AuditEventType> type );
+    boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 
-    void retainHavingEvent( Collection<? extends AbstractAuditable> a, Class<? extends AuditEventType> type );
+    void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
-    void retainLackingEvent( Collection<? extends AbstractAuditable> a, Class<? extends AuditEventType> type );
+    void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     /**
      *

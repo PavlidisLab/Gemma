@@ -46,7 +46,7 @@ public class CurationDetailsDao extends AbstractDao<CurationDetails> {
     }
 
     public CurationDetails create( AuditEvent createdEvent ) {
-        CurationDetails cd = new CurationDetails( createdEvent, false, createdEvent, false, createdEvent, null );
+        CurationDetails cd = new CurationDetails( createdEvent.getDate(), createdEvent, false, createdEvent, false, createdEvent, null );
         return this.create( cd );
     }
 //

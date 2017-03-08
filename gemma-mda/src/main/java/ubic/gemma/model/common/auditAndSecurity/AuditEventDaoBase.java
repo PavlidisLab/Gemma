@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import java.util.Collection;
@@ -59,17 +59,17 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     }
 
     @Override
-    public List<AuditEvent> getEvents( AbstractAuditable auditable ) {
+    public List<AuditEvent> getEvents( Auditable auditable ) {
         return this.handleGetEvents( auditable );
     }
 
     @Override
-    public AuditEvent getLastEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type ) {
+    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable, type );
     }
 
     @Override
-    public Map<AbstractAuditable, AuditEvent> getLastEvent( Collection<? extends AbstractAuditable> auditables,
+    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditables, type );
     }
@@ -78,7 +78,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
      */
     @Override
-    public java.util.Collection<AbstractAuditable> getNewSinceDate( final java.util.Date date ) {
+    public java.util.Collection<Auditable> getNewSinceDate( final java.util.Date date ) {
         try {
             return this.handleGetNewSinceDate( date );
         } catch ( Throwable th ) {
@@ -92,7 +92,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
      */
     @Override
-    public java.util.Collection<AbstractAuditable> getUpdatedSinceDate( final java.util.Date date ) {
+    public java.util.Collection<Auditable> getUpdatedSinceDate( final java.util.Date date ) {
         try {
             return this.handleGetUpdatedSinceDate( date );
         } catch ( Throwable th ) {
@@ -188,24 +188,24 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         this.getHibernateTemplate().update( auditEvent );
     }
 
-    protected abstract List<AuditEvent> handleGetEvents( AbstractAuditable auditable );
+    protected abstract List<AuditEvent> handleGetEvents( Auditable auditable );
 
-    protected abstract AuditEvent handleGetLastEvent( AbstractAuditable auditable,
+    protected abstract AuditEvent handleGetLastEvent( Auditable auditable,
             Class<? extends AuditEventType> type );
 
-    protected abstract Map<AbstractAuditable, AuditEvent> handleGetLastEvent(
-            Collection<? extends AbstractAuditable> auditables, Class<? extends AuditEventType> type );
+    protected abstract Map<Auditable, AuditEvent> handleGetLastEvent(
+            Collection<? extends Auditable> auditables, Class<? extends AuditEventType> type );
 
     /**
      * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}
      */
-    protected abstract java.util.Collection<AbstractAuditable> handleGetNewSinceDate( java.util.Date date )
+    protected abstract java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getUpdatedSinceDate(java.util.Date)}
      */
-    protected abstract java.util.Collection<AbstractAuditable> handleGetUpdatedSinceDate( java.util.Date date )
+    protected abstract java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date )
             throws java.lang.Exception;
 
     /**

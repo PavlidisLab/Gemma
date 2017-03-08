@@ -29,7 +29,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
@@ -109,9 +110,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             }
 
             if ( !needToRefresh ) {
-                Collection<AbstractAuditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
+                Collection<Auditable> newObj = auditEventService.getNewSinceDate( status.getLastUpdate() );
 
-                for ( AbstractAuditable a : newObj ) {
+                for ( Auditable a : newObj ) {
                     if ( a instanceof ArrayDesign ) {
                         needToRefresh = true;
                         annotation = a + " is new since " + status.getLastUpdate();
@@ -122,9 +123,9 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
             }
 
             if ( !needToRefresh ) {
-                Collection<AbstractAuditable> updatedObj = auditEventService
+                Collection<Auditable> updatedObj = auditEventService
                         .getUpdatedSinceDate( status.getLastUpdate() );
-                for ( AbstractAuditable a : updatedObj ) {
+                for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
                         for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
                             if ( ae == null )
