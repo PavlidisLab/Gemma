@@ -19,23 +19,9 @@
 package ubic.gemma.apps;
 
 import gemma.gsec.SecurityService;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
@@ -52,19 +38,36 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
+import java.io.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * Given an array design creates a Gene Ontology Annotation file
- * <p>
  * Given a batch file creates all the Annotation files for the AD's specified in the batch file
- * <p>
  * Given nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
- * 
+ *
  * @author klc
- * @version $Id$
  */
 public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatingCli {
 
     private static final String GENENAME_LISTFILE_OPTION = "genefile";
+    // file info
+    String batchFileName;
+    String fileName = null;
+    /**
+     * Clobber existing file, if any.
+     */
+    boolean overWrite = false;
+    boolean processAllADs = false;
+    OutputType type = OutputType.SHORT;
+    private ArrayDesignAnnotationService arrayDesignAnnotationService;
+    private CompositeSequenceService compositeSequenceService;
+    private boolean doAllTypes = false;
+    private String geneFileName;
+    private GeneOntologyService goService;
+    private String taxonName;
 
     public static void main( String[] args ) {
         ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
@@ -80,7 +83,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
     } /*
        * (non-Javadoc)
-       * 
+       *
        * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
        */
 
@@ -93,32 +96,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     public String getShortDesc() {
         return "Generate annotation files for platforms.";
     }
-
-    // file info
-    String batchFileName;
-
-    String fileName = null;
-
-    /**
-     * Clobber existing file, if any.
-     */
-    boolean overWrite = false;
-
-    boolean processAllADs = false;
-
-    OutputType type = OutputType.SHORT;
-
-    private ArrayDesignAnnotationService arrayDesignAnnotationService;
-
-    private CompositeSequenceService compositeSequenceService;
-
-    private boolean doAllTypes = false;
-
-    private String geneFileName;
-
-    private GeneOntologyService goService;
-
-    private String taxonName;
 
     @Override
     public String getCommandName() {
@@ -139,27 +116,19 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 .withDescription( "The name of the Annotation file to be generated [Default = Accession number]" )
                 .withLongOpt( "annotation" ).create( 'f' );
 
-        Option annotationType = OptionBuilder
-                .hasArg()
-                .withArgName( "Type of annotation file" )
-                .withDescription(
-                        "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
-                                + "[Default=short (no parents)]. If you select bioprocess, parents are not included." )
+        Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" ).withDescription(
+                "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
+                        + "[Default=short (no parents)]. If you select bioprocess, parents are not included." )
                 .withLongOpt( "type" ).create( 't' );
 
-        Option fileLoading = OptionBuilder
-                .hasArg()
-                .withArgName( "Batch Generating of annotation files" )
-                .withDescription(
-                        "Use specified file for batch generating annotation files.  "
-                                + "specified File format (per line): shortName,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
+        Option fileLoading = OptionBuilder.hasArg().withArgName( "Batch Generating of annotation files" )
+                .withDescription( "Use specified file for batch generating annotation files.  "
+                        + "specified File format (per line): shortName,outputFileName,[short|long|biologicalprocess] Note:  Overrides -a,-t,-f command line options " )
                 .withLongOpt( "load" ).create( 'l' );
 
-        Option batchLoading = OptionBuilder
-                .withArgName( "Generating all annotation files" )
-                .withDescription(
-                        "Generates annotation files for all Array Designs (omits ones that are subsumed or merged) uses accession as annotation file name."
-                                + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings except '--taxon'." )
+        Option batchLoading = OptionBuilder.withArgName( "Generating all annotation files" ).withDescription(
+                "Generates annotation files for all Array Designs (omits ones that are subsumed or merged) uses accession as annotation file name."
+                        + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings except '--taxon'." )
                 .withLongOpt( "batch" ).create( 'b' );
 
         Option geneListFile = OptionBuilder.hasArg()
@@ -167,11 +136,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 .create( GENENAME_LISTFILE_OPTION );
         addOption( geneListFile );
 
-        Option taxonNameOption = OptionBuilder
-                .hasArg()
-                .withDescription(
-                        "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
-                                + "known genes for the taxon, or with --batch to process all arrays for the taxon." )
+        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
+                "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
+                        + "known genes for the taxon, or with --batch to process all arrays for the taxon." )
                 .create( "taxon" );
         addOption( taxonNameOption );
 
@@ -195,7 +162,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         try {
             this.goService.init( true );
@@ -273,7 +241,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * Goes over all the AD's in the database (possibly limited by taxon) and creates annotation 3 annotation files for
      * each AD that is not merged into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the
      * annotation file. Appends noparents, bioProcess, allParents to the file name.
-     * 
+     *
      * @throws IOException
      */
     protected void processAllADs() throws IOException {
@@ -420,7 +388,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             }
         }
 
-        if ( this.hasOption( 'o' ) ) this.overWrite = true;
+        if ( this.hasOption( 'o' ) )
+            this.overWrite = true;
 
         super.processOptions();
 
@@ -435,7 +404,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     private void audit( ArrayDesign arrayDesign, String note ) {
 
         SecurityService ss = this.getBean( SecurityService.class );
-        if ( !ss.isEditable( arrayDesign ) ) return;
+        if ( !ss.isEditable( arrayDesign ) )
+            return;
 
         AuditEventType eventType = ArrayDesignAnnotationFileEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
@@ -458,7 +428,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return false;
         }
 
-        try (Writer writer = arrayDesignAnnotationService.initOutputFile( arrayDesign, fileBaseName, this.overWrite );) {
+        try (Writer writer = arrayDesignAnnotationService
+                .initOutputFile( arrayDesign, fileBaseName, this.overWrite );) {
 
             // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
             if ( writer == null ) {
@@ -468,8 +439,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
             log.info( arrayDesign.getName() + " has " + genesWithSpecificity.size() + " composite sequences" );
 
-            int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( writer, genesWithSpecificity,
-                    outputType );
+            int numProcessed = arrayDesignAnnotationService
+                    .generateAnnotationFile( writer, genesWithSpecificity, outputType );
 
             log.info( "Finished processing platform: " + arrayDesign.getName() );
 
@@ -513,14 +484,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 genes.add( g );
             }
             log.info( "File contained " + genes.size() + " potential gene symbols" );
-            int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ),
-                    genes, OutputType.SHORT );
+            int numProcessed = arrayDesignAnnotationService
+                    .generateAnnotationFile( new PrintWriter( System.out ), genes, OutputType.SHORT );
             log.info( "Processed " + numProcessed + " genes that were found" );
         }
     }
 
     /**
-     * 
+     *
      */
     private void processGenesForTaxon() {
         GeneService geneService = getBean( GeneService.class );
@@ -532,8 +503,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         log.info( "Processing all genes for " + taxon );
         Collection<Gene> genes = geneService.loadAll( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );
-        int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
-                type );
+        int numProcessed = arrayDesignAnnotationService
+                .generateAnnotationFile( new PrintWriter( System.out ), genes, type );
         log.info( "Processed " + numProcessed + " genes that were found" );
     }
 

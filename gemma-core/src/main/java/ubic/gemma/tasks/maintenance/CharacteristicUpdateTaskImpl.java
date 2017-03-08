@@ -16,11 +16,6 @@ package ubic.gemma.tasks.maintenance;
 
 import gemma.gsec.SecurityService;
 import gemma.gsec.model.Securable;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -29,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.association.GOEvidenceCode;
@@ -44,16 +38,19 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.tasks.AbstractTask;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * @author paul
- * @version $Id$
  */
 @Component
 @Scope("prototype")
-public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand> implements
-        CharacteristicUpdateTask {
+public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, CharacteristicUpdateCommand>
+        implements CharacteristicUpdateTask {
 
-    private static Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
+    private static final Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
 
     @Autowired
     private BioMaterialService bioMaterialService;
@@ -97,10 +94,6 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
         }
     }
 
-    /**
-     * @param avo
-     * @return
-     */
     private VocabCharacteristic convertAvo2Characteristic( AnnotationValueObject avo ) {
         VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
         vc.setId( avo.getId() );
@@ -115,12 +108,9 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
     /**
      * Convert incoming AVOs into Characteristics (if the AVO objectClass is not FactorValue)
-     * 
-     * @param avos
-     * @return
      */
     private Collection<Characteristic> convertToCharacteristic( Collection<AnnotationValueObject> avos ) {
-        Collection<Characteristic> result = new HashSet<Characteristic>();
+        Collection<Characteristic> result = new HashSet<>();
         for ( AnnotationValueObject avo : avos ) {
             if ( avo.getObjectClass() != null && avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
                 continue;
@@ -134,15 +124,14 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
     /**
      * This is used to handle the special case of FactorValues that are being updated to have a characteristic.
-     * 
-     * @param avos
+     *
      * @return for each given AnnotationValueObject, the corresponding FactorValue with an associated persistent
-     *         Characteristic.
+     * Characteristic.
      * @throws IllegalStateException if the corresponding FactorValue already has at least one Characteristic. This
-     *         method is just intended for filling that in if it's empty.
+     *                               method is just intended for filling that in if it's empty.
      */
     private Collection<FactorValue> convertToFactorValuesWithCharacteristics( Collection<AnnotationValueObject> avos ) {
-        Collection<FactorValue> result = new HashSet<FactorValue>();
+        Collection<FactorValue> result = new HashSet<>();
         for ( AnnotationValueObject avo : avos ) {
             if ( avo.getObjectClass() == null || !avo.getObjectClass().equals( FactorValue.class.getSimpleName() ) )
                 continue;
@@ -156,7 +145,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
              * load the factor value, and create a characteristic
              */
             FactorValue fv = factorValueService.load( avo.getId() );
-            if ( fv == null ) continue;
+            if ( fv == null )
+                continue;
 
             if ( !fv.getCharacteristics().isEmpty() ) {
                 throw new IllegalStateException(
@@ -204,13 +194,10 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
     }
 
-    /**
-     * @param command
-     * @return
-     */
     private TaskResult doUpdate() {
         Collection<AnnotationValueObject> avos = taskCommand.getAnnotationValueObjects();
-        if ( avos.size() == 0 ) return new TaskResult( taskCommand, false );
+        if ( avos.size() == 0 )
+            return new TaskResult( taskCommand, false );
         log.info( "Updating " + avos.size() + " characteristics or uncharacterized factor values..." );
         StopWatch timer = new StopWatch();
         timer.start();
@@ -227,7 +214,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             factorValueService.update( factorValue );
         }
 
-        if ( asChars.size() == 0 ) return new TaskResult( taskCommand, true );
+        if ( asChars.size() == 0 )
+            return new TaskResult( taskCommand, true );
 
         Map<Characteristic, Object> charToParent = characteristicService.getParents( asChars );
 
@@ -243,10 +231,12 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 continue;
             }
 
-            VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromClient
-                    : null;
-            VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ? ( VocabCharacteristic ) cFromDatabase
-                    : null;
+            VocabCharacteristic vcFromClient = ( cFromClient instanceof VocabCharacteristic ) ?
+                    ( VocabCharacteristic ) cFromClient :
+                    null;
+            VocabCharacteristic vcFromDatabase = ( cFromDatabase instanceof VocabCharacteristic ) ?
+                    ( VocabCharacteristic ) cFromDatabase :
+                    null;
 
             /*
              * if one of the characteristics is a VocabCharacteristic and the other is not, we have to change the
@@ -259,8 +249,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             /*
              * Check needed because Characteristics are not securable.
              */
-            if ( parent != null && Securable.class.isAssignableFrom( parent.getClass() )
-                    && !securityService.isEditable( ( Securable ) parent ) ) {
+            if ( parent != null && Securable.class.isAssignableFrom( parent.getClass() ) && !securityService
+                    .isEditable( ( Securable ) parent ) ) {
                 throw new AccessDeniedException( "Access is denied" );
             }
 
@@ -280,10 +270,10 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
                 // don't copy AuditTrail or Status to avoid cascade error... vcFromDatabase.getAuditTrail()
-                cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance(
-                        vcFromDatabase.getName(), vcFromDatabase.getDescription(), null,
-                        StringUtils.strip( vcFromDatabase.getValue() ), vcFromDatabase.getCategory(),
-                        vcFromDatabase.getCategoryUri(), vcFromDatabase.getEvidenceCode() ) );
+                cFromDatabase = characteristicService.create( Characteristic.Factory
+                        .newInstance( vcFromDatabase.getName(), vcFromDatabase.getDescription(), null,
+                                StringUtils.strip( vcFromDatabase.getValue() ), vcFromDatabase.getCategory(),
+                                vcFromDatabase.getCategoryUri(), vcFromDatabase.getEvidenceCode() ) );
                 removeFromParent( vcFromDatabase, parent );
                 characteristicService.delete( vcFromDatabase );
                 addToParent( cFromDatabase, parent );
@@ -300,8 +290,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 vcFromDatabase = ( VocabCharacteristic ) cFromDatabase;
 
                 if ( vcFromClient != null ) {
-                    if ( vcFromDatabase.getValueUri() == null || vcFromDatabase.getValueUri() == null
-                            || !vcFromDatabase.getValueUri().equals( vcFromClient.getValueUri() ) ) {
+                    if ( vcFromDatabase.getValueUri() == null || vcFromDatabase.getValueUri() == null || !vcFromDatabase
+                            .getValueUri().equals( vcFromClient.getValueUri() ) ) {
                         log.info( "Characteristic value update: " + vcFromDatabase + " " + vcFromDatabase.getValueUri()
                                 + " -> " + vcFromClient.getValueUri() + " associated with " + parent );
                         vcFromDatabase.setValueUri( vcFromClient.getValueUri() );
@@ -309,9 +299,9 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
                     if ( vcFromDatabase.getCategory() == null || vcFromDatabase.getCategoryUri() == null
                             || !vcFromDatabase.getCategoryUri().equals( vcFromClient.getCategoryUri() ) ) {
-                        log.info( "Characteristic category update: " + vcFromDatabase + " "
-                                + vcFromDatabase.getCategoryUri() + " -> " + vcFromClient.getCategoryUri()
-                                + " associated with " + parent );
+                        log.info( "Characteristic category update: " + vcFromDatabase + " " + vcFromDatabase
+                                .getCategoryUri() + " -> " + vcFromClient.getCategoryUri() + " associated with "
+                                + parent );
                         vcFromDatabase.setCategoryUri( vcFromClient.getCategoryUri() );
                     }
                 }
@@ -321,8 +311,8 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 cFromDatabase.setEvidenceCode( GOEvidenceCode.IC ); // characteristic has been manually updated
             } else {
                 if ( !cFromDatabase.getEvidenceCode().equals( cFromClient.getEvidenceCode() ) ) {
-                    log.info( "Characteristic evidence code update: " + cFromDatabase + " "
-                            + cFromDatabase.getEvidenceCode() + " -> " + cFromClient.getEvidenceCode() );
+                    log.info( "Characteristic evidence code update: " + cFromDatabase + " " + cFromDatabase
+                            .getEvidenceCode() + " -> " + cFromClient.getEvidenceCode() );
                 }
                 cFromDatabase.setEvidenceCode( cFromClient.getEvidenceCode() ); // let them change it.
             }
@@ -337,10 +327,6 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
     }
 
-    /**
-     * @param c
-     * @param parent
-     */
     private void removeFromParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;

@@ -148,7 +148,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     public Gene getTestPeristentGene( Taxon taxon ) {
-        return testHelper.getTestPeristentGene( taxon );
+        return testHelper.getTestPersistentGene( taxon );
     }
 
     public Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
@@ -262,7 +262,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
      * @return
      */
     protected Gene getTestPeristentGene() {
-        return testHelper.getTestPeristentGene();
+        return testHelper.getTestPersistentGene();
     }
 
     /**
