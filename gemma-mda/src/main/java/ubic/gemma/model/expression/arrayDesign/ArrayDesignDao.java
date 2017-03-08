@@ -429,15 +429,14 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         this.getHibernateTemplate().update( arrayDesign );
     }
 
-    private Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
+    public Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL";
         return getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
     }
 
-    @SuppressWarnings("unchecked")
-    private Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
+    public Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -451,8 +450,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 .findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
     }
 
-    @SuppressWarnings("unchecked")
-    private Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
+    public Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null || arrayDesign.getId() == null ) {
             throw new IllegalArgumentException();
         }
@@ -467,12 +465,12 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 .findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "id", id );
     }
 
-    private Integer countAll() {
+    public Integer countAll() {
         final String queryString = "select count(*) from ArrayDesignImpl";
         return ( ( Long ) getHibernateTemplate().find( queryString ).iterator().next() ).intValue();
     }
 
-    private void deleteAlignmentData( ArrayDesign arrayDesign ) {
+    public void deleteAlignmentData( ArrayDesign arrayDesign ) {
         // First have to delete all blatAssociations, because they are referred to by the alignments
         deleteGeneProductAssociations( arrayDesign );
 
@@ -491,7 +489,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     }
 
-    private void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
+    public void deleteGeneProductAssociations( ArrayDesign arrayDesign ) {
 
         this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.UPGRADE )
                 .setLockMode( LockMode.PESSIMISTIC_WRITE ).lock( arrayDesign );
@@ -526,18 +524,18 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         }
     }
 
-    private Collection<ArrayDesign> findByAlternateName( String queryString ) {
+    public Collection<ArrayDesign> findByAlternateName( String queryString ) {
         return this.getHibernateTemplate()
                 .findByNamedParam( "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q",
                         "q", queryString );
     }
 
-    private Collection<BioAssay> getAllAssociatedBioAssays( Long id ) {
+    public Collection<BioAssay> getAllAssociatedBioAssays( Long id ) {
         final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
-    private Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
+    public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
         final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad"
                 + " join ad.auditTrail as auditTrail join auditTrail.events as auditEvent join fetch auditEvent.performer "
                 + " where ad.id in (:ids) ";
@@ -562,13 +560,13 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     }
 
-    private Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
+    public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
         final String queryString = "select distinct ee from   "
                 + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad";
         return getHibernateTemplate().findByNamedParam( queryString, "ad", arrayDesign );
     }
 
-    private Collection<Taxon> getTaxa( Long id ) {
+    public Collection<Taxon> getTaxa( Long id ) {
 
         final String queryString = "select distinct t from ArrayDesignImpl as arrayD "
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
@@ -577,7 +575,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
-    private Taxon getTaxon( Long id ) {
+    public Taxon getTaxon( Long id ) {
         Collection<Taxon> taxon = getTaxa( id );
         if ( taxon.size() == 0 ) {
             log.warn( "No taxon found for array " + id );
@@ -590,7 +588,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return taxon.iterator().next();
     }
 
-    private Map<Long, Boolean> isMerged( Collection<Long> ids ) {
+    public Map<Long, Boolean> isMerged( Collection<Long> ids ) {
 
         Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
@@ -620,7 +618,17 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         }
     }
 
-    private Map<Long, Boolean> isMergee( final Collection<Long> ids ) {
+    private void putIdsInListCheckMerger( Map<Long, Boolean> eventMap, List<Object[]> list ) {
+        for ( Object[] o : list ) {
+            Long id = ( Long ) o[0];
+            ArrayDesign merger = ( ArrayDesign ) o[1];
+            if ( merger != null ) {
+                eventMap.put( id, Boolean.TRUE );
+            }
+        }
+    }
+
+    public Map<Long, Boolean> isMergee( final Collection<Long> ids ) {
 
         Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
@@ -640,17 +648,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return eventMap;
     }
 
-    private void putIdsInListCheckMerger( Map<Long, Boolean> eventMap, List<Object[]> list ) {
-        for ( Object[] o : list ) {
-            Long id = ( Long ) o[0];
-            ArrayDesign merger = ( ArrayDesign ) o[1];
-            if ( merger != null ) {
-                eventMap.put( id, Boolean.TRUE );
-            }
-        }
-    }
-
-    private Map<Long, Boolean> isSubsumed( final Collection<Long> ids ) {
+    public Map<Long, Boolean> isSubsumed( final Collection<Long> ids ) {
         Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
             return eventMap;
@@ -668,7 +666,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return eventMap;
     }
 
-    private Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
+    public Map<Long, Boolean> isSubsumer( Collection<Long> ids ) {
 
         Map<Long, Boolean> eventMap = new HashMap<>();
         if ( ids.size() == 0 ) {
@@ -687,15 +685,10 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return eventMap;
     }
 
-    private Collection<ArrayDesignValueObject> loadAllValueObjects() {
+    public Collection<ArrayDesignValueObject> loadAllValueObjects() {
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
-
-        final String queryString = "select ad.id, ad.name, ad.shortName, " + "ad.technologyType, ad.description, m, "
-                + "s.troubled, s.needsAttention, s.curationNote, s.lastTroubledEvent, s.lastNeedsAttentionEvent, s.lastNoteEvent"
-                + "t.commonName"
-                + " from ArrayDesignImpl ad join ad.curationDetails join ad.primaryTaxon t  left join ad.mergedInto m";
-
+        final String queryString = this.getEEValueObjectQueryString();
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         return processADValueObjectQueryResults( eeCounts, queryObject );
@@ -715,47 +708,42 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     }
 
-    private Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids ) {
+    public Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids ) {
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
             return new ArrayList<>();
         }
 
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
-
-        final String queryString = "select ad.id, ad.name, ad.shortName, " + "ad.technologyType, ad.description, m, "
-                + "s.troubled, s.needsAttention, s.curationNote, s.lastTroubledEvent, s.lastNeedsAttentionEvent, s.lastNoteEvent"
-                + "t.commonName"
-                + " from ArrayDesignImpl ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m where ad.id in (:ids)  ";
-
+        final String queryString = this.getEEValueObjectQueryString() + "where ad.id in (:ids)  ";
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "ids", ids );
 
         return processADValueObjectQueryResults( eeCounts, queryObject );
     }
 
-    private long numAllCompositeSequenceWithBioSequences() {
+    public long numAllCompositeSequenceWithBioSequences() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " where cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
-    private long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
+    public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
-    private long numAllCompositeSequenceWithBlatResults() {
+    public long numAllCompositeSequenceWithBlatResults() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
-    private long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
+    public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -765,7 +753,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
-    private long numAllCompositeSequenceWithGenes() {
+    public long numAllCompositeSequenceWithGenes() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
@@ -773,7 +761,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
-    private long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
+    public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -785,7 +773,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
-    private long numAllGenes() {
+    public long numAllGenes() {
         final String queryString =
                 "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
@@ -793,7 +781,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
     }
 
-    private long numAllGenes( Collection<Long> ids ) {
+    public long numAllGenes( Collection<Long> ids ) {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -805,14 +793,14 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ids", ids ).iterator().next();
     }
 
-    private long numBioSequences( ArrayDesign arrayDesign ) {
+    public long numBioSequences( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    private long numBlatResults( ArrayDesign arrayDesign ) {
+    public long numBlatResults( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " , BioSequence2GeneProduct as bs2gp "
@@ -820,27 +808,27 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    private Integer numCompositeSequences( Long id ) {
+    public Integer numCompositeSequences( Long id ) {
         final String queryString = "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return ( ( Long ) getHibernateTemplate().findByNamedParam( queryString, "id", id ).iterator().next() )
                 .intValue();
     }
 
-    private long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
+    public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs) from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " where ar = :ar and cs.biologicalCharacteristic.sequence IS NOT NULL";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    private long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
+    public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " , BlatResultImpl as blat where blat.querySequence=cs.biologicalCharacteristic and ar = :ar";
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    private long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
+    public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " , BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
@@ -849,7 +837,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    private long numGenes( ArrayDesign arrayDesign ) {
+    public long numGenes( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + ", BioSequence2GeneProduct bs2gp, GeneImpl gene inner join gene.products gp "
@@ -858,7 +846,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    private void removeBiologicalCharacteristics( final ArrayDesign arrayDesign ) {
+    public void removeBiologicalCharacteristics( final ArrayDesign arrayDesign ) {
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "Array design cannot be null" );
         }
@@ -882,11 +870,11 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         } );
     }
 
-    private ArrayDesign thaw( final ArrayDesign arrayDesign ) {
+    public ArrayDesign thaw( final ArrayDesign arrayDesign ) {
         return this.doThaw( arrayDesign );
     }
 
-    private Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
+    public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
 
         // Size does not automatically disqualify, because we only consider BioSequences that actually have
         // sequences in them.
@@ -1104,6 +1092,24 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return result;
     }
 
+    private String getEEValueObjectQueryString() {
+        return "select " + "ad.id, " //0
+                + "ad.name, " //1
+                + "ad.shortName, " //2
+                + "ad.technologyType, " //3
+                + "ad.description, "  //4
+                + "m, " //5
+                + "s.lastUpdated" //6
+                + "s.troubled, "  //7
+                + "s.needsAttention, " //8
+                + "s.curationNote, "  //9
+                + "s.lastTroubledEvent, " //10
+                + "s.lastNeedsAttentionEvent, " //11
+                + "s.lastNoteEvent"  //12
+                + "t.commonName" //13
+                + " from ArrayDesignImpl ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m";
+    }
+
     /**
      * Process query results for LoadAllValueObjects or LoadValueObjects
      */
@@ -1129,23 +1135,25 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
                 v.setDescription( list.getString( 4 ) );
                 v.setIsMergee( list.get( 5 ) != null );
-                v.setTroubled( list.getBoolean( 6 ) );
-                v.setNeedsAttention( list.getBoolean( 7 ) );
-                v.setCurationNote( list.getString( 8 ) );
 
-                AuditEvent lastTroubleEvent = ( AuditEvent ) list.get( 9 );
+                v.setLastUpdated( list.getDate( 6 ) );
+                v.setTroubled( list.getBoolean( 7 ) );
+                v.setNeedsAttention( list.getBoolean( 8 ) );
+                v.setCurationNote( list.getString( 9 ) );
+
+                AuditEvent lastTroubleEvent = ( AuditEvent ) list.get( 10 );
                 if ( lastTroubleEvent != null )
                     v.setLastTroubledEvent( lastTroubleEvent );
 
-                AuditEvent lastNeedsAttentionEvent = ( AuditEvent ) list.get( 10 );
+                AuditEvent lastNeedsAttentionEvent = ( AuditEvent ) list.get( 11 );
                 if ( lastTroubleEvent != null )
                     v.setLastNeedsAttentionEvent( lastNeedsAttentionEvent );
 
-                AuditEvent lastCurationNoteEvent = ( AuditEvent ) list.get( 11 );
+                AuditEvent lastCurationNoteEvent = ( AuditEvent ) list.get( 12 );
                 if ( lastTroubleEvent != null )
                     v.setLastCurationNoteEvent( lastCurationNoteEvent );
 
-                v.setTaxon( list.getString( 12 ) );
+                v.setTaxon( list.getString( 13 ) );
 
                 if ( !eeCounts.containsKey( v.getId() ) ) {
                     v.setExpressionExperimentCount( 0 );
