@@ -52,7 +52,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Date dateArrayDesignLastUpdated;
     private Date dateBatchFetch;
     private Date dateCached;
-    private Date dateCreated;
     private Date dateDifferentialAnalysis;
     private Date dateLinkAnalysis;
     private Date dateMissingValueAnalysis;
@@ -124,11 +123,11 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
                 otherBean.bioAssayCount, otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
                 otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,
                 otherBean.dateArrayDesignLastUpdated, otherBean.dateBatchFetch, otherBean.dateCached,
-                otherBean.dateCreated, otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis,
-                otherBean.dateMissingValueAnalysis, otherBean.datePcaAnalysis,
-                otherBean.dateProcessedDataVectorComputation, otherBean.designElementDataVectorCount,
-                otherBean.differentialExpressionAnalyses, otherBean.experimentalDesign, otherBean.externalDatabase,
-                otherBean.externalUri, otherBean.hasBothIntensities, otherBean.hasCoexpressionAnalysis,
+                otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis, otherBean.dateMissingValueAnalysis,
+                otherBean.datePcaAnalysis, otherBean.dateProcessedDataVectorComputation,
+                otherBean.designElementDataVectorCount, otherBean.differentialExpressionAnalyses,
+                otherBean.experimentalDesign, otherBean.externalDatabase, otherBean.externalUri,
+                otherBean.hasBothIntensities, otherBean.hasCoexpressionAnalysis,
                 otherBean.hasDifferentialExpressionAnalysis, otherBean.hasEitherIntensity,
                 otherBean.hasProbeSpecificForQueryGene, otherBean.id, otherBean.investigators, otherBean.isPublic,
                 otherBean.isShared, otherBean.isSubset, otherBean.linkAnalysisEventType, otherBean.minPvalue,
@@ -146,9 +145,9 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             String accession, Integer arrayDesignCount, Date autoTagDate, String batchFetchEventType,
             Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
             Boolean currentUserHasWritePermission, Boolean currentUserIsOwner, Date dateArrayDesignLastUpdated,
-            Date dateBatchFetch, Date dateCached, Date dateCreated, Date dateDifferentialAnalysis,
-            Date dateLinkAnalysis, Date dateMissingValueAnalysis, Date datePcaAnalysis,
-            Date dateProcessedDataVectorComputation, Integer designElementDataVectorCount,
+            Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis, Date dateLinkAnalysis,
+            Date dateMissingValueAnalysis, Date datePcaAnalysis, Date dateProcessedDataVectorComputation,
+            Integer designElementDataVectorCount,
             Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses,
             Long experimentalDesign, String externalDatabase, String externalUri, Boolean hasBothIntensities,
             Boolean hasCoexpressionAnalysis, Boolean hasDifferentialExpressionAnalysis, Boolean hasEitherIntensity,
@@ -173,7 +172,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
         this.dateBatchFetch = dateBatchFetch;
         this.dateCached = dateCached;
-        this.dateCreated = dateCreated;
         this.dateDifferentialAnalysis = dateDifferentialAnalysis;
         this.dateLinkAnalysis = dateLinkAnalysis;
         this.dateMissingValueAnalysis = dateMissingValueAnalysis;
@@ -363,14 +361,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setDateCached( Date dateCached ) {
         this.dateCached = dateCached;
-    }
-
-    public Date getDateCreated() {
-        return this.dateCreated;
-    }
-
-    public void setDateCreated( Date dateCreated ) {
-        this.dateCreated = dateCreated;
     }
 
     public Date getDateDifferentialAnalysis() {
