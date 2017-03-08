@@ -54,14 +54,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     private static final String GENENAME_LISTFILE_OPTION = "genefile";
     // file info
-    String batchFileName;
-    String fileName = null;
+    private String batchFileName;
+    private String fileName = null;
     /**
      * Clobber existing file, if any.
      */
-    boolean overWrite = false;
-    boolean processAllADs = false;
-    OutputType type = OutputType.SHORT;
+    private boolean overWrite = false;
+    private boolean processAllADs = false;
+    private OutputType type = OutputType.SHORT;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
     private CompositeSequenceService compositeSequenceService;
     private boolean doAllTypes = false;
@@ -71,21 +71,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     public static void main( String[] args ) {
         ArrayDesignAnnotationFileCli p = new ArrayDesignAnnotationFileCli();
-        try {
-
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            System.exit( 0 );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    } /*
-       * (non-Javadoc)
-       *
-       * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
-       */
+        tryDoWork( p, args );
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -102,11 +89,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         return "makePlatformAnnotFiles";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -154,11 +136,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
@@ -198,11 +175,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         return null;
     }
 
-    /**
-     * @param outputType
-     * @throws IOException
-     */
-    protected boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
+    private boolean processAD( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType )
             throws IOException {
 
         log.info( "Loading gene information for " + arrayDesign );
@@ -241,10 +214,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
      * Goes over all the AD's in the database (possibly limited by taxon) and creates annotation 3 annotation files for
      * each AD that is not merged into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the
      * annotation file. Appends noparents, bioProcess, allParents to the file name.
-     *
-     * @throws IOException
      */
-    protected void processAllADs() throws IOException {
+    private void processAllADs() throws IOException {
 
         Collection<ArrayDesign> allADs = this.arrayDesignService.loadAll();
 
@@ -280,16 +251,15 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     }
 
     /**
-     * @param fileName
      * @throws IOException used for batch processing
      */
-    protected void processBatchFile() throws IOException {
+    private void processBatchFile() throws IOException {
 
         log.info( "Loading platforms to annotate from " + this.batchFileName );
         InputStream is = new FileInputStream( this.batchFileName );
         try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-            String line = null;
+            String line;
             int lineNumber = 0;
             while ( ( line = br.readLine() ) != null ) {
                 lineNumber++;
@@ -333,7 +303,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                     log.error( e, e );
                     cacheException( e );
                     errorObjects.add( arrayDesign + ": " + e.getMessage() );
-                    continue;
                 }
 
             }
@@ -398,9 +367,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         this.compositeSequenceService = getBean( CompositeSequenceService.class );
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note ) {
 
         SecurityService ss = this.getBean( SecurityService.class );
@@ -411,15 +377,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
-    /**
-     * @param arrayDesign
-     * @param fileBaseName
-     * @param outputType
-     * @param writer
-     * @param genesWithSpecificity
-     * @return true if the file was made.
-     * @throws IOException
-     */
     private boolean processCompositeSequences( ArrayDesign arrayDesign, String fileBaseName, OutputType outputType,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity ) throws IOException {
 
@@ -428,8 +385,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return false;
         }
 
-        try (Writer writer = arrayDesignAnnotationService
-                .initOutputFile( arrayDesign, fileBaseName, this.overWrite );) {
+        try (Writer writer = arrayDesignAnnotationService.initOutputFile( arrayDesign, fileBaseName, this.overWrite )) {
 
             // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
             if ( writer == null ) {
@@ -462,14 +418,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         log.info( "Loading genes to annotate from " + geneFileName );
         InputStream is = new FileInputStream( geneFileName );
         try (BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
-            String line = null;
+            String line;
             GeneService geneService = getBean( GeneService.class );
             TaxonService taxonService = getBean( TaxonService.class );
             Taxon taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "Unknown taxon: " + taxonName );
             }
-            Collection<Gene> genes = new HashSet<Gene>();
+            Collection<Gene> genes = new HashSet<>();
             while ( ( line = br.readLine() ) != null ) {
                 if ( StringUtils.isBlank( line ) ) {
                     continue;
@@ -508,11 +464,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
-    /**
-     * @param inputAd
-     * @return
-     * @throws IOException
-     */
     private boolean processOneAD( ArrayDesign inputAd ) throws IOException {
         ArrayDesign ad = unlazifyArrayDesign( inputAd );
 
@@ -581,10 +532,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         return didAnything;
     }
 
-    /**
-     * @param n
-     * @throws InterruptedException
-     */
     private void waitForGeneOntologyReady() {
         while ( !goService.isReady() ) {
             try {

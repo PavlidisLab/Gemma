@@ -22,17 +22,28 @@ import ubic.gemma.apps.GemmaCLI.CommandGroup;
 
 /**
  * Spring configuration for CLI.
- * 
- * @author: anton date: 18/02/13
+ *
+ * @author anton date: 18/02/13
  */
 public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
+
+    protected static void tryDoWork( AbstractCLIContextCLI p, String[] args ) {
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            System.exit( 0 );
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
 
     public abstract CommandGroup getCommandGroup();
 
     @Override
     protected String[] getAdditionalSpringConfigLocations() {
-        String[] cliSpecificConfigs = { "classpath*:ubic/gemma/cliContext-component-scan.xml" };
-        return cliSpecificConfigs;
+        return new String[] { "classpath*:ubic/gemma/cliContext-component-scan.xml" };
     }
 
 }
