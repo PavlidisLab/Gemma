@@ -54,7 +54,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Date dateCached;
     private Date dateCreated;
     private Date dateDifferentialAnalysis;
-    private Date dateLastUpdated;
     private Date dateLinkAnalysis;
     private Date dateMissingValueAnalysis;
     private Date datePcaAnalysis;
@@ -92,9 +91,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String taxon;
     private Long taxonId;
     private String technologyType;
-    private Boolean troubled = false;
-    private String troubleDetails = "(Reason for trouble not populated)";
-    private Boolean validated = false;
 
     public ExpressionExperimentValueObject() {
     }
@@ -122,14 +118,14 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * @throws NullPointerException if the argument is <code>null</code>
      */
     public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
-        this( otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention, otherBean.lastNeedsAttentionEvent,
-                otherBean.curationNote, otherBean.lastCurationNoteEvent, otherBean.accession, otherBean.arrayDesignCount,
-                otherBean.autoTagDate, otherBean.batchFetchEventType, otherBean.bioAssayCount,
-                otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
+        this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
+                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastCurationNoteEvent,
+                otherBean.accession, otherBean.arrayDesignCount, otherBean.autoTagDate, otherBean.batchFetchEventType,
+                otherBean.bioAssayCount, otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
                 otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,
                 otherBean.dateArrayDesignLastUpdated, otherBean.dateBatchFetch, otherBean.dateCached,
-                otherBean.dateCreated, otherBean.dateDifferentialAnalysis, otherBean.dateLastUpdated,
-                otherBean.dateLinkAnalysis, otherBean.dateMissingValueAnalysis, otherBean.datePcaAnalysis,
+                otherBean.dateCreated, otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis,
+                otherBean.dateMissingValueAnalysis, otherBean.datePcaAnalysis,
                 otherBean.dateProcessedDataVectorComputation, otherBean.designElementDataVectorCount,
                 otherBean.differentialExpressionAnalyses, otherBean.experimentalDesign, otherBean.externalDatabase,
                 otherBean.externalUri, otherBean.hasBothIntensities, otherBean.hasCoexpressionAnalysis,
@@ -140,18 +136,17 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
                 otherBean.numPopulatedFactors, otherBean.parentTaxonId, otherBean.pcaAnalysisEventType,
                 otherBean.processedDataVectorComputationEventType, otherBean.processedExpressionVectorCount,
                 otherBean.pubmedId, otherBean.sampleRemovedFlags, otherBean.shortName, otherBean.source,
-                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType,
-                otherBean.troubled, otherBean.troubleDetails, otherBean.validated
+                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType
 
         );
     }
 
-    public ExpressionExperimentValueObject( Boolean troubled, AuditEvent troubledEvent, Boolean needsAttention,
-            AuditEvent needsAttentionEvent, String curationNote, AuditEvent noteEvent, String accession,
-            Integer arrayDesignCount, Date autoTagDate, String batchFetchEventType, Integer bioAssayCount,
-            Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
+    public ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEvent troubledEvent,
+            Boolean needsAttention, AuditEvent needsAttentionEvent, String curationNote, AuditEvent noteEvent,
+            String accession, Integer arrayDesignCount, Date autoTagDate, String batchFetchEventType,
+            Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
             Boolean currentUserHasWritePermission, Boolean currentUserIsOwner, Date dateArrayDesignLastUpdated,
-            Date dateBatchFetch, Date dateCached, Date dateCreated, Date dateDifferentialAnalysis, Date dateLastUpdated,
+            Date dateBatchFetch, Date dateCached, Date dateCreated, Date dateDifferentialAnalysis,
             Date dateLinkAnalysis, Date dateMissingValueAnalysis, Date datePcaAnalysis,
             Date dateProcessedDataVectorComputation, Integer designElementDataVectorCount,
             Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses,
@@ -163,9 +158,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             String pcaAnalysisEventType, String processedDataVectorComputationEventType,
             Integer processedExpressionVectorCount, Integer pubmedId,
             Collection<AuditEventValueObject> sampleRemovedFlags, String shortName, String source,
-            Long sourceExperiment, String taxon, Long taxonId, String technologyType, Boolean troubled1,
-            String troubleDetails, Boolean validated ) {
-        super( troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
+            Long sourceExperiment, String taxon, Long taxonId, String technologyType ) {
+        super( lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.accession = accession;
         this.arrayDesignCount = arrayDesignCount;
         this.autoTagDate = autoTagDate;
@@ -181,7 +175,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.dateCached = dateCached;
         this.dateCreated = dateCreated;
         this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-        this.dateLastUpdated = dateLastUpdated;
         this.dateLinkAnalysis = dateLinkAnalysis;
         this.dateMissingValueAnalysis = dateMissingValueAnalysis;
         this.datePcaAnalysis = datePcaAnalysis;
@@ -219,9 +212,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.taxon = taxon;
         this.taxonId = taxonId;
         this.technologyType = technologyType;
-        this.troubled = troubled1;
-        this.troubleDetails = troubleDetails;
-        this.validated = validated;
     }
 
     public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
@@ -389,14 +379,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setDateDifferentialAnalysis( Date dateDifferentialAnalysis ) {
         this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-    }
-
-    public Date getDateLastUpdated() {
-        return this.dateLastUpdated;
-    }
-
-    public void setDateLastUpdated( Date dateLastUpdated ) {
-        this.dateLastUpdated = dateLastUpdated;
     }
 
     public Date getDateLinkAnalysis() {
@@ -735,22 +717,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.technologyType = technologyType;
     }
 
-    public Boolean getTroubled() {
-        return this.troubled;
-    }
-
-    public void setTroubled( Boolean troubleFlag ) {
-        this.troubled = troubleFlag;
-    }
-
-    public String getTroubleDetails() {
-        return troubleDetails;
-    }
-
-    public void setTroubleDetails( String troubleDetails ) {
-        this.troubleDetails = troubleDetails;
-    }
-
     @Override
     public boolean getUserCanWrite() {
         // FIXME consider making return type Boolean
@@ -775,14 +741,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Override
     public void setUserOwned( boolean isUserOwned ) {
         this.currentUserIsOwner = isUserOwned;
-    }
-
-    public boolean getValidated() {
-        return this.validated;
-    }
-
-    public void setValidated( Boolean validatedFlag ) {
-        this.validated = validatedFlag;
     }
 
     @Override

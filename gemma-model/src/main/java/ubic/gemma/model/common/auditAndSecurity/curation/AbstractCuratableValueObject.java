@@ -2,10 +2,17 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
+import java.util.Date;
+
 /**
  * Created by tesarst on 07/03/17.
+ *
+ * Abstract curatable value object that provides variables and methods for data stored in CurationDetails objects on
+ * curatable objects.
  */
 public abstract class AbstractCuratableValueObject {
+
+    protected Date lastUpdated;
 
     protected Boolean troubled;
 
@@ -22,14 +29,24 @@ public abstract class AbstractCuratableValueObject {
     public AbstractCuratableValueObject() {
     }
 
-    public AbstractCuratableValueObject( Boolean troubled, AuditEvent lastTroubledEvent, Boolean needsAttention,
-            AuditEvent lastNeedsAttentionEvent, String curationNote, AuditEvent lastCurationNoteEvent ) {
+    public AbstractCuratableValueObject( Date lastUpdated, Boolean troubled, AuditEvent lastTroubledEvent,
+            Boolean needsAttention, AuditEvent lastNeedsAttentionEvent, String curationNote,
+            AuditEvent lastCurationNoteEvent ) {
+        this.lastUpdated = lastUpdated;
         this.troubled = troubled;
-        this.setLastTroubledEvent( lastTroubledEvent );
-        this.setNeedsAttention( needsAttention );
-        this.setLastNeedsAttentionEvent( lastNeedsAttentionEvent );
-        this.setCurationNote( curationNote );
-        this.setLastCurationNoteEvent( lastCurationNoteEvent );
+        this.lastTroubledEvent = lastTroubledEvent;
+        this.needsAttention = needsAttention;
+        this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
+        this.curationNote = curationNote;
+        this.lastCurationNoteEvent = lastCurationNoteEvent;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated( Date lastUpdated ) {
+        this.lastUpdated = lastUpdated;
     }
 
     public Boolean getTroubled() {

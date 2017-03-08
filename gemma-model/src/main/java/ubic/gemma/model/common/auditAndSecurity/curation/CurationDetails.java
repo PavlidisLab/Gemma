@@ -20,6 +20,8 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
+import java.util.Date;
+
 /**
  * Represents the basic status of an AbstractAuditable, with possible information about state in workflows etc.
  */
@@ -28,6 +30,8 @@ public class CurationDetails implements java.io.Serializable {
     private static final long serialVersionUID = -3418540112052921387L;
 
     private Long id;
+
+    private Date lastUpdated;
 
     private AuditEvent lastNeedsAttentionEvent;
 
@@ -44,8 +48,9 @@ public class CurationDetails implements java.io.Serializable {
     public CurationDetails() {
     }
 
-    public CurationDetails( AuditEvent lastNeedsAttentionEvent, Boolean needsAttention, AuditEvent lastTroubledEvent,
-            Boolean troubled, AuditEvent lastNoteUpdateEvent, String curationNote ) {
+    public CurationDetails( Date lastUpdated, AuditEvent lastNeedsAttentionEvent, Boolean needsAttention,
+            AuditEvent lastTroubledEvent, Boolean troubled, AuditEvent lastNoteUpdateEvent, String curationNote ) {
+        this.lastUpdated = lastUpdated;
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
         this.needsAttention = needsAttention;
         this.lastTroubledEvent = lastTroubledEvent;
@@ -81,16 +86,20 @@ public class CurationDetails implements java.io.Serializable {
         return hashCode;
     }
 
-    public static long getSerialVersionUID() {
-        return serialVersionUID;
-    }
-
     public Long getId() {
         return id;
     }
 
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated( Date lastUpdated ) {
+        this.lastUpdated = lastUpdated;
     }
 
     public AuditEvent getLastNeedsAttentionEvent() {
