@@ -181,7 +181,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         log.info( "Loading gene information for " + arrayDesign );
         ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
-        if ( thawed.getStatus().getTroubled() ) {
+        if ( thawed.getCurationDetails().getTroubled() ) {
             log.warn( "Troubled: " + arrayDesign );
             return false;
         }
@@ -222,7 +222,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         for ( ArrayDesign ad : allADs ) {
 
             ad = arrayDesignService.thawLite( ad );
-            if ( ad.getStatus().getTroubled() ) {
+            if ( ad.getCurationDetails().getTroubled() ) {
                 log.warn( "Troubled: " + ad + " (skipping)" );
                 continue;
             }

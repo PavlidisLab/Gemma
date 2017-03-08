@@ -218,8 +218,8 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             if ( arrayDesign != null ) {
                 arrayDesign = arrayDesignService.thawLite( arrayDesign );
                 String trouble = "";
-                if ( arrayDesign.getStatus().getTroubled() ) {
-                    AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
+                if ( arrayDesign.getCurationDetails().getTroubled() ) {
+                    AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();
                     if ( lastTroubleEvent != null ) {
                         trouble =
                                 "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""

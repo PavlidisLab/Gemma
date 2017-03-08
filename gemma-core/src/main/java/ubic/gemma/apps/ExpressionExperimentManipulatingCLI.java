@@ -448,7 +448,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
             log.warn( "No experiments to remove troubled from" );
             return;
         }
-        final Collection<Long> untroubled = eeService.getUntroubled( EntityUtils.getIds( ees ) );
 
         BioAssaySet theOnlyOne = null;
         if ( ees.size() == 1 ) {
@@ -459,11 +458,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         CollectionUtils.filter( ees, new Predicate() {
             @Override
             public boolean evaluate( Object object ) {
-                boolean ok = untroubled.contains( ( ( ExpressionExperiment ) object ).getId() );
-                if ( !ok ) {
-                    log.info( "Troubled: " + object );
-                }
-                return ok;
+                return !( ( ExpressionExperiment ) object ).getCurationDetails().getTroubled();
             }
         } );
         int newSize = ees.size();

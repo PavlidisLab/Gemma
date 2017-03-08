@@ -558,7 +558,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             void consume( ArrayDesign x ) {
 
-                if ( x.getStatus().getTroubled() ) {
+                if ( x.getCurationDetails().getTroubled() ) {
                     log.warn( "Skipping troubled platform: " + x );
                     errorObjects.add( x + ": " + "Skipped because it is troubled; run in non-batch-mode" );
                     return;

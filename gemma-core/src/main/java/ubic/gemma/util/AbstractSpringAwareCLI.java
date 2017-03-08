@@ -27,6 +27,7 @@ import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -46,11 +47,10 @@ import java.util.List;
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
+    private final Collection<Exception> exceptionCache = new ArrayList<>();
     protected AuditTrailService auditTrailService;
     protected AuditEventService auditEventService;
     protected BeanFactory ctx;
-
-    private final Collection<Exception> exceptionCache = new ArrayList<>();
     private Persister persisterHelper;
 
     public AbstractSpringAwareCLI() {
@@ -87,7 +87,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * Override this method in your subclass to provide additional Spring configuration files that will be merged with
      * the Gemma spring context. See SpringContextUtil; an example path is
      * "classpath*:/myproject/applicationContext-mine.xml".
-     *
      */
     protected String[] getAdditionalSpringConfigLocations() {
         return null;
@@ -95,7 +94,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * Convenience method to obtain instance of any bean by name.
-     *
      */
     protected <T> T getBean( String name, Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
@@ -123,7 +121,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         Date skipIfLastRunLaterThan = getLimitingDate();
         List<AuditEvent> events = this.auditEventService.getEvents( auditable );
 
-        boolean okToRun; // assume okay unless indicated otherwise
+        boolean okToRun = true; // assume okay unless indicated otherwise
 
         // figure out if we need to run it by date; or if there is no event of the given class; "Fail" type events don't
         // count.
@@ -148,24 +146,27 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
 
         /*
-         * Always skip if we have trouble.
+         * Always skip if the object is curatable and troubled
          */
-        AuditEvent lastTrouble = this.auditTrailService.getLastTroubleEvent( auditable );
+        if ( auditable instanceof Curatable ) {
+            Curatable curatable = ( Curatable ) auditable;
+            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
 
-        // special case for expression experiments - check associated ADs.
-        if ( lastTrouble == null && auditable instanceof ExpressionExperiment ) {
-            ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
-            for ( Object o : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
-                lastTrouble = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
+            // special case for expression experiments - check associated ADs.
+            if ( okToRun && curatable instanceof ExpressionExperiment ) {
+                ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
+                for ( ArrayDesign ad : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
+                    if ( ad.getCurationDetails().getTroubled() ) {
+                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
+                        break;
+                    }
+                }
             }
-        }
 
-        okToRun = lastTrouble == null;
-        // }
-
-        if ( !okToRun ) {
-            log.info( auditable + ": has an active 'trouble' flag" );
-            errorObjects.add( auditable + ": has an active 'trouble' flag" );
+            if ( !okToRun ) {
+                log.info( auditable + ": has an active 'trouble' flag" );
+                errorObjects.add( auditable + ": has an active 'trouble' flag" );
+            }
         }
 
         return needToRun && okToRun;

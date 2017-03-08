@@ -20,12 +20,9 @@ package ubic.gemma.security.audit;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.util.EntityUtils;
 
 import java.util.Collection;
 
@@ -36,9 +33,6 @@ import java.util.Collection;
  */
 @Component
 public class AuditableUtilImpl implements AuditableUtil {
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
 
     @Override
     public void removeTroubledArrayDesigns( Collection<ArrayDesignValueObject> valueObjects ) {
@@ -60,12 +54,10 @@ public class AuditableUtilImpl implements AuditableUtil {
             return;
         }
 
-        final Collection<Long> untroubled = expressionExperimentService.getUntroubled( EntityUtils.getIds( eevos ) );
-
         CollectionUtils.filter( eevos, new Predicate() {
             @Override
             public boolean evaluate( Object e ) {
-                return untroubled.contains( ( ( ExpressionExperimentValueObject ) e ).getId() );
+                return !( ( ExpressionExperimentValueObject ) e ).getTroubled();
             }
         } );
     }
