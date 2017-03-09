@@ -19,11 +19,11 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * Flags used to indicate the status of an object (trouble, OK, validated, etc)
+ * Statuses used by CurationDetails
  *
  * @author Paul
  */
-public class StatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+public abstract class CurationDetailsEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -33,19 +33,20 @@ public class StatusFlagEvent extends ubic.gemma.model.common.auditAndSecurity.ev
     /**
      * No-arg constructor added to satisfy javabean contract
      */
-    public StatusFlagEvent() {
+    public CurationDetailsEvent() {
     }
 
     /**
-     * Constructs new instances of {@link StatusFlagEvent}.
+     * Throws an exception, as CurationDetailsEvent can not be instantiated.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of
-         * {@link StatusFlagEvent}.
+         * Throws an UnsupportedOperationException
+         * {@link CurationDetailsEvent}.
          */
-        public static StatusFlagEvent newInstance() {
-            return new StatusFlagEvent();
+        public static CurationDetailsEvent newInstance() {
+            throw new UnsupportedOperationException(
+                    "CurationDetailsEvent can not be instantiated. It only serves as a wrapper class for its descendants. Use a more specific event type." );
         }
 
     }

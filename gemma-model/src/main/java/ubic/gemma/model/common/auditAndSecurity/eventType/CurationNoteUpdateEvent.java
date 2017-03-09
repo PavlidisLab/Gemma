@@ -19,33 +19,34 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * An event that occurs when a curator has validated the entity and indicated that it is "approved". This could be used
- * to indicate that all preprocessing is finished, for example.
+ * <p>
+ * Indicates that previous validation is being invalidated
+ * </p>
  *
  * @author Paul
  */
-public class DoesNotNeedAttentionEvent extends CurationDetailsEvent {
+public class CurationNoteUpdateEvent extends CurationDetailsEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = 6425018808816856629L;
+    private static final long serialVersionUID = -1180281595664872508L;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
-    public DoesNotNeedAttentionEvent() {
+    public CurationNoteUpdateEvent() {
     }
 
     /**
-     * Constructs new instances of {@link DoesNotNeedAttentionEvent}.
+     * Constructs new instances of {@link CurationNoteUpdateEvent}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link DoesNotNeedAttentionEvent}.
+         * Constructs a new instance of {@link CurationNoteUpdateEvent}.
          */
-        public static DoesNotNeedAttentionEvent newInstance() {
-            return new DoesNotNeedAttentionEvent();
+        public static CurationNoteUpdateEvent newInstance() {
+            return new CurationNoteUpdateEvent();
         }
 
     }

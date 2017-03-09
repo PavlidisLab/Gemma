@@ -25,7 +25,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  *
  * @author Paul
  */
-public class NeedsAttentionEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent {
+public class NeedsAttentionEvent extends CurationDetailsEvent {
 
     /**
      * The serial version UID of this class. Needed for serialization.
