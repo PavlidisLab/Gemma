@@ -77,8 +77,8 @@ public class CustomRssViewer extends AbstractRssFeedView {
             item.setTitle( title );
             item.setLink( link );
 
-            if ( statusService.getStatus( e ) != null ) {
-                item.setPubDate( statusService.getStatus( e ).getLastUpdateDate() );
+            if ( e.getCurationDetails() != null ) {
+                item.setPubDate( e.getCurationDetails().getLastUpdated() );
             }
             items.add( item );
         }
