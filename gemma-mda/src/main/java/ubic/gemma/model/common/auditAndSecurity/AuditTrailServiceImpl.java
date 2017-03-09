@@ -64,7 +64,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     @Transactional
     public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final String note ) {
-        return this.addUpdateEvent( auditable, null, note);
+        return this.addUpdateEvent( auditable, null, note );
     }
 
     /**
@@ -82,8 +82,8 @@ public class AuditTrailServiceImpl implements AuditTrailService {
      */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final AuditEventType auditEventType, final String note,
-            final String detail ) {
+    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final AuditEventType auditEventType,
+            final String note, final String detail ) {
         AuditEvent auditEvent = AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, note, detail, null, auditEventType );
         return this.auditTrailDao.addEvent( auditable, auditEvent );
@@ -116,12 +116,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
         return this.auditTrailDao.create( auditTrail );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#getEntitiesWithEvent(java.lang.Class,
-     * java.lang.Class)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<Auditable> getEntitiesWithEvent( Class<Auditable> entityClass,

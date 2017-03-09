@@ -42,9 +42,6 @@ public interface AuditTrailService {
         // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     AuditEvent addUpdateEvent( AbstractAuditable auditable, AuditEventType auditEventType, String note );
 
-    /**
-     *
-     */
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     AuditEvent addUpdateEvent( AbstractAuditable auditable, AuditEventType auditEventType, String note, String detail );
