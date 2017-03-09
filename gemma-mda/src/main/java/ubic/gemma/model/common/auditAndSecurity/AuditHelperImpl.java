@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Auditable;
 
 /**
@@ -38,7 +38,7 @@ public class AuditHelperImpl implements AuditHelper {
     private AuditTrailDao auditTrailDao;
 
     @Override
-    public AuditEvent addCreateAuditEvent( AbstractAuditable auditable, String note, User user ) {
+    public AuditEvent addCreateAuditEvent( Auditable auditable, String note, User user ) {
         this.addAuditTrailIfNeeded( auditable );
         assert auditable.getAuditTrail() != null;
         assert auditable.getAuditTrail().getEvents().size() == 0;
@@ -49,7 +49,7 @@ public class AuditHelperImpl implements AuditHelper {
     }
 
     @Override
-    public AuditEvent addUpdateAuditEvent( AbstractAuditable auditable, String note, User user ) {
+    public AuditEvent addUpdateAuditEvent( Auditable auditable, String note, User user ) {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, user, null );
         return this.tryUpdate(auditable, auditEvent);
     }
@@ -64,7 +64,7 @@ public class AuditHelperImpl implements AuditHelper {
     }
 
 
-    private AuditTrail addAuditTrailIfNeeded( AbstractAuditable auditable ) {
+    private AuditTrail addAuditTrailIfNeeded( Auditable auditable ) {
 
         if ( auditable.getAuditTrail() != null ) return auditable.getAuditTrail();
 

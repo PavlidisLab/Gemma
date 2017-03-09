@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -342,7 +342,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
     }
 
-    private void checkAuditTrail( AbstractAuditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {
+    private void checkAuditTrail( Auditable c, Collection<Long> trailIds, Collection<Long> eventIds ) {
 
         AuditTrail auditTrail = c.getAuditTrail();
         assertNotNull( "No audit trail for " + c, auditTrail );

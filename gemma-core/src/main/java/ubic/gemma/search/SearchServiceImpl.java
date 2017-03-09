@@ -86,7 +86,7 @@ import ubic.gemma.genome.gene.service.GeneSearchService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -1705,12 +1705,12 @@ public class SearchServiceImpl implements SearchService {
             // if(i < maxPrint){
             // Object obj = entry.getValue();
             // Characteristic charac = entry.getKey();
-            // if ( obj instanceof AbstractAuditable ) {
+            // if ( obj instanceof Auditable ) {
             // if ( log.isDebugEnabled() ) {
             // log.debug("Key: Characteristic Name: " + charac.getName() +" Characteristic Desc: " +
             // charac.getDescription() +" Characteristic Category: " + charac.getCategory() );
             // log.debug("Val: Owner Class: " + obj.getClass()
-            // +" Owner Name: " + ( ( AbstractAuditable ) obj ).getName() +" Owner Desc: " + ( ( AbstractAuditable ) obj
+            // +" Owner Name: " + ( ( Auditable ) obj ).getName() +" Owner Desc: " + ( ( Auditable ) obj
             // ).getDescription() );
             // }
             // } else {
@@ -2562,7 +2562,7 @@ public class SearchServiceImpl implements SearchService {
 
                 // Are SearchResults always auditable? maybe put in some error handling in case they are not or
                 // enforce searchSettings object to be of a certain form
-                AbstractAuditable auditableResult = ( AbstractAuditable ) sr.getResultObject();
+                Auditable auditableResult = ( Auditable ) sr.getResultObject();
 
                 // this list is ordered by date (not descending)
                 List<AuditEvent> eventList = auditTrailService.getEvents( auditableResult );

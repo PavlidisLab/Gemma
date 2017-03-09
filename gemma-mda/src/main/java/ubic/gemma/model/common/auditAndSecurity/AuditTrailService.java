@@ -19,7 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
@@ -36,18 +36,18 @@ public interface AuditTrailService {
 
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void addComment( AbstractAuditable auditable, String comment, String detail );
+    void addComment( Auditable auditable, String comment, String detail );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
         // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    AuditEvent addUpdateEvent( AbstractAuditable auditable, AuditEventType auditEventType, String note );
+    AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note );
 
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( AbstractAuditable auditable, AuditEventType auditEventType, String note, String detail );
+    AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, String detail );
 
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    AuditEvent addUpdateEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type, String note,
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
             String detail );
 
     /**
@@ -55,7 +55,7 @@ public interface AuditTrailService {
      */
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    AuditEvent addUpdateEvent( AbstractAuditable auditable, String note );
+    AuditEvent addUpdateEvent( Auditable auditable, String note );
 
     @Secured({ "GROUP_USER" })
     AuditTrail create( AuditTrail auditTrail );
@@ -65,6 +65,6 @@ public interface AuditTrailService {
             Class<? extends AuditEventType> auditEventClass );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    List<AuditEvent> getEvents( AbstractAuditable auditable );
+    List<AuditEvent> getEvents( Auditable auditable );
 
 }

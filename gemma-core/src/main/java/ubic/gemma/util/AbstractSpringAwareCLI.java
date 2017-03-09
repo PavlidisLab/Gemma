@@ -23,7 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -116,7 +116,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /**
      * @param eventClass can be null
      */
-    protected boolean needToRun( AbstractAuditable auditable, Class<? extends AuditEventType> eventClass ) {
+    protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
         Date skipIfLastRunLaterThan = getLimitingDate();
         List<AuditEvent> events = this.auditEventService.getEvents( auditable );

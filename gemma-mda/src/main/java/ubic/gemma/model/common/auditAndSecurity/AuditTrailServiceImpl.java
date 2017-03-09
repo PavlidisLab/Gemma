@@ -23,10 +23,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -49,40 +50,40 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     private AuditEventDao auditEventDao;
 
     /**
-     * @see AuditTrailService#addComment(AbstractAuditable, String, String)
+     * @see AuditTrailService#addComment(Auditable, String, String)
      */
     @Override
     @Transactional
-    public void addComment( final AbstractAuditable auditable, final String comment, final String detail ) {
+    public void addComment( final Auditable auditable, final String comment, final String detail ) {
         AuditEventType type = new CommentedEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     /**
-     * @see AuditTrailService#addUpdateEvent(AbstractAuditable, String)
+     * @see AuditTrailService#addUpdateEvent(Auditable, String)
      */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final String note ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, final String note ) {
         return this.addUpdateEvent( auditable, null, note );
     }
 
     /**
-     * @see AuditTrailService#addUpdateEvent(AbstractAuditable, AuditEventType, String)
+     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String)
      */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final AuditEventType auditEventType,
+    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
             final String note ) {
         return this.addUpdateEvent( auditable, auditEventType, note, null );
     }
 
     /**
-     * @see AuditTrailService#addUpdateEvent(AbstractAuditable, AuditEventType, String, String)
+     * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
      */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final AbstractAuditable auditable, final AuditEventType auditEventType,
+    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
             final String note, final String detail ) {
         AuditEvent auditEvent = AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, note, detail, null, auditEventType );
@@ -91,7 +92,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( AbstractAuditable auditable, Class<? extends AuditEventType> type, String note,
+    public AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
             String detail ) {
 
         AuditEventType auditEventType;
@@ -125,7 +126,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AuditEvent> getEvents( AbstractAuditable ad ) {
+    public List<AuditEvent> getEvents( Auditable ad ) {
         return this.auditEventDao.getEvents( ad );
     }
 

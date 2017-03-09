@@ -24,11 +24,11 @@ import java.lang.reflect.Method;
 
 import org.apache.commons.beanutils.PropertyUtils;
 
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 
 /**
  * Class to help complete beans based on other beans
- * 
+ *
  * @author pavlidis
  */
 public class BeanPropertyCompleter {
@@ -63,7 +63,7 @@ public class BeanPropertyCompleter {
             throw new IllegalArgumentException( "Args must be of the same type" );
         PropertyDescriptor[] props = PropertyUtils.getPropertyDescriptors( targetObject );
         for ( PropertyDescriptor descriptor : props ) {
-            if ( targetObject instanceof AbstractAuditable && descriptor.getName().equals( "auditTrail" ) ) {
+            if ( targetObject instanceof Auditable && descriptor.getName().equals( "auditTrail" ) ) {
                 continue;
             }
 
