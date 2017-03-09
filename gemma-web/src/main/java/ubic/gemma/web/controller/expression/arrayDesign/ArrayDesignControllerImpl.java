@@ -131,8 +131,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        return new JsonReaderResponse<>(
-                new ArrayList<>( valueObjects ), count );
+        return new JsonReaderResponse<>( new ArrayList<>( valueObjects ), count );
     }
 
     @Override
@@ -278,12 +277,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#generateSummary(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/generateArrayDesignSummary.html")
     public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
@@ -311,12 +304,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getArrayDesigns(java.util.Collection,
-     * boolean, boolean)
-     */
     @Override
     public Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
@@ -351,32 +338,19 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getCsSummaries(ubic.gemma.web.remote.
-     * EntityDelegator)
-     */
     @Override
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
         return this.getDesignSummaries( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getDesignSummaries(ubic.gemma.model.
-     * expression .arrayDesign.ArrayDesign)
-     */
     @Override
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
         if ( rawSummaries == null ) {
             return new HashSet<>();
         }
-        return arrayDesignMapResultService
-                .getSummaryMapValueObjects( rawSummaries );
+        return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 
     @Override
@@ -404,7 +378,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Loads, checks not null, and thaws the Array Design with given ID;
-     *
      */
     private ArrayDesign getADSafely( Long id ) {
         if ( id == null ) {
@@ -422,7 +395,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Setls alternate names on the given value object.
-     *
      */
     private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Collection<String> names = new HashSet<>();
@@ -435,7 +407,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Sets external references, design element count and express. experiment count on the given value object.
-     *
      */
     private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
@@ -454,7 +425,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Sets the summary info on the given value object.
-     *
      */
     private ArrayDesignValueObjectExt setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
@@ -479,7 +449,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             result.put( "html", ArrayDesignHtmlUtil.getSummaryHtml( summary ) );
         return result;
     }
-
 
     @Override
     public String getSummaryForArrayDesign( Long id ) {
@@ -523,7 +492,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         return valueObjects;
     }
-
 
     @Override
     public ArrayDesignValueObject loadArrayDesignsSummary() {
@@ -598,7 +566,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return mav;
     }
 
-
     @Override
     @RequestMapping("/showCompositeSequenceSummary.html")
     public ModelAndView showCompositeSequences( HttpServletRequest request ) {
@@ -626,7 +593,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         return mav;
     }
-
 
     @Override
     @RequestMapping("/showExpressionExperiments.html")
@@ -658,7 +624,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return taskRunningService.submitLocalTask( job );
     }
 
-
     private String formatAlternateNames( ArrayDesign ad ) {
         Collection<String> names = new HashSet<>();
         for ( AlternateName an : ad.getAlternateNames() ) {
@@ -670,7 +635,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Recursively populate the status. Recursion only goes 'up' - so the subsumer and merger, not the subsumees and
      * mergees.
-     *
      */
     private void populateMergeStatus( ArrayDesign arrayDesign, ArrayDesignValueObjectExt result ) {
         assert arrayDesign != null;
