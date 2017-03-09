@@ -41,7 +41,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.web.controller.BaseFormController;
@@ -74,7 +73,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private CompositeSequenceService compositeSequenceService = null;
     private DesignElementDataVectorService designElementDataVectorService;
     private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
-    private BioAssayService bioAssayService = null;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -181,10 +179,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return super.processFormSubmission( request, response, command, errors );
     }
 
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
     /**
      * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
      */
@@ -221,7 +215,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         if ( StringUtils.isNotBlank( id.toString() ) ) {
             ee = expressionExperimentService.load( id );
         } else {
-            ee = ExpressionExperimentImpl.Factory.newInstance();
+            ee = ExpressionExperiment.Factory.newInstance();
         }
 
         eevc.setExpressionExperimentId( ee.getId() );
