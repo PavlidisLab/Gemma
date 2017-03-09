@@ -18,24 +18,22 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Date;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.Date;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 /**
  * @author keshav
- * @version $Id$
  */
 public class AuditTrailDaoTest extends BaseSpringContextTest {
 
@@ -54,7 +52,7 @@ public class AuditTrailDaoTest extends BaseSpringContextTest {
     AuditEvent auditEvent4;
 
     /**
-     * @exception Exception
+     * @throws Exception
      */
     @Before
     public void setup() throws Exception {
