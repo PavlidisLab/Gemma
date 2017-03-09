@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -57,7 +56,6 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.*;
@@ -65,7 +63,6 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -102,9 +99,6 @@ import java.util.*;
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController {
 
-    private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
-    private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
-    private static final String TROUBLE_DETAIL_EVENT_NOT_FOUND = "No trouble event found for the experiment";
     private static final Log log = LogFactory.getLog( ExpressionExperimentController.class.getName() );
     private static final Boolean AJAX = true;
     private static final int TRIM_SIZE = 800;
@@ -249,14 +243,13 @@ public class ExpressionExperimentController {
         if ( SecurityUtil.isUserAdmin() ) {
             for ( ExpressionExperimentDetailsValueObject vo : recordsSubset ) {
                 ExpressionExperiment ee = this.getEESafely( vo.getId() );
+                // trouble details are retrieved automatically if we set the array designs
                 vo.setArrayDesigns(
                         arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
-                this.setTroubleInfo( vo, ee );
             }
         }
 
-        return new JsonReaderResponse<ExpressionExperimentDetailsValueObject>(
-                recordsSubset, count );
+        return new JsonReaderResponse<ExpressionExperimentDetailsValueObject>( recordsSubset, count );
     }
 
     /**
@@ -721,6 +714,8 @@ public class ExpressionExperimentController {
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject(
                 initialResult );
+        // Most of DetailsVO values are set automatically through the constructor.
+        // We only need to set the additional values:
 
         finalResult.setArrayDesigns(
                 arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
@@ -735,7 +730,6 @@ public class ExpressionExperimentController {
         // finalResult.setUserOwned( securityService.isOwnedByCurrentUser( ee ) );
         finalResult = this.setPublicationAndAuthor( finalResult, ee );
         finalResult = this.setBatchInfo( finalResult, ee );
-        finalResult = this.setTroubleInfo( finalResult, ee );
 
         Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
         if ( lastArrayDesignUpdate != null ) {
@@ -744,67 +738,6 @@ public class ExpressionExperimentController {
 
         return finalResult;
 
-    }
-
-    /**
-     * Checks the given EE and all the given array designs for trouble and sets the appropriate properties on the given
-     * value object.
-     */
-    private ExpressionExperimentDetailsValueObject setTroubleInfo( ExpressionExperimentDetailsValueObject finalResult,
-            ExpressionExperiment ee ) {
-
-        boolean eeTroubled = ee.getStatus().getTroubled();
-        boolean eeTroubledButNoInfo = false;
-        boolean adTroubled = false;
-        String eeTroubleDetails = null;
-        String adTroubleDetails = null;
-        String finalTroubleDetails = "";
-
-        // If EE is troubled itself, show the reason for that trouble
-        if ( eeTroubled ) {
-
-            AuditEvent ae = expressionExperimentService.getOustandingTroubleEvent( ee.getId() );
-            if ( ae == null ) {
-                eeTroubleDetails = TROUBLE_DETAIL_EVENT_NOT_FOUND;
-                eeTroubledButNoInfo = true;
-                log.error( "Experiment has a troubled status, but no trouble event was found! EE id: " + ee.getId() );
-            } else {
-                eeTroubleDetails = ae.toString();
-            }
-
-        }
-
-        // this loop has to happen even if eeTroubled, because we need to escape troubleDetails of all the ADs to be
-        // displayed as AD trouble
-        for ( ArrayDesignValueObject ad : finalResult.getArrayDesigns() ) {
-            ad.setTroubleDetails( StringEscapeUtils.escapeHtml4( ad.getTroubleDetails() ) );
-
-            // if the EE is not troubled, but the array design(s) the EE belongs to is/are troubled, show the details of
-            // their trouble.
-            if ( !eeTroubled || eeTroubledButNoInfo ) {
-                if ( ad.getTroubled() ) {
-                    adTroubled = true;
-                    if ( adTroubleDetails == null ) {
-                        adTroubleDetails = TROUBLE_DETAIL_PLATF;
-                    } else {
-                        adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
-                    }
-                    adTroubleDetails += ad.getTroubleDetails();
-                }
-            }
-        }
-
-        // Construct the final trouble string to be displayed as EE trouble
-        if ( eeTroubled ) {
-            finalTroubleDetails += eeTroubleDetails;
-        } else if ( adTroubled ) {
-            finalTroubleDetails += adTroubleDetails;
-        }
-
-        finalResult.setTroubled( eeTroubled || adTroubled );
-        finalResult.setTroubleDetails( StringEscapeUtils.escapeHtml4( finalTroubleDetails ) );
-
-        return finalResult;
     }
 
     /**
@@ -949,8 +882,7 @@ public class ExpressionExperimentController {
             return new HashSet<>();
         }
 
-        return getFilteredExpressionExperimentValueObjects( null, ids,
-                false, null, true );
+        return getFilteredExpressionExperimentValueObjects( null, ids, false, null, true );
     }
 
     /**
@@ -983,7 +915,6 @@ public class ExpressionExperimentController {
     /**
      * AJAX; get a collection of experiments that have had samples removed due to outliers (TODO: and experiment that
      * have possible batch effects detected)
-     *
      */
     public JsonReaderResponse<JSONObject> loadExpressionExperimentsWithQcIssues() {
 
