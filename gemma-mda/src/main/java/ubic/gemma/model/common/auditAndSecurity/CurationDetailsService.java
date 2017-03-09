@@ -26,4 +26,8 @@ public class CurationDetailsService {
     @Autowired
     CurationDetailsDao curationDetailsDao;
 
+    public void Update(){
+
+    }
+
 }

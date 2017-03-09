@@ -23,9 +23,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,7 +36,7 @@ import java.util.HashSet;
 
 /**
  * This is required solely for exposing auditables to remote services would try to marshall the abstract class
- * AbstractAuditable.
+ * Auditable.
  *
  * @author pavlidis
  */
@@ -56,36 +57,27 @@ public class AuditController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
+    @Autowired
+    private CurationDetailsService curationDetailsService;
+
     @SuppressWarnings("unchecked")
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
-        AbstractAuditable entity = getAuditable( e );
+        Auditable entity = getAuditable( e );
         if ( entity == null ) {
-            log.warn( "Couldn't find AbstractAuditable represented by " + e );
+            log.warn( "Couldn't find Auditable represented by " + e );
             return;
         }
 
-        switch ( auditEventType ) {
-            case "CommentedEvent":
-                auditTrailService.addComment( entity, comment, detail );
-                break;
-            case "TroubledStatusFlagEvent":
-                auditTrailService.addTroubleFlag( entity, comment, detail );
-                break;
-            case "NotTroubledStatusFlagEvent":
-                auditTrailService.addOkFlag( entity, comment, detail );
-                break;
-            case "DoesNotNeedAttentionEvent":
-                auditTrailService.addValidatedFlag( entity, comment, detail );
-                break;
-            default:
-                Class<?> clazz;
-                try {
-                    clazz = Class.forName( "ubic.gemma.model.common.auditAndSecurity.eventType." + auditEventType );
-                } catch ( ClassNotFoundException e1 ) {
-                    throw new RuntimeException( "Unknown event type: " + auditEventType );
-                }
-                auditTrailService.addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
-                break;
+        Class<?> clazz;
+        try {
+            clazz = Class.forName( "ubic.gemma.model.common.auditAndSecurity.eventType." + auditEventType );
+        } catch ( ClassNotFoundException e1 ) {
+            throw new RuntimeException( "Unknown event type: " + auditEventType );
+        }
+        AuditEvent auditEvent = auditTrailService
+                .addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
+        if(auditEvent.getEventType() instanceof StatusFlagEvent){
+            curationDetailsService.update(auditEvent);
         }
 
     }
@@ -93,7 +85,7 @@ public class AuditController {
     public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
         Collection<AuditEventValueObject> result = new HashSet<>();
 
-        AbstractAuditable entity = getAuditable( e );
+        Auditable entity = getAuditable( e );
 
         if ( entity == null ) {
             return result;
@@ -119,14 +111,14 @@ public class AuditController {
     /**
      * FIXME this relies on the exact class name being available from the EntityDelegator.
      */
-    private AbstractAuditable getAuditable( EntityDelegator e ) {
+    private Auditable getAuditable( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
         if ( e.getClassDelegatingFor() == null )
             return null;
 
         Class<?> clazz;
-        AbstractAuditable result;
+        Auditable result;
         try {
             clazz = Class.forName( e.getClassDelegatingFor() );
         } catch ( ClassNotFoundException e1 ) {

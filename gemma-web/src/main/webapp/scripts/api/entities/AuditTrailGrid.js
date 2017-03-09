@@ -199,12 +199,9 @@ Gemma.AddAuditEventDialog = Ext.extend( Ext.Window, {
 
       this.auditEventTypeStore = new Ext.data.SimpleStore( {
          fields : [ 'type', 'description' ],
-         data : [ [ 'CommentedEvent', 'Comment' ], [ 'TroubleStatusFlagEvent', 'Other (generic) Trouble' ],
-                 [ 'ExperimentalDesignTrouble', 'Experimental Design Trouble' ],
-                 [ 'OutlierSampleTrouble', 'Outlier sample' ], [ 'OKStatusFlagEvent', 'OK flag (clear Trouble)' ],
-                 [ 'ValidatedFlagEvent', 'Validated flag' ], [ 'ValidatedQualityControl', 'QC validated' ],
-                 [ 'ValidatedAnnotations', 'Tags validated' ],
-                 [ 'ValidatedExperimentalDesign', 'Experimental design validated' ] ]
+         data : [ [ 'CommentedEvent', 'Comment' ], [ 'TroubledStatusFlagEvent', 'Other (generic) Trouble' ],
+                [ 'ExperimentalDesignTrouble', 'Experimental Design Trouble' ],
+                [ 'OutlierSampleTrouble', 'Outlier sample' ], [ 'NotTroubledFlagEvent', 'Not troubled' ] ]
       } );
 
       this.auditEventTypeCombo = new Ext.form.ComboBox( {

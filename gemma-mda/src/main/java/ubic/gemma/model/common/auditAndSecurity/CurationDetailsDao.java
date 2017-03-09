@@ -18,11 +18,20 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
+import org.hibernate.proxy.HibernateProxyHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent;
 import ubic.gemma.persistence.AbstractDao;
+
+import java.util.Date;
 
 /**
  * @author tesarst
@@ -41,58 +50,58 @@ public class CurationDetailsDao extends AbstractDao<CurationDetails> {
                 createdEvent, null );
         return this.create( cd );
     }
-    //
-    //    @Override
-    //    public CurationDetails load( Long id ) {
-    //        if ( id == null ) {
-    //            throw new IllegalArgumentException( "CurationDetailsDao.load - 'id' can not be null" );
-    //        }
-    //        final Object entity = this.getHibernateTemplate().get( CurationDetails.class, id );
-    //        return ( CurationDetails ) entity;
-    //    }
-    //
-    //    public void setTroubled( AbstractAuditable auditable, boolean value, StatusFlagEvent troubleEvent ) {
-    //        Hibernate.initialize( auditable );
-    //        auditable.getStatus().setTroubled( value );
-    //        this.update( auditable.getStatus() );
-    //    }
-    //
-    //    public void setNeedsAttention( AbstractAuditable auditable, boolean value ) {
-    //        Hibernate.initialize( auditable );
-    //        auditable.getStatus().setValidated( value );
-    //        if ( value ) {
-    //            auditable.getStatus().setTroubled( false );
-    //        }
-    //        this.update( auditable.getStatus() );
-    //    }
-    //
-    //    public void update( AbstractAuditable a, AuditEventType auditEventType ) {
-    //
-    //        // note that according to the docs, HibernateProxyHelper is being "phased out".
-    //        a = ( AbstractAuditable ) this.getSessionFactory().getCurrentSession()
-    //                .get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
-    //
-    //        Date now = new Date();
-    //        if ( a.getStatus() == null ) {
-    //            a.setStatus( create() );
-    //        } else {
-    //            this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
-    //            this.update( a.getStatus() );
-    //        }
-    //
-    //        if ( auditEventType != null ) {
-    //            Class<? extends AuditEventType> eventClass = auditEventType.getClass();
-    //            if ( TroubledStatusFlagEvent.class.isAssignableFrom( eventClass ) ) {
-    //                this.setTroubled( a, true );
-    //            } else if ( NotTroubledFlagEvent.class.isAssignableFrom( eventClass ) ) {
-    //                this.setTroubled( a, false );
-    //            } else if ( NeedsAttentionFlagEvent.class.isAssignableFrom( eventClass ) ) {
-    //                this.setNeedsAttention( a, true );
-    //            } else if ( NeedsAttentionFlagEvent.class.isAssignableFrom( eventClass ) ) {
-    //                this.setNeedsAttention( a, false );
-    //            }
-    //        }
-    //
-    //    }
+
+    @Override
+    public CurationDetails load( Long id ) {
+        if ( id == null ) {
+            throw new IllegalArgumentException( "CurationDetailsDao.load - 'id' can not be null" );
+        }
+        final Object entity = this.getHibernateTemplate().get( CurationDetails.class, id );
+        return ( CurationDetails ) entity;
+    }
+
+    public void setTroubled( Auditable auditable, boolean value, StatusFlagEvent troubleEvent ) {
+        Hibernate.initialize( auditable );
+        auditable.getStatus().setTroubled( value );
+        this.update( auditable.getStatus() );
+    }
+
+    public void setNeedsAttention( Auditable auditable, boolean value ) {
+        Hibernate.initialize( auditable );
+        auditable.getStatus().setValidated( value );
+        if ( value ) {
+            auditable.getStatus().setTroubled( false );
+        }
+        this.update( auditable.getStatus() );
+    }
+
+    public void update( Auditable a, AuditEventType auditEventType ) {
+
+        // note that according to the docs, HibernateProxyHelper is being "phased out".
+        a = ( Auditable ) this.getSessionFactory().getCurrentSession()
+                .get( HibernateProxyHelper.getClassWithoutInitializingProxy( a ), a.getId() );
+
+        Date now = new Date();
+        if ( a.getStatus() == null ) {
+            a.setStatus( create() );
+        } else {
+            this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE ).lock( a.getStatus() );
+            this.update( a.getStatus() );
+        }
+
+        if ( auditEventType != null ) {
+            Class<? extends AuditEventType> eventClass = auditEventType.getClass();
+            if ( TroubledStatusFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setTroubled( a, true );
+            } else if ( NotTroubledFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setTroubled( a, false );
+            } else if ( NeedsAttentionFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setNeedsAttention( a, true );
+            } else if ( NeedsAttentionFlagEvent.class.isAssignableFrom( eventClass ) ) {
+                this.setNeedsAttention( a, false );
+            }
+        }
+
+    }
 
 }

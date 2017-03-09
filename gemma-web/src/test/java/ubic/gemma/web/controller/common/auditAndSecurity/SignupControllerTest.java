@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
@@ -95,7 +96,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
                             /*
                              * Extra torture.
                              */
-                            ExpressionExperiment ee = ExpressionExperiment.Factory.newInstance();
+                            ExpressionExperiment ee = ExpressionExperimentImpl.Factory.newInstance();
                             ee.setDescription( "From test" );
                             ee.setName( RandomStringUtils.randomAlphabetic( 20 ) );
                             ee.setShortName( RandomStringUtils.randomAlphabetic( 20 ) );
