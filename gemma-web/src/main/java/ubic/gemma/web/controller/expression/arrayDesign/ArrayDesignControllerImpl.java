@@ -329,7 +329,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     || a.getExpressionExperimentCount() == 0 ) ) {
                 toHide.add( a );
             }
-            a.setTroubleDetails( StringEscapeUtils.escapeHtml4( a.getTroubleDetails() ) );
         }
         result.removeAll( toHide );
 
@@ -364,7 +363,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
 
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
-        result.setTroubleDetails( StringEscapeUtils.escapeHtml4( result.getTroubleDetails() ) );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setAlternateNames( result, arrayDesign );
         result = this.setExtRefsAndCounts( result, arrayDesign );
