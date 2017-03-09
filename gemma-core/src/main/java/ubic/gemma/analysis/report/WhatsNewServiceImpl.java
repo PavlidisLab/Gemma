@@ -54,7 +54,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private static final String WHATS_NEW_CACHE = "WhatsNew";
     private static final String WHATS_NEW_DIR = "WhatsNew";
     private static final String WHATS_NEW_FILE = "WhatsNew";
-    private static Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );
+    private final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
     @Autowired
     private ArrayDesignService arrayDesignService = null;
     @Autowired
@@ -65,7 +66,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
     private SecurityService securityService = null;
     @Autowired
     private CacheManager cacheManager = null;
-    private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
     private Cache whatsNewCache;
 
     @Override
@@ -101,9 +101,14 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         saveReport( date );
     }
 
-    /**
-     * @return representing the updated or new objects.
-     */
+    @Override
+    public WhatsNew getReport() {
+        Calendar c = Calendar.getInstance();
+        Date date = c.getTime();
+        date = DateUtils.addWeeks( date, -1 );
+        return this.getReport( date );
+    }
+
     @Override
     public WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );

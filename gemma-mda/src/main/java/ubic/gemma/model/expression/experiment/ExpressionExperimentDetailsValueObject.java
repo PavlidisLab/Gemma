@@ -18,18 +18,19 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-
+import org.apache.commons.lang3.StringEscapeUtils;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
+import java.util.Collection;
+
 /**
- * @version $Id$
  * @author paul
  */
-public class ExpressionExperimentDetailsValueObject extends
-        ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject {
+public class ExpressionExperimentDetailsValueObject extends ExpressionExperimentValueObject {
 
+    private static final String TROUBLE_DETAIL_PLATF = "Platform problems: ";
+    private static final String TROUBLE_DETAIL_SEPARATOR = " | ";
     private static final long serialVersionUID = -1219449523930648392L;
 
     private String description;
@@ -68,8 +69,20 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private boolean reprocessedFromRawData;
 
+    public ExpressionExperimentDetailsValueObject() {
+        super();
+    }
+
+    public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject otherBean ) {
+        super( otherBean );
+    }
+
     public boolean getReprocessedFromRawData() {
         return reprocessedFromRawData;
+    }
+
+    public void setReprocessedFromRawData( boolean reprocessedFromRawData ) {
+        this.reprocessedFromRawData = reprocessedFromRawData;
     }
 
     public Boolean getHasMultipleTechnologyTypes() {
@@ -88,27 +101,28 @@ public class ExpressionExperimentDetailsValueObject extends
         this.hasMultiplePreferredQuantitationTypes = hasMultiplePreferredQuantitationTypes;
     }
 
-    public ExpressionExperimentDetailsValueObject() {
-        super();
-    }
-
-    public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject otherBean ) {
-        super( otherBean );
-    }
-
     public Collection<ArrayDesignValueObject> getArrayDesigns() {
         return arrayDesigns;
     }
 
-    /**
-     * 
-     */
+    public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
+        this.arrayDesigns = arrayDesigns;
+    }
+
     public String getDescription() {
         return this.description;
     }
 
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public CitationValueObject getPrimaryCitation() {
         return primaryCitation;
+    }
+
+    public void setPrimaryCitation( CitationValueObject primaryCitation ) {
+        this.primaryCitation = primaryCitation;
     }
 
     /**
@@ -121,58 +135,40 @@ public class ExpressionExperimentDetailsValueObject extends
         return this.secondaryAccession;
     }
 
-    /**
-     * 
-     */
-    public String getSecondaryExternalDatabase() {
-        return this.secondaryExternalDatabase;
-    }
-
-    /**
-     * 
-     */
-    public String getSecondaryExternalUri() {
-        return this.secondaryExternalUri;
-    }
-
-    public void setArrayDesigns( Collection<ArrayDesignValueObject> arrayDesigns ) {
-        this.arrayDesigns = arrayDesigns;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setPrimaryCitation( CitationValueObject primaryCitation ) {
-        this.primaryCitation = primaryCitation;
-    }
-
     public void setSecondaryAccession( String secondaryAccession ) {
         this.secondaryAccession = secondaryAccession;
+    }
+
+    public String getSecondaryExternalDatabase() {
+        return this.secondaryExternalDatabase;
     }
 
     public void setSecondaryExternalDatabase( String secondaryExternalDatabase ) {
         this.secondaryExternalDatabase = secondaryExternalDatabase;
     }
 
-    public void setSecondaryExternalUri( String secondaryExternalUri ) {
-        this.secondaryExternalUri = secondaryExternalUri;
+    public String getSecondaryExternalUri() {
+        return this.secondaryExternalUri;
     }
 
-    public void setParentTaxon( String parentTaxon ) {
-        this.parentTaxon = parentTaxon;
+    public void setSecondaryExternalUri( String secondaryExternalUri ) {
+        this.secondaryExternalUri = secondaryExternalUri;
     }
 
     public String getParentTaxon() {
         return parentTaxon;
     }
 
-    public void setQChtml( String qChtml ) {
-        QChtml = qChtml;
+    public void setParentTaxon( String parentTaxon ) {
+        this.parentTaxon = parentTaxon;
     }
 
     public String getQChtml() {
         return QChtml;
+    }
+
+    public void setQChtml( String qChtml ) {
+        QChtml = qChtml;
     }
 
     public boolean isHasBatchInformation() {
@@ -181,10 +177,6 @@ public class ExpressionExperimentDetailsValueObject extends
 
     public void setHasBatchInformation( boolean hasBatchInformation ) {
         this.hasBatchInformation = hasBatchInformation;
-    }
-
-    public void setReprocessedFromRawData( boolean reprocessedFromRawData ) {
-        this.reprocessedFromRawData = reprocessedFromRawData;
     }
 
     public String getBatchConfound() {
@@ -203,12 +195,19 @@ public class ExpressionExperimentDetailsValueObject extends
         this.batchEffect = batchEffect;
     }
 
+    public String getLastArrayDesignUpdateDate() {
+        return lastArrayDesignUpdateDate;
+    }
+
     public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {
         this.lastArrayDesignUpdateDate = lastArrayDesignUpdateDate;
     }
 
-    public String getLastArrayDesignUpdateDate() {
-        return lastArrayDesignUpdateDate;
+    /**
+     * @return the expressionExperimentSets
+     */
+    public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
+        return expressionExperimentSets;
     }
 
     /**
@@ -219,10 +218,63 @@ public class ExpressionExperimentDetailsValueObject extends
     }
 
     /**
-     * @return the expressionExperimentSets
+     * @return true if the EE, or any of its Array Designs is troubled.
      */
-    public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
-        return expressionExperimentSets;
+    @Override
+    public Boolean getTroubled() {
+        Boolean troubled = super.getTroubled();
+        if ( !troubled ) {
+            for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
+                if ( ad.getTroubled() )
+                    return true;
+            }
+        }
+        return troubled;
     }
 
+    /**
+     * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
+     * MAKE SURE to fill the Array Design variable first!
+     *
+     * @param htmlEscape whether to escape the returned string for html
+     * @return string with trouble info.
+     */
+    @Override
+    public String getTroubleDetails( boolean htmlEscape ) {
+        String eeTroubleDetails = null;
+        String adTroubleDetails = null;
+        String finalTroubleDetails = "";
+        boolean adTroubled = false;
+
+        if ( super.getTroubled() )
+            eeTroubleDetails = super.getTroubleDetails( htmlEscape );
+
+        for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
+            if ( ad.getTroubled() ) {
+                adTroubled = true;
+                if ( adTroubleDetails == null ) {
+                    adTroubleDetails = TROUBLE_DETAIL_PLATF;
+                } else {
+                    adTroubleDetails += TROUBLE_DETAIL_SEPARATOR;
+                }
+                adTroubleDetails += ad.getTroubleDetails( false );
+            }
+        }
+
+        if ( super.getTroubled() ) {
+            finalTroubleDetails += eeTroubleDetails;
+        } else if ( adTroubled ) {
+            finalTroubleDetails += adTroubleDetails;
+        }
+
+        return htmlEscape ? StringEscapeUtils.escapeHtml4( finalTroubleDetails ) : finalTroubleDetails;
+    }
+
+    /**
+     * @return html-escaped string with trouble info.
+     * @see #getTroubleDetails(boolean)
+     */
+    public String getTroubleDetails() {
+        return this.getTroubleDetails( true );
+    }
 }

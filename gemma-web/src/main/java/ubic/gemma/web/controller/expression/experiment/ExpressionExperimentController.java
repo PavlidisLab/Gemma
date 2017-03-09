@@ -22,7 +22,6 @@ import gemma.gsec.SecurityService;
 import gemma.gsec.util.SecurityUtil;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,6 +76,7 @@ import ubic.gemma.tasks.AbstractTask;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -94,7 +94,7 @@ import java.util.*;
 /**
  * @author keshav
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({ "unused", "WeakerAccess" })
 @Controller
 @RequestMapping(value = { "/expressionExperiment", "/ee" })
 public class ExpressionExperimentController {
@@ -249,7 +249,7 @@ public class ExpressionExperimentController {
             }
         }
 
-        return new JsonReaderResponse<ExpressionExperimentDetailsValueObject>( recordsSubset, count );
+        return new JsonReaderResponse<>( recordsSubset, count );
     }
 
     /**
@@ -609,11 +609,7 @@ public class ExpressionExperimentController {
         WhatsNew wn = whatsNewService.retrieveReport();
 
         if ( wn == null ) {
-            Calendar c = Calendar.getInstance();
-            Date date = c.getTime();
-            date = DateUtils.addWeeks( date, -1 );
-            wn = whatsNewService.getReport( date );
-
+            wn = whatsNewService.getReport();
         }
         if ( wn != null ) {
             // Get count for new assays
@@ -944,7 +940,7 @@ public class ExpressionExperimentController {
             jsonRecords.add( record );
         }
 
-        return new JsonReaderResponse<JSONObject>( jsonRecords );
+        return new JsonReaderResponse<>( jsonRecords );
 
     }
 
@@ -1151,12 +1147,7 @@ public class ExpressionExperimentController {
 
         ModelAndView mav = new ModelAndView( "bioMaterials" );
         if ( AJAX ) {
-            StringBuilder buf = new StringBuilder();
-            for ( BioMaterial bm : bioMaterials ) {
-                buf.append( bm.getId() );
-                buf.append( "," );
-            }
-            mav.addObject( "bioMaterialIdList", buf.toString().replaceAll( ",$", "" ) );
+            mav.addObject( "bioMaterialIdList", bioMaterialService.getBioMaterialIdList( bioMaterials ) );
         }
 
         Integer numBioMaterials = bioMaterials.size();
@@ -1317,38 +1308,14 @@ public class ExpressionExperimentController {
         return taskRunningService.submitLocalTask( task );
     }
 
-    /**
-     * Returns a collection of {@link Long} ids from strings.
-     */
-    protected Collection<Long> extractIds( String idString ) {
-        Collection<Long> ids = new ArrayList<>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
-    }
-
-    /*
-     * Handle case of text export of a list of genes
-     *
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by
-     * /Gemma/expressionExperiment/downloadExpressionExperimentList.html
-     */
     @RequestMapping("/downloadExpressionExperimentList.html")
     protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> eeIds = extractIds( request.getParameter( "e" ) ); // might not be any
-        Collection<Long> eeSetIds = extractIds( request.getParameter( "es" ) ); // might not be there
+        Collection<Long> eeIds = ControllerUtils.extractIds( request.getParameter( "e" ) ); // might not be any
+        Collection<Long> eeSetIds = ControllerUtils.extractIds( request.getParameter( "es" ) ); // might not be there
         String eeSetName = request.getParameter( "esn" ); // might not be there
 
         ModelAndView mav = new ModelAndView( new TextView() );

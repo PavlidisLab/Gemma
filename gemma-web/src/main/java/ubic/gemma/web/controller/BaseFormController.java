@@ -18,16 +18,6 @@
  */
 package ubic.gemma.web.controller;
 
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,103 +31,38 @@ import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
-
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * Implementation of <strong>SimpleFormController</strong> that contains convenience methods for subclasses. For
  * example, getting the current user and saving messages/errors. This class is intended to be a base class for all Form
  * controllers.
- * 
+ *
  * @author pavlidis (originally based on Appfuse code)
- * @version $Id$
  */
 public abstract class BaseFormController extends SimpleFormController {
-    protected static Log log = LogFactory.getLog( BaseFormController.class.getName() );
+    protected static final Log log = LogFactory.getLog( BaseFormController.class.getName() );
 
     @Autowired
     private MessageUtil messageUtil;
 
     @Autowired
-    protected MailEngine mailEngine;
+    private MailEngine mailEngine;
 
     /**
      * @return the messageUtil
      */
     public MessageUtil getMessageUtil() {
         return this.messageUtil;
-    }
-
-    /**
-     * @param msgKey
-     * @param locale
-     * @return
-     * @see ubic.gemma.web.util.MessageUtilImpl#getText(java.lang.String, java.util.Locale)
-     */
-    public String getText( String msgKey, Locale locale ) {
-        return this.messageUtil.getText( msgKey, locale );
-    }
-
-    /**
-     * @param request
-     * @param msg
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String msg ) {
-        this.messageUtil.saveMessage( request, msg );
-    }
-
-    /**
-     * @param request
-     * @param key
-     * @param parameter
-     * @param defaultMessage
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
-     *      java.lang.Object, java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
-        this.messageUtil.saveMessage( request, key, parameter, defaultMessage );
-    }
-
-    /**
-     * @param request
-     * @param key
-     * @param parameters
-     * @param defaultMessage
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
-     *      java.lang.Object[], java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
-        this.messageUtil.saveMessage( request, key, parameters, defaultMessage );
-    }
-
-    /**
-     * @param request
-     * @param key
-     * @param defaultMessage
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
-     *      java.lang.String)
-     */
-    public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
-        this.messageUtil.saveMessage( request, key, defaultMessage );
-    }
-
-    /**
-     * @param session
-     * @param msg
-     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
-     */
-    public void saveMessage( HttpSession session, String msg ) {
-        this.messageUtil.saveMessage( session, msg );
-    }
-
-    /**
-     * @param mailEngine
-     */
-    public void setMailEngine( MailEngine mailEngine ) {
-        this.mailEngine = mailEngine;
     }
 
     /**
@@ -148,29 +73,55 @@ public abstract class BaseFormController extends SimpleFormController {
     }
 
     /**
-     * Returns a collection of {@link Long} ids from strings.
-     * 
-     * @param idString
-     * @return
+     * @see ubic.gemma.web.util.MessageUtilImpl#getText(java.lang.String, java.util.Locale)
      */
-    protected Collection<Long> extractIds( String idString ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
+    public String getText( String msgKey, Locale locale ) {
+        return this.messageUtil.getText( msgKey, locale );
+    }
+
+    /**
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
+     */
+    public void saveMessage( HttpServletRequest request, String msg ) {
+        this.messageUtil.saveMessage( request, msg );
+    }
+
+    /**
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.Object, java.lang.String)
+     */
+    public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
+        this.messageUtil.saveMessage( request, key, parameter, defaultMessage );
+    }
+
+    /**
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.Object[], java.lang.String)
+     */
+    public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
+        this.messageUtil.saveMessage( request, key, parameters, defaultMessage );
+    }
+
+    /**
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String, java.lang.String)
+     */
+    public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
+        this.messageUtil.saveMessage( request, key, defaultMessage );
+    }
+
+    /**
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
+     */
+    public void saveMessage( HttpSession session, String msg ) {
+        this.messageUtil.saveMessage( session, msg );
+    }
+
+    public void setMailEngine( MailEngine mailEngine ) {
+        this.mailEngine = mailEngine;
     }
 
     /**
      * Override this to control which cancelView is used. The default behavior is to go to the success view if there is
      * no cancel view defined; otherwise, get the cancel view.
-     * 
+     *
      * @param request can be used to control which cancel view to use. (This is not used in the default implementation)
      * @return the view to use.
      */
@@ -180,7 +131,7 @@ public abstract class BaseFormController extends SimpleFormController {
 
     /**
      * Set up a custom property editor for converting form inputs to real objects. Override this to add additional
-     * custom editors (call super.initBinder() in your implemenation)
+     * custom editors (call super.initBinder() in your implementation)
      */
     @InitBinder
     protected void initBinder( WebDataBinder binder ) {
@@ -192,7 +143,7 @@ public abstract class BaseFormController extends SimpleFormController {
 
     /**
      * Convenience method to get the user object from the session
-     * 
+     *
      * @param request the current request
      * @return the user's populated object from the session
      */
@@ -227,9 +178,6 @@ public abstract class BaseFormController extends SimpleFormController {
 
     /**
      * Convenience message to send messages to users
-     * 
-     * @param user
-     * @param msg
      */
     protected void sendEmail( User user, String msg ) {
         if ( StringUtils.isBlank( user.getEmail() ) ) {
@@ -244,10 +192,6 @@ public abstract class BaseFormController extends SimpleFormController {
 
     /**
      * Convenience message to send messages to users
-     * 
-     * @param user
-     * @param templateName
-     * @param model
      */
     protected void sendEmail( User user, String templateName, Map<String, Object> model ) {
         if ( StringUtils.isBlank( user.getEmail() ) ) {

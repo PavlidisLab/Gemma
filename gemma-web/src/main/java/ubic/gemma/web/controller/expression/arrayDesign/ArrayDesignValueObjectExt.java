@@ -72,7 +72,6 @@ public class ArrayDesignValueObjectExt extends ArrayDesignValueObject {
         formatTechnologyType();
 
         addAnnotationFileLinks();
-        this.setTroubleDetails( vo.getTroubleDetails() );
     }
 
     public String getAllParentsAnnotationLink() {

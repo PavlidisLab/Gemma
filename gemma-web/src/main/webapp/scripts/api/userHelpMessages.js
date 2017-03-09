@@ -618,11 +618,3 @@ Gemma.HelpText.WidgetDefaults = {
          + "Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/"
    }
 };
-
-/*
- * where would this go? (from AuditTrailGrid.js), could be useful elsewhere AddAuditEventDialog:{ types: {
- * CommentedEvent: 'Comment', TroubleStatusFlagEvent: 'Other (generic) Trouble', ExperimentalDesignTrouble:
- * 'Experimental Design Trouble', OutlierSampleTrouble: 'Outlier sample', OKStatusFlagEvent: 'OK flag (clear Trouble)',
- * ValidatedFlagEvent: 'Validated flag', ValidatedQualityControl: 'QC validated', ValidatedAnnotations: 'Tags
- * validated', ValidatedExperimentalDesign: 'Experimental design validated' } },
- */
