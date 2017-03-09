@@ -34,7 +34,6 @@ import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -198,18 +197,6 @@ public class AnnotationController {
             characteristicService.delete( id );
         }
 
-    }
-
-    /**
-     * @param eeId
-     */
-    public void validateTags( Long eeId ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-        if ( ee == null ) {
-            return;
-        }
-        this.auditTrailService.addUpdateEvent( ee, ValidatedAnnotations.class, "", "" );
     }
 
 }
