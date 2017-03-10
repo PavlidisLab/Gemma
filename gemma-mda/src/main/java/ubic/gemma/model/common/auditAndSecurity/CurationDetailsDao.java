@@ -83,10 +83,10 @@ public class CurationDetailsDao extends AbstractDao<CurationDetails> {
     /**
      * Updates the given curatable object based on the provided event type.
      *
-     * @param curatable            the curatable object that should be updated with the given event.
+     * @param curatable  the curatable object that should be updated with the given event.
      * @param auditEvent the event containing information about the necessary update. This method only
-     *                             accepts events whose type is an extension of {@link CurationDetailsEvent}. Audit events
-     *                             with any other type will cause an exception.
+     *                   accepts events whose type is an extension of {@link CurationDetailsEvent}. Audit events
+     *                   with any other type will cause an exception.
      * @throws IllegalArgumentException if the given audit event had an unrecognised type.
      */
     public void update( Curatable curatable, AuditEvent auditEvent ) {
@@ -117,12 +117,13 @@ public class CurationDetailsDao extends AbstractDao<CurationDetails> {
      * @param auditEvent the audit event to be checked
      * @return true, if the given audit event satisfies all the conditions, false otherwise.
      */
-    private boolean isEventLegal( AuditEvent auditEvent) {
+    private boolean isEventLegal( AuditEvent auditEvent ) {
         return auditEvent != null // Can not be null
                 && auditEvent.getEventType() != null // Type must be set
-                && CurationDetailsEvent.class.isAssignableFrom(
-                    auditEvent.getEventType().getClass() ) // Type must be extension of CurationDetailsEvent...
-                && auditEvent.getEventType().getClass() != CurationDetailsEvent.class; // ...but not the CurationDetailsEvent itself.
+                && CurationDetailsEvent.class.isAssignableFrom( auditEvent.getEventType().getClass() )
+                // Type must be extension of CurationDetailsEvent...
+                && auditEvent.getEventType().getClass()
+                != CurationDetailsEvent.class; // ...but not the CurationDetailsEvent itself.
     }
 
 }

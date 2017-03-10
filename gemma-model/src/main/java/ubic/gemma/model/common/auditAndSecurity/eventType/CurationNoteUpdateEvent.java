@@ -42,7 +42,6 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
     }
 
     /**
-     *
      * @param curatable  the curatable object to do the curation action on.
      * @param auditEvent the audit event containing information about the action that should be made.
      *                   With the CurationNoteUpdateEvent, this method expects the auditEvent Note property to
