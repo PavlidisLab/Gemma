@@ -22,7 +22,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
 /**
- * Statuses used by CurationDetails
+ * Event types that can change CurationDetails of Curatable objects.
  * Anytime a new extension of this event type is implemented, add a new handler to the
  * {@link ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao#update(ubic.gemma.model.common.auditAndSecurity.curation.Curatable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
  * method.

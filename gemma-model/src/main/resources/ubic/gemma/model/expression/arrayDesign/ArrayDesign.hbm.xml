@@ -15,7 +15,7 @@
          <column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <many-to-one name="curationDetails" class="ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails" cascade="all" lazy="false" fetch="select">
-         <column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
+         <column name="CURATION_DETAILS_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <property name="name" type="java.lang.String">
          <column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>

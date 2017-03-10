@@ -22,10 +22,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
 /**
- * <p>
- * Event indicating that the status of this entity is OK. This can be used after a troublestatusevent to indicate that
- * 'all is well'.
- * </p>
+ * This event type resets the trouble flag of curation details of a curatable object.
  *
  * @author Paul
  */

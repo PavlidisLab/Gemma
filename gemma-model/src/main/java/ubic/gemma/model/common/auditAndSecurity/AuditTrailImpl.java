@@ -38,7 +38,6 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
     }
 
     /**
-     * Use AbstractAuditable.getStatus().getCreateDate() if all you want is the date.
      *
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#getCreationEvent()
      */

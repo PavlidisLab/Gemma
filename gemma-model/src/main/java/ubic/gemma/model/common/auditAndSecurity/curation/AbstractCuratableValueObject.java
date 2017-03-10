@@ -12,7 +12,7 @@ import java.util.Date;
  */
 public abstract class AbstractCuratableValueObject {
 
-    protected static final String TROUBLE_DETAILS_NONE = "Not troubled";
+    private static final String TROUBLE_DETAILS_NONE = "Not troubled";
 
     protected Date lastUpdated;
 
@@ -100,10 +100,11 @@ public abstract class AbstractCuratableValueObject {
     }
 
     /**
-     * @return a string describing the current trouble status of this object.
-     *
-     * The EEDetailsVO actually goes through the ADs and composes complete trouble details.
+     * @return a string describing the current trouble of this object. In this case, only the trouble of the Expression
+     * Experiment are described. If you also need to include the Array Design trouble info, use
+     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsvalueObject}
      */
+    @SuppressWarnings("JavadocReference") // Inspector can not see the EEDetailsVo because it is in gemma-mda for some reason
     public String getTroubleDetails() {
         return this.getTroubleDetails( true );
     }
