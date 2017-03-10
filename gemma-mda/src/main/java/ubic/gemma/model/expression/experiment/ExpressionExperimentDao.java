@@ -31,6 +31,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -94,6 +95,13 @@ public class ExpressionExperimentDao extends AbstractCuratableDao<ExpressionExpe
             throw new IllegalArgumentException(
                     "ExpressionExperiment.create - 'expressionExperiment' can not be null" );
         }
+
+        if ( expressionExperiment.getCurationDetails() == null ) {
+            CurationDetailsDao curationDetailsDao = new CurationDetailsDao( getSessionFactory() );
+            expressionExperiment.setCurationDetails(
+                    curationDetailsDao.create( expressionExperiment.getAuditTrail().getCreationEvent() ) );
+        }
+
         this.getHibernateTemplate().save( expressionExperiment );
         return expressionExperiment;
     }

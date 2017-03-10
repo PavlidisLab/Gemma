@@ -40,8 +40,6 @@ public class CurationDetailsService {
     AuditTrailService auditTrailService;
 
     /**
-     * Processes the given audit event and updates the CurationDetails on the given curatable object. If necessary, sends
-     * the event to the AuditTrail service to be added to the Curatables audit trail first.
      *
      * This method should only be called from {@link AuditTrailService}, as the passed event has to already exist in the
      * audit trail of the curatable object.
@@ -53,8 +51,7 @@ public class CurationDetailsService {
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( Curatable curatable, AuditEvent auditEvent ) {
-        throw new NotYetImplementedException(  "Curation details service not yet implemented" );
-        //TODO implement
+        this.curationDetailsDao.update( curatable, auditEvent );
     }
 
 }

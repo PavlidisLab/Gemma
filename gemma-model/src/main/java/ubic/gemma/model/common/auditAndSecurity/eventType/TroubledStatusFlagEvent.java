@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+
 /**
  * Audit event added when some type of "problem" or "trouble" notice is added to the entity.
  *
@@ -34,6 +37,12 @@ public class TroubledStatusFlagEvent extends CurationDetailsEvent {
      * No-arg constructor added to satisfy javabean contract
      */
     public TroubledStatusFlagEvent() {
+    }
+
+    @Override
+    public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
+        curatable.getCurationDetails().setTroubled( true );
+        curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
     }
 
     /**

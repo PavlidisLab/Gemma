@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+
 /**
  * Statuses used by CurationDetails
  * Anytime a new extension of this event type is implemented, add a new handler to the
@@ -40,6 +43,14 @@ public abstract class CurationDetailsEvent
      */
     public CurationDetailsEvent() {
     }
+
+    /**
+     * This method should be overloaded in all of the extensions of this class to do the specific actions they wre designed for.
+     *
+     * @param curatable  the curatable object to do the curation action on.
+     * @param auditEvent the audit event containing information about the action that should be made.
+     */
+    public abstract void setCurationDetails( Curatable curatable, AuditEvent auditEvent );
 
     /**
      * Throws an exception, as CurationDetailsEvent can not be instantiated.

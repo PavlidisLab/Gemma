@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+
 /**
  * <p>
  * Indicates that previous validation is being invalidated
@@ -36,6 +39,19 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
      * No-arg constructor added to satisfy javabean contract
      */
     public CurationNoteUpdateEvent() {
+    }
+
+    /**
+     *
+     * @param curatable  the curatable object to do the curation action on.
+     * @param auditEvent the audit event containing information about the action that should be made.
+     *                   With the CurationNoteUpdateEvent, this method expects the auditEvent Note property to
+     *                   contain the new text of the note. This can be any String object, including a null object.
+     */
+    @Override
+    public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
+        curatable.getCurationDetails().setCurationNote( auditEvent.getNote() );
+        curatable.getCurationDetails().setLastNoteUpdateEvent( auditEvent );
     }
 
     /**

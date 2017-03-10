@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+
 /**
  * <p>
  * Event indicating that the status of this entity is OK. This can be used after a troublestatusevent to indicate that
@@ -37,6 +40,12 @@ public class NotTroubledStatusFlagEvent extends CurationDetailsEvent {
      * No-arg constructor added to satisfy javabean contract
      */
     public NotTroubledStatusFlagEvent() {
+    }
+
+    @Override
+    public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
+        curatable.getCurationDetails().setTroubled( false );
+        curatable.getCurationDetails().setLastTroubledEvent( auditEvent );
     }
 
     /**
