@@ -24,10 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -48,6 +48,9 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Autowired
     private AuditEventDao auditEventDao;
+
+    @Autowired
+    private CurationDetailsService curationDetailsService;
 
     /**
      * @see AuditTrailService#addComment(Auditable, String, String)
@@ -79,15 +82,36 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     }
 
     /**
+     *
+     * This method creates a new event in the audit trail of the passed Auditable object. If this object also implements
+     * the {@link Curatable} interface, and the passes auditEventType is one of the extensions of
+     * {@link CurationDetailsEvent} AuditEventType, this method will pass its result to
+     * {@link CurationDetailsService#update(Curatable, AuditEvent)}, to update the curatable objects curation details,
+     * before returning it.
+     *
+     * @param auditable the auditable object to whose audit trail should a new event be added.
+     * @param auditEventType the type of the event that should be created.
+     * @param note string displayed as a note for the event
+     * @param detail detailed description of the event.
+     * @return the new AuditEvent that was created in the audit trail of the given auditable object.
      * @see AuditTrailService#addUpdateEvent(Auditable, AuditEventType, String, String)
      */
     @Override
     @Transactional
-    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType,
-            final String note, final String detail ) {
+    public AuditEvent addUpdateEvent( final Auditable auditable, final AuditEventType auditEventType, final String note,
+            final String detail ) {
+        //Create new audit event
         AuditEvent auditEvent = AuditEvent.Factory
                 .newInstance( new Date(), AuditAction.UPDATE, note, detail, null, auditEventType );
-        return this.auditTrailDao.addEvent( auditable, auditEvent );
+        auditEvent = this.auditTrailDao.addEvent( auditable, auditEvent );
+
+        //If conditions are met, update the CurationDetails
+        if(auditable instanceof Curatable && auditEvent.getEventType() instanceof CurationDetailsEvent){
+            curationDetailsService.update( (Curatable) auditable, auditEvent );
+        }
+
+        //return the newly created event
+        return auditEvent;
     }
 
     @Override

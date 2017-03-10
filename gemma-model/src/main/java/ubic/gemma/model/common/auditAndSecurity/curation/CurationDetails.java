@@ -23,7 +23,9 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import java.util.Date;
 
 /**
- * Represents the basic status of an AbstractAuditable, with possible information about state in workflows etc.
+ * Class encapsulating all the curation information for Curatable objects.
+ *
+ * @author tesarst
  */
 public class CurationDetails implements java.io.Serializable {
 
@@ -45,6 +47,10 @@ public class CurationDetails implements java.io.Serializable {
 
     private String curationNote;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     public CurationDetails() {
     }
 
@@ -59,9 +65,14 @@ public class CurationDetails implements java.io.Serializable {
         this.curationNote = curationNote;
     }
 
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     /**
-     * Returns <code>true</code> if the argument is an Status instance and all identifiers for this entity equal the
-     * identifiers of the argument entity. Returns <code>false</code> otherwise.
+     * Compares the objects type and IDs.
+     * @param object the object to compare this instance to.
+     * @return true, if this instance and the given object are the same type and have the same ID. False otherwise.
      */
     @Override
     public boolean equals( Object object ) {
@@ -76,7 +87,8 @@ public class CurationDetails implements java.io.Serializable {
     }
 
     /**
-     * Returns a hash code based on this entity's identifiers.
+     *
+     * @return a simple hash code based on this instances ID.
      */
     @Override
     public int hashCode() {

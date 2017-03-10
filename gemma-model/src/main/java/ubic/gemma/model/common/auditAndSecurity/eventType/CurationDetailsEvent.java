@@ -20,10 +20,15 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
  * Statuses used by CurationDetails
+ * Anytime a new extension of this event type is implemented, add a new handler to the
+ * {@link ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao#update(ubic.gemma.model.common.auditAndSecurity.curation.Curatable, ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
+ * method.
  *
- * @author Paul
+ * @author tesarst
  */
-public abstract class CurationDetailsEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+@SuppressWarnings("JavadocReference") // inspector can not see the CurationDetailsDao in gemma-mda from gemma-Model
+public abstract class CurationDetailsEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
 
     /**
      * The serial version UID of this class. Needed for serialization.

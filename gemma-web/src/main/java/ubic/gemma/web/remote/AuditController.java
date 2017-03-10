@@ -23,10 +23,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -57,12 +57,9 @@ public class AuditController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @Autowired
-    private CurationDetailsService curationDetailsService;
-
     @SuppressWarnings("unchecked")
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
-        Auditable entity = getAuditable( e );
+        AbstractAuditable entity = getAuditable( e );
         if ( entity == null ) {
             log.warn( "Couldn't find Auditable represented by " + e );
             return;
@@ -74,10 +71,11 @@ public class AuditController {
         } catch ( ClassNotFoundException e1 ) {
             throw new RuntimeException( "Unknown event type: " + auditEventType );
         }
+
         AuditEvent auditEvent = auditTrailService
                 .addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
-        if(auditEvent.getEventType() instanceof StatusFlagEvent){
-            curationDetailsService.update(auditEvent);
+        if(auditEvent == null){
+            log.error( "Persisting the audit event failed! On auditable id "+entity.getId() );
         }
 
     }
@@ -111,14 +109,14 @@ public class AuditController {
     /**
      * FIXME this relies on the exact class name being available from the EntityDelegator.
      */
-    private Auditable getAuditable( EntityDelegator e ) {
+    private AbstractAuditable getAuditable( EntityDelegator e ) {
         if ( e == null || e.getId() == null )
             return null;
         if ( e.getClassDelegatingFor() == null )
             return null;
 
         Class<?> clazz;
-        Auditable result;
+        AbstractAuditable result;
         try {
             clazz = Class.forName( e.getClassDelegatingFor() );
         } catch ( ClassNotFoundException e1 ) {
