@@ -262,7 +262,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ArrayDesign> handleLoadAll() {
-        return ( Collection<ArrayDesign> ) this.getArrayDesignDao().loadAll();
+        return this.getArrayDesignDao().loadAll();
     }
 
     @Override

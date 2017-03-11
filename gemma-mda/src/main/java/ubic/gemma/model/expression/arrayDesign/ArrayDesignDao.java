@@ -47,6 +47,7 @@ import java.util.*;
  * @author pavlidis
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
+@SuppressWarnings("WeakerAccess")
 @Repository
 public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
@@ -164,7 +165,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             t = ( Taxon ) oa[0];
             Long count = ( Long ) oa[1];
 
-            result.put( t, count.longValue() );
+            result.put( t, count );
         }
 
         return result;
@@ -204,6 +205,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return 0;
         }
 
+        //noinspection unchecked
         return EntityUtils.securityFilterIds( ExpressionExperiment.class, ids, false, true,
                 this.getSessionFactory().getCurrentSession() ).size();
     }
@@ -253,6 +255,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() )
             return arrayDesigns;
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct a from ArrayDesignImpl a " + "left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
@@ -268,6 +271,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 "select distinct cs from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                         + " left join cs.biologicalCharacteristic bs where ar = :ar and bs IS NULL";
 
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ar", arrayDesign )
                 .list();
     }
@@ -282,6 +286,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + "LEFT JOIN SEQUENCE_SIMILARITY_SEARCH_RESULT ssResult ON bs2gp.BLAT_RESULT_FK=ssResult.ID "
                 + "WHERE ssResult.ID IS NULL AND ARRAY_DESIGN_FK = :id ";
 
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString ).setParameter( "id", id )
                 .list();
     }
@@ -297,6 +302,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + "LEFT JOIN CHROMOSOME_FEATURE geneProduct ON (geneProduct.ID=bs2gp.GENE_PRODUCT_FK AND geneProduct.class='GeneProductImpl') "
                 + "LEFT JOIN CHROMOSOME_FEATURE gene ON geneProduct.GENE_FK=gene.ID  "
                 + "WHERE gene.ID IS NULL AND ARRAY_DESIGN_FK = :id";
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createSQLQuery( nativeQueryString ).setParameter( "id", id )
                 .list();
     }
@@ -309,6 +315,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         final String queryString = "select br from ArrayDesignImpl ad join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
                 + "where br.querySequence = bs and ad=:arrayDesign";
+        //noinspection unchecked
         List<BlatResult> toDelete = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", arrayDesign ).list();
 
@@ -345,6 +352,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + " inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
 
+        //noinspection unchecked
         List<AnnotationAssociation> annotAssociations = this.getSessionFactory().getCurrentSession()
                 .createQuery( annotationAssociationQueryString ).setParameter( "arrayDesign", arrayDesign ).list();
 
@@ -359,6 +367,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     }
 
     public Collection<ArrayDesign> findByAlternateName( String queryString ) {
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q" )
                 .setParameter( "q", queryString ).list();
@@ -366,6 +375,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     public Collection<BioAssay> getAllAssociatedBioAssays( Long id ) {
         final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
     }
 
@@ -374,6 +384,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + " join ad.auditTrail as auditTrail join auditTrail.events as auditEvent join fetch auditEvent.performer "
                 + " where ad.id in (:ids) ";
 
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
         Map<Long, Collection<AuditEvent>> eventMap = new HashMap<>();
@@ -410,6 +421,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
                 + " inner join bioC.taxon t where arrayD.id = :id";
 
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
     }
 
@@ -434,6 +446,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         }
 
         final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
 
@@ -455,6 +468,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         }
 
         final String queryString = "select ad.id, ad.mergedInto from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
 
@@ -475,6 +489,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         }
 
         final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
 
@@ -495,6 +510,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         }
 
         final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
 
@@ -519,6 +535,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     protected Collection<CompositeSequence> loadCompositeSequences( Long id ) {
         final String queryString = "select cs from CompositeSequenceImpl as cs where cs.arrayDesign.id = :id";
+        //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
     }
 
@@ -878,6 +895,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
 
         Map<Long, Integer> eeCount = new HashMap<>();
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).list();
 
         // Bug 1549: for unknown reasons, this method sometimes returns only a single record (or no records). Obviously
@@ -907,6 +925,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         final String queryString = "select ad.id, count(distinct ee) from   "
                 + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
 
+        //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", arrayDesignIds ).list();
 

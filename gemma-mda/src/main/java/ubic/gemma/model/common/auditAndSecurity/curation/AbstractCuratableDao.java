@@ -8,7 +8,6 @@ import org.hibernate.jdbc.Work;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
@@ -38,7 +37,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
      * Abstract methods
      * ********************************/
 
-    public abstract T find( T entity);
+    public abstract T find( T entity );
 
     public abstract Map<Taxon, Long> getPerTaxonCount();
 
@@ -115,6 +114,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
 
     /**
      * Updates the given entity in the database.
+     *
      * @param entity the entity to update in database.
      */
     public void update( T entity ) {
