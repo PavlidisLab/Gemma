@@ -156,7 +156,7 @@ public interface ArrayDesignService {
      * @return a map of taxon -> count of how many array designs there are for that taxon. Taxa with no arrays are
      * excluded.
      */
-    Map<Taxon, Integer> getPerTaxonCount();
+    Map<Taxon, Long> getPerTaxonCount();
 
     /**
      * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.

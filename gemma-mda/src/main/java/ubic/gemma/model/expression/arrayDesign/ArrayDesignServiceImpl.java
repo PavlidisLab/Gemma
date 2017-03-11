@@ -69,7 +69,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     @Transactional(readOnly = true)
-    public Map<Taxon, Integer> getPerTaxonCount() {
+    public Map<Taxon, Long> getPerTaxonCount() {
         return this.getArrayDesignDao().getPerTaxonCount();
     }
 
