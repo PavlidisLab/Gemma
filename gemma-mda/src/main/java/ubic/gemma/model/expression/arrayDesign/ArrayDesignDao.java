@@ -53,19 +53,15 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
 
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     @Autowired
     public ArrayDesignDao( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
         this.entityName = "ArrayDesign";
         this.entityImplName = "ArrayDeignImpl";
-    }
-
-    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
-        for ( CompositeSequence compositeSequence : newProbes ) {
-            compositeSequence.setArrayDesign( arrayDesign );
-            this.getSessionFactory().getCurrentSession().update( compositeSequence );
-        }
-        this.update( arrayDesign );
     }
 
     @Override
@@ -78,23 +74,67 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     }
 
+    @Override
+    public Map<Taxon, Long> getPerTaxonCount() {
+        Map<Taxon, Long> result = new HashMap<>();
+
+        final String csString = "select t, count(ad) from ArrayDesignImpl ad inner join ad.primaryTaxon t group by t ";
+        org.hibernate.Query csQueryObject = super.getSessionFactory().getCurrentSession().createQuery( csString );
+        csQueryObject.setReadOnly( true );
+        csQueryObject.setCacheable( true );
+
+        List csList = csQueryObject.list();
+
+        Taxon t;
+        for ( Object object : csList ) {
+            Object[] oa = ( Object[] ) object;
+            t = ( Taxon ) oa[0];
+            Long count = ( Long ) oa[1];
+
+            result.put( t, count );
+        }
+
+        return result;
+
+    }
+
+    @Override
+    public void remove( final ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null ) {
+            throw new IllegalArgumentException( ARG_NULL_ERR_MSG + ": entity" );
+        }
+
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                Hibernate.initialize( arrayDesign.getMergees() );
+                Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
+                arrayDesign.getMergees().clear();
+                arrayDesign.getSubsumedArrayDesigns().clear();
+            }
+        } );
+
+        /*
+         * FIXME this is very slow. I think we need to delete the compositesequences first, flushing along the way.
+         */
+
+        this.getSessionFactory().getCurrentSession().delete( arrayDesign );
+    }
+
+    public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
+        for ( CompositeSequence compositeSequence : newProbes ) {
+            compositeSequence.setArrayDesign( arrayDesign );
+            this.getSessionFactory().getCurrentSession().update( compositeSequence );
+        }
+        this.update( arrayDesign );
+    }
+
     public ArrayDesign find( String queryString, ArrayDesign entity ) {
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", entity );
         return this.find( query.list(), entity.getName() );
 
-    }
-
-    private ArrayDesign find( List resultList, String name ) {
-        //noinspection unchecked
-        HashSet<ArrayDesign> results = new HashSet<>( resultList );
-
-        if ( results.size() != 1 ) {
-            throw new InvalidDataAccessResourceUsageException(
-                    MULTIPLE_FOUND_ERR_MSG + " for ArrayDesign name: " + name );
-        }
-        return results.iterator().next();
     }
 
     public Collection<ArrayDesign> findByManufacturer( String queryString ) {
@@ -148,30 +188,6 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         return bioSequences;
     }
 
-    @Override
-    public Map<Taxon, Long> getPerTaxonCount() {
-        Map<Taxon, Long> result = new HashMap<>();
-
-        final String csString = "select t, count(ad) from ArrayDesignImpl ad inner join ad.primaryTaxon t group by t ";
-        org.hibernate.Query csQueryObject = super.getSessionFactory().getCurrentSession().createQuery( csString );
-        csQueryObject.setReadOnly( true );
-        csQueryObject.setCacheable( true );
-
-        List csList = csQueryObject.list();
-
-        Taxon t;
-        for ( Object object : csList ) {
-            Object[] oa = ( Object[] ) object;
-            t = ( Taxon ) oa[0];
-            Long count = ( Long ) oa[1];
-
-            result.put( t, count );
-        }
-
-        return result;
-
-    }
-
     public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign ) {
         //noinspection unchecked
         List<Object[]> m = this.getSessionFactory().getCurrentSession().createQuery(
@@ -208,29 +224,6 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         //noinspection unchecked
         return EntityUtils.securityFilterIds( ExpressionExperiment.class, ids, false, true,
                 this.getSessionFactory().getCurrentSession() ).size();
-    }
-
-    @Override
-    public void remove( final ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null ) {
-            throw new IllegalArgumentException( ARG_NULL_ERR_MSG + ": entity" );
-        }
-
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) throws SQLException {
-                Hibernate.initialize( arrayDesign.getMergees() );
-                Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
-                arrayDesign.getMergees().clear();
-                arrayDesign.getSubsumedArrayDesigns().clear();
-            }
-        } );
-
-        /*
-         * FIXME this is very slow. I think we need to delete the compositesequences first, flushing along the way.
-         */
-
-        this.getSessionFactory().getCurrentSession().delete( arrayDesign );
     }
 
     public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
@@ -787,6 +780,17 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     /* ********************************
      * Private methods
      * ********************************/
+
+    private ArrayDesign find( List resultList, String name ) {
+        //noinspection unchecked
+        HashSet<ArrayDesign> results = new HashSet<>( resultList );
+
+        if ( results.size() != 1 ) {
+            throw new InvalidDataAccessResourceUsageException(
+                    MULTIPLE_FOUND_ERR_MSG + " for ArrayDesign name: " + name );
+        }
+        return results.iterator().next();
+    }
 
     private void putIdsInList( Map<Long, Boolean> eventMap, List<Object[]> list ) {
         for ( Object[] o : list ) {
