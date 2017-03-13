@@ -19,6 +19,8 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +37,6 @@ import java.util.Map;
 /**
  * @author paul
  * @author keshav
- * @version $Id$
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
  */
 @Service
@@ -128,11 +129,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
                 .findByInvestigations( ( Collection<Investigation> ) investigations );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.model.analysis.AnalysisServiceBase#findByName(java.lang.String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
@@ -164,13 +160,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         return found.iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#findExperimentsWithAnalyses
-     * (ubic.gemma.model.genome.Gene)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene ) {
@@ -183,12 +172,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         return this.getDifferentialExpressionAnalysisDao().findByInvestigation( expressionExperiment );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getAnalyses(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
@@ -203,22 +186,12 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         return this.differentialExpressionAnalysisDao;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         return this.getDifferentialExpressionAnalysisDao().getExperimentsWithAnalysis( idsToFilter );
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(ubic.gemma.model.genome.Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> getExperimentsWithAnalysis( Taxon taxon ) {
@@ -295,13 +268,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getAnalysesByExperiment(java.
-     * util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })

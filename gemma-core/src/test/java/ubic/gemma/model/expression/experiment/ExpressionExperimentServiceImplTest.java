@@ -45,7 +45,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
     private Person admin = null;
     private ExpressionExperimentServiceImpl svc = null;
 
-    private ExpressionExperimentDao eeDao;
+    private ExpressionExperimentDaoImpl eeDao;
 
     public void testExpressionExperimentFindAll() {
         reset( eeDao );
@@ -71,7 +71,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
         svc = new ExpressionExperimentServiceImpl();
 
-        eeDao = createMock( ExpressionExperimentDao.class );
+        eeDao = createMock( ExpressionExperimentDaoImpl.class );
         svc.setExpressionExperimentDao( eeDao );
 
         nobody = Person.Factory.newInstance();

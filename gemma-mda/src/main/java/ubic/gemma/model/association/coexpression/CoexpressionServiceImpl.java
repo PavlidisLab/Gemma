@@ -43,7 +43,7 @@ import java.util.*;
  * @see ubic.gemma.model.association.coexpression.CoexpressionService
  */
 @Service
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+
 public class CoexpressionServiceImpl implements CoexpressionService {
 
     private static Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );

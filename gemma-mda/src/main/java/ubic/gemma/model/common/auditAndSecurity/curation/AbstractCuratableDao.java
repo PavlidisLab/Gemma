@@ -8,7 +8,8 @@ import org.hibernate.jdbc.Work;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDaoImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
 
@@ -27,7 +28,7 @@ import java.util.Map;
  */
 public abstract class AbstractCuratableDao<T extends Curatable> extends HibernateDaoSupport implements BaseDao<T> {
 
-    protected static final Log log = LogFactory.getLog( ExpressionExperimentDao.class.getName() );
+    protected static final Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
     protected static final String ARG_NULL_ERR_MSG = "Argument can not be null";
     protected static final String MULTIPLE_FOUND_ERR_MSG = "Multiple entities found";
     protected String entityName = "ArrayDesign";
@@ -68,7 +69,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
         this.getSessionFactory().getCurrentSession().saveOrUpdate( entity );
 
         if ( entity.getCurationDetails() == null ) {
-            CurationDetailsDao curationDetailsDao = new CurationDetailsDao( getSessionFactory() );
+            CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( getSessionFactory() );
             entity.setCurationDetails( curationDetailsDao.create( entity.getAuditTrail().getCreationEvent() ) );
         }
 

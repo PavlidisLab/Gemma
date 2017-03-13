@@ -14,24 +14,22 @@
  */
 package ubic.gemma.loader.pazar;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.gemma.loader.pazar.model.PazarRecord;
+import ubic.gemma.model.association.PazarAssociation;
+import ubic.gemma.persistence.Persister;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import ubic.gemma.loader.pazar.model.PazarRecord;
-import ubic.gemma.model.association.PazarAssociation;
-import ubic.gemma.persistence.Persister;
-
 /**
  * Load Pazar records from a text file...
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class PazarLoaderImpl implements PazarLoader {
@@ -42,11 +40,6 @@ public class PazarLoaderImpl implements PazarLoader {
     @Autowired
     private Persister persisterHelper;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.pazar.PazarLoader#load(java.io.File)
-     */
     @Override
     public int load( File file ) throws IOException {
         try (FileInputStream i = new FileInputStream( file );) {
@@ -54,11 +47,6 @@ public class PazarLoaderImpl implements PazarLoader {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.pazar.PazarLoader#load(java.io.InputStream)
-     */
     @Override
     public int load( InputStream is ) throws IOException {
         PazarParser p = new PazarParser();

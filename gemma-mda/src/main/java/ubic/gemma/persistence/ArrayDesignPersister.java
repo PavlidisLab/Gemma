@@ -25,6 +25,7 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -48,11 +49,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     @Autowired
     private ArrayDesignDao arrayDesignDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persist( Object entity ) {
@@ -67,11 +63,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persistOrUpdate( Object entity ) {

@@ -14,51 +14,35 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.Collection;
-
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
  * @author Paul
- * @version $Id$
  */
 public interface ProcessedExpressionDataVectorCreateHelperService {
 
-    /**
-     * @param ee
-     * @param vecs
-     * @return
-     */
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
 
-    /**
-     * @param ee
-     * @return updated ee
-     */
-    public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
+    ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee );
 
     /**
-     * @param ee
-     * @param processedVectors
      * @return intensities See {@link ExpressionDataMatrixBuilder#getIntensity()}
      */
-    public ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
+    ExpressionDataDoubleMatrix loadIntensities( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors );
 
-    /**
-     * @param eeId
-     */
-    public void reorderByDesign( Long eeId );
+    void reorderByDesign( Long eeId );
 
     /**
      * If possible, update the ranks for the processed data vectors. For data sets with only ratio expression values
      * provided, ranks will not be computable.
-     * 
-     * @param ee
+     *
      * @return updated experiment.
      */
-    public ExpressionExperiment updateRanks( ExpressionExperiment ee );
+    ExpressionExperiment updateRanks( ExpressionExperiment ee );
 }

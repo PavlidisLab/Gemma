@@ -18,25 +18,26 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.Collection;
-
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
  * Compute the "processed" expression data vectors with the rank information filled in.
- * 
+ *
  * @author pavlidis
  * @author raymond
- * @version $Id$
  */
 @Component
+
 public class ProcessedExpressionDataVectorCreateServiceImpl implements ProcessedExpressionDataVectorCreateService {
 
     @Autowired
@@ -45,13 +46,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
     @Autowired
     private ProcessedExpressionDataVectorCreateHelperService helperService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService#computeProcessedExpressionData(ubic
-     * .gemma.model.expression.experiment.ExpressionExperiment)
-     */
     @Override
     public void computeProcessedExpressionData( ExpressionExperiment ee ) {
         try {
@@ -74,13 +68,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService#createProcessedDataVectors(ubic.gemma.
-     * model.expression.experiment.ExpressionExperiment, java.util.Collection)
-     */
     @Override
     public void createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vecs ) {
         try {
@@ -103,11 +90,6 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService#reorderByDesign(java.lang.Long)
-     */
     @Override
     public void reorderByDesign( Long eeId ) {
         this.helperService.reorderByDesign( eeId );

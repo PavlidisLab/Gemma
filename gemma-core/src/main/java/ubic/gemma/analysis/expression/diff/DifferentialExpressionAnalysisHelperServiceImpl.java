@@ -19,12 +19,9 @@
 
 package ubic.gemma.analysis.expression.diff;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -34,13 +31,15 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.persistence.Persister;
 
+import java.util.Collection;
+
 /**
  * Transactional methods for dealing with differential expression analyses.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 @Service
+
 public class DifferentialExpressionAnalysisHelperServiceImpl implements DifferentialExpressionAnalysisHelperService {
 
     @Autowired
@@ -68,27 +67,14 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
         return entity;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService#addResults(ubic.gemma.model.analysis
-     * .expression.diff.DifferentialExpressionAnalysis, java.util.Collection)
-     */
     @Override
     @Transactional
-    public void addResults( DifferentialExpressionAnalysis entity, Collection<ExpressionAnalysisResultSet> resultSets ) {
+    public void addResults( DifferentialExpressionAnalysis entity,
+            Collection<ExpressionAnalysisResultSet> resultSets ) {
         entity.getResultSets().addAll( resultSets );
         differentialExpressionAnalysisDao.update( entity ); // could be sped up.
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService#create(ubic.gemma.model.analysis
-     * .expression.diff.ExpressionAnalysisResultSet)
-     */
     @Override
     @Transactional
     public ExpressionAnalysisResultSet create( ExpressionAnalysisResultSet rs ) {

@@ -23,14 +23,12 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.BaseDao;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,7 +44,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
-    private ArrayDesignDao arrayDesignDao;
+    private ArrayDesignDaoImpl arrayDesignDao;
 
     private AuditEventDao auditEventDao;
 
@@ -54,16 +52,16 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     @Autowired
-    public ArrayDesignServiceBase( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
+    public ArrayDesignServiceBase( ArrayDesignDaoImpl arrayDesignDao, AuditEventDao auditEventDao ) {
         this.arrayDesignDao = arrayDesignDao;
         this.auditEventDao = auditEventDao;
     }
 
-    public ArrayDesignDao getArrayDesignDao() {
+    public ArrayDesignDaoImpl getArrayDesignDao() {
         return this.arrayDesignDao;
     }
 
-    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+    public void setArrayDesignDao( ArrayDesignDaoImpl arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
     }
 

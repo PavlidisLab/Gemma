@@ -53,11 +53,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     @Autowired
     private Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persist( Object entity ) {
@@ -79,11 +74,6 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persistOrUpdate( Object entity ) {

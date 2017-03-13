@@ -31,7 +31,6 @@ import java.util.Collection;
 /**
  * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSet
  */
-@Repository
 public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperimentSet> {
 
     /**

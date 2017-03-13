@@ -18,20 +18,11 @@
  */
 package ubic.gemma.loader.genome.gene;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Collection;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
@@ -42,6 +33,9 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.persistence.Persister;
 
+import java.io.*;
+import java.util.Collection;
+
 /**
  * Class to provide functionality to load genes from a tab delimited file. Typical usage is for non model organisms that
  * do not have genes in NCBI. Supports loading genes against a non species taxon such as a family e.g Salmonids. File
@@ -51,9 +45,8 @@ import ubic.gemma.persistence.Persister;
  * The gene is populated with gene symbol, gene name, gene official name (gene symbol) and a description indicating that
  * this gene has been loaded from a text file. Then gene is associated with a gene product bearing the same name as the
  * gene symbol and persisted.
- * 
+ *
  * @author ldonnison
- * @version $Id$
  */
 @Component
 public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoaderService {
@@ -102,14 +95,13 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * Creates a gene, where gene name and official gene symbol is set to gene symbol(from file) and official name is
      * set to geneName(from file). The gene description is set to a message indicating that the gene was imported from
      * an external file and the associated uniprot id.
-     * <p>
      * If the gene already exists, then it is not modified, unless it lacks a gene product. In that case we add one and
      * return it.
-     * 
+     *
      * @param fields A string array containing gene symbol, gene name and uniprot id.
-     * @param taxon Taxon relating to gene
+     * @param taxon  Taxon relating to gene
      * @return Gene with associated gene product for loading into Gemma. Null if no gene was loaded (exists, or invalid
-     *         fields) or modified.
+     * fields) or modified.
      */
     private Gene createGene( String[] fields, Taxon taxon ) {
 
@@ -118,7 +110,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         String geneSymbol = fields[0];
         String geneName = fields[1];
         String uniProt = "";
-        if ( fields.length > 2 ) uniProt = fields[2];
+        if ( fields.length > 2 )
+            uniProt = fields[2];
         Gene gene = null;
         // need at least the gene symbol and gene name
         if ( StringUtils.isBlank( geneSymbol ) || StringUtils.isBlank( geneName ) ) {
@@ -127,7 +120,8 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
             return null;
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "Creating gene " + geneSymbol );
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating gene " + geneSymbol );
         gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
 
         if ( gene != null ) {
@@ -160,7 +154,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     /**
      * When loading genes with a file each gene will have just 1 gene product. The gene product is a filler taking its
      * details from the gene.
-     * 
+     *
      * @param gene The gene associated to this gene product
      * @return Collection of gene products in this case just 1.
      */
@@ -202,7 +196,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     /**
      * Creates a bufferedReader for gene file.
-     * 
+     *
      * @param geneFile GeneFile including full path
      * @return BufferedReader The bufferedReader for gene file.
      * @throws IOException File can not be opened for reading such as does not exist.
@@ -220,7 +214,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     /**
      * Read a gene file line, splitting the line into 3 strings.
-     * 
+     *
      * @param line A line from the gene file
      * @return Array of strings representing a line in a gene file.
      * @throws IOException Thrown if file is not readable
@@ -244,9 +238,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
     /**
      * Method to update taxon to indicate that genes have been loaded for that taxon. If the taxon has children taxa
      * then those child genes should not be used and the flag for those child taxon set to false.
-     * 
+     *
      * @param taxon The taxon to update
-     * @exception Thrown if error accessing updating taxon details
+     * @throws Thrown if error accessing updating taxon details
      */
     private void updateTaxonWithGenesLoaded( Taxon taxon ) {
         Collection<Taxon> childTaxa = taxonService.findChildTaxaByParent( taxon );
@@ -271,10 +265,10 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
 
     /**
      * Method to validate that taxon is held in system.
-     * 
+     *
      * @param taxonName Taxon common name
      * @return Full Taxon details
-     * @exception If taxon is not found in the system.
+     * @throws If taxon is not found in the system.
      */
     private Taxon validateTaxon( String taxonName ) throws IllegalArgumentException {
         Taxon taxon = taxonService.findByCommonName( taxonName );

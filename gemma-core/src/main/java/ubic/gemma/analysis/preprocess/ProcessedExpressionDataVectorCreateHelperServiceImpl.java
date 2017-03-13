@@ -19,28 +19,20 @@
 
 package ubic.gemma.analysis.preprocess;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
-import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
+import ubic.gemma.datastructure.matrix.*;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -49,36 +41,31 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import cern.colt.list.DoubleArrayList;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+
+import java.util.*;
 
 /**
  * Transactional methods.
- * 
+ *
  * @author Paul
- * @version $Id$
  * @see ProcessedExpressionDataVectorCreateService
  */
 @Service
-public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
-        ProcessedExpressionDataVectorCreateHelperService {
+public class ProcessedExpressionDataVectorCreateHelperServiceImpl
+        implements ProcessedExpressionDataVectorCreateHelperService {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateHelperServiceImpl.class );
 
     @Autowired
-    private ExpressionExperimentService eeService = null;
+    private ExpressionExperimentService eeService;
 
     @Autowired
-    private ProcessedExpressionDataVectorService processedDataService = null;
+    private ProcessedExpressionDataVectorService processedDataService;
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -87,15 +74,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
-    private ExpressionExperimentDao eeDao;
+    private ExpressionExperimentDao expressionExperimentDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService#createProcessedExpressionData
-     * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
-     */
     @Override
     @Transactional
     public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
@@ -109,13 +89,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         return ee;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateHelperService#addProcessedDataVectors(ubic.
-     * gemma.model.expression.experiment.ExpressionExperiment, java.util.Collection)
-     */
     @Override
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
@@ -131,9 +104,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
 
     /**
      * Computes expression intensities depending on which ArrayDesign TechnologyType is used.
-     * 
-     * @param ee
-     * @param processedVectors
+     *
      * @return ExpressionDataDoubleMatrix
      */
     @Override
@@ -147,8 +118,8 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
 
         ExpressionDataDoubleMatrix intensities;
 
-        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR )
-                && !arrayDesign.getTechnologyType().equals( TechnologyType.NONE ) ) {
+        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) && !arrayDesign.getTechnologyType()
+                .equals( TechnologyType.NONE ) ) {
 
             log.info( "Computing intensities for two-color data from underlying data" );
 
@@ -206,7 +177,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     @Override
     @Transactional
     public void reorderByDesign( Long eeId ) {
-        ExpressionExperiment ee = eeDao.load( eeId );
+        ExpressionExperiment ee = expressionExperimentDao.load( eeId );
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
             log.info( ee.getShortName() + " does not have a populated experimental design, skipping" );
@@ -227,7 +198,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         }
 
         BioAssayDimension bioassaydim = dims.iterator().next();
-        List<BioMaterial> start = new ArrayList<BioMaterial>();
+        List<BioMaterial> start = new ArrayList<>();
         for ( BioAssay ba : bioassaydim.getBioAssays() ) {
 
             start.add( ba.getSampleUsed() );
@@ -236,13 +207,13 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         /*
          * Get the ordering we want.
          */
-        List<BioMaterial> orderByExperimentalDesign = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( start,
-                ee.getExperimentalDesign().getExperimentalFactors() );
+        List<BioMaterial> orderByExperimentalDesign = ExpressionDataMatrixColumnSort
+                .orderByExperimentalDesign( start, ee.getExperimentalDesign().getExperimentalFactors() );
 
         /*
          * Map of biomaterials to the new order index.
          */
-        final Map<BioMaterial, Integer> ordering = new HashMap<BioMaterial, Integer>();
+        final Map<BioMaterial, Integer> ordering = new HashMap<>();
         int i = 0;
         for ( BioMaterial bioMaterial : orderByExperimentalDesign ) {
             ordering.put( bioMaterial, i );
@@ -252,9 +223,9 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         /*
          * Map of the original order to new order of bioassays.
          */
-        Map<Integer, Integer> indexes = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> indexes = new HashMap<>();
 
-        Map<BioAssayDimension, BioAssayDimension> old2new = new HashMap<BioAssayDimension, BioAssayDimension>();
+        Map<BioAssayDimension, BioAssayDimension> old2new = new HashMap<>();
         for ( BioAssayDimension bioAssayDimension : dims ) {
 
             /*
@@ -267,7 +238,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
             /*
              * Initialize the new bioassay list.
              */
-            List<BioAssay> resorted = new ArrayList<BioAssay>( bioAssays.size() );
+            List<BioAssay> resorted = new ArrayList<>( bioAssays.size() );
             for ( int m = 0; m < bioAssays.size(); m++ ) {
                 resorted.add( null );
             }
@@ -346,7 +317,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     }
 
     /**
-     * @param ee
      * @return expression ranks based on computed intensities
      */
     @Override
@@ -377,9 +347,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         return ee;
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ExpressionExperiment ee, String note ) {
         AuditEventType eventType = ProcessedVectorComputationEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( ee, eventType, note );
@@ -387,12 +354,10 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
 
     /**
      * Make sure we have only one ordering!!! If the sample matching is botched, there will be problems.
-     * 
-     * @param dims
      */
     private void checkAllBioAssayDimensionsMatch( Collection<BioAssayDimension> dims ) {
         log.info( "Data set has more than one bioassaydimension for its processed data vectors" );
-        List<BioMaterial> ordering = new ArrayList<BioMaterial>();
+        List<BioMaterial> ordering = new ArrayList<>();
         int i = 0;
         for ( BioAssayDimension dim : dims ) {
             int j = 0;
@@ -414,11 +379,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         }
     }
 
-    /**
-     * @param ad
-     * @param builder
-     * @return
-     */
     private Collection<ProcessedExpressionDataVector> computeRanks(
             Collection<ProcessedExpressionDataVector> processedDataVectors, ExpressionDataDoubleMatrix intensities ) {
 
@@ -446,10 +406,6 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
         return processedDataVectors;
     }
 
-    /**
-     * @param intensities
-     * @return
-     */
     private DoubleArrayList getRanks( ExpressionDataDoubleMatrix intensities,
             ProcessedExpressionDataVectorDao.RankMethod method ) {
         log.debug( "Getting ranks" );
@@ -482,13 +438,12 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl implements
     /**
      * Masking is done even if the array design is not two-color, so the decision whether to mask or not must be done
      * elsewhere.
-     * 
+     *
      * @param inMatrix The matrix to be masked
-     * @param missingValues
-     * @param missingValueMatrix The matrix used as a mask.
      */
     private void maskMissingValues( ExpressionDataDoubleMatrix inMatrix, ExpressionDataBooleanMatrix missingValues ) {
-        if ( missingValues != null ) ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
+        if ( missingValues != null )
+            ExpressionDataDoubleMatrixUtil.maskMatrix( inMatrix, missingValues );
     }
 
 }

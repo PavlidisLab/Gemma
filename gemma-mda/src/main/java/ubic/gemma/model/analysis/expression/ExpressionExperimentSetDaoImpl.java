@@ -23,9 +23,8 @@ import org.hibernate.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.util.EntityUtils;
 
@@ -34,7 +33,7 @@ import java.util.*;
 /**
  * @author paul
  */
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Repository
 public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implements ExpressionExperimentSetDao {
 
     private static Logger log = LoggerFactory.getLogger( ExpressionExperimentSetDaoImpl.class );
