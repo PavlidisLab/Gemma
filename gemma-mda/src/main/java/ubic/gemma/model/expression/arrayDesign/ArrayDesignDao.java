@@ -62,7 +62,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     public ArrayDesignDao( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
         this.entityName = "ArrayDesign";
-        this.entityImplName = "ArrayDeignImpl";
+        this.entityName = "ArrayDeignImpl";
     }
 
     @Override
@@ -79,7 +79,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     public Map<Taxon, Long> getPerTaxonCount() {
         Map<Taxon, Long> result = new HashMap<>();
 
-        final String csString = "select t, count(ad) from ArrayDesignImpl ad inner join ad.primaryTaxon t group by t ";
+        final String csString = "select t, count(ad) from ArrayDesign ad inner join ad.primaryTaxon t group by t ";
         org.hibernate.Query csQueryObject = super.getSessionFactory().getCurrentSession().createQuery( csString );
         csQueryObject.setReadOnly( true );
         csQueryObject.setCacheable( true );
@@ -143,7 +143,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return new HashSet<>();
         }
         Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ad from ArrayDesignImpl ad inner join ad.designProvider n where n.name like ?" )
+                .createQuery( "select ad from ArrayDesign ad inner join ad.designProvider n where n.name like ?" )
                 .setParameter( 0, queryString + "%" );
         //noinspection unchecked
         return query.list();
@@ -151,7 +151,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select a from ArrayDesignImpl a where a.primaryTaxon = :t" ).setParameter( "t", taxon );
+                .createQuery( "select a from ArrayDesign a where a.primaryTaxon = :t" ).setParameter( "t", taxon );
 
         //noinspection unchecked
         return query.list();
@@ -166,7 +166,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        String queryString = "select ad from ArrayDesignImpl ad inner join fetch ad.compositeSequences cs "
+        String queryString = "select ad from ArrayDesign ad inner join fetch ad.compositeSequences cs "
                 + "left outer join fetch cs.biologicalCharacteristic bs where ad = :ad";
         // have to include ad in the select to be able to use fetch join
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -213,7 +213,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     public int numExperiments( ArrayDesign arrayDesign ) {
         final String queryString = "select distinct ee.id  from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad";
+                + " ExpressionExperiment ee inner join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad";
 
         List ids = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ad", arrayDesign ).list();
@@ -232,7 +232,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             throw new IllegalArgumentException( "array design cannot be null" );
         }
         List res = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from ArrayDesignImpl a left join fetch a.subsumedArrayDesigns "
+                "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
                         + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.localFiles where a.id=:adid" )
@@ -251,7 +251,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return arrayDesigns;
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct a from ArrayDesignImpl a " + "left join fetch a.subsumedArrayDesigns "
+                "select distinct a from ArrayDesign a " + "left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
                         + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
                         + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
@@ -306,7 +306,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
         deleteGeneProductAssociations( arrayDesign );
 
         // Note attempts to do this with bulk updates were unsuccessful due to the need for joins.
-        final String queryString = "select br from ArrayDesignImpl ad join ad.compositeSequences as cs "
+        final String queryString = "select br from ArrayDesign ad join ad.compositeSequences as cs "
                 + "inner join cs.biologicalCharacteristic bs, BlatResultImpl br "
                 + "where br.querySequence = bs and ad=:arrayDesign";
         //noinspection unchecked
@@ -363,7 +363,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     public Collection<ArrayDesign> findByAlternateName( String queryString ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select ad from ArrayDesignImpl ad inner join ad.alternateNames n where n.name = :q" )
+                .createQuery( "select ad from ArrayDesign ad inner join ad.alternateNames n where n.name = :q" )
                 .setParameter( "q", queryString ).list();
     }
 
@@ -374,7 +374,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
     }
 
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids ) {
-        final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad"
+        final String queryString = "select ad.id, auditEvent from ArrayDesign ad"
                 + " join ad.auditTrail as auditTrail join auditTrail.events as auditEvent join fetch auditEvent.performer "
                 + " where ad.id in (:ids) ";
 
@@ -402,7 +402,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     public Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign ) {
         final String queryString = "select distinct ee from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad";
+                + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad where ad = :ad";
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ad", arrayDesign )
@@ -411,7 +411,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     public Collection<Taxon> getTaxa( Long id ) {
 
-        final String queryString = "select distinct t from ArrayDesignImpl as arrayD "
+        final String queryString = "select distinct t from ArrayDesign as arrayD "
                 + "inner join arrayD.compositeSequences as cs inner join " + "cs.biologicalCharacteristic as bioC"
                 + " inner join bioC.taxon t where arrayD.id = :id";
 
@@ -439,7 +439,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return eventMap;
         }
 
-        final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
+        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
@@ -461,7 +461,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return eventMap;
         }
 
-        final String queryString = "select ad.id, ad.mergedInto from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        final String queryString = "select ad.id, ad.mergedInto from ArrayDesign as ad where ad.id in (:ids) ";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
@@ -482,7 +482,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return eventMap;
         }
 
-        final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesignImpl as ad where ad.id in (:ids) ";
+        final String queryString = "select ad.id, ad.subsumingArrayDesign from ArrayDesign as ad where ad.id in (:ids) ";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
@@ -503,7 +503,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return eventMap;
         }
 
-        final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
+        final String queryString = "select ad.id, count(subs) from ArrayDesign as ad inner join ad.subsumedArrayDesigns subs where ad.id in (:ids) group by ad";
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids ).list();
@@ -903,7 +903,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
      */
     private Map<Long, Integer> getExpressionExperimentCountMap() {
         final String queryString = "select ad.id, count(distinct ee) from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
+                + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
 
         Map<Long, Integer> eeCount = new HashMap<>();
         //noinspection unchecked
@@ -934,7 +934,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
             return result;
         }
         final String queryString = "select ad.id, count(distinct ee) from   "
-                + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
+                + " ExpressionExperiment ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad  where ad.id in (:ids) group by ad ";
 
         //noinspection unchecked
         List<Object[]> list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -970,7 +970,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 + "s.lastNeedsAttentionEvent, " //11
                 + "s.lastNoteEvent"  //12
                 + "t.commonName" //13
-                + " from ArrayDesignImpl ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m";
+                + " from ArrayDesign ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m";
     }
 
     /**

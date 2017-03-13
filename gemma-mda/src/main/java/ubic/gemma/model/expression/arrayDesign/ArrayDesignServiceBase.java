@@ -21,12 +21,16 @@ package ubic.gemma.model.expression.arrayDesign;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.BaseDao;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,15 +41,39 @@ import java.util.Collection;
  *
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
+@Scope( proxyMode = ScopedProxyMode.TARGET_CLASS )
 public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
-    @Autowired
-    private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
+    private ArrayDesignDao arrayDesignDao;
+
+    private AuditEventDao auditEventDao;
+
+    public ArrayDesignServiceBase() {
+    }
 
     @Autowired
-    private AuditEventDao auditEventDao;
+    public ArrayDesignServiceBase( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+        this.auditEventDao = auditEventDao;
+    }
+
+    public ArrayDesignDao getArrayDesignDao() {
+        return this.arrayDesignDao;
+    }
+
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
+
+    public AuditEventDao getAuditEventDao() {
+        return auditEventDao;
+    }
+
+    public void setAuditEventDao( AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -190,26 +218,11 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
-     * @return the auditEventDao
-     */
-    AuditEventDao getAuditEventDao() {
-        return auditEventDao;
-    }
-
-    /**
-     * @param auditEventDao the auditEventDao to set
-     */
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     @Transactional(readOnly = true)
-    public Long getCompositeSequenceCount(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public Long getCompositeSequenceCount( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleGetCompositeSequenceCount( arrayDesign );
 
@@ -646,20 +659,6 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     @Transactional
     public Boolean updateSubsumingStatus( final ArrayDesign candidateSubsumer, final ArrayDesign candidateSubsumee ) {
         return this.handleUpdateSubsumingStatus( candidateSubsumer, candidateSubsumee );
-    }
-
-    /**
-     * Gets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    ArrayDesignDao getArrayDesignDao() {
-        return this.arrayDesignDao;
-    }
-
-    /**
-     * Sets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    void setArrayDesignDao( ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
     }
 
     /**

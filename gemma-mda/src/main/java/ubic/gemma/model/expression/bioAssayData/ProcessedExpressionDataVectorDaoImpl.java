@@ -671,7 +671,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Get quantitation types that will be removed.
          */
         List<QuantitationType> qtsToRemove = this.getHibernateTemplate().findByNamedParam(
-                "select distinct p.quantitationType from ExpressionExperimentImpl e "
+                "select distinct p.quantitationType from ExpressionExperiment e "
                         + "inner join e.processedExpressionDataVectors p where e.id = :id", "id",
                 expressionExperiment.getId() );
 
@@ -845,7 +845,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             timer.start();
             List<?> r = this.getHibernateTemplate().findByNamedParam(
                     // this does not look efficient.
-                    "select distinct bad from ExpressionExperimentImpl e, BioAssayDimensionImpl bad"
+                    "select distinct bad from ExpressionExperiment e, BioAssayDimensionImpl bad"
                             + " inner join e.bioAssays b inner join bad.bioAssays badba where e = :ee and b in (badba) ",
                     "ee", ee );
             timer.stop();
@@ -874,7 +874,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         StopWatch timer = new StopWatch();
         timer.start();
         List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "select distinct e, bad from ExpressionExperimentImpl e, BioAssayDimensionImpl bad"
+                "select distinct e, bad from ExpressionExperiment e, BioAssayDimensionImpl bad"
                         + " inner join e.bioAssays b inner join bad.bioAssays badba where e in (:ees) and b in (badba) ",
                 "ees", ees );
 

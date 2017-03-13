@@ -26,18 +26,25 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,
  * provides access to all services and entities referenced by this service.
  * 
  * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService
- * @version $Id$
  */
 public abstract class ExpressionExperimentSetServiceBase implements ExpressionExperimentSetService {
 
-    @Autowired
     private ExpressionExperimentSetDao expressionExperimentSetDao;
+
+    public ExpressionExperimentSetServiceBase(){
+    }
+
+    @Autowired
+    public ExpressionExperimentSetServiceBase( ExpressionExperimentSetDao expressionExperimentSetDao ) {
+        this.expressionExperimentSetDao = expressionExperimentSetDao;
+    }
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
@@ -79,18 +86,6 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
 
     }
 
-    /**
-     * // * @see
-     * ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#getAnalyses(ubic.gemma.model.analysis
-     * .expression.ExpressionExperimentSet) //
-     */
-    // @Override
-    // @Transactional(readOnly = true)
-    // public Collection<ExpressionAnalysis> getAnalyses(
-    // final ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet ) {
-    // return this.handleGetAnalyses( expressionExperimentSet );
-    //
-    // }
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
@@ -151,12 +146,6 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
     protected abstract Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name );
-
-    // /**
-    // * Performs the core logic for {@link #getAnalyses(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
-    // */
-    // protected abstract Collection<ExpressionAnalysis> handleGetAnalyses(
-    // ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Performs the core logic for {@link #load(java.lang.Long)}

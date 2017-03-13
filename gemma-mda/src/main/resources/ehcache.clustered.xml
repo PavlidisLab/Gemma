@@ -1197,7 +1197,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1206,7 +1206,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1215,7 +1215,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.quantitationTypes"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.quantitationTypes"
 	maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="120000" timeToLiveSeconds="120000"
 	overflowToDisk="false">
 		<terracotta>
@@ -1225,7 +1225,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.bioAssays" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.bioAssays" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1234,7 +1234,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.rawExpressionDataVectors"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.rawExpressionDataVectors"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -1244,7 +1244,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.bioAssayDataVectors"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.bioAssayDataVectors"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -1255,7 +1255,7 @@
 	</cache>
 
 	<!-- not much used -->
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.processedExpressionDataVectors"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.processedExpressionDataVectors"
 		maxElementsOnDisk="10000" maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1395,7 +1395,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1404,7 +1404,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.externalReferences" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.externalReferences" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1413,7 +1413,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.localFiles" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.localFiles" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1422,7 +1422,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.compositeSequences" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.compositeSequences" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1431,7 +1431,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.subsumedArrayDesigns" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.subsumedArrayDesigns" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1440,7 +1440,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.mergees" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.mergees" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1449,7 +1449,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.alternateNames" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.alternateNames" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">

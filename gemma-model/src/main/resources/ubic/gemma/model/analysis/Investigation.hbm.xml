@@ -55,7 +55,7 @@
 		</set>
 		<subclass name="ubic.gemma.model.expression.experiment.BioAssaySet" dynamic-insert="false" dynamic-update="false"
 			abstract="true">
-			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment" discriminator-value="ExpressionExperimentImpl"
+			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperiment" discriminator-value="ExpressionExperiment"
 				dynamic-insert="false" dynamic-update="false" abstract="false">
 				<property name="source" type="java.lang.String">
 					<column name="SOURCE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />

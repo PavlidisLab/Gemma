@@ -258,7 +258,7 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
             },
             auditable : {
                id : this.experimentDetails.id,
-               classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+               classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperiment"
             },
             loadOnlyOnRender : true
          } );

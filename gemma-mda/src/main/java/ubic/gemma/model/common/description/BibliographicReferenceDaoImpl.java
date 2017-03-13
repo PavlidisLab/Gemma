@@ -158,7 +158,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Override
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records ) {
-        final String query = "select distinct e, b from ExpressionExperimentImpl "
+        final String query = "select distinct e, b from ExpressionExperiment "
                 + "e join e.primaryPublication b left join fetch b.pubAccession where b in (:recs)";
 
         Map<BibliographicReference, Collection<ExpressionExperiment>> result = new HashMap<BibliographicReference, Collection<ExpressionExperiment>>();
@@ -179,7 +179,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
 
     @Override
     public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession left join fetch b.publicationTypes ";
+        final String query = "select distinct e, b from ExpressionExperiment e join e.primaryPublication b left join fetch b.pubAccession left join fetch b.publicationTypes ";
         Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();
         List<Object[]> os = this.getHibernateTemplate().find( query );
         for ( Object[] o : os ) {
@@ -229,7 +229,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Override
     protected Collection<ExpressionExperiment> handleGetRelatedExperiments(
             BibliographicReference bibliographicReference ) {
-        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
+        final String queryString = "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
                 + " where ee.primaryPublication = :bib OR (eeO = :bib) ";
 
         return this.getHibernateTemplate().findByNamedParam( queryString, "bib", bibliographicReference );

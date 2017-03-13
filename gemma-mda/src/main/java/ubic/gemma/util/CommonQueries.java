@@ -53,7 +53,7 @@ public class CommonQueries {
         if ( ees == null || ees.isEmpty() )
             return eeAdMap;
 
-        final String eeAdQuery = "select distinct ee.id,ad from ExpressionExperimentImpl as ee inner join "
+        final String eeAdQuery = "select distinct ee.id,ad from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
@@ -87,7 +87,7 @@ public class CommonQueries {
         if ( ees == null || ees.isEmpty() )
             return ee2ads;
 
-        final String eeAdQuery = "select distinct ee.id,ad.id from ExpressionExperimentImpl as ee inner join "
+        final String eeAdQuery = "select distinct ee.id,ad.id from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
@@ -138,7 +138,7 @@ public class CommonQueries {
             return null;
         }
 
-        final String eeAdQuery = "select distinct ad from ExpressionExperimentImpl as ee inner join "
+        final String eeAdQuery = "select distinct ad from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee = :ee";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );

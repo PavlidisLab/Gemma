@@ -661,7 +661,7 @@ Gemma.EEReportGridColumnRenderers = {
       }
 
       result = result
-         + Gemma.SecurityManager.getSecurityLink( 'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl',
+         + Gemma.SecurityManager.getSecurityLink( 'ubic.gemma.model.expression.experiment.ExpressionExperiment',
             id, record.get( 'isPublic' ), record.get( 'isShared' ), record.get( 'userCanWrite' ), null, null, null,
             record.get( 'userOwned' ) );
 

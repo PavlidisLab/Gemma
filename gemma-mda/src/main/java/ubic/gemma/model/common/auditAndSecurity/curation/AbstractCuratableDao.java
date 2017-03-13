@@ -31,7 +31,6 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
     protected static final String ARG_NULL_ERR_MSG = "Argument can not be null";
     protected static final String MULTIPLE_FOUND_ERR_MSG = "Multiple entities found";
     protected String entityName = "ArrayDesign";
-    protected String entityImplName = "ArrayDesignImpl";
 
     /* ********************************
      * Abstract methods
@@ -151,7 +150,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
         if ( ids == null || ids.isEmpty() ) {
             return new HashSet<>();
         }
-        final String queryString = "select ad from " + entityImplName + " as ad where ad.id in (:ids) ";
+        final String queryString = "select ad from " + entityName + " as ad where ad.id in (:ids) ";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ids", ids );
 
@@ -224,7 +223,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
 
     private Collection<T> findByParam( final String paramName, final String paramValue ) {
         Query query = this.getSessionFactory().getCurrentSession()
-                .createQuery( "from " + entityImplName + " a where a." + paramName + "=:" + paramName + "" )
+                .createQuery( "from " + entityName + " a where a." + paramName + "=:" + paramName + "" )
                 .setParameter( paramName, paramValue );
 
         //noinspection unchecked

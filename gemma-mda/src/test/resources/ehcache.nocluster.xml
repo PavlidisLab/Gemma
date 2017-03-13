@@ -423,25 +423,25 @@
 	<cache name="ubic.gemma.model.common.AbstractAuditable" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200"
            timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.characteristics"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.characteristics"
 		maxElementsInMemory="0" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.quantitationTypes"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.quantitationTypes"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.bioAssays" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.bioAssays" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.rawExpressionDataVectors"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.rawExpressionDataVectors"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.bioAssayDataVectors"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.bioAssayDataVectors"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.processedExpressionDataVectors"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperiment.processedExpressionDataVectors"
 		maxElementsInMemory="100000" eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.FactorValueImpl" maxElementsInMemory="10000" eternal="false"
@@ -489,25 +489,25 @@
 	<cache name="ubic.gemma.model.expression.designElement.DesignElementImpl" maxElementsInMemory="100000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.externalReferences" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.externalReferences" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.localFiles" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.localFiles" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.compositeSequences" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.compositeSequences" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.subsumedArrayDesigns" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.subsumedArrayDesigns" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.mergees" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.mergees" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl.alternateNames" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.arrayDesign.ArrayDesign.alternateNames" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.arrayDesign.AlternateNameImpl" maxElementsInMemory="10000" eternal="false"

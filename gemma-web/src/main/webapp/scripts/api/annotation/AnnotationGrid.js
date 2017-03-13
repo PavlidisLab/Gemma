@@ -10,7 +10,7 @@ Ext.namespace( 'Gemma' );
  * ExpressionExperimentController.getAnnotation )
  * 
  * readParams : an array of parameters that will be passed to the readMethod ( e.e.: [ { id:x,
- * classDelegatingFor:"ExpressionExperimentImpl" } ] ) or a pointer to a function that will return the array of
+ * classDelegatingFor:"ExpressionExperiment" } ] ) or a pointer to a function that will return the array of
  * parameters
  * 
  * editable : if true, the annotations in the grid will be editable

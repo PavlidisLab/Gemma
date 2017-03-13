@@ -87,7 +87,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
         return this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select distinct bm from ExpressionExperimentImpl e join e.bioAssays b join b.sampleUsed bm where e = :ee",
+                        "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee",
                         "ee", experiment );
     }
 
@@ -129,7 +129,7 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
         List<?> result = getHibernateTemplate()
                 .findByNamedParam(
-                        "select distinct e from ExpressionExperimentImpl e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid ",
+                        "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid ",
                         "bmid", bioMaterialId );
 
         if ( result.size() > 1 )

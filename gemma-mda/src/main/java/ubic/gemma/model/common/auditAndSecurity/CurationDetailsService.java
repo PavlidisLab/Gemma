@@ -15,6 +15,8 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -28,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
  * @author tesarst
  */
 @Service
+@Scope( proxyMode = ScopedProxyMode.TARGET_CLASS )
 public class CurationDetailsService {
 
     @Autowired

@@ -109,7 +109,7 @@ Gemma.PlatformPage = Ext.extend( Ext.TabPanel, {
             },
             auditable : {
                id : this.platformId,
-               classDelegatingFor : "ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl"
+               classDelegatingFor : "ubic.gemma.model.expression.arrayDesign.ArrayDesign"
             },
             loadOnlyOnRender : true
          } );

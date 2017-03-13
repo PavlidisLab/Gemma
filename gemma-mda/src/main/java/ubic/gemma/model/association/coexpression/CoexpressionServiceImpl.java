@@ -18,23 +18,15 @@
  */
 package ubic.gemma.model.association.coexpression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import cern.colt.list.DoubleArrayList;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Rank;
 import ubic.gemma.model.analysis.expression.coexpression.SupportDetails;
@@ -45,10 +37,13 @@ import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.EntityUtils;
 
+import java.util.*;
+
 /**
  * @see ubic.gemma.model.association.coexpression.CoexpressionService
  */
 @Service
+@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS)
 public class CoexpressionServiceImpl implements CoexpressionService {
 
     private static Logger log = LoggerFactory.getLogger( CoexpressionServiceImpl.class );
@@ -108,8 +103,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             genes.add( link.getFirstGene() );
             genes.add( link.getSecondGene() );
         }
-        this.coexpressionQueryQueue.removeFromQueue( genes,
-                CoexpressionQueryUtils.getGeneLinkClassName( genesTested.iterator().next() ) );
+        this.coexpressionQueryQueue
+                .removeFromQueue( genes, CoexpressionQueryUtils.getGeneLinkClassName( genesTested.iterator().next() ) );
     }
 
     /*
@@ -133,10 +128,10 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas,
-            int maxResults, boolean quick ) {
-        List<CoexpressionValueObject> results = this.coexpressionDao.findCoexpressionRelationships( gene, bas,
-                maxResults, quick );
+    public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int maxResults,
+            boolean quick ) {
+        List<CoexpressionValueObject> results = this.coexpressionDao
+                .findCoexpressionRelationships( gene, bas, maxResults, quick );
 
         if ( quick || maxResults > 0 ) {
             this.coexpressionQueryQueue.addToFullQueryQueue( gene );
@@ -153,11 +148,12 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      * .model.genome.Gene, java.util.Collection, int, int)
      */
     @Override
-    public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas,
-            int stringency, int maxResults, boolean quick ) {
+    public List<CoexpressionValueObject> findCoexpressionRelationships( Gene gene, Collection<Long> bas, int stringency,
+            int maxResults, boolean quick ) {
         assert gene != null;
-        Map<Long, List<CoexpressionValueObject>> r = this.findCoexpressionRelationships( gene.getTaxon(),
-                EntityUtils.getIds( gene ), bas, stringency, maxResults, quick );
+        Map<Long, List<CoexpressionValueObject>> r = this
+                .findCoexpressionRelationships( gene.getTaxon(), EntityUtils.getIds( gene ), bas, stringency,
+                        maxResults, quick );
         return r.containsKey( gene.getId() ) ? r.get( gene.getId() ) : new ArrayList<CoexpressionValueObject>();
     }
 
@@ -177,8 +173,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             throw new IllegalArgumentException( "Must specify genes or the taxon" );
         }
 
-        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findCoexpressionRelationships( t,
-                genes, bas, maxResults, quick );
+        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao
+                .findCoexpressionRelationships( t, genes, bas, maxResults, quick );
 
         // since we require these links occur in all the given data sets, we assume we should cache (if not there
         // already) - don't bother checking 'quick' and 'maxResults'.
@@ -197,8 +193,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Override
     public Map<Long, List<CoexpressionValueObject>> findCoexpressionRelationships( Taxon t, Collection<Long> genes,
             Collection<Long> bas, int stringency, int maxResults, boolean quick ) {
-        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findCoexpressionRelationships( t,
-                genes, bas, stringency, maxResults, quick );
+        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao
+                .findCoexpressionRelationships( t, genes, bas, stringency, maxResults, quick );
 
         if ( stringency > CoexpressionCache.CACHE_QUERY_STRINGENCY || quick || maxResults > 0 ) {
             possiblyAddToCacheQueue( t, results );
@@ -215,10 +211,10 @@ public class CoexpressionServiceImpl implements CoexpressionService {
      * .util.Collection, java.util.Collection, int)
      */
     @Override
-    public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t,
-            Collection<Long> genes, Collection<Long> bas, int stringency, boolean quick ) {
-        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao.findInterCoexpressionRelationships( t,
-                genes, bas, stringency, quick );
+    public Map<Long, List<CoexpressionValueObject>> findInterCoexpressionRelationships( Taxon t, Collection<Long> genes,
+            Collection<Long> bas, int stringency, boolean quick ) {
+        Map<Long, List<CoexpressionValueObject>> results = this.coexpressionDao
+                .findInterCoexpressionRelationships( t, genes, bas, stringency, quick );
 
         // these are always candidates for queuing since the constraint on genes is done at the query level.
         possiblyAddToCacheQueue( t, results );
@@ -235,7 +231,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
     @Transactional(readOnly = true)
     public GeneCoexpressionNodeDegreeValueObject getNodeDegree( Gene g ) {
         GeneCoexpressionNodeDegree nd = geneCoexpressionNodeDegreeDao.load( g.getId() );
-        if ( nd == null ) return null;
+        if ( nd == null )
+            return null;
         return new GeneCoexpressionNodeDegreeValueObject( nd );
     }
 
@@ -317,8 +314,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             // low ranks = low node degree = good.
             Map<Long, Double> rt = Rank.rankTransform( forRanks.get( support ) );
 
-            double max = DescriptiveWithMissing.max( new DoubleArrayList( ArrayUtils.toPrimitive( new ArrayList<>( rt
-                    .values() ).toArray( new Double[] {} ) ) ) );
+            double max = DescriptiveWithMissing.max( new DoubleArrayList(
+                    ArrayUtils.toPrimitive( new ArrayList<>( rt.values() ).toArray( new Double[] {} ) ) ) );
 
             for ( Long g : rt.keySet() ) {
                 double relRank = rt.get( g ) / max;
@@ -336,13 +333,14 @@ public class CoexpressionServiceImpl implements CoexpressionService {
 
     /**
      * Check for results which were not in the cache, and which were not cached; make sure we fully query them.
-     * 
+     *
      * @param t
      * @param links
      */
     private void possiblyAddToCacheQueue( Taxon t, Map<Long, List<CoexpressionValueObject>> links ) {
 
-        if ( !coexpressionCache.isEnabled() ) return;
+        if ( !coexpressionCache.isEnabled() )
+            return;
 
         Set<Long> toQueue = new HashSet<>();
         for ( Long id : links.keySet() ) {
@@ -375,7 +373,8 @@ public class CoexpressionServiceImpl implements CoexpressionService {
             TreeMap<Integer, Map<Long, Integer>> forRanksNeg ) {
         GeneCoexpressionNodeDegreeValueObject updatedVO = this.updateNodeDegree( g );
 
-        if ( log.isDebugEnabled() ) log.debug( updatedVO.toString() );
+        if ( log.isDebugEnabled() )
+            log.debug( updatedVO.toString() );
 
         /*
          * Positive

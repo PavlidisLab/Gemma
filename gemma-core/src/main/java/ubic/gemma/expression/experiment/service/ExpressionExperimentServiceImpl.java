@@ -22,6 +22,8 @@ import gemma.gsec.SecurityService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.ontology.model.OntologyResource;
@@ -72,6 +74,7 @@ import java.util.*;
  */
 @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Service
+@Scope( proxyMode = ScopedProxyMode.TARGET_CLASS )
 @Transactional
 public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
 
@@ -215,7 +218,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Override
     @Transactional(readOnly = true)
     public Integer count() {
-        return this.expressionExperimentDao.count();
+        return this.expressionExperimentDao.countAll();
     }
 
     /**

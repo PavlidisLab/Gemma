@@ -148,7 +148,7 @@ Gemma.ExpressionExperimentDetails = Ext
             if ( isUserLoggedIn ) {
                result = result
                   + Gemma.SecurityManager.getSecurityLink(
-                     'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
+                     'ubic.gemma.model.expression.experiment.ExpressionExperiment', ee.id, ee.isPublic,
                      ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned );
             }
 
@@ -412,7 +412,7 @@ Gemma.ExpressionExperimentDetails = Ext
             tagView = new Gemma.AnnotationDataView( {
                readParams : [ {
                   id : e.id,
-                  classDelegatingFor : "ExpressionExperimentImpl"
+                  classDelegatingFor : "ExpressionExperiment"
                } ]
             } );
 

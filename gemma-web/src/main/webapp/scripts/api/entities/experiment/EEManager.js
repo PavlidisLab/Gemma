@@ -161,7 +161,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
             collapsible : false,
             auditable : {
                id : id,
-               classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+               classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperiment"
             }
          } ) ]
       } );

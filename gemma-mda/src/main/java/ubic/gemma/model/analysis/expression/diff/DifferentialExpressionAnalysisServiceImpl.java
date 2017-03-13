@@ -18,30 +18,25 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.Investigation;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.EntityUtils;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author paul
  * @author keshav
- * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
  * @version $Id$
+ * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService
  */
 @Service
 public class DifferentialExpressionAnalysisServiceImpl implements DifferentialExpressionAnalysisService {
@@ -51,6 +46,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Autowired
     private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+    @Autowired
+    private ExpressionExperimentDao expressionExperimentDao;
 
     @Override
     @Transactional(readOnly = true)
@@ -133,7 +130,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.model.analysis.AnalysisServiceBase#findByName(java.lang.String)
      */
     @Override
@@ -162,13 +159,14 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
             return null;
         }
         Collection<DifferentialExpressionAnalysis> found = this.findByInvestigation( investigations.iterator().next() );
-        if ( found.isEmpty() ) return null;
+        if ( found.isEmpty() )
+            return null;
         return found.iterator().next();
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisServiceBase#findExperimentsWithAnalyses
      * (ubic.gemma.model.genome.Gene)
@@ -187,7 +185,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService#getAnalyses(java.util.Collection)
      */
@@ -207,7 +205,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(java.util.Collection)
      */
     @Override
@@ -218,7 +216,7 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.model.analysis.AnalysisService#getExperimentsWithAnalysis(ubic.gemma.model.genome.Taxon)
      */
     @Override
@@ -297,9 +295,6 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     }
 
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
-
     /*
      * (non-Javadoc)
      * 
@@ -321,7 +316,8 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
         Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> result = new HashMap<>();
 
         for ( Long id : analysesByExperimentIds.keySet() ) {
-            if ( !idMap.containsKey( id ) ) continue; // defensive....
+            if ( !idMap.containsKey( id ) )
+                continue; // defensive....
             result.put( idMap.get( id ), analysesByExperimentIds.get( id ) );
         }
         return result;

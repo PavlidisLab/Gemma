@@ -2,7 +2,7 @@
 <jsp:useBean id="experimentalDesign" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" />
 <jsp:useBean id="expressionExperiment" scope="request"
-	class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" />
+	class="ubic.gemma.model.expression.experiment.ExpressionExperiment" />
 <head>
 <title><fmt:message key="experimentalDesign.details" /></title>
 

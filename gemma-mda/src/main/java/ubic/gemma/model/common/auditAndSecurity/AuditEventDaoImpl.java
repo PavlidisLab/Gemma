@@ -51,11 +51,8 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
      * Classes that we track for 'updated since'. This is used for "What's new" functionality.
      */
     private static final String[] AUDITABLES_TO_TRACK_FOR_WHATSNEW = {
-            // "ubic.gemma.model.expression.analysis.ExpressionAnalysisImpl",
-            "ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl",
-            // "ubic.gemma.model.common.description.BibliographicReferenceImpl",
-            // "ubic.gemma.model.common.auditAndSecurity.ContactImpl",
-            "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" };
+            "ubic.gemma.model.expression.arrayDesign.ArrayDesign",
+            "ubic.gemma.model.expression.experiment.ExpressionExperiment" };
 
     @Autowired
     public AuditEventDaoImpl( SessionFactory sessionFactory ) {

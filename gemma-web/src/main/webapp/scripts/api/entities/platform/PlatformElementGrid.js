@@ -322,7 +322,7 @@ Gemma.PlatformElementGrid = Ext
             this.getStore().load( {
                params : [ {
                   id : id,
-                  classDelegatingFor : "ArrayDesignImpl"
+                  classDelegatingFor : "ArrayDesign"
                } ],
                callback : function( r, options, success, scope ) {
                   if ( !success ) {

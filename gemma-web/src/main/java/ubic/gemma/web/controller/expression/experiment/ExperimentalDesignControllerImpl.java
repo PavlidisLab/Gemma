@@ -382,8 +382,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
         Long designId = null;
         if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" )
-                || e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperimentImpl" )
-                || e.getClassDelegatingFor().endsWith( ".ExpressionExperimentImpl" ) ) {
+                || e.getClassDelegatingFor().endsWith( ".ExpressionExperiment" ) ) {
             ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
             designId = ee.getExperimentalDesign().getId();
         } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" )

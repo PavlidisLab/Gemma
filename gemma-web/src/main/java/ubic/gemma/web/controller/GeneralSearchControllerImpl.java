@@ -386,7 +386,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         if ( vos == null || vos.isEmpty() ) {
 
             // bug 3475: if there are search results but they are all removed because they are troubled, then results
-            // has ExpressionExperimentImpls in
+            // has ExpressionExperiments in
             // it causing front end errors, if vos is empty make sure to get rid of all search results
             for ( Iterator<SearchResult> it = results.iterator(); it.hasNext(); ) {
                 it.next();
