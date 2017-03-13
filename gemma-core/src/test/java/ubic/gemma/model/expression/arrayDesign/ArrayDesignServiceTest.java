@@ -18,23 +18,12 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.SecurityService;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateObjectRetrievalFailureException;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -45,9 +34,14 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
@@ -67,9 +61,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Autowired
     private SecurityService securityService;
 
-    /*
-     * @see TestCase#setUp()
-     */
     @Before
     public void setup() {
 
@@ -157,7 +148,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
         Collection<CompositeSequence> seqs = ad.getCompositeSequences();
-        Collection<Long> seqIds = new ArrayList<Long>();
+        Collection<Long> seqIds = new ArrayList<>();
         for ( CompositeSequence seq : seqs ) {
             if ( seq.getId() == null ) {
                 continue; // why?
@@ -175,7 +166,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         for ( Long id : seqIds ) {
             try {
                 CompositeSequence cs = compositeSequenceService.load( id );
-                if ( cs != null ) fail( cs + " was still in the system" );
+                if ( cs != null )
+                    fail( cs + " was still in the system" );
             } catch ( HibernateObjectRetrievalFailureException e ) {
                 // ok
             }
@@ -200,7 +192,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
         toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
-        // artficial, wouldn't normally have multiple GEO acc
+        // artificial, wouldn't normally have multiple GEO acc
         assignExternalReference( toFind, getGpl() );
         assignExternalReference( toFind, getGpl() );
         assignExternalReference( toFind, gplToFind );
@@ -225,7 +217,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ArrayDesign toFind = ArrayDesign.Factory.newInstance();
         toFind.setPrimaryTaxon( this.getTaxon( "mouse" ) );
 
-        // artficial, wouldn't normally have multiple GEO acc
+        // artificial, wouldn't normally have multiple GEO acc
         assignExternalReference( toFind, getGpl() );
         assignExternalReference( toFind, getGpl() );
         ArrayDesign found = arrayDesignService.find( toFind );
@@ -243,7 +235,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     }
 
     /**
-     * Test retrieving mutiple taxa for an arraydesign where hibernate query is not restricted to return just 1 taxon.
+     * Test retrieving multiple taxa for an arraydesign where hibernate query is not restricted to return just 1 taxon.
      */
     @Test
     public void testGetTaxaMultipleTaxonForArray() {
@@ -274,12 +266,12 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
         assertEquals( 2, taxa.size() );
 
-        Collection<String> list = new ArrayList<String>();
+        Collection<String> list = new ArrayList<>();
         for ( Taxon taxon : taxa ) {
             list.add( taxon.getScientificName() );
         }
         assertTrue( "Should have found " + taxonName2, list.contains( taxonName2 ) );
-        assertTrue( "Should ahve found " + DEFAULT_TAXON, list.contains( DEFAULT_TAXON ) );
+        assertTrue( "Should have found " + DEFAULT_TAXON, list.contains( DEFAULT_TAXON ) );
 
     }
 
@@ -319,7 +311,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     public void testLoadAllValueObjectsOneTaxon() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
 
-        Collection<Long> ids = new HashSet<Long>();
+        Collection<Long> ids = new HashSet<>();
         ids.add( ad.getId() );
         Collection<ArrayDesignValueObject> vos = arrayDesignService.loadValueObjects( ids );
         assertNotNull( vos );
@@ -372,8 +364,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     /**
      * Test for bug 1939 - dirty collection error after thaw.
-     * 
-     * @throws Exception
      */
     @Test
     public void testThaw() throws Exception {
@@ -459,9 +449,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         assertTrue( !actualValue );
     }
 
-    /**
-     * @param accession
-     */
     private void assignExternalReference( ArrayDesign toFind, String accession ) {
         ExternalDatabase geo = externalDatabaseService.find( "GEO" );
         assert geo != null;
