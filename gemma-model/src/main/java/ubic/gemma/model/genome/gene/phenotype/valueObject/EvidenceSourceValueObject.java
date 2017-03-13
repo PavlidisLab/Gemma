@@ -2,7 +2,6 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
-import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
 public class EvidenceSourceValueObject extends DatabaseEntryValueObject {
 

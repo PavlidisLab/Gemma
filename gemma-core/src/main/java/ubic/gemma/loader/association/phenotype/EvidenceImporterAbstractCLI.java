@@ -38,7 +38,6 @@ import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;

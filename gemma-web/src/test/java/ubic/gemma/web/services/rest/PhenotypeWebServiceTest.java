@@ -39,7 +39,6 @@ import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;

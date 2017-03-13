@@ -19,17 +19,14 @@
 
 package ubic.gemma.web.persistence;
 
+import ubic.gemma.model.GemmaSessionBackedValueObject;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import ubic.gemma.model.GemmaSessionBackedValueObject;
-
 /**
- * TODO Document Me
- * 
  * @author thea
- * @version $Id$
  */
 public abstract class AbstractSetListContainer implements Serializable {
 
@@ -39,23 +36,18 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     private static final long serialVersionUID = -7207696842986893748L;
 
-    private List<GemmaSessionBackedValueObject> allSessionBoundGroups;
-
-    private Long largestSessionId = 0l;
-
-    private List<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
+    private final List<GemmaSessionBackedValueObject> allSessionBoundGroups;
+    private final List<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
+    private Long largestSessionId = 0L;
 
     public AbstractSetListContainer() {
-        allSessionBoundGroups = new ArrayList<GemmaSessionBackedValueObject>();
-        sessionBoundModifiedGroups = new ArrayList<GemmaSessionBackedValueObject>();
+        allSessionBoundGroups = new ArrayList<>();
+        sessionBoundModifiedGroups = new ArrayList<>();
     }
 
     /**
      * Sets the reference (generates an id and assumes this group was made as a result of a modification for the type
      * value) for the group then adds it to the session-bound list(s) for session-bound groups
-     * 
-     * @param vo
-     * @return
      */
     public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo, boolean modified ) {
 
@@ -109,15 +101,12 @@ public abstract class AbstractSetListContainer implements Serializable {
         // so I believe 100000 provides a large enough range to avoid conflicts
         //
         if ( largestSessionId > 100000 ) {
-            largestSessionId = 0l;
+            largestSessionId = 0L;
         }
 
         return largestSessionId;
     }
 
-    /**
-     * @param vo
-     */
     public void removeSet( GemmaSessionBackedValueObject vo ) {
 
         if ( vo != null ) {
@@ -142,29 +131,20 @@ public abstract class AbstractSetListContainer implements Serializable {
         }
     }
 
-    /**
-     * @param vo
-     */
     public void updateSet( GemmaSessionBackedValueObject vo ) {
 
+        this.updateSet( allSessionBoundGroups, vo );
+        this.updateSet( sessionBoundModifiedGroups, vo );
+    }
+
+    private void updateSet( List<GemmaSessionBackedValueObject> list, GemmaSessionBackedValueObject vo ) {
         if ( vo != null ) {
 
-            for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
+            for ( int i = 0; i < list.size(); i++ ) {
 
-                if ( allSessionBoundGroups.get( i ).equals( vo ) ) {
-                    allSessionBoundGroups.remove( i );
-                    allSessionBoundGroups.add( i, vo );
-                    break;
-                }
-            }
-        }
-        if ( vo != null ) {
-
-            for ( int i = 0; i < sessionBoundModifiedGroups.size(); i++ ) {
-
-                if ( sessionBoundModifiedGroups.get( i ).equals( vo ) ) {
-                    sessionBoundModifiedGroups.remove( i );
-                    sessionBoundModifiedGroups.add( i, vo );
+                if ( list.get( i ).equals( vo ) ) {
+                    list.remove( i );
+                    list.add( i, vo );
                     break;
                 }
             }

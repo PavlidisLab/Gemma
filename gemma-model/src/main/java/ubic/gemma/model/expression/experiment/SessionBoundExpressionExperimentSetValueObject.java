@@ -40,10 +40,7 @@ package ubic.gemma.model.expression.experiment;
 import ubic.gemma.model.GemmaSessionBackedValueObject;
 
 /**
- * TODO Document Me
- *
  * @author tvrossum
- * @version $Id$
  */
 public class SessionBoundExpressionExperimentSetValueObject extends ExpressionExperimentSetValueObject
         implements GemmaSessionBackedValueObject {
@@ -58,11 +55,6 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
         super();
     }
 
-    /*
-     * can't implement this because sessionListManager in is 'web' package
-     *
-     * @Override public Object loadEntity() { return sessionListManager.getExperimentSetById( this.getId() ); }
-     */
     @Override
     public boolean isModified() {
         return this.modified;

@@ -37,7 +37,6 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;

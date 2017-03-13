@@ -18,32 +18,14 @@
  */
 package ubic.gemma.model;
 
-/**
- * TODO Document FIXME should be in util or web package?
- * 
- * @author ?
- * @version $Id$
- */
 public interface GemmaSessionBackedValueObject {
 
-    /**
-     * @return
-     */
-    public Long getId();
+    Long getId();
 
-    /**
-     * @return
-     */
-    public boolean isModified();
+    void setId( Long id );
 
-    /**
-     * @param id
-     */
-    public void setId( Long id );
+    boolean isModified();
 
-    /**
-     * @param modified
-     */
-    public void setModified( boolean modified );
+    void setModified( boolean modified );
 
 }

@@ -14,8 +14,6 @@
  */
 package ubic.gemma.model.genome;
 
-import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
-
 /**
  * @author Paul
  * @version $Id$

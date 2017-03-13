@@ -40,10 +40,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 /**
- * TODO Document Me
- * 
  * @author tvrossum
- * @version $Id$
  */
 public class FreeTextExpressionExperimentResultsValueObject extends SessionBoundExpressionExperimentSetValueObject {
 
@@ -59,12 +56,12 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
 
     /**
      * Method to create a display object from scratch
-     * 
-     * @param name cannot be null
+     *
+     * @param name        cannot be null
      * @param description should not be null
-     * @param taxonId can be null
-     * @param taxonName can be null
-     * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
+     * @param taxonId     can be null
+     * @param taxonName   can be null
+     * @param memberIds   can be null; for a gene or experiment, this is a collection just containing their id
      */
     public FreeTextExpressionExperimentResultsValueObject( String name, String description, Long taxonId,
             String taxonName, Collection<Long> memberIds, String queryString ) {
@@ -81,17 +78,17 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
     }
 
     /**
-     * @param queryString the queryString to set
-     */
-    public void setQueryString( String queryString ) {
-        this.queryString = queryString;
-    }
-
-    /**
      * @return the queryString
      */
     public String getQueryString() {
         return queryString;
+    }
+
+    /**
+     * @param queryString the queryString to set
+     */
+    public void setQueryString( String queryString ) {
+        this.queryString = queryString;
     }
 
 }

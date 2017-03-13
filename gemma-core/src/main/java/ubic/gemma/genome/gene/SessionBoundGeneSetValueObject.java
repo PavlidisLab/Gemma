@@ -19,14 +19,11 @@
 
 package ubic.gemma.genome.gene;
 
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.GemmaSessionBackedValueObject;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
 /**
- * TODO Document Me
- * 
  * @author tvrossum
- * @version $Id$
  */
 public class SessionBoundGeneSetValueObject extends GeneSetValueObject implements GemmaSessionBackedValueObject {
 

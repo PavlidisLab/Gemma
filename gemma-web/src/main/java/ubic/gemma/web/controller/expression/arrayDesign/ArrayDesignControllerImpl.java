@@ -20,7 +20,6 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import com.google.common.collect.Lists;
 import gemma.gsec.util.SecurityUtil;
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -529,8 +528,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( ( name == null ) && ( idStr == null ) ) {
             throw new IllegalArgumentException( "Must provide a platform identifier or name" );
-
         }
+
         ArrayDesign arrayDesign = null;
         if ( idStr != null ) {
             arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
