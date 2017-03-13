@@ -14,78 +14,53 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-
 /**
  * CharacteristicValueObject containing a category to a value
- * 
- * @author ??
- * @version $Id$
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
     private static Log log = LogFactory.getLog( CharacteristicValueObject.class );
-
     /**
-     * @param characteristics
-     * @return
+     * id used by url on the client side
      */
-    public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
-            Collection<? extends Characteristic> characteristics ) {
-
-        Collection<CharacteristicValueObject> characteristicValueObjects;
-
-        if ( characteristics instanceof List )
-            characteristicValueObjects = new ArrayList<>();
-        else
-            characteristicValueObjects = new HashSet<>();
-
-        for ( Characteristic characteristic : characteristics ) {
-            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( characteristic );
-            characteristicValueObjects.add( characteristicValueObject );
-        }
-        return characteristicValueObjects;
-    }
-
-    /** id used by url on the client side */
     protected String urlId = "";
     private boolean alreadyPresentInDatabase = false;
-
     private boolean alreadyPresentOnGene = false;
-
     private String category = "";
-
     private String categoryUri = null;
-
-    /** child term from a root */
+    /**
+     * child term from a root
+     */
     private boolean child = false;
     private Long id = null; // MUST be initialized with null or have equality
-                            // problems in javascript.
-
     private int numTimesUsed = 0;
-    /** what Ontology uses this term */
+    // problems in javascript.
+    /**
+     * what Ontology uses this term
+     */
     private String ontologyUsed = null;
-
     private long privateGeneCount = 0L;
-
-    /** number of occurrences in all genes */
+    /**
+     * number of occurrences in all genes
+     */
     private long publicGeneCount = 0L;
-    /** root of a query */
+    /**
+     * root of a query
+     */
     private boolean root = false;
-
     private String taxon = "";
     private String value = "";
-
     private String valueUri = null;
 
     public CharacteristicValueObject() {
@@ -133,6 +108,23 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.value = value;
     }
 
+    public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
+            Collection<? extends Characteristic> characteristics ) {
+
+        Collection<CharacteristicValueObject> characteristicValueObjects;
+
+        if ( characteristics instanceof List )
+            characteristicValueObjects = new ArrayList<>();
+        else
+            characteristicValueObjects = new HashSet<>();
+
+        for ( Characteristic characteristic : characteristics ) {
+            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( characteristic );
+            characteristicValueObjects.add( characteristicValueObject );
+        }
+        return characteristicValueObjects;
+    }
+
     @Override
     public int compareTo( CharacteristicValueObject o ) {
         if ( this.category != null && o.category != null && !this.category.equalsIgnoreCase( o.category )
@@ -152,19 +144,25 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
         if ( this.valueUri == null ) {
-            if ( other.valueUri != null ) return false;
+            if ( other.valueUri != null )
+                return false;
         } else {
             return this.valueUri.equals( other.valueUri );
         }
 
         if ( this.value == null ) {
-            if ( other.value != null ) return false;
-        } else if ( !this.value.equals( other.value ) ) return false;
+            if ( other.value != null )
+                return false;
+        } else if ( !this.value.equals( other.value ) )
+            return false;
 
         return true;
     }
@@ -173,44 +171,91 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return this.category;
     }
 
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
     public String getCategoryUri() {
         return this.categoryUri;
+    }
+
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
     }
 
     public Long getId() {
         return this.id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public int getNumTimesUsed() {
         return numTimesUsed;
+    }
+
+    public void setNumTimesUsed( int numTimesUsed ) {
+        this.numTimesUsed = numTimesUsed;
     }
 
     public String getOntologyUsed() {
         return this.ontologyUsed;
     }
 
+    public void setOntologyUsed( String ontologyUsed ) {
+        this.ontologyUsed = ontologyUsed;
+    }
+
     public long getPrivateGeneCount() {
         return this.privateGeneCount;
+    }
+
+    public void setPrivateGeneCount( long privateGeneCount ) {
+        this.privateGeneCount = privateGeneCount;
     }
 
     public long getPublicGeneCount() {
         return this.publicGeneCount;
     }
 
+    public void setPublicGeneCount( long publicGeneCount ) {
+        this.publicGeneCount = publicGeneCount;
+    }
+
     public String getTaxon() {
         return this.taxon;
+    }
+
+    public void setTaxon( String taxon ) {
+        this.taxon = taxon;
     }
 
     public String getUrlId() {
         return this.urlId;
     }
 
+    public void setUrlId( String urlId ) {
+        this.urlId = urlId;
+    }
+
     public String getValue() {
         return this.value;
     }
 
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
     public String getValueUri() {
         return this.valueUri;
+    }
+
+    public void setValueUri( String valueUri ) {
+        if ( valueUri == null )
+            this.valueUri = null;
+        else
+            this.valueUri = valueUri.toLowerCase();
     }
 
     @Override
@@ -225,9 +270,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return result;
     }
 
-    /**
-     * 
-     */
     public void incrementOccurrenceCount() {
         this.numTimesUsed++;
     }
@@ -236,79 +278,32 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return this.alreadyPresentInDatabase;
     }
 
-    public boolean isAlreadyPresentOnGene() {
-        return this.alreadyPresentOnGene;
-    }
-
-    public boolean isChild() {
-        return this.child;
-    }
-
-    public boolean isRoot() {
-        return this.root;
-    }
-
     public void setAlreadyPresentInDatabase( boolean alreadyPresentInDatabase ) {
         this.alreadyPresentInDatabase = alreadyPresentInDatabase;
+    }
+
+    public boolean isAlreadyPresentOnGene() {
+        return this.alreadyPresentOnGene;
     }
 
     public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
         this.alreadyPresentOnGene = alreadyPresentOnGene;
     }
 
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
+    public boolean isChild() {
+        return this.child;
     }
 
     public void setChild( boolean child ) {
         this.child = child;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setNumTimesUsed( int numTimesUsed ) {
-        this.numTimesUsed = numTimesUsed;
-    }
-
-    public void setOntologyUsed( String ontologyUsed ) {
-        this.ontologyUsed = ontologyUsed;
-    }
-
-    public void setPrivateGeneCount( long privateGeneCount ) {
-        this.privateGeneCount = privateGeneCount;
-    }
-
-    public void setPublicGeneCount( long publicGeneCount ) {
-        this.publicGeneCount = publicGeneCount;
+    public boolean isRoot() {
+        return this.root;
     }
 
     public void setRoot( boolean root ) {
         this.root = root;
-    }
-
-    public void setTaxon( String taxon ) {
-        this.taxon = taxon;
-    }
-
-    public void setUrlId( String urlId ) {
-        this.urlId = urlId;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public void setValueUri( String valueUri ) {
-        if ( valueUri == null )
-            this.valueUri = null;
-        else
-            this.valueUri = valueUri.toLowerCase();
     }
 
     @Override
@@ -316,11 +311,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
     }
 
-    /**
-     * 
-     */
     private void parseUrlId() {
-        if ( StringUtils.isBlank( valueUri ) ) return;
+        if ( StringUtils.isBlank( valueUri ) )
+            return;
         if ( valueUri.indexOf( "#" ) > 0 ) {
             this.urlId = valueUri.substring( valueUri.lastIndexOf( "#" ) + 1, this.valueUri.length() );
         } else if ( valueUri.lastIndexOf( "/" ) > 0 ) {

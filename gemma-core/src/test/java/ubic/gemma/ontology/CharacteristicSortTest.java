@@ -49,7 +49,7 @@ public class CharacteristicSortTest {
         cl.add( a );
 
         CharacteristicValueObject vo = new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "b",
-                "bbbb", null, null, "bbbbb", "http://bbbb", "b",  null ) );
+                "bbbb", null, "bbbbb", "http://bbbb", "b",  null, null ) );
         vo.setNumTimesUsed( 5 );
         vo.setAlreadyPresentInDatabase( true );
         cl.add( vo );
