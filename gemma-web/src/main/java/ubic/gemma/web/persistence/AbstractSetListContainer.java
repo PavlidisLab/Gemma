@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import ubic.gemma.session.GemmaSessionBackedValueObject;
+import ubic.gemma.model.GemmaSessionBackedValueObject;
 
 /**
  * TODO Document Me

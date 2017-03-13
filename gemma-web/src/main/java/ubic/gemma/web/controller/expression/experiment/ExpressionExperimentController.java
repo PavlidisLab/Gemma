@@ -45,7 +45,7 @@ import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSearchService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
