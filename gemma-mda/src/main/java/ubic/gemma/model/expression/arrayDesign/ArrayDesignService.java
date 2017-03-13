@@ -118,7 +118,7 @@ public interface ArrayDesignService {
     Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    Integer getCompositeSequenceCount( ArrayDesign arrayDesign );
+    Long getCompositeSequenceCount( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> getCompositeSequences( ArrayDesign arrayDesign );

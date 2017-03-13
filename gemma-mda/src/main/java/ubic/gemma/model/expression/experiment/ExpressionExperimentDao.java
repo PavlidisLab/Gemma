@@ -66,6 +66,10 @@ public class ExpressionExperimentDao extends AbstractCuratableDao<ExpressionExpe
         this.entityImplName = "ExpressionExperimentImpl";
     }
 
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     @Override
     public ExpressionExperiment findOrCreate( ExpressionExperiment entity ) {
         if ( entity.getShortName() == null && entity.getName() == null && entity.getAccession() == null ) {

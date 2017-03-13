@@ -152,13 +152,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
-    protected Integer handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null )
-            throw new IllegalArgumentException( "Array design cannot be null" );
-        return this.getArrayDesignDao().numCompositeSequences( arrayDesign.getId() );
-    }
-
-    @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().getExpressionExperiments( arrayDesign );
     }
@@ -357,8 +350,20 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
+    protected long handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) {
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Array design cannot be null" );
+        return this.getArrayDesignDao().numCompositeSequences( arrayDesign.getId() );
+    }
+
+    @Override
     protected void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         this.getArrayDesignDao().remove( arrayDesign );
+    }
+
+    @Override
+    protected void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+        this.getArrayDesignDao().update( arrayDesign );
     }
 
     @Override
@@ -375,11 +380,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected ArrayDesign handleThawLite( ArrayDesign arrayDesign ) {
         return this.getArrayDesignDao().thawLite( arrayDesign );
-    }
-
-    @Override
-    protected void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        this.getArrayDesignDao().update( arrayDesign );
     }
 
     @Override

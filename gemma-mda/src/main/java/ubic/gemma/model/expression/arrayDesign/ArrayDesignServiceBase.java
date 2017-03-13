@@ -208,7 +208,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer getCompositeSequenceCount(
+    public Long getCompositeSequenceCount(
             final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleGetCompositeSequenceCount( arrayDesign );
@@ -744,7 +744,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      * Performs the core logic for
      * {@link #getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.lang.Integer handleGetCompositeSequenceCount(
+    protected abstract long handleGetCompositeSequenceCount(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**

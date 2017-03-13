@@ -53,6 +53,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     private static final int LOGGING_UPDATE_EVENT_COUNT = 5000;
 
+
     /* ********************************
      * Public methods
      * ********************************/
@@ -526,12 +527,6 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
     }
 
-    protected Collection<CompositeSequence> loadCompositeSequences( Long id ) {
-        final String queryString = "select cs from CompositeSequenceImpl as cs where cs.arrayDesign.id = :id";
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
-    }
-
     public Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids ) {
         // sanity check
         if ( ids == null || ids.size() == 0 ) {
@@ -642,7 +637,7 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
                 .setParameter( "ar", arrayDesign ).list().iterator().next();
     }
 
-    public Integer numCompositeSequences( Long id ) {
+    public long numCompositeSequences( Long id ) {
         final String queryString = "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "id", id ).list().iterator().next() ).intValue();
@@ -776,6 +771,18 @@ public class ArrayDesignDao extends AbstractCuratableDao<ArrayDesign> {
 
         return true;
     }
+
+
+    /* ********************************
+     * Protected methods
+     * ********************************/
+
+    protected Collection<CompositeSequence> loadCompositeSequences( Long id ) {
+        final String queryString = "select cs from CompositeSequenceImpl as cs where cs.arrayDesign.id = :id";
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
+    }
+
 
     /* ********************************
      * Private methods
