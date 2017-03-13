@@ -17,7 +17,7 @@
             <column name="ACTION" not-null="true"
                     sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
         </property>
-        <property access="field" generated="never" lazy="false" name="curationNote"
+        <property access="field" generated="never" lazy="false" name="note"
                   type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="NOTE" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
         </property>
