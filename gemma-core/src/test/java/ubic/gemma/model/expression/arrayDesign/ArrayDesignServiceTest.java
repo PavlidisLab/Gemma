@@ -358,8 +358,8 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
     @Test
     public void testNumCompositeSequencesArrayDesign() {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Integer actualValue = arrayDesignService.getCompositeSequenceCount( ad );
-        Integer expectedValue = 3;
+        Long actualValue = arrayDesignService.getCompositeSequenceCount( ad );
+        Long expectedValue = 3L;
         assertEquals( expectedValue, actualValue );
     }
 
