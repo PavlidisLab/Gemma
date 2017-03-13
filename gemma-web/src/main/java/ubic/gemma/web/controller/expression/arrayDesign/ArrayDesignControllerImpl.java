@@ -407,7 +407,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
      * Sets external references, design element count and express. experiment count on the given value object.
      */
     private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
-        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
+        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
 
         int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
