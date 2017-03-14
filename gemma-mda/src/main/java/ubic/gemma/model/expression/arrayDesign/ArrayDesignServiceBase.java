@@ -21,8 +21,6 @@ package ubic.gemma.model.expression.arrayDesign;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
@@ -43,24 +41,17 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
+    @Autowired
     private ArrayDesignDao arrayDesignDao;
 
-    private AuditEventDao auditEventDao;
-
-    public ArrayDesignServiceBase() {
-    }
-
     @Autowired
-    public ArrayDesignServiceBase( ArrayDesignDaoImpl arrayDesignDao, AuditEventDao auditEventDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-        this.auditEventDao = auditEventDao;
-    }
+    private AuditEventDao auditEventDao;
 
     public ArrayDesignDao getArrayDesignDao() {
         return this.arrayDesignDao;
     }
 
-    public void setArrayDesignDao( ArrayDesignDaoImpl arrayDesignDao ) {
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
     }
 
