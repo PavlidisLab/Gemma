@@ -240,7 +240,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
         List res = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct a from ArrayDesign a left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
-                        + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
+                        + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curation_details left join fetch a.externalReferences"
                         + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto left join fetch a.localFiles where a.id=:adid" )
                 .setParameter( "adid", arrayDesign.getId() ).list();
 
@@ -260,7 +260,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct a from ArrayDesign a " + "left join fetch a.subsumedArrayDesigns "
                         + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
-                        + " join fetch a.auditTrail trail join fetch trail.events join fetch a.status left join fetch a.externalReferences"
+                        + " join fetch a.auditTrail trail join fetch trail.events join fetch a.curation_details left join fetch a.externalReferences"
                         + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
                         + " left join fetch a.mergedInto left join fetch a.localFiles where a.id in (:adids)" )
                 .setParameter( "adids", EntityUtils.getIds( arrayDesigns ) ).list();

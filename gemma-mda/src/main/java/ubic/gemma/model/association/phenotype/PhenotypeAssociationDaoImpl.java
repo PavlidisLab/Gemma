@@ -161,7 +161,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             tpl.setMaxResults( 10000 );
         }
         return tpl.findByNamedParam(
-                "select p from PhenotypeAssociation as p fetch all properties  join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
+                "select p from PhenotypeAssociation as p fetch all properties join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
                 "name", externalDatabaseName );
 
     }
@@ -274,7 +274,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String sqlSelectQuery = "select distinct gene.ID as gid, gene.NCBI_GENE_ID, gene.OFFICIAL_NAME, "
                 + "gene.OFFICIAL_SYMBOL, tax.ID as taxonid, tax.COMMON_NAME, charac.VALUE_URI ";
 
-        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false, false );
+        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false);
 
         sqlQuery += addValuesUriToQuery( SecurityUtil.isUserAdmin() ? " where " : " and ", phenotypeUris );
 
@@ -434,7 +434,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Set<Long> ids = new HashSet<>();
 
         String sqlQuery = "select distinct phen.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false /* force */, true );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false);
 
         if ( !SecurityUtil.isUserAdmin() ) { // admins have no restrictions.
             if ( !sqlQuery.trim().endsWith( "where" ) ) {
@@ -483,7 +483,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
          * numbers. ACESID 4 is anonymous; MASK=1 is read.
          */
         String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true /* force */, false );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true);
         if ( !sqlQuery.trim().endsWith( "where" ) ) {
             sqlQuery += " and ";
         }
@@ -534,7 +534,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation ) {
 
         String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true /* force */, false );
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
 
         // rule to find public: anonymous, READ.
         if ( !sqlQuery.trim().endsWith( "where" ) ) {
@@ -551,7 +551,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         if ( showOnlyEditable ) {
             sqlQuery += "and phen.ID in ( select phen.ID ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false, false );
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false);
             if ( !sqlQuery.trim().endsWith( "where" ) ) {
                 sqlQuery += " and ";
             }
@@ -684,8 +684,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         HashMap<String, ExternalDatabaseStatisticsValueObject> externalDatabasesStatistics = new HashMap<String, ExternalDatabaseStatisticsValueObject>();
 
         List<Object[]> numEvidence = this.getHibernateTemplate()
-                .find( "select p.evidenceSource.externalDatabase, count (*), p.status.lastUpdateDate from PhenotypeAssociation "
-                        + "as p group by p.evidenceSource.externalDatabase order by p.status.lastUpdateDate desc" );
+                .find( "select p.evidenceSource.externalDatabase, count (*), p.curationDetails.lastUpdated from PhenotypeAssociation "
+                        + "as p group by p.evidenceSource.externalDatabase order by p.curationDetails.lastUpdated desc" );
 
         for ( Object[] o : numEvidence ) {
 
@@ -756,8 +756,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setMaxResults( 1 );
 
-        List<?> result = tpl.find( "select p.status.lastUpdateDate from PhenotypeAssociation as p "
-                + "where p.evidenceSource is null order by p.status.lastUpdateDate desc" );
+        List<?> result = tpl.find( "select p.lastUpdated from PhenotypeAssociation as p "
+                + "where p.evidenceSource is null order by p.lastUpdated desc" );
 
         Date lastUpdatedDate = null;
         if ( !result.isEmpty() ) {
@@ -896,14 +896,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * sid
      *
      */
-    private String getPhenotypesGenesAssociationsBeginQuery( boolean force, boolean addStatus ) {
+    private String getPhenotypesGenesAssociationsBeginQuery( boolean force) {
         String queryString = "";
 
         queryString += "from CHARACTERISTIC as charac ";
         queryString += "join PHENOTYPE_ASSOCIATION as phen on charac.PHENOTYPE_ASSOCIATION_FK = phen.ID ";
-        if ( addStatus ) {
-            queryString += "join STATUS as stat on stat.ID = phen.STATUS_FK "; // what good does this do?
-        }
         queryString += "join CHROMOSOME_FEATURE as gene on gene.id = phen.GENE_FK ";
         queryString += "join TAXON tax on tax.ID = gene.TAXON_FK ";
 

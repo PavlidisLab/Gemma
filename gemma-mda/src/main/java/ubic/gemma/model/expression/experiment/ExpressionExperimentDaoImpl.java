@@ -365,7 +365,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     public List<ExpressionExperiment> findByTaxon( Taxon taxon, Integer limit ) {
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
-                        + "inner join ba.sampleUsed as sample join ee.status s where sample.sourceTaxon = :taxon"
+                        + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
                         + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "taxon", taxon );
@@ -385,7 +385,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         Session s = this.getSessionFactory().getCurrentSession();
 
-        String queryString = "select e from ExpressionExperiment e join e.status s where e.id in (:ids) order by s.lastUpdateDate desc ";
+        String queryString = "select e from ExpressionExperiment e join e.curationDetails s where e.id in (:ids) order by s.lastUpdateDate desc ";
 
         Query q = s.createQuery( queryString );
         q.setParameterList( "ids", ids );
@@ -404,7 +404,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
         String queryString =
-                "select e from ExpressionExperiment e join e.status s order by s.lastUpdateDate " + ( limit < 0 ?
+                "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdateDate " + ( limit < 0 ?
                         "asc" :
                         "desc" );
         Query q = s.createQuery( queryString );
@@ -1075,7 +1075,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     @Override
     public Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments ) {
         final String queryString = "select ee.id, max(s.lastUpdateDate) from ExpressionExperiment as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed a join a.status s "
+                + "ee.bioAssays b inner join b.arrayDesignUsed a join a.curationDetails s "
                 + " where ee in (:ees) group by ee.id ";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -1097,7 +1097,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     public Date getLastArrayDesignUpdate( ExpressionExperiment ee ) {
 
         final String queryString = "select max(s.lastUpdateDate) from ExpressionExperiment as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed a join a.status s " + " where ee = :ee ";
+                + "ee.bioAssays b inner join b.arrayDesignUsed a join a.curationDetails s " + " where ee = :ee ";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
                 .list();
@@ -1603,29 +1603,29 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     private String getLoadValueObjectsQueryString( String idRestrictionClause, String orderByClause ) {
         String queryString = "select " + "ee.id as id, " // 0
                 + "ee.name, " // 1
-                + "ee.source, " // 4 -> 2
-                + "ee.shortName, " // 10  -> 3
-                + "ee.class, " // 12, 13  -> 4
-                + "ee.numberOfDataVectors, " // 20  -> 5
-                + "acc.accession, " // 5  -> 6
-                + "ED.name, " // 2  -> 7
-                + "ED.webUri, " // 3 -> 8
-                + "AD.status, " // 16 -> 9
+                + "ee.source, " // 2
+                + "ee.shortName, " // 3
+                + "ee.class, " // 14
+                + "ee.numberOfDataVectors, " // 5
+                + "acc.accession, " // 6
+                + "ED.name, " // 7
+                + "ED.webUri, " // 8
+                + "AD.curationDetails, " // 9
                 + "AD.technologyType, "// 10
-                + "taxon.commonName, " // 6 -> 11
-                + "taxon.id," // 7 -> 12
-                + "s.lastUpdated, " //13
-                + "s.troubled, "  //14
-                + "s.needsAttention, " //15
-                + "s.curationNote, "  //16
-                + "s.lastTroubledEvent, " //17
-                + "s.lastNeedsAttentionEvent, " //18
-                + "s.lastNoteEvent, "  //19
-                + "count(distinct BA), " // 8 -> 20
-                + "count(distinct AD), " // 9 -> 21
-                + "count(distinct SU), " // 19 -> 22
-                + "EDES.id,  " // 14 -> 23
-                + "ptax.id " // 21 -> 24
+                + "taxon.commonName, " // 11
+                + "taxon.id," // 12
+                + "s.lastUpdated, " // 13
+                + "s.troubled, "  // 14
+                + "s.needsAttention, " // 15
+                + "s.curationNote, "  // 16
+                + "s.lastTroubledEvent, " // 17
+                + "s.lastNeedsAttentionEvent, " // 18
+                + "s.lastNoteEvent, "  // 19
+                + "count(distinct BA), " // 20
+                + "count(distinct AD), " // 21
+                + "count(distinct SU), " // 22
+                + "EDES.id,  " // 23
+                + "ptax.id " // 24
                 + "from ExpressionExperiment as ee " + "inner join ee.bioAssays as BA  "
                 + "left join BA.sampleUsed as SU " + "left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon " + "left join ee.accession acc "
