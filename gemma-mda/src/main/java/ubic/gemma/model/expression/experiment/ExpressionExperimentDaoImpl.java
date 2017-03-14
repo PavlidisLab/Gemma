@@ -1620,7 +1620,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 + "s.curationNote, "  // 16
                 + "s.lastTroubledEvent, " // 17
                 + "s.lastNeedsAttentionEvent, " // 18
-                + "s.lastNoteEvent, "  // 19
+                + "s.lastNoteUpdateEvent, "  // 19
                 + "count(distinct BA), " // 20
                 + "count(distinct AD), " // 21
                 + "count(distinct SU), " // 22
