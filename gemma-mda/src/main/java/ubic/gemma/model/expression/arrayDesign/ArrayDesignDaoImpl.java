@@ -999,15 +999,15 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
                 + "ad.technologyType, " //3
                 + "ad.description, "  //4
                 + "m, " //5
-                + "s.lastUpdated" //6
+                + "s.lastUpdated " //6
                 + "s.troubled, "  //7
                 + "s.needsAttention, " //8
                 + "s.curationNote, "  //9
                 + "s.lastTroubledEvent, " //10
                 + "s.lastNeedsAttentionEvent, " //11
-                + "s.lastNoteUpdateEvent"  //12
-                + "t.commonName" //13
-                + " from ArrayDesign ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m";
+                + "s.lastNoteUpdateEvent "  //12
+                + "t.commonName " //13
+                + "from ArrayDesign ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m ";
     }
 
     /**
@@ -1068,8 +1068,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     private List thawBatchOfProbes( Collection<CompositeSequence> batch ) {
-        return ( List ) this.getSessionFactory().getCurrentSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select cs from CompositeSequenceImpl cs left join fetch cs.biologicalCharacteristic where cs in (:batch)" )
-                .setParameter( "batch", batch );
+                .setParameterList( "batch", batch ).list();
     }
 }
