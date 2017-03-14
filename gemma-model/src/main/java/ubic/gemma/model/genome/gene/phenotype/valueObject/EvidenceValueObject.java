@@ -126,7 +126,7 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
             this.phenotypeAssPubVO.add( phenotypeAss );
         }
 
-        this.lastUpdated = phenotypeAssociation.getLastUdpated().getTime();
+        this.lastUpdated = phenotypeAssociation.getLastUpdated().getTime();
         this.geneId = phenotypeAssociation.getGene().getId();
         this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId();
         this.geneOfficialSymbol = phenotypeAssociation.getGene().getOfficialSymbol();

@@ -1100,7 +1100,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // check for the race condition
-        if ( phenotypeAssociation.getLastUdpated().getTime() != modifedEvidenceValueObject.getLastUpdated() ) {
+        if ( phenotypeAssociation.getLastUpdated().getTime() != modifedEvidenceValueObject.getLastUpdated() ) {
             validateEvidenceValueObject = new ValidateEvidenceValueObject();
             validateEvidenceValueObject.setLastUpdateDifferent( true );
             return validateEvidenceValueObject;
@@ -1539,7 +1539,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
 
                 // check for the race condition
-                if ( phenotypeAssociation.getLastUdpated().getTime() != evidence.getLastUpdated() ) {
+                if ( phenotypeAssociation.getLastUpdated().getTime() != evidence.getLastUpdated() ) {
                     validateEvidenceValueObject = new ValidateEvidenceValueObject();
                     validateEvidenceValueObject.setLastUpdateDifferent( true );
                     return validateEvidenceValueObject;

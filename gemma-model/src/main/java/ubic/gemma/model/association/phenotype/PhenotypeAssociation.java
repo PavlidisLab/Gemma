@@ -66,7 +66,7 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
 
     private String relationship; // information for a gene-disease relationship
 
-    private Date lastUdpated;
+    private Date lastUpdated;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -216,11 +216,11 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
         this.relationship = relationship;
     }
 
-    public Date getLastUdpated() {
-        return lastUdpated;
+    public Date getLastUpdated() {
+        return lastUpdated;
     }
 
-    public void setLastUdpated( Date lastUdpated ) {
-        this.lastUdpated = lastUdpated;
+    public void setLastUpdated( Date lastUpdated ) {
+        this.lastUpdated = lastUpdated;
     }
 }
