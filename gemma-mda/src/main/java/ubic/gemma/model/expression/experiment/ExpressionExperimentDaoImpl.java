@@ -1612,15 +1612,15 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 + "ED.webUri, " // 3 -> 8
                 + "AD.status, " // 16 -> 9
                 + "AD.technologyType, "// 10
-                + "taxon.commonName," // 6 -> 11
+                + "taxon.commonName, " // 6 -> 11
                 + "taxon.id," // 7 -> 12
-                + "s.lastUpdated" //13
+                + "s.lastUpdated, " //13
                 + "s.troubled, "  //14
                 + "s.needsAttention, " //15
                 + "s.curationNote, "  //16
                 + "s.lastTroubledEvent, " //17
                 + "s.lastNeedsAttentionEvent, " //18
-                + "s.lastNoteEvent"  //19
+                + "s.lastNoteEvent, "  //19
                 + "count(distinct BA), " // 8 -> 20
                 + "count(distinct AD), " // 9 -> 21
                 + "count(distinct SU), " // 19 -> 22
