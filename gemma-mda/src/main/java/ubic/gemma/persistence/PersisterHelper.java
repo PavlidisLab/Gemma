@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -51,25 +50,12 @@ public class PersisterHelper extends RelationshipPersister {
     @Override
     @Transactional
     public Object persist( Object entity ) {
-
         try {
 
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
-            if ( entity instanceof Auditable ) {
-                Auditable auditable = ( Auditable ) entity;
-
-                if ( auditable.getAuditTrail() == null )
-                    auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
-
-                auditable.setAuditTrail( persistAuditTrail( auditable.getAuditTrail() ) );
-
-                if ( entity instanceof Curatable ) {
-                    Curatable curatable = ( Curatable ) entity;
-                    if ( curatable.getCurationDetails() == null ) {
-                        this.initializeCurationDetails( curatable );
-                    }
-                }
+            if ( entity instanceof Curatable ) {
+                this.initializeCurationDetails( ( Curatable ) entity );
             }
 
             return super.persist( entity );
@@ -78,10 +64,11 @@ public class PersisterHelper extends RelationshipPersister {
         }
     }
 
-    private void initializeCurationDetails( Curatable d ) {
-        CurationDetails cd = this.curationDetailsDao.create();
-        d.setCurationDetails( cd );
-        this.getHibernateTemplate().update( d );
+    private void initializeCurationDetails( Curatable curatable ) {
+        if ( curatable.getCurationDetails() == null ) {
+            CurationDetails cd = this.curationDetailsDao.create();
+            curatable.setCurationDetails( cd );
+        }
     }
 
 }
