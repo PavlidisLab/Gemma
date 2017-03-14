@@ -62,7 +62,6 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
         this.entityName = "ArrayDesign";
-        this.entityName = "ArrayDeignImpl";
     }
 
     @Override
