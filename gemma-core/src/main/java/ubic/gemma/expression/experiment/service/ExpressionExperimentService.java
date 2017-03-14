@@ -93,9 +93,6 @@ public interface ExpressionExperimentService {
      */
     Collection<Long> filter( String searchString );
 
-    /**
-     *
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 

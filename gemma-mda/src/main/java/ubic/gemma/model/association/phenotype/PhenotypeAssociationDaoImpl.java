@@ -48,14 +48,14 @@ import java.util.*;
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
-
+    private static final String QUERY_EV_CODE = " and phen.EVIDENCE_CODE != 'IEA'";
     private static final String DISCRIMINATOR_CLAUSE =
             "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
                     + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
                     + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
                     + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
 
-    private static Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
+    private static final Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
 
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
@@ -63,7 +63,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    public void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
+    private void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
         if ( SecurityUtil.isUserAnonymous() ) {
             return;
         }
@@ -274,7 +274,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String sqlSelectQuery = "select distinct gene.ID as gid, gene.NCBI_GENE_ID, gene.OFFICIAL_NAME, "
                 + "gene.OFFICIAL_SYMBOL, tax.ID as taxonid, tax.COMMON_NAME, charac.VALUE_URI ";
 
-        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false);
+        String sqlQuery = sqlSelectQuery + getPhenotypesGenesAssociationsBeginQuery( false );
 
         sqlQuery += addValuesUriToQuery( SecurityUtil.isUserAdmin() ? " where " : " and ", phenotypeUris );
 
@@ -434,7 +434,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Set<Long> ids = new HashSet<>();
 
         String sqlQuery = "select distinct phen.ID ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false);
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
 
         if ( !SecurityUtil.isUserAdmin() ) { // admins have no restrictions.
             if ( !sqlQuery.trim().endsWith( "where" ) ) {
@@ -483,7 +483,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
          * numbers. ACESID 4 is anonymous; MASK=1 is read.
          */
         String sqlQuery = "select gene.NCBI_GENE_ID, charac.VALUE_URI ";
-        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true);
+        sqlQuery += getPhenotypesGenesAssociationsBeginQuery( true );
         if ( !sqlQuery.trim().endsWith( "where" ) ) {
             sqlQuery += " and ";
         }
@@ -502,7 +502,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
         if ( noElectronicAnnotation ) {
-            sqlQuery += addNoIEAEvidenceCodeQuery();
+            sqlQuery += QUERY_EV_CODE;
         }
 
         SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
@@ -546,12 +546,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addExternalDatabaseQuery( "and", externalDatabaseIds );
 
         if ( noElectronicAnnotation ) {
-            sqlQuery += addNoIEAEvidenceCodeQuery();
+            sqlQuery += QUERY_EV_CODE;
         }
 
         if ( showOnlyEditable ) {
             sqlQuery += "and phen.ID in ( select phen.ID ";
-            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false);
+            sqlQuery += getPhenotypesGenesAssociationsBeginQuery( false );
             if ( !sqlQuery.trim().endsWith( "where" ) ) {
                 sqlQuery += " and ";
             }
@@ -783,7 +783,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 phenotypeAssociationPublicationId );
     }
 
-
     private String addExternalDatabaseQuery( String keyWord, Collection<Long> externalDatabaseIds ) {
 
         String externalDatabaseSqlQuery = "";
@@ -864,11 +863,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         return sqlQuery;
     }
 
-    private String addNoIEAEvidenceCodeQuery() {
-        return " and phen.EVIDENCE_CODE != 'IEA'";
-    }
-
-
     private String addTaxonToQuery( String keyWord, Taxon taxon ) {
         String taxonSqlQuery = "";
         if ( taxon != null && taxon.getId() != null && !taxon.getId().equals( 0 ) ) {
@@ -880,7 +874,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /**
      * Add IN clause for contstraint on valueuris.
      *
-     * @param keyWord   either 'and' or '' depending on whether this is the first clause...
+     * @param keyWord either 'and' or '' depending on whether this is the first clause...
      */
     private String addValuesUriToQuery( String keyWord, Set<String> valuesUris ) {
 
@@ -894,9 +888,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /**
      * basic sql command to deal with security; adds the where clause; delcare aliases charac, phen and gene; ace, aoi,
      * sid
-     *
      */
-    private String getPhenotypesGenesAssociationsBeginQuery( boolean force) {
+    private String getPhenotypesGenesAssociationsBeginQuery( boolean force ) {
         String queryString = "";
 
         queryString += "from CHARACTERISTIC as charac ";
@@ -921,7 +914,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /**
      * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
-     *
      */
     private Map<String, Set<Integer>> populateGenesAssociations( SQLQuery queryObject ) {
         Map<String, Set<Integer>> phenotypesGenesAssociations = new HashMap<>();
@@ -945,7 +937,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /**
      * execute sqlQuery and populate phenotypesGenesAssociations is : phenotype --> genes
-     *
      */
     private Collection<GeneEvidenceValueObject> populateGenesWithPhenotypes( SQLQuery queryObject ) {
         StopWatch sw = new StopWatch();
