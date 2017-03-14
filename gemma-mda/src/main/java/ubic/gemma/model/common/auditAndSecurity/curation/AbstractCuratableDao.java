@@ -186,9 +186,11 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
         //noinspection unchecked
         Collection<T> results = this.findByParam( "shortName", name );
 
-        if ( results.size() != 1 ) {
+        if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    MULTIPLE_FOUND_ERR_MSG + "for shortName: " + name );
+                    MULTIPLE_FOUND_ERR_MSG + " for shortName: " + name );
+        }else if (results.size() < 1){
+            return null;
         }
         return results.iterator().next();
     }
