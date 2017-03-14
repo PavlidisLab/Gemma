@@ -70,7 +70,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
 
         if ( entity.getCurationDetails() == null ) {
             CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( getSessionFactory() );
-            entity.setCurationDetails( curationDetailsDao.create( entity.getAuditTrail().getCreationEvent() ) );
+            entity.setCurationDetails( curationDetailsDao.create() );
         }
 
         return entity;

@@ -12,7 +12,7 @@ public interface CurationDetailsDao extends InitializingBean, BaseDao<CurationDe
     @Override
     CurationDetails load( Long id );
 
-    CurationDetails create( AuditEvent createdEvent );
+    CurationDetails create();
 
     void update( Curatable curatable, AuditEvent auditEvent );
 }

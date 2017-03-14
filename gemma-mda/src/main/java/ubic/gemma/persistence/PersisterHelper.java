@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
@@ -68,7 +67,7 @@ public class PersisterHelper extends RelationshipPersister {
                 if ( entity instanceof Curatable ) {
                     Curatable curatable = ( Curatable ) entity;
                     if ( curatable.getCurationDetails() == null ) {
-                        this.initializeCurationDetails( curatable, curatable.getAuditTrail().getCreationEvent() );
+                        this.initializeCurationDetails( curatable );
                     }
                 }
             }
@@ -79,8 +78,8 @@ public class PersisterHelper extends RelationshipPersister {
         }
     }
 
-    private void initializeCurationDetails( Curatable d, AuditEvent createdEvent ) {
-        CurationDetails cd = this.curationDetailsDao.create( createdEvent );
+    private void initializeCurationDetails( Curatable d ) {
+        CurationDetails cd = this.curationDetailsDao.create();
         d.setCurationDetails( cd );
         this.getHibernateTemplate().update( d );
     }

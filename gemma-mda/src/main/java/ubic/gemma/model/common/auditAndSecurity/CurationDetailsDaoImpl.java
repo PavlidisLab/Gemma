@@ -27,6 +27,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 import ubic.gemma.persistence.AbstractDao;
 
+import java.util.Date;
+
 /**
  * Data access object for Curation Details
  *
@@ -72,12 +74,11 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
     /**
      * Creates new CurationDetails object and persists it.
      *
-     * @param createdEvent the creation event of the Curatable object these details will be attached to.
      * @return the newly created CurationDetails object.
      */
     @Override
-    public CurationDetails create( AuditEvent createdEvent ) {
-        CurationDetails cd = new CurationDetails( createdEvent.getDate(), null, false, null, false, null, null );
+    public CurationDetails create() {
+        CurationDetails cd = new CurationDetails( new Date(), null, false, null, false, null, null );
         return this.create( cd );
     }
 
