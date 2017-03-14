@@ -7,6 +7,8 @@ import ubic.gemma.persistence.BaseDao;
 
 /**
  * Created by tesarst on 13/03/17.
+ *
+ * Interface extracted from CurationDetailsDaoImpl to satisfy spring autowiring requirements.
  */
 public interface CurationDetailsDao extends InitializingBean, BaseDao<CurationDetails> {
     @Override

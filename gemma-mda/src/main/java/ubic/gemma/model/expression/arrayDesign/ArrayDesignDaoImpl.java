@@ -25,7 +25,6 @@ import org.hibernate.*;
 import org.hibernate.collection.PersistentCollection;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableDao;
@@ -70,7 +69,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
         Criteria query = super.getSessionFactory().getCurrentSession().createCriteria( ArrayDesign.class );
         BusinessKey.addRestrictions( query, entity );
 
-        return this.find( query.list(), entity.getName() );
+        return this.findByName( query.list(), entity.getName() );
 
     }
 
@@ -135,7 +134,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
 
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "arrayDesign", entity );
-        return this.find( query.list(), entity.getName() );
+        return this.findByName( query.list(), entity.getName() );
 
     }
 
@@ -831,15 +830,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
      * Private methods
      * ********************************/
 
-    private ArrayDesign find( List resultList, String name ) {
+    private ArrayDesign findByName( List resultList, String name ) {
         //noinspection unchecked
         HashSet<ArrayDesign> results = new HashSet<>( resultList );
-
-        if ( results.size() != 1 ) {
-            throw new InvalidDataAccessResourceUsageException(
-                    MULTIPLE_FOUND_ERR_MSG + " for ArrayDesign name: " + name );
-        }
-        return results.iterator().next();
+        return this.checkAndReturn( results, "name", name );
     }
 
     private void putIdsInList( Map<Long, Boolean> eventMap, List<Object[]> list ) {

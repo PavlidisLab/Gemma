@@ -11,7 +11,6 @@ import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDaoImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.BaseDao;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -185,14 +184,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
     public T findByShortName( final String name ) {
         //noinspection unchecked
         Collection<T> results = this.findByParam( "shortName", name );
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    MULTIPLE_FOUND_ERR_MSG + " for shortName: " + name );
-        }else if (results.size() < 1){
-            return null;
-        }
-        return results.iterator().next();
+        return this.checkAndReturn( results, "shortName", name );
     }
 
     public T findOrCreate( T entity ) {
@@ -218,6 +210,16 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
             events.add( event );
             eventMap.put( id, events );
         }
+    }
+
+    protected T checkAndReturn( Collection<T> results, String err_arg, String err_val ) {
+        if ( results.size() > 1 ) {
+            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                    MULTIPLE_FOUND_ERR_MSG + " for " + err_arg + ": " + err_val );
+        } else if ( results.size() < 1 ) {
+            return null;
+        }
+        return results.iterator().next();
     }
 
     /* ********************************
