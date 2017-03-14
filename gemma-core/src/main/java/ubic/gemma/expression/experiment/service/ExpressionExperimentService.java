@@ -87,14 +87,6 @@ public interface ExpressionExperimentService {
     void delete( ExpressionExperiment expressionExperiment );
 
     /**
-     * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
-     * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
-     * will not be deleted automatically, though this behavior could be changed) Security handled with a check inside
-     * the method.
-     */
-    void delete( Long id );
-
-    /**
      * returns ids of search results
      *
      * @return collection of ids or an empty collection

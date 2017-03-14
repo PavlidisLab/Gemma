@@ -245,25 +245,14 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         if ( expressionExperiment == null || expressionExperiment.getId() == null ) {
             throw new IllegalArgumentException( "Experiment is null or had null id" );
         }
-        delete( expressionExperiment.getId() );
-    }
 
-    /**
-     * @see ExpressionExperimentService#delete(ExpressionExperiment)
-     */
-    @Override
-    @Transactional
-    public void delete( final Long id ) {
-
-        final ExpressionExperiment ee = this.load( id );
-        if ( securityService.isEditable( ee ) ) {
-            this.handleDelete( ee );
+        if ( securityService.isEditable( expressionExperiment ) ) {
+            this.handleDelete( expressionExperiment );
         } else {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );
         }
-
     }
 
     /**

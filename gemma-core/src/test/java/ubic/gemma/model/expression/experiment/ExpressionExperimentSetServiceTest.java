@@ -111,9 +111,9 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     public void tearDown() {
 
         // delete by id because otherwise get HibernateException: reassociated object has dirty collection reference
-        expressionExperimentService.delete( ee1.getId() );
-        expressionExperimentService.delete( ee2.getId() );
-        expressionExperimentService.delete( eeMouse.getId() );
+        expressionExperimentService.delete( ee1 );
+        expressionExperimentService.delete( ee2);
+        expressionExperimentService.delete( eeMouse );
 
         // getting "access is denied" error here, even with this.runAsAdmin()
         // expressionExperimentSetService.delete( eeSet );

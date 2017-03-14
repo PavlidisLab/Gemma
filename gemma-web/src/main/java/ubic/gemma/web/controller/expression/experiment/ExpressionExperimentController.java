@@ -1863,7 +1863,8 @@ public class ExpressionExperimentController {
 
         @Override
         public TaskResult execute() {
-            expressionExperimentService.delete( taskCommand.getEntityId() );
+            ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
+            expressionExperimentService.delete( ee );
 
             return new TaskResult( taskCommand, new ModelAndView(
                     new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
