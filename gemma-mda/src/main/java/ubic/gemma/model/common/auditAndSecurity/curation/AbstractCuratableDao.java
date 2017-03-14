@@ -26,7 +26,7 @@ import java.util.Map;
  *
  * @author tesarst
  */
-public abstract class AbstractCuratableDao<T extends Curatable> extends HibernateDaoSupport implements BaseDao<T> {
+public abstract class AbstractCuratableDao<T extends Curatable> extends HibernateDaoSupport implements CuratableDao<T> {
 
     protected static final Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
     protected static final String ARG_NULL_ERR_MSG = "Argument can not be null";

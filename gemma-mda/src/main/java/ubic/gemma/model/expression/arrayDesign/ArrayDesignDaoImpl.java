@@ -821,7 +821,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
      * Protected methods
      * ********************************/
 
-    protected Collection<CompositeSequence> loadCompositeSequences( Long id ) {
+    public Collection<CompositeSequence> loadCompositeSequences( Long id ) {
         final String queryString = "select cs from CompositeSequenceImpl as cs where cs.arrayDesign.id = :id";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();

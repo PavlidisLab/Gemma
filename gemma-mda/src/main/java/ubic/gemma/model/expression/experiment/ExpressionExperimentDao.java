@@ -3,6 +3,7 @@ package ubic.gemma.model.expression.experiment;
 import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -14,7 +15,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.BaseDao;
 
 import java.util.Collection;
 import java.util.Date;
@@ -26,18 +26,7 @@ import java.util.Map;
  *
  * @author tesarst
  */
-public interface ExpressionExperimentDao extends InitializingBean, BaseDao<ExpressionExperiment> {
-
-    ExpressionExperiment findOrCreate( ExpressionExperiment entity );
-
-    @Override
-    void remove( ExpressionExperiment toDelete );
-
-    Integer countAll();
-
-    Collection<ExpressionExperiment> load( Collection<Long> ids );
-
-    Collection<ExpressionExperiment> loadAll();
+public interface ExpressionExperimentDao extends InitializingBean, CuratableDao<ExpressionExperiment> {
 
     Collection<ExpressionExperiment> findByInvestigator( Contact investigator );
 
@@ -57,10 +46,6 @@ public interface ExpressionExperimentDao extends InitializingBean, BaseDao<Expre
             Collection<Long> ids );
 
     ExpressionExperiment find( ExpressionExperiment entity );
-
-    Collection<ExpressionExperiment> findByName( String name );
-
-    ExpressionExperiment findByShortName( String name );
 
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 

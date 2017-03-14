@@ -2,13 +2,13 @@ package ubic.gemma.model.expression.arrayDesign;
 
 import org.springframework.beans.factory.InitializingBean;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.BaseDao;
 
 import java.util.Collection;
 import java.util.Map;
@@ -16,21 +16,14 @@ import java.util.Map;
 /**
  * Created by tesarst on 13/03/17.
  */
-public interface ArrayDesignDao extends InitializingBean, BaseDao<ArrayDesign> {
+public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign> {
     ArrayDesign find( ArrayDesign entity );
 
     Map<Taxon, Long> getPerTaxonCount();
 
-    @Override
-    void remove( ArrayDesign arrayDesign );
-
     void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
     ArrayDesign find( String queryString, ArrayDesign entity );
-
-    Collection<ArrayDesign> findByName(String name);
-
-    ArrayDesign findByShortName(String name);
 
     Collection<ArrayDesign> findByManufacturer( String queryString );
 
@@ -79,6 +72,8 @@ public interface ArrayDesignDao extends InitializingBean, BaseDao<ArrayDesign> {
     Collection<ArrayDesignValueObject> loadAllValueObjects();
 
     Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
+
+    Collection<CompositeSequence> loadCompositeSequences( Long id );
 
     long numAllCompositeSequenceWithBioSequences();
 

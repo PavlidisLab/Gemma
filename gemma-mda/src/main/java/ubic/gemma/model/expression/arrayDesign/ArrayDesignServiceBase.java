@@ -39,12 +39,11 @@ import java.util.Collection;
  *
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
-@Scope( proxyMode = ScopedProxyMode.TARGET_CLASS )
 public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
     protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
-    private ArrayDesignDaoImpl arrayDesignDao;
+    private ArrayDesignDao arrayDesignDao;
 
     private AuditEventDao auditEventDao;
 
@@ -57,7 +56,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
         this.auditEventDao = auditEventDao;
     }
 
-    public ArrayDesignDaoImpl getArrayDesignDao() {
+    public ArrayDesignDao getArrayDesignDao() {
         return this.arrayDesignDao;
     }
 
