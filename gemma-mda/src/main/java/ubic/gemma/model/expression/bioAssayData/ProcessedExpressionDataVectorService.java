@@ -31,137 +31,90 @@ import ubic.gemma.model.genome.Gene;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public interface ProcessedExpressionDataVectorService {
 
-    /**
-     * @param ee
-     * @param vecs
-     * @return
-     */
     @Secured({ "GROUP_USER" })
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs );
 
     @Secured({ "GROUP_ADMIN" })
-    public void clearCache();
+    void clearCache();
 
     /**
      * Populate the processed data for the given experiment. For two-channel studies, the missing value information
      * should already have been computed.
-     * 
-     * @param expressionExperiment
+     *
      * @return updated expressionExperiment
      */
     @Secured({ "GROUP_USER" })
-    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
      * @param bioassaySets - expressionExperiments or expressionExperimentSubSets
-     * @param genes
      * @return vectors, which will be subsetted if the bioassayset is a subset.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( Collection<? extends BioAssaySet> bioassaySets,
             Collection<Long> genes );
 
     /**
      * Note: currently only used in tests
-     * 
-     * @param expressionExperiment
-     * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment expressionExperiment );
 
     /**
-     * @param expressionExperiments
      * @param limit (null limit = default hibernate limit).
-     * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit );
+    Collection<DoubleVectorValueObject> getProcessedDataArrays( ExpressionExperiment ee, int limit );
 
     /**
      * Retrieves DEDV's by probes and experiments
-     * 
-     * @param expressionExperiments
-     * @param compositeSequences
-     * @param fullMap
-     * @return DVVOs
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
+    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences );
 
-    /**
-     * @param analyzedSet
-     * @param probes
-     * @return
-     */
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
+    Collection<DoubleVectorValueObject> getProcessedDataArraysByProbeIds( BioAssaySet analyzedSet,
             Collection<Long> probes );
 
-    /**
-     * @param expressionExperiment
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
+    Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
-    /**
-     * @param expressionExperiments
-     * @param genes
-     * @param method
-     * @return
-     */
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_AFTER_MAP_READ", "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
+    Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method );
 
-    /**
-     * @param expressionExperiment
-     * @param genes
-     * @param method
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
+    Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );
 
-    /**
-     * @param expressionExperiment
-     * @param method
-     * @return
-     */
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
+    Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
     /**
      * Retrieve expression level information for genes in experiments.
-     * 
-     * @param expressionExperiments
-     * @param genes
      * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
+    Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
+    void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
 
-    /**
-     * @param vectors
-     */
-    public void thaw( Collection<ProcessedExpressionDataVector> vectors );
+    void thaw( Collection<ProcessedExpressionDataVector> vectors );
 
     /**
      * Updates a collection of ProcessedExpressionDataVectors
      */
     @Secured({ "GROUP_USER" })
-    public void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
+    void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
 
 }
