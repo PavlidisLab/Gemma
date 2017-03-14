@@ -42,25 +42,13 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
     @Autowired
-    private ArrayDesignDao arrayDesignDao;
+    protected ArrayDesignDao arrayDesignDao;
 
     @Autowired
-    private AuditEventDao auditEventDao;
-
-    public ArrayDesignDao getArrayDesignDao() {
-        return this.arrayDesignDao;
-    }
+    protected AuditEventDao auditEventDao;
 
     public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
         this.arrayDesignDao = arrayDesignDao;
-    }
-
-    public AuditEventDao getAuditEventDao() {
-        return auditEventDao;
-    }
-
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
     }
 
     /**

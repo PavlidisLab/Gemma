@@ -60,7 +60,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     @Autowired
     public ArrayDesignDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
-        this.entityName = "ArrayDesign";
+        this.entityName = ArrayDesign.class.getName();
     }
 
     @Override
@@ -999,13 +999,13 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
                 + "ad.technologyType, " //3
                 + "ad.description, "  //4
                 + "m, " //5
-                + "s.lastUpdated " //6
+                + "s.lastUpdated, " //6
                 + "s.troubled, "  //7
                 + "s.needsAttention, " //8
                 + "s.curationNote, "  //9
                 + "s.lastTroubledEvent, " //10
                 + "s.lastNeedsAttentionEvent, " //11
-                + "s.lastNoteUpdateEvent "  //12
+                + "s.lastNoteUpdateEvent, "  //12
                 + "t.commonName " //13
                 + "from ArrayDesign ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m ";
     }

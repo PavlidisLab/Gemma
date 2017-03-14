@@ -9,6 +9,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDaoImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.model.genome.Taxon;
 
@@ -30,7 +31,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
     protected static final Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
     protected static final String ARG_NULL_ERR_MSG = "Argument can not be null";
     protected static final String MULTIPLE_FOUND_ERR_MSG = "Multiple entities found";
-    protected String entityName = "ArrayDesign";
+    protected String entityName;
 
     /* ********************************
      * Abstract methods

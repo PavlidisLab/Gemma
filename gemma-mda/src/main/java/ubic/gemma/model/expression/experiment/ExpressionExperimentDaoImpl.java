@@ -63,8 +63,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
-        this.entityName = "ExpressionExperiment";
-        this.entityName = "ExpressionExperiment";
+        this.entityName = ExpressionExperiment.class.getName();
     }
 
     /* ********************************

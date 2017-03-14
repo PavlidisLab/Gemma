@@ -40,78 +40,78 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     @Transactional
     public void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes ) {
-        this.getArrayDesignDao().addProbes( arrayDesign, newProbes );
+        this.arrayDesignDao.addProbes( arrayDesign, newProbes );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByManufacturer( String searchString ) {
-        return this.getArrayDesignDao().findByManufacturer( searchString );
+        return this.arrayDesignDao.findByManufacturer( searchString );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
-        return this.getArrayDesignDao().findByTaxon( taxon );
+        return this.arrayDesignDao.findByTaxon( taxon );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<CompositeSequence, Collection<BlatResult>> getAlignments( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().loadAlignments( arrayDesign );
+        return this.arrayDesignDao.loadAlignments( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<CompositeSequence, BioSequence> getBioSequences( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().getBioSequences( arrayDesign );
+        return this.arrayDesignDao.getBioSequences( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Taxon, Long> getPerTaxonCount() {
-        return this.getArrayDesignDao().getPerTaxonCount();
+        return this.arrayDesignDao.getPerTaxonCount();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        return this.getArrayDesignDao().thawLite( arrayDesigns );
+        return this.arrayDesignDao.thawLite( arrayDesigns );
     }
 
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().compositeSequenceWithoutBioSequences( arrayDesign );
+        return this.arrayDesignDao.compositeSequenceWithoutBioSequences( arrayDesign );
     }
 
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().compositeSequenceWithoutBlatResults( arrayDesign );
+        return this.arrayDesignDao.compositeSequenceWithoutBlatResults( arrayDesign );
     }
 
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().compositeSequenceWithoutGenes( arrayDesign );
+        return this.arrayDesignDao.compositeSequenceWithoutGenes( arrayDesign );
     }
 
     @Override
     protected Integer handleCountAll() {
-        return this.getArrayDesignDao().countAll();
+        return this.arrayDesignDao.countAll();
     }
 
     @Override
     protected ArrayDesign handleCreate( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().create( arrayDesign );
+        return this.arrayDesignDao.create( arrayDesign );
     }
 
     @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) {
-        this.getArrayDesignDao().deleteAlignmentData( arrayDesign );
+        this.arrayDesignDao.deleteAlignmentData( arrayDesign );
     }
 
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
-        this.getArrayDesignDao().deleteGeneProductAssociations( arrayDesign );
+        this.arrayDesignDao.deleteGeneProductAssociations( arrayDesign );
     }
 
     /**
@@ -119,12 +119,12 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
      */
     @Override
     protected ArrayDesign handleFind( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().find( arrayDesign );
+        return this.arrayDesignDao.find( arrayDesign );
     }
 
     @Override
     protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) {
-        return this.getArrayDesignDao().findByAlternateName( queryString );
+        return this.arrayDesignDao.findByAlternateName( queryString );
     }
 
     /**
@@ -132,39 +132,39 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
      */
     @Override
     protected Collection<ArrayDesign> handleFindByName( String name ) {
-        return this.getArrayDesignDao().findByName( name );
+        return this.arrayDesignDao.findByName( name );
     }
 
     @Override
     protected ArrayDesign handleFindByShortName( String shortName ) {
-        return this.getArrayDesignDao().findByShortName( shortName );
+        return this.arrayDesignDao.findByShortName( shortName );
     }
 
     @Override
     protected ArrayDesign handleFindOrCreate( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().findOrCreate( arrayDesign );
+        return this.arrayDesignDao.findOrCreate( arrayDesign );
     }
 
     @Override
     protected java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id ) {
-        return this.getArrayDesignDao().getAllAssociatedBioAssays( id );
+        return this.arrayDesignDao.getAllAssociatedBioAssays( id );
 
     }
 
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().getExpressionExperiments( arrayDesign );
+        return this.arrayDesignDao.getExpressionExperiments( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
     public int numExperiments( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numExperiments( arrayDesign );
+        return this.arrayDesignDao.numExperiments( arrayDesign );
     }
 
     @Override
     protected Map<Long, AuditEvent> handleGetLastAnnotationFile( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
 
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not AnnotationFile events
@@ -176,7 +176,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Map<Long, AuditEvent> handleGetLastGeneMapping( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignGeneMappingEvent.class;
@@ -186,7 +186,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Map<Long, AuditEvent> handleGetLastRepeatAnalysis( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
@@ -197,7 +197,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceAnalysis( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
@@ -208,7 +208,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceUpdate( Collection<Long> ids ) {
-        Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
+        Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         // remove all AuditEvents that are not Sequence update events
         Set<Long> aaIds = eventMap.keySet();
@@ -219,177 +219,177 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     protected Collection<Taxon> handleGetTaxa( java.lang.Long id ) {
-        return this.getArrayDesignDao().getTaxa( id );
+        return this.arrayDesignDao.getTaxa( id );
     }
 
     @Override
     protected Taxon handleGetTaxon( java.lang.Long id ) {
-        return this.getArrayDesignDao().load( id ).getPrimaryTaxon();
+        return this.arrayDesignDao.load( id ).getPrimaryTaxon();
     }
 
     @Override
     protected Map<Long, Boolean> handleIsMerged( Collection<Long> ids ) {
-        return this.getArrayDesignDao().isMerged( ids );
+        return this.arrayDesignDao.isMerged( ids );
     }
 
     @Override
     protected Map<Long, Boolean> handleIsMergee( Collection<Long> ids ) {
-        return this.getArrayDesignDao().isMergee( ids );
+        return this.arrayDesignDao.isMergee( ids );
     }
 
     @Override
     protected Map<Long, Boolean> handleIsSubsumed( Collection<Long> ids ) {
-        return this.getArrayDesignDao().isSubsumed( ids );
+        return this.arrayDesignDao.isSubsumed( ids );
     }
 
     @Override
     protected Map<Long, Boolean> handleIsSubsumer( Collection<Long> ids ) {
-        return this.getArrayDesignDao().isSubsumer( ids );
+        return this.arrayDesignDao.isSubsumer( ids );
     }
 
     @Override
     protected ArrayDesign handleLoad( long id ) {
-        return this.getArrayDesignDao().load( id );
+        return this.arrayDesignDao.load( id );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ArrayDesign> handleLoadAll() {
-        return this.getArrayDesignDao().loadAll();
+        return this.arrayDesignDao.loadAll();
     }
 
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() {
-        return this.getArrayDesignDao().loadAllValueObjects();
+        return this.arrayDesignDao.loadAllValueObjects();
     }
 
     @Override
     protected Collection<CompositeSequence> handleLoadCompositeSequences( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
+        return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId() );
     }
 
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) {
-        return this.getArrayDesignDao().load( ids );
+        return this.arrayDesignDao.load( ids );
     }
 
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) {
-        return this.getArrayDesignDao().loadValueObjects( ids );
+        return this.arrayDesignDao.loadValueObjects( ids );
     }
 
     @Override
     protected long handleNumAllCompositeSequenceWithBioSequences() {
-        return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences();
+        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences();
     }
 
     @Override
     protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
-        return this.getArrayDesignDao().numAllCompositeSequenceWithBioSequences( ids );
+        return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences( ids );
     }
 
     @Override
     protected long handleNumAllCompositeSequenceWithBlatResults() {
-        return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults();
+        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults();
     }
 
     @Override
     protected long handleNumAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
-        return this.getArrayDesignDao().numAllCompositeSequenceWithBlatResults( ids );
+        return this.arrayDesignDao.numAllCompositeSequenceWithBlatResults( ids );
     }
 
     @Override
     protected long handleNumAllCompositeSequenceWithGenes() {
-        return this.getArrayDesignDao().numAllCompositeSequenceWithGenes();
+        return this.arrayDesignDao.numAllCompositeSequenceWithGenes();
     }
 
     @Override
     protected long handleNumAllCompositeSequenceWithGenes( Collection<Long> ids ) {
-        return this.getArrayDesignDao().numAllCompositeSequenceWithGenes( ids );
+        return this.arrayDesignDao.numAllCompositeSequenceWithGenes( ids );
     }
 
     @Override
     protected long handleNumAllGenes() {
-        return this.getArrayDesignDao().numAllGenes();
+        return this.arrayDesignDao.numAllGenes();
     }
 
     @Override
     protected long handleNumAllGenes( Collection<Long> ids ) {
-        return this.getArrayDesignDao().numAllGenes( ids );
+        return this.arrayDesignDao.numAllGenes( ids );
     }
 
     @Override
     protected long handleNumBioSequences( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numBioSequences( arrayDesign );
+        return this.arrayDesignDao.numBioSequences( arrayDesign );
     }
 
     @Override
     protected long handleNumBlatResults( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numBlatResults( arrayDesign );
+        return this.arrayDesignDao.numBlatResults( arrayDesign );
     }
 
     @Override
     protected long handleNumCompositeSequenceWithBioSequences( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numCompositeSequenceWithBioSequences( arrayDesign );
+        return this.arrayDesignDao.numCompositeSequenceWithBioSequences( arrayDesign );
     }
 
     @Override
     protected long handleNumCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numCompositeSequenceWithBlatResults( arrayDesign );
+        return this.arrayDesignDao.numCompositeSequenceWithBlatResults( arrayDesign );
     }
 
     @Override
     protected long handleNumCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numCompositeSequenceWithGenes( arrayDesign );
+        return this.arrayDesignDao.numCompositeSequenceWithGenes( arrayDesign );
     }
 
     @Override
     protected long handleNumGenes( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().numGenes( arrayDesign );
+        return this.arrayDesignDao.numGenes( arrayDesign );
     }
 
     @Override
     protected long handleGetCompositeSequenceCount( ArrayDesign arrayDesign ) {
         if ( arrayDesign == null )
             throw new IllegalArgumentException( "Array design cannot be null" );
-        return this.getArrayDesignDao().numCompositeSequences( arrayDesign.getId() );
+        return this.arrayDesignDao.numCompositeSequences( arrayDesign.getId() );
     }
 
     @Override
     protected void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        this.getArrayDesignDao().remove( arrayDesign );
+        this.arrayDesignDao.remove( arrayDesign );
     }
 
     @Override
     protected void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        this.getArrayDesignDao().update( arrayDesign );
+        this.arrayDesignDao.update( arrayDesign );
     }
 
     @Override
     protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) {
-        this.getArrayDesignDao().removeBiologicalCharacteristics( arrayDesign );
+        this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
 
     }
 
     @Override
     protected ArrayDesign handleThaw( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().thaw( arrayDesign );
+        return this.arrayDesignDao.thaw( arrayDesign );
     }
 
     @Override
     protected ArrayDesign handleThawLite( ArrayDesign arrayDesign ) {
-        return this.getArrayDesignDao().thawLite( arrayDesign );
+        return this.arrayDesignDao.thawLite( arrayDesign );
     }
 
     @Override
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
-        return this.getArrayDesignDao().updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
+        return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
             Class<? extends ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
-        AuditEvent lastSubsumerEvent = this.getAuditEventDao().getLastEvent( subsumedInto, eventclass );
+        AuditEvent lastSubsumerEvent = this.auditEventDao.getLastEvent( subsumedInto, eventclass );
         if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
                 && lastEventMap.get( arrayDesignId ) != null && lastEventMap.get( arrayDesignId ).getDate()
                 .before( lastSubsumerEvent.getDate() ) ) {
@@ -408,7 +408,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
                 lastEventMap.put( arrayDesignId, null );
             } else {
                 ArrayDesign ad = this.load( arrayDesignId );
-                lastEvent = this.getAuditEventDao().getLastEvent( ad, eventclass );
+                lastEvent = this.auditEventDao.getLastEvent( ad, eventclass );
                 lastEventMap.put( arrayDesignId, lastEvent );
             }
 
