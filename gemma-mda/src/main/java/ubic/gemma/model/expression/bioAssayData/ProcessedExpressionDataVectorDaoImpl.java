@@ -61,6 +61,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     private static final int MIN_SIZE_FOR_RENORMALIZATION = 4000;
     private static final Log log = LogFactory.getLog( ProcessedExpressionDataVectorDaoImpl.class.getName() );
+
     @Autowired
     private ProcessedDataVectorCache processedDataVectorCache;
 
@@ -521,7 +522,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
 
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "cs", EntityUtils.getIds( cs2gene.keySet()) ).setParameterList( "ees", EntityUtils.getIds( expressionExperiments ) ).list();
+                .setParameterList( "cs", EntityUtils.getIds( cs2gene.keySet() ) )
+                .setParameterList( "ees", EntityUtils.getIds( expressionExperiments ) ).list();
 
         Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> resultnew = new HashMap<>();
         for ( Object o : qr ) {
@@ -567,7 +569,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()k
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
      */
     @Override
     public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
@@ -589,8 +591,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Get quantitation types that will be removed.
          */
         //noinspection unchecked
-        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct p.quantitationType from ExpressionExperiment e "
+        List<QuantitationType> qtsToRemove = this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct p.quantitationType from ExpressionExperiment e "
                         + "inner join e.processedExpressionDataVectors p where e.id = :id" )
                 .setParameter( "id", expressionExperiment.getId() ).list();
 
