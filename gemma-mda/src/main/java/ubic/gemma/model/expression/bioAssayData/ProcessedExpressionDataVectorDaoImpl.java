@@ -195,7 +195,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         expressionExperiment.getQuantitationTypes().add( data.iterator().next().getQuantitationType() );
         expressionExperiment.setNumberOfDataVectors( expressionExperiment.getProcessedExpressionDataVectors().size() );
 
-        this.getSessionFactory().getCurrentSession().delete( expressionExperiment );
+        this.getSessionFactory().getCurrentSession().update( expressionExperiment );
         assert expressionExperiment.getNumberOfDataVectors() != null;
 
         this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
@@ -521,7 +521,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                         + " where dedv.designElement.id in ( :cs ) and dedv.expressionExperiment.id in (:ees) ";
 
         List qr = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "cs", cs2gene.keySet() ).setParameterList( "ees", expressionExperiments ).list();
+                .setParameterList( "cs", EntityUtils.getIds( cs2gene.keySet()) ).setParameterList( "ees", EntityUtils.getIds( expressionExperiments ) ).list();
 
         Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> resultnew = new HashMap<>();
         for ( Object o : qr ) {
@@ -567,7 +567,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#loadAll()k
      */
     @Override
     public java.util.Collection<? extends ProcessedExpressionDataVector> loadAll() {
@@ -601,7 +601,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         if ( !qtsToRemove.isEmpty() ) {
             log.info( "Deleting " + qtsToRemove + " old quantitation types" );
             expressionExperiment.getQuantitationTypes().removeAll( qtsToRemove );
-            this.getSessionFactory().getCurrentSession().delete( expressionExperiment );
+            this.getSessionFactory().getCurrentSession().update( expressionExperiment );
             this.getSessionFactory().getCurrentSession()
                     .createQuery( "delete from QuantitationTypeImpl where id in :ids" )
                     .setParameterList( "ids", qtsToRemove );
