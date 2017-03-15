@@ -18,20 +18,9 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -42,25 +31,19 @@ import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
-import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.*;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoServiceTest {
 
@@ -180,12 +163,12 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             CompositeSequence el = mat.getDesignElementForRow( i );
             for ( int j = 0; j < row.length; j++ ) {
                 BioAssay ba = mat.getBioAssaysForColumn( j ).iterator().next();
-                if ( ba.getName().matches( "PGA-MurLungHyper-Norm-1a[ABC]v2-s2" )
-                        && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
-                                || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )
-                                || el.getName().equals( "100005_at" ) || el.getName().equals( "100006_at" )
-                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100009_r_at" )
-                                || el.getName().equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
+                if ( ba.getName().matches( "PGA-MurLungHyper-Norm-1a[ABC]v2-s2" ) && (
+                        el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" ) || el.getName()
+                                .equals( "100003_at" ) || el.getName().equals( "100004_at" ) || el.getName()
+                                .equals( "100005_at" ) || el.getName().equals( "100006_at" ) || el.getName()
+                                .equals( "100007_at" ) || el.getName().equals( "100009_r_at" ) || el.getName()
+                                .equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
                     assertEquals( Double.NaN, row[j], 0.0001 );
                     found = true;
                 } else {
@@ -225,12 +208,12 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             for ( int j = 0; j < row.length; j++ ) {
                 assertNotNull( v.getBioAssays() );
                 BioAssayValueObject ba = v.getBioAssays().get( j );
-                if ( ba.getName().startsWith( "Missing bioassay for biomaterial" )
-                        && ( el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" )
-                                || el.getName().equals( "100003_at" ) || el.getName().equals( "100004_at" )
-                                || el.getName().equals( "100005_at" ) || el.getName().equals( "100006_at" )
-                                || el.getName().equals( "100007_at" ) || el.getName().equals( "100009_r_at" )
-                                || el.getName().equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
+                if ( ba.getName().startsWith( "Missing bioassay for biomaterial" ) && (
+                        el.getName().equals( "100001_at" ) || el.getName().equals( "100002_at" ) || el.getName()
+                                .equals( "100003_at" ) || el.getName().equals( "100004_at" ) || el.getName()
+                                .equals( "100005_at" ) || el.getName().equals( "100006_at" ) || el.getName()
+                                .equals( "100007_at" ) || el.getName().equals( "100009_r_at" ) || el.getName()
+                                .equals( "100010_at" ) || el.getName().equals( "100011_at" ) ) ) {
                     assertEquals( Double.NaN, row[j], 0.0001 );
                     found = true;
                 } else {
@@ -253,8 +236,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         try {
             geoService.setGeoDomainObjectGenerator(
                     new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse404Short" ) ) );
-            @SuppressWarnings("unchecked")
-            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
+            @SuppressWarnings("unchecked") Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                     .fetchAndLoad( "GSE404", false, true, false, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
@@ -281,7 +263,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         eeService.addFactorValue( ee, fv1 );
         eeService.addFactorValue( ee, fv2 );
 
-        List<BioAssay> basInOrder = new ArrayList<BioAssay>( ee.getBioAssays() );
+        List<BioAssay> basInOrder = new ArrayList<>( ee.getBioAssays() );
 
         Collections.sort( basInOrder, new Comparator<BioAssay>() {
 

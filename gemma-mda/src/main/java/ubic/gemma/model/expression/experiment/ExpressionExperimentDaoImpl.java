@@ -1055,7 +1055,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                         + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
 
         List results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "qts", quantitationTypes ).list();
+                .setParameterList( "qts", quantitationTypes ).list();
 
         if ( results.isEmpty() ) {
             queryString = "select dev from ProcessedExpressionDataVectorImpl dev"
@@ -1064,7 +1064,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
             //noinspection unchecked
             results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameter( "qts", quantitationTypes ).list() );
+                    .setParameterList( "qts", quantitationTypes ).list() );
         }
 
         //noinspection unchecked
