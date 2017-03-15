@@ -41,7 +41,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author cmcdonald
- * @version $Id$
  */
 public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
@@ -54,9 +53,9 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
     @Autowired
     private ExpressionExperimentService eeService;
 
-    private String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
+    private final String ownerUsername = RandomStringUtils.randomAlphabetic( 5 );
 
-    private String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
+    private final String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
 
     private Long ownersExpressionExperimentId;
 
@@ -64,11 +63,6 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
     private ExpressionExperiment ee;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() throws Exception {
 
@@ -81,9 +75,6 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
 
         ownersExpressionExperimentId = ee.getId();
 
-        // redundant.
-        // .securityService.makePrivate( ee );
-
         makeUser( ownerUsername );
 
         this.securityService.makeOwnedByUser( ee, ownerUsername );
@@ -95,7 +86,7 @@ public class SecureValueObjectAuthorizationTest extends BaseSpringContextTest {
     @Test
     public void testSecuredExpressionExperimentValueObject() throws Exception {
 
-        ArrayList<Long> eeIds = new ArrayList<Long>();
+        ArrayList<Long> eeIds = new ArrayList<>();
 
         eeIds.add( ownersExpressionExperimentId );
         eeIds.add( publicExpressionExperimentId );
