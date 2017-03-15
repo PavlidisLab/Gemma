@@ -222,8 +222,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             session.delete( qt );
         }
 
-        session.flush();
         session.delete( toDelete );
+        session.flush();
 
             /*
              * Put transient instances back. This is possibly useful for clearing ACLS.
@@ -567,7 +567,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             return new HashSet<>();
         }
 
-        String idRestrictionClause = "where ee.id in (:ids) ";
+        String idRestrictionClause = " where ee.id in :ids ";
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
 
@@ -582,7 +582,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list,
                 getQuantitationTypeMap( idl ), ids.size() );
-
         /*
          * Remove items we didn't get back out. This is defensiveness!
          */
@@ -1038,7 +1037,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "des", designElements ).setParameter( "qt", quantitationType ).list();
+                .setParameterList( "des", designElements ).setParameter( "qt", quantitationType ).list();
     }
 
     @Override
@@ -1640,7 +1639,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         if ( orderByClause != null ) {
             queryString = queryString + orderByClause;
         }
-
         return queryString;
     }
 

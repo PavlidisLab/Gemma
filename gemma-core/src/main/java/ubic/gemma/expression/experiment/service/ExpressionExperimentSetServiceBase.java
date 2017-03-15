@@ -36,15 +36,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class ExpressionExperimentSetServiceBase implements ExpressionExperimentSetService {
 
-    private ExpressionExperimentSetDao expressionExperimentSetDao;
-
-    public ExpressionExperimentSetServiceBase(){
-    }
-
     @Autowired
-    public ExpressionExperimentSetServiceBase( ExpressionExperimentSetDao expressionExperimentSetDao ) {
-        this.expressionExperimentSetDao = expressionExperimentSetDao;
-    }
+    private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     /**
      * @see ubic.gemma.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)

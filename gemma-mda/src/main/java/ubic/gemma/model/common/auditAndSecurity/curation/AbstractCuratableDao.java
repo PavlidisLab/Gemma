@@ -153,7 +153,7 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
         }
         final String queryString = "select ad from " + entityName + " as ad where ad.id in (:ids) ";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "ids", ids );
+                .setParameterList( "ids", ids );
 
         //noinspection unchecked
         return query.list();

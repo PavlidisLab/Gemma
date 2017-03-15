@@ -60,10 +60,6 @@ public interface AuditTrailService {
     @Secured({ "GROUP_USER" })
     AuditTrail create( AuditTrail auditTrail );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<Auditable> getEntitiesWithEvent( Class<Auditable> entityClass,
-            Class<? extends AuditEventType> auditEventClass );
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     List<AuditEvent> getEvents( Auditable auditable );
 

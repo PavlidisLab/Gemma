@@ -104,7 +104,6 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         assertNotNull( ee.getNumberOfDataVectors() );
-        log.info( "Number of data vectors: "+ee.getNumberOfDataVectors() );
         ExpressionExperimentValueObject s = experimentReportService.generateSummary( ee.getId() );
         assertNotNull( s );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );

@@ -799,7 +799,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .valueObject2Entity( evidence );
-
+        phenotypeAssociation.setLastUpdated( new Date() );
         assert !phenotypeAssociation.getPhenotypes().isEmpty();
 
         phenotypeAssociation = this.phenoAssocService.create( phenotypeAssociation );

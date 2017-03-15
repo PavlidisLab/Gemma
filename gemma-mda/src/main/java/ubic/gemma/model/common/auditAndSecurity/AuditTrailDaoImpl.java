@@ -113,37 +113,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         return auditTrail;
     }
 
-    /**
-     * FIXME this returns a list, but there is no particular ordering enforced?
-     */
-    @Override
-    public Collection<Auditable> getEntitiesWithEvent( Class<Auditable> entityClass,
-            Class<? extends AuditEventType> auditEventClass ) {
-
-        String entityCanonicalName = entityClass.getName();
-        entityCanonicalName = entityCanonicalName.endsWith( "Impl" ) ?
-                entityClass.getName() :
-                entityClass.getName() + "Impl";
-
-        String eventCanonicalName = auditEventClass.getName();
-        eventCanonicalName = eventCanonicalName.endsWith( "Impl" ) ?
-                auditEventClass.getName() :
-                auditEventClass.getName() + "Impl";
-
-        String queryString = "select distinct auditableEntity from " + entityCanonicalName + " auditableEntity "
-                + " inner join auditableEntity.auditTrail trail inner join trail.events auditEvents "
-                + " inner join auditEvents.eventType et where et.class = " + eventCanonicalName;
-
-        // FIXME add order by clause?
-
-        /*
-         * This might be the best place to embody rules that determine if the event is still 'live'.
-         */
-
-        Query queryObject = super.getSession( false ).createQuery( queryString );
-        return queryObject.list();
-    }
-
     @Override
     public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from  AuditTrailImpl where id in (:ids)", "ids", ids );

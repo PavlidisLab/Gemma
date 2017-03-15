@@ -143,13 +143,6 @@ public class AuditTrailServiceImpl implements AuditTrailService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Auditable> getEntitiesWithEvent( Class<Auditable> entityClass,
-            Class<? extends AuditEventType> auditEventClass ) {
-        return ( List<Auditable> ) this.auditTrailDao.getEntitiesWithEvent( entityClass, auditEventClass );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<AuditEvent> getEvents( Auditable ad ) {
         return this.auditEventDao.getEvents( ad );
     }
