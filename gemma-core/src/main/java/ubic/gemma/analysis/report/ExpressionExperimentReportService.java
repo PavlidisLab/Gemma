@@ -31,63 +31,53 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * after an analysis; and retrieval is usually from the web interface.
  * 
  * @author paul
- * @version $Id$
  */
 public interface ExpressionExperimentReportService {
 
     /**
      * Invalidate the cached 'report' for the experiment with the given id. If it is not cached nothing happens.
-     * 
-     * @param id
+     *
      */
-    public void evictFromCache( Long id );
+    void evictFromCache( Long id );
 
     /**
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
      */
-    public abstract ExpressionExperimentValueObject generateSummary( Long id );
+    ExpressionExperimentValueObject generateSummary( Long id );
 
     /**
      * Generates reports on ALL experiments, including 'private' ones. This should only be run by administrators as it
      * takes a while to run.
-     * 
-     * @return
+     *
      */
     @Secured({ "GROUP_AGENT" })
-    public abstract void generateSummaryObjects();
+    void generateSummaryObjects();
 
     /**
      * generates a collection of value objects that contain summary information about links, biomaterials, and
-     * datavectors
-     * 
-     * @return
+     * dataVectors
+     *
      */
-    public abstract Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids );
+    Collection<ExpressionExperimentValueObject> generateSummaryObjects( Collection<Long> ids );
 
-    /**
-     * @param vos
-     */
-    public void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
 
-    /**
-     * @param vos
-     * @return
-     */
-    public Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
+    void getAnnotationInformation( Collection<ExpressionExperimentValueObject> vos );
+
+
+    Map<Long, Date> getEventInformation( Collection<ExpressionExperimentValueObject> vos );
 
     /**
      * Fills in link analysis and differential expression analysis summaries, and other info from the report.
-     * 
-     * @param vos
+     *
      * @return map of when the objects were most recently updated (or created)
      */
-    public Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos );
+    Map<Long, Date> getReportInformation( Collection<ExpressionExperimentValueObject> vos );
 
     /**
      * retrieves a collection of cached value objects containing summary information
      * 
      * @return a collection of cached value objects
      */
-    public abstract Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
+    Collection<ExpressionExperimentValueObject> retrieveSummaryObjects( Collection<Long> ids );
 
 }
