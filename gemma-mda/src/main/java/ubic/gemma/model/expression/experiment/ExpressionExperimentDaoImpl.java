@@ -372,7 +372,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         final String queryString =
                 "select distinct ee from ExpressionExperiment as ee " + "inner join ee.bioAssays as ba "
                         + "inner join ba.sampleUsed as sample join ee.curationDetails s where sample.sourceTaxon = :taxon"
-                        + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
+                        + " or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdated desc";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "taxon", taxon );
 
@@ -391,7 +391,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         Session s = this.getSessionFactory().getCurrentSession();
 
-        String queryString = "select e from ExpressionExperiment e join e.curationDetails s where e.id in (:ids) order by s.lastUpdateDate desc ";
+        String queryString = "select e from ExpressionExperiment e join e.curationDetails s where e.id in (:ids) order by s.lastUpdated desc ";
 
         Query q = s.createQuery( queryString );
         q.setParameterList( "ids", ids );
@@ -410,7 +410,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
         String queryString =
-                "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdateDate " + (
+                "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + (
                         limit < 0 ? "asc" : "desc" );
         Query q = s.createQuery( queryString );
         q.setMaxResults( Math.abs( limit ) );
@@ -1078,7 +1078,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
     @Override
     public Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments ) {
-        final String queryString = "select ee.id, max(s.lastUpdateDate) from ExpressionExperiment as ee inner join "
+        final String queryString = "select ee.id, max(s.lastUpdated) from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed a join a.curationDetails s "
                 + " where ee in (:ees) group by ee.id ";
 
@@ -1100,7 +1100,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     @Override
     public Date getLastArrayDesignUpdate( ExpressionExperiment ee ) {
 
-        final String queryString = "select max(s.lastUpdateDate) from ExpressionExperiment as ee inner join "
+        final String queryString = "select max(s.lastUpdated) from ExpressionExperiment as ee inner join "
                 + "ee.bioAssays b inner join b.arrayDesignUsed a join a.curationDetails s " + " where ee = :ee ";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", ee )
@@ -1394,8 +1394,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             case "bioAssayCount":
                 orderByClause = "order by count(BA) " + ( descending ? "desc" : "" );
                 break;
-            case "dateLastUpdated":
-                orderByClause = "order by s.lastUpdateDate " + ( descending ? "desc" : "" );
+            case "lastUpdated":
+                orderByClause = "order by s.lastUpdated " + ( descending ? "desc" : "" );
                 break;
             case "troubled":
                 orderByClause = "order by status.troubled " + ( descending ? "desc" : "" );
