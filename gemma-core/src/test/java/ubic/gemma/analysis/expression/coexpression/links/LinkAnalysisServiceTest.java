@@ -18,20 +18,6 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.dbcp.BasicDataSource;
 import org.junit.After;
 import org.junit.Before;
@@ -39,7 +25,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
-
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig.SingularThreshold;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
@@ -59,6 +44,12 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.EntityUtils;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author paul
@@ -112,7 +103,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
                 // + "'0000000500000001000000000000000200000000')", new RowCallbackHandler() {
 
                 // 000002BB00000001000000000000001600000000
-                "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___0000000100000000000000%'",
+                "SELECT ID FROM MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) LIKE '00000___0000000100000000000000%'",
                 new RowCallbackHandler() {
 
                     @Override
@@ -125,7 +116,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         // we should definitely have some of these
         assertTrue( checkme.size() > 0 );
 
-        jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK in (?) AND SUPPORT > 0",
+        jt.query( "SELECT SUPPORT FROM MOUSE_GENE_COEXPRESSION WHERE SUPPORT_DETAILS_FK IN (?) AND SUPPORT > 0",
                 new Object[] { checkme.toArray() }, new RowCallbackHandler() {
                     @Override
                     public void processRow( ResultSet rs ) throws SQLException {
@@ -229,14 +220,14 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         // assertNotNull( coex.toString(), coex.getTestedInDatasets() );
 
         if ( coex.getNumDatasetsTestedIn() > 0 ) {
-            assertEquals( coex.toString(), coex.getNumDatasetsTestedIn().intValue(), coex.getTestedInDatasets().size() );
-            assertTrue(
-                    coex.toString() + " testedin: " + coex.getTestedInDatasets() + " supportedin: "
-                            + coex.getSupportingDatasets(),
-                    coex.getNumDatasetsSupporting() <= coex.getNumDatasetsTestedIn() );
+            assertEquals( coex.toString(), coex.getNumDatasetsTestedIn().intValue(),
+                    coex.getTestedInDatasets().size() );
+            assertTrue( coex.toString() + " testedin: " + coex.getTestedInDatasets() + " supportedin: " + coex
+                    .getSupportingDatasets(), coex.getNumDatasetsSupporting() <= coex.getNumDatasetsTestedIn() );
         }
 
-        assertEquals( coex.toString(), coex.getSupportingDatasets().size(), coex.getNumDatasetsSupporting().intValue() );
+        assertEquals( coex.toString(), coex.getSupportingDatasets().size(),
+                coex.getNumDatasetsSupporting().intValue() );
 
         assertTrue( coex.toString(), !coex.getSupportingDatasets().isEmpty() );
     }
@@ -263,8 +254,9 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         assertTrue( !nodeDegrees.isEmpty() );
 
         // experiment-major query
-        Map<Long, List<CoexpressionValueObject>> allLinks = geneCoexpressionService.findCoexpressionRelationships(
-                mouse, new HashSet<Long>(), EntityUtils.getIds( ees ), ees.size(), 10, false );
+        Map<Long, List<CoexpressionValueObject>> allLinks = geneCoexpressionService
+                .findCoexpressionRelationships( mouse, new HashSet<Long>(), EntityUtils.getIds( ees ), ees.size(), 10,
+                        false );
         assertTrue( !allLinks.isEmpty() );
 
         for ( Long g : allLinks.keySet() ) {
@@ -275,8 +267,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         for ( Gene gene : geneService.loadAll( mouse ) ) {
 
-            Collection<CoexpressionValueObject> links = geneCoexpressionService.findCoexpressionRelationships( gene,
-                    EntityUtils.getIds( ees ), 1, 0, false );
+            Collection<CoexpressionValueObject> links = geneCoexpressionService
+                    .findCoexpressionRelationships( gene, EntityUtils.getIds( ees ), 1, 0, false );
 
             if ( links == null || links.isEmpty() ) {
                 continue;
@@ -290,8 +282,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
             if ( links.size() != nodeDegree.getLinksWithMinimumSupport( 1 ).intValue() ) {
                 log.info( nodeDegree );
-                assertEquals( "Node degree check failed for gene " + gene, links.size(), nodeDegree
-                        .getLinksWithMinimumSupport( 1 ).intValue() );
+                assertEquals( "Node degree check failed for gene " + gene, links.size(),
+                        nodeDegree.getLinksWithMinimumSupport( 1 ).intValue() );
             }
 
             assertTrue( nodeDegree.getLinksWithMinimumSupport( 1 ) >= nodeDegree.getLinksWithMinimumSupport( 2 ) );
