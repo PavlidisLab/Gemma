@@ -62,7 +62,6 @@ import ubic.gemma.util.EntityUtils;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
@@ -99,15 +98,12 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     @Autowired
     private TableMaintenenceUtil tableMaintenenceUtil;
 
-    /**
-     * 
-     */
     public void checkUnsupportedLinksHaveNoSupport() {
         JdbcTemplate jt = new JdbcTemplate( dataSource );
 
         // see SupportDetailsTest for validation that these strings represent empty byte arrays. I think the 1 at
         // position 12 is important.
-        final Collection<Long> checkme = new HashSet<Long>();
+        final Collection<Long> checkme = new HashSet<>();
         // maybe these patterns aren't this reproducible.
         jt.query(
                 // "SELECT ID from MOUSE_LINK_SUPPORT_DETAILS WHERE HEX(BYTES) in ('0000000200000001000000000000000200000000',"
@@ -177,7 +173,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         CoexpressionAnalysis analysisObj = la.getAnalysisObj();
         assertEquals( 151, analysisObj.getNumberOfElementsAnalyzed().intValue() );
-        assertTrue( analysisObj.getNumberOfLinks().intValue() > 0 );
+        assertTrue( analysisObj.getNumberOfLinks() > 0 );
 
         assertNotNull( analysisObj.getCoexpCorrelationDistribution() );
 
@@ -222,9 +218,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @param coex
-     */
     private void checkResult( CoexpressionValueObject coex ) {
         assertNotNull( coex.toString(), coex.getQueryGeneId() );
         assertNotNull( coex.toString(), coex.getCoexGeneId() );
@@ -248,10 +241,6 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         assertTrue( coex.toString(), !coex.getSupportingDatasets().isEmpty() );
     }
 
-    /**
-     * @param ees
-     * @param expectedMinimumMaxSupport
-     */
     private int checkResults( Collection<BioAssaySet> ees, int expectedMinimumMaxSupport ) {
         boolean foundOne = false;
 
