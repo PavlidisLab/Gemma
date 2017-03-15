@@ -122,8 +122,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testAddValidatedEvent() {
-        AuditEventType eventType = DoesNotNeedAttentionEvent.Factory.newInstance();
+    public final void testAddNeedsAttentionEvent() {
+        AuditEventType eventType = NeedsAttentionEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
@@ -136,6 +136,30 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertTrue( auditable.getCurationDetails().getNeedsAttention() );
+
+        assertEquals( DoesNotNeedAttentionEvent.class,
+                ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
+
+        for ( AuditEvent e : auditTrail.getEvents() ) {
+            assertNotNull( e.getId() );
+        }
+    }
+
+    @Test
+    public final void testAddDoesNotNeedsAttentionEvent() {
+        AuditEventType eventType = DoesNotNeedAttentionEvent.Factory.newInstance();
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        assertNotNull( ev.getId() );
+
+        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
+
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        assertNotNull( auditTrail );
+        assertNotNull( auditable.getCurationDetails() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertFalse( auditable.getCurationDetails().getTroubled() );
+        assertFalse( auditable.getCurationDetails().getNeedsAttention() );
 
         assertEquals( DoesNotNeedAttentionEvent.class,
                 ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
