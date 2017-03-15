@@ -92,7 +92,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         // At this point, the ee is probably still in the session, as the service already has gotten it
         // in this transaction.
         session.flush();
-        // session.clear();
+        session.clear();
 
         session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
@@ -198,7 +198,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
             copyOfRelations.put( ba, biomaterial );
 
-            // see bug 855
             session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
             Hibernate.initialize( biomaterial );
 
@@ -209,6 +208,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             biomaterial.getBioAssaysUsedIn().clear();
 
             ba.setSampleUsed( null );
+            session.update( ba );
         }
 
         log.info( "Last bits ..." );
@@ -571,7 +571,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
 
-        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         List<Long> idl = new ArrayList<>( ids );
         Collections.sort( idl ); // so it's consistent and therefore cacheable.
@@ -1625,11 +1625,11 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 + "count(distinct SU), " // 22
                 + "EDES.id,  " // 23
                 + "ptax.id " // 24
-                + "from ExpressionExperiment as ee " + "inner join ee.bioAssays as BA  "
-                + "left join BA.sampleUsed as SU " + "left join BA.arrayDesignUsed as AD "
-                + "left join SU.sourceTaxon as taxon " + "left join ee.accession acc "
-                + "left join acc.externalDatabase as ED " + "left join taxon.parentTaxon as ptax "
-                + "inner join ee.experimentalDesign as EDES " + "join ee.curationDetails as s ";
+                + "from ExpressionExperiment as ee inner join ee.bioAssays as BA  "
+                + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
+                + "left join SU.sourceTaxon as taxon left join ee.accession acc "
+                + "left join acc.externalDatabase as ED left join taxon.parentTaxon as ptax "
+                + "inner join ee.experimentalDesign as EDES join ee.curationDetails as s ";
 
         if ( idRestrictionClause != null ) {
             queryString = queryString + idRestrictionClause;

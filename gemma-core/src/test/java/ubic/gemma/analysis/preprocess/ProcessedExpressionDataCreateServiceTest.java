@@ -20,6 +20,7 @@ package ubic.gemma.analysis.preprocess;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
+import org.openjena.atlas.logging.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -103,8 +104,9 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
 
         assertNotNull( ee.getNumberOfDataVectors() );
-
+        log.info( "Number of data vectors: "+ee.getNumberOfDataVectors() );
         ExpressionExperimentValueObject s = experimentReportService.generateSummary( ee.getId() );
+        assertNotNull( s );
         assertEquals( ee.getNumberOfDataVectors(), s.getProcessedExpressionVectorCount() );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
