@@ -88,11 +88,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     }
 
-    /*
-     * // for Quartz (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.report.WhatsNewServiceI#generateWeeklyReport()
-     */
     @Override
     public void generateWeeklyReport() {
         Calendar c = Calendar.getInstance();
@@ -320,7 +315,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
         int count = 0;
         for ( ExpressionExperiment ee : ees ) {
-            //FIXME trying to access bio assays causes LazyInitializationException
+            ee = expressionExperimentService.thaw( ee );
             count += ee.getBioAssays().size();
         }
         return count;
