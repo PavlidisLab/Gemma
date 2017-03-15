@@ -157,8 +157,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         events = auditTrailService.getEvents( auditable );
         assertTrue( events.contains( ev ) );
 
-        List<Auditable> results = auditTrailService.getEntitiesWithEvent( Auditable.class, SampleRemovalEvent.class );
-        assertTrue( results.contains( auditable ) );
+        Auditable result = arrayDesignService.find( auditable );
+        assertTrue( result.getAuditTrail().getEvents().contains( ev ));
 
     }
 
