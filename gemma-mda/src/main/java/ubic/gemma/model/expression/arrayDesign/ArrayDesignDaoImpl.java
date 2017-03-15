@@ -106,6 +106,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
         this.getSessionFactory().getCurrentSession().doWork( new Work() {
             @Override
             public void execute( Connection connection ) throws SQLException {
+                getSession().buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
                 Hibernate.initialize( arrayDesign.getMergees() );
                 Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
                 arrayDesign.getMergees().clear();
