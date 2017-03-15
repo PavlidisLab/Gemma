@@ -87,154 +87,161 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         Session session = this.getSessionFactory().getCurrentSession();
 
-        // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
+        try {
+            // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
-        // At this point, the ee is probably still in the session, as the service already has gotten it
-        // in this transaction.
-        session.flush();
-        session.clear();
+            // At this point, the ee is probably still in the session, as the service already has gotten it
+            // in this transaction.
+            session.flush();
+            session.clear();
 
-        session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
+            session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
-        Hibernate.initialize( toDelete.getAuditTrail() );
+            Hibernate.initialize( toDelete.getAuditTrail() );
 
-        Set<BioAssayDimension> dims = new HashSet<>();
-        Set<QuantitationType> qts = new HashSet<>();
-        Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
-        Hibernate.initialize( designElementDataVectors );
-        toDelete.setRawExpressionDataVectors( null );
+            Set<BioAssayDimension> dims = new HashSet<>();
+            Set<QuantitationType> qts = new HashSet<>();
+            Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
+            Hibernate.initialize( designElementDataVectors );
+            toDelete.setRawExpressionDataVectors( null );
 
             /*
              * We don't delete the investigators, just breaking the association.
              */
-        toDelete.getInvestigators().clear();
+            toDelete.getInvestigators().clear();
 
-        int count = 0;
-        if ( designElementDataVectors != null ) {
-            log.info( "Removing Design Element Data Vectors ..." );
-            for ( RawExpressionDataVector dv : designElementDataVectors ) {
-                BioAssayDimension bad = dv.getBioAssayDimension();
-                dims.add( bad );
-                QuantitationType qt = dv.getQuantitationType();
-                qts.add( qt );
-                dv.setBioAssayDimension( null );
-                dv.setQuantitationType( null );
-                session.delete( dv );
-                if ( ++count % 1000 == 0 ) {
-                    session.flush();
-                }
-                // put back...
-                dv.setBioAssayDimension( bad );
-                dv.setQuantitationType( qt );
+            int count = 0;
+            if ( designElementDataVectors != null ) {
+                log.info( "Removing Design Element Data Vectors ..." );
+                for ( RawExpressionDataVector dv : designElementDataVectors ) {
+                    BioAssayDimension bad = dv.getBioAssayDimension();
+                    dims.add( bad );
+                    QuantitationType qt = dv.getQuantitationType();
+                    qts.add( qt );
+                    dv.setBioAssayDimension( null );
+                    dv.setQuantitationType( null );
+                    session.delete( dv );
+                    if ( ++count % 1000 == 0 ) {
+                        session.flush();
+                    }
+                    // put back...
+                    dv.setBioAssayDimension( bad );
+                    dv.setQuantitationType( qt );
 
-                if ( count % 20000 == 0 ) {
-                    log.info( count + " design Element data vectors deleted" );
+                    if ( count % 20000 == 0 ) {
+                        log.info( count + " design Element data vectors deleted" );
+                    }
                 }
+                count = 0;
+                // designElementDataVectors.clear();
             }
-            count = 0;
-            // designElementDataVectors.clear();
-        }
 
-        Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
+            Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
 
-        Hibernate.initialize( processedVectors );
-        if ( processedVectors != null && processedVectors.size() > 0 ) {
+            Hibernate.initialize( processedVectors );
+            if ( processedVectors != null && processedVectors.size() > 0 ) {
 
-            toDelete.setProcessedExpressionDataVectors( null );
+                toDelete.setProcessedExpressionDataVectors( null );
 
-            for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                BioAssayDimension bad = dv.getBioAssayDimension();
-                dims.add( bad );
-                QuantitationType qt = dv.getQuantitationType();
-                qts.add( qt );
-                dv.setBioAssayDimension( null );
-                dv.setQuantitationType( null );
-                session.delete( dv );
-                if ( ++count % 1000 == 0 ) {
-                    session.flush();
+                for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                    BioAssayDimension bad = dv.getBioAssayDimension();
+                    dims.add( bad );
+                    QuantitationType qt = dv.getQuantitationType();
+                    qts.add( qt );
+                    dv.setBioAssayDimension( null );
+                    dv.setQuantitationType( null );
+                    session.delete( dv );
+                    if ( ++count % 1000 == 0 ) {
+                        session.flush();
+                    }
+                    if ( count % 20000 == 0 ) {
+                        log.info( count + " processed design Element data vectors deleted" );
+                    }
+
+                    // put back..
+                    dv.setBioAssayDimension( bad );
+                    dv.setQuantitationType( qt );
                 }
-                if ( count % 20000 == 0 ) {
-                    log.info( count + " processed design Element data vectors deleted" );
-                }
-
-                // put back..
-                dv.setBioAssayDimension( bad );
-                dv.setQuantitationType( qt );
+                // processedVectors.clear();
             }
-            // processedVectors.clear();
-        }
 
-        session.flush();
-        session.clear();
-        session.update( toDelete );
+            session.flush();
+            session.clear();
+            session.update( toDelete );
 
-        log.info( "Removing BioAssay Dimensions ..." );
-        for ( BioAssayDimension dim : dims ) {
-            dim.getBioAssays().clear();
-            session.update( dim );
-            session.delete( dim );
-        }
-        dims.clear();
-        session.flush();
+            log.info( "Removing BioAssay Dimensions ..." );
+            for ( BioAssayDimension dim : dims ) {
+                dim.getBioAssays().clear();
+                session.update( dim );
+                session.delete( dim );
+            }
+            dims.clear();
+            session.flush();
 
-        log.info( "Removing Bioassays and biomaterials ..." );
+            log.info( "Removing Bioassays and biomaterials ..." );
 
-        // keep to put back in the object.
-        Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
+            // keep to put back in the object.
+            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
 
-        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
-        Collection<BioAssay> bioAssays = toDelete.getBioAssays();
+            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
+            Collection<BioAssay> bioAssays = toDelete.getBioAssays();
 
-        for ( BioAssay ba : bioAssays ) {
-            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
+            for ( BioAssay ba : bioAssays ) {
+                // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
+                // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
 
-            BioMaterial biomaterial = ba.getSampleUsed();
+                BioMaterial biomaterial = ba.getSampleUsed();
 
-            if ( biomaterial == null )
-                continue; // shouldn't...
+                if ( biomaterial == null )
+                    continue; // shouldn't...
 
-            bioMaterialsToDelete.add( biomaterial );
+                bioMaterialsToDelete.add( biomaterial );
 
-            copyOfRelations.put( ba, biomaterial );
+                copyOfRelations.put( ba, biomaterial );
 
-            session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
-            Hibernate.initialize( biomaterial );
+                session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
 
-            // this can easily end up with an unattached object.
-            Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
+                Hibernate.initialize( biomaterial );
 
-            biomaterial.getFactorValues().clear();
-            biomaterial.getBioAssaysUsedIn().clear();
+                // this can easily end up with an unattached object.
+                Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
 
-            ba.setSampleUsed( null );
-            session.update( ba );
-        }
+                biomaterial.getFactorValues().clear();
+                biomaterial.getBioAssaysUsedIn().clear();
 
-        log.info( "Last bits ..." );
+                ba.setSampleUsed( null );
+            }
 
-        // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
-        for ( BioMaterial bm : bioMaterialsToDelete ) {
-            session.delete( bm );
-        }
+            log.info( "Last bits ..." );
 
-        for ( QuantitationType qt : qts ) {
-            session.delete( qt );
-        }
+            // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
+            for ( BioMaterial bm : bioMaterialsToDelete ) {
+                session.delete( bm );
+            }
 
-        session.delete( toDelete );
-        session.flush();
+            for ( QuantitationType qt : qts ) {
+                session.delete( qt );
+            }
+
+            session.flush();
+            session.delete( toDelete );
 
             /*
              * Put transient instances back. This is possibly useful for clearing ACLS.
              */
-        toDelete.setProcessedExpressionDataVectors( processedVectors );
-        toDelete.setRawExpressionDataVectors( designElementDataVectors );
-        for ( BioAssay ba : toDelete.getBioAssays() ) {
-            ba.setSampleUsed( copyOfRelations.get( ba ) );
-        }
+            toDelete.setProcessedExpressionDataVectors( processedVectors );
+            toDelete.setRawExpressionDataVectors( designElementDataVectors );
+            for ( BioAssay ba : toDelete.getBioAssays() ) {
+                ba.setSampleUsed( copyOfRelations.get( ba ) );
+            }
 
-        log.info( "Deleted " + toDelete );
+            log.info( "Deleted " + toDelete );
+        } catch ( Exception e ) {
+            log.error( e );
+        } finally {
+            log.info("Finalising remove method.");
+            // session.disconnect();
+        }
 
     }
 
@@ -403,9 +410,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
         String queryString =
-                "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdateDate " + ( limit < 0 ?
-                        "asc" :
-                        "desc" );
+                "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdateDate " + (
+                        limit < 0 ? "asc" : "desc" );
         Query q = s.createQuery( queryString );
         q.setMaxResults( Math.abs( limit ) );
 
@@ -1283,7 +1289,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     }
 
     @Override
-    public Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType, Integer limit ) {
+    public Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType,
+            Integer limit ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev "
                 + "inner join dev.quantitationType as qt where qt.id = :qtid";
 
