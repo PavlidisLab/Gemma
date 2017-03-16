@@ -695,7 +695,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
                 //noinspection unchecked
                 results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                        .setParameterList( "bms", batch ).list() );
+                        .setParameter( "bms", batch ).list() );
                 batch.clear();
             }
         }
@@ -793,7 +793,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         Collection<ExperimentalDesign> eds = this.getSessionFactory().getCurrentSession().createQuery(
                 "select ed from FactorValueImpl f join f.experimentalFactor ef "
                         + " join ef.experimentalDesign ed where f.id in (:ids)" )
-                .setParameterList( "ids", EntityUtils.getIds( fvs ) ).list();
+                .setParameter( "ids", EntityUtils.getIds( fvs ) ).list();
 
         if ( eds.isEmpty() ) {
             return new HashSet<>();
@@ -808,7 +808,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
                 //noinspection unchecked
                 results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                        .setParameterList( "eds", batch ).list() );
+                        .setParameter( "eds", batch ).list() );
                 batch.clear();
             }
         }
@@ -1080,7 +1080,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 + " where ee in (:ees) group by ee.id ";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ees", expressionExperiments ).list();
+                .setParameter( "ees", expressionExperiments ).list();
 
         assert ( !res.isEmpty() );
 
@@ -1179,7 +1179,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor "
                 + "ef where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "ids", ids )
+        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ids", ids )
                 .list();
 
         addIdsToResults( results, res );
@@ -1202,7 +1202,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 + " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and ef.name != (:name) group by e.id";
 
         List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ids", ids ) // Set ids
+                .setParameter( "ids", ids ) // Set ids
                 .setParameter( "category", ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME ) // Set batch category
                 .setParameter( "name", ExperimentalFactorService.BATCH_FACTOR_NAME ) // set batch name
                 .list();
@@ -1271,7 +1271,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<>();
         List r = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameterList( "ees", expressionExperiments ).list();
+                .setParameter( "ees", expressionExperiments ).list();
 
         for ( Object o : r ) {
             Object[] ol = ( Object[] ) o;
@@ -1354,13 +1354,13 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             String queryString = "select EE, SU.sourceTaxon from ExpressionExperiment as EE "
                     + "inner join EE.bioAssays as BA inner join BA.sampleUsed as SU where EE in (:ees)";
             list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ees", bioAssaySets ).list();
+                    .setParameter( "ees", bioAssaySets ).list();
         } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
             String queryString =
                     "select eess, su.sourceTaxon from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee"
                             + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
             list = this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                    .setParameterList( "ees", bioAssaySets ).list();
+                    .setParameter( "ees", bioAssaySets ).list();
         } else {
             throw new UnsupportedOperationException(
                     "Can't get taxon of BioAssaySet of class " + example.getClass().getName() );
@@ -1465,7 +1465,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             BioMaterial bm = ba.getSampleUsed();
             Hibernate.initialize( bm.getFactorValues() );
             Hibernate.initialize( bm.getTreatments() );
-
         }
 
         ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
