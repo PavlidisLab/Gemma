@@ -246,8 +246,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             throw new IllegalArgumentException( "Experiment is null or had null id" );
         }
 
-        if ( securityService.isEditable( expressionExperiment ) ) {
-            this.handleDelete( expressionExperiment );
+        final ExpressionExperiment ee = this.load( expressionExperiment.getId() );
+        if ( securityService.isEditable( ee ) ) {
+            this.handleDelete( ee );
         } else {
             throw new SecurityException(
                     "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
@@ -1021,7 +1022,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         this.expressionExperimentDao.update( expressionExperiment );
     }
 
-    private void handleDelete( ExpressionExperiment ee ) {
+    protected void handleDelete( ExpressionExperiment ee ) {
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment cannot be null" );
@@ -1067,7 +1068,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
                 log.info( "Removing " + ee + " from " + eeset );
                 eeset.getExperiments().remove( ee );
                 this.getExpressionExperimentSetDao().update( eeset );
-
             }
         }
 
