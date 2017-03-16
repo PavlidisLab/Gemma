@@ -18,9 +18,6 @@
  */
 package ubic.gemma.security.authorization.acl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclObjectIdentity;
 import gemma.gsec.acl.domain.AclPrincipalSid;
@@ -28,16 +25,12 @@ import gemma.gsec.acl.domain.AclService;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.authentication.UserService;
-
-import java.util.Date;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
@@ -50,19 +43,18 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.testing.BaseSpringContextTest;
+
+import java.util.Date;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests of ACL management: adding and removing from objects during CRUD operations. (AclAdvice)
- * 
+ *
  * @author keshav
  * @author paul
- * @version $Id$
  */
 public class AclAdviceTest extends BaseSpringContextTest {
 
@@ -110,8 +102,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     /**
      * Create Array design, check ACLs are put on correctly and removed when the design is removed. Array Designs are
      * _simple_ compared to EEs!
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testArrayDesignAcls() throws Exception {
@@ -129,9 +120,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testSignup() throws Exception {
         try {
@@ -243,15 +231,14 @@ public class AclAdviceTest extends BaseSpringContextTest {
         try {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 
     /**
      * Test of EE ACLs and also SecurityNotInherited on EE set.
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testExpressionExperimentAcls() throws Exception {
@@ -335,8 +322,8 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         diffExpressionAnalysis.setExperimentAnalyzed( ee );
 
-        diffExpressionAnalysis = differentialExpressionAnalyzerService.persistAnalysis( ee, diffExpressionAnalysis,
-                config );
+        diffExpressionAnalysis = differentialExpressionAnalyzerService
+                .persistAnalysis( ee, diffExpressionAnalysis, config );
 
         aclTestUtils.checkHasAcl( ee );
         aclTestUtils.checkHasAcl( diffExpressionAnalysis );
@@ -351,8 +338,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
     /**
      * Test that when a new associated object is persisted by a cascade, it gets the correct permissions of the parent
      * object
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testUpdateAcl() throws Exception {
