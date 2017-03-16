@@ -98,8 +98,6 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
             throw new IllegalArgumentException( ILLEGAL_EVENT_TYPE_ERR_MSG );
         }
 
-        //TODO check if Lock Request is necessary.
-
         Hibernate.initialize( curatable );
 
         CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
