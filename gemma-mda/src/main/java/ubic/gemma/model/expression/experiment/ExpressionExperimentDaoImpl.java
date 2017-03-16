@@ -565,8 +565,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " loading VOs start" );
-        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " ids: " + ids + " maintainOrder: " + maintainOrder );
         boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
@@ -578,7 +576,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         String idRestrictionClause = " where ee.id in (:ids) ";
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
-        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " query string: " + queryString );
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         List<Long> idl = new ArrayList<>( ids );
@@ -586,10 +583,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         queryObject.setParameterList( "ids", idl );
         queryObject.setCacheable( true );
-        Object oe = queryObject.uniqueResult();
-        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " unique object: " + oe );
         List list = queryObject.list();
-        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " list from query size: " + list.size() );
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list,
                 getQuantitationTypeMap( idl ), ids.size() );
         /*
