@@ -26,6 +26,7 @@ import org.hibernate.collection.PersistentCollection;
 import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -46,7 +47,6 @@ import java.util.*;
  * @author pavlidis
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  */
-@SuppressWarnings("WeakerAccess")
 @Repository
 public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implements ArrayDesignDao {
 
@@ -217,6 +217,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public int numExperiments( ArrayDesign arrayDesign ) {
         final String queryString = "select distinct ee.id  from   "
                 + " ExpressionExperiment ee inner join ee.bioAssays bas join bas.arrayDesignUsed ad where ad = :ad";
@@ -567,6 +568,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllCompositeSequenceWithBioSequences() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -576,6 +578,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllCompositeSequenceWithBioSequences( Collection<Long> ids ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -585,6 +588,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllCompositeSequenceWithBlatResults() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -594,6 +598,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllCompositeSequenceWithBlatResults( Collection<Long> ids ) {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
@@ -606,6 +611,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllCompositeSequenceWithGenes() {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -616,6 +622,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllCompositeSequenceWithGenes( Collection<Long> ids ) {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
@@ -630,6 +637,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllGenes() {
         final String queryString =
                 "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -640,6 +648,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numAllGenes( Collection<Long> ids ) {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
@@ -654,6 +663,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numBioSequences( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs.biologicalCharacteristic) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -663,6 +673,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numBlatResults( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct bs2gp) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -673,6 +684,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numCompositeSequences( Long id ) {
         final String queryString = "select count (*) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return ( ( Long ) this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -689,6 +701,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -698,6 +711,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -709,6 +723,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    @Transactional
     public long numGenes( ArrayDesign arrayDesign ) {
         final String queryString =
                 "select count (distinct gene) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
@@ -1004,10 +1019,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
                 + "s.troubled, "  //7
                 + "s.needsAttention, " //8
                 + "s.curationNote, "  //9
-                + "s.lastTroubledEvent, " //10
-                + "s.lastNeedsAttentionEvent, " //11
-                + "s.lastNoteUpdateEvent, "  //12
-                + "t.commonName " //13
+                + "t.commonName " //10
                 + "from ArrayDesign ad join ad.curationDetails s join ad.primaryTaxon t left join ad.mergedInto m ";
     }
 
@@ -1042,19 +1054,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
                 v.setNeedsAttention( list.getBoolean( 8 ) );
                 v.setCurationNote( list.getString( 9 ) );
 
-                AuditEvent lastTroubleEvent = ( AuditEvent ) list.get( 10 );
-                if ( lastTroubleEvent != null )
-                    v.setLastTroubledEvent( lastTroubleEvent );
-
-                AuditEvent lastNeedsAttentionEvent = ( AuditEvent ) list.get( 11 );
-                if ( lastTroubleEvent != null )
-                    v.setLastNeedsAttentionEvent( lastNeedsAttentionEvent );
-
-                AuditEvent lastCurationNoteEvent = ( AuditEvent ) list.get( 12 );
-                if ( lastTroubleEvent != null )
-                    v.setLastCurationNoteEvent( lastCurationNoteEvent );
-
-                v.setTaxon( list.getString( 13 ) );
+                v.setTaxon( list.getString( 10 ) );
 
                 if ( !eeCounts.containsKey( v.getId() ) ) {
                     v.setExpressionExperimentCount( 0 );
@@ -1062,12 +1062,14 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
                 }
 
+                //This was causing null results when being retrieved through the original query
+                this.addCurationEvents( v );
+
                 result.add( v );
             }
         }
         return result;
     }
-
     private List thawBatchOfProbes( Collection<CompositeSequence> batch ) {
         return this.getSessionFactory().getCurrentSession().createQuery(
                 "select cs from CompositeSequenceImpl cs left join fetch cs.biologicalCharacteristic where cs in (:batch)" )

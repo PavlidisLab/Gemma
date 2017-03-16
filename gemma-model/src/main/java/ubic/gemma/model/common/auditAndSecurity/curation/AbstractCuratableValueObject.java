@@ -14,6 +14,8 @@ public abstract class AbstractCuratableValueObject {
 
     private static final String TROUBLE_DETAILS_NONE = "Not troubled";
 
+    protected Long id;
+
     protected Date lastUpdated;
 
     protected Boolean troubled;
@@ -26,21 +28,30 @@ public abstract class AbstractCuratableValueObject {
 
     protected String curationNote;
 
-    protected AuditEvent lastCurationNoteEvent;
+    protected AuditEvent lastNoteUpdateEvent;
 
     public AbstractCuratableValueObject() {
     }
 
-    public AbstractCuratableValueObject( Date lastUpdated, Boolean troubled, AuditEvent lastTroubledEvent,
+    public AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled, AuditEvent lastTroubledEvent,
             Boolean needsAttention, AuditEvent lastNeedsAttentionEvent, String curationNote,
-            AuditEvent lastCurationNoteEvent ) {
+            AuditEvent lastNoteUpdateEvent ) {
+        this.id = id;
         this.lastUpdated = lastUpdated;
         this.troubled = troubled;
         this.lastTroubledEvent = lastTroubledEvent;
         this.needsAttention = needsAttention;
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
         this.curationNote = curationNote;
-        this.lastCurationNoteEvent = lastCurationNoteEvent;
+        this.lastNoteUpdateEvent = lastNoteUpdateEvent;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     public Date getLastUpdated() {
@@ -91,12 +102,12 @@ public abstract class AbstractCuratableValueObject {
         this.curationNote = curationNote;
     }
 
-    public AuditEvent getLastCurationNoteEvent() {
-        return lastCurationNoteEvent;
+    public AuditEvent getLastNoteUpdateEvent() {
+        return lastNoteUpdateEvent;
     }
 
-    public void setLastCurationNoteEvent( AuditEvent lastCurationNoteEvent ) {
-        this.lastCurationNoteEvent = lastCurationNoteEvent;
+    public void setLastNoteUpdateEvent( AuditEvent lastNoteUpdateEvent ) {
+        this.lastNoteUpdateEvent = lastNoteUpdateEvent;
     }
 
     /**

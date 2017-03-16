@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.arrayDesign;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -16,6 +17,7 @@ import java.util.Map;
 /**
  * Created by tesarst on 13/03/17.
  */
+@Repository
 public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign> {
     ArrayDesign find( ArrayDesign entity );
 

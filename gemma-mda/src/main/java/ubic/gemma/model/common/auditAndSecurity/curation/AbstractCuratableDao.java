@@ -9,7 +9,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDaoImpl;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImpl;
 import ubic.gemma.model.genome.Taxon;
 
@@ -222,6 +221,25 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
         }
         return results.iterator().next();
     }
+
+    /**
+     * Attaches all curation events to the given value object.
+     * Note that the events can still be null, as the value-change events they represent might have not occurred since
+     * the curatable object was created, and they are not initialised with a creation event.
+     *
+     * @param vo the value object that needs its curation events populated.
+     * @return the same value object, enriched by all the curation events.
+     */
+    protected AbstractCuratableValueObject addCurationEvents( AbstractCuratableValueObject vo ) {
+        Long id = vo.getId();
+        Curatable curatable = this.load( id );
+        CurationDetails details = curatable.getCurationDetails();
+        vo.setLastNoteUpdateEvent( details.getLastNoteUpdateEvent() );
+        vo.setLastNeedsAttentionEvent( details.getLastNeedsAttentionEvent() );
+        vo.setLastTroubledEvent( details.getLastTroubledEvent() );
+        return vo;
+    }
+
 
     /* ********************************
      * Private methods

@@ -239,7 +239,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         } catch ( Exception e ) {
             log.error( e );
         } finally {
-            log.info("Finalising remove method.");
+            log.info( "Finalising remove method." );
             // session.disconnect();
         }
 
@@ -409,9 +409,10 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         if ( limit == 0 )
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
-        String queryString =
-                "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + (
-                        limit < 0 ? "asc" : "desc" );
+        String queryString = "select e from ExpressionExperiment e join e.curationDetails s order by s.lastUpdated " + (
+                limit < 0 ?
+                        "asc" :
+                        "desc" );
         Query q = s.createQuery( queryString );
         q.setMaxResults( Math.abs( limit ) );
 
@@ -564,7 +565,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
     @Override
     public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<Long> ids, boolean maintainOrder ) {
-
+        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " loading VOs start" );
+        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " ids: " + ids + " maintainOrder: " + maintainOrder );
         boolean isList = ( ids != null && ids instanceof List );
         if ( ids == null || ids.size() == 0 ) {
             if ( isList ) {
@@ -573,10 +575,10 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             return new HashSet<>();
         }
 
-        String idRestrictionClause = " where ee.id in :ids ";
+        String idRestrictionClause = " where ee.id in (:ids) ";
 
         final String queryString = getLoadValueObjectsQueryString( idRestrictionClause, null );
-
+        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " query string: " + queryString );
         Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
 
         List<Long> idl = new ArrayList<>( ids );
@@ -584,8 +586,10 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         queryObject.setParameterList( "ids", idl );
         queryObject.setCacheable( true );
+        Object oe = queryObject.uniqueResult();
+        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " unique object: " + oe );
         List list = queryObject.list();
-
+        System.out.println( " EEEEEEEEEEEEEEEEEEEEEEEEE " + " list from query size: " + list.size() );
         Map<Long, ExpressionExperimentValueObject> vo = getExpressionExperimentValueObjectMap( list,
                 getQuantitationTypeMap( idl ), ids.size() );
         /*
@@ -1623,14 +1627,11 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 + "s.troubled, "  // 14
                 + "s.needsAttention, " // 15
                 + "s.curationNote, "  // 16
-                + "s.lastTroubledEvent, " // 17
-                + "s.lastNeedsAttentionEvent, " // 18
-                + "s.lastNoteUpdateEvent, "  // 19
-                + "count(distinct BA), " // 20
-                + "count(distinct AD), " // 21
-                + "count(distinct SU), " // 22
-                + "EDES.id,  " // 23
-                + "ptax.id " // 24
+                + "count(distinct BA), " // 17
+                + "count(distinct AD), " // 18
+                + "count(distinct SU), " // 19
+                + "EDES.id,  " // 20
+                + "ptax.id " // 21
                 + "from ExpressionExperiment as ee inner join ee.bioAssays as BA  "
                 + "left join BA.sampleUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc "
@@ -1713,26 +1714,18 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             v.setTroubled( ( ( Boolean ) res[14] ) );
             v.setNeedsAttention( ( Boolean ) res[15] );
             v.setCurationNote( ( String ) res[16] );
-            AuditEvent lastTroubleEvent = ( AuditEvent ) list.get( 17 );
-            if ( lastTroubleEvent != null )
-                v.setLastTroubledEvent( lastTroubleEvent );
-
-            AuditEvent lastNeedsAttentionEvent = ( AuditEvent ) list.get( 18 );
-            if ( lastTroubleEvent != null )
-                v.setLastNeedsAttentionEvent( lastNeedsAttentionEvent );
-
-            AuditEvent lastCurationNoteEvent = ( AuditEvent ) list.get( 19 );
-            if ( lastTroubleEvent != null )
-                v.setLastCurationNoteEvent( lastCurationNoteEvent );
 
             //counts
-            v.setBioAssayCount( ( ( Long ) res[20] ).intValue() );
-            v.setArrayDesignCount( ( ( Long ) res[21] ).intValue() );
-            v.setBioMaterialCount( ( ( Long ) res[22] ).intValue() );
+            v.setBioAssayCount( ( ( Long ) res[17] ).intValue() );
+            v.setArrayDesignCount( ( ( Long ) res[18] ).intValue() );
+            v.setBioMaterialCount( ( ( Long ) res[19] ).intValue() );
 
             //other
-            v.setExperimentalDesign( ( Long ) res[23] );
-            v.setParentTaxonId( ( Long ) res[24] );
+            v.setExperimentalDesign( ( Long ) res[20] );
+            v.setParentTaxonId( ( Long ) res[21] );
+
+            //This was causing null results when being retrieved through the original query
+            this.addCurationEvents( v );
 
             vo.put( eeId, v );
         }

@@ -67,7 +67,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Boolean hasDifferentialExpressionAnalysis = null;
     private Boolean hasEitherIntensity = null;
     private Boolean hasProbeSpecificForQueryGene;
-    private Long id;
     private String investigators;
     private Boolean isPublic = null;
     private Boolean isShared = false;
@@ -118,7 +117,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      */
     public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
         this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
-                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastCurationNoteEvent,
+                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastNoteUpdateEvent,
                 otherBean.accession, otherBean.arrayDesignCount, otherBean.autoTagDate, otherBean.batchFetchEventType,
                 otherBean.bioAssayCount, otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
                 otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,
@@ -158,7 +157,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
             Integer processedExpressionVectorCount, Integer pubmedId,
             Collection<AuditEventValueObject> sampleRemovedFlags, String shortName, String source,
             Long sourceExperiment, String taxon, Long taxonId, String technologyType ) {
-        super( lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
+        super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.accession = accession;
         this.arrayDesignCount = arrayDesignCount;
         this.autoTagDate = autoTagDate;
@@ -187,7 +186,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
         this.hasEitherIntensity = hasEitherIntensity;
         this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
-        this.id = id;
         this.investigators = investigators;
         this.isPublic = isPublic;
         this.isShared = isShared;
@@ -488,15 +486,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setHasProbeSpecificForQueryGene( Boolean hasProbeSpecificForQueryGene ) {
         this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
-    }
-
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public String getInvestigators() {

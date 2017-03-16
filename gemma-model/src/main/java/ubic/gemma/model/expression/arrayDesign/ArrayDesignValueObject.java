@@ -53,8 +53,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     private Boolean hasSequenceAssociations;
 
-    private Long id;
-
     private Boolean isMerged;
 
     private Boolean isMergee;
@@ -100,7 +98,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
      */
     public ArrayDesignValueObject( ArrayDesignValueObject otherBean ) {
         this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
-                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastCurationNoteEvent,
+                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastNoteUpdateEvent,
                 otherBean.color, otherBean.dateCached, otherBean.description, otherBean.designElementCount,
                 otherBean.expressionExperimentCount, otherBean.hasBlatAssociations, otherBean.hasGeneAssociations,
                 otherBean.hasSequenceAssociations, otherBean.id, otherBean.isMerged, otherBean.isMergee,
@@ -130,7 +128,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
             Date lastRepeatMask, Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes,
             String numProbeAlignments, String numProbeSequences, String numProbesToGenes, String shortName,
             String taxon, String technologyType, Boolean hasAnnotationFile ) {
-        super( lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
+        super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
         this.dateCached = dateCached;
         this.description = description;
@@ -139,7 +137,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.hasBlatAssociations = hasBlatAssociations;
         this.hasGeneAssociations = hasGeneAssociations;
         this.hasSequenceAssociations = hasSequenceAssociations;
-        this.id = id;
         this.isMerged = isMerged;
         this.isMergee = isMergee;
         this.isSubsumed = isSubsumed;
@@ -267,14 +264,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     public void setHasSequenceAssociations( Boolean hasSequenceAssociations ) {
         this.hasSequenceAssociations = hasSequenceAssociations;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     /**

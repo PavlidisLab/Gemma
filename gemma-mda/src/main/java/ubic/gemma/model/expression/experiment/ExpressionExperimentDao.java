@@ -1,6 +1,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.CuratableDao;
@@ -26,6 +27,7 @@ import java.util.Map;
  *
  * @author tesarst
  */
+@Repository
 public interface ExpressionExperimentDao extends InitializingBean, CuratableDao<ExpressionExperiment> {
 
     Collection<ExpressionExperiment> findByInvestigator( Contact investigator );
