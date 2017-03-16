@@ -137,7 +137,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertFalse( auditable.getCurationDetails().getTroubled() );
         assertTrue( auditable.getCurationDetails().getNeedsAttention() );
 
-        assertEquals( DoesNotNeedAttentionEvent.class,
+        assertEquals( NeedsAttentionEvent.class,
                 ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
 
         for ( AuditEvent e : auditTrail.getEvents() ) {
@@ -176,14 +176,12 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
+
         Collection<AuditEvent> events = auditTrail.getEvents();
         assertTrue( events.contains( ev ) );
+
         events = auditTrailService.getEvents( auditable );
         assertTrue( events.contains( ev ) );
-
-        Auditable result = arrayDesignService.find( auditable );
-        assertTrue( result.getAuditTrail().getEvents().contains( ev ));
-
     }
 
     @Test
