@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
@@ -39,12 +40,12 @@ import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 @Service
 public class PersisterHelper extends RelationshipPersister {
 
-    private final CurationDetailsDao curationDetailsDao;
+    @Autowired
+    private CurationDetailsDao curationDetailsDao;
 
     @Autowired
-    public PersisterHelper( SessionFactory sessionFactory, CurationDetailsDao curationDetailsDao ) {
+    public PersisterHelper( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
-        this.curationDetailsDao = curationDetailsDao;
     }
 
     @Override
@@ -54,8 +55,18 @@ public class PersisterHelper extends RelationshipPersister {
 
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
-            if ( entity instanceof Curatable ) {
-                this.initializeCurationDetails( ( Curatable ) entity );
+            if ( entity instanceof Auditable ) {
+                Auditable auditable = ( Auditable ) entity;
+
+                if ( auditable.getAuditTrail() == null ) {
+                    auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+                }
+
+                auditable.setAuditTrail( persistAuditTrail( auditable.getAuditTrail() ) );
+
+                if ( entity instanceof Curatable ) {
+                    this.initializeCurationDetails( ( Curatable ) entity );
+                }
             }
 
             return super.persist( entity );
