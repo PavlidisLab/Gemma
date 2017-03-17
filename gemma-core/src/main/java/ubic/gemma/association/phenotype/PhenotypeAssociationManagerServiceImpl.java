@@ -628,7 +628,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // dbFromColln = iter.next();
         // DumpsValueObject currObj;
         // currObj = new DumpsValueObject( dbFromColln.getName(), dbFromColln.getWebUri(),
-        // (dbFromColln.getLastUpdateDate()).toString() );
+        // (dbFromColln.getLastUpdated()).toString() );
         // currObj = new DumpsValueObject( "test", "test", "test" );
         // dumpsValueObjects.add( currObj );
         // }

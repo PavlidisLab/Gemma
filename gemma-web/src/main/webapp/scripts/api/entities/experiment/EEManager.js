@@ -70,8 +70,10 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       name : "troubled",
       type : "boolean"
    }, {
-      name : "troubleDetails",
-      type : "string"
+       name : "needsAttention",
+       type : "boolean"
+   }, {
+       name : "curationNote"
    }, {
       name : "missingValueAnalysisEventType"
    }, {
@@ -89,7 +91,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       name : "dateDifferentialAnalysis",
       type : 'date'
    }, {
-      name : "dateLastUpdated",
+      name : "lastUpdated",
       type : 'date'
    }, {
       name : "dateLinkAnalysis",

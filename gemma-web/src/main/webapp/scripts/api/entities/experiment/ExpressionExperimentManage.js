@@ -219,7 +219,7 @@ Gemma.EEReportGrid = Ext
                }, manager.record ),
                remoteSort : false,
                sortInfo : {
-                  field : 'dateLastUpdated',
+                  field : 'lastUpdated',
                   direction : 'DESC'
                },
                sort : function( fieldName, dir ) {

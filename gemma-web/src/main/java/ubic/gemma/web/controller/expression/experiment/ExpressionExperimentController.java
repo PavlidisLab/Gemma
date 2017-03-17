@@ -1726,9 +1726,9 @@ public class ExpressionExperimentController {
                 case "troubled":
                     orderBy = "troubled";
                     break;
-                case "dateLastUpdated":
+                case "lastUpdated":
                 case "modDate":
-                    orderBy = "dateLastUpdated";
+                    orderBy = "lastUpdated";
                     descending = !descending;
                     break;
                 default:
@@ -1792,7 +1792,7 @@ public class ExpressionExperimentController {
         } else {
             // everything
             initialListOfValueObject = new ArrayList<>(
-                    expressionExperimentService.loadAllValueObjectsOrdered( "dateLastUpdated", descending ) );
+                    expressionExperimentService.loadAllValueObjectsOrdered( "lastUpdated", descending ) );
         }
         return initialListOfValueObject;
     }

@@ -45,7 +45,7 @@ Gemma.ExperimentPagingStore = Ext.extend( Ext.data.Store, {
       adjustedStart : 'adjustedStart',
       // used by store to set its sortInfo
       sortInfo : {
-         field : "dateLastUpdated",
+         field : "lastUpdated",
          direction : "DESC"
       },
       fields : [ {
@@ -79,7 +79,7 @@ Gemma.ExperimentPagingStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "troubleDetails"
       }, {
-         name : "dateLastUpdated",
+         name : "lastUpdated",
          type : "date",
          sortDir : 'DESC'
       } ]
@@ -185,7 +185,7 @@ Gemma.ExperimentPagingGrid = Ext
             },
             {
                header : "Updated",
-               dataIndex : 'dateLastUpdated',
+               dataIndex : 'lastUpdated',
                sortable : true,
                width : 0.06,
                hidden : true,
@@ -261,7 +261,7 @@ Gemma.ExperimentPagingGrid = Ext
                }
             } );
 
-            pageStore.setDefaultSort( 'dateLastUpdated' );
+            pageStore.setDefaultSort( 'lastUpdated' );
 
             return pageStore;
          },
@@ -529,7 +529,7 @@ Gemma.ExperimentPagingGrid = Ext
                   }
                } );
             }
-            pageStore.setDefaultSort( 'dateLastUpdated' );
+            pageStore.setDefaultSort( 'lastUpdated' );
 
             pageStore.on( 'load', function( store, records, options ) {
                // console.log(records[0]);
@@ -685,7 +685,7 @@ Gemma.ExperimentPagingGrid = Ext
                var index = this.getColumnModel().findColumnIndex( 'troubled' );
                this.getColumnModel().setHidden( index, !isAdmin );
 
-               index = this.getColumnModel().findColumnIndex( 'dateLastUpdated' );
+               index = this.getColumnModel().findColumnIndex( 'lastUpdated' );
                this.getColumnModel().setHidden( index, !isAdmin );
             }
 
