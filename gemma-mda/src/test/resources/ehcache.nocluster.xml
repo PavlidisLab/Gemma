@@ -318,10 +318,10 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEventImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventImpl" maxElementsInMemory="10000"

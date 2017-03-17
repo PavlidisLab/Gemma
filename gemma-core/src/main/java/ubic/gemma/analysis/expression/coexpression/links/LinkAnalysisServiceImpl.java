@@ -18,27 +18,16 @@
  */
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-
+import cern.colt.list.ObjectArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.impl.DenseDoubleMatrix1D;
+import cern.jet.math.Functions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.InsufficientProbesException;
@@ -56,6 +45,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistrib
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent;
@@ -67,15 +57,17 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import cern.colt.list.ObjectArrayList;
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.impl.DenseDoubleMatrix1D;
-import cern.jet.math.Functions;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.text.NumberFormat;
+import java.util.*;
 
 /**
  * Running link analyses through the spring context; will persist the results if the configuration says so. See
  * LinkAnalysisCli for more instructions.
- * 
+ *
  * @author Paul
  * @version $Id$
  */
@@ -162,16 +154,16 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     @Override
     public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix(
-                linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
+                .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
         if ( datamatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
-                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                    + " rows" );
+            throw new InsufficientProbesException(
+                    "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
+                            + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
 
@@ -246,8 +238,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         qcCheck( linkAnalysisConfig, ee );
 
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig,
-                dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
+                .getFilteredMatrix( ee, filterConfig, dataVectors );
 
         setUpForAnalysis( ee, la, dataVectors, datamatrix );
 
@@ -264,9 +256,9 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             log.info( "No rows left after filtering" );
             throw new InsufficientProbesException( "No rows left after filtering" );
         } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException( "To few rows (" + datamatrix.rows()
-                    + "), data sets are not analyzed unless they have at least " + FilterConfig.MINIMUM_ROWS_TO_BOTHER
-                    + " rows" );
+            throw new InsufficientProbesException(
+                    "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
+                            + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
         }
 
         log.info( "Starting link analysis... " + ee );
@@ -287,7 +279,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
     }
 
-    private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
+    private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
         ee = eeService.thawLite( ee );
         auditTrailService.addUpdateEvent( ee, eventType, note );
@@ -304,7 +296,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Check properties of the distribution TODO refactor this out.
-     * 
+     *
      * @throws UnsuitableForAnalysisException
      */
     private void diagnoseCorrelationDistribution( ExpressionExperiment ee, CoexpCorrelationDistribution corrDist )
@@ -344,8 +336,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 lowerTailDensity = s;
             } else if ( bin == ( int ) Math.floor( numBins * ( 1.0 - tailFraction ) ) ) {
                 upperTailDensity = 1.0 - s;
-            } else if ( bin > ( int ) Math.floor( lowerLimitofMiddle * numBins )
-                    && bin < ( int ) Math.floor( upperLimitofMiddle * numBins ) ) {
+            } else if ( bin > ( int ) Math.floor( lowerLimitofMiddle * numBins ) && bin < ( int ) Math
+                    .floor( upperLimitofMiddle * numBins ) ) {
                 middleDensity += histogram.get( bin );
             }
 
@@ -378,20 +370,21 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Remove rows corresponding to probes that don't map to genes. Row order may be changed.
-     * 
+     *
      * @param dataMatrix
      * @param probeToGeneMap
      * @return
      */
     private ExpressionDataDoubleMatrix filterUnmappedProbes( ExpressionDataDoubleMatrix dataMatrix,
             Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
-        return new ExpressionDataDoubleMatrix( dataMatrix, new ArrayList<CompositeSequence>( probeToGeneMap.keySet() ) );
+        return new ExpressionDataDoubleMatrix( dataMatrix,
+                new ArrayList<CompositeSequence>( probeToGeneMap.keySet() ) );
     }
 
     /**
      * Fills in the probe2gene map for the linkAnalysis. Note that the collection DOES NOT contain probes that have NO
      * genes mapped
-     * 
+     *
      * @param la
      * @param dataVectors
      * @param eeDoubleMatrix - used to make sure we don't use probes from vectors that are removed?
@@ -402,7 +395,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         Collection<CompositeSequence> probesForVectors = new HashSet<>();
         for ( DesignElementDataVector v : dataVectors ) {
             CompositeSequence cs = v.getDesignElement();
-            if ( eeDoubleMatrix.getRow( cs ) != null ) probesForVectors.add( cs );
+            if ( eeDoubleMatrix.getRow( cs ) != null )
+                probesForVectors.add( cs );
         }
 
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> specificityData = csService
@@ -448,8 +442,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
         // assert !probeToGeneMap.isEmpty();
         if ( probeToGeneMap.isEmpty() ) {
-            throw new IllegalStateException( "No probes are mapped to genes; example="
-                    + probeToGeneMap.keySet().iterator().next() );
+            throw new IllegalStateException(
+                    "No probes are mapped to genes; example=" + probeToGeneMap.keySet().iterator().next() );
         }
 
         la.setProbeToGeneMap( probeToGeneMap );
@@ -500,7 +494,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Reject if experiment has outliers or batch effects. TODO use BioAssaySet instead.
-     * 
+     *
      * @param ee
      * @throws UnsuitableForAnalysisException
      */
@@ -540,15 +534,15 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                     return;
                 }
 
-                throw new UnsuitableForAnalysisException( ee, String.format( "Strong batch effect detected (%s)",
-                        batchEffect ) );
+                throw new UnsuitableForAnalysisException( ee,
+                        String.format( "Strong batch effect detected (%s)", batchEffect ) );
             }
         }
     }
 
     /**
      * Save the analysis data, either to DB or a file.
-     * 
+     *
      * @param ee
      * @param la
      * @param linkAnalysisConfig
@@ -589,7 +583,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Initializes the LinkAnalysis object; populates the probe2gene map.
-     * 
+     *
      * @param ee
      * @param la
      * @param dataVectors
@@ -611,7 +605,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Initializes the LinkAnalysis object for data file input; populates the probe2gene map.
-     * 
+     *
      * @param ee
      * @param la
      * @param dataVectors
@@ -627,7 +621,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Write links as text.
-     * 
+     *
      * @param la
      * @param wr
      */
@@ -655,7 +649,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         for ( int n = links.size(); i < n; i++ ) {
 
             Object val = links.getQuick( i );
-            if ( val == null ) continue;
+            if ( val == null )
+                continue;
             Link m = ( Link ) val;
             Double w = m.getWeight();
 
@@ -664,8 +659,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             int x = m.getx();
             int y = m.gety();
 
-            if ( probeDegreeThreshold > 0
-                    && ( la.getProbeDegree( x ) > probeDegreeThreshold || la.getProbeDegree( y ) > probeDegreeThreshold ) ) {
+            if ( probeDegreeThreshold > 0 && ( la.getProbeDegree( x ) > probeDegreeThreshold
+                    || la.getProbeDegree( y ) > probeDegreeThreshold ) ) {
                 skippedDueToDegree++;
                 continue;
             }
@@ -705,7 +700,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
             if ( la.getConfig().isSubsetUsed() ) {
                 rand = generator.nextDouble();
-                if ( rand > fraction ) continue;
+                if ( rand > fraction )
+                    continue;
             }
 
             buf.add( p1.getId() + "\t" + p2.getId() + "\t" + gene1String + "\t" + gene2String + "\t" + nf.format( w )
@@ -724,7 +720,8 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         }
 
         if ( la.getConfig().isSubsetUsed() ) {// subset option activated
-            log.info( "Done, " + keptLinksCount + "/" + links.size() + " links kept, " + buf.size() + " links printed" );
+            log.info(
+                    "Done, " + keptLinksCount + "/" + links.size() + " links kept, " + buf.size() + " links printed" );
             // wr.write("# Amount of links before subsetting/after subsetting: " + links.size() + "/" + numPrinted +
             // "\n" );
         } else {

@@ -437,7 +437,7 @@ Gemma.EEReportGridColumnRenderers = {
          var color = "#000";
          var suggestRun = true;
          var qtip = 'ext:qtip="OK"';
-         if ( type === 'FailedLinkAnalysisEventImpl' ) {
+         if ( type === 'FailedLinkAnalysisEvent' ) {
             color = 'red';
             qtip = 'ext:qtip="Failed"';
          } else if ( type === 'TooSmallDatasetLinkAnalysisEventImpl' ) {
@@ -563,7 +563,7 @@ Gemma.EEReportGridColumnRenderers = {
             var color = "#000";
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if ( type == 'FailedMissingValueAnalysisEventImpl' ) {
+            if ( type == 'FailedMissingValueAnalysisEvent' ) {
                color = 'red';
                qtip = 'ext:qtip="Failed"';
             }
@@ -629,7 +629,7 @@ Gemma.EEReportGridColumnRenderers = {
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
 
-            if ( type == 'FailedDifferentialExpressionAnalysisEventImpl' ) {
+            if ( type == 'FailedDifferentialExpressionAnalysisEvent' ) {
                color = 'red';
                qtip = 'ext:qtip="Failed"';
             } else if ( record.get( 'differentialExpressionAnalyses' ).length == 0 ) {

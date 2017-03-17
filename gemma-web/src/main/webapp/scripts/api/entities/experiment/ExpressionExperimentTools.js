@@ -95,7 +95,7 @@ Gemma.ExpressionExperimentTools = Ext
                var color = "#000";
                var suggestRun = true;
                var qtip = 'ext:qtip="Analysis was OK"';
-               if ( type == 'FailedLinkAnalysisEventImpl' ) {
+               if ( type == 'FailedLinkAnalysisEvent' ) {
                   color = 'red';
                   qtip = 'ext:qtip="Analysis failed"';
                } else if ( type == 'TooSmallDatasetLinkAnalysisEventImpl' ) {
@@ -149,7 +149,7 @@ Gemma.ExpressionExperimentTools = Ext
                   var color = "#000";
                   var suggestRun = true;
                   var qtip = 'ext:qtip="OK"';
-                  if ( type == 'FailedMissingValueAnalysisEventImpl' ) {
+                  if ( type == 'FailedMissingValueAnalysisEvent' ) {
                      color = 'red';
                      qtip = 'ext:qtip="Failed"';
                   }
@@ -259,7 +259,7 @@ Gemma.ExpressionExperimentTools = Ext
                   var color = "#000";
                   var suggestRun = true;
                   var qtip = 'ext:qtip="OK"';
-                  if ( type == 'FailedDifferentialExpressionAnalysisEventImpl' ) { // note:
+                  if ( type == 'FailedDifferentialExpressionAnalysisEvent' ) { // note:
                      // no
                      // such
                      // thing.
