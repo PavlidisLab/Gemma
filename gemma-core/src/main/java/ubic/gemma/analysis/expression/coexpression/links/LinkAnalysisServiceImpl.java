@@ -69,12 +69,11 @@ import java.util.*;
  * LinkAnalysisCli for more instructions.
  *
  * @author Paul
- * @version $Id$
  */
 @Component
 public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
-    private static Log log = LogFactory.getLog( LinkAnalysisServiceImpl.class );
+    private static final Log log = LogFactory.getLog( LinkAnalysisServiceImpl.class );
 
     @Autowired
     private AuditTrailService auditTrailService;
@@ -100,14 +99,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService#process(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.gemma.analysis.preprocess.filter.FilterConfig,
-     * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig)
-     */
     @Override
     public LinkAnalysis process( ExpressionExperiment ee, FilterConfig filterConfig,
             LinkAnalysisConfig linkAnalysisConfig ) {
@@ -144,27 +135,13 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService#process(ubic.gemma.model.genome.Taxon,
-     * java.util.Collection, ubic.gemma.analysis.preprocess.filter.FilterConfig,
-     * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig)
-     */
     @Override
     public LinkAnalysis processVectors( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
         ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService
                 .getFilteredMatrix( linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
-        if ( datamatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException(
-                    "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
-                            + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
-        }
+        checkDatamatrix( datamatrix );
         LinkAnalysis la = new LinkAnalysis( linkAnalysisConfig );
 
         datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
@@ -182,13 +159,17 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     }
 
-    /**
-     * @param ee
-     * @param eeDoubleMatrix
-     * @param filterConfig
-     * @param linkAnalysisConfig
-     * @param la
-     */
+    private void checkDatamatrix( ExpressionDataDoubleMatrix datamatrix ) {
+        if ( datamatrix.rows() == 0 ) {
+            log.info( "No rows left after filtering" );
+            throw new InsufficientProbesException( "No rows left after filtering" );
+        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
+            throw new InsufficientProbesException(
+                    "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
+                            + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
+        }
+    }
+
     private void addAnalysisObj( ExpressionExperiment ee, ExpressionDataDoubleMatrix eeDoubleMatrix,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig, LinkAnalysis la ) {
 
@@ -222,13 +203,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         la.setAnalysisObj( analysis );
     }
 
-    /**
-     * @param ee
-     * @param filterConfig
-     * @param linkAnalysisConfig
-     * @param la
-     * @param dataVectors
-     */
     private void analyze( ExpressionExperiment ee, FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig,
             LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors ) {
 
@@ -252,14 +226,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
          */
         datamatrix = filterUnmappedProbes( datamatrix, probeToGeneMap );
 
-        if ( datamatrix.rows() == 0 ) {
-            log.info( "No rows left after filtering" );
-            throw new InsufficientProbesException( "No rows left after filtering" );
-        } else if ( datamatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
-            throw new InsufficientProbesException(
-                    "To few rows (" + datamatrix.rows() + "), data sets are not analyzed unless they have at least "
-                            + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " rows" );
-        }
+        checkDatamatrix( datamatrix );
 
         log.info( "Starting link analysis... " + ee );
 
@@ -285,19 +252,12 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
-    /**
-     * @param bin
-     * @param numBins
-     * @return
-     */
     private double binToCorrelation( int bin, int numBins ) {
         return bin * 2.0 / numBins - 1.0;
     }
 
     /**
      * Check properties of the distribution TODO refactor this out.
-     *
-     * @throws UnsuitableForAnalysisException
      */
     private void diagnoseCorrelationDistribution( ExpressionExperiment ee, CoexpCorrelationDistribution corrDist )
             throws UnsuitableForAnalysisException {
@@ -370,23 +330,16 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Remove rows corresponding to probes that don't map to genes. Row order may be changed.
-     *
-     * @param dataMatrix
-     * @param probeToGeneMap
-     * @return
      */
     private ExpressionDataDoubleMatrix filterUnmappedProbes( ExpressionDataDoubleMatrix dataMatrix,
             Map<CompositeSequence, Set<Gene>> probeToGeneMap ) {
-        return new ExpressionDataDoubleMatrix( dataMatrix,
-                new ArrayList<CompositeSequence>( probeToGeneMap.keySet() ) );
+        return new ExpressionDataDoubleMatrix( dataMatrix, new ArrayList<>( probeToGeneMap.keySet() ) );
     }
 
     /**
      * Fills in the probe2gene map for the linkAnalysis. Note that the collection DOES NOT contain probes that have NO
      * genes mapped
      *
-     * @param la
-     * @param dataVectors
      * @param eeDoubleMatrix - used to make sure we don't use probes from vectors that are removed?
      */
     private void getProbe2GeneMap( LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors,
@@ -449,10 +402,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         la.setProbeToGeneMap( probeToGeneMap );
     }
 
-    /**
-     * @param expressionExperiment
-     * @param e
-     */
     private void logFailure( ExpressionExperiment expressionExperiment, Exception e ) {
 
         if ( e instanceof InsufficientSamplesException ) {
@@ -494,9 +443,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Reject if experiment has outliers or batch effects. TODO use BioAssaySet instead.
-     *
-     * @param ee
-     * @throws UnsuitableForAnalysisException
      */
     private void qcCheck( LinkAnalysisConfig config, ExpressionExperiment ee ) throws UnsuitableForAnalysisException {
 
@@ -542,11 +488,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Save the analysis data, either to DB or a file.
-     *
-     * @param ee
-     * @param la
-     * @param linkAnalysisConfig
-     * @param filterConfig
      */
     private void saveResults( ExpressionExperiment ee, LinkAnalysis la, LinkAnalysisConfig linkAnalysisConfig,
             FilterConfig filterConfig ) {
@@ -583,11 +524,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Initializes the LinkAnalysis object; populates the probe2gene map.
-     *
-     * @param ee
-     * @param la
-     * @param dataVectors
-     * @param eeDoubleMatrix
      */
     private void setUpForAnalysis( ExpressionExperiment ee, LinkAnalysis la,
             Collection<ProcessedExpressionDataVector> dataVectors, ExpressionDataDoubleMatrix eeDoubleMatrix ) {
@@ -605,11 +541,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Initializes the LinkAnalysis object for data file input; populates the probe2gene map.
-     *
-     * @param ee
-     * @param la
-     * @param dataVectors
-     * @param eeDoubleMatrix
      */
     private void setUpForAnalysis( Taxon t, LinkAnalysis la, Collection<ProcessedExpressionDataVector> dataVectors,
             ExpressionDataDoubleMatrix eeDoubleMatrix ) {
@@ -621,9 +552,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     /**
      * Write links as text.
-     *
-     * @param la
-     * @param wr
      */
     private void writeLinks( final LinkAnalysis la, FilterConfig filterConfig, Writer wr ) throws IOException {
         Map<CompositeSequence, Set<Gene>> probeToGeneMap = la.getProbeToGeneMap();
@@ -643,7 +571,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         int i = 0;
         int keptLinksCount = 0;
         Random generator = new Random();
-        double rand = 0.0;
+        double rand;
         double fraction = subsetSize / links.size();
         int skippedDueToDegree = 0;
         for ( int n = links.size(); i < n; i++ ) {
@@ -653,8 +581,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
                 continue;
             Link m = ( Link ) val;
             Double w = m.getWeight();
-
-            assert w != null;
 
             int x = m.getx();
             int y = m.gety();
@@ -671,7 +597,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
             Set<Gene> g1 = probeToGeneMap.get( p1 );
             Set<Gene> g2 = probeToGeneMap.get( p2 );
 
-            List<String> genes1 = new ArrayList<String>();
+            List<String> genes1 = new ArrayList<>();
             for ( Gene cluster : g1 ) {
                 String t = cluster.getOfficialSymbol();
                 genes1.add( t );
