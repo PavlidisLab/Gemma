@@ -1803,6 +1803,15 @@ public class ExpressionExperimentController {
 
         Collection<ExpressionExperimentDetailsValueObject> toRemove = new ArrayList<>();
         for ( ExpressionExperimentDetailsValueObject record : records ) {
+            if(record.getArrayDesigns() == null) {
+                // Loading array designs which we need for the parent trouble check.
+                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( expressionExperimentService.load( record.getId() ) );
+                LinkedList<Long> adIds = new LinkedList<>();
+                for ( ArrayDesign ad : ads ) {
+                    adIds.add( ad.getId() );
+                }
+                record.setArrayDesigns( arrayDesignService.loadValueObjects( adIds ) );
+            }
 
             if ( record.getTroubled() ) {
                 toRemove.add( record );
