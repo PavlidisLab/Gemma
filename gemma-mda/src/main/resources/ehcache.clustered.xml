@@ -922,7 +922,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -931,16 +931,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
