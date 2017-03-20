@@ -85,7 +85,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     private String technologyType;
 
-    private Boolean hasAnnotationFile;
+    private boolean hasAnnotationFile;
 
     public ArrayDesignValueObject() {
     }
@@ -105,7 +105,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
                 otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
                 otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
                 otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.technologyType, otherBean.hasAnnotationFile );
+                otherBean.shortName, otherBean.taxon, otherBean.technologyType);
     }
 
     /**
@@ -127,7 +127,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
             Boolean isMerged, Boolean isMergee, Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping,
             Date lastRepeatMask, Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes,
             String numProbeAlignments, String numProbeSequences, String numProbesToGenes, String shortName,
-            String taxon, String technologyType, Boolean hasAnnotationFile ) {
+            String taxon, String technologyType) {
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
         this.dateCached = dateCached;
@@ -153,7 +153,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.shortName = shortName;
         this.taxon = taxon;
         this.technologyType = technologyType;
-        this.hasAnnotationFile = hasAnnotationFile;
     }
 
     public static Collection<ArrayDesignValueObject> create( Collection<ArrayDesign> subsumees ) {

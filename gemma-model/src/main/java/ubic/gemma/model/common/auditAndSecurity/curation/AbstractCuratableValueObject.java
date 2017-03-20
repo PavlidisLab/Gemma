@@ -113,9 +113,8 @@ public abstract class AbstractCuratableValueObject {
     /**
      * @return a string describing the current trouble of this object. In this case, only the trouble of the Expression
      * Experiment are described. If you also need to include the Array Design trouble info, use
-     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsvalueObject}
+     * {@link ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject}
      */
-    @SuppressWarnings("JavadocReference") // Inspector can not see the EEDetailsVo because it is in gemma-mda for some reason
     public String getTroubleDetails() {
         return this.getTroubleDetails( true );
     }
