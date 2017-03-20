@@ -134,19 +134,17 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
                 otherBean.numPopulatedFactors, otherBean.parentTaxonId, otherBean.pcaAnalysisEventType,
                 otherBean.processedDataVectorComputationEventType, otherBean.processedExpressionVectorCount,
                 otherBean.pubmedId, otherBean.sampleRemovedFlags, otherBean.shortName, otherBean.source,
-                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType
-
-        );
+                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType );
     }
 
-    public ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEvent troubledEvent,
-            Boolean needsAttention, AuditEvent needsAttentionEvent, String curationNote, AuditEvent noteEvent,
-            String accession, Integer arrayDesignCount, Date autoTagDate, String batchFetchEventType,
-            Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
-            Boolean currentUserHasWritePermission, Boolean currentUserIsOwner, Date dateArrayDesignLastUpdated,
-            Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis, Date dateLinkAnalysis,
-            Date dateMissingValueAnalysis, Date datePcaAnalysis, Date dateProcessedDataVectorComputation,
-            Integer designElementDataVectorCount,
+    public ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
+            Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
+            AuditEventValueObject noteEvent, String accession, Integer arrayDesignCount, Date autoTagDate,
+            String batchFetchEventType, Integer bioAssayCount, Integer bioMaterialCount, String clazz,
+            Integer coexpressionLinkCount, Boolean currentUserHasWritePermission, Boolean currentUserIsOwner,
+            Date dateArrayDesignLastUpdated, Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis,
+            Date dateLinkAnalysis, Date dateMissingValueAnalysis, Date datePcaAnalysis,
+            Date dateProcessedDataVectorComputation, Integer designElementDataVectorCount,
             Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses,
             Long experimentalDesign, String externalDatabase, String externalUri, Boolean hasBothIntensities,
             Boolean hasCoexpressionAnalysis, Boolean hasDifferentialExpressionAnalysis, Boolean hasEitherIntensity,

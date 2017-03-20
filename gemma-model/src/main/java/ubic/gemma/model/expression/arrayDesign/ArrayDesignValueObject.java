@@ -18,7 +18,7 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 
 import java.util.Collection;
@@ -105,7 +105,7 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
                 otherBean.isSubsumed, otherBean.isSubsumer, otherBean.lastGeneMapping, otherBean.lastRepeatMask,
                 otherBean.lastSequenceAnalysis, otherBean.lastSequenceUpdate, otherBean.name, otherBean.numGenes,
                 otherBean.numProbeAlignments, otherBean.numProbeSequences, otherBean.numProbesToGenes,
-                otherBean.shortName, otherBean.taxon, otherBean.technologyType);
+                otherBean.shortName, otherBean.taxon, otherBean.technologyType );
     }
 
     /**
@@ -120,14 +120,14 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
 
     }
 
-    public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEvent troubledEvent, Boolean needsAttention,
-            AuditEvent needsAttentionEvent, String curationNote, AuditEvent noteEvent, String color, String dateCached,
-            String description, Integer designElementCount, Integer expressionExperimentCount,
-            Boolean hasBlatAssociations, Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id,
-            Boolean isMerged, Boolean isMergee, Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping,
-            Date lastRepeatMask, Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes,
-            String numProbeAlignments, String numProbeSequences, String numProbesToGenes, String shortName,
-            String taxon, String technologyType) {
+    public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
+            Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
+            AuditEventValueObject noteEvent, String color, String dateCached, String description,
+            Integer designElementCount, Integer expressionExperimentCount, Boolean hasBlatAssociations,
+            Boolean hasGeneAssociations, Boolean hasSequenceAssociations, Long id, Boolean isMerged, Boolean isMergee,
+            Boolean isSubsumed, Boolean isSubsumer, Date lastGeneMapping, Date lastRepeatMask,
+            Date lastSequenceAnalysis, Date lastSequenceUpdate, String name, String numGenes, String numProbeAlignments,
+            String numProbeSequences, String numProbesToGenes, String shortName, String taxon, String technologyType ) {
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.color = color;
         this.dateCached = dateCached;

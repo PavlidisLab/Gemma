@@ -2,7 +2,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.openjena.atlas.logging.Log;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
 
@@ -21,22 +21,23 @@ public abstract class AbstractCuratableValueObject {
 
     protected Boolean troubled = false;
 
-    protected AuditEvent lastTroubledEvent;
+    protected AuditEventValueObject lastTroubledEvent;
 
     protected Boolean needsAttention = false;
 
-    protected AuditEvent lastNeedsAttentionEvent;
+    protected AuditEventValueObject lastNeedsAttentionEvent;
 
     protected String curationNote;
 
-    protected AuditEvent lastNoteUpdateEvent;
+    protected AuditEventValueObject lastNoteUpdateEvent;
 
     public AbstractCuratableValueObject() {
     }
 
-    public AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled, AuditEvent lastTroubledEvent,
-            Boolean needsAttention, AuditEvent lastNeedsAttentionEvent, String curationNote,
-            AuditEvent lastNoteUpdateEvent ) {
+    public AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled,
+            AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
+            AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
+            AuditEventValueObject lastNoteUpdateEvent ) {
         this.id = id;
         this.lastUpdated = lastUpdated;
         this.troubled = troubled;
@@ -71,11 +72,11 @@ public abstract class AbstractCuratableValueObject {
         this.troubled = troubled;
     }
 
-    public AuditEvent getLastTroubledEvent() {
+    public AuditEventValueObject getLastTroubledEvent() {
         return lastTroubledEvent;
     }
 
-    public void setLastTroubledEvent( AuditEvent lastTroubledEvent ) {
+    public void setLastTroubledEvent( AuditEventValueObject lastTroubledEvent ) {
         this.lastTroubledEvent = lastTroubledEvent;
     }
 
@@ -87,11 +88,11 @@ public abstract class AbstractCuratableValueObject {
         this.needsAttention = needsAttention;
     }
 
-    public AuditEvent getLastNeedsAttentionEvent() {
+    public AuditEventValueObject getLastNeedsAttentionEvent() {
         return lastNeedsAttentionEvent;
     }
 
-    public void setLastNeedsAttentionEvent( AuditEvent lastNeedsAttentionEvent ) {
+    public void setLastNeedsAttentionEvent( AuditEventValueObject lastNeedsAttentionEvent ) {
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
     }
 
@@ -103,11 +104,11 @@ public abstract class AbstractCuratableValueObject {
         this.curationNote = curationNote;
     }
 
-    public AuditEvent getLastNoteUpdateEvent() {
+    public AuditEventValueObject getLastNoteUpdateEvent() {
         return lastNoteUpdateEvent;
     }
 
-    public void setLastNoteUpdateEvent( AuditEvent lastNoteUpdateEvent ) {
+    public void setLastNoteUpdateEvent( AuditEventValueObject lastNoteUpdateEvent ) {
         this.lastNoteUpdateEvent = lastNoteUpdateEvent;
     }
 
@@ -122,10 +123,10 @@ public abstract class AbstractCuratableValueObject {
 
     public String getTroubleDetails( boolean htmlEscape ) {
         String details = TROUBLE_DETAILS_NONE;
-        if(this.getTroubled()){
-            if(this.getLastTroubledEvent() == null){
-                Log.warn(this, "Curatable object is troubled, but has no trouble event! Id: "+this.getId());
-            }else{
+        if ( this.getTroubled() ) {
+            if ( this.getLastTroubledEvent() == null ) {
+                Log.warn( this, "Curatable object is troubled, but has no trouble event! Id: " + this.getId() );
+            } else {
                 details = this.getLastTroubledEvent().toString();
             }
         }

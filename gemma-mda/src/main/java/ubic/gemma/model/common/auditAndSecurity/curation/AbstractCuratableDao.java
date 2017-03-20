@@ -7,6 +7,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.jdbc.Work;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
 import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDaoImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDaoImpl;
@@ -234,9 +235,15 @@ public abstract class AbstractCuratableDao<T extends Curatable> extends Hibernat
         Long id = vo.getId();
         Curatable curatable = this.load( id );
         CurationDetails details = curatable.getCurationDetails();
-        vo.setLastNoteUpdateEvent( details.getLastNoteUpdateEvent() );
-        vo.setLastNeedsAttentionEvent( details.getLastNeedsAttentionEvent() );
-        vo.setLastTroubledEvent( details.getLastTroubledEvent() );
+        if ( details.getLastNoteUpdateEvent() != null ) {
+            vo.setLastNoteUpdateEvent( new AuditEventValueObject( details.getLastNoteUpdateEvent() ) );
+        }
+        if ( details.getLastNeedsAttentionEvent() != null ) {
+            vo.setLastNeedsAttentionEvent( new AuditEventValueObject( details.getLastNeedsAttentionEvent() ) );
+        }
+        if ( details.getLastTroubledEvent() != null ) {
+            vo.setLastTroubledEvent( new AuditEventValueObject( details.getLastTroubledEvent() ) );
+        }
         return vo;
     }
 
