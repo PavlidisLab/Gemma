@@ -68,11 +68,14 @@ Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
       var ret = value.replace( /.*\./, '' ).replace( "Impl", '' ).replace( /([A-Z])/g, ' $1' );
 
       if ( value.indexOf("Trouble") !== -1) {
-         ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
+          if( value === 'NotTroubledStatusFlagEvent' ) {
+              ret = '<img  src="/Gemma/images/icons/ok.png">&nbsp;' + ret;
+          }else{
+              ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
+          }
       } else if ( value.indexOf("Validated") !== -1 ){
+         // FIXME this is a remnant of validated events, kept just for the transition period. Remove in due time.
          ret = '<img  src="/Gemma/images/icons/emoticon_smile.png">&nbsp;' + ret;
-      } else if ( value === 'OKStatusFlagEventImpl' ) {
-         ret = '<img  src="/Gemma/images/icons/ok.png">&nbsp;' + ret;
       }
 
       return ret;
