@@ -346,7 +346,7 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEventImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledFlagEventImpl" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEventImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DoesNotNeedAttentionEvent" maxElementsInMemory="10000"
