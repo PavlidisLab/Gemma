@@ -1,6 +1,7 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.openjena.atlas.logging.Log;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
 import java.util.Date;
@@ -18,11 +19,11 @@ public abstract class AbstractCuratableValueObject {
 
     protected Date lastUpdated;
 
-    protected Boolean troubled;
+    protected Boolean troubled = false;
 
     protected AuditEvent lastTroubledEvent;
 
-    protected Boolean needsAttention;
+    protected Boolean needsAttention = false;
 
     protected AuditEvent lastNeedsAttentionEvent;
 
@@ -120,7 +121,14 @@ public abstract class AbstractCuratableValueObject {
     }
 
     public String getTroubleDetails( boolean htmlEscape ) {
-        String details = this.getTroubled() ? this.getLastTroubledEvent().toString() : TROUBLE_DETAILS_NONE;
+        String details = TROUBLE_DETAILS_NONE;
+        if(this.getTroubled()){
+            if(this.getLastTroubledEvent() == null){
+                Log.warn(this, "Curatable object is troubled, but has no trouble event! Id: "+this.getId());
+            }else{
+                details = this.getLastTroubledEvent().toString();
+            }
+        }
 
         return htmlEscape ? StringEscapeUtils.escapeHtml4( details ) : details;
     }
