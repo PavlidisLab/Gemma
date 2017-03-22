@@ -42,14 +42,14 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         //Status description
         if (this.curatable.lastNeedsAttentionEvent) {
-            str +=  '<span class="dark-gray">' +
+            str +=  '<div class="dark-gray v-padded">' +
                         ' <i class="fa fa-calendar"></i> ' +
                         'As of ' + this.curatable.lastNeedsAttentionEvent.date.toLocaleString() +
                         ' <i class="fa fa-user"></i> ' +
                         ' set by: ' + this.curatable.lastNeedsAttentionEvent.performer +
                         ' <i class="fa fa-pencil"></i>' +
-                        ' Details: ' + this.getNeedsAttentionNonNullDescription(this.curatable.lastNeedsAttentionEvent) +
-                    '</span>';
+                        ' Details: ' + this.getAuditEventNonNullDescription(this.curatable.lastNeedsAttentionEvent) +
+                    '</div>';
         }
         return str;
     },
@@ -59,21 +59,30 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      * @returns {string} string containing the status with appropriate icon, color, date and performer.
      */
     getTroubleStatusHtml: function () {
-        //Base status
-        var str = this.curatable.troubled
+        // Base status
+        // This is messy because we have to detect whether we are dealing with ArrayDesign or ExpressionExperiment
+        var str =       (this.curatable.actuallyTroubled !== undefined && this.curatable.actuallyTroubled === true)
+                    ||  (this.curatable.actuallyTroubled === undefined && this.curatable.troubled)
             ?   '<span class="red width130"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>Troubled</span>'
             :   '<span class="green width130"><i class="fa fa-check-circle fa-lg fa-fw"></i>Not Troubled</span>';
 
-        //Status details
+        if( this.curatable.actuallyTroubled !== undefined
+            && this.curatable.troubled){
+            str+=   '<span class="gray-red">' +
+                ' <i class="fa fa-exclamation-triangle"></i> Platform troubled ' +
+                '</span>';
+        }
+
+        // Status details
         if (this.curatable.lastTroubledEvent) {
-            str +=  '<span class="dark-gray">' +
+            str +=  '<div class="dark-gray v-padded">' +
                         ' <i class="fa fa-calendar"></i> ' +
                         'As of ' + this.curatable.lastTroubledEvent.date.toLocaleString() +
                         ' <i class="fa fa-user"></i> ' +
                         ' set by: ' + this.curatable.lastTroubledEvent.performer +
                         ' <i class="fa fa-pencil"></i>' +
-                        ' Details: ' + this.curatable.lastTroubledEvent.detail +
-                    '</span>'
+                        ' Details: ' + this.getAuditEventNonNullDescription(this.curatable.lastTroubledEvent) +
+                    '</div>'
         }
 
         return str;
@@ -81,20 +90,23 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
     /**
      * Iterates through the events detail and note, and creates an adequate description from the found strings.
-     * @param NeedsAttentionEvent the event to be described.
+     * @param AuditEvent the event to be described.
      * @returns {string} description of the given event, or "Unspecified" if no suitable string is found.
      */
-    getNeedsAttentionNonNullDescription: function(NeedsAttentionEvent){
-        var str = "Unspecified";
+    getAuditEventNonNullDescription: function(AuditEvent){
+        var str = "";
+        var defaultStr = "Unspecified";
 
-        if(NeedsAttentionEvent.detail) str = NeedsAttentionEvent.detail;
-        if(NeedsAttentionEvent.note) str = NeedsAttentionEvent.note;
+        if(AuditEvent.detail) str += AuditEvent.detail;
+        if(AuditEvent.detail && AuditEvent.note) str+= " - ";
+        if(AuditEvent.note) str += AuditEvent.note;
 
         if(str.length > 100){
             str = str.substring(0,99) + "...";
         }
 
-        return str;
+        if(str.length > 0) return str;
+        return defaultStr;
     }
 
 });
