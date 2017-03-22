@@ -163,7 +163,4 @@ public abstract class AuditEvent implements Serializable {
         return hashCode;
     }
 
-    @Override
-    public abstract String toString();
-
 }
