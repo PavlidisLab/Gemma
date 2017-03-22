@@ -279,3 +279,33 @@ i[class*=qtp]{
 	background-color: white;
 }
 
+/* introduced for curation tab */
+
+.width110{
+	display: inline-block;
+	width: 110px;
+}
+.width130{
+	display: inline-block;
+	width: 130px;
+}
+
+.green{
+	color: #3A3;
+}
+
+.gold{
+	color: gold;
+}
+
+.red{
+	color: #DD2222;
+}
+
+.dark-gray{
+	color: darkgray;
+}
+
+.bold{
+	font-weight: bold;
+}
