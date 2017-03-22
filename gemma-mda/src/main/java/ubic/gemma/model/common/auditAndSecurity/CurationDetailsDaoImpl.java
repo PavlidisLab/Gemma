@@ -103,8 +103,8 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
         CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
 
         eventType.setCurationDetails( curatable, auditEvent );
-
-        this.update( curatable.getCurationDetails() );
+        
+        this.getSessionFactory().getCurrentSession().merge( curatable.getCurationDetails() );
 
     }
 
