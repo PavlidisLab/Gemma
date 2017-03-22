@@ -233,6 +233,14 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
+     *
+     * @return true if this EE is troubled, disregards any platform trouble that might be present.
+     */
+    public Boolean getActuallyTroubled(){
+        return super.getTroubled();
+    }
+
+    /**
      * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
      * MAKE SURE to fill the Array Design variable first!
      *
