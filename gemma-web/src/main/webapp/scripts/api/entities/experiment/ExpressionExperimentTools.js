@@ -1,5 +1,6 @@
 Ext.namespace( 'Gemma' );
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
 /**
  * 
  * Used as one tab of the EE page - the "Admin" tab.
@@ -7,26 +8,19 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * pass in the ee details obj as experimentDetails
  * 
  * @class Gemma.ExpressionExperimentDetails
- * @extends Ext.Panel version $Id$
+ * @extends Gemma.CurationTools
  * 
  */
-Gemma.ExpressionExperimentTools = Ext
-   .extend(
-      Ext.Panel,
-      {
+Gemma.ExpressionExperimentTools = Ext.extend( Gemma.CurationTools, {
+
          experimentDetails : null,
-         border : false,
          tbar : new Ext.Toolbar(),
-         defaultType : 'box',
-         defaults : {
-            border : false
-         },
-         padding : 10,
 
          /**
           * @memberOf Gemma.ExpressionExperimentTools
           */
          initComponent : function() {
+            this.curatable = this.experimentDetails;
             Gemma.ExpressionExperimentTools.superclass.initComponent.call( this );
             var manager = new Gemma.EEManager( {
                editable : this.editable
@@ -48,7 +42,7 @@ Gemma.ExpressionExperimentTools = Ext
             this.getTopToolbar().addButton( refreshButton );
 
             this.add( {
-               html : '<h4>Preprocessing:<br></h4>'
+               html : '<hr class="normal"/><h4>Preprocessing:<br></h4>'
             } );
             var missingValueInfo = this.missingValueAnalysisPanelRenderer( this.experimentDetails, manager );
             this.add( missingValueInfo );

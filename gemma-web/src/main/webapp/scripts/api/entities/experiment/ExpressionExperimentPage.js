@@ -271,7 +271,7 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
       if ( (isAdmin || isEditable) && !this.toolTab ) {
          this.toolTab = new Gemma.ExpressionExperimentTools( {
             experimentDetails : this.experimentDetails,
-            title : 'Admin',
+            title : 'Admin & Curation',
             itemId : 'admin',
             editable : isEditable,
             listeners : {

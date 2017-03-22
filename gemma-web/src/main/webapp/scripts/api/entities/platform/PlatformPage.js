@@ -2,17 +2,17 @@ Ext.namespace( 'Gemma' );
 
 Gemma.DIFF_THRESHOLD = 0.01;
 Gemma.MAX_DIFF_RESULTS = 125;
+
 /**
- * 
+ *
  * Top level container for all sections of platform info
- * 
+ *
  * To open the page at a specific tab, include ?tab=[tabName] suffix in the URL. Tab names are each tab's itemId.
- * 
+ *
  * @class Gemma.PlatformPage
  * @extends Ext.TabPanel
- * 
+ *
  */
-
 Gemma.PlatformPage = Ext.extend( Ext.TabPanel, {
 
    defaults : {
@@ -119,29 +119,24 @@ Gemma.PlatformPage = Ext.extend( Ext.TabPanel, {
       }
 
       /* ADMIN TOOLS TAB */
-      if ( isAdmin && !this.toolTab ) {
-         // this.toolTab = new Gemma.ExpressionExperimentTools( {
-         // experimentDetails : this.experimentDetails,
-         // title : 'Admin',
-         // itemId : 'admin',
-         // editable : isEditable,
-         // listeners : {
-         // 'reloadNeeded' : function() {
-         // var myMask = new Ext.LoadMask( Ext.getBody(), {
-         // msg : "Refreshing..."
-         // } );
-         // myMask.show();
-         // var reloadToAdminTab = document.URL;
-         // reloadToAdminTab = reloadToAdminTab.replace( /&*tab=\w*/, '' );
-         // reloadToAdminTab += '&tab=admin';
-         // window.location.href = reloadToAdminTab;
-         //
-         // }
-         // }
-         // } );
-         // this.add( this.toolTab );
-      } else if ( this.toolTab ) {
-         // this.toolTab.setVisible( isAdmin );
+       if ( isAdmin && !this.toolTab ) {
+
+           ArrayDesignController.getDetails( this.platformId, {
+               callback : function( platformDetails ) {
+                   this.toolTab = new Gemma.CurationTools( {
+                       title : 'Curation',
+                       itemId : 'admin',
+                       curatable : platformDetails
+                   } );
+                   this.add( this.toolTab );
+               }.createDelegate( this ),
+               errorHandler : function( er, exception ) {
+                   Ext.Msg.alert( "Error", er + "\n" + exception.stack );
+               }
+           } );
+
+       } else if ( this.toolTab ) {
+         this.toolTab.setVisible( isAdmin );
       }
    }
 
