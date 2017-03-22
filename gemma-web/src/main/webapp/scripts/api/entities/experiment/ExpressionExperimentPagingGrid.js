@@ -203,8 +203,7 @@ Gemma.ExperimentPagingGrid = Ext
                renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
 
                   if ( value ) {
-                     return '<img title="' + record.get( 'troubleDetails' )
-                        + '" src="/Gemma/images/icons/stop.png"/>';
+                     return '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="' + record.get( 'troubleDetails' ) +'"></i>';
                   }
 
                   var text = '';

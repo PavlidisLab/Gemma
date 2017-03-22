@@ -44,8 +44,8 @@ Gemma.ExpressionExperimentDetails = Ext
                   + '</a> - ' + ad.name;
 
                if ( arrayDesigns[i].troubled ) {
-                  result = result + ' <img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
-                     + arrayDesigns[i].troubleDetails + '"/>';
+                  result = result + ' <i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                     + arrayDesigns[i].troubleDetails + '"></i>';
                }
                if ( i < arrayDesigns.length - 1 ) {
                   result = result + "<br/>";
@@ -118,8 +118,8 @@ Gemma.ExpressionExperimentDetails = Ext
 
             var result = '';
             if ( ee.troubled ) {
-               result = result + ' <img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
-                  + ee.troubleDetails + '"/>';
+               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" alt="trouble" ext:qtip="'
+                  + ee.troubleDetails + '"></i> ';
             }
 
             result = result
@@ -128,14 +128,14 @@ Gemma.ExpressionExperimentDetails = Ext
             result = result + (ee.batchEffect != null ? ee.batchEffect : ""); // string description.
 
             if ( ee.hasMultiplePreferredQuantitationTypes ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' + 'title="'
+               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'+
                   + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes
-                  + '"/>';
+                  + '"></i>';
             }
 
             if ( ee.hasMultipleTechnologyTypes ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' + 'title="'
-                  + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"/>';
+               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'+
+                  + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"></i>';
             }
 
             var isUserLoggedIn = (Ext.get( 'hasUser' ) && Ext.get( 'hasUser' ).getValue() === 'true') ? true : false;

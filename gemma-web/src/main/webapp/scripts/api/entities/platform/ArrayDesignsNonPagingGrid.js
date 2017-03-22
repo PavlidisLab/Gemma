@@ -315,11 +315,11 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
                      if ( record.get( 'troubled' ) ) {
                         var te = record.get( 'troubleDetails' );
                         if ( te ) {
-                           statusString += '<img title="' + te + '" ';
+                           statusString += '<i ext:qtip="' + te + '" ';
                         } else {
-                           statusString += '<img ';
+                           statusString += '<i ';
                         }
-                        statusString += 'src="/Gemma/images/icons/stop.png"/>&nbsp;'
+                        statusString += 'class="red fa fa-exclamation-triangle fa-lg"></i>&nbsp;'
                      }
                      if ( record.get( 'isMerged' ) ) {
                         statusString += '<img title="'

@@ -69,9 +69,9 @@ Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
 
       if ( value.indexOf("Trouble") !== -1) {
           if( value === 'NotTroubledStatusFlagEvent' ) {
-              ret = '<img  src="/Gemma/images/icons/ok.png">&nbsp;' + ret;
+              ret = '<i class="green fa fa-check-circle fa-lg fa-fw"></i>' + ret;
           }else{
-              ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
+              ret = '<i class="red fa fa-exclamation-triangle fa-lg fa-fw"></i>' + ret;
           }
       }
       return ret;

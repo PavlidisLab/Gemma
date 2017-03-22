@@ -653,7 +653,7 @@ Gemma.EEReportGridColumnRenderers = {
       var result = '';
 
       if ( record.get( 'troubled' ) ) {
-         result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '
+         result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="trouble: '
             + record.get( 'troubleDetails' ) + '"/>';
       }
 

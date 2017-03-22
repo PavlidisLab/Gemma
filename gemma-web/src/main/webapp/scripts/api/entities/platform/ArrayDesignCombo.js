@@ -48,7 +48,7 @@ Gemma.ArrayDesignCombo = Ext
          initComponent : function() {
 
             var templ = new Ext.XTemplate(
-               '<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item"><tpl if="troubled"><img src="/Gemma/images/icons/stop.png" />&nbsp;</tpl>{shortName} - {name}</div></tpl>' );
+               '<tpl for="."><div ext:qtip="{description}" class="x-combo-list-item"><tpl if="troubled"><i class="red fa fa-exclamation-triangle fa-lg"></i>&nbsp;</tpl>{shortName} - {name}</div></tpl>' );
 
             Ext.apply( this, {
                store : new Ext.data.Store( {
