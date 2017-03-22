@@ -343,10 +343,6 @@ Gemma.PlatformDetails = Ext
             if ( platformDetails.troubled ) {
                text = '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
                   + platformDetails.troubleDetails + '"/> Unusable';
-            } else if ( platformDetails.validated ) {
-               text = "Validated";
-            } else {
-               // nothing to see here.
             }
 
             return new Ext.Panel( {

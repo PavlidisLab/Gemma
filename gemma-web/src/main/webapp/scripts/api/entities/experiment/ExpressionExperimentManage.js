@@ -391,7 +391,7 @@ Gemma.EEReportGridColumnRenderers = {
       var taxonId = record.get( 'taxonId' );
 
       var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ','
-         + record.get( "userCanWrite" ) + ',' + (record.get( "validatedAnnotations" ) !== null)
+         + record.get( "userCanWrite" )
          + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
       value = value + '&nbsp;' + url;
 
@@ -651,9 +651,6 @@ Gemma.EEReportGridColumnRenderers = {
    flagRenderer : function( value, metadata, record, rowIndex, colIndex, store ) {
       var id = record.get( 'id' );
       var result = '';
-      if ( record.get( 'validated' ) ) {
-         result = result + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" ext:qtip="validated"/>';
-      }
 
       if ( record.get( 'troubled' ) ) {
          result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="trouble: '

@@ -63,10 +63,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
    }, {
       name : "diffExpressedProbes"
    }, {
-      name : "validated"
-   }, {
-      name : 'validatedAnnotations'
-   }, {
       name : "troubled",
       type : "boolean"
    }, {
@@ -249,9 +245,8 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
     * @param id
     * @param taxonId
     * @param canEdit
-    * @param isValidated
     */
-   tagger : function( id, taxonId, canEdit, isValidated ) {
+   tagger : function( id, taxonId, canEdit) {
       var annotator = new Ext.Panel( {
          id : 'annotator-wrap',
          collapsible : false,
@@ -260,7 +255,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
          layout : 'fit',
          items : [ new Gemma.AnnotationGrid( {
             id : 'annotator-grid',
-            entityAnnotsAreValidated : isValidated,
             readMethod : ExpressionExperimentController.getAnnotation,
             writeMethod : AnnotationController.createExperimentTag,
             removeMethod : AnnotationController.removeExperimentTag,

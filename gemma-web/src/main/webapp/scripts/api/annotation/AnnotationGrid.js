@@ -172,7 +172,6 @@ Gemma.AnnotationGrid = Ext.extend( Gemma.GemmaGridPanel, {
    stateful : false,
    taxonId : null,
    name : 'AnnotationGrid',
-   entityAnnotsAreValidated : false,
 
    viewConfig : {
       enableRowBody : true,
@@ -305,7 +304,6 @@ Gemma.AnnotationGrid = Ext.extend( Gemma.GemmaGridPanel, {
             tbar : new Gemma.AnnotationToolBar( {
                annotationGrid : this,
                showValidateButton : true,
-               isValidated : this.entityAnnotsAreValidated,
                createHandler : function( characteristic, callback ) {
                   this.writeMethod( characteristic, this.entId, callback );
                }.createDelegate( this ),

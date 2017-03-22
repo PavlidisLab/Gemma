@@ -44,7 +44,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   + '</a> - ' + ad.name;
 
                if ( arrayDesigns[i].troubled ) {
-                  result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
+                  result = result + ' <img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
                      + arrayDesigns[i].troubleDetails + '"/>';
                }
                if ( i < arrayDesigns.length - 1 ) {
@@ -117,13 +117,8 @@ Gemma.ExpressionExperimentDetails = Ext
          renderStatus : function( ee ) {
 
             var result = '';
-            if ( ee.validated ) {
-               result = result
-                  + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" title="validated"/>';
-            }
-
             if ( ee.troubled ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
+               result = result + ' <img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
                   + ee.troubleDetails + '"/>';
             }
 
@@ -405,8 +400,7 @@ Gemma.ExpressionExperimentDetails = Ext
             new Gemma.CategoryCombo( {} );
 
             var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'' + e.id
-               + '-eemanager\').tagger(' + e.id + ',' + e.taxonId + ',' + this.editable + ','
-               + (e.validatedAnnotations !== null)
+               + '-eemanager\').tagger(' + e.id + ',' + e.taxonId + ',' + this.editable +
                + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
 
             tagView = new Gemma.AnnotationDataView( {

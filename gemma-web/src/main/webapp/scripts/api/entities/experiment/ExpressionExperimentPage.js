@@ -109,7 +109,6 @@ Gemma.ExpressionExperimentPage = Ext.extend( Ext.TabPanel, {
       this.add( this.makeDetailsTab( experimentDetails ) );
 
       // EXPERIMENT DESIGN TAB
-
       this.add( this.makeDesignTab( experimentDetails ) );
 
       // VISUALISATION TAB

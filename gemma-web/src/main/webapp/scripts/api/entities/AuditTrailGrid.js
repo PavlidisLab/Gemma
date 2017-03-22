@@ -73,11 +73,7 @@ Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
           }else{
               ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
           }
-      } else if ( value.indexOf("Validated") !== -1 ){
-         // FIXME this is a remnant of validated events, kept just for the transition period. Remove in due time.
-         ret = '<img  src="/Gemma/images/icons/emoticon_smile.png">&nbsp;' + ret;
       }
-
       return ret;
    },
 
