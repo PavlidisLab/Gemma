@@ -281,6 +281,10 @@ i[class*=qtp]{
 
 /* introduced for curation tab */
 
+.curationNote-label{
+	display: block;
+}
+
 .width110{
 	display: inline-block;
 	width: 110px;

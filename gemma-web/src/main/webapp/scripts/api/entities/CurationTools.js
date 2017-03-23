@@ -18,17 +18,115 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
     },
     padding: 10,
 
+    emptyEvent: {
+        performer: "--",
+        date : "--",
+        detail: "--"
+    },
+
+    _DEFAULT_EVENT_DESCRIPTION : "Untouched, default since creation.",
+
     initComponent: function () {
         Gemma.CurationTools.superclass.initComponent.call(this);
 
-        this.add({
-            html:
-                '<div class="v-padded"><span class="bold width110">Troubled status: </span>' + this.getTroubleStatusHtml() + '</div>' +
-                '<div class="v-padded"><span class="bold width110">Curation status: </span>' + this.getNeedsAttentionStatusHtml() + '</div>'
-
-        });
+        this.add(this.createTroublePanel());
+        this.add(this.createCurationPanel());
     },
 
+    /*
+        PANEL COMPOSITION METHODS
+     */
+
+    /**
+     * Creates an Ext.Panel with trouble details and editing tools.
+     * @returns {Ext.Panel} panel that can be added to the page
+     */
+    createTroublePanel : function(){
+        var panelTrouble = new Ext.Panel( {
+            layout : 'hbox',
+            buttonAlign : 'left',
+            defaults : {
+                width: '100%',
+                border : false,
+                padding : 0
+            }
+        });
+        // Status and input elements
+        panelTrouble.add({
+            html:
+            '<div class="v-padded"><span class="bold width110">Troubled status: </span>' + this.getTroubleStatusHtml() + '</div>'
+        });
+
+        var changeTroubleButton = new Ext.Button( {
+            text : 'Change troubled status',
+            tooltip : 'Create new troubled or not-troubled event',
+            handler : this.showAddTroubleEventDialog,
+            scope : this,
+            cls : 'default-button'
+        } );
+
+        panelTrouble.addButton( changeTroubleButton );
+
+        return panelTrouble;
+    },
+
+    /**
+     * Creates an Ext.Panel with curation details and editing tools.
+     * @returns {Ext.Panel} panel that can be added to the page
+     */
+    createCurationPanel : function (){
+        var panelCuration = new Ext.Panel( {
+            layout : 'hbox',
+            buttonAlign : 'left',
+            defaults : {
+                width: '100%',
+                border : false,
+                padding : 0
+            }
+        });
+
+        // Status and input elements
+        panelCuration.add({
+            html:
+            '<hr class="normal"/>' +
+            '<div class="v-padded"><span class="bold width110">Curation status: </span>' + this.getNeedsAttentionStatusHtml() + '</div>' +
+            '<div class="v-padded">' +
+            '<label for="curationNote" class="curationNote-label">Curation notes:</label>' +
+            '<textarea id="curationNote" rows="10" cols="60"></textarea>'
+            + this.getCurationNoteDetails() +
+            '</div>'
+        });
+
+        var saveButton = new Ext.Button( {
+            text : 'Save Curation',
+            tooltip : 'Update curation status and note.',
+            handler : function() {
+                //TODO update note and curation status
+                this.fireEvent( 'reloadNeeded' );
+            },
+            scope : this
+        } );
+
+        panelCuration.addButton( saveButton );
+        return panelCuration;
+    },
+
+    /**
+     *
+     * @returns {string} Information about last edit of the curation note of this.curatable object.
+     */
+    getCurationNoteDetails : function () {
+        if (this.curatable.lastNoteUpdateEvent) {
+            return  '<div class="dark-gray v-padded">Last edit: ' +
+                        ' <i class="fa fa-calendar"></i> ' +
+                        'As of ' + this.curatable.lastNoteUpdateEvent.date.toLocaleString() +
+                        ' <i class="fa fa-user"></i> ' +
+                        ' by: ' + this.curatable.lastNoteUpdateEvent.performer +
+                    '</div>'
+        }else{
+            return '<div class="dark-gray v-padded">' + this._DEFAULT_EVENT_DESCRIPTION + '</div>';
+        }
+    },
 
     /**
      * Composes the string for curation attention description
@@ -41,16 +139,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
             :   '<span class="green width130"><i class="fa fa-check-circle-o fa-lg fa-fw"></i>OK</span>';
 
         //Status description
-        if (this.curatable.lastNeedsAttentionEvent) {
-            str +=  '<div class="dark-gray v-padded">' +
-                        ' <i class="fa fa-calendar"></i> ' +
-                        'As of ' + this.curatable.lastNeedsAttentionEvent.date.toLocaleString() +
-                        ' <i class="fa fa-user"></i> ' +
-                        ' set by: ' + this.curatable.lastNeedsAttentionEvent.performer +
-                        ' <i class="fa fa-pencil"></i>' +
-                        ' Details: ' + this.getAuditEventNonNullDescription(this.curatable.lastNeedsAttentionEvent) +
-                    '</div>';
-        }
+        str +=  this.getEventDescriptionLine(this.curatable.lastNeedsAttentionEvent);
         return str;
     },
 
@@ -74,18 +163,28 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         }
 
         // Status details
-        if (this.curatable.lastTroubledEvent) {
-            str +=  '<div class="dark-gray v-padded">' +
-                        ' <i class="fa fa-calendar"></i> ' +
-                        'As of ' + this.curatable.lastTroubledEvent.date.toLocaleString() +
-                        ' <i class="fa fa-user"></i> ' +
-                        ' set by: ' + this.curatable.lastTroubledEvent.performer +
-                        ' <i class="fa fa-pencil"></i>' +
-                        ' Details: ' + this.getAuditEventNonNullDescription(this.curatable.lastTroubledEvent) +
-                    '</div>'
-        }
-
+        str +=  this.getEventDescriptionLine(this.curatable.lastTroubledEvent);
         return str;
+    },
+
+    /**
+     * Creates a gray line of text with icons, describing the given audit event.
+     * @param AuditEvent the event to describe
+     * @returns {string} html div element containing description about the given event.
+     */
+    getEventDescriptionLine : function(AuditEvent){
+        if(AuditEvent) {
+            return '<div class="dark-gray v-padded">' +
+                        ' <i class="fa fa-calendar"></i> ' +
+                        'As of ' + AuditEvent.date.toLocaleString() +
+                        ' <i class="fa fa-user"></i> ' +
+                        ' set by: ' + AuditEvent.performer +
+                        ' <i class="fa fa-pencil"></i>' +
+                        ' Details: ' + this.getAuditEventNonNullDescription(AuditEvent) +
+                    '</div>'
+        }else{
+            return '<div class="dark-gray v-padded">' + this._DEFAULT_EVENT_DESCRIPTION + '</div>';
+        }
     },
 
     /**
@@ -107,6 +206,29 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         if(str.length > 0) return str;
         return defaultStr;
+    },
+
+    /*
+        EVENT HANDLING METHODS
+     */
+
+    showAddTroubleEventDialog : function() {
+        if ( !this.addEventDialog ) {
+            this.addEventDialog = new Gemma.AddAuditEventDialog();
+            this.addEventDialog.on( "commit", function( resultObj ) {
+                this.createCurationEvent( resultObj );
+            }.createDelegate( this ) );
+        }
+        this.addEventDialog.show();
+    },
+
+    createCurationEvent : function( obj ) {
+        var cb = function() {
+            this.fireEvent( 'reloadNeeded' );
+        }.createDelegate( this );
+        AuditController.addAuditEvent( this.auditable, obj.type, obj.comment, obj.details, {
+            callback : cb
+        } );
     }
 
 });

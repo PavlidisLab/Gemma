@@ -41,6 +41,7 @@ Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
    createEvent : function( obj ) {
       var cb = function() {
          this.getStore().reload();
+         this.refreshGrid();
       }.createDelegate( this );
       AuditController.addAuditEvent( this.auditable, obj.type, obj.comment, obj.details, {
          callback : cb
@@ -167,9 +168,6 @@ Gemma.AuditTrailGrid = Ext.extend( Ext.grid.GridPanel, {
    }
 } );
 
-/**
- * 
- */
 Gemma.AddAuditEventDialog = Ext.extend( Ext.Window, {
 
    height : 350,
@@ -197,10 +195,15 @@ Gemma.AddAuditEventDialog = Ext.extend( Ext.Window, {
    initComponent : function() {
 
       this.auditEventTypeStore = new Ext.data.SimpleStore( {
-         fields : [ 'type', 'description' ],
-         data : [ [ 'CommentedEvent', 'Comment' ], [ 'TroubledStatusFlagEvent', 'Other (generic) Trouble' ],
-                [ 'ExperimentalDesignTrouble', 'Experimental Design Trouble' ],
-                [ 'OutlierSampleTrouble', 'Outlier sample' ], [ 'NotTroubledStatusFlagEvent', 'Not troubled' ] ]
+         fields : [ 'type', 'description', 'icon' ],
+         data : [
+                [ 'CommentedEvent', 'Comment', 'pencil-square-o' ],
+                [ 'TroubledStatusFlagEvent', 'Other (generic) Trouble', 'exclamation-triangle' ],
+                [ 'ExperimentalDesignTrouble', 'Experimental Design Trouble', 'exclamation-triangle' ],
+                [ 'OutlierSampleTrouble', 'Outlier sample trouble', 'exclamation-triangle' ],
+                [ 'CoexpressionTrouble', 'Coexpression trouble', 'exclamation-triangle'],
+                [ 'SampleLayoutTrouble', 'Sample layout trouble', 'exclamation-triangle' ],
+                [ 'NotTroubledStatusFlagEvent', 'Not troubled', 'check-circle' ] ]
       } );
 
       this.auditEventTypeCombo = new Ext.form.ComboBox( {
@@ -214,7 +217,10 @@ Gemma.AddAuditEventDialog = Ext.extend( Ext.Window, {
          triggerAction : 'all',
          emptyText : 'Select an event type',
          editable : false,
-         width : 180
+         width : 180,
+         tpl :  '<tpl for=".">' +
+                    '<tpl if="0==0"><div class="x-combo-list-item" ><i class="fa fa-{icon} fa-fw"></i>{description}</div></tpl>' +
+                '</tpl>'
       } );
       this.auditEventCommentField = new Ext.form.TextField( {
          fieldLabel : 'Comment',
