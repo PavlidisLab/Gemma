@@ -20,8 +20,11 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -135,19 +138,12 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     @Override
     public int compareTo( CharacteristicValueObject o ) {
-        if ( this.category != null && o.category != null && !this.category.equalsIgnoreCase( o.category )
-                && o.category != null ) {
-            return ( this.category.compareToIgnoreCase( o.category ) );
-        } else if ( this.taxon != null && o.taxon != null && !this.taxon.equalsIgnoreCase( o.taxon )
-                && o.taxon != null ) {
-            return this.taxon.compareToIgnoreCase( o.taxon );
-        } else if ( this.value != null && !this.value.equalsIgnoreCase( o.value ) && o.value != null ) {
-            return this.value.compareToIgnoreCase( o.value );
-        } else if ( this.valueUri != null && o.valueUri != null ) {
-            return this.valueUri.compareToIgnoreCase( o.valueUri );
-        } else {
-            return 1;
-        }
+        return ComparisonChain.start()
+                .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
+                .compare( taxon, o.taxon, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
+                .compare( value, o.value, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
+                .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
+                .result();
     }
 
     @Override
