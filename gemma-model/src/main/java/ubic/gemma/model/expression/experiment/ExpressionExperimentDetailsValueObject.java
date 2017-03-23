@@ -236,6 +236,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      *
      * @return true if this EE is troubled, disregards any platform trouble that might be present.
      */
+    @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
     public Boolean getActuallyTroubled(){
         return super.getTroubled();
     }
