@@ -115,6 +115,10 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
                         title: 'Curation',
                         itemId: 'admin',
                         curatable: platformDetails,
+                        auditable : {
+                            id: panel.platformId,
+                            classDelegatingFor: "ubic.gemma.model.expression.arrayDesign.ArrayDesign"
+                        },
                         listeners: {
                             'reloadNeeded': function () {
                                 var myMask = new Ext.LoadMask(Ext.getBody(), {

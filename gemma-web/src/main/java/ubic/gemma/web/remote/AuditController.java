@@ -74,10 +74,11 @@ public class AuditController {
 
         AuditEvent auditEvent = auditTrailService
                 .addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
-        if(auditEvent == null){
-            log.error( "Persisting the audit event failed! On auditable id "+entity.getId() );
+        if ( auditEvent == null ) {
+            log.error( "Persisting the audit event failed! On auditable id " + entity.getId() );
+        } else {
+            log.info( "created new event: " + auditEvent );
         }
-
     }
 
     public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
@@ -126,8 +127,6 @@ public class AuditController {
             result = expressionExperimentService.load( e.getId() );
         } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
             result = arrayDesignService.load( e.getId() );
-            // } else if ( Gene.class.isAssignableFrom( clazz ) ) {
-            // result = geneService.load( e.getId() );
         } else {
             log.warn( "We don't support that class yet, sorry" );
             return null;
