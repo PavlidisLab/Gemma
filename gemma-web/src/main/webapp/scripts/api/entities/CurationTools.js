@@ -174,7 +174,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
             : '<span class="green width130"><i class="fa fa-check-circle fa-lg fa-fw"></i>Not Troubled</span>';
 
         if (this.curatable.actuallyTroubled !== undefined
-            && this.curatable.troubled) {
+            && this.curatable.platformTroubled) {
             str += '<span class="gray-red">' +
                 ' <i class="fa fa-exclamation-triangle"></i> Platform troubled ' +
                 '</span>';
@@ -230,6 +230,9 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
      EVENT HANDLING METHODS
      */
 
+    /**
+     * Saves the curation status and note, if they were changed, by creating new audit events.
+     */
     saveCurationStatusAndNote: function () {
         var note = document.getElementById('curationNote').value;
         var needsAttention = document.getElementById('needsAttention').checked;
@@ -267,9 +270,11 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
             updateNeedsAttentionFunction();
         }
 
-
     },
 
+    /**
+     * Shows the 'add new event' dialog.
+     */
     showAddTroubleEventDialog: function () {
         if (!this.addEventDialog) {
             this.addEventDialog = new Gemma.AddAuditEventDialog();
@@ -280,6 +285,10 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         this.addEventDialog.show();
     },
 
+    /**
+     * Calls audit controller to create a new audit event.
+     * @param obj object containing necessary event information.
+     */
     createCurationEvent: function (obj) {
         var cb = function () {
             this.fireEvent('reloadNeeded');

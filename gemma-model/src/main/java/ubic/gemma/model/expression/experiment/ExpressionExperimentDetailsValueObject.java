@@ -241,6 +241,15 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
         return super.getTroubled();
     }
 
+    public Boolean getPlatformTroubled(){
+        for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
+            if ( ad.getTroubled() ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Checks trouble of this EE and all its Array Designs and returns compilation of trouble info.
      * MAKE SURE to fill the Array Design variable first!
