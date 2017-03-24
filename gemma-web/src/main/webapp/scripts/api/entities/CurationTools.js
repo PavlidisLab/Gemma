@@ -214,7 +214,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         var str = "";
         var defaultStr = "Unspecified";
 
-        if (AuditEvent.detail) str += AuditEvent.detail;
+
         if (AuditEvent.detail && AuditEvent.note) str += " - ";
         if (AuditEvent.note) str += AuditEvent.note;
 
@@ -235,13 +235,11 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         var needsAttention = document.getElementById('needsAttention').checked;
 
         var refreshCb = function () {
-            alert("Will refresh now.");
             this.fireEvent('reloadNeeded');
         }.createDelegate(this);
 
         var parent = this;
         var updateNeedsAttentionFunction = function(){
-            alert('This is NA update callback.');
             if (needsAttention && !parent.curatable.needsAttention) {
                 AuditController.addAuditEvent(parent.auditable, "NeedsAttentionEvent", "Setting: needs attention.", null, {
                     callback: refreshCb
@@ -257,18 +255,15 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         // race conditions, if we are updating both attributes through different audit events.
         var noteCB = refreshCb;
         if(needsAttention != this.curatable.needsAttention){
-            alert("NA has changed, will call it AFTER note if it changed as well.");
             noteCB = updateNeedsAttentionFunction;
         }
 
         // Check for information change
         if (note != this.curatable.curationNote) {
-            alert("Note has changed. Adding note update event...");
             AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
                 callback: noteCB
             });
         }else{
-            alert("Note has not changed, calling update NA function...");
             updateNeedsAttentionFunction();
         }
 
