@@ -64,12 +64,14 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         });
         // Status and input elements
         panelTrouble.add({
-            html: '<div class="v-padded"><span class="bold width110">Troubled status: </span>' + this.getTroubleStatusHtml() + '</div>'
+            html: '<div class="v-padded"><span class="bold width130">Troubled status: </span>' + this.getTroubleStatusHtml() +
+            '</div>'
         });
 
         var changeTroubleButton = new Ext.Button({
             text: 'Change troubled status',
-            tooltip: 'Create new troubled or not-troubled event',
+            tooltip: 'Create new event to change the trouble status. ' +
+            'This is equivalent to creating a new event in the history tab',
             handler: this.showAddTroubleEventDialog,
             scope: this,
             cls: 'default-button'
@@ -99,19 +101,23 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         panelCuration.add({
             html: '<hr class="normal"/>' +
             '<div class="v-padded">' +
-            '<span class="bold width110">Curation status: </span>' + this.getNeedsAttentionStatusHtml() +
+            '<span class="bold width130">Curation status: </span>' + this.getNeedsAttentionStatusHtml() +
             '<span class="v-padded"><span class="chb-correction"><input type="checkbox" id="needsAttention"></span> Needs Attention</span>' +
             '</div>' +
             '<div class="v-padded">' +
             '<label for="curationNote" class="curationNote-label">Curation notes:</label>' +
-            '<textarea id="curationNote" rows="10" cols="60"></textarea>'
+            '<textarea id="curationNote" rows="6" cols="60"></textarea>'
             + this.getCurationNoteDetails() +
             '</div>'
         });
 
+        panelCuration.add({
+            html: ""
+        });
+
         var saveButton = new Ext.Button({
             text: 'Save Curation info',
-            tooltip: 'Update curation status and note.',
+            tooltip: 'Update curation status and note. Only works when changes to the attention status or note have been done',
             handler: function () {
                 this.saveCurationStatusAndNote();
             },
@@ -119,6 +125,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         });
 
         panelCuration.addButton(saveButton);
+
         return panelCuration;
     },
 
@@ -231,7 +238,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
             this.fireEvent('reloadNeeded');
         }.createDelegate(this);
 
-        if(note != this.curatable.curationNote) {
+        if (note != this.curatable.curationNote) {
             AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
                 callback: cb
             });
