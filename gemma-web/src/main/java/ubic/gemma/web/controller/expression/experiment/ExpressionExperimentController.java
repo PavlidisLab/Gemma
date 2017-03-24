@@ -732,7 +732,6 @@ public class ExpressionExperimentController {
         }
 
         return finalResult;
-
     }
 
     /**
@@ -967,12 +966,12 @@ public class ExpressionExperimentController {
      * @param filter     if non-null, limit data sets to ones meeting criteria.
      * @param showPublic return user's public datasets too
      */
-    public Collection<ExpressionExperimentValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
+    public Collection<ExpressionExperimentDetailsValueObject> loadStatusSummaries( Long taxonId, Collection<Long> ids,
             Integer limit, Integer filter, Boolean showPublic ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+        Collection<ExpressionExperimentValueObject> vos;
 
         boolean filterDataByUser = false;
 
@@ -991,9 +990,9 @@ public class ExpressionExperimentController {
         if ( limit == null )
             limit = 50;
 
-        eeValObjectCol = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter, showPublic );
+        vos = getEEVOsForManager( taxonId, ids, filterDataByUser, limit, filter, showPublic );
 
-        if ( eeValObjectCol.isEmpty() ) {
+        if ( vos.isEmpty() ) {
             return new HashSet<>();
         }
 
@@ -1008,13 +1007,27 @@ public class ExpressionExperimentController {
         timer.reset();
         timer.start();
 
-        getReportData( eeValObjectCol );
+        getReportData( vos );
 
         if ( timer.getTime() > 1000 ) {
-            log.info( "Filling in report data for " + eeValObjectCol.size() + " EEs: " + timer.getTime() + "ms" );
+            log.info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
         }
 
-        return eeValObjectCol;
+        LinkedList<ExpressionExperimentDetailsValueObject> finalVos = new LinkedList<>(  );
+
+        // We need to convert the VOs to detailVos and add array designs so trouble info can be correctly displayed.
+        for ( ExpressionExperimentValueObject vo : vos ) {
+            ExpressionExperimentDetailsValueObject detailVo= new ExpressionExperimentDetailsValueObject( vo );
+
+            // Detail VO has many more fields but we currently only use the ADs.
+            detailVo.setArrayDesigns(
+                    //TODO: This is ridiculous - a method that actually loads AD VOs based on an EE id should be implemented
+                    arrayDesignService.loadValueObjects(
+                            EntityUtils.getIds( this.getADsSafely( this.getEESafely( vo.getId() ) ) ) ) );
+            finalVos.add( detailVo );
+        }
+
+        return finalVos;
     }
 
     /**
@@ -1803,9 +1816,10 @@ public class ExpressionExperimentController {
 
         Collection<ExpressionExperimentDetailsValueObject> toRemove = new ArrayList<>();
         for ( ExpressionExperimentDetailsValueObject record : records ) {
-            if(record.getArrayDesigns() == null) {
+            if ( record.getArrayDesigns() == null ) {
                 // Loading array designs which we need for the parent trouble check.
-                Collection<ArrayDesign> ads = expressionExperimentService.getArrayDesignsUsed( expressionExperimentService.load( record.getId() ) );
+                Collection<ArrayDesign> ads = expressionExperimentService
+                        .getArrayDesignsUsed( expressionExperimentService.load( record.getId() ) );
                 LinkedList<Long> adIds = new LinkedList<>();
                 for ( ArrayDesign ad : ads ) {
                     adIds.add( ad.getId() );

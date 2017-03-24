@@ -672,16 +672,10 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.taxon = taxon;
     }
 
-    /**
-     * @return the taxonId
-     */
     public Long getTaxonId() {
         return taxonId;
     }
 
-    /**
-     * @param taxonId the taxonId to set
-     */
     public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;
     }

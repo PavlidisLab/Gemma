@@ -333,8 +333,6 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel,
 
 Gemma.EEReportGridColumnRenderers = {
 
-    dateRenderer: new Ext.util.Format.dateRenderer("y/M/d"),
-
     adminRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
 
         if (record.get("userCanWrite")) {
@@ -385,7 +383,7 @@ Gemma.EEReportGridColumnRenderers = {
                 icon = "/Gemma/images/icons/wand.png";
                 turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="'
                     + icon + '" alt="run auto-tagger" ext:qtip="tagger was run on '
-                    + Ext.util.Format.date(record.get('autoTagDate'), 'y/M/d') + '; click to re-run"/></span>';
+                    + Gemma.GridRenderers.dateRenderer(record.get('autoTagDate')) + '; click to re-run"/></span>';
             } else {
                 icon = "/Gemma/images/icons/wand--plus.png";
                 turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="'
@@ -428,7 +426,7 @@ Gemma.EEReportGridColumnRenderers = {
                 suggestRun = false;
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -467,7 +465,7 @@ Gemma.EEReportGridColumnRenderers = {
                 + true
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -510,7 +508,7 @@ Gemma.EEReportGridColumnRenderers = {
                 }
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else if (hasBatchInformation) {
             return '<span style="color:#000;">Provided</span>&nbsp;';
@@ -544,7 +542,7 @@ Gemma.EEReportGridColumnRenderers = {
                     qtip = 'ext:qtip="Failed"';
                 }
 
-                return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value)
                     + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                 return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -575,7 +573,7 @@ Gemma.EEReportGridColumnRenderers = {
                 qtip = 'ext:qtip="Failed"';
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d') + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -614,7 +612,7 @@ Gemma.EEReportGridColumnRenderers = {
                 }
 
                 // TODO: add tooltip describing the analysis.
-                return '<span style="color:' + color + ';" ' + qtip + '>' + Ext.util.Format.date(value, 'y/M/d')
+                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value)
                     + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                 return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -624,21 +622,11 @@ Gemma.EEReportGridColumnRenderers = {
         }
     },
 
-    flagRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
+    isPublicRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
-        var result = '';
-
-        if (record.get('troubled')) {
-            result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="trouble: '
-                + record.get('troubleDetails') + '"/>';
-        }
-
-        result = result
-            + Gemma.SecurityManager.getSecurityLink('ubic.gemma.model.expression.experiment.ExpressionExperiment',
+        return Gemma.SecurityManager.getSecurityLink('ubic.gemma.model.expression.experiment.ExpressionExperiment',
                 id, record.get('isPublic'), record.get('isShared'), record.get('userCanWrite'), null, null, null,
                 record.get('userOwned'));
-
-        return result;
     }
 };
 
@@ -647,114 +635,124 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         header: 'Short Name',
         sortable: true,
         dataIndex: 'shortName',
-        renderer: Gemma.EEReportGridColumnRenderers.shortNameRenderer
+        renderer: Gemma.EEReportGridColumnRenderers.shortNameRenderer,
+        tooltip: 'Code name of the experiment.',
+        width: 60
     }, {
         header: 'Name',
         sortable: true,
+        tooltip: 'Full experiment name.',
         dataIndex: 'name'
     }, {
         header: 'Taxon',
         sortable: true,
         dataIndex: 'taxon',
+        tooltip: 'The taxon of this experiment.',
         width: 40
     }, {
-        header: 'Flags',
+        header: 'Public',
         sortable: true,
-        renderer: Gemma.EEReportGridColumnRenderers.flagRenderer,
-        tooltip: 'Status flags',
+        renderer: Gemma.EEReportGridColumnRenderers.isPublicRenderer,
+        tooltip: 'Whether this experiment is visible to public.',
+        width: 40
+    }, {
+        header: 'Trouble',
+        sortable: true,
+        renderer: Gemma.GridRenderers.troubleRenderer,
+        tooltip: 'Shows a warning icon for troubled experiments.',
+        width: 40
+    }, {
+        header: 'Curation',
+        sortable: true,
+        renderer: Gemma.GridRenderers.curationRenderer,
+        tooltip: 'Shows a warning icon for experiment that are marked for curators attention.',
         width: 40
     }, {
         header: '#ADs',
         sortable: true,
         dataIndex: 'arrayDesignCount',
-        tooltip: "The number of different platforms used in the study",
+        tooltip: "The number of different platforms used in the study.",
         width: 35
     }, {
         header: '#BAs',
         sortable: true,
         dataIndex: 'bioAssayCount',
-        tooltip: 'The number of samples in the study',
+        tooltip: 'The number of samples in the study.',
         width: 35
     }, {
         header: '#Prof',
         sortable: true,
         dataIndex: 'processedExpressionVectorCount',
-        tooltip: 'The number of expression profiles',
-        width: 45
+        tooltip: 'The number of expression profiles.',
+        width: 35
     }, {
         header: '#Facs',
         sortable: true,
         dataIndex: 'numPopulatedFactors',
         renderer: Gemma.EEReportGridColumnRenderers.experimentalDesignEditRenderer,
-        tooltip: 'The number of experimental factors (variables) defined for the study, excluding any batch factors',
-        width: 45
+        tooltip: 'The number of experimental factors (variables) defined for the study, excluding any batch factors.',
+        width: 40
     }, {
         header: '#tags',
         sortable: true,
         dataIndex: 'numAnnotations',
         renderer: Gemma.EEReportGridColumnRenderers.experimentTaggerRenderer,
-        tooltip: 'The number of terms the experiment is tagged with',
+        tooltip: 'The number of terms the experiment is tagged with.',
         width: 60
-    }, {
-        header: 'Created',
-        sortable: true,
-        dataIndex: 'dateCreated',
-        tooltip: 'Create date',
-        renderer: Gemma.EEReportGridColumnRenderers.dateRenderer,
-        width: 80
     }, {
         header: 'Updated',
         sortable: true,
-        dataIndex: 'dateLastUpdated',
-        tooltip: 'Update date; not all possible types of updates are considered.',
-        renderer: Gemma.EEReportGridColumnRenderers.dateRenderer,
+        dataIndex: 'lastUpdated',
+        tooltip: 'Last update (status or curation).',
+        renderer: Gemma.GridRenderers.dateRenderer,
         width: 80
     }, {
         header: 'MissingVals',
         sortable: true,
         dataIndex: 'dateMissingValueAnalysis',
-        tooltip: 'Status of missing value computation (two-channel studies only)',
+        tooltip: 'Status of missing value computation (two-channel studies only).',
         renderer: Gemma.EEReportGridColumnRenderers.missingValueAnalysisRenderer,
         width: 80
     }, {
         header: 'BatchInfo',
         sortable: true,
         dataIndex: 'dateBatchFetch',
-        tooltip: 'Status of batch information',
+        tooltip: 'Status of batch information.',
         renderer: Gemma.EEReportGridColumnRenderers.batchDateRenderer,
         width: 90
     }, {
         header: 'ProcProf',
         sortable: true,
         dataIndex: 'dateProcessedDataVectorComputation',
-        tooltip: 'Status of processed expression profile configuration',
+        tooltip: 'Status of processed expression profile configuration.',
         renderer: Gemma.EEReportGridColumnRenderers.processedVectorCreateRenderer,
         width: 80
     }, {
         header: 'Diff',
         sortable: true,
         dataIndex: 'dateDifferentialAnalysis',
-        tooltip: 'Status of differential expression analysis. Must have factors to enable',
+        tooltip: 'Status of differential expression analysis. Must have factors to enable.',
         renderer: Gemma.EEReportGridColumnRenderers.differentialAnalysisRenderer,
         width: 90
     }, {
         header: 'Links',
         sortable: true,
         dataIndex: 'dateLinkAnalysis',
-        tooltip: 'Status of coexpression analysis',
+        tooltip: 'Status of coexpression analysis.',
         renderer: Gemma.EEReportGridColumnRenderers.linkAnalysisRenderer,
         width: 90
     }, {
         header: 'PCA',
         sortable: true,
         dataIndex: 'datePcaAnalysis',
-        tooltip: 'Status of PCA analysis',
+        tooltip: 'Status of PCA analysis.',
         renderer: Gemma.EEReportGridColumnRenderers.pcaDateRenderer,
         width: 90
     }, {
         header: 'Admin',
         sortable: false,
         dataIndex: 'id',
+        tooltip: 'Administration tools.',
         renderer: Gemma.EEReportGridColumnRenderers.adminRenderer,
         width: 60
     }]

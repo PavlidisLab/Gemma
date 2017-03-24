@@ -66,6 +66,8 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       name : "troubled",
       type : "boolean"
    }, {
+       name : "troubleDetails"
+   }, {
        name : "needsAttention",
        type : "boolean"
    }, {
@@ -74,9 +76,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       name : "missingValueAnalysisEventType"
    }, {
       name : "processedDataVectorComputationEventType"
-   }, {
-      name : "dateCreated",
-      type : 'date'
    }, {
       name : "dateProcessedDataVectorComputation",
       type : 'date'
