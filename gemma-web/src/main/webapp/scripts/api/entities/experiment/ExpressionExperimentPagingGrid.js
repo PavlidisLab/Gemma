@@ -74,10 +74,13 @@ Gemma.ExperimentPagingStore = Ext.extend( Ext.data.Store, {
          type : "date",
          sortDir : 'DESC'
       }, {
-         name : "troubled",
-         sortDir : 'DESC'
+         name : "troubled"
       }, {
          name : "troubleDetails"
+      }, {
+          name : "needsAttention"
+      }, {
+          name : "curationNote"
       }, {
          name : "lastUpdated",
          type : "date",
@@ -195,7 +198,8 @@ Gemma.ExperimentPagingGrid = Ext
             },
             {
                header : "Status",
-               tooltip : "D=has differential expression analysis; C=has coexpression analysis",
+               tooltip : "D = has differential expression analysis, C = has coexpression analysis. " +
+                        "If experiment is troubled, a warning will be displayed instead of D or C.",
                dataIndex : 'troubled',
                sortable : true,
                width : 0.05,
@@ -217,6 +221,20 @@ Gemma.ExperimentPagingGrid = Ext
                   return text;
                }
             },
+             {
+                 header : "Curation",
+                 tooltip : "Shows whether curators marked this experiment for attention or not.",
+                 dataIndex : 'needsAttention',
+                 sortable : true,
+                 width : 0.05,
+                 hidden : false,
+                 renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
+
+                     if ( value ) {
+                         return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + record.get( 'curationNote' ) +'"></i>';
+                     }
+                 }
+             },
             {
                header : "Short Name",
                dataIndex : 'shortName',

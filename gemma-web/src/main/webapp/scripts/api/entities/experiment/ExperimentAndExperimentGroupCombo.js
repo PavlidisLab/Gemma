@@ -65,7 +65,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
          enableKeyEvents : true,
 
          loadingText : 'Searching ...', // FIXME if field is blank use 'loading ...'
-         emptyText : "Find experiments by keyword", //'human' alone maps to human herpesvirus
+         emptyText : "Find experiments by keyword",
          listEmptyTextBlankQuery : 'Search by keyword or ID',
          listEmptyText : 'No results',
          minChars : 3,
