@@ -40,8 +40,7 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
         root: 'records', // required.
         successProperty: 'success', // same as default.
         messageProperty: 'message', // optional
-        totalProperty: 'totalRecords', // default is 'total'; optional unless
-        // paging.
+        totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
         idProperty: "id", // same as default,
         adjustedStart: 'adjustedStart',
         // used by store to set its sortInfo
@@ -70,10 +69,6 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
         }, {
             name: "taxon",
             type: "string"
-        }, {
-            name: "dateCreated",
-            type: "date",
-            sortDir: 'DESC'
         }, {
             name: "troubled"
         }, {
@@ -188,9 +183,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 sortable: true,
                 width: 0.06,
                 hidden: true,
-                renderer: function (value, metaData, record, rowIndex, colIndex, store) {
-                    return (value) ? Ext.util.Format.date(value, "Y/m/d") : '?';
-                }
+                renderer: Gemma.GridRenderers.dateRenderer
             },
             {
                 header: "Status",

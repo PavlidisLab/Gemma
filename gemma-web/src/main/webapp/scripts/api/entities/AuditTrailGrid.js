@@ -92,7 +92,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
                 header: "Date",
                 width: 105,
                 dataIndex: "date",
-                renderer: Ext.util.Format.dateRenderer('D, d M Y H:i:s'),
+                renderer: Gemma.GridRenderers.dateTimeRenderer,
                 sortable: true
             }, {
                 header: "Action",

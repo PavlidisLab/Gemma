@@ -103,7 +103,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d')
+                + Gemma.GridRenderers.dateRenderer(ee.dateLinkAnalysis )
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -152,13 +152,9 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                     qtip = 'ext:qtip="Failed"';
                 }
 
-                // return '<span style="color:' + color + ';" ' + qtip + '>' +
-                // Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') +
-                // '&nbsp;' +
-                // (suggestRun ? runurl : '');
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') + '&nbsp;'
+                    + Gemma.GridRenderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -216,7 +212,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Ext.util.Format.date(ee.dateProcessedDataVectorComputation, 'y/M/d') + '&nbsp;'
+                + Gemma.GridRenderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -266,7 +262,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 }
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') + '&nbsp;'
+                    + Gemma.GridRenderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -331,7 +327,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Ext.util.Format.date(ee.datePcaAnalysis, 'y/M/d') + '&nbsp;'
+                + Gemma.GridRenderers.dateRenderer( ee.datePcaAnalysis ) + '&nbsp;'
             });
         } else
             panel.add({
@@ -395,7 +391,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Ext.util.Format.date(ee.dateBatchFetch, 'y/M/d') + '&nbsp;'
+                + Gemma.GridRenderers.dateRenderer( ee.dateBatchFetch ) + '&nbsp;'
             });
             panel.add(runBtn);
         } else if (hasBatchInformation) {

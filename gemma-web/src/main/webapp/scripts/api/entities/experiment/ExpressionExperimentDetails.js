@@ -173,7 +173,7 @@ Gemma.ExpressionExperimentDetails = Ext
                }
 
                return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Ext.util.Format.date( ee.dateLinkAnalysis, 'y/M/d' ) + '&nbsp;' + (suggestRun ? runurl : '');
+                  + Gemma.GridRenderers.dateRenderer( ee.dateLinkAnalysis ) + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
             }
@@ -204,7 +204,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   }
 
                   return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Ext.util.Format.date( ee.dateMissingValueAnalysis, 'y/M/d' ) + '&nbsp;'
+                     + Gemma.GridRenderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
                      + (suggestRun ? runurl : '');
                } else {
                   return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -238,7 +238,7 @@ Gemma.ExpressionExperimentDetails = Ext
                }
 
                return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Ext.util.Format.date( ee.dateProcessedDataVectorComputation, 'y/M/d' ) + '&nbsp;'
+                  + Gemma.GridRenderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
                   + (suggestRun ? runurl : '');
             } else {
                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -270,7 +270,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   }
 
                   return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Ext.util.Format.date( ee.dateDifferentialAnalysis, 'y/M/d' ) + '&nbsp;'
+                     + Gemma.GridRenderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
                      + (suggestRun ? runurl : '');
                } else {
                   return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -791,7 +791,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                        pubMedForm,
                                        {
                                           fieldLabel : 'Created',
-                                          html : Ext.util.Format.date( e.dateCreated ) + ' from '
+                                          html : Gemma.GridRenderers.dateRenderer( e.dateCreated ) + ' from '
                                              + this.renderSourceDatabaseEntry( e )
                                        },
                                        {
