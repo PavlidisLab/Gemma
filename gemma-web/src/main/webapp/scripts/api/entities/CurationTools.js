@@ -234,26 +234,45 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         var note = document.getElementById('curationNote').value;
         var needsAttention = document.getElementById('needsAttention').checked;
 
-        var cb = function () {
+        var refreshCb = function () {
+            alert("Will refresh now.");
             this.fireEvent('reloadNeeded');
         }.createDelegate(this);
 
-        if (note != this.curatable.curationNote) {
-            AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
-                callback: cb
-            });
+        var parent = this;
+        var updateNeedsAttentionFunction = function(){
+            alert('This is NA update callback.');
+            if (needsAttention && !parent.curatable.needsAttention) {
+                AuditController.addAuditEvent(parent.auditable, "NeedsAttentionEvent", "Setting: needs attention.", null, {
+                    callback: refreshCb
+                });
+            } else if (!needsAttention && parent.curatable.needsAttention) {
+                AuditController.addAuditEvent(parent.auditable, "DoesNotNeedAttentionEvent", "Setting: does not need attention.", null, {
+                    callback: refreshCb
+                });
+            }
+        };
+
+        // Check whether we need to wait for the note update before we update curation status. We have to wait to prevent
+        // race conditions, if we are updating both attributes through different audit events.
+        var noteCB = refreshCb;
+        if(needsAttention != this.curatable.needsAttention){
+            alert("NA has changed, will call it AFTER note if it changed as well.");
+            noteCB = updateNeedsAttentionFunction;
         }
 
         // Check for information change
-        if (needsAttention && !this.curatable.needsAttention) {
-            AuditController.addAuditEvent(this.auditable, "NeedsAttentionEvent", "Setting: needs attention.", null, {
-                callback: cb
+        if (note != this.curatable.curationNote) {
+            alert("Note has changed. Adding note update event...");
+            AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
+                callback: noteCB
             });
-        } else if (!needsAttention && this.curatable.needsAttention) {
-            AuditController.addAuditEvent(this.auditable, "DoesNotNeedAttentionEvent", "Setting: does not need attention.", null, {
-                callback: cb
-            });
+        }else{
+            alert("Note has not changed, calling update NA function...");
+            updateNeedsAttentionFunction();
         }
+
+
     },
 
     showAddTroubleEventDialog: function () {
