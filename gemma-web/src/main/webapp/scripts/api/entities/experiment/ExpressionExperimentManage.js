@@ -109,7 +109,8 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel,
             forceFit: true
         },
 
-        filterMode: {},
+        filterMode: null,
+        showPublic: true,
 
         /**
          * @memberOf Gemma.EEReportGrid
@@ -934,7 +935,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                 boxLabel: "Show your public data",
                 checked: this.showPublic,
 
-                parent : this,
+                parent: this,
                 handler: function (checkbox, event) {
                     parent.showPublic = checkbox.getValue();
                     this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.filterType]);
