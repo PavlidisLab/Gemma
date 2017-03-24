@@ -229,9 +229,9 @@ Gemma.ExperimentPagingGrid = Ext
                  width : 0.05,
                  hidden : false,
                  renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-
                      if ( value ) {
-                         return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + record.get( 'curationNote' ) +'"></i>';
+                         var note = record.get( 'curationNote' ) ? record.get( 'curationNote' ) : "Curation note empty";
+                         return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note +'"></i>';
                      }
                  }
              },
@@ -261,7 +261,7 @@ Gemma.ExperimentPagingGrid = Ext
 
          /**
           * private
-          * 
+          *
           * @return a configured Gemma.ExperimentPagingStoreSelectedIds
           */
          getIdsStore : function( ids ) {
@@ -284,13 +284,13 @@ Gemma.ExperimentPagingGrid = Ext
          },
          /**
           * Show the experiments indicated by the array of ids passed in
-          * 
+          *
           * Steps:
           * <ul>
           * <li> create a store with the ids from the parameter pass in
           * <li> unbind the current store from the paging toolbar and bind Gemma.ExperimentPagingStoreSelectedIds
           * <li> reconfigure the grid with the new store </li>
-          * 
+          *
           * @param {Object}
           *           eeIds
           * @memberOf Gemma.ExperimentPagingGrid
@@ -333,7 +333,7 @@ Gemma.ExperimentPagingGrid = Ext
 
          /**
           * private
-          * 
+          *
           * @return a configured Gemma.ExperimentPagingStoreTaxon
           */
          getTaxonStore : function( id ) {
@@ -451,7 +451,7 @@ Gemma.ExperimentPagingGrid = Ext
          },
          /**
           * Show the experiments indicated by the array of ids passed in
-          * 
+          *
           * Steps:
           * <ul>
           * <li>if necessary, unbind the current store from the paging toolbar and bind
@@ -459,7 +459,7 @@ Gemma.ExperimentPagingGrid = Ext
           * <li> reconfigure the store with the new store (if necessary)
           * <li> load the (new) store with the ids from the parameter pass in
           * </ul>
-          * 
+          *
           * @param {Object}
           *           eeIds
           */
@@ -491,7 +491,7 @@ Gemma.ExperimentPagingGrid = Ext
 
          /**
           * Show a list of short names (GSE numbers) of all or selected experiments
-          * 
+          *
           */
          showAsText : function() {
 
@@ -556,12 +556,12 @@ Gemma.ExperimentPagingGrid = Ext
                hideTrigger : true
             } );
             eeCombo.on( "groupSelected", function( storeItem ) {
-               
+
                if (storeItem && storeItem.data && storeItem.data.resultValueObject) {
 
                   var resultVO = storeItem.data.resultValueObject;
                   var ids = [];
-                  
+
                   this.showAll = false;
                   this.filterById = true;
 
@@ -575,7 +575,7 @@ Gemma.ExperimentPagingGrid = Ext
                      // Case when neither was found.
                      console.log("ComboBox did not return any Expression Experiment ID/IDs.");
                   }
-                  
+
                   this.loadExperimentsById( ids );
                   // ids is not security filtered
                   // var totalCount = this.getStore().getTotalCount();
@@ -697,14 +697,16 @@ Gemma.ExperimentPagingGrid = Ext
          }, // end of initComponent
          // make changes based on whether user is admin or not
          adjustForIsAdmin : function( isAdmin ) {
-            if ( isAdmin ) {
-               // if user is admin, update the column model to show the status column
+
                var index = this.getColumnModel().findColumnIndex( 'troubled' );
                this.getColumnModel().setHidden( index, !isAdmin );
 
                index = this.getColumnModel().findColumnIndex( 'lastUpdated' );
                this.getColumnModel().setHidden( index, !isAdmin );
-            }
+
+                index = this.getColumnModel().findColumnIndex( 'needsAttention' );
+                this.getColumnModel().setHidden( index, !isAdmin );
+
 
          }
       } );

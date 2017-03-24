@@ -56,6 +56,10 @@ Gemma.ArrayDesignsStore = Ext.extend( Ext.data.Store, {
       }, {
          name : "troubleDetails"
       }, {
+          name : "needsAttention"
+      }, {
+          name : "curationNote"
+      },  {
          name : "statusArray",
          convert : function( v, record ) {
             return [ record.troubled, record.isMerged, record.isMergee, record.isSubsumed, record.isSubsumer ];
@@ -345,6 +349,20 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
                      return statusString;
                   }
                },
+                {
+                    header : "Curation",
+                    tooltip : "Shows whether curators marked this experiment for attention or not.",
+                    dataIndex : 'needsAttention',
+                    sortable : true,
+                    width : 0.05,
+                    hidden : false,
+                    renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
+                        if ( value ) {
+                            var note = record.get( 'curationNote' ) ? record.get( 'curationNote' ) : "Curation note empty";
+                            return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note +'"></i>';
+                        }
+                    }
+                },
                {
                   header : "Short Name",
                   dataIndex : 'shortName',
@@ -610,6 +628,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
 
       index = this.getColumnModel().findColumnIndex( 'actions' );
       colModel.setHidden( index, !isAdmin );
+
+       index = this.getColumnModel().findColumnIndex( 'needsAttention' );
+       colModel.setHidden( index, !isAdmin );
 
       if ( !isAdmin ) {
          this.getStore().activateMultiFilter( 'troubledFilter' );
