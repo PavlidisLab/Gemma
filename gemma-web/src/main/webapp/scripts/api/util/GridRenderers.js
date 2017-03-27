@@ -13,27 +13,17 @@ Gemma.GridRenderers = {
     },
 
     troubleRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        var id = record.get('id');
-        var result = '';
-
         if (record.get('troubled')) {
-            result = '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="trouble: '
-                + record.get('troubleDetails') + '"/>';
+            var trouble = record.get('troubleDetails') ? record.get('troubleDetails') : "Trouble details unspecified";
+            return '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="' + trouble + '"></i>';
         }
-
-        return result;
     },
 
     curationRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        var id = record.get('id');
-        var result = '';
-
         if (record.get('needsAttention')) {
-            result = '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="'
-                + record.get('curationNote') + '"/>';
+            var note = record.get('curationNote') ? record.get('curationNote') : "Curation note empty";
+            return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note + '"></i>';
         }
-
-        return result;
     }
 
 };

@@ -217,12 +217,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 sortable: true,
                 width: 0.05,
                 hidden: false,
-                renderer: function (value, metaData, record, rowIndex, colIndex, store) {
-                    if (value) {
-                        var note = record.get('curationNote') ? record.get('curationNote') : "Curation note empty";
-                        return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note + '"></i>';
-                    }
-                }
+                renderer: Gemma.GridRenderers.curationRenderer
             },
             {
                 header: "Short Name",
