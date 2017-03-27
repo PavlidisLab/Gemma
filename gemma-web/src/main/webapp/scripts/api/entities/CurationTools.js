@@ -247,11 +247,11 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         var parent = this;
         var updateNeedsAttentionFunction = function(){
             if (needsAttention && !parent.curatable.needsAttention) {
-                AuditController.addAuditEvent(parent.auditable, "NeedsAttentionEvent", "Setting: needs attention.", null, {
+                AuditController.addAuditEvent(parent.auditable, "NeedsAttentionEvent", "Needs attention.", null, {
                     callback: refreshCb
                 });
             } else if (!needsAttention && parent.curatable.needsAttention) {
-                AuditController.addAuditEvent(parent.auditable, "DoesNotNeedAttentionEvent", "Setting: does not need attention.", null, {
+                AuditController.addAuditEvent(parent.auditable, "DoesNotNeedAttentionEvent", "Does not need attention.", null, {
                     callback: refreshCb
                 });
             }

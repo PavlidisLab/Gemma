@@ -308,6 +308,18 @@ i[class*=qtp]{
 	width: 190px;
 }
 
+.fa-custom-ext:before{
+	content: "\f071";
+	font-family: FontAwesome, monospace;
+	font-style: normal;
+}
+
+.fa-custom-exc:before{
+	content: "\f06a";
+	font-family: FontAwesome, monospace;
+	font-style: normal;
+}
+
 .green{
 	color: #3A3;
 }

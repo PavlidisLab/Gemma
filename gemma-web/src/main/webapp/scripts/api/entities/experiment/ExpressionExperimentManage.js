@@ -638,107 +638,113 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         sortable: true,
         renderer: Gemma.EEReportGridColumnRenderers.isPublicRenderer,
         tooltip: 'Whether this experiment is visible to public.',
-        width: 40
+        width: 30
     }, {
-        header: 'Trouble',
+        header: '<i class="fa-custom-ext"></i>',
         sortable: true,
         renderer: Gemma.GridRenderers.troubleRenderer,
         tooltip: 'Shows a warning icon for troubled experiments.',
-        width: 35
+        width: 15
     }, {
-        header: 'Curation',
+        header: '<i class="fa-custom-exc"></i>',
         sortable: true,
         renderer: Gemma.GridRenderers.curationRenderer,
-        tooltip: 'Shows a warning icon for experiment that are marked for curators attention.',
-        width: 35
+        tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',
+        width: 15
+    }, {
+        header: 'Curation note',
+        sortable: false,
+        renderer: Gemma.GridRenderers.curationNoteStubRenderer,
+        tooltip: 'Shows first 50 characters of the curation note for experiments that are marked for curators attention.',
+        width: 100
     }, {
         header: '#ADs',
         sortable: true,
         dataIndex: 'arrayDesignCount',
         tooltip: "The number of different platforms used in the study.",
-        width: 35
+        width: 25
     }, {
         header: '#BAs',
         sortable: true,
         dataIndex: 'bioAssayCount',
         tooltip: 'The number of samples in the study.',
-        width: 35
+        width: 25
     }, {
         header: '#Prof',
         sortable: true,
         dataIndex: 'processedExpressionVectorCount',
         tooltip: 'The number of expression profiles.',
-        width: 35
+        width: 25
     }, {
         header: '#Facs',
         sortable: true,
         dataIndex: 'numPopulatedFactors',
         renderer: Gemma.EEReportGridColumnRenderers.experimentalDesignEditRenderer,
         tooltip: 'The number of experimental factors (variables) defined for the study, excluding any batch factors.',
-        width: 40
+        width: 25
     }, {
         header: '#tags',
         sortable: true,
         dataIndex: 'numAnnotations',
         renderer: Gemma.EEReportGridColumnRenderers.experimentTaggerRenderer,
         tooltip: 'The number of terms the experiment is tagged with.',
-        width: 40
+        width: 25
     }, {
         header: 'Updated',
         sortable: true,
         dataIndex: 'lastUpdated',
         tooltip: 'Last update (status or curation).',
         renderer: Gemma.GridRenderers.dateRenderer,
-        width: 80
+        width: 40
     }, {
         header: 'MissingVals',
         sortable: true,
         dataIndex: 'dateMissingValueAnalysis',
         tooltip: 'Status of missing value computation (two-channel studies only).',
         renderer: Gemma.EEReportGridColumnRenderers.missingValueAnalysisRenderer,
-        width: 80
+        width: 50
     }, {
         header: 'BatchInfo',
         sortable: true,
         dataIndex: 'dateBatchFetch',
         tooltip: 'Status of batch information.',
         renderer: Gemma.EEReportGridColumnRenderers.batchDateRenderer,
-        width: 90
+        width: 50
     }, {
         header: 'ProcProf',
         sortable: true,
         dataIndex: 'dateProcessedDataVectorComputation',
         tooltip: 'Status of processed expression profile configuration.',
         renderer: Gemma.EEReportGridColumnRenderers.processedVectorCreateRenderer,
-        width: 80
+        width: 50
     }, {
         header: 'Diff',
         sortable: true,
         dataIndex: 'dateDifferentialAnalysis',
         tooltip: 'Status of differential expression analysis. Must have factors to enable.',
         renderer: Gemma.EEReportGridColumnRenderers.differentialAnalysisRenderer,
-        width: 90
+        width: 50
     }, {
         header: 'Links',
         sortable: true,
         dataIndex: 'dateLinkAnalysis',
         tooltip: 'Status of coexpression analysis.',
         renderer: Gemma.EEReportGridColumnRenderers.linkAnalysisRenderer,
-        width: 90
+        width: 50
     }, {
         header: 'PCA',
         sortable: true,
         dataIndex: 'datePcaAnalysis',
         tooltip: 'Status of PCA analysis.',
         renderer: Gemma.EEReportGridColumnRenderers.pcaDateRenderer,
-        width: 90
+        width: 50
     }, {
         header: 'Admin',
         sortable: false,
         dataIndex: 'id',
         tooltip: 'Administration tools.',
         renderer: Gemma.EEReportGridColumnRenderers.adminRenderer,
-        width: 60
+        width: 30
     }]
 });
 
