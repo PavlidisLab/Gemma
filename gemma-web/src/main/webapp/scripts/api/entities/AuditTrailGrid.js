@@ -64,7 +64,6 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
     },
 
     eventTypeRenderer: function (value, metaData, record, rowIndex, colIndex, store) {
-
         var ret = value.replace(/.*\./, '').replace("Impl", '').replace(/([A-Z])/g, ' $1');
 
         if (value.indexOf("Trouble") !== -1) {
@@ -205,12 +204,8 @@ Gemma.AddAuditEventDialog = Ext.extend(Ext.Window, {
             fields: ['type', 'description', 'icon'],
             data: [
                 ['CommentedEvent', 'Comment', 'pencil-square-o'],
-                ['TroubledStatusFlagEvent', 'Other (generic) Trouble', 'exclamation-triangle'],
-                ['ExperimentalDesignTrouble', 'Experimental Design Trouble', 'exclamation-triangle'],
-                ['OutlierSampleTrouble', 'Outlier sample trouble', 'exclamation-triangle'],
-                ['CoexpressionTrouble', 'Coexpression trouble', 'exclamation-triangle'],
-                ['SampleLayoutTrouble', 'Sample layout trouble', 'exclamation-triangle'],
-                ['NotTroubledStatusFlagEvent', 'Not troubled', 'check-circle']]
+                ['TroubledStatusFlagEvent', 'Mark as troubled', 'exclamation-triangle'],
+                ['NotTroubledStatusFlagEvent', 'Mark as NOT troubled', 'check-circle']]
         });
 
         this.auditEventTypeCombo = new Ext.form.ComboBox({

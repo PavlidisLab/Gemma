@@ -979,25 +979,6 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble"
-		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
-		overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsImpl" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>

@@ -102,16 +102,6 @@
 				  name="ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent" select-before-update="false">
 			<subclass abstract="false" discriminator-value="TroubledStatusFlagEvent"
 				name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent" select-before-update="false">
-				<subclass abstract="false" discriminator-value="CoexpressionTrouble"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.CoexpressionTrouble" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="DifferentialExpressionTrouble"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionTrouble" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="OutlierSampleTrouble"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.OutlierSampleTrouble" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="ExperimentalDesignTrouble"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignTrouble" select-before-update="false" />
-				<subclass abstract="false" discriminator-value="SampleLayoutTrouble"
-					name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleLayoutTrouble" select-before-update="false" />
 			</subclass>
 			<subclass abstract="false" discriminator-value="NotTroubledStatusFlagEvent"
 				name="ubic.gemma.model.common.auditAndSecurity.eventType.NotTroubledStatusFlagEvent" select-before-update="false" />

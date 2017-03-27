@@ -91,19 +91,19 @@ UPDATE INVESTIGATION SET `class` = "ExpressionExperiment" WHERE class='Expressio
 UPDATE AUDIT_EVENT_TYPE SET `class` = "NotTroubledStatusFlagEvent" WHERE class='OKStatusFlagEventImpl';
 -- -- rename trouble event types
 UPDATE AUDIT_EVENT_TYPE SET `class` = "TroubledStatusFlagEvent" WHERE class='TroubleStatusFlagEventImpl';
-UPDATE AUDIT_EVENT_TYPE SET `class` = "CoexpressionTrouble" WHERE class='CoexpressionTroubleImpl';
-UPDATE AUDIT_EVENT_TYPE SET `class` = "DifferentialExpressionTrouble" WHERE class='DifferentialExpressionTroubleImpl';
-UPDATE AUDIT_EVENT_TYPE SET `class` = "ExperimentalDesignTrouble" WHERE class='ExperimentalDesignTroubleImpl';
-UPDATE AUDIT_EVENT_TYPE SET `class` = "OutlierSampleTrouble" WHERE class='OutlierSampleTroubleImpl';
-UPDATE AUDIT_EVENT_TYPE SET `class` = "SampleLayoutTrouble" WHERE class='SampleLayoutTroubleImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "TroubledStatusFlagEvent" WHERE class='CoexpressionTroubleImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "TroubledStatusFlagEvent" WHERE class='DifferentialExpressionTroubleImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "TroubledStatusFlagEvent" WHERE class='ExperimentalDesignTroubleImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "TroubledStatusFlagEvent" WHERE class='OutlierSampleTroubleImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "TroubledStatusFlagEvent" WHERE class='SampleLayoutTroubleImpl';
 -- -- rename Failed analysis event types
-UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedDifferentialExpressionAnalysisEvent" WHERE class='FailedDifferentialExpressionAnalysisEventImpl'
-UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedLinkAnalysisEvent" WHERE class='FailedLinkAnalysisEventImpl'
-UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedMissingValueAnalysisEvent" WHERE class='FailedMissingValueAnalysisEventImpl'
-UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedPCAAnalysisEvent" WHERE class='FailedPCAAnalysisEventImpl'
-UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedProcessedVectorComputationEvent" WHERE class='FailedProcessedVectorComputationEventImpl'
+UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedDifferentialExpressionAnalysisEvent" WHERE class='FailedDifferentialExpressionAnalysisEventImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedLinkAnalysisEvent" WHERE class='FailedLinkAnalysisEventImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedMissingValueAnalysisEvent" WHERE class='FailedMissingValueAnalysisEventImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedPCAAnalysisEvent" WHERE class='FailedPCAAnalysisEventImpl';
+UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedProcessedVectorComputationEvent" WHERE class='FailedProcessedVectorComputationEventImpl';
 
--- -- Validation flag is discontinued and was never used consistenly. The information these events contain is
+-- -- Validation flag is discontinued and was never used consistently. The information these events contain is
 -- -- delete all validation events
 ALTER TABLE AUDIT_EVENT DROP FOREIGN KEY AUDIT_EVENT_EVENT_TYPE_FKC;
 ALTER TABLE AUDIT_EVENT ADD FOREIGN KEY AUDIT_EVENT_EVENT_TYPE_FKC(EVENT_TYPE_FK) REFERENCES AUDIT_EVENT_TYPE(ID) ON DELETE CASCADE;
