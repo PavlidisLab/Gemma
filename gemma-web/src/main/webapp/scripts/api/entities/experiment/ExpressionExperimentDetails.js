@@ -787,9 +787,8 @@ Gemma.ExpressionExperimentDetails = Ext
                                        pubMedDisplay,
                                        pubMedForm,
                                        {
-                                          fieldLabel : 'Created',
-                                          html : Gemma.GridRenderers.dateRenderer( e.dateCreated ) + ' from '
-                                             + this.renderSourceDatabaseEntry( e )
+                                          fieldLabel : 'Source',
+                                          html : this.renderSourceDatabaseEntry( e )
                                        },
                                        {
                                           html : 'The last time a platform associated with this experiment was updated: '

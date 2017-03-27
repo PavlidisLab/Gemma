@@ -21,6 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 
+import java.util.Date;
+
 /**
  * <p>
  * Indicates that previous validation is being invalidated
@@ -51,6 +53,7 @@ public class CurationNoteUpdateEvent extends CurationDetailsEvent {
     public void setCurationDetails( Curatable curatable, AuditEvent auditEvent ) {
         curatable.getCurationDetails().setCurationNote( auditEvent.getNote() );
         curatable.getCurationDetails().setLastNoteUpdateEvent( auditEvent );
+        curatable.getCurationDetails().setLastUpdated( new Date() );
     }
 
     /**
