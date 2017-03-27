@@ -288,9 +288,24 @@ i[class*=qtp]{
 	display: inline-block;
 	width: 110px;
 }
+
 .width130{
 	display: inline-block;
 	width: 130px;
+}
+
+.width150{
+	display: inline-block;
+	width: 150px;
+}
+.width170{
+	display: inline-block;
+	width: 170px;
+}
+
+.width190{
+	display: inline-block;
+	width: 190px;
 }
 
 .green{

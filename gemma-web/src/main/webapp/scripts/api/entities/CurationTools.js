@@ -40,8 +40,8 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
     initComponent: function () {
         Gemma.CurationTools.superclass.initComponent.call(this);
 
-        this.add(this.createTroublePanel());
         this.add(this.createCurationPanel());
+        this.add(this.createTroublePanel());
     },
 
     /*
@@ -64,7 +64,8 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         });
         // Status and input elements
         panelTrouble.add({
-            html: '<div class="v-padded"><span class="bold width130">Troubled status: </span>' + this.getTroubleStatusHtml() +
+            html: '<hr class="normal"/>' +
+            '<div class="v-padded"><span class="bold width130">Troubled status: </span>' + this.getTroubleStatusHtml() +
             '</div>'
         });
 
@@ -99,8 +100,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
 
         // Status and input elements
         panelCuration.add({
-            html: '<hr class="normal"/>' +
-            '<div class="v-padded">' +
+            html: '<div class="v-padded">' +
             '<span class="bold width130">Curation status: </span>' + this.getNeedsAttentionStatusHtml() +
             '<span class="v-padded"><span class="chb-correction"><input type="checkbox" id="needsAttention"></span> Needs Attention</span>' +
             '</div>' +
@@ -168,10 +168,13 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
     getTroubleStatusHtml: function () {
         // Base status
         // This is messy because we have to detect whether we are dealing with ArrayDesign or ExpressionExperiment
+        // Changing th model is undesirable in thi case, since this is the only place in the UI we actually care
+        // whether the trouble comes from the EE itself, or its platform.
+        var type = this.curatable.actuallyTroubled === undefined ? 'Platform' : 'Experiment';
         var str = (this.curatable.actuallyTroubled !== undefined && this.curatable.actuallyTroubled === true)
         || (this.curatable.actuallyTroubled === undefined && this.curatable.troubled)
-            ? '<span class="red width130"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>Troubled</span>'
-            : '<span class="green width130"><i class="fa fa-check-circle fa-lg fa-fw"></i>Not Troubled</span>';
+            ? '<span class="red width190"><i class="fa fa-exclamation-triangle fa-lg fa-fw"></i>' + type + ' Troubled</span>'
+            : '<span class="green width190"><i class="fa fa-check-circle fa-lg fa-fw"></i>' + type + ' Not Troubled</span>';
 
         if (this.curatable.actuallyTroubled !== undefined
             && this.curatable.platformTroubled) {

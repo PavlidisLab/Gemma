@@ -97,10 +97,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
          /**
           * Link for samples details page.
-          * 
-          * @param {}
-          *           ee
-          * @return {}
+          *
           */
          renderSamples : function( ee ) {
             var result = ee.bioAssayCount;
