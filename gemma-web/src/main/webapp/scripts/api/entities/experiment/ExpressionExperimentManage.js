@@ -641,12 +641,14 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         width: 30
     }, {
         header: '<i class="fa-custom-ext"></i>',
+        dataIndex: 'troubled',
         sortable: true,
         renderer: Gemma.GridRenderers.troubleRenderer,
         tooltip: 'Shows a warning icon for troubled experiments.',
         width: 15
     }, {
         header: '<i class="fa-custom-exc"></i>',
+        dataIndex: 'needsAttention',
         sortable: true,
         renderer: Gemma.GridRenderers.curationRenderer,
         tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',

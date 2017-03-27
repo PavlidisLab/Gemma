@@ -1722,40 +1722,12 @@ public class ExpressionExperimentController {
             String o = batch.getSort();
             boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
 
-            String orderBy = "name"; // default ordering
-            switch ( o ) {
-                case "shortName":
-                    orderBy = "shortName";
-                    break;
-                case "name":
-                    orderBy = "name";
-                    break;
-                case "bioAssayCount":
-                    orderBy = "bioAssayCount";
-                    break;
-                case "taxon":
-                    orderBy = "taxon";
-                    break;
-                case "troubled":
-                    orderBy = "troubled";
-                    break;
-                case "lastUpdated":
-                case "modDate":
-                    orderBy = "lastUpdated";
-                    descending = !descending;
-                    break;
-                default:
-                    log.error( "Tried to sort experiments by unknown sort field: " + o + ". Sorting by default: "
-                            + orderBy );
-                    break;
-            }
-
             if ( ids != null ) {
-                records = expressionExperimentService.loadValueObjectsOrdered( orderBy, descending, ids );
+                records = expressionExperimentService.loadValueObjectsOrdered( o, descending, ids );
             } else if ( taxon != null ) {
-                records = expressionExperimentService.loadAllValueObjectsTaxonOrdered( orderBy, descending, taxon );
+                records = expressionExperimentService.loadAllValueObjectsTaxonOrdered( o, descending, taxon );
             } else {
-                records = expressionExperimentService.loadAllValueObjectsOrdered( orderBy, descending );
+                records = expressionExperimentService.loadAllValueObjectsOrdered( o, descending );
             }
         } else {
             if ( ids != null ) {
