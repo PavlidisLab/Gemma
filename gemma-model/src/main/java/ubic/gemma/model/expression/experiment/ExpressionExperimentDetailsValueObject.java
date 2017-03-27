@@ -233,15 +233,18 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     }
 
     /**
-     *
      * @return true if this EE is troubled, disregards any platform trouble that might be present.
      */
     @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
-    public Boolean getActuallyTroubled(){
+    public Boolean getActuallyTroubled() {
         return super.getTroubled();
     }
 
-    public Boolean getPlatformTroubled(){
+    /**
+     * @return true, if the any of the platforms of this EE is troubled. False otherwise, even if this EE itself is troubled.
+     */
+    @SuppressWarnings("unused")// Used in Curation tab, see CurationTools.js
+    public Boolean getPlatformTroubled() {
         for ( ArrayDesignValueObject ad : this.arrayDesigns ) {
             if ( ad.getTroubled() ) {
                 return true;
