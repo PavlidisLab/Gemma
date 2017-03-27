@@ -376,22 +376,6 @@ Gemma.EEReportGridColumnRenderers = {
             + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
         value = value + '&nbsp;' + url;
 
-        if (record.get("userCanWrite")) {
-            var turl;
-            var icon;
-            if (record.get('autoTagDate')) {
-                icon = "/Gemma/images/icons/wand.png";
-                turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="'
-                    + icon + '" alt="run auto-tagger" ext:qtip="tagger was run on '
-                    + Gemma.GridRenderers.dateRenderer(record.get('autoTagDate')) + '; click to re-run"/></span>';
-            } else {
-                icon = "/Gemma/images/icons/wand--plus.png";
-                turl = '<span class="link"  onClick="return Ext.getCmp(\'eemanager\').autoTag(' + id + ')"><img src="'
-                    + icon + '" alt="run auto-tagger" ext:qtip="add tags automatically"/></span>';
-            }
-            value = value + '&nbsp;' + turl;
-        }
-
         return value;
     },
 
@@ -698,7 +682,7 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         dataIndex: 'numAnnotations',
         renderer: Gemma.EEReportGridColumnRenderers.experimentTaggerRenderer,
         tooltip: 'The number of terms the experiment is tagged with.',
-        width: 60
+        width: 40
     }, {
         header: 'Updated',
         sortable: true,

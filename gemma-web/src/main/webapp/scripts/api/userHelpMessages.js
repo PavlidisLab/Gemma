@@ -160,7 +160,7 @@ Gemma.HelpText.CommonWarnings = {
       text : "There are unsaved changes. Do you want to continue without saving?"
    },
    Deletion : {
-      title : 'Comfirm Deletion',
+      title : 'Confirm Deletion',
       text : "Are you sure you want to delete this {0}? This cannot be undone."
    },
    Redo : {
@@ -172,7 +172,7 @@ Gemma.HelpText.CommonWarnings = {
       text : "Are you sure you want to refresh statistics for this {0}? This cannot be undone."
    },
    ReIndexing : {
-      title : 'Comfirm Re-Indexing',
+      title : 'Confirm Re-Indexing',
       text : "Are you sure you want to rebuild the {0} indicies? Old indices will be deleted."
    },
    DuplicateName : {
