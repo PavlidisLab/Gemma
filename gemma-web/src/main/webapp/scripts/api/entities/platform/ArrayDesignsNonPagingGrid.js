@@ -316,15 +316,10 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
                   renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
                      var statusString = "";
 
-                     if ( record.get( 'troubled' ) ) {
-                        var te = record.get( 'troubleDetails' );
-                        if ( te ) {
-                           statusString += '<i ext:qtip="' + te + '" ';
-                        } else {
-                           statusString += '<i ';
-                        }
-                        statusString += 'class="red fa fa-exclamation-triangle fa-lg"></i>&nbsp;'
-                     }
+                      if (record.get( 'troubled' )) {
+                          statusString += '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="' + record.get('troubleDetails') + '"></i>';
+                      }
+
                      if ( record.get( 'isMerged' ) ) {
                         statusString += '<img title="'
                            + Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergedTT + '"'
@@ -356,12 +351,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend( Ext.grid.GridPanel, {
                     sortable : true,
                     width : 0.05,
                     hidden : false,
-                    renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
-                        if ( value ) {
-                            var note = record.get( 'curationNote' ) ? record.get( 'curationNote' ) : "Curation note empty";
-                            return '<i class="gold fa fa-exclamation-circle fa-lg" ext:qtip="' + note +'"></i>';
-                        }
-                    }
+                    renderer : Gemma.GridRenderers.curationRenderer
                 },
                {
                   header : "Short Name",
