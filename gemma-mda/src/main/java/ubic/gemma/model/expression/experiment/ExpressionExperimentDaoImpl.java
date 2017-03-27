@@ -1397,6 +1397,9 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             case "troubled":
                 orderByClause = "order by s.troubled " + ( descending ? "desc" : "" );
                 break;
+            case "needsAttention":
+                orderByClause = "order by s.needsAttention " + ( descending ? "desc" : "" );
+                break;
             default:
                 orderByClause = " order by ee." + orderField + " " + ( descending ? "desc" : "" );
                 break;

@@ -211,13 +211,12 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 }
             },
             {
-                header: "Curation",
-                tooltip: "Shows whether curators marked this experiment for attention or not.",
+                header: 'Curation',
                 dataIndex: 'needsAttention',
                 sortable: true,
-                width: 0.05,
-                hidden: false,
-                renderer: Gemma.GridRenderers.curationRenderer
+                renderer: Gemma.GridRenderers.curationRenderer,
+                tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',
+                width: 0.05
             },
             {
                 header: "Short Name",
