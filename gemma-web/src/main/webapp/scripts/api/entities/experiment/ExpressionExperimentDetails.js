@@ -170,7 +170,7 @@ Gemma.ExpressionExperimentDetails = Ext
                }
 
                return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Gemma.GridRenderers.dateRenderer( ee.dateLinkAnalysis ) + '&nbsp;' + (suggestRun ? runurl : '');
+                  + Gemma.Renderers.dateRenderer( ee.dateLinkAnalysis ) + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
             }
@@ -201,7 +201,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   }
 
                   return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Gemma.GridRenderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
+                     + Gemma.Renderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
                      + (suggestRun ? runurl : '');
                } else {
                   return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -235,7 +235,7 @@ Gemma.ExpressionExperimentDetails = Ext
                }
 
                return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Gemma.GridRenderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
+                  + Gemma.Renderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
                   + (suggestRun ? runurl : '');
             } else {
                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -267,7 +267,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   }
 
                   return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Gemma.GridRenderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
+                     + Gemma.Renderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
                      + (suggestRun ? runurl : '');
                } else {
                   return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -792,7 +792,7 @@ Gemma.ExpressionExperimentDetails = Ext
                                        },
                                        {
                                           html : 'The last time a platform associated with this experiment was updated: '
-                                             + e.lastArrayDesignUpdateDate,
+                                             + Gemma.Renderers.dateTimeRenderer(e.lastArrayDesignUpdateDate),
                                           hidden : !e.lastArrayDesignUpdateDate
                                        } ]
                            } ]

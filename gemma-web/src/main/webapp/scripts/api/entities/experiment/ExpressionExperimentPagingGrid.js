@@ -183,7 +183,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 sortable: true,
                 width: 0.06,
                 hidden: true,
-                renderer: Gemma.GridRenderers.dateRenderer
+                renderer: Gemma.Renderers.dateRenderer
             },
             {
                 header: "Status",
@@ -214,7 +214,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 header: 'Curation',
                 dataIndex: 'needsAttention',
                 sortable: true,
-                renderer: Gemma.GridRenderers.curationRenderer,
+                renderer: Gemma.Renderers.curationRenderer,
                 tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',
                 width: 0.05
             },

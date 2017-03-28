@@ -1,6 +1,6 @@
 Ext.namespace('Gemma');
 
-Gemma.GridRenderers = {
+Gemma.Renderers = {
 
     dateTimeRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var time = Date.parse(value);

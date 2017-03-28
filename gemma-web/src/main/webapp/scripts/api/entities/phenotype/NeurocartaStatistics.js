@@ -143,7 +143,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
                tooltip: "The date when we last imported a data source or checked it for updates. If a source itself has not been updated since we last imported it, we do not re-import it.",
                renderer : renderBold,
                width : 0.55,
-               renderer : Gemma.GridRenderers.dateRenderer
+               renderer : Gemma.Renderers.dateRenderer
             }, {
                header : "Download",
                dataIndex : "pathToDownloadFile",

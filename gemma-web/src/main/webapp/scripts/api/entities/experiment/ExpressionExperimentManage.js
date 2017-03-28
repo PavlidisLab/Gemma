@@ -410,7 +410,7 @@ Gemma.EEReportGridColumnRenderers = {
                 suggestRun = false;
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -449,7 +449,7 @@ Gemma.EEReportGridColumnRenderers = {
                 + true
                 + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -492,7 +492,7 @@ Gemma.EEReportGridColumnRenderers = {
                 }
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else if (hasBatchInformation) {
             return '<span style="color:#000;">Provided</span>&nbsp;';
@@ -526,7 +526,7 @@ Gemma.EEReportGridColumnRenderers = {
                     qtip = 'ext:qtip="Failed"';
                 }
 
-                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value)
+                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value)
                     + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                 return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -557,7 +557,7 @@ Gemma.EEReportGridColumnRenderers = {
                 qtip = 'ext:qtip="Failed"';
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value) + '&nbsp;'
+            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
                 + (suggestRun ? runurl : '');
         } else {
             return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -596,7 +596,7 @@ Gemma.EEReportGridColumnRenderers = {
                 }
 
                 // TODO: add tooltip describing the analysis.
-                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.GridRenderers.dateRenderer(value)
+                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value)
                     + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                 return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -643,20 +643,20 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         header: '<i class="fa-custom-ext"></i>',
         dataIndex: 'troubled',
         sortable: true,
-        renderer: Gemma.GridRenderers.troubleRenderer,
+        renderer: Gemma.Renderers.troubleRenderer,
         tooltip: 'Shows a warning icon for troubled experiments.',
         width: 15
     }, {
         header: '<i class="fa-custom-exc"></i>',
         dataIndex: 'needsAttention',
         sortable: true,
-        renderer: Gemma.GridRenderers.curationRenderer,
+        renderer: Gemma.Renderers.curationRenderer,
         tooltip: 'Shows a warning icon for experiments that are marked for curators attention.',
         width: 15
     }, {
         header: 'Curation note',
         sortable: false,
-        renderer: Gemma.GridRenderers.curationNoteStubRenderer,
+        renderer: Gemma.Renderers.curationNoteStubRenderer,
         tooltip: 'Shows first 50 characters of the curation note for experiments that are marked for curators attention.',
         width: 100
     }, {
@@ -696,7 +696,7 @@ Gemma.EEReportGridColumnModel = new Ext.grid.ColumnModel({
         sortable: true,
         dataIndex: 'lastUpdated',
         tooltip: 'Last update (status or curation).',
-        renderer: Gemma.GridRenderers.dateRenderer,
+        renderer: Gemma.Renderers.dateRenderer,
         width: 40
     }, {
         header: 'MissingVals',

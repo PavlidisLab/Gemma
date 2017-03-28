@@ -103,7 +103,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.GridRenderers.dateRenderer(ee.dateLinkAnalysis )
+                + Gemma.Renderers.dateRenderer(ee.dateLinkAnalysis )
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -154,7 +154,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Gemma.GridRenderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
+                    + Gemma.Renderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -212,7 +212,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.GridRenderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
             });
             if (suggestRun) {
                 panel.add(runBtn);
@@ -262,7 +262,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
                 }
                 panel.add({
                     html: '<span style="color:' + color + ';" ' + qtip + '>'
-                    + Gemma.GridRenderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
+                    + Gemma.Renderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
                 });
                 if (suggestRun) {
                     panel.add(runBtn);
@@ -327,7 +327,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             }
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.GridRenderers.dateRenderer( ee.datePcaAnalysis ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer( ee.datePcaAnalysis ) + '&nbsp;'
             });
         } else
             panel.add({
@@ -391,7 +391,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             panel.add({
                 html: '<span style="color:' + color + ';" ' + qtip + '>'
-                + Gemma.GridRenderers.dateRenderer( ee.dateBatchFetch ) + '&nbsp;'
+                + Gemma.Renderers.dateRenderer( ee.dateBatchFetch ) + '&nbsp;'
             });
             panel.add(runBtn);
         } else if (hasBatchInformation) {

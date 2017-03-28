@@ -348,7 +348,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                         sortable: true,
                         width: 0.05,
                         hidden: false,
-                        renderer: Gemma.GridRenderers.curationRenderer
+                        renderer: Gemma.Renderers.curationRenderer
                     },
                     {
                         header: "Short Name",
