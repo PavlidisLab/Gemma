@@ -4,12 +4,25 @@ Gemma.GridRenderers = {
 
     dateTimeRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var time = Date.parse(value);
-        return new Date(time).toLocaleString();
+        var options = {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric'
+        };
+        return new Date(time).toLocaleDateString(undefined, options);
     },
 
     dateRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var time = Date.parse(value);
-        return new Date(time).toLocaleDateString();
+        var options = {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+        };
+        return new Date(time).toLocaleDateString(undefined, options);
     },
 
     troubleRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
