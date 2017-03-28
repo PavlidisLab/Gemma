@@ -137,7 +137,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         if (this.curatable.lastNoteUpdateEvent) {
             return '<div class="dark-gray v-padded">Last edit: ' +
                 ' <i class="fa fa-calendar"></i> ' +
-                'As of ' + this.curatable.lastNoteUpdateEvent.date.toLocaleString() +
+                'As of ' + Gemma.Renderers.dateRenderer(this.curatable.lastNoteUpdateEvent.date) +
                 ' <i class="fa fa-user"></i> ' +
                 ' by: ' + this.curatable.lastNoteUpdateEvent.performer +
                 '</div>'
@@ -197,7 +197,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         if (AuditEvent) {
             return '<div class="dark-gray v-padded">' +
                 ' <i class="fa fa-calendar"></i> ' +
-                'As of ' + AuditEvent.date.toLocaleString() +
+                'As of ' + Gemma.Renderers.dateRenderer(AuditEvent.date) +
                 ' <i class="fa fa-user"></i> ' +
                 ' set by: ' + AuditEvent.performer +
                 ' <i class="fa fa-pencil"></i>' +
@@ -245,7 +245,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         }.createDelegate(this);
 
         var parent = this;
-        var updateNeedsAttentionFunction = function(){
+        var updateNeedsAttentionFunction = function () {
             if (needsAttention && !parent.curatable.needsAttention) {
                 AuditController.addAuditEvent(parent.auditable, "NeedsAttentionEvent", "Needs attention.", null, {
                     callback: refreshCb
@@ -260,7 +260,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         // Check whether we need to wait for the note update before we update curation status. We have to wait to prevent
         // race conditions, if we are updating both attributes through different audit events.
         var noteCB = refreshCb;
-        if(needsAttention != this.curatable.needsAttention){
+        if (needsAttention != this.curatable.needsAttention) {
             noteCB = updateNeedsAttentionFunction;
         }
 
@@ -269,7 +269,7 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
             AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
                 callback: noteCB
             });
-        }else{
+        } else {
             updateNeedsAttentionFunction();
         }
 
