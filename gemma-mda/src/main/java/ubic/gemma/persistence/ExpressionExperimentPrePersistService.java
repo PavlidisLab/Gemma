@@ -20,22 +20,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Sets up the array designs before saving an experiment.
  * 
  * @author paul
- * @version $Id$
  */
 public interface ExpressionExperimentPrePersistService {
 
     /**
      * Call this before calling the persister.
-     * 
-     * @param ee
+     *
      */
-    public abstract ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee );
+    ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee );
 
     /**
-     * @param ee
      * @param c A cache that is already possibly partly populated.
-     * @return
      */
-    public abstract ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
+    ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
 
 }

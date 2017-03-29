@@ -586,7 +586,7 @@ Ext
                                       sortable : true,
                                       renderer : function( value, metaData, record, rowIndex, colIndex, store ) {
 
-                                         if ( record.get( 'entityClazz' ) === "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" ) {
+                                         if ( record.get( 'entityClazz' ) === "ubic.gemma.model.expression.experiment.ExpressionExperiment" ) {
                                             return '<a target="_blank" href="'
                                                + Gemma.LinkRoots.expressionExperimentPage + record.get( "entityId" )
                                                + '">' + value + '</a>';

@@ -27,42 +27,38 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class CharacteristicSortTest {
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testSortCharacteristics() throws Exception {
         // does not use spring context
         OntologyService os = new OntologyServiceImpl();
         List<CharacteristicValueObject> cl = new ArrayList<>();
-        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "g", "gggg", null, null, "gggg_",
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "g", "gggg",  null, "gggg_",
                 "g", null, null ) ) );
 
-        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "xused", "x", null, null, "xused",
+        cl.add( new CharacteristicValueObject( Characteristic.Factory.newInstance( "xused", "x",  null, "xused",
                 "x", null, null ) ) );
 
         // will be first
         CharacteristicValueObject a = new CharacteristicValueObject( Characteristic.Factory.newInstance( "a", "a",
-                null, null, "aused", "a", null, null ) );
+                 null, "aused", "a", null, null ) );
         a.setNumTimesUsed( 3 );
         a.setAlreadyPresentInDatabase( true );
         cl.add( a );
 
         CharacteristicValueObject vo = new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "b",
-                "bbbb", null, null, "bbbbb", "http://bbbb", "b", null, null ) );
+                "bbbb", null, "bbbbb", "http://bbbb", "b",  null, null ) );
         vo.setNumTimesUsed( 5 );
         vo.setAlreadyPresentInDatabase( true );
         cl.add( vo );
 
-        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "a", "aaaa", null, null,
+        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "a", "aaaa",  null,
                 "aaaa_", "http://aaaa_", "a", null, null ) ) );
-        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "d", "dddd", null, null,
+        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "d", "dddd",  null,
                 "dddd_", "http://dddd_", "d", null, null ) ) );
-        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "af", "aaaf", null, null,
+        cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory.newInstance( "af", "aaaf",  null,
                 "aaaff", "http://aaaff", "af", null, null ) ) );
 
         ( ( OntologyServiceImpl ) os ).sort( cl );

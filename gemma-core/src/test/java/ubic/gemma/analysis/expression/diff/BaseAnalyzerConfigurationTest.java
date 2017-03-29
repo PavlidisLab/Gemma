@@ -18,17 +18,11 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.easymock.EasyMock;
 import org.junit.After;
 import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
@@ -51,60 +45,44 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.Settings;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * Other tests can extend this class if they want an expression experiment with complete block design and biological
  * replicates.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTest {
 
-    protected static final int NUM_BIOASSAYS = 8;
-
     protected static final int NUM_DESIGN_ELEMENTS = 100;
-
-    protected ArrayDesign arrayDesign = null;
-
-    protected BioAssayDimension bioAssayDimension = null;
-
+    protected final int NUM_TWA_RESULT_SETS = 3;
+    private final ByteArrayConverter bac = new ByteArrayConverter();
     protected List<BioMaterial> biomaterials = null;
 
     protected boolean connected = false;
-
-    protected ExperimentalDesign experimentalDesign = null;
-
     protected ExperimentalFactor experimentalFactorA_Area = null;
-
     protected ExperimentalFactor experimentalFactorB = null;
-
     protected List<ExperimentalFactor> experimentalFactors = null;
-
     @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
     protected ExpressionExperiment expressionExperiment = null;
-
-    protected final int NUM_TWA_RESULT_SETS = 3;
-
     @Autowired
     protected ProcessedExpressionDataVectorService processedExpressionDataVectorService = null;
-
     protected QuantitationType quantitationType = null;
-
     protected FactorValue factorValueA1;
     protected FactorValue factorValueA2;
     protected FactorValue factorValueB2;
-
-    private ByteArrayConverter bac = new ByteArrayConverter();
-
+    private ArrayDesign arrayDesign = null;
+    private BioAssayDimension bioAssayDimension = null;
+    private ExperimentalDesign experimentalDesign = null;
     private BioAssay bioAssay0a = null;
     private BioAssay bioAssay0b = null;
     private BioAssay bioAssay1a = null;
@@ -177,14 +155,14 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         experimentalFactorA_Area.setName( "area" );
         experimentalFactorA_Area.setType( FactorType.CATEGORICAL );
         experimentalFactorA_Area.setId( 5001L );
-        factorValuesA = new HashSet<FactorValue>();
+        factorValuesA = new HashSet<>();
 
         factorValueA1 = FactorValue.Factory.newInstance();
         factorValueA1.setId( 1001L );
         factorValueA1.setValue( "cerebellum" );
         Characteristic characteristicA1 = Characteristic.Factory.newInstance();
         characteristicA1.setValue( factorValueA1.getValue() );
-        Collection<Characteristic> characteristicsA1 = new HashSet<Characteristic>();
+        Collection<Characteristic> characteristicsA1 = new HashSet<>();
         characteristicsA1.add( characteristicA1 );
         factorValueA1.setCharacteristics( characteristicsA1 );
         factorValueA1.setExperimentalFactor( experimentalFactorA_Area );
@@ -195,7 +173,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueA2.setId( 1002L );
         Characteristic characteristicA2 = Characteristic.Factory.newInstance();
         characteristicA2.setValue( factorValueA2.getValue() );
-        Collection<Characteristic> characteristicsA2 = new HashSet<Characteristic>();
+        Collection<Characteristic> characteristicsA2 = new HashSet<>();
         characteristicsA2.add( characteristicA2 );
         factorValueA2.setCharacteristics( characteristicsA2 );
         factorValueA2.setExperimentalFactor( experimentalFactorA_Area );
@@ -210,14 +188,14 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         experimentalFactorB.setId( 5002L );
         experimentalFactorB.setType( FactorType.CATEGORICAL );
 
-        factorValuesB = new HashSet<FactorValue>();
+        factorValuesB = new HashSet<>();
 
         FactorValue factorValueB1 = FactorValue.Factory.newInstance();
         factorValueB1.setValue( "pcp" );
         factorValueB1.setId( 1003L );
         Characteristic characteristicB1 = Characteristic.Factory.newInstance();
         characteristicB1.setValue( factorValueB1.getValue() );
-        Collection<Characteristic> characteristicsB1 = new HashSet<Characteristic>();
+        Collection<Characteristic> characteristicsB1 = new HashSet<>();
         characteristicsB1.add( characteristicB1 );
         factorValueB1.setCharacteristics( characteristicsB1 );
         factorValueB1.setExperimentalFactor( experimentalFactorB );
@@ -227,7 +205,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         factorValueB2.setId( 1004L );
         Characteristic characteristicB2 = Characteristic.Factory.newInstance();
         characteristicB2.setValue( factorValueB2.getValue() );
-        Collection<Characteristic> characteristicsB2 = new HashSet<Characteristic>();
+        Collection<Characteristic> characteristicsB2 = new HashSet<>();
         characteristicsB2.add( characteristicB2 );
         factorValueB2.setCharacteristics( characteristicsB2 );
         factorValueB2.setExperimentalFactor( experimentalFactorB );
@@ -238,12 +216,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         experimentalFactorB.getFactorValues().addAll( factorValuesB );
 
         /* set up the biomaterials */
-        biomaterials = new ArrayList<BioMaterial>();
+        biomaterials = new ArrayList<>();
 
         // 2 replicates
         biomaterial0a = BioMaterial.Factory.newInstance();
         biomaterial0a.setName( "0a" );
-        Collection<FactorValue> factorValuesForBioMaterial0 = new HashSet<FactorValue>();
+        Collection<FactorValue> factorValuesForBioMaterial0 = new HashSet<>();
         factorValuesForBioMaterial0.add( factorValueA1 );
         factorValuesForBioMaterial0.add( factorValueB1 );
         biomaterial0a.getFactorValues().addAll( factorValuesForBioMaterial0 );
@@ -255,7 +233,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         // 2 replicates
         biomaterial1a = BioMaterial.Factory.newInstance();
         biomaterial1a.setName( "1a" );
-        Collection<FactorValue> factorValuesForBioMaterial1 = new HashSet<FactorValue>();
+        Collection<FactorValue> factorValuesForBioMaterial1 = new HashSet<>();
         factorValuesForBioMaterial1.add( factorValueA1 );
         factorValuesForBioMaterial1.add( factorValueB2 );
         biomaterial1a.getFactorValues().addAll( factorValuesForBioMaterial1 );
@@ -267,7 +245,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         // 2 replicates
         biomaterial2a = BioMaterial.Factory.newInstance();
         biomaterial2a.setName( "2a" );
-        Collection<FactorValue> factorValuesForBioMaterial2 = new HashSet<FactorValue>();
+        Collection<FactorValue> factorValuesForBioMaterial2 = new HashSet<>();
         factorValuesForBioMaterial2.add( factorValueA2 );
         factorValuesForBioMaterial2.add( factorValueB1 );
         biomaterial2a.getFactorValues().addAll( factorValuesForBioMaterial2 );
@@ -279,7 +257,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         // 2 replicates
         biomaterial3a = BioMaterial.Factory.newInstance();
         biomaterial3a.setName( "3a" );
-        Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<FactorValue>();
+        Collection<FactorValue> factorValuesForBioMaterial3 = new HashSet<>();
         factorValuesForBioMaterial3.add( factorValueA2 );
         factorValuesForBioMaterial3.add( factorValueB2 );
         biomaterial3a.getFactorValues().addAll( factorValuesForBioMaterial3 );
@@ -348,7 +326,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         bioAssay3b.setSampleUsed( biomaterial3b );
         bioAssay3b.setArrayDesignUsed( arrayDesign );
 
-        bioAssays = new ArrayList<BioAssay>();
+        bioAssays = new ArrayList<>();
         bioAssays.add( bioAssay0a );
         bioAssays.add( bioAssay0b );
         bioAssays.add( bioAssay1a );
@@ -369,7 +347,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         expressionExperiment.setBioAssays( bioAssays );
 
-        experimentalFactors = new ArrayList<ExperimentalFactor>();
+        experimentalFactors = new ArrayList<>();
         experimentalFactors.add( experimentalFactorA_Area );
         experimentalFactors.add( experimentalFactorB );
 
@@ -404,16 +382,16 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     @After
     public void tearDown() {
-        if ( rc != null && rc.isConnected() && rc instanceof RServeClient ) ( ( RServeClient ) rc ).disconnect();
+        if ( rc != null && rc.isConnected() && rc instanceof RServeClient )
+            ( ( RServeClient ) rc ).disconnect();
     }
 
     /**
      * Mocks the method getVectors in the {@link ExpressionDataMatrixServiceImpl}.
-     * 
+     *
      * @param numMethodCalls The number of times the mocked method will be called.
-     * @throws Exception
      */
-    protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
+    protected void configureMockAnalysisServiceHelper( int numMethodCalls ) {
         this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixServiceImpl.class );
 
         org.easymock.EasyMock
@@ -425,9 +403,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         EasyMock.replay( expressionDataMatrixService );
     }
 
-    /**
-     * @throws Exception
-     */
+
     protected abstract void configureMocks() throws Exception;
 
     /**
@@ -440,10 +416,10 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
          */
         log.debug( "Configuring test data for one way anova." );
 
-        List<BioMaterial> updatedBiomaterials = new ArrayList<BioMaterial>();
+        List<BioMaterial> updatedBiomaterials = new ArrayList<>();
         for ( BioMaterial m : biomaterials ) {
             Collection<FactorValue> fvs = m.getFactorValues();
-            Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+            Collection<FactorValue> updatedFactorValues = new HashSet<>();
             for ( FactorValue fv : fvs ) {
                 if ( !fv.getExperimentalFactor().getName().equals( experimentalFactorB.getName() ) ) {
                     continue;
@@ -466,7 +442,6 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     /**
      * Configure the test data for two way anova without interactions that isn't valid for a two-way. F
-     * <p>
      * Removes the replicates.
      */
     protected void configureTestDataForTwoWayAnovaWithoutInteractions() throws Exception {
@@ -483,7 +458,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         bioAssayDimension.setBioAssays( bioAssays );
 
-        biomaterials = new ArrayList<BioMaterial>();
+        biomaterials = new ArrayList<>();
         for ( BioAssay b : bioAssayDimension.getBioAssays() ) {
 
             biomaterials.add( b.getSampleUsed() );
@@ -493,11 +468,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
     }
 
-    /**
-     * @param numAssays
-     */
+
     protected void configureVectors( List<BioMaterial> bioMaterials, String resourcePath ) throws Exception {
-        this.vectors = new HashSet<ProcessedExpressionDataVector>();
+        this.vectors = new HashSet<>();
 
         DoubleMatrixReader r = new DoubleMatrixReader();
 
@@ -511,7 +484,7 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         DoubleMatrix<String, String> dataMatrix = r.read( this.getClass().getResourceAsStream( path ) );
         // RandomData randomData = new RandomDataImpl( new MersenneTwister( 0 ) ); // fixed seed - important!
 
-        Collection<CompositeSequence> compositeSequences = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> compositeSequences = new HashSet<>();
         for ( int i = 0; i < NUM_DESIGN_ELEMENTS; i++ ) {
             ProcessedExpressionDataVector vector = ProcessedExpressionDataVector.Factory.newInstance();
             vector.setBioAssayDimension( bioAssayDimension );

@@ -96,6 +96,6 @@ public class ContactDaoImpl extends ContactDaoBase {
          * If there are other types of investigations they will have to be added to the results.
          */
         return this.getHibernateTemplate().findByNamedParam(
-                "select e from ExpressionExperimentImpl e join e.investigators i where i=:c ", "c", contact );
+                "select e from ExpressionExperiment e join e.investigators i where i=:c ", "c", contact );
     }
 }

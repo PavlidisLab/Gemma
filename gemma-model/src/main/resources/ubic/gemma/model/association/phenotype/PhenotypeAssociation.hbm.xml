@@ -17,10 +17,6 @@
 			lazy="proxy" fetch="select">
 			<column name="AUDIT_TRAIL_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
-		<many-to-one name="status" class="ubic.gemma.model.common.auditAndSecurity.StatusImpl" cascade="all" lazy="proxy"
-			fetch="select">
-			<column name="STATUS_FK" not-null="false" sql-type="BIGINT" unique="true" />
-		</many-to-one>
 		<property name="name" type="java.lang.String">
 			<column name="NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
@@ -48,6 +44,9 @@
 		</property>
 		<property name="strength" type="java.lang.Double">
 			<column name="STRENGTH" not-null="false" unique="false" sql-type="DOUBLE" />
+		</property>
+		<property name="lastUpdated" type="java.util.Date">
+			<column name="LAST_UPDATED" not-null="true" unique="false" sql-type="DATETIME"/>
 		</property>
 		<many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl" cascade="none" lazy="false" fetch="select">
 			<column name="GENE_FK" not-null="false" sql-type="BIGINT" />

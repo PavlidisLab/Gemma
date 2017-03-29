@@ -20,7 +20,6 @@ package ubic.gemma.model.common.description;
 
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.Status;
 
 /**
  * <p>
@@ -35,39 +34,9 @@ import ubic.gemma.model.common.auditAndSecurity.Status;
 public abstract class VocabCharacteristic extends CharacteristicImpl {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 9108913504702857653L;
-
-    /**
-     * Constructs new instances of {@link VocabCharacteristic}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link VocabCharacteristic}.
-         */
-        public static VocabCharacteristic newInstance() {
-            return new VocabCharacteristicImpl();
-        }
-
-        public static VocabCharacteristic newInstance( String name, String description, AuditTrail auditTrail,
-                Status status, String value, String valueUri, String category, String categoryUri,
-                GOEvidenceCode evidenceCode ) {
-            final VocabCharacteristic entity = new VocabCharacteristicImpl();
-            entity.setName( name );
-            entity.setDescription( description );
-            entity.setAuditTrail( auditTrail );
-            entity.setStatus( status );
-            entity.setCategoryUri( categoryUri );
-            entity.setValueUri( valueUri );
-            entity.setValue( value );
-            entity.setCategory( category );
-            entity.setEvidenceCode( evidenceCode );
-            return entity;
-        }
-
-    }
-
     private String valueUri;
 
     /**
@@ -81,6 +50,33 @@ public abstract class VocabCharacteristic extends CharacteristicImpl {
 
     public void setValueUri( String valueUri ) {
         this.valueUri = valueUri;
+    }
+
+    /**
+     * Constructs new instances of {@link VocabCharacteristic}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link VocabCharacteristic}.
+         */
+        public static VocabCharacteristic newInstance() {
+            return new VocabCharacteristicImpl();
+        }
+
+        public static VocabCharacteristic newInstance( String name, String description, AuditTrail auditTrail,
+                String value, String valueUri, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
+            final VocabCharacteristic entity = new VocabCharacteristicImpl();
+            entity.setName( name );
+            entity.setDescription( description );
+            entity.setAuditTrail( auditTrail );
+            entity.setCategoryUri( categoryUri );
+            entity.setValueUri( valueUri );
+            entity.setValue( value );
+            entity.setCategory( category );
+            entity.setEvidenceCode( evidenceCode );
+            return entity;
+        }
+
     }
 
 }

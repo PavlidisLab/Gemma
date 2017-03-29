@@ -34,7 +34,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @author keshav
  * @author Paul Pavlidis
- * @version $Id$
  */
 public interface Persister {
 
@@ -47,7 +46,7 @@ public interface Persister {
      * @return The persistent versions of the objects.
      */
     @Secured({ "GROUP_USER" })
-    public Collection<?> persist( Collection<?> col );
+    Collection<?> persist( Collection<?> col );
 
     /**
      * Persist a single object. Non-nullable dependencies are checked and persisted first, if the reference is detached,
@@ -58,7 +57,7 @@ public interface Persister {
      * @resutln the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
-    public Object persist( Object obj );
+    Object persist( Object obj );
 
     /**
      * Special case for experiments.
@@ -68,7 +67,7 @@ public interface Persister {
      * @return
      */
     @Secured({ "GROUP_USER" })
-    public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
+    ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
 
     /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
@@ -83,7 +82,7 @@ public interface Persister {
      * @return the persistent version of the object.
      */
     @Secured({ "GROUP_USER" })
-    public Object persistOrUpdate( Object obj );
+    Object persistOrUpdate( Object obj );
 
     /**
      * Determine if a entity is transient (not persistent).
@@ -91,13 +90,13 @@ public interface Persister {
      * @param entity
      * @return true if the object is not (as far as we can tell) already persisted.
      */
-    public boolean isTransient( Object entity );
+    boolean isTransient( Object entity );
 
     /**
      * @param entity
      * @return
      */
     @Secured({ "GROUP_USER" })
-    public ArrayDesignsForExperimentCache prepare( ExpressionExperiment entity );
+    ArrayDesignsForExperimentCache prepare( ExpressionExperiment entity );
 
 }

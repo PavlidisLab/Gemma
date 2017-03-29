@@ -77,7 +77,7 @@
       new Gemma.AuditTrailGrid( {
          renderTo : 'atGrid',
          auditable : {
-            classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl",
+            classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperiment",
             id : 1
          },
          height : 200,

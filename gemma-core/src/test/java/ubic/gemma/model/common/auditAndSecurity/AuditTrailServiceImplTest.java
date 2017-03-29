@@ -18,48 +18,34 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.*;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.testing.BaseSpringContextTest;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
-    ArrayDesign auditable;
+    private ArrayDesign auditable;
 
     @Autowired
-    AuditTrailService auditTrailService;
+    private AuditTrailService auditTrailService;
 
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     private int size;
 
@@ -79,39 +65,38 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Test
     public final void testAddOKEvent() {
-        AuditEventType eventType = OKStatusFlagEvent.Factory.newInstance();
+        AuditEventType eventType = NotTroubledStatusFlagEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
         auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
-        assertNotNull( auditable.getStatus() );
-        assertNotNull( auditable.getStatus().getLastUpdateDate() );
-        assertFalse( auditable.getStatus().getTroubled() );
+        assertNotNull( auditable.getCurationDetails() );
+        assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertFalse( auditable.getCurationDetails().getTroubled() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
-        assertEquals( OKStatusFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
-                .getEventType().getClass() );
+        assertEquals( NotTroubledStatusFlagEvent.class,
+                ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
     }
 
     @Test
     public final void testAddTroubleEvent() {
-        AuditEventType eventType = TroubleStatusFlagEvent.Factory.newInstance();
+        AuditEventType eventType = TroubledStatusFlagEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
         auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
-        assertNotNull( auditable.getStatus() );
-        assertNotNull( auditable.getStatus().getLastUpdateDate() );
+        assertNotNull( auditable.getCurationDetails() );
+        assertNotNull( auditable.getCurationDetails().getLastUpdated() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
 
-        assertTrue( auditable.getStatus().getTroubled() );
-        assertFalse( auditable.getStatus().getValidated() );
+        assertTrue( auditable.getCurationDetails().getTroubled() );
 
-        assertEquals( TroubleStatusFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
-                .getEventType().getClass() );
+        assertEquals( TroubledStatusFlagEvent.class,
+                ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
     }
 
     @Test
@@ -121,11 +106,11 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
-        assertNotNull( auditable.getStatus() );
-        assertNotNull( auditable.getStatus().getLastUpdateDate() );
+        assertNotNull( auditable.getCurationDetails() );
+        assertNotNull( auditable.getCurationDetails().getLastUpdated() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
-        assertEquals( ArrayDesignGeneMappingEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
-                .getEventType().getClass() );
+        assertEquals( ArrayDesignGeneMappingEventImpl.class,
+                ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
     }
 
     @Test
@@ -137,8 +122,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testAddValidatedEvent() {
-        AuditEventType eventType = ValidatedFlagEvent.Factory.newInstance();
+    public final void testAddNeedsAttentionEvent() {
+        AuditEventType eventType = NeedsAttentionEvent.Factory.newInstance();
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
@@ -146,14 +131,38 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
-        assertNotNull( auditable.getStatus() );
+        assertNotNull( auditable.getCurationDetails() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
-        assertNotNull( auditable.getStatus().getLastUpdateDate() );
-        assertFalse( auditable.getStatus().getTroubled() );
-        assertTrue( auditable.getStatus().getValidated() );
+        assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertFalse( auditable.getCurationDetails().getTroubled() );
+        assertTrue( auditable.getCurationDetails().getNeedsAttention() );
 
-        assertEquals( ValidatedFlagEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
-                .getEventType().getClass() );
+        assertEquals( NeedsAttentionEvent.class,
+                ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
+
+        for ( AuditEvent e : auditTrail.getEvents() ) {
+            assertNotNull( e.getId() );
+        }
+    }
+
+    @Test
+    public final void testAddDoesNotNeedsAttentionEvent() {
+        AuditEventType eventType = DoesNotNeedAttentionEvent.Factory.newInstance();
+        AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
+        assertNotNull( ev.getId() );
+
+        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
+
+        AuditTrail auditTrail = auditable.getAuditTrail();
+        assertNotNull( auditTrail );
+        assertNotNull( auditable.getCurationDetails() );
+        assertEquals( size + 1, auditTrail.getEvents().size() );
+        assertNotNull( auditable.getCurationDetails().getLastUpdated() );
+        assertFalse( auditable.getCurationDetails().getTroubled() );
+        assertFalse( auditable.getCurationDetails().getNeedsAttention() );
+
+        assertEquals( DoesNotNeedAttentionEvent.class,
+                ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
 
         for ( AuditEvent e : auditTrail.getEvents() ) {
             assertNotNull( e.getId() );
@@ -167,26 +176,23 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
+
         Collection<AuditEvent> events = auditTrail.getEvents();
         assertTrue( events.contains( ev ) );
+
         events = auditTrailService.getEvents( auditable );
         assertTrue( events.contains( ev ) );
-
-        List<? extends Auditable> results = auditTrailService.getEntitiesWithEvent( ArrayDesign.class,
-                SampleRemovalEvent.class );
-        assertTrue( results.contains( auditable ) );
-
     }
 
     @Test
     public final void testReflectionOnFactory() throws Exception {
-        Class<? extends AuditEventType> type = ValidatedFlagEvent.class;
-        AuditEventType auditEventType = null;
+        Class<? extends AuditEventType> type = DoesNotNeedAttentionEvent.class;
+        AuditEventType auditEventType;
 
         Class<?> factory = Class.forName( type.getName() + "$Factory" );
         Method method = factory.getMethod( "newInstance" );
         auditEventType = ( AuditEventType ) method.invoke( type );
         assertNotNull( auditEventType );
-        assertTrue( auditEventType instanceof ValidatedFlagEvent );
+        assertTrue( auditEventType instanceof DoesNotNeedAttentionEvent );
     }
 }

@@ -28,7 +28,6 @@ import org.springframework.security.acls.model.Permission;
 import ubic.gemma.model.expression.bioAssayData.DataVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
@@ -38,10 +37,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * @author pavlidis (based in part on code from Acegi)
  * @version $Id: BasicAclEntryAfterInvocationArrayDesignCollectionFilteringProvider.java,v 1.2 2005/08/17 21:46:32
  *          keshav Exp $
- * @see AfterInvocationProvider
  */
 public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends
-        ByAssociationFilteringProvider<ExpressionExperimentImpl, Object> {
+        ByAssociationFilteringProvider<ExpressionExperiment, Object> {
 
     private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_DATAVECTOR_COLLECTION_READ";
 
@@ -60,15 +58,15 @@ public class AclAfterCollectionDataVectorByExpressionExperimentFilter extends
      * @return
      */
     @Override
-    protected ExpressionExperimentImpl getAssociatedSecurable( Object targetDomainObject ) {
-        ExpressionExperimentImpl domainObject = null;
+    protected ExpressionExperiment getAssociatedSecurable( Object targetDomainObject ) {
+        ExpressionExperiment domainObject = null;
         if ( targetDomainObject instanceof DesignElementDataVector ) {
-            domainObject = ( ExpressionExperimentImpl ) ( ( DesignElementDataVector ) targetDomainObject )
+            domainObject = ( ExpressionExperiment ) ( ( DesignElementDataVector ) targetDomainObject )
                     .getExpressionExperiment();
         } else if ( targetDomainObject instanceof DataVectorValueObject ) {
             ExpressionExperimentValueObject expressionExperiment = ( ( DataVectorValueObject ) targetDomainObject )
                     .getExpressionExperiment();
-            domainObject = ( ExpressionExperimentImpl ) ExpressionExperiment.Factory.newInstance();
+            domainObject = ( ExpressionExperiment ) ExpressionExperiment.Factory.newInstance();
             domainObject.setId( expressionExperiment.getId() );
         }
         return domainObject;

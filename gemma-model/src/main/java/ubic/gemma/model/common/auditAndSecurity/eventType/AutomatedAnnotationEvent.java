@@ -19,14 +19,33 @@
 package ubic.gemma.model.common.auditAndSecurity.eventType;
 
 /**
- * 
+ * @deprecated this event type was used by the auto-tagger, which has been removed. This event type has been kept
+ * so that the audit-trails can still properly display these events, but creation new events of this type should not
+ * occure.
  */
-public abstract class AutomatedAnnotationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEventImpl {
+@Deprecated
+public abstract class AutomatedAnnotationEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEventImpl {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 8510568858539453569L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public AutomatedAnnotationEvent() {
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent}.
+     *
+     * @deprecated new events of this type should not be created.
      */
+    @Deprecated
     public static final class Factory {
         /**
          * Constructs a new instance of
@@ -36,19 +55,6 @@ public abstract class AutomatedAnnotationEvent extends
             return new ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEventImpl();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 8510568858539453569L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public AutomatedAnnotationEvent() {
     }
 
 }

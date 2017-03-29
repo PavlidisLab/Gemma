@@ -23,7 +23,7 @@
         <many-to-one name="quantitationType" class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl"  lazy="false" fetch="select">
             <column name="QUANTITATION_TYPE_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" cascade="none"  lazy="proxy" fetch="select">
+        <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment" cascade="none"  lazy="proxy" fetch="select">
             <column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>

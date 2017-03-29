@@ -32,28 +32,22 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.testing.BaseSpringWebTest;
 
 /**
  * @author ptan
- * @version $Id$
  */
 public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
 
     @Autowired
     private ExpressionExperimentController eeController;
 
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
     }
 
-    /**
-     * @throws java.lang.Exception
-     */
     @After
     public void tearDown() throws Exception {
     }
@@ -67,17 +61,16 @@ public class ExpressionExperimentControllerTest extends BaseSpringWebTest {
             ids.add( eeId );
         }
         limit = 1;
-        Collection<ExpressionExperimentValueObject> ret = eeController
+        Collection<ExpressionExperimentDetailsValueObject> ret = eeController
                 .loadStatusSummaries( -1L, ids, limit, null, true );
         assertEquals( 1, ret.size() );
         Iterator<Long> in = ids.iterator();
-        Iterator<ExpressionExperimentValueObject> out = ret.iterator();
+        Iterator<ExpressionExperimentDetailsValueObject> out = ret.iterator();
         assertEquals( in.next(), out.next().getId() );
 
         // Negative limit, assumes IDs have been sorted in decreasing order
         limit = -1;
-        @SuppressWarnings("unchecked")
-        List<Long> idsRev = ( ArrayList<Long> ) ids.clone();
+        @SuppressWarnings("unchecked") List<Long> idsRev = ( ArrayList<Long> ) ids.clone();
         Collections.reverse( idsRev );
         ret = eeController.loadStatusSummaries( -1L, idsRev, limit, null, true );
         out = ret.iterator();

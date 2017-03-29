@@ -18,18 +18,16 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
+import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValue;
-
 /**
  * @author kelsey
- * @version $Id$
  */
 public interface BioMaterialService {
 
@@ -37,90 +35,67 @@ public interface BioMaterialService {
      * Copies a bioMaterial.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public BioMaterial copy( BioMaterial bioMaterial );
+    BioMaterial copy( BioMaterial bioMaterial );
 
     /**
      * Total number of biomaterials in the system.
      */
-    public Integer countAll();
+    Integer countAll();
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public BioMaterial create( BioMaterial bioMaterial );
+    BioMaterial create( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
-    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
+    Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv );
+    Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public BioMaterial findOrCreate( BioMaterial bioMaterial );
+    BioMaterial findOrCreate( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperiment getExpressionExperiment( Long id );
+    ExpressionExperiment getExpressionExperiment( Long id );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public BioMaterial load( Long id );
+    BioMaterial load( Long id );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioMaterial> loadAll();
+    Collection<BioMaterial> loadAll();
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioMaterial> loadMultiple( Collection<Long> ids );
+    Collection<BioMaterial> loadMultiple( Collection<Long> ids );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void remove( BioMaterial bioMaterial );
+    void remove( BioMaterial bioMaterial );
 
-    /**
-     * @param bioMaterial
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
-    public void thaw( BioMaterial bioMaterial );
+    void thaw( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
+    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
 
     /**
      * Updates the given biomaterial to the database.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( BioMaterial bioMaterial );
+    void update( BioMaterial bioMaterial );
 
     /**
      * Update the biomaterials that are described by the given valueObjects. This is used to update experimental designs
      * in particular.
-     * 
-     * @param valueObjects
+     *
      * @return the biomaterials that were modified.
      */
     @Secured({ "GROUP_USER" })
-    public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects );
+    Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects );
 
     /**
      * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
-     * 
-     * @param dates
-     * @param d2fv
      */
     @Secured({ "GROUP_ADMIN" })
-    public void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
+    void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
+
+    String getBioMaterialIdList( Collection<BioMaterial> bioMaterials);
 
 }

@@ -308,7 +308,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                     .getCurrentSession()
                     .createQuery(
                             "select distinct ee.id, fv from "
-                                    + "ExpressionExperimentImpl"
+                                    + "ExpressionExperiment"
                                     + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", expressionExperimentIds ).list();
             for ( Object[] oa : fvs ) {
@@ -828,7 +828,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
         }
         if ( !ids.isEmpty() ) {
             result.addAll( this.getHibernateTemplate().findByNamedParam(
-                    "from ExpressionExperimentImpl e where e.id in (:ids)", "ids", ids ) );
+                    "from ExpressionExperiment e where e.id in (:ids)", "ids", ids ) );
         }
     }
 

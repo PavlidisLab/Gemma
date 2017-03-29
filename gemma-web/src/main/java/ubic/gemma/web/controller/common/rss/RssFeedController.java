@@ -18,16 +18,6 @@
  */
 package ubic.gemma.web.controller.common.rss;
 
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,14 +25,18 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author sshao
- * @version $Id$
  */
 @Controller
 public class RssFeedController {
@@ -56,20 +50,13 @@ public class RssFeedController {
 
     /**
      * Show all experiments
-     * 
-     * @param request
-     * @param response
-     * @return ModelAndView
      */
     @RequestMapping(value = { "/rssfeed" }, method = RequestMethod.GET)
     public ModelAndView getLatestExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
         WhatsNew wn = whatsNewService.retrieveReport();
         if ( wn == null ) {
-            Calendar c = Calendar.getInstance();
-            Date date = c.getTime();
-            date = DateUtils.addWeeks( date, -1 );
-            wn = whatsNewService.getReport( date );
+            wn = whatsNewService.getReport();
         }
 
         int updatedExperimentsCount = 0;

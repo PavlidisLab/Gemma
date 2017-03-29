@@ -21,8 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class FailedMissingValueAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventImpl {
+public class FailedMissingValueAnalysisEvent extends NeedsAttentionEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +33,7 @@ public abstract class FailedMissingValueAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedMissingValueAnalysisEvent();
         }
 
     }

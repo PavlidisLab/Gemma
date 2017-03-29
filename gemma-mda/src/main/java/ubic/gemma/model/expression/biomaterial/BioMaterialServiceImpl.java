@@ -14,17 +14,11 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -33,23 +27,21 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
  * @see ubic.gemma.model.expression.biomaterial.BioMaterialService
  */
 @Service
 public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
-    private static Logger log = LoggerFactory.getLogger( BioMaterialServiceImpl.class );
+    private static final Logger log = LoggerFactory.getLogger( BioMaterialServiceImpl.class );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#associateBatchFactor(java.util.Map,
-     * java.util.Map)
-     */
     @Override
     public void associateBatchFactor( final Map<BioMaterial, Date> dates, final Map<Date, FactorValue> d2fv ) {
 
@@ -97,39 +89,23 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return this.getBioMaterialDao().getExpressionExperiment( id );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(ubic.gemma.model.expression.biomaterial.
-     * BioMaterial )
-     */
     @Override
     @Transactional(readOnly = true)
     public void thaw( BioMaterial bioMaterial ) {
         this.getBioMaterialDao().thaw( bioMaterial );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#thaw(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
         return this.getBioMaterialDao().thaw( bioMaterials );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#updateBioMaterials(java.util.Collection)
-     */
     @Override
     @Transactional
     public Collection<BioMaterial> updateBioMaterials( Collection<BioMaterialValueObject> valueObjects ) {
 
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        Collection<BioMaterial> bms = new HashSet<>();
         for ( BioMaterialValueObject bioMaterialValueObject : valueObjects ) {
             BioMaterial updatedBm = this.update( bioMaterialValueObject );
             // the map FactorIdToFactorValueId contains values for all factors, including empty ones.
@@ -139,13 +115,6 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return bms;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleCopy(ubic.gemma.model.expression.biomaterial
-     * .BioMaterial)
-     */
     @Override
     protected BioMaterial handleCopy( BioMaterial bioMaterial ) {
         return this.getBioMaterialDao().copy( bioMaterial );
@@ -156,10 +125,6 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return this.getBioMaterialDao().countAll();
     }
 
-    /**
-     * @param bioMaterial
-     * @return @
-     */
     @Override
     protected BioMaterial handleCreate( BioMaterial bioMaterial ) {
         return this.getBioMaterialDao().create( bioMaterial );
@@ -173,9 +138,6 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return this.getBioMaterialDao().findOrCreate( bioMaterial );
     }
 
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#findOrId(java.lang.Long)
-     */
     @Override
     protected BioMaterial handleLoad( Long id ) {
         return this.getBioMaterialDao().load( id );
@@ -190,11 +152,6 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return ( Collection<BioMaterial> ) this.getBioMaterialDao().loadAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleLoadMultiple(java.util.Collection)
-     */
     @Override
     protected Collection<BioMaterial> handleLoadMultiple( Collection<Long> ids ) {
         return this.getBioMaterialDao().load( ids );
@@ -209,32 +166,19 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
     }
 
-    /**
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialService#saveBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
     protected void handleSaveBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
         this.getBioMaterialDao().create( bioMaterial );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.biomaterial.BioMaterialServiceBase#handleUpdate(ubic.gemma.model.expression.
-     * biomaterial .BioMaterial)
-     */
     @Override
     protected void handleUpdate( BioMaterial bioMaterial ) {
         this.getBioMaterialDao().update( bioMaterial );
     }
 
-    /**
-     * @param bmvo
-     * @return
-     */
     private BioMaterial update( BioMaterialValueObject bmvo ) {
         BioMaterial bm = load( bmvo.getId() );
 
-        Collection<FactorValue> updatedFactorValues = new HashSet<FactorValue>();
+        Collection<FactorValue> updatedFactorValues = new HashSet<>();
         Map<String, String> factorIdToFactorValueId = bmvo.getFactorIdToFactorValueId(); // all of them.
         for ( String factorIdString : factorIdToFactorValueId.keySet() ) {
             String factorValueString = factorIdToFactorValueId.get( factorIdString );
@@ -244,8 +188,6 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
             if ( StringUtils.isBlank( factorValueString ) ) {
                 // no value provided, that's okay, the curator can fill it in later.
-                continue;
-
             } else if ( factorValueString.matches( "fv\\d+" ) ) {
                 // categorical
                 long fvId = Long.parseLong( factorValueString.substring( 2 ) );
@@ -266,8 +208,8 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
                             throw new IllegalStateException(
                                     "Should have been a measurement associated with fv=" + fv + ", cannot update." );
                         } else if ( !fv.getMeasurement().getValue().equals( factorValueString ) ) {
-                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor="
-                                    + fv.getExperimentalFactor() + " value= '" + factorValueString + "'" );
+                            log.debug( "Updating continuous value on biomaterial:" + bmvo + ", factor=" + fv
+                                    .getExperimentalFactor() + " value= '" + factorValueString + "'" );
                             fv.getMeasurement().setValue( factorValueString );
                         } else {
                             log.debug( "Value unchanged from " + fv.getMeasurement().getValue() );
@@ -324,5 +266,15 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         update( bm );
         assert !bm.getFactorValues().isEmpty();
         return bm;
+    }
+
+    public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials) {
+        StringBuilder buf = new StringBuilder();
+        for ( BioMaterial bm : bioMaterials ) {
+            buf.append( bm.getId() );
+            buf.append( "," );
+        }
+        return buf.toString().replaceAll( ",$", "" );
+
     }
 }

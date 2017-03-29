@@ -179,9 +179,9 @@ Gemma.BioAssayGrid = Ext
 
          isOutlierRender : function( value, metadata, record, row, col, ds ) {
             if ( record.get( 'outlier' ) ) {
-               return "<img title=\"Is an outlier\" src=\"/Gemma/images/icons/stop.png\"/>";
+               return "<i class=\"fa fa-exclamation-triangle fa-lg\"></i>";
             }
             return "";
-         },
+         }
 
       } );

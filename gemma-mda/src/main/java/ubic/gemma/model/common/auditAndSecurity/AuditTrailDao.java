@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.BaseDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
@@ -30,22 +30,9 @@ import ubic.gemma.persistence.BaseDao;
 public interface AuditTrailDao extends BaseDao<AuditTrail> {
 
     /**
-     * Add the given event to the audit trail of the given Auditable entity. For efficiency, it is best to set the audit
+     * Add the given event to the audit trail of the given AbstractAuditable entity. For efficiency, it is best to set the audit
      * event performer before passing in.
-     * 
-     * @param auditable
-     * @param auditEvent
-     * @return
      */
-    public AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
+    AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 
-    /**
-     * get all entities of the class specified that have the event type specified in their audit trails
-     * 
-     * @param entityClass
-     * @param auditEventClass
-     * @return
-     */
-    Collection<Auditable> getEntitiesWithEvent( Class<? extends Auditable> entityClass,
-            Class<? extends AuditEventType> auditEventClass );
 }

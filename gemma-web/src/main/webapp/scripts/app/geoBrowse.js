@@ -198,7 +198,7 @@ Gemma.GeoBrowseGrid = Ext
                }, {
                   header : "Release date",
                   dataIndex : "releaseDate",
-                  renderer : new Ext.util.Format.dateRenderer( "M d, Y" ),
+                  renderer : Gemma.Renderers.dateRenderer,
                   width : 76
                }, {
                   header : "numSamples",

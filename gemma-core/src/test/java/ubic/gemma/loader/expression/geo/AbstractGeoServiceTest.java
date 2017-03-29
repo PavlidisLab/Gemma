@@ -25,27 +25,17 @@ import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public abstract class AbstractGeoServiceTest extends BaseSpringContextTest {
 
     private static final String GEO_TEST_DATA_ROOT = "/data/loader/expression/geo/";
 
-    /**
-     * @return
-     * @throws URISyntaxException
-     */
     protected String getTestFileBasePath() throws URISyntaxException {
 
         return FileTools.resourceToPath( GEO_TEST_DATA_ROOT );
 
     }
 
-    /**
-     * @param subPath
-     * @return
-     * @throws URISyntaxException
-     */
     protected String getTestFileBasePath( String subPath ) throws URISyntaxException {
 
         return FileTools.resourceToPath( GEO_TEST_DATA_ROOT + subPath );

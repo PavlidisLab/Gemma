@@ -21,8 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class FailedLinkAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventImpl {
+public class FailedLinkAnalysisEvent extends NeedsAttentionEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent}.
@@ -33,7 +32,7 @@ public abstract class FailedLinkAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedLinkAnalysisEvent();
         }
 
     }

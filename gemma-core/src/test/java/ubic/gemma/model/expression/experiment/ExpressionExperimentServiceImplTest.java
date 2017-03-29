@@ -36,17 +36,16 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 /**
  * @author daq2101
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentServiceImplTest extends TestCase {
-    Collection<ExpressionExperiment> c;
-    Collection<ExpressionExperiment> cJustTwelve;
+    private Collection<ExpressionExperiment> c;
+    private Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
     private Person nobody = null;
     private Person admin = null;
     private ExpressionExperimentServiceImpl svc = null;
 
-    private ExpressionExperimentDao eeDao;
+    private ExpressionExperimentDaoImpl eeDao;
 
     public void testExpressionExperimentFindAll() {
         reset( eeDao );
@@ -72,7 +71,7 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
         svc = new ExpressionExperimentServiceImpl();
 
-        eeDao = createMock( ExpressionExperimentDao.class );
+        eeDao = createMock( ExpressionExperimentDaoImpl.class );
         svc.setExpressionExperimentDao( eeDao );
 
         nobody = Person.Factory.newInstance();
@@ -101,15 +100,15 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
         ee.getInvestigators().add( admin );
 
-        c = new HashSet<ExpressionExperiment>();
+        c = new HashSet<>();
         ExpressionExperiment numberTwelve = ExpressionExperiment.Factory.newInstance();
-        numberTwelve.setId( new Long( 12 ) );
+        numberTwelve.setId( 12L );
 
         c.add( numberTwelve );
         c.add( ExpressionExperiment.Factory.newInstance() );
         c.add( ExpressionExperiment.Factory.newInstance() );
 
-        cJustTwelve = new HashSet<ExpressionExperiment>();
+        cJustTwelve = new HashSet<>();
         cJustTwelve.add( numberTwelve );
 
     }

@@ -8,7 +8,6 @@ Ext.namespace( 'Gemma' );
  * @class Gemma.ExpressionExperimentPage
  * @extends Ext.TabPanel
  * @author tvrossum
- * @version $Id$
  * 
  */
 Gemma.ExpressionExperimentSetPage = Ext.extend( Ext.TabPanel, {

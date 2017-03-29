@@ -1894,7 +1894,7 @@
                   <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949459_916200_2436" value="1"/>
                   <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949459_439357_2435" value="1"/>
                 </ownedAttribute>
-                <ownedAttribute xmi:id="Ieeda37m101f2ab640dmm300d" name="note" type="_9_0_1fe00f9_1119336925531_45790_53">
+                <ownedAttribute xmi:id="Ieeda37m101f2ab640dmm300d" name="curationNote" type="_9_0_1fe00f9_1119336925531_45790_53">
                   <ownedComment xmi:id="_17_0_1_43d01b3_1299017949460_578436_2437" body="&lt;p>An annotation about the action taken.&lt;/p>" annotatedElement="Ieeda37m101f2ab640dmm300d"/>
                   <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949460_920588_2440" value="1"/>
                   <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949460_962080_2439"/>
@@ -2025,35 +2025,35 @@
                 </ownedOperation>
                 <ownedOperation xmi:id="I6b76d33cm104615ec4cbmc2d" name="start" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="I6b76d33cm104615ec4cbmc6f" name="return" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
-                  <ownedParameter xmi:id="I6b76d33cm104615ec4cbmc6d" name="note" type="_9_0_1fe00f9_1119336925531_364079_66"/>
+                  <ownedParameter xmi:id="I6b76d33cm104615ec4cbmc6d" name="curationNote" type="_9_0_1fe00f9_1119336925531_364079_66"/>
                   <ownedParameter xmi:id="I6b76d33cm104615ec4cbmc6e" name="actor" type="Ibaaea8m10259547663mm2a31"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="Ib6efb2m10268bb2e8am2e24" name="start" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="Ib6efb2m10268bb2e8am2e27" name="return" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
-                  <ownedParameter xmi:id="Ib6efb2m10268bb2e8am2ec0" name="note" type="_9_0_1fe00f9_1119336925531_364079_66"/>
+                  <ownedParameter xmi:id="Ib6efb2m10268bb2e8am2ec0" name="curationNote" type="_9_0_1fe00f9_1119336925531_364079_66"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="Ib6efb2m10268bb2e8am2e50" name="update" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="Ib6efb2m10268bb2e8am2e53" name="return" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="I6b76d33cm104615ec4cbmd5a" name="update" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="I6b76d33cm104615ec4cbmd9c" name="return" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
-                  <ownedParameter xmi:id="I6b76d33cm104615ec4cbmd9a" name="note" type="_9_0_1fe00f9_1119336925531_364079_66"/>
+                  <ownedParameter xmi:id="I6b76d33cm104615ec4cbmd9a" name="curationNote" type="_9_0_1fe00f9_1119336925531_364079_66"/>
                   <ownedParameter xmi:id="I6b76d33cm104615ec4cbmd9b" name="actor" type="Ibaaea8m10259547663mm2a31"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="Ib6efb2m10268bb2e8am2e7c" name="update" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="Ib6efb2m10268bb2e8am2e7f" name="return" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
-                  <ownedParameter xmi:id="Ib6efb2m10268bb2e8am2f31" name="note" type="_9_0_1fe00f9_1119336925531_364079_66"/>
+                  <ownedParameter xmi:id="Ib6efb2m10268bb2e8am2f31" name="curationNote" type="_9_0_1fe00f9_1119336925531_364079_66"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="_9_5_1_f24035d_1138934632679_539338_1331" name="read" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="_9_5_1_f24035d_1138934632679_491637_1330" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="_9_5_1_f24035d_1138934632689_565097_1332" name="read" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="_9_5_1_f24035d_1138934556810_627295_1326" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
-                  <ownedParameter xmi:id="_9_5_1_f24035d_1138934556810_44875_1325" name="note" type="_9_0_1fe00f9_1119336925531_364079_66" direction="inout"/>
+                  <ownedParameter xmi:id="_9_5_1_f24035d_1138934556810_44875_1325" name="curationNote" type="_9_0_1fe00f9_1119336925531_364079_66" direction="inout"/>
                 </ownedOperation>
                 <ownedOperation xmi:id="_9_5_1_f24035d_1138934632689_465093_1333" name="read" type="_9_0_1fe00f9_1119336925531_324247_52">
                   <returnResult xmi:id="_9_5_1_f24035d_1138934602526_574463_1329" type="_9_0_1fe00f9_1119336925531_324247_52" direction="return"/>
-                  <ownedParameter xmi:id="_9_5_1_f24035d_1138934602526_237357_1327" name="note" type="_9_0_1fe00f9_1119336925531_364079_66" direction="inout"/>
+                  <ownedParameter xmi:id="_9_5_1_f24035d_1138934602526_237357_1327" name="curationNote" type="_9_0_1fe00f9_1119336925531_364079_66" direction="inout"/>
                   <ownedParameter xmi:id="_9_5_1_f24035d_1138934602526_39332_1328" name="actor" type="Ibaaea8m10259547663mm2a31" direction="inout"/>
                 </ownedOperation>
               </ownedMember>
@@ -2438,7 +2438,7 @@
                   <eAnnotations xmi:id="_0X5Cch2HEeOjaaBf708ONQ" source="appliedStereotypes">
                     <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0X5Ccx2HEeOjaaBf708ONQ"/>
                   </eAnnotations>
-                  <ownedComment xmi:id="_9_5_1_43d01b3_1255490480468_884895_81" body="To note that the data set has one or more outlier samples." annotatedElement="_9_5_1_43d01b3_1255490196984_319502_0"/>
+                  <ownedComment xmi:id="_9_5_1_43d01b3_1255490480468_884895_81" body="To curationNote that the data set has one or more outlier samples." annotatedElement="_9_5_1_43d01b3_1255490196984_319502_0"/>
                   <generalization xmi:id="_9_5_1_43d01b3_1255490200875_375672_16" general="_9_5_1_f24035d_1188923477031_967730_43" isSubstitutable="true"/>
                 </ownedMember>
                 <ownedMember xmi:type="uml:Class" xmi:id="_9_5_1_43d01b3_1255490310937_342056_27" name="ExperimentalDesignTrouble">

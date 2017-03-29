@@ -1,18 +1,11 @@
 package ubic.gemma.analysis.expression.coexpression.links;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import cern.colt.list.ObjectArrayList;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.dataStructure.Link;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
@@ -28,13 +21,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.EntityUtils;
-import cern.colt.list.ObjectArrayList;
+
+import java.util.*;
 
 /**
  * Handles moving gene coexpression links from memory into the database; updates related meta-data.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 @Component
 public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
@@ -53,13 +46,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     @Autowired
     private Persister persisterHelper;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisPersister#initializeLinksFromOldData(ubic.gemma
-     * .model.genome.Taxon)
-     */
     @Override
     public void initializeLinksFromOldData( Taxon t ) {
         Collection<Gene> genes = geneService.loadAll( t );
@@ -91,9 +77,10 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
         int numGenes = 0;
         int count = 0;
         for ( Gene gene : genes ) {
-            Map<SupportDetails, Gene2GeneCoexpression> links = gene2GeneCoexpressionService.initializeLinksFromOldData(
-                    gene, idMap, linksSoFar, skipGenes );
-            if ( links == null || links.isEmpty() ) continue;
+            Map<SupportDetails, Gene2GeneCoexpression> links = gene2GeneCoexpressionService
+                    .initializeLinksFromOldData( gene, idMap, linksSoFar, skipGenes );
+            if ( links == null || links.isEmpty() )
+                continue;
 
             count += links.size();
 
@@ -128,13 +115,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisPersister#saveLinks(ubic.gemma.analysis.expression
-     * .coexpression.links.LinkAnalysis)
-     */
     @Override
     public void saveLinksToDb( LinkAnalysis la ) {
 
@@ -166,10 +146,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
 
     }
 
-    /**
-     * @param la
-     * @return
-     */
     private LinkCreator getLinkCreator( LinkAnalysis la ) {
         Taxon taxon = la.getTaxon();
         LinkCreator c;
@@ -178,10 +154,7 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     }
 
     /**
-     * @param w
      * @param c helper class
-     * @param v1
-     * @param v2
      * @return entity ready for saving to the database (or updating equivalent existing link)
      */
     private Gene2GeneCoexpression initCoexp( double w, LinkCreator c, Gene v1, Gene v2 ) {
@@ -191,8 +164,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
     }
 
     /**
-     * @param la
-     * @param links
      * @return how many links were saved
      */
     private int saveLinks( LinkAnalysis la, ObjectArrayList links ) {
@@ -207,7 +178,8 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
         for ( int i = 0, n = links.size(); i < n; i++ ) {
 
             Object val = links.getQuick( i );
-            if ( val == null ) continue;
+            if ( val == null )
+                continue;
             Link m = ( Link ) val;
             Double w = m.getWeight();
 
@@ -232,14 +204,15 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
                         continue;
                     }
 
-                    NonPersistentNonOrderedCoexpLink link = new NonPersistentNonOrderedCoexpLink( initCoexp( w, c, g1,
-                            g2 ) );
+                    NonPersistentNonOrderedCoexpLink link = new NonPersistentNonOrderedCoexpLink(
+                            initCoexp( w, c, g1, g2 ) );
                     if ( linksForDb.contains( link ) ) {
                         /*
                          * This happens if there is more than one probe retained for a gene (or both genes) and the
                          * coexpression shows up more than once (different pair of probes, same genes).
                          */
-                        if ( log.isDebugEnabled() ) log.debug( "Skipping duplicate: " + link );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Skipping duplicate: " + link );
                         duplicateLinksSkipped++;
                         continue;
 
@@ -259,7 +232,8 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
                     g1HasLinks = true;
                     genesWithLinks.add( g2 );
                 }
-                if ( g1HasLinks ) genesWithLinks.add( g1 );
+                if ( g1HasLinks )
+                    genesWithLinks.add( g1 );
             }
 
             if ( i > 0 && i % 200000 == 0 ) {
@@ -287,8 +261,8 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
          * Do the actual database writing. It's a good idea to do this part in one (big) transaction. Note that even if
          * there are no links, we still update the "genes tested" information.
          */
-        this.gene2GeneCoexpressionService.createOrUpdate( la.getExpressionExperiment(), new ArrayList<>( linksForDb ),
-                c, la.getGenesTested() );
+        this.gene2GeneCoexpressionService
+                .createOrUpdate( la.getExpressionExperiment(), new ArrayList<>( linksForDb ), c, la.getGenesTested() );
 
         /*
          * Update the meta-data about the analysis
@@ -306,13 +280,6 @@ public class LinkAnalysisPersisterImpl implements LinkAnalysisPersister {
          */
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisPersister#deleteAnalyses(ubic.gemma.model.expression
-     * .experiment.ExpressionExperiment)
-     */
     @Override
     public void deleteAnalyses( BioAssaySet ee ) {
         Collection<CoexpressionAnalysis> oldAnalyses = coexpressionAnalysisService.findByInvestigation( ee );

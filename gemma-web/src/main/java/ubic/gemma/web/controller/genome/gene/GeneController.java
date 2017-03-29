@@ -18,17 +18,6 @@
  */
 package ubic.gemma.web.controller.genome.gene;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +25,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneCoreService;
@@ -57,14 +45,19 @@ import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.image.aba.ImageValueObject;
 import ubic.gemma.web.view.TextView;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author daq2101
  * @author pavlidis
  * @author joseph
- * @version $Id$
  */
 @Controller
 @RequestMapping(value = { "/gene", "/g" })
@@ -87,8 +80,6 @@ public class GeneController extends BaseController {
 
     /**
      * For ajax
-     * 
-     * @return
      */
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         return geneService.findGOTerms( geneId );
@@ -96,11 +87,10 @@ public class GeneController extends BaseController {
 
     /**
      * For ajax.
-     * 
-     * @return
      */
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
-        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
+        if ( geneId == null )
+            throw new IllegalArgumentException( "Null id for gene" );
         return geneService.getProducts( geneId );
     }
 
@@ -108,7 +98,7 @@ public class GeneController extends BaseController {
      * AJAX NOTE: this method updates the value object passed in
      */
     public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
-        Collection<ImageValueObject> images = new ArrayList<ImageValueObject>();
+        Collection<ImageValueObject> images = new ArrayList<>();
         GeneValueObject gene = geneService.loadValueObject( geneId );
 
         String queryGeneSymbol = gene.getOfficialSymbol();
@@ -120,15 +110,16 @@ public class GeneController extends BaseController {
         }
 
         if ( mouseGene != null ) {
-            Collection<ImageSeries> imageSeries = null;
+            Collection<ImageSeries> imageSeries;
 
             try {
                 imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
                 String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
 
                 Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl,
-                        new GeneValueObject( mouseGene ), queryGeneSymbol, usingHomologue );
+                images = ImageValueObject
+                        .convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject( mouseGene ),
+                                queryGeneSymbol, usingHomologue );
 
             } catch ( IOException e ) {
                 log.warn( "Could not get ABA data: " + e );
@@ -139,20 +130,19 @@ public class GeneController extends BaseController {
 
     /**
      * AJAX used for gene page
-     * 
-     * @param geneId
-     * @return
      */
     public GeneValueObject loadGeneDetails( Long geneId ) {
         // return geneCoreService.loadGeneDetails( geneId );
         GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
-        Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService.findEvidenceByGeneId( geneId,
-                new HashSet<String>(), new EvidenceFilter( gvo.getTaxonId(), false, null ) );
+        Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService
+                .findEvidenceByGeneId( geneId, new HashSet<String>(),
+                        new EvidenceFilter( gvo.getTaxonId(), false, null ) );
         Iterator<EvidenceValueObject> iter = collEVO.iterator();
-        Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
         while ( iter.hasNext() ) {
             EvidenceValueObject evo = iter.next();
-            if ( !evo.isHomologueEvidence() ) collFilteredDVO.addAll( evo.getPhenotypes() );
+            if ( !evo.isHomologueEvidence() )
+                collFilteredDVO.addAll( evo.getPhenotypes() );
         }
         gvo.setPhenotypes( collFilteredDVO );
         return gvo;
@@ -163,25 +153,16 @@ public class GeneController extends BaseController {
      */
     public Collection<EvidenceValueObject> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
-        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId,
-                phenotypeValueUris == null ? new HashSet<String>()
-                        : new HashSet<String>( Arrays.asList( phenotypeValueUris ) ),
+        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, phenotypeValueUris == null ?
+                        new HashSet<String>() :
+                        new HashSet<>( Arrays.asList( phenotypeValueUris ) ),
                 new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
     }
 
-    /**
-     * @param geneId
-     * @return
-     */
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         return geneService.loadGenePhenotypes( geneId );
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
     @RequestMapping(value = { "/showGene.html", "/" }, method = RequestMethod.GET)
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
@@ -196,7 +177,6 @@ public class GeneController extends BaseController {
         try {
             if ( StringUtils.isNotBlank( idString ) ) {
                 Long id = Long.parseLong( idString );
-                assert id != null;
 
                 geneVO = geneService.loadValueObject( id );
 
@@ -209,8 +189,8 @@ public class GeneController extends BaseController {
                 geneVO = geneService.findByNCBIIdValueObject( Integer.parseInt( ncbiId ) );
 
             } else if ( StringUtils.isNotBlank( ensemblId ) ) {
-                @SuppressWarnings("unchecked")
-                Collection<Gene> foundGenes = ( Collection<Gene> ) geneService.findByEnsemblId( ensemblId );
+                @SuppressWarnings("unchecked") Collection<Gene> foundGenes = ( Collection<Gene> ) geneService
+                        .findByEnsemblId( ensemblId );
 
                 if ( foundGenes.size() == 1 ) {
                     Gene gene = foundGenes.iterator().next();
@@ -252,52 +232,14 @@ public class GeneController extends BaseController {
         return mav;
     }
 
-    // /**
-    // * Used to display the probe browser, when starting by gene.
-    // *
-    // * @param request
-    // * @param response
-    // * @return ModelAndView
-    // */
-    // @RequestMapping("/showCompositeSequences.html")
-    // public ModelAndView showCompositeSequences( HttpServletRequest request, HttpServletResponse response ) {
-    //
-    // // gene id.
-    // Long id = Long.parseLong( request.getParameter( "id" ) );
-    // GeneValueObject gene = geneService.loadValueObject( id );
-    // if ( gene == null ) {
-    // addMessage( request, "object.notfound", new Object[] { "Gene with id: " + request.getParameter( "id" ) } );
-    // StringBuffer requestURL = request.getRequestURL();
-    // log.info( requestURL );
-    // return new ModelAndView( WebConstants.HOME_PAGE );
-    // }
-    // Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
-    //
-    // ModelAndView mav = new ModelAndView( "compositeSequences.geneMap" );
-    // mav.addObject( "numCompositeSequences", compositeSequences.size() );
-    //
-    // StringBuilder buf = new StringBuilder();
-    // for ( CompositeSequence sequence : compositeSequences ) {
-    // buf.append( sequence.getId() );
-    // buf.append( "," );
-    // }
-    // mav.addObject( "compositeSequenceIdList", buf.toString().replaceAll( ",$", "" ) );
-    //
-    // mav.addObject( "gene", gene );
-    //
-    // return mav;
-    // }
-
     /**
-     * @param request
-     * @param response
      * @return ModelAndView
      */
     @RequestMapping(value = { "/showGenes.html", "/show.html" }, method = RequestMethod.GET)
     public ModelAndView showMultiple( HttpServletRequest request, HttpServletResponse response ) {
 
         String sId = request.getParameter( "id" );
-        Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();
+        Collection<GeneValueObject> genes = new ArrayList<>();
         // if no IDs are specified, then show an error message
         if ( sId == null ) {
             addMessage( request, "object.notfound", new Object[] { "All genes cannot be listed. Genes " } );
@@ -307,8 +249,8 @@ public class GeneController extends BaseController {
         else {
             String[] idList = StringUtils.split( sId, ',' );
 
-            for ( int i = 0; i < idList.length; i++ ) {
-                Long id = Long.parseLong( idList[i] );
+            for ( String anIdList : idList ) {
+                Long id = Long.parseLong( anIdList );
                 GeneValueObject gene = geneService.loadValueObject( id );
                 if ( gene == null ) {
                     addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
@@ -323,40 +265,14 @@ public class GeneController extends BaseController {
 
     }
 
-    /**
-     * Returns a collection of {@link Long} ids from strings.
-     * 
-     * @param idString
-     * @return
-     */
-    protected Collection<Long> extractIds( String idString ) {
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
-    }
-
-    /*
-     * Handle case of text export of a list of genes
-     * 
-     * @see org.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse) Called by /Gemma/gene/downloadGeneList.html
-     */
     @RequestMapping("/downloadGeneList.html")
     protected ModelAndView handleRequestInternal( HttpServletRequest request ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) ); // might not be any
-        Collection<Long> geneSetIds = extractIds( request.getParameter( "gs" ) ); // might not be there
+        Collection<Long> geneIds = ControllerUtils.extractIds( request.getParameter( "g" ) ); // might not be any
+        Collection<Long> geneSetIds = ControllerUtils.extractIds( request.getParameter( "gs" ) ); // might not be there
         String geneSetName = request.getParameter( "gsn" ); // might not be there
 
         ModelAndView mav = new ModelAndView( new TextView() );
@@ -365,7 +281,7 @@ public class GeneController extends BaseController {
                     "Could not find genes to match gene ids: {" + geneIds + "} or gene set ids {" + geneSetIds + "}" );
             return mav;
         }
-        Collection<GeneValueObject> genes = new ArrayList<GeneValueObject>();
+        Collection<GeneValueObject> genes = new ArrayList<>();
         if ( geneIds != null ) {
             for ( Long id : geneIds ) {
                 genes.add( geneService.loadValueObject( id ) );
@@ -389,17 +305,20 @@ public class GeneController extends BaseController {
     }
 
     private String format4File( Collection<GeneValueObject> genes, String geneSetName ) {
-        StringBuffer strBuff = new StringBuffer();
-        strBuff.append( "# Generated by Gemma\n# " + ( new Date() ) + "\n" );
+        StringBuilder strBuff = new StringBuilder();
+        strBuff.append( "# Generated by Gemma\n# " ).append( new Date() ).append( "\n" );
         strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
 
-        if ( geneSetName != null && geneSetName.length() != 0 ) strBuff.append( "# Gene Set: " + geneSetName + "\n" );
-        strBuff.append( "# " + genes.size() + ( ( genes.size() > 1 ) ? " genes" : " gene" ) + "\n" );
+        if ( geneSetName != null && geneSetName.length() != 0 )
+            strBuff.append( "# Gene Set: " ).append( geneSetName ).append( "\n" );
+        strBuff.append( "# " ).append( genes.size() ).append( ( genes.size() > 1 ) ? " genes" : " gene" )
+                .append( "\n" );
 
         // add header
         strBuff.append( "Gene Symbol\tGene Name\tNCBI ID\n" );
         for ( GeneValueObject gene : genes ) {
-            strBuff.append( gene.getOfficialSymbol() + "\t" + gene.getOfficialName() + "\t" + gene.getNcbiId() );
+            strBuff.append( gene.getOfficialSymbol() ).append( "\t" ).append( gene.getOfficialName() ).append( "\t" )
+                    .append( gene.getNcbiId() );
             strBuff.append( "\n" );
         }
 

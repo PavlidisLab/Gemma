@@ -18,30 +18,23 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao;
-import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GOAssociationDao;
-import ubic.gemma.model.association.Gene2GeneProteinAssociation;
-import ubic.gemma.model.association.Gene2GeneProteinAssociationDao;
-import ubic.gemma.model.association.TfGeneAssociation;
-import ubic.gemma.model.association.TfGeneAssociationDao;
+import ubic.gemma.model.association.*;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Persist objects like Gene2GOAssociation.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class RelationshipPersister extends ExpressionPersister {
 
@@ -60,15 +53,11 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     @Autowired
     private Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persist( Object entity ) {
-        if ( entity == null ) return null;
+        if ( entity == null )
+            return null;
 
         if ( entity instanceof Gene2GOAssociation ) {
             return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
@@ -85,26 +74,19 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persistOrUpdate( Object entity ) {
-        if ( entity == null ) return null;
+        if ( entity == null )
+            return null;
         return super.persistOrUpdate( entity );
     }
 
-    /**
-     * @param entity
-     * @return
-     */
-    protected ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
-        if ( !isTransient( entity ) ) return entity;
+    private ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
+        if ( !isTransient( entity ) )
+            return entity;
 
-        Collection<BioAssaySet> setMembers = new HashSet<BioAssaySet>();
+        Collection<BioAssaySet> setMembers = new HashSet<>();
 
         for ( BioAssaySet baSet : entity.getExperiments() ) {
             if ( isTransient( baSet ) ) {
@@ -118,13 +100,11 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return expressionExperimentSetDao.create( entity );
     }
 
-    /**
-     * @param association
-     * @return
-     */
-    protected Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
-        if ( association == null ) return null;
-        if ( !isTransient( association ) ) return association;
+    private Gene2GOAssociation persistGene2GOAssociation( Gene2GOAssociation association ) {
+        if ( association == null )
+            return null;
+        if ( !isTransient( association ) )
+            return association;
         try {
             FieldUtils.writeField( association, "gene", persistGene( association.getGene() ), true );
         } catch ( IllegalAccessException e ) {
@@ -134,8 +114,10 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     }
 
     private TfGeneAssociation persistTfGeneAssociation( TfGeneAssociation entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
+        if ( entity == null )
+            return null;
+        if ( !isTransient( entity ) )
+            return entity;
 
         if ( isTransient( entity.getFirstGene() ) || isTransient( entity.getSecondGene() ) ) {
             throw new IllegalArgumentException(
@@ -146,13 +128,11 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     }
 
-    /**
-     * @param entity
-     * @return
-     */
-    protected CoexpressionAnalysis persistProbeCoexpressionAnalysis( CoexpressionAnalysis entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
+    private CoexpressionAnalysis persistProbeCoexpressionAnalysis( CoexpressionAnalysis entity ) {
+        if ( entity == null )
+            return null;
+        if ( !isTransient( entity ) )
+            return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
         if ( isTransient( entity.getExperimentAnalyzed() ) ) {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
@@ -164,14 +144,16 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     /**
      * The persisting method for Gene2GeneProteinAssociation which validates the the Gene2GeneProteinAssociation does
      * not already exist in the system. If it does then the persisted object is returned
-     * 
-     * @param entity Gene2GeneProteinAssociation the object to persist
-     * @return Gene2GeneProteinAssociation the persisted object
+     *
+     * @param gene2GeneProteinAssociation the object to persist
+     * @return the persisted object
      */
-    protected Gene2GeneProteinAssociation persistGene2GeneProteinAssociation(
+    private Gene2GeneProteinAssociation persistGene2GeneProteinAssociation(
             Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
-        if ( gene2GeneProteinAssociation == null ) return null;
-        if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;
+        if ( gene2GeneProteinAssociation == null )
+            return null;
+        if ( !isTransient( gene2GeneProteinAssociation ) )
+            return gene2GeneProteinAssociation;
 
         // Deletes any old existing one.
         return gene2GeneProteinAssociationDao.create( gene2GeneProteinAssociation );

@@ -70,7 +70,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 /**
  * @author keshav
  * @author pavlidis
- * @version $Id$
  */
 public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
@@ -92,7 +91,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     private ProcessedExpressionDataVectorCreateService processedDataVectorService;
 
     @Autowired
-    protected GeoService geoService;
+    private GeoService geoService;
 
     @Autowired
     private ExpressionDataFileService expressionDataFileService = null;
@@ -108,7 +107,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     @Before
     public void setup() throws Exception {
 
-        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> ads = new HashSet<>();
 
         metaData = new SimpleExpressionExperimentMetaData();
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
@@ -129,7 +128,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         metaData.setIsRatio( true );
 
         try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
+                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
             DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
             ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
         }
@@ -150,15 +149,14 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
                 expressionExperimentService.delete( newee );
             }
         } catch ( Exception e ) {
-
+            log.error( e );
         }
 
     }
 
     /**
      * Tests the construction of an ExpressionDataDoubleMatrix
-     * 
-     * @throws IOException
+     *
      */
     @Test
     public void testConstructExpressionDataDoubleMatrix() {
@@ -175,7 +173,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         quantitationType.setIsNormalized( true );
 
         Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
-        Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> designElements = new HashSet<>();
         for ( DesignElementDataVector designElementDataVector : designElementDataVectors ) {
             CompositeSequence de = designElementDataVector.getDesignElement();
             designElements.add( de );
@@ -190,8 +188,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         Double[] row = expressionDataDoubleMatrix.getRow( deToQuery );
         assertNotNull( row );
-        for ( int i = 0; i < row.length; i++ ) {
-            log.debug( row[i] );
+        for ( Double aRow : row ) {
+            log.debug( aRow );
         }
 
         Double[][] dMatrix = expressionDataDoubleMatrix.getRawMatrix();
@@ -256,7 +254,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         bioAssayDimension.setBioAssays( assays );
 
-        Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectors1 = new LinkedHashSet<>();
         RawExpressionDataVector vector1 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata1 = { 74.9, 101.7 };
         byte[] bdata1 = bac.doubleArrayToBytes( ddata1 );
@@ -265,7 +263,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         vector1.setBioAssayDimension( bioAssayDimension );
         vectors1.add( vector1 );
 
-        Collection<DesignElementDataVector> vectors2 = new LinkedHashSet<DesignElementDataVector>();
+        Collection<DesignElementDataVector> vectors2 = new LinkedHashSet<>();
         RawExpressionDataVector vector2 = RawExpressionDataVector.Factory.newInstance();
         double[] ddata2 = { 404.6, 318.7 };
         byte[] bdata2 = bac.doubleArrayToBytes( ddata2 );
@@ -274,7 +272,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         vector2.setBioAssayDimension( bioAssayDimension );
         vectors2.add( vector2 );
 
-        Collection<CompositeSequence> designElements = new LinkedHashSet<CompositeSequence>();
+        Collection<CompositeSequence> designElements = new LinkedHashSet<>();
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "test ar" );
@@ -303,7 +301,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         designElements.add( de1 );
         designElements.add( de2 );
 
-        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> eeVectors = new LinkedHashSet<>();
         eeVectors.add( vector1 );
         eeVectors.add( vector2 );
 
@@ -357,7 +355,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
          * outlier removal.
          */
         BioAssay tba = newee.getBioAssays().iterator().next();
-        Collection<BioAssay> ol = new HashSet<BioAssay>();
+        Collection<BioAssay> ol = new HashSet<>();
         ol.add( tba );
         sampleRemoveService.markAsMissing( ol );
 

@@ -18,18 +18,7 @@
  */
 package ubic.gemma.analysis.report;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -41,32 +30,27 @@ import org.springframework.social.twitter.api.Tweet;
 import org.springframework.social.twitter.api.Twitter;
 import org.springframework.social.twitter.api.impl.TwitterTemplate;
 import org.springframework.stereotype.Component;
-
-import gemma.gsec.SecurityService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.Settings;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * @author sshao
- * @version $Id$
  */
+@SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Component
 public class TwitterOutboundImpl implements TwitterOutbound {
-    private static AtomicBoolean enabled = new AtomicBoolean( Settings.getBoolean( "gemma.twitter.enabled", false ) );
-
     /**
-     * 
+     *
      */
     private static final String EXPERIMENT_URL_BASE = "http://www.chibi.ubc.ca/Gemma/expressionExperiment/showExpressionExperiment.html?id=";
 
-    private static Log log = LogFactory.getLog( TwitterOutboundImpl.class.getName() );
-
-    /**
-     * FIXME this shortener no longer works.
-     */
-    private static final String SHORTENER = "http://to.ly/api.php?json=0&longurl=";
-
+    private static final AtomicBoolean enabled = new AtomicBoolean(
+            Settings.getBoolean( "gemma.twitter.enabled", false ) );
+    private static final Log log = LogFactory.getLog( TwitterOutboundImpl.class.getName() );
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -99,8 +83,6 @@ public class TwitterOutboundImpl implements TwitterOutbound {
 
     /**
      * Generate content for the tweet; exposed for testing.
-     * 
-     * @return
      */
     @Override
     public String generateDailyFeed() {
@@ -110,7 +92,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
         date = DateUtils.addDays( date, -1 );
         WhatsNew whatsNew = whatsNewService.getReport( date );
 
-        Collection<ExpressionExperiment> experiments = new ArrayList<ExpressionExperiment>();
+        Collection<ExpressionExperiment> experiments = new ArrayList<>();
         int updatedExperimentsCount = 0;
         int newExperimentsCount = 0;
 
@@ -126,7 +108,7 @@ public class TwitterOutboundImpl implements TwitterOutbound {
             newExperimentsCount = newExperiments.size();
         }
 
-        ExpressionExperiment experiment = null;
+        ExpressionExperiment experiment;
 
         // Query latest experiments if there are no updated / new experiments
         if ( updatedExperimentsCount == 0 && newExperimentsCount == 0 ) {
@@ -139,12 +121,6 @@ public class TwitterOutboundImpl implements TwitterOutbound {
             }
 
             experiment = ( ExpressionExperiment ) publicExperiments.toArray()[rand.nextInt( publicExperiments.size() )];
-
-            // this shouldn't be needed.
-            if ( experiment.getStatus().getLastUpdateDate().before( DateUtils.addDays( new Date(), -1 ) ) ) {
-                log.info( "No updates in the last day, no tweeting" );
-                return null;
-            }
 
         } else {
             if ( experiments.isEmpty() ) {
@@ -161,8 +137,9 @@ public class TwitterOutboundImpl implements TwitterOutbound {
                 StringUtils.abbreviate( experiment.getShortName() + ": " + experiment.getName(), 60 ),
                 formExperimentUrl( experiment ), updatedExperimentsCount, newExperimentsCount );
 
-        return StringUtils.abbreviate( status, 140 ); // this will look a bit weird, and might chop off the url...but
-                                                      // have to ensure.
+        return StringUtils.abbreviate( status, 140 );
+        // this will look a bit weird, and might chop off the url...but
+        // have to ensure.
     }
 
     /*
@@ -248,47 +225,8 @@ public class TwitterOutboundImpl implements TwitterOutbound {
     }
 
     /**
-     * TODO remove this unnecessary method, or fix it in case it is needed.
-     * 
-     * @param url
-     * @return
-     * @deprecated the shortener does not work, and is unused
-     */
-    @SuppressWarnings("unused")
-    @Deprecated
-    private String shortenUrl( String url ) {
-
-        URL toGet;
-        try {
-            toGet = new URL( SHORTENER + url );
-        } catch ( MalformedURLException e1 ) {
-            throw new IllegalArgumentException( "URL could not be shortened!" );
-        }
-
-        try (BufferedReader in = new BufferedReader( new InputStreamReader( toGet.openStream() ) );) {
-            StringBuilder buf = new StringBuilder();
-
-            // should be just one line...
-            String inputLine;
-
-            while ( ( inputLine = in.readLine() ) != null ) {
-                buf.append( inputLine );
-            }
-            in.close();
-
-            return buf.toString();
-        } catch ( IOException e ) {
-            throw new RuntimeException( "URL could not be shortened!", e );
-        }
-    }
-
-    /**
-     * @param experimentName
-     * @param url link to experiment
-     * @param updatedExperimentsCount
-     * @param newExperimentsCount
      * @return a status that provides the number of updated and new experiments, a "randomly" chosen experiment and a
-     *         link back to Gemma
+     * link back to Gemma
      */
     private String statusWithExperiment( String experimentName, String url, int updatedExperimentsCount,
             int newExperimentsCount ) {

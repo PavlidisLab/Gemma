@@ -341,12 +341,8 @@ Gemma.PlatformDetails = Ext
             var text = '';
 
             if ( platformDetails.troubled ) {
-               text = '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
-                  + platformDetails.troubleDetails + '"/> Unusable';
-            } else if ( platformDetails.validated ) {
-               text = "Validated";
-            } else {
-               // nothing to see here.
+               text = '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                  + platformDetails.troubleDetails + '"></i> Unusable';
             }
 
             return new Ext.Panel( {

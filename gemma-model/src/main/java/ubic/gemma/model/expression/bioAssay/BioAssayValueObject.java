@@ -14,61 +14,36 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
 /**
  * @author Paul
- * @version $Id$
  */
 public class BioAssayValueObject implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 9164284536309673585L;
-
-    public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
-        Collection<BioAssayValueObject> result = new HashSet<>();
-        for ( BioAssay bioAssay : bioAssays ) {
-            result.add( new BioAssayValueObject( bioAssay ) );
-        }
-        return result;
-    }
-
     private DatabaseEntryValueObject accession = null;
-
     private ArrayDesignValueObject arrayDesign;
-
     private String description = "";
-
     private Long id = null;
-
     private String name = "";
-
     // if it was removed as an outlier
     private Boolean outlier = false;
-
     // if our algorithm says it might be an outlier.
     private Boolean predictedOutlier = false;
-
     private Date processingDate;
-
     private BioMaterialValueObject sample;
-
     private Boolean sequencePairedReads;
-
     private Integer sequenceReadCount;
-
     private Integer sequenceReadLength;
-
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
@@ -78,8 +53,7 @@ public class BioAssayValueObject implements Serializable {
 
     /**
      * This method is a bit dangerous because we get lazy-load errors.
-     * 
-     * @param bioAssay
+     *
      * @deprecated
      */
     @Deprecated
@@ -116,19 +90,34 @@ public class BioAssayValueObject implements Serializable {
         this.userFlaggedOutlier = this.outlier;
     }
 
+    public static Collection<BioAssayValueObject> convert2ValueObjects( Collection<BioAssay> bioAssays ) {
+        Collection<BioAssayValueObject> result = new HashSet<>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            result.add( new BioAssayValueObject( bioAssay ) );
+        }
+        return result;
+    }
+
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         BioAssayValueObject other = ( BioAssayValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
 
         if ( name == null ) {
-            if ( other.name != null ) return false;
-        } else if ( !name.equals( other.name ) ) return false;
+            if ( other.name != null )
+                return false;
+        } else if ( !name.equals( other.name ) )
+            return false;
         return true;
     }
 
@@ -136,48 +125,96 @@ public class BioAssayValueObject implements Serializable {
         return accession;
     }
 
+    public void setAccession( DatabaseEntryValueObject accession ) {
+        this.accession = accession;
+    }
+
     public ArrayDesignValueObject getArrayDesign() {
         return arrayDesign;
+    }
+
+    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
+        this.arrayDesign = arrayDesign;
     }
 
     public String getDescription() {
         return description;
     }
 
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     public Boolean getPredictedOutlier() {
         return predictedOutlier;
+    }
+
+    public void setPredictedOutlier( Boolean predictedOutlier ) {
+        this.predictedOutlier = predictedOutlier;
     }
 
     public Date getProcessingDate() {
         return processingDate;
     }
 
+    public void setProcessingDate( Date processingDate ) {
+        this.processingDate = processingDate;
+    }
+
     public BioMaterialValueObject getSample() {
         return sample;
+    }
+
+    public void setSample( BioMaterialValueObject sample ) {
+        this.sample = sample;
     }
 
     public Boolean getSequencePairedReads() {
         return sequencePairedReads;
     }
 
+    public void setSequencePairedReads( Boolean sequencePairedReads ) {
+        this.sequencePairedReads = sequencePairedReads;
+    }
+
     public Integer getSequenceReadCount() {
         return sequenceReadCount;
+    }
+
+    public void setSequenceReadCount( Integer sequenceReadCount ) {
+        this.sequenceReadCount = sequenceReadCount;
     }
 
     public Integer getSequenceReadLength() {
         return sequenceReadLength;
     }
 
+    public void setSequenceReadLength( Integer sequenceReadLength ) {
+        this.sequenceReadLength = sequenceReadLength;
+    }
+
     public Boolean getUserFlaggedOutlier() {
         return userFlaggedOutlier;
+    }
+
+    public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
+        this.userFlaggedOutlier = userFlaggedOutlier;
     }
 
     @Override
@@ -195,56 +232,8 @@ public class BioAssayValueObject implements Serializable {
         return outlier;
     }
 
-    public void setAccession( DatabaseEntryValueObject accession ) {
-        this.accession = accession;
-    }
-
-    public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
-        this.arrayDesign = arrayDesign;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
     public void setOutlier( boolean outlier ) {
         this.outlier = outlier;
-    }
-
-    public void setPredictedOutlier( Boolean predictedOutlier ) {
-        this.predictedOutlier = predictedOutlier;
-    }
-
-    public void setProcessingDate( Date processingDate ) {
-        this.processingDate = processingDate;
-    }
-
-    public void setSample( BioMaterialValueObject sample ) {
-        this.sample = sample;
-    }
-
-    public void setSequencePairedReads( Boolean sequencePairedReads ) {
-        this.sequencePairedReads = sequencePairedReads;
-    }
-
-    public void setSequenceReadCount( Integer sequenceReadCount ) {
-        this.sequenceReadCount = sequenceReadCount;
-    }
-
-    public void setSequenceReadLength( Integer sequenceReadLength ) {
-        this.sequenceReadLength = sequenceReadLength;
-    }
-
-    public void setUserFlaggedOutlier( Boolean userFlaggedOutlier ) {
-        this.userFlaggedOutlier = userFlaggedOutlier;
     }
 
     @Override

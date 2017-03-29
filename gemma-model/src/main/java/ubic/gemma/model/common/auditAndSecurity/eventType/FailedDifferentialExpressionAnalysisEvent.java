@@ -21,8 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class FailedDifferentialExpressionAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventImpl {
+public class FailedDifferentialExpressionAnalysisEvent extends NeedsAttentionEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +33,7 @@ public abstract class FailedDifferentialExpressionAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent();
         }
 
     }

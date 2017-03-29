@@ -876,9 +876,7 @@ Gemma.PhenotypeEvidenceGridPanel = Ext
                               // to locate this column
                               dataIndex : 'lastUpdated',
                               width : 0.2,
-                              renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
-                                 return new Date( value ).format( "y/M/d" );
-                              },
+                              renderer : Gemma.Renderers.dateRenderer,
                               hidden : !this.hasUserLoggedIn(),
                               sortable : true
                            },

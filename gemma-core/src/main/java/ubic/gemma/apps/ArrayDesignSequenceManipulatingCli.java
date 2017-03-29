@@ -18,22 +18,9 @@
  */
 package ubic.gemma.apps;
 
-import gemma.gsec.authentication.UserManager;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -43,12 +30,14 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 
+import java.io.IOException;
+import java.util.*;
+
 /**
  * Aggregates functionality useful when writing CLIs that need to get an array design from the database and do something
  * with it.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLIContextCLI {
 
@@ -58,9 +47,7 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     protected ArrayDesignService arrayDesignService;
 
-    protected Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<ArrayDesign>();
-
-    protected UserManager userManager;
+    protected Collection<ArrayDesign> arrayDesignsToProcess = new HashSet<>();
 
     public ArrayDesignReportService getArrayDesignReportService() {
         return arrayDesignReportService;
@@ -84,10 +71,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
         addOption( arrayDesignOption );
 
-        Option eeFileListOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Array Design list file" )
-                .withDescription( "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
+        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "Array Design list file" ).withDescription(
+                "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
         addOption( eeFileListOption );
 
@@ -98,10 +83,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
-     * @param arrayDesign
      * @return true if the sequences on the given array design would be equivalently treated by analyzing another array
-     *         design. In the case of subsumption, this only works if the array design has been either analyzed for
-     *         subsuming status. (the analysis is not done as part of this call).
+     * design. In the case of subsumption, this only works if the array design has been either analyzed for
+     * subsuming status. (the analysis is not done as part of this call).
      */
     protected boolean isSubsumedOrMerged( ArrayDesign arrayDesign ) {
         if ( arrayDesign.getSubsumingArrayDesign() != null ) {
@@ -117,50 +101,25 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
-     * @param name of the array design to find.
-     * @return
-     */
-    protected ArrayDesign locateArrayDesign( String name ) {
-
-        ArrayDesign arrayDesign = null;
-
-        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
-        if ( byname.size() > 1 ) {
-            throw new IllegalArgumentException( "Ambiguous name: " + name );
-        } else if ( byname.size() == 1 ) {
-            arrayDesign = byname.iterator().next();
-        }
-
-        if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( name );
-        }
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return arrayDesign;
-    }
-
-    /**
-     * @param skipIfLastRunLaterThan
-     * @param arrayDesign
      * @param eventClass e.g., ArrayDesignSequenceAnalysisEvent.class
      * @return true if skipIfLastRunLaterThan is null, or there is no record of a previous analysis, or if the last
-     *         analysis was run before skipIfLastRunLaterThan. false otherwise.
+     * analysis was run before skipIfLastRunLaterThan. false otherwise.
      */
     protected boolean needToRun( Date skipIfLastRunLaterThan, ArrayDesign arrayDesign,
             Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
 
-        if ( skipIfLastRunLaterThan == null ) return true;
-        if ( autoSeek == false ) return true;
+        if ( skipIfLastRunLaterThan == null )
+            return true;
+        if ( !autoSeek )
+            return true;
 
         ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
 
         if ( subsumingArrayDesign != null ) {
             boolean needToRunSubsumer = needToRun( skipIfLastRunLaterThan, subsumingArrayDesign, eventClass );
             if ( !needToRunSubsumer ) {
-                log.info( "Subsumer  " + subsumingArrayDesign + " was run more recently than " + skipIfLastRunLaterThan );
+                log.info(
+                        "Subsumer  " + subsumingArrayDesign + " was run more recently than " + skipIfLastRunLaterThan );
                 return false;
             }
         }
@@ -185,7 +144,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
         arrayDesignReportService = this.getBean( ArrayDesignReportService.class );
         arrayDesignService = this.getBean( ArrayDesignService.class );
-        userManager = this.getBean( UserManager.class );
 
         if ( this.hasOption( 'a' ) ) {
             arraysFromCliList();
@@ -219,16 +177,14 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         return arrayDesignService.thaw( arrayDesign );
     }
 
-    /**
-     * 
-     */
     private void arraysFromCliList() {
         String arrayShortNames = this.getOptionValue( 'a' );
         String[] shortNames = arrayShortNames.split( "," );
 
         for ( String shortName : shortNames ) {
-            if ( StringUtils.isBlank( shortName ) ) continue;
-            ArrayDesign ad = locateArrayDesign( shortName );
+            if ( StringUtils.isBlank( shortName ) )
+                continue;
+            ArrayDesign ad = locateArrayDesign( shortName, arrayDesignService );
             if ( ad == null ) {
                 log.warn( shortName + " not found" );
                 continue;
@@ -242,17 +198,17 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     /**
-     * @param arrayDesign
      * @param eventClass if null, then all events are added.
-     * @return
      */
-    private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        List<AuditEvent> events = new ArrayList<AuditEvent>();
+    private List<AuditEvent> getEvents( ArrayDesign arrayDesign,
+            Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
+        List<AuditEvent> events = new ArrayList<>();
 
         for ( AuditEvent event : this.auditTrailService.getEvents( arrayDesign ) ) {
-            if ( event == null ) continue;
-            if ( eventClass == null
-                    || ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) ) {
+            if ( event == null )
+                continue;
+            if ( eventClass == null || ( event.getEventType() != null && eventClass
+                    .isAssignableFrom( event.getEventType().getClass() ) ) ) {
                 events.add( event );
             }
         }
@@ -269,13 +225,13 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
      * <li>If any other ArrayDesignAnalysisEvent was more recent than the last event of eventClass, return true.
      * <li>Otherwise return false.
      * </ul>
-     * 
-     * @param arrayDesign
+     *
      * @param eventClass The type of event we are considering running on the basis of this call.
      * @return whether the array design needs updating based on the criteria outlined above.
      */
     private boolean needToAutoRun( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
-        if ( !autoSeek ) return false;
+        if ( !autoSeek )
+            return false;
 
         List<AuditEvent> eventsOfCurrentType = getEvents( arrayDesign, eventClass );
         List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
@@ -295,8 +251,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
         }
 
         for ( AuditEvent currentEvent : allEvents ) {
-            if ( currentEvent == null ) continue;// legacy of ordered-list which could end up with gaps; should not be
-                                                 // needed any more
+            if ( currentEvent == null )
+                continue;// legacy of ordered-list which could end up with gaps; should not be
+            // needed any more
 
             if ( currentEvent.getEventType() == null || currentEvent.getEventType().getClass().equals( eventClass ) ) {
                 continue;
@@ -315,8 +272,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
                         + currentEvent.getEventType().getClass().getSimpleName() );
                 return true;
             }
-            log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last "
-                    + currentEvent.getEventType().getClass().getSimpleName() + " (OK)" );
+            log.debug( arrayDesign + " " + eventClass.getSimpleName() + " was after last " + currentEvent.getEventType()
+                    .getClass().getSimpleName() + " (OK)" );
 
         }
         log.info( arrayDesign + " does not need an update" );
@@ -325,13 +282,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file.
-     * 
-     * @param fileName
-     * @return
-     * @throws IOException
      */
     private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
-        Set<ArrayDesign> ees = new HashSet<ArrayDesign>();
+        Set<ArrayDesign> ees = new HashSet<>();
         for ( String eeName : readListFileToStrings( fileName ) ) {
             ArrayDesign ee = arrayDesignService.findByShortName( eeName );
             if ( ee == null ) {
@@ -353,25 +306,6 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
             ees.add( ee );
         }
         return ees;
-    }
-
-    /**
-     * @param fileName
-     * @return
-     * @throws IOException
-     */
-    private Collection<String> readListFileToStrings( String fileName ) throws IOException {
-        Collection<String> eeNames = new HashSet<String>();
-        try (BufferedReader in = new BufferedReader( new FileReader( fileName ) );) {
-            while ( in.ready() ) {
-                String eeName = in.readLine().trim();
-                if ( eeName.startsWith( "#" ) ) {
-                    continue;
-                }
-                eeNames.add( eeName );
-            }
-            return eeNames;
-        }
     }
 
 }

@@ -2,83 +2,72 @@ package ubic.gemma.web.persistence;
 
 import java.util.Collection;
 
-import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 public interface SessionListManager {
 
-    public abstract SessionBoundExpressionExperimentSetValueObject addExperimentSet(
+    SessionBoundExpressionExperimentSetValueObject addExperimentSet(
             SessionBoundExpressionExperimentSetValueObject eesvo );
 
-    public abstract SessionBoundExpressionExperimentSetValueObject addExperimentSet(
+    SessionBoundExpressionExperimentSetValueObject addExperimentSet(
             SessionBoundExpressionExperimentSetValueObject eesvo, boolean modified );
 
-    public abstract SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo );
+    SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo );
 
-    public abstract SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo, boolean modified );
+    SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo, boolean modified );
 
-    public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getAllExperimentSets();
+    Collection<SessionBoundExpressionExperimentSetValueObject> getAllExperimentSets();
 
-    public abstract Collection<SessionBoundGeneSetValueObject> getAllGeneSets();
+    Collection<SessionBoundGeneSetValueObject> getAllGeneSets();
 
-    public abstract Collection<SessionBoundGeneSetValueObject> getAllGeneSets( Long taxonId );
+    Collection<SessionBoundGeneSetValueObject> getAllGeneSets( Long taxonId );
 
-    /**
-     * @param id
-     * @return
-     */
-    public abstract Collection<Long> getExperimentIdsInSet( Long id );
+
+    Collection<Long> getExperimentIdsInSet( Long id );
 
     /**
      * Get the session-bound group using the group's id
      * 
-     * @param reference
-     * @return
-     */
-    public abstract SessionBoundExpressionExperimentSetValueObject getExperimentSetById( Long id );
 
-    /**
-     * @param id
-     * @return
      */
-    public abstract Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id );
+    SessionBoundExpressionExperimentSetValueObject getExperimentSetById( Long id );
+
+
+    Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id );
 
     /**
      * Get the session-bound group using the group's id
-     * 
-     * @param reference
-     * @return
+     *
      */
-    public abstract SessionBoundGeneSetValueObject getGeneSetById( Long id );
+    SessionBoundGeneSetValueObject getGeneSetById( Long id );
 
     /**
      * AJAX If the current user has access to given gene group will return the gene ids in the gene group
-     * 
-     * @param groupId
-     * @return
+     *
      */
-    public abstract Collection<GeneValueObject> getGenesInGroup( Long groupId );
+    Collection<GeneValueObject> getGenesInGroup( Long groupId );
 
-    public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets();
+    Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets();
 
-    public abstract Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId );
+    Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId );
 
-    public abstract Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets();
+    Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets();
 
-    public abstract Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets( Long taxonId );
+    Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets( Long taxonId );
 
-    public abstract Long incrementAndGetLargestExperimentSetSessionId();
+    Long incrementAndGetLargestExperimentSetSessionId();
 
-    public abstract Long incrementAndGetLargestGeneSetSessionId();
+    Long incrementAndGetLargestGeneSetSessionId();
 
-    public abstract void removeExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo );
+    void removeExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo );
 
-    public abstract void removeGeneSet( SessionBoundGeneSetValueObject gsvo );
+    void removeGeneSet( SessionBoundGeneSetValueObject gsvo );
 
-    public abstract void updateExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo );
+    void updateExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo );
 
-    public abstract void updateGeneSet( SessionBoundGeneSetValueObject gsvo );
+    void updateGeneSet( SessionBoundGeneSetValueObject gsvo );
 
 }

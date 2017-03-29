@@ -18,18 +18,6 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,7 +26,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.analysis.sequence.ProbeMapper;
@@ -62,123 +49,57 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductService;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.model.genome.sequenceAnalysis.*;
 import ubic.gemma.persistence.Persister;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * For an array design, generate gene product mappings for the sequences.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
+
 public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapperService {
 
-    // wrapper
-    private class BACS {
-        BlatAssociation ba;
-
-        CompositeSequence cs;
-
-        /**
-         * @param compositeSequence
-         * @param association
-         */
-        public BACS( CompositeSequence compositeSequence, BlatAssociation association ) {
-            this.cs = compositeSequence;
-            this.ba = association;
-        }
-
-        @Override
-        public boolean equals( Object obj ) {
-            if ( this == obj ) {
-                return true;
-            }
-            if ( obj == null ) {
-                return false;
-            }
-            if ( getClass() != obj.getClass() ) {
-                return false;
-            }
-            BACS other = ( BACS ) obj;
-            if ( ba == null ) {
-                if ( other.ba != null ) {
-                    return false;
-                }
-            } else if ( !ba.equals( other.ba ) ) {
-                return false;
-            }
-            if ( cs == null ) {
-                if ( other.cs != null ) {
-                    return false;
-                }
-            } else if ( !cs.equals( other.cs ) ) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ( ( ba == null ) ? 0 : ba.hashCode() );
-            result = prime * result + ( ( cs == null ) ? 0 : cs.hashCode() );
-            return result;
-        }
-    }
-
-    private static Log log = LogFactory.getLog( ArrayDesignProbeMapperServiceImpl.class.getName() );
-
     private static final int QUEUE_SIZE = 20000;
-
+    private static Log log = LogFactory.getLog( ArrayDesignProbeMapperServiceImpl.class.getName() );
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
-
     @Autowired
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
-
     @Autowired
     private ArrayDesignReportService arrayDesignReportService;
-
     @Autowired
     private ArrayDesignService arrayDesignService;
-
     @Autowired
     private BioSequenceService bioSequenceService;
-
     @Autowired
     private BlatResultService blatResultService;
-
     @Autowired
     private CompositeSequenceService compositeSequenceService;
-
     @Autowired
     private ExpressionDataFileService expressionDataFileService;
-
     @Autowired
     private GeneProductService geneProductService;
-
     @Autowired
     private GeneService geneService;
-
     @Autowired
     private Persister persisterHelper;
-
     @Autowired
     private ProbeMapper probeMapper;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#printResult(ubic.gemma.model.expression
-     * .designElement.CompositeSequence, java.util.Collection)
-     */
     @Override
     public void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
         for ( BlatAssociation blatAssociation : col ) {
@@ -186,27 +107,11 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.
-     * expression
-     * .arrayDesign.ArrayDesign)
-     */
     @Override
     public void processArrayDesign( ArrayDesign arrayDesign ) {
         this.processArrayDesign( arrayDesign, new ProbeMapperConfig(), true );
     }
 
-    /*
-     * (non-Javadoc) - mapping to the genome ourselves.
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.
-     * expression
-     * .arrayDesign.ArrayDesign, ubic.gemma.analysis.sequence.ProbeMapperConfig, boolean)
-     */
     @Override
     public void processArrayDesign( ArrayDesign arrayDesign, ProbeMapperConfig config, boolean useDB ) {
 
@@ -250,11 +155,13 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
             Map<String, Collection<BlatAssociation>> results = processCompositeSequence( config, taxon, goldenPathDb,
                     compositeSequence );
 
-            if ( results == null ) continue;
+            if ( results == null )
+                continue;
 
             for ( Collection<BlatAssociation> col : results.values() ) {
                 for ( BlatAssociation association : col ) {
-                    if ( log.isDebugEnabled() ) log.debug( association );
+                    if ( log.isDebugEnabled() )
+                        log.debug( association );
                     persistingQueue.add( new BACS( compositeSequence, association ) );
 
                 }
@@ -291,15 +198,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
     }
 
-    /*
-     * (non-Javadoc) - from an input file, not mapped with sequences.
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processArrayDesign(ubic.gemma.model.
-     * expression
-     * .arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon, java.io.File,
-     * ubic.gemma.model.common.description.ExternalDatabase, boolean)
-     */
     @Override
     public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB,
             boolean ncbiIds ) throws IOException {
@@ -455,21 +353,13 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService#processCompositeSequence(ubic.gemma.
-     * analysis
-     * .sequence.ProbeMapperConfig, ubic.gemma.model.genome.Taxon, ubic.gemma.externalDb.GoldenPathSequenceAnalysis,
-     * ubic.gemma.model.expression.designElement.CompositeSequence)
-     */
     @Override
     @Transactional
     public Map<String, Collection<BlatAssociation>> processCompositeSequence( ProbeMapperConfig config, Taxon taxon,
             GoldenPathSequenceAnalysis goldenPathDb, CompositeSequence compositeSequence ) {
         BioSequence bs = compositeSequence.getBiologicalCharacteristic();
-        if ( bs == null ) return null;
+        if ( bs == null )
+            return null;
 
         /*
          * It isn't 100% clear what the right thing to do is. But this seems at least _reasonable_ when there is a
@@ -490,19 +380,14 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         ProbeMapUtils.removeDuplicates( blatResults );
 
-        if ( blatResults == null || blatResults.isEmpty() ) return null;
+        if ( blatResults == null || blatResults.isEmpty() )
+            return null;
 
         Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( db, blatResults, config );
 
         return results;
     }
 
-    /**
-     * @param queue
-     * @param generatorDone
-     * @param loaderDone
-     * @param persist
-     */
     void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
             boolean persist ) {
         int loadedAssociationCount = 0;
@@ -563,15 +448,12 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         loaderDone.set( true );
     }
 
-    /**
-     * @param ba
-     * @param geneProduct
-     */
     private final GeneProduct checkForAlias( GeneProduct geneProduct ) {
-        Collection<GeneProduct> candidates = geneProductService.findByName( geneProduct.getName(), geneProduct
-                .getGene().getTaxon() );
+        Collection<GeneProduct> candidates = geneProductService
+                .findByName( geneProduct.getName(), geneProduct.getGene().getTaxon() );
 
-        if ( candidates.isEmpty() ) return null;
+        if ( candidates.isEmpty() )
+            return null;
 
         Gene gene = geneProduct.getGene();
         for ( GeneProduct existing2 : candidates ) {
@@ -581,8 +463,9 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     /*
                      * So, our gene products match, and the genes match but via an alias. That's pretty solid.
                      */
-                    log.info( "Associated gene product " + geneProduct
-                            + " has a match in Gemma through an aliased gene: " + existing2 );
+                    log.info(
+                            "Associated gene product " + geneProduct + " has a match in Gemma through an aliased gene: "
+                                    + existing2 );
                     return existing2;
                 }
             }
@@ -593,8 +476,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
     /**
      * Delete outdated annotation and associated experiment files.
-     * 
-     * @param arrayDesign
      */
     private void deleteOldFiles( ArrayDesign arrayDesign ) throws IOException {
         arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
@@ -612,9 +493,6 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     }
 
     /**
-     * @param queue
-     * @param generatorDone
-     * @param loaderDone
      * @param persist true to get results saved to database; otherwise output is to standard out.
      */
     private void load( final BlockingQueue<BACS> queue, final AtomicBoolean generatorDone,
@@ -637,15 +515,65 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
     /**
      * Print line of result to STDOUT.
-     * 
-     * @param cs
-     * @param blatAssociation
      */
     private void printResult( CompositeSequence cs, BlatAssociation blatAssociation ) {
         GeneProduct geneProduct = blatAssociation.getGeneProduct();
         Gene gene = geneProduct.getGene();
-        System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
-                + geneProduct.getName() + '\t' + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
+        System.out.println(
+                cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t' + geneProduct.getName() + '\t'
+                        + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
+    }
+
+    /**
+     * Wrapper
+     */
+    private class BACS {
+        BlatAssociation ba;
+
+        CompositeSequence cs;
+
+        public BACS( CompositeSequence compositeSequence, BlatAssociation association ) {
+            this.cs = compositeSequence;
+            this.ba = association;
+        }
+
+        @Override
+        public boolean equals( Object obj ) {
+            if ( this == obj ) {
+                return true;
+            }
+            if ( obj == null ) {
+                return false;
+            }
+            if ( getClass() != obj.getClass() ) {
+                return false;
+            }
+            BACS other = ( BACS ) obj;
+            if ( ba == null ) {
+                if ( other.ba != null ) {
+                    return false;
+                }
+            } else if ( !ba.equals( other.ba ) ) {
+                return false;
+            }
+            if ( cs == null ) {
+                if ( other.cs != null ) {
+                    return false;
+                }
+            } else if ( !cs.equals( other.cs ) ) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ( ( ba == null ) ? 0 : ba.hashCode() );
+            result = prime * result + ( ( cs == null ) ? 0 : cs.hashCode() );
+            return result;
+        }
     }
 
 }

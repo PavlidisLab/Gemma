@@ -63,22 +63,19 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
    }, {
       name : "diffExpressedProbes"
    }, {
-      name : "validated"
-   }, {
-      name : 'validatedAnnotations'
-   }, {
       name : "troubled",
       type : "boolean"
    }, {
-      name : "troubleDetails",
-      type : "string"
+       name : "troubleDetails"
+   }, {
+       name : "needsAttention",
+       type : "boolean"
+   }, {
+       name : "curationNote"
    }, {
       name : "missingValueAnalysisEventType"
    }, {
       name : "processedDataVectorComputationEventType"
-   }, {
-      name : "dateCreated",
-      type : 'date'
    }, {
       name : "dateProcessedDataVectorComputation",
       type : 'date'
@@ -89,7 +86,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       name : "dateDifferentialAnalysis",
       type : 'date'
    }, {
-      name : "dateLastUpdated",
+      name : "lastUpdated",
       type : 'date'
    }, {
       name : "dateLinkAnalysis",
@@ -99,9 +96,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       type : 'date'
    }, {
       name : "dateBatchFetch",
-      type : 'date'
-   }, {
-      name : "autoTagDate",
       type : 'date'
    }, {
       name : "linkAnalysisEventType"
@@ -161,7 +155,7 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
             collapsible : false,
             auditable : {
                id : id,
-               classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+               classDelegatingFor : "ubic.gemma.model.expression.experiment.ExpressionExperiment"
             }
          } ) ]
       } );
@@ -187,22 +181,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
                'showLogButton' : true,
                'showBackgroundButton' : true
             } );
-         },
-         errorHandler : eeManager.onTaskSubmissionError
-      } );
-   },
-
-   autoTag : function( id ) {
-      var eeManager = this;
-      AnnotationController.autoTag( id, {
-         callback : function( taskId ) {
-            var task = new Gemma.ObservableSubmittedTask( {
-               'taskId' : taskId
-            } );
-            task.on( 'task-completed', function( payload ) {
-               eeManager.fireEvent( 'tagsUpdated', payload );
-            } );
-            task.showTaskProgressWindow( {} );
          },
          errorHandler : eeManager.onTaskSubmissionError
       } );
@@ -247,9 +225,8 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
     * @param id
     * @param taxonId
     * @param canEdit
-    * @param isValidated
     */
-   tagger : function( id, taxonId, canEdit, isValidated ) {
+   tagger : function( id, taxonId, canEdit) {
       var annotator = new Ext.Panel( {
          id : 'annotator-wrap',
          collapsible : false,
@@ -258,7 +235,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
          layout : 'fit',
          items : [ new Gemma.AnnotationGrid( {
             id : 'annotator-grid',
-            entityAnnotsAreValidated : isValidated,
             readMethod : ExpressionExperimentController.getAnnotation,
             writeMethod : AnnotationController.createExperimentTag,
             removeMethod : AnnotationController.removeExperimentTag,

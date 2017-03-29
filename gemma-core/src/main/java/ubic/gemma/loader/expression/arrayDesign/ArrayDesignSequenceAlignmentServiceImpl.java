@@ -18,20 +18,12 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.util.StringUtil;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ProbeMapUtils;
@@ -50,34 +42,43 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.SequenceBinUtils;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * Aligns sequences from array designs to the genome, using blat, and persists the blat results.
- * <p>
  * Note: to avoid having very long transactions, this does not run transactionally at the level of a platform. Thus it
  * is possible for it to die with a platform half-processed. But if we don't do this the transactions are too big and
  * cause various deadlocking problems.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
+
 public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSequenceAlignmentService {
 
     private static Log log = LogFactory.getLog( ArrayDesignSequenceAlignmentServiceImpl.class.getName() );
+    @Autowired
+    private ArrayDesignReportService arrayDesignReportService;
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+    @Autowired
+    private BioSequenceService bioSequenceService;
+    @Autowired
+    private Persister persisterHelper;
 
     /**
-     * @param ad
      * @return all sequences, across all taxa that might be represented on the array design
-     * @see getSequences(ad, taxon) for method to get just the sequences for one taxon.
      */
     public static Collection<BioSequence> getSequences( ArrayDesign ad ) {
         return getSequences( ad, null );
     }
 
     /**
-     * @param ad
      * @param taxon (specified in case array has multiple taxa)
-     * @return
      */
     public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
 
@@ -135,61 +136,21 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         return sequencesToBlat;
     }
 
-    @Autowired
-    private ArrayDesignReportService arrayDesignReportService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private BioSequenceService bioSequenceService;
-
-    @Autowired
-    private Persister persisterHelper;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign)
-     */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign design ) {
         return this.processArrayDesign( design, false, null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign)
-     */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign design, Blat blat ) {
         return this.processArrayDesign( design, false, blat );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign)
-     */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign design, boolean sensitive ) {
         return this.processArrayDesign( design, sensitive, null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon, java.util.Collection)
-     */
     @Override
     public Collection<BlatResult> processArrayDesign( ArrayDesign ad, Taxon taxon,
             Collection<BlatResult> rawBlatResults ) {
@@ -264,13 +225,6 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#validateTaxaForBlatFile(ubic.gemma
-     * .model.expression.arrayDesign.ArrayDesign, ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Taxon validateTaxaForBlatFile( ArrayDesign arrayDesign, Taxon taxon ) {
 
@@ -279,8 +233,9 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             if ( taxaOnArray != null && taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
-            throw new IllegalArgumentException( ( taxaOnArray == null ? "?" : taxaOnArray.size() ) + " taxon found for "
-                    + arrayDesign + " specifiy which taxon to run" );
+            throw new IllegalArgumentException(
+                    ( taxaOnArray == null ? "?" : taxaOnArray.size() ) + " taxon found for " + arrayDesign
+                            + " specifiy which taxon to run" );
 
         }
         return taxon;
@@ -289,23 +244,23 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     /**
      * If necessary, copy the sequence length information over from the blat result to the given sequence. This is often
      * needed when we get the blat results from golden path.
-     * 
+     *
      * @param sequence that may not have length information
-     * @param result used to get length information
+     * @param result   used to get length information
      */
     private void copyLengthInformation( BioSequence sequence, BlatResult result ) {
         if ( result.getQuerySequence() != null && result.getQuerySequence().getLength() == null ) {
             long length = result.getQuerySequence().getLength();
-            if ( sequence.getLength() == null ) sequence.setLength( length );
+            if ( sequence.getLength() == null )
+                sequence.setLength( length );
             sequence.setIsApproximateLength( false );
-            sequence.setDescription( StringUtil.append( sequence.getDescription(),
-                    "Length information from GoldenPath annotations.", " -- " ) );
+            sequence.setDescription( StringUtil
+                    .append( sequence.getDescription(), "Length information from GoldenPath annotations.", " -- " ) );
             bioSequenceService.update( sequence );
         }
     }
 
     /**
-     * @param sequencesToBlat
      * @param taxon whose database will be queried
      * @return Map of biosequences to collections of blat results.
      */
@@ -331,12 +286,10 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
     /**
      * Check if there are alignment results in the goldenpath database, in which case we do not reanalyze the sequences.
-     * 
+     *
      * @param sequencesToBlat The full set of sequences that need analysis.
-     * @param taxon
-     * @param results Will be stored here.
+     * @param results         Will be stored here.
      * @return the sequences which ARE NOT found in goldenpath and which therefore DO need blat.
-     * @throws SQLException
      */
     private Collection<BioSequence> getGoldenPathAlignments( Collection<BioSequence> sequencesToBlat, Taxon taxon,
             Map<BioSequence, Collection<BlatResult>> results ) {
@@ -379,10 +332,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     }
 
     /**
-     * @param sequencesToBlat, assumed to be the ones that were analyzed
      * @param brs, assumed to be from alignments to the genome for the array design (that is, we don't consider aligning
-     *        mouse to human)
-     * @return
+     *             mouse to human)
      */
     @SuppressWarnings("unchecked")
     private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
@@ -432,20 +383,15 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         return ( Collection<BlatResult> ) persisterHelper.persist( brs );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, boolean)
-     */
     private Collection<BlatResult> processArrayDesign( ArrayDesign ad, boolean sensitive, Blat blat ) {
 
-        if ( blat == null ) blat = new ShellDelegatingBlat();
+        if ( blat == null )
+            blat = new ShellDelegatingBlat();
 
         Collection<BlatResult> allResults = new HashSet<>();
 
-        if ( sensitive ) log.info( "Running in 'sensitive' mode if possible" );
+        if ( sensitive )
+            log.info( "Running in 'sensitive' mode if possible" );
 
         Collection<Taxon> taxa = arrayDesignService.getTaxa( ad.getId() );
         boolean first = true;

@@ -14,26 +14,10 @@
  */
 package ubic.gemma.loader.association.phenotype;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
-import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.NIFSTDOntologyService;
-import ubic.basecode.ontology.providers.ObiService;
+import ubic.basecode.ontology.providers.*;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.service.GeneService;
@@ -44,49 +28,49 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractCLIContextCLI;
 import ubic.gemma.util.Settings;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
 public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI {
 
-    protected static final String WRITE_FOLDER = Settings.getString( "gemma.appdata.home" ) + File.separator
-            + "EvidenceImporterNeurocarta";
+    protected static final String WRITE_FOLDER =
+            Settings.getString( "gemma.appdata.home" ) + File.separator + "EvidenceImporterNeurocarta";
 
     protected final String BIOSOURCE = "BioSource";
     protected final String BIOSOURCE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioSource";
-
-    protected BufferedReader br = null;
-    protected boolean createInDatabase = false;
     protected final String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
     protected final String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#DevelopmentalStage";
-    protected DiseaseOntologyService diseaseOntologyService = null;
-    protected Set<String> errorMessage = new TreeSet<String>();
     protected final String EXPERIMENT = "Experiment";
     protected final String EXPERIMENT_DESIGN = "ExperimentDesign";
-
     protected final String EXPERIMENT_DESIGN_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ExperimentDesign";
     protected final String EXPERIMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Experiment";
     protected final String EXPERIMENTAL_EVIDENCE = "EXPERIMENTAL";
-    protected FMAOntologyService fmaOntologyService = null;
-
     protected final String GENERIC_EVIDENCE = "GENERIC";
+    protected final String LITERATURE_EVIDENCE = "LITERATURE";
+    protected final String ORGANISM_PART = "OrganismPart";
+    protected final String ORGANISM_PART_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#OrganismPart";
+    protected final String TREATMENT = "Treatment";
+    protected final String TREATMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Treatment";
+    protected BufferedReader br = null;
+    protected boolean createInDatabase = false;
+    protected DiseaseOntologyService diseaseOntologyService = null;
+    protected Set<String> errorMessage = new TreeSet<String>();
+    protected FMAOntologyService fmaOntologyService = null;
     protected GeneService geneService = null;
     protected HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
-
     // input file path
     protected String inputFile = "";
-
-    protected final String LITERATURE_EVIDENCE = "LITERATURE";
     protected BufferedWriter logFileWriter = null;
     protected MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
     protected HashMap<String, Integer> mapColumns = new HashMap<String, Integer>();
     protected NIFSTDOntologyService nifstdOntologyService = null;
     protected ObiService obiService = null;
     protected OntologyService ontologyService = null;
-    protected final String ORGANISM_PART = "OrganismPart";
-    protected final String ORGANISM_PART_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#OrganismPart";
-
     protected PhenotypeAssociationManagerService phenotypeAssociationService = null;
     protected TaxonService taxonService = null;
-    protected final String TREATMENT = "Treatment";
-    protected final String TREATMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Treatment";
     protected String warningMessage = "";
 
     @Override
@@ -96,13 +80,12 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     @Override
     protected void buildOptions() {
-        @SuppressWarnings("static-access")
-        Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg().withArgName( "file path" )
-                .isRequired().create( "f" );
+        @SuppressWarnings("static-access") Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg()
+                .withArgName( "file path" ).isRequired().create( "f" );
         addOption( fileOption );
-        @SuppressWarnings("static-access")
-        Option createOption = OptionBuilder.withDescription( "Create in Database (false or true)" ).hasArg()
-                .withArgName( "create in Database" ).isRequired().create( "c" );
+        @SuppressWarnings("static-access") Option createOption = OptionBuilder
+                .withDescription( "Create in Database (false or true)" ).hasArg().withArgName( "create in Database" )
+                .isRequired().create( "c" );
         addOption( createOption );
     }
 
@@ -111,20 +94,20 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
      */
     protected void checkEvidenceCodeExits( String evidenceCode ) {
 
-        if ( !( evidenceCode.equalsIgnoreCase( "IC" ) || evidenceCode.equalsIgnoreCase( "IDA" )
-                || evidenceCode.equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" )
-                || evidenceCode.equalsIgnoreCase( "IGI" ) || evidenceCode.equalsIgnoreCase( "IMP" )
-                || evidenceCode.equalsIgnoreCase( "IPI" ) || evidenceCode.equalsIgnoreCase( "ISS" )
-                || evidenceCode.equalsIgnoreCase( "NAS" ) || evidenceCode.equalsIgnoreCase( "ND" )
-                || evidenceCode.equalsIgnoreCase( "RCA" ) || evidenceCode.equalsIgnoreCase( "TAS" )
-                || evidenceCode.equalsIgnoreCase( "NR" ) || evidenceCode.equalsIgnoreCase( "EXP" )
-                || evidenceCode.equalsIgnoreCase( "ISA" ) || evidenceCode.equalsIgnoreCase( "ISM" )
-                || evidenceCode.equalsIgnoreCase( "IGC" ) || evidenceCode.equalsIgnoreCase( "ISO" )
-                || evidenceCode.equalsIgnoreCase( "IIA" ) || evidenceCode.equalsIgnoreCase( "IBA" )
-                || evidenceCode.equalsIgnoreCase( "IBD" ) || evidenceCode.equalsIgnoreCase( "IKR" )
-                || evidenceCode.equalsIgnoreCase( "IRD" ) || evidenceCode.equalsIgnoreCase( "IMR" )
-                || evidenceCode.equalsIgnoreCase( "IED" ) || evidenceCode.equalsIgnoreCase( "IAGP" )
-                || evidenceCode.equalsIgnoreCase( "IPM" ) || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
+        if ( !( evidenceCode.equalsIgnoreCase( "IC" ) || evidenceCode.equalsIgnoreCase( "IDA" ) || evidenceCode
+                .equalsIgnoreCase( "IEA" ) || evidenceCode.equalsIgnoreCase( "IEP" ) || evidenceCode
+                .equalsIgnoreCase( "IGI" ) || evidenceCode.equalsIgnoreCase( "IMP" ) || evidenceCode
+                .equalsIgnoreCase( "IPI" ) || evidenceCode.equalsIgnoreCase( "ISS" ) || evidenceCode
+                .equalsIgnoreCase( "NAS" ) || evidenceCode.equalsIgnoreCase( "ND" ) || evidenceCode
+                .equalsIgnoreCase( "RCA" ) || evidenceCode.equalsIgnoreCase( "TAS" ) || evidenceCode
+                .equalsIgnoreCase( "NR" ) || evidenceCode.equalsIgnoreCase( "EXP" ) || evidenceCode
+                .equalsIgnoreCase( "ISA" ) || evidenceCode.equalsIgnoreCase( "ISM" ) || evidenceCode
+                .equalsIgnoreCase( "IGC" ) || evidenceCode.equalsIgnoreCase( "ISO" ) || evidenceCode
+                .equalsIgnoreCase( "IIA" ) || evidenceCode.equalsIgnoreCase( "IBA" ) || evidenceCode
+                .equalsIgnoreCase( "IBD" ) || evidenceCode.equalsIgnoreCase( "IKR" ) || evidenceCode
+                .equalsIgnoreCase( "IRD" ) || evidenceCode.equalsIgnoreCase( "IMR" ) || evidenceCode
+                .equalsIgnoreCase( "IED" ) || evidenceCode.equalsIgnoreCase( "IAGP" ) || evidenceCode
+                .equalsIgnoreCase( "IPM" ) || evidenceCode.equalsIgnoreCase( "QTM" ) ) ) {
             writeError( "evidenceCode not in gemma: " + evidenceCode );
         }
     }
@@ -141,9 +124,9 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     /**
      * find the exact term of a search term in a Collection of Ontology terms
-     * 
+     *
      * @param ontologyTerms Collection of ontologyTerms
-     * @param search The value we are interested in finding
+     * @param search        The value we are interested in finding
      * @return OntologyTerm the exact match value found
      * @throws IOException
      */
@@ -225,8 +208,8 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
             if ( search.equalsIgnoreCase( "apraxia" ) ) {
 
                 for ( OntologyTerm o : ontologyKept ) {
-                    if ( o.getLabel().equalsIgnoreCase( "apraxia" )
-                            && o.getUri().equalsIgnoreCase( "http://purl.obolibrary.org/obo/DOID_4019" ) ) {
+                    if ( o.getLabel().equalsIgnoreCase( "apraxia" ) && o.getUri()
+                            .equalsIgnoreCase( "http://purl.obolibrary.org/obo/DOID_4019" ) ) {
                         return o;
                     }
                 }
@@ -317,14 +300,14 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
         // Minimum fields any evidence should have, need a (taxon+geneSymbol) or (geneId+geneSymbol)
         if ( !( ( this.mapColumns.containsKey( "GeneId" ) ) && this.mapColumns.containsKey( "GeneSymbol" )
                 && this.mapColumns.containsKey( "EvidenceCode" ) && this.mapColumns.containsKey( "Comments" )
-                && this.mapColumns.containsKey( "Phenotypes" ) && this.mapColumns.containsKey( "OriginalPhenotype" ) && this.mapColumns
-                    .containsKey( "PhenotypeMapping" ) ) ) {
+                && this.mapColumns.containsKey( "Phenotypes" ) && this.mapColumns.containsKey( "OriginalPhenotype" )
+                && this.mapColumns.containsKey( "PhenotypeMapping" ) ) ) {
             throw new Exception( "Headers not set correctly" );
         }
 
         // score set ???
-        if ( this.mapColumns.containsKey( "Score" ) && this.mapColumns.containsKey( "ScoreType" )
-                && this.mapColumns.containsKey( "Strength" ) ) {
+        if ( this.mapColumns.containsKey( "Score" ) && this.mapColumns.containsKey( "ScoreType" ) && this.mapColumns
+                .containsKey( "Strength" ) ) {
             log.info( "Found a score on the evidence" );
         } else {
             log.info( "No score on the evidence" );
@@ -356,7 +339,7 @@ public abstract class EvidenceImporterAbstractCLI extends AbstractCLIContextCLI 
 
     /**
      * Loads all services that will be needed
-     * 
+     *
      * @param experimentalEvidenceServicesNeeded if the type is an experimental evidence (we need then to load more)
      */
     protected synchronized void loadServices( boolean experimentalEvidenceServicesNeeded ) throws Exception {

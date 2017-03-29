@@ -233,6 +233,8 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 
                if (Ext.get("geneId") != null && Ext.get("geneId").getValue() != "") {
                   selectRecordsOnLoad(geneGrid, 'id', [parseInt(Ext.get("geneId").getValue())]);
+               } else if (Ext.get("ncbiId") != null && Ext.get("ncbiId").getValue() != "") {
+                  selectRecordsOnLoad(geneGrid, 'ncbiId', [parseInt(Ext.get("ncbiId").getValue())]);
                }
             }
          }

@@ -65,7 +65,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * one.
  * 
  * @author nicolas
- * @version $Id$
  */
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
@@ -88,11 +87,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     private Gene gene = null;
 
-    private Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
+    private final Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
     private LiteratureEvidenceValueObject litEvidence = null;
-
-    private ExternalDatabase externalDatabase = null;
 
     private Taxon humanTaxon = null;
 
@@ -327,11 +324,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertTrue( this.phenotypeAssociationManagerService.loadEvidenceWithoutExternalDatabaseName().isEmpty() );
     }
 
-    /**
-     * 
-     */
     private void createExternalDatabase() {
-        externalDatabase = ExternalDatabase.Factory.newInstance();
+        ExternalDatabase externalDatabase = ExternalDatabase.Factory.newInstance();
         externalDatabase.setName( TEST_EXTERNAL_DATABASE );
         externalDatabase.setWebUri( "http://www.test.ca/" );
         externalDatabase = externalDatabaseService.findOrCreate( externalDatabase );
@@ -353,7 +347,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         EvidenceSourceValueObject evidenceSourceValueObject = new EvidenceSourceValueObject( "url_link",
                 externalDatabaseValueObject );
 
-        SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
+        SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<>();
 
         CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( uri );
 
@@ -361,7 +355,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         this.litEvidence.setPhenotypes( phenotypes );
 
-        SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<PhenotypeAssPubValueObject>();
+        SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<>();
 
         PhenotypeAssPubValueObject phenotypeAssPubValueObject = new PhenotypeAssPubValueObject();
         phenotypeAssPubValueObject.setType( "Primary" );
@@ -378,16 +372,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNull( e );
     }
 
-    /**
-     * @param ncbiId
-     */
     private void createGene() {
         this.humanTaxon = this.taxonService.findByCommonName( "human" );
         this.gene = Gene.Factory.newInstance();
         this.gene.setName( "RAT1" );
         this.gene.setOfficialName( "RAT1" );
         this.gene.setOfficialSymbol( "RAT1" );
-        this.gene.setNcbiGeneId( new Integer( this.geneNCBI ) );
+        this.gene.setNcbiGeneId( this.geneNCBI );
         // the taxon is already populated in the test database
         this.gene.setTaxon( humanTaxon );
         this.gene.getProducts().add( super.getTestPersistentGeneProduct( this.gene ) );

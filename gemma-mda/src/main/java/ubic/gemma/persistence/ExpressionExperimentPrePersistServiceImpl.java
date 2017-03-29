@@ -45,7 +45,7 @@ import ubic.gemma.util.Settings;
 @Component
 public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExperimentPrePersistService {
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentPrePersistServiceImpl.class );
+    private static final Log log = LogFactory.getLog( ExpressionExperimentPrePersistServiceImpl.class );
 
     @Autowired
     private Persister persisterHelper;
@@ -76,8 +76,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
 
-        Map<ArrayDesign, Collection<CompositeSequence>> newprobes = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
-        Collection<DesignElementDataVector> dataVectorsThatNeedNewProbes = new HashSet<DesignElementDataVector>();
+        Map<ArrayDesign, Collection<CompositeSequence>> newprobes = new HashMap<>();
+        Collection<DesignElementDataVector> dataVectorsThatNeedNewProbes = new HashSet<>();
 
         /*
          * First time through.
@@ -156,10 +156,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         return cache;
     }
 
-    /**
-     * @param ee
-     * @param cache
-     */
     private void prepareWithoutData( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
             ArrayDesign arrayDesign = ba.getArrayDesignUsed();
@@ -168,10 +164,6 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         }
     }
 
-    /**
-     * @param designElement
-     * @return
-     */
     private CompositeSequence addNewDesignElementToPersistentArrayDesign( ArrayDesign arrayDesign,
             CompositeSequence designElement ) {
         if ( designElement == null ) return null;
@@ -196,9 +188,8 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         }
 
         // transaction.
-        CompositeSequence persistedDE = compositeSequenceService.create( designElement );
 
-        return persistedDE;
+        return compositeSequenceService.create( designElement );
 
     }
 
@@ -209,7 +200,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     private Map<ArrayDesign, Collection<CompositeSequence>> addNewDesignElementToPersistentArrayDesigns(
             Map<ArrayDesign, Collection<CompositeSequence>> toAdd ) {
 
-        Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<ArrayDesign, Collection<CompositeSequence>>();
+        Map<ArrayDesign, Collection<CompositeSequence>> result = new HashMap<>();
 
         for ( ArrayDesign ad : toAdd.keySet() ) {
 
@@ -221,7 +212,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
 
             assert ad.getId() != null;
             result.put( ad, new HashSet<CompositeSequence>() );
-            Collection<CompositeSequence> newprobes = new HashSet<CompositeSequence>();
+            Collection<CompositeSequence> newprobes = new HashSet<>();
 
             Collection<CompositeSequence> probesToAdd = toAdd.get( ad );
 
@@ -249,11 +240,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
     /**
      * Put an array design in the cache (if it already isn't there). This is needed when loading
      * designelementdatavectors, for example, to avoid repeated (and one-at-a-time) fetching of designelement.
-     * 
-     * @param arrayDesignCache
-     * @param cacheIsSetUp
-     * @param designElementCache
-     * @param arrayDesign
+     *
      * @return the persistent array design.
      */
     private ArrayDesign loadOrPersistArrayDesignAndAddToCache( ArrayDesign arrayDesign,

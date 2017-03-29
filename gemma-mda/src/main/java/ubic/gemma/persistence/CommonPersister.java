@@ -18,30 +18,9 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
-import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.ContactDao;
-import ubic.gemma.model.common.auditAndSecurity.Person;
-import ubic.gemma.model.common.auditAndSecurity.PersonDao;
-import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceDao;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryDao;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseDao;
-import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.LocalFileDao;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.auditAndSecurity.*;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementDao;
 import ubic.gemma.model.common.measurement.Unit;
@@ -52,54 +31,53 @@ import ubic.gemma.model.common.protocol.ProtocolDao;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeDao;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Persister for ubic.gemma.model.common package classes.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 abstract public class CommonPersister extends AbstractPersister {
 
-    @Autowired
-    protected AuditTrailDao auditTrailDao;
-
-    @Autowired
-    protected BibliographicReferenceDao bibliographicReferenceDao;
-
-    @Autowired
-    protected ContactDao contactDao;
-
-    @Autowired
-    protected DatabaseEntryDao databaseEntryDao;
-
-    protected Person defaultOwner;
-
-    @Autowired
-    protected ExternalDatabaseDao externalDatabaseDao;
-
-    @Autowired
-    protected LocalFileDao localFileDao;
-
-    @Autowired
-    protected MeasurementDao measurementDao;
-
-    @Autowired
-    protected PersonDao personDao;
-
-    @Autowired
-    protected ProtocolDao protocolDao;
-
-    @Autowired
-    protected QuantitationTypeDao quantitationTypeDao;
-
     // FIXME should use an expiring cache (but this is probably not a big deal)
-    protected Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<Object, ExternalDatabase>();
+    private final Map<Object, ExternalDatabase> seenDatabases = new ConcurrentHashMap<>();
+    // FIXME should use an expiring cache (not a huge amount of data)
+    private final Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<>();
+
+    Person defaultOwner;
 
     @Autowired
-    protected UnitDao unitDao;
+    LocalFileDao localFileDao;
 
-    // FIXME should use an expiring cache (not a huge amount of data)
-    Map<Object, QuantitationType> quantitationTypeCache = new ConcurrentHashMap<Object, QuantitationType>();
+    @Autowired
+    private AuditTrailDao auditTrailDao;
+
+    @Autowired
+    private BibliographicReferenceDao bibliographicReferenceDao;
+
+    @Autowired
+    private ContactDao contactDao;
+
+    @Autowired
+    private ExternalDatabaseDao externalDatabaseDao;
+
+    @Autowired
+    private MeasurementDao measurementDao;
+
+    @Autowired
+    private PersonDao personDao;
+
+    @Autowired
+    private ProtocolDao protocolDao;
+
+    @Autowired
+    private QuantitationTypeDao quantitationTypeDao;
+
+    @Autowired
+    private UnitDao unitDao;
 
     /*
      * (non-Javadoc)
@@ -142,7 +120,8 @@ abstract public class CommonPersister extends AbstractPersister {
 
     @Override
     public Object persistOrUpdate( Object entity ) {
-        if ( entity == null ) return null;
+        if ( entity == null )
+            return null;
         throw new UnsupportedOperationException( "Don't know how to persistOrUpdate a " + entity.getClass().getName() );
     }
 
@@ -156,16 +135,15 @@ abstract public class CommonPersister extends AbstractPersister {
     /**
      * For clearing the cache.
      */
-    protected void clearCommonCache() {
+    void clearCommonCache() {
         this.quantitationTypeCache.clear();
     }
 
-    /**
-     * @param databaseEntry
-     */
-    protected void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
-        if ( !isTransient( databaseEntry ) ) return;
-        if ( databaseEntry == null ) return;
+    void fillInDatabaseEntry( DatabaseEntry databaseEntry ) {
+        if ( !isTransient( databaseEntry ) )
+            return;
+        if ( databaseEntry == null )
+            return;
         ExternalDatabase tempExternalDb = databaseEntry.getExternalDatabase();
         databaseEntry.setExternalDatabase( null );
         ExternalDatabase persistedDb = persistExternalDatabase( tempExternalDb );
@@ -173,24 +151,20 @@ abstract public class CommonPersister extends AbstractPersister {
         assert databaseEntry.getExternalDatabase().getId() != null;
     }
 
-    /**
-     * @param protocol
-     */
-    protected void fillInProtocol( Protocol protocol ) {
-        if ( !isTransient( protocol ) ) return;
+    private void fillInProtocol( Protocol protocol ) {
+        if ( !isTransient( protocol ) )
+            return;
         if ( protocol == null ) {
             log.warn( "Null protocol" );
-            return;
         }
 
     }
 
-    /**
-     * @param protocolApplication
-     */
-    protected void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
-        if ( !isTransient( protocolApplication ) ) return;
-        if ( protocolApplication == null ) return;
+    void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
+        if ( !isTransient( protocolApplication ) )
+            return;
+        if ( protocolApplication == null )
+            return;
 
         log.debug( "Filling in protocolApplication" );
 
@@ -198,13 +172,14 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( protocol == null )
             throw new IllegalStateException( "Must have protocol associated with ProtocolApplication" );
 
-        if ( protocol.getName() == null ) throw new IllegalStateException( "Protocol must have a name" );
+        if ( protocol.getName() == null )
+            throw new IllegalStateException( "Protocol must have a name" );
 
         protocolApplication.setProtocol( persistProtocol( protocol ) );
 
         for ( Person performer : protocolApplication.getPerformers() ) {
             log.debug( "Filling in performer" );
-            performer = personDao.findOrCreate( performer );
+            personDao.findOrCreate( performer );
         }
 
     }
@@ -219,20 +194,20 @@ abstract public class CommonPersister extends AbstractPersister {
 
         defaultOwner = matchingPersons.iterator().next();
 
-        if ( defaultOwner == null ) throw new NullPointerException( "Default Person 'nobody' not found in database." );
+        if ( defaultOwner == null )
+            throw new NullPointerException( "Default Person 'nobody' not found in database." );
     }
 
-    /**
-     * @param entity
-     * @return
-     */
-    protected AuditTrail persistAuditTrail( AuditTrail entity ) {
-        if ( entity == null ) return null;
-        if ( !isTransient( entity ) ) return entity;
+    AuditTrail persistAuditTrail( AuditTrail entity ) {
+        if ( entity == null )
+            return null;
+        if ( !isTransient( entity ) )
+            return entity;
 
         for ( AuditEvent event : entity.getEvents() ) {
-            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
-                                           // any more
+            if ( event == null )
+                continue; // legacy of ordered-list which could end up with gaps; should not be needed
+            // any more
             // event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
             assert event.getPerformer() != null && !isTransient( event.getPerformer() );
         }
@@ -241,41 +216,23 @@ abstract public class CommonPersister extends AbstractPersister {
         return auditTrailDao.create( entity );
     }
 
-    /**
-     * @param reference
-     * @return
-     */
-    protected Object persistBibliographicReference( BibliographicReference reference ) {
+    private Object persistBibliographicReference( BibliographicReference reference ) {
         fillInDatabaseEntry( reference.getPubAccession() );
-        final BibliographicReference perReference = this.bibliographicReferenceDao.findOrCreate( reference );
-
-        // // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
-        // HibernateTemplate templ = this.getHibernateTemplate();
-        // templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-        // public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-        // session.update( perReference );
-        // return null;
-        // }
-        // } );
-
-        return perReference;
+        return this.bibliographicReferenceDao.findOrCreate( reference );
     }
 
-    /**
-     * @param designProvider
-     */
-    protected Contact persistContact( Contact contact ) {
-        if ( contact == null ) return null;
+    Contact persistContact( Contact contact ) {
+        if ( contact == null )
+            return null;
         return this.contactDao.findOrCreate( contact );
     }
 
-    /**
-     * @param database
-     */
-    protected ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
+    ExternalDatabase persistExternalDatabase( ExternalDatabase database ) {
 
-        if ( database == null ) return null;
-        if ( !isTransient( database ) ) return database;
+        if ( database == null )
+            return null;
+        if ( !isTransient( database ) )
+            return database;
 
         String name = database.getName();
 
@@ -296,31 +253,23 @@ abstract public class CommonPersister extends AbstractPersister {
         return database;
     }
 
-    /**
-     * @param file
-     */
-    protected LocalFile persistLocalFile( LocalFile file ) {
+    LocalFile persistLocalFile( LocalFile file ) {
         return persistLocalFile( file, false );
     }
 
-    /**
-     * @param file
-     * @param forceNew
-     * @return
-     */
-    protected LocalFile persistLocalFile( LocalFile file, boolean forceNew ) {
-        if ( file == null ) return null;
-        if ( !isTransient( file ) ) return file;
-        if ( forceNew ) return localFileDao.create( file );
+    LocalFile persistLocalFile( LocalFile file, boolean forceNew ) {
+        if ( file == null )
+            return null;
+        if ( !isTransient( file ) )
+            return file;
+        if ( forceNew )
+            return localFileDao.create( file );
         file.setId( null ); // in case of retry.
         return localFileDao.findOrCreate( file );
     }
 
     /**
      * Unlike many entities, measurements are 'unique' - there is no 'findOrCreate' method.
-     * 
-     * @param measurement
-     * @return
      */
     protected Measurement persistMeasurement( Measurement measurement ) {
 
@@ -331,31 +280,31 @@ abstract public class CommonPersister extends AbstractPersister {
         return measurementDao.create( measurement );
     }
 
-    /**
-     * @param
-     */
-    protected Person persistPerson( Person person ) {
-        if ( person == null ) return null;
+    private Person persistPerson( Person person ) {
+        if ( person == null )
+            return null;
         return this.personDao.findOrCreate( person );
     }
 
-    protected Protocol persistProtocol( Protocol protocol ) {
-        if ( protocol == null ) return protocol;
+    Protocol persistProtocol( Protocol protocol ) {
+        if ( protocol == null )
+            return protocol;
         fillInProtocol( protocol );
         return protocolDao.findOrCreate( protocol );
     }
 
-    /**
-     * @param qType
-     */
-    protected QuantitationType persistQuantitationType( QuantitationType qType ) {
-        if ( qType == null ) return null;
-        if ( !isTransient( qType ) ) return qType;
+    QuantitationType persistQuantitationType( QuantitationType qType ) {
+        if ( qType == null )
+            return null;
+        if ( !isTransient( qType ) )
+            return qType;
 
-        int key = 0;
-        if ( qType.getName() == null ) throw new IllegalArgumentException( "QuantitationType must have a name" );
+        int key;
+        if ( qType.getName() == null )
+            throw new IllegalArgumentException( "QuantitationType must have a name" );
         key = qType.getName().hashCode();
-        if ( qType.getDescription() != null ) key += qType.getDescription().hashCode();
+        if ( qType.getDescription() != null )
+            key += qType.getDescription().hashCode();
 
         if ( quantitationTypeCache.containsKey( key ) ) {
             return quantitationTypeCache.get( key );
@@ -370,9 +319,11 @@ abstract public class CommonPersister extends AbstractPersister {
         return qt;
     }
 
-    protected Unit persistUnit( Unit unit ) {
-        if ( unit == null ) return null;
-        if ( !isTransient( unit ) ) return unit;
+    Unit persistUnit( Unit unit ) {
+        if ( unit == null )
+            return null;
+        if ( !isTransient( unit ) )
+            return unit;
         return this.unitDao.findOrCreate( unit );
     }
 

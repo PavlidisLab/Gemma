@@ -211,7 +211,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
 
         if ( ed == null ) return null;
 
-        final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed ";
+        final String queryString = "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed ";
         List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
 
         if ( results.size() == 0 ) {

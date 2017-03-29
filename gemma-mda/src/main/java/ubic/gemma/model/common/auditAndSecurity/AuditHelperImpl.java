@@ -15,19 +15,16 @@
 package ubic.gemma.model.common.auditAndSecurity;
 
 import gemma.gsec.model.User;
-
-import java.util.Date;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.model.common.Auditable;
+
+import java.util.Date;
 
 /**
  * @author anton
- * @version $Id$
  */
 @Component
 public class AuditHelperImpl implements AuditHelper {
@@ -37,45 +34,27 @@ public class AuditHelperImpl implements AuditHelper {
     @Autowired
     private AuditTrailDao auditTrailDao;
 
-    @Autowired
-    private StatusDao statusDao;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditHelper#addCreateAuditEvent(ubic.gemma.model.common.Auditable,
-     * java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)
-     */
     @Override
     public AuditEvent addCreateAuditEvent( Auditable auditable, String note, User user ) {
         this.addAuditTrailIfNeeded( auditable );
-        this.addStatusIfNeeded( auditable );
         assert auditable.getAuditTrail() != null;
         assert auditable.getAuditTrail().getEvents().size() == 0;
 
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.CREATE, note, null, user, null );
-        try {
-            this.statusDao.update( auditable, null );
-            AuditEvent a = this.auditTrailDao.addEvent( auditable, auditEvent );
-            return a;
-        } catch ( Exception e ) {
-            log.warn( ">>>>>>> AUDIT ERROR >>>>>>>>  " + e.getMessage() );
-            throw e;
-        }
+        AuditEvent auditEvent = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.CREATE, note, null, user, null );
+        return this.tryUpdate( auditable, auditEvent );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditHelper#addUpdateAuditEvent(ubic.gemma.model.common.Auditable,
-     * java.lang.String, ubic.gemma.model.common.auditAndSecurity.User)
-     */
     @Override
     public AuditEvent addUpdateAuditEvent( Auditable auditable, String note, User user ) {
-        AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, user, null );
+        AuditEvent auditEvent = AuditEvent.Factory
+                .newInstance( new Date(), AuditAction.UPDATE, note, null, user, null );
+        return this.tryUpdate( auditable, auditEvent );
+    }
+
+    private AuditEvent tryUpdate( Auditable auditable, AuditEvent auditEvent ) {
         try {
-            this.statusDao.update( auditable, null );
             return this.auditTrailDao.addEvent( auditable, auditEvent );
         } catch ( Exception e ) {
             log.warn( ">>>>>>> AUDIT ERROR >>>>>>>>  " + e.getMessage() );
@@ -83,29 +62,16 @@ public class AuditHelperImpl implements AuditHelper {
         }
     }
 
-    /**
-     * @param auditable
-     * @return
-     */
     private AuditTrail addAuditTrailIfNeeded( Auditable auditable ) {
 
-        if ( auditable.getAuditTrail() != null ) return auditable.getAuditTrail();
+        if ( auditable.getAuditTrail() != null )
+            return auditable.getAuditTrail();
 
         // no need to persist it here
         AuditTrail auditTrail = AuditTrail.Factory.newInstance();
         auditable.setAuditTrail( auditTrail );
 
         return auditable.getAuditTrail();
-    }
-
-    /**
-     * @param auditable
-     */
-    private void addStatusIfNeeded( Auditable auditable ) {
-        if ( auditable.getStatus() == null ) {
-            statusDao.initializeStatus( auditable );
-            assert auditable.getStatus() != null && auditable.getStatus().getId() != null;
-        }
     }
 
 }

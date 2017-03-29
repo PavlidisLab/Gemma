@@ -19,10 +19,10 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+
+import java.util.Collection;
 
 /**
  * Represents a set of BioAssays. This is not associated with any actual data, and soley represents a logical grouping
@@ -31,9 +31,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
  */
 public abstract class BioAssaySet extends Investigation {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 2368063046639481521L;
 
     public abstract Collection<BioAssay> getBioAssays();

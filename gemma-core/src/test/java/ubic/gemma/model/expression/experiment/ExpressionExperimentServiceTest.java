@@ -18,20 +18,10 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -44,26 +34,26 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
+import static org.junit.Assert.*;
+
 /**
  * @author kkeshav
  * @author pavlidis
- * @version $Id$
  */
 public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
-    @Autowired
-    ExpressionExperimentService expressionExperimentService;
-
     private static final String EE_NAME = RandomStringUtils.randomAlphanumeric( 20 );
-    ExpressionExperiment ee = null;
-    ExternalDatabase ed;
-    String accession;
-    String contactName;
-    boolean persisted = false;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperiment ee = null;
+    private ExternalDatabase ed;
+    private String accession;
+    private boolean persisted = false;
 
-    /**
-     * @exception Exception
-     */
     @Before
     public void setup() {
 
@@ -149,7 +139,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Test
     public final void testGetDesignElementDataVectorsByQt() {
         QuantitationType quantitationType = ee.getRawExpressionDataVectors().iterator().next().getQuantitationType();
-        Collection<QuantitationType> quantitationTypes = new HashSet<QuantitationType>();
+        Collection<QuantitationType> quantitationTypes = new HashSet<>();
         quantitationTypes.add( quantitationType );
         Collection<DesignElementDataVector> vectors = expressionExperimentService
                 .getDesignElementDataVectors( quantitationTypes );
@@ -160,7 +150,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Test
     public final void testGetPerTaxonCount() {
         Map<Taxon, Long> counts = expressionExperimentService.getPerTaxonCount();
-        long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) ).longValue();
+        long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) );
         assertNotNull( counts );
         expressionExperimentService.delete( ee );
         counts = expressionExperimentService.getPerTaxonCount();
@@ -180,13 +170,10 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         assertEquals( 2, types.size() );
     }
 
-    /**
-     * @
-     */
     @Test
-    public final void testgetRawExpressionDataVectors() {
+    public final void testGetRawExpressionDataVectors() {
         ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
-        Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> designElements = new HashSet<>();
         QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<RawExpressionDataVector> allv = eel.getRawExpressionDataVectors();
 
@@ -194,18 +181,19 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
         assertTrue( allv.size() > 1 );
 
-        for ( Iterator<RawExpressionDataVector> it = allv.iterator(); it.hasNext(); ) {
-            CompositeSequence designElement = it.next().getDesignElement();
+        for ( RawExpressionDataVector anAllv : allv ) {
+            CompositeSequence designElement = anAllv.getDesignElement();
             assertNotNull( designElement );
 
             designElements.add( designElement );
-            if ( designElements.size() == 2 ) break;
+            if ( designElements.size() == 2 )
+                break;
         }
 
         assertEquals( 2, designElements.size() );
 
-        Collection<DesignElementDataVector> vectors = expressionExperimentService.getDesignElementDataVectors(
-                designElements, quantitationType );
+        Collection<DesignElementDataVector> vectors = expressionExperimentService
+                .getDesignElementDataVectors( designElements, quantitationType );
 
         assertEquals( 2, vectors.size() );
 
@@ -213,7 +201,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
 
     @Test
     public final void testLoadValueObjects() {
-        Collection<Long> ids = new HashSet<Long>();
+        Collection<Long> ids = new HashSet<>();
         Long id = ee.getId();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadValueObjects( ids, false );

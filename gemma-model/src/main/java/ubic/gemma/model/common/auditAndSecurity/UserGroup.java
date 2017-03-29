@@ -19,16 +19,56 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.model.GroupAuthority;
+import gemma.gsec.model.User;
+import ubic.gemma.model.common.AbstractAuditable;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import gemma.gsec.model.GroupAuthority;
-import gemma.gsec.model.User;
-
 /**
  * An organized group of researchers with an identifiable leader and group members.
+ *
+ * @author Paul
  */
-public abstract class UserGroup extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.UserGroup {
+public abstract class UserGroup extends AbstractAuditable implements gemma.gsec.model.UserGroup {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 5795744069086222179L;
+    private Collection<User> groupMembers = new HashSet<>();
+    private Collection<GroupAuthority> authorities = new HashSet<>();
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public UserGroup() {
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<GroupAuthority> getAuthorities() {
+        return this.authorities;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends GroupAuthority> void setAuthorities( Collection<T> authorities ) {
+        this.authorities = ( Collection<GroupAuthority> ) authorities;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<User> getGroupMembers() {
+        return this.groupMembers;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
+        this.groupMembers = ( Collection<User> ) groupMembers;
+    }
 
     /**
      * Constructs new instances of {@link UserGroup}.
@@ -41,50 +81,6 @@ public abstract class UserGroup extends ubic.gemma.model.common.Auditable implem
             return new UserGroupImpl();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 5795744069086222179L;
-    private Collection<User> groupMembers = new HashSet<>();
-
-    private Collection<GroupAuthority> authorities = new HashSet<GroupAuthority>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public UserGroup() {
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public Collection<GroupAuthority> getAuthorities() {
-        return this.authorities;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public Collection<User> getGroupMembers() {
-        return this.groupMembers;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends GroupAuthority> void setAuthorities( Collection<T> authorities ) {
-        this.authorities = ( Collection<GroupAuthority> ) authorities;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
-        this.groupMembers = ( Collection<User> ) groupMembers;
     }
 
 }

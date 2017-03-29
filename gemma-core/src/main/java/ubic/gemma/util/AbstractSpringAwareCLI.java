@@ -19,45 +19,38 @@
 package ubic.gemma.util;
 
 import gemma.gsec.authentication.ManualAuthenticationService;
-
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.Persister;
 
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
 /**
  * Subclass this to create command line interface (CLI) tools that need a Spring context. A standard set of CLI options
  * are provided to manage authentication.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
+    private final Collection<Exception> exceptionCache = new ArrayList<>();
     protected AuditTrailService auditTrailService;
     protected AuditEventService auditEventService;
-
     protected BeanFactory ctx;
-    protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
     private Persister persisterHelper;
 
     public AbstractSpringAwareCLI() {
@@ -71,9 +64,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return "No description provided";
     }
 
-    /**
-     * @param ctx
-     */
     public void setCtx( BeanFactory ctx ) {
         this.ctx = ctx;
     }
@@ -86,8 +76,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * @param e Adds an exception to a cache. this is useful in the scenario where we don't want the CLI to bomb on the
-     *        exception but continue with its processing. Granted if the exception is fatal then the CLI should
-     *        terminate regardless.
+     *          exception but continue with its processing. Granted if the exception is fatal then the CLI should
+     *          terminate regardless.
      */
     protected void cacheException( Exception e ) {
         exceptionCache.add( e );
@@ -97,8 +87,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * Override this method in your subclass to provide additional Spring configuration files that will be merged with
      * the Gemma spring context. See SpringContextUtil; an example path is
      * "classpath*:/myproject/applicationContext-mine.xml".
-     * 
-     * @return
      */
     protected String[] getAdditionalSpringConfigLocations() {
         return null;
@@ -106,9 +94,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     /**
      * Convenience method to obtain instance of any bean by name.
-     * 
-     * @param name
-     * @return
      */
     protected <T> T getBean( String name, Class<T> clz ) {
         assert ctx != null : "Spring context was not initialized";
@@ -120,9 +105,6 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         return ctx.getBean( clz );
     }
 
-    /**
-     * @return
-     */
     protected Persister getPersisterHelper() {
         if ( persisterHelper != null ) {
             return persisterHelper;
@@ -132,9 +114,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * @param auditable
      * @param eventClass can be null
-     * @return
      */
     protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
@@ -166,24 +146,27 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         }
 
         /*
-         * Always skip if we have trouble.
+         * Always skip if the object is curatable and troubled
          */
-        AuditEvent lastTrouble = this.auditTrailService.getLastTroubleEvent( auditable );
+        if ( auditable instanceof Curatable ) {
+            Curatable curatable = ( Curatable ) auditable;
+            okToRun = !curatable.getCurationDetails().getTroubled(); //not ok if troubled
 
-        // special case for expression experiments - check associated ADs.
-        if ( lastTrouble == null && auditable instanceof ExpressionExperiment ) {
-            ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
-            for ( Object o : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
-                lastTrouble = auditTrailService.getLastTroubleEvent( ( ArrayDesign ) o );
+            // special case for expression experiments - check associated ADs.
+            if ( okToRun && curatable instanceof ExpressionExperiment ) {
+                ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
+                for ( ArrayDesign ad : ees.getArrayDesignsUsed( ( ExpressionExperiment ) auditable ) ) {
+                    if ( ad.getCurationDetails().getTroubled() ) {
+                        okToRun = false; // not ok if even one parent AD is troubled, no need to check the remaining ones.
+                        break;
+                    }
+                }
             }
-        }
 
-        okToRun = lastTrouble == null;
-        // }
-
-        if ( !okToRun ) {
-            log.info( auditable + ": has an active 'trouble' flag" );
-            errorObjects.add( auditable + ": has an active 'trouble' flag" );
+            if ( !okToRun ) {
+                log.info( auditable + ": has an active 'trouble' flag" );
+                errorObjects.add( auditable + ": has an active 'trouble' flag" );
+            }
         }
 
         return needToRun && okToRun;
@@ -198,17 +181,16 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     }
 
     /**
-     * @param fileName
      * @return Given a file name returns a collection of strings. Each string represents one line of the file
      */
     protected Collection<String> processFile( String fileName ) {
 
-        Collection<String> lines = new ArrayList<String>();
+        Collection<String> lines = new ArrayList<>();
         int lineNumber = 0;
         try (InputStream is = new FileInputStream( fileName );
-                BufferedReader br = new BufferedReader( new InputStreamReader( is ) );) {
+                BufferedReader br = new BufferedReader( new InputStreamReader( is ) )) {
 
-            String line = null;
+            String line;
 
             while ( ( line = br.readLine() ) != null ) {
                 lineNumber++;
@@ -218,7 +200,8 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
                 lines.add( line.trim().toUpperCase() );
             }
         } catch ( IOException ioe ) {
-            log.error( "At line: " + lineNumber + " an error occured processing " + fileName + ". \n Error is: " + ioe );
+            log.error(
+                    "At line: " + lineNumber + " an error occurred processing " + fileName + ". \n Error is: " + ioe );
         }
 
         return lines;
@@ -235,8 +218,10 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         this.auditEventService = this.getBean( AuditEventService.class );
     }
 
-    /** check username and password. */
-    void authenticate() {
+    /**
+     * check username and password.
+     */
+    private void authenticate() {
 
         /*
          * Allow security settings (authorization etc) in a given context to be passed into spawned threads

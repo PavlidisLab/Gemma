@@ -24,7 +24,7 @@ import gemma.gsec.model.Securable;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -32,7 +32,7 @@ import ubic.gemma.model.common.description.Characteristic;
 /**
  * An abstract concept of a scientific study
  */
-public abstract class Investigation extends Auditable implements Securable {
+public abstract class Investigation extends AbstractAuditable implements Securable {
 
     /**
      * 

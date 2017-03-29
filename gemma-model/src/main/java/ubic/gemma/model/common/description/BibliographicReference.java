@@ -22,11 +22,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.expression.biomaterial.Compound;
 
 /** 
  */
-public abstract class BibliographicReference extends ubic.gemma.model.common.Auditable {
+public abstract class BibliographicReference extends AbstractAuditable {
 
     /**
      * Constructs new instances of {@link BibliographicReference}.
@@ -81,7 +82,7 @@ public abstract class BibliographicReference extends ubic.gemma.model.common.Aud
 
     private Collection<PublicationType> publicationTypes = new HashSet<>();
 
-    private Collection<Keyword> keywords = new HashSet<Keyword>();
+    private Collection<Keyword> keywords = new HashSet<>();
 
     private Collection<Compound> chemicals = new HashSet<>();
 

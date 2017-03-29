@@ -19,56 +19,37 @@
 
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.util.Collection;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+import java.util.Collection;
+
 /**
- * TODO Document Me
- * 
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentEditValueObject extends ExpressionExperimentDetailsValueObject {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1630521876359566915L;
     private Collection<QuantitationTypeValueObject> quantitationTypes;
+    private Collection<BioAssayValueObject> bioAssays;
 
-    /**
-     * @param eevo
-     */
     public ExpressionExperimentEditValueObject( ExpressionExperimentValueObject eevo ) {
         super( eevo );
     }
 
-    /**
-     * 
-     */
     public ExpressionExperimentEditValueObject() {
         super();
     }
 
-    /**
-     * @return
-     */
     public Collection<QuantitationTypeValueObject> getQuantitationTypes() {
         return this.quantitationTypes;
     }
 
-    /**
-     * @param qts
-     */
     public void setQuantitationTypes( Collection<QuantitationTypeValueObject> qts ) {
         this.quantitationTypes = qts;
     }
-
-    private Collection<BioAssayValueObject> bioAssays;
 
     public Collection<BioAssayValueObject> getBioAssays() {
         return bioAssays;

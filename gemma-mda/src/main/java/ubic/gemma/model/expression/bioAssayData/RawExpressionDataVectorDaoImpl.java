@@ -9,10 +9,6 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -20,23 +16,24 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.util.BusinessKey;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @author paul
- * @version $Id$
  */
 @Repository
-public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<RawExpressionDataVector> implements
-        RawExpressionDataVectorDao {
+public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<RawExpressionDataVector>
+        implements RawExpressionDataVectorDao {
 
-    private static Log log = LogFactory.getLog( RawExpressionDataVectorDaoImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( RawExpressionDataVectorDaoImpl.class.getName() );
 
     @Autowired
     public RawExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
@@ -45,7 +42,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     @Override
     public ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors ) {
-        ExpressionExperimentImpl ee = this.getHibernateTemplate().load( ExpressionExperimentImpl.class, eeId );
+        ExpressionExperiment ee = this.getHibernateTemplate().load( ExpressionExperiment.class, eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Experiment with id=" + eeId + " not found" );
         }
@@ -63,9 +60,10 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      */
     @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
-                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
-                + "and dev.quantitationType = :quantitationType ";
+        final String queryString =
+                "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
+                        + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
+                        + "and dev.quantitationType = :quantitationType ";
 
         org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameter( "quantitationType", quantitationType );
@@ -77,14 +75,14 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     @Override
     public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
-        Collection<? extends DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+        Collection<? extends DesignElementDataVector> results = new HashSet<>();
 
-        results.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
-                bioAssayDimension ) );
-        results.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
-                bioAssayDimension ) );
+        results.addAll( this.getHibernateTemplate()
+                .findByNamedParam( "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad",
+                        "bad", bioAssayDimension ) );
+        results.addAll( this.getHibernateTemplate()
+                .findByNamedParam( "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad",
+                        "bad", bioAssayDimension ) );
         return results;
 
     }
@@ -131,14 +129,14 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
         crit.createCriteria( "designElement" )
                 .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
-                .createCriteria( "arrayDesign" )
-                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
+                .createCriteria( "arrayDesign" ).add( Restrictions
+                .eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
 
-        crit.createCriteria( "quantitationType" ).add(
-                Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
+        crit.createCriteria( "quantitationType" )
+                .add( Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
 
-        crit.createCriteria( "expressionExperiment" ).add(
-                Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
+        crit.createCriteria( "expressionExperiment" )
+                .add( Restrictions.eq( "name", designElementDataVector.getExpressionExperiment().getName() ) );
 
         List<?> results = this.getHibernateTemplate().findByCriteria( crit );
         Object result = null;
@@ -157,7 +155,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(int, java.lang.Long)
+     * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#load(java.lang.Long)
      */
 
     @Override

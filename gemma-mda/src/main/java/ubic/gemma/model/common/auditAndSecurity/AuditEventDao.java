@@ -18,124 +18,55 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.BaseDao;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.persistence.BaseDao;
-
 /**
  * @see AuditEvent
  * @see AuditEventService
- * @version $Id$
  */
 public interface AuditEventDao extends BaseDao<AuditEvent> {
     /**
      * @return events for the given auditable.
      */
-    public List<AuditEvent> getEvents( Auditable auditable );
+    List<AuditEvent> getEvents( Auditable auditable );
 
     /**
      * Returns the last AuditEvent of the specified type from the given auditable.
      */
-    public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
+    AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     /**
      * Return a map of Auditables to AuditEvents for the given AuditEventType.
      */
-    public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
+    Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type );
 
-    /**
-     * @param auditables
-     * @param types
-     * @return
-     */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+    Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types );
 
     /**
-     * @param events
-     * @return
-     */
-    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events );
-
-    /**
-     * @param auditables
-     * @return map of Auditable to AuditEvent. NOTE: for EEs, this does NOT look at the ADs.
-     */
-    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables );
-
-    /**
-     * Get all of the most recent AuditEvents for the given auditables, where the events have types. Return value is a
-     * map of AuditEventType.classes -> Auditable -> AuditEven
-     */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables );
-
-    /**
      * Get auditables that have been Created since the given date
-     * 
-     * @return
      */
-    public Collection<Auditable> getNewSinceDate( Date date );
+    Collection<Auditable> getNewSinceDate( Date date );
 
     /**
      * Get auditables that have been Updated since the given date
-     * 
-     * @return
      */
-    public Collection<Auditable> getUpdatedSinceDate( Date date );
+    Collection<Auditable> getUpdatedSinceDate( Date date );
 
-    /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
+    boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 
-    // not implementing yet.
-    //
-    // /**
-    // * @param <T>
-    // * @param clazz
-    // * @param type
-    // * @param limit
-    // * @return
-    // */
-    // public <T extends Auditable> java.util.Collection<T> getHavingEvent( Class<T> clazz,
-    // Class<? extends AuditEventType> type, int limit );
-    //
-    // /**
-    // * @param <T>
-    // * @param clazz
-    // * @param type
-    // * @param limit
-    // * @return
-    // */
-    // public <T extends Auditable> java.util.Collection<T> getLackingEvent( Class<T> clazz,
-    // Class<? extends AuditEventType> type, int limit );
+    void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
-    /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+    void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
-    /**
-     * @param a
-     * @param type
-     * @return
-     */
-    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
-
-    /**
-     * 
-     */
-    public void thaw( AuditEvent auditEvent );
+    void thaw( AuditEvent auditEvent );
 
 }

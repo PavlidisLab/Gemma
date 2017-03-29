@@ -39,7 +39,7 @@ Gemma.NewsDisplay = Ext
                                     name : "date",
                                     type : "date",
                                     convert : function( v, rec ) {
-                                       return Ext.util.Format.date( v, "M d y" );
+                                       return Gemma.Renderers.dateRenderer( v );
                                     }
                                  }, {
                                     name : "body"

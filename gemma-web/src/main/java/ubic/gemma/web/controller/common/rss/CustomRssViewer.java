@@ -37,27 +37,17 @@ import com.sun.syndication.feed.rss.Content;
 import com.sun.syndication.feed.rss.Item;
 
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.StatusService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author sshao
- * @version $Id$
  */
 @Component
 public class CustomRssViewer extends AbstractRssFeedView {
 
     @Autowired
-    StatusService statusService;
-    @Autowired
     ExpressionExperimentService expressionExperimentService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.web.servlet.view.feed.AbstractRssFeedView#buildFeedItems(java.util.Map,
-     * javax.servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     protected List<Item> buildFeedItems( Map<String, Object> model, HttpServletRequest request,
             HttpServletResponse response ) throws Exception {
@@ -65,7 +55,7 @@ public class CustomRssViewer extends AbstractRssFeedView {
         @SuppressWarnings("unchecked")
         Map<ExpressionExperiment, String> experiments = ( Map<ExpressionExperiment, String> ) model
                 .get( "feedContent" );
-        List<Item> items = new ArrayList<Item>( experiments.size() );
+        List<Item> items = new ArrayList<>( experiments.size() );
 
         // Set content of each expression experiment
         for ( Map.Entry<ExpressionExperiment, String> entry : experiments.entrySet() ) {
@@ -75,20 +65,20 @@ public class CustomRssViewer extends AbstractRssFeedView {
             String link = "http://" + request.getServerName()
                     + "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + e.getId().toString();
 
-            int maxlength = 500;
+            int maxLength = 500;
             if ( e.getDescription().length() < 500 ) {
-                maxlength = e.getDescription().length();
+                maxLength = e.getDescription().length();
             }
 
             Item item = new Item();
             Content content = new Content();
-            content.setValue( e.getDescription().substring( 0, maxlength ) + " ..." );
+            content.setValue( e.getDescription().substring( 0, maxLength ) + " ..." );
             item.setContent( content );
             item.setTitle( title );
             item.setLink( link );
 
-            if ( statusService.getStatus( e ) != null ) {
-                item.setPubDate( statusService.getStatus( e ).getLastUpdateDate() );
+            if ( e.getCurationDetails() != null ) {
+                item.setPubDate( e.getCurationDetails().getLastUpdated() );
             }
             items.add( item );
         }

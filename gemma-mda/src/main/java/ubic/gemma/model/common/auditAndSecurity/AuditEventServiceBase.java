@@ -18,19 +18,17 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-import java.util.Collection;
-import java.util.Date;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.Auditable;
+
+import java.util.Collection;
+import java.util.Date;
 
 /**
  * Spring Service base class for <code>AuditEventService</code>, provides access to all services and entities referenced
  * by this service.
- * 
- * @version $Id$
+ *
  * @see AuditEventService
  */
 public abstract class AuditEventServiceBase implements AuditEventService {
@@ -57,17 +55,17 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     }
 
     /**
+     * Gets the reference to <code>auditEvent</code>'s DAO.
+     */
+    AuditEventDao getAuditEventDao() {
+        return this.auditEventDao;
+    }
+
+    /**
      * Sets the reference to <code>auditEvent</code>'s DAO.
      */
     public void setAuditEventDao( AuditEventDao auditEventDao ) {
         this.auditEventDao = auditEventDao;
-    }
-
-    /**
-     * Gets the reference to <code>auditEvent</code>'s DAO.
-     */
-    protected AuditEventDao getAuditEventDao() {
-        return this.auditEventDao;
     }
 
     /**
@@ -80,9 +78,6 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      */
     protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date );
 
-    /**
-     * Performs the core logic for {@link #thaw(AuditEvent)}
-     */
     protected abstract void handleThaw( AuditEvent auditEvent ) throws java.lang.Exception;
 
 }

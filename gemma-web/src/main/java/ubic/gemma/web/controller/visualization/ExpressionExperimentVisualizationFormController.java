@@ -18,21 +18,6 @@
  */
 package ubic.gemma.web.controller.visualization;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -40,7 +25,6 @@ import org.springframework.web.bind.ServletRequestDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -63,58 +47,32 @@ import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.propertyeditor.QuantitationTypePropertyEditor;
 import ubic.gemma.web.util.ConfigurationCookie;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
+
 /**
  * A <link>SimpleFormController<link> providing search functionality of genes or design elements (probe sets). The
  * success view returns either a visual representation of the result set or a downloadable data file.
- * <p>
- * {@link viewSampling} sets whether or not just some randomly selected vectors will be shown, and {@link species} sets
- * the type of species to search. {@link keywords} restrict the search.
- * <p>
- * {@link maskMissing} masks the missing values.
- * 
+ * viewSampling sets whether or not just some randomly selected vectors will be shown, and species sets
+ * the type of species to search. keywords restrict the search.
+ * maskMissing masks the missing values.
+ *
  * @author keshav
- * @version $Id$
  */
 @Deprecated
 public class ExpressionExperimentVisualizationFormController extends BaseFormController {
 
-    /**
-     * @author keshav
-     */
-    static class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
-
-        public ExpressionExperimentVisualizationCookie( ExpressionExperimentVisualizationCommand command ) {
-
-            super( COOKIE_NAME );
-
-            log.debug( "creating cookie" );
-
-            this.setProperty( "searchString", command.getSearchString() );
-            this.setProperty( "viewSampling", command.isViewSampling() );
-            this.setProperty( "maskMissing", command.isMaskMissing() );
-            this.setProperty( SEARCH_CRITERIA, command.getSearchCriteria() );
-            this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
-
-            /* set cookie to expire after 2 days. */
-            this.setMaxAge( 172800 );
-            this.setComment( "User selections for visualization form" );
-        }
-
-    }
-
-    private static final String SEARCH_CRITERIA = "searchCriteria";
-
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
+    private static final String SEARCH_CRITERIA = "searchCriteria";
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
-
     private static final int MAX_ELEMENTS_TO_VISUALIZE = 200;
-    protected ExpressionExperimentService expressionExperimentService = null;
-    protected CompositeSequenceService compositeSequenceService = null;
-    protected DesignElementDataVectorService designElementDataVectorService;
-    protected CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
-
-    protected BioAssayService bioAssayService = null;
+    private ExpressionExperimentService expressionExperimentService = null;
+    private CompositeSequenceService compositeSequenceService = null;
+    private DesignElementDataVectorService designElementDataVectorService;
+    private CompositeSequenceGeneMapperService compositeSequenceGeneMapperService = null;
 
     public ExpressionExperimentVisualizationFormController() {
         /*
@@ -123,14 +81,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         setSessionForm( true );
     }
 
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -170,7 +120,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         designElementDataVectorService.thaw( dataVectors );
 
         ExpressionDataMatrixBuilder matrixBuilder = new ExpressionDataMatrixBuilder( dataVectors );
-        ExpressionDataDoubleMatrix expressionDataMatrix = null;
+        ExpressionDataDoubleMatrix expressionDataMatrix;
 
         if ( eevc.isMaskMissing() ) {
             expressionDataMatrix = matrixBuilder.getProcessedData();
@@ -183,8 +133,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
          * type, or other calamaties.
          */
         if ( expressionDataMatrix == null || expressionDataMatrix.rows() == 0 ) {
-            String message = "None of the probe sets match the given quantitation type "
-                    + quantitationType.getType().getValue();
+            String message =
+                    "None of the probe sets match the given quantitation type " + quantitationType.getType().getValue();
 
             return processErrors( request, response, command, errors, message );
         }
@@ -200,19 +150,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         mav.addObject( "quantitationType", eevc.getQuantitationType() );
         mav.addObject( SEARCH_CRITERIA, eevc.getSearchCriteria() );
         mav.addObject( "searchString", eevc.getSearchString() );
-        mav.addObject( "viewSampling", new Boolean( eevc.isViewSampling() ) );
-        mav.addObject( "maskMissing", new Boolean( eevc.isMaskMissing() ) );
+        mav.addObject( "viewSampling", eevc.isViewSampling() );
+        mav.addObject( "maskMissing", eevc.isMaskMissing() );
         return mav;
     }
 
-    /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
-     */
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response, Object command,
             BindException errors ) throws Exception {
@@ -237,10 +179,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return super.processFormSubmission( request, response, command, errors );
     }
 
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
     /**
      * @param compositeSequenceGeneMapperService The compositeSequenceGeneMapperService to set.
      */
@@ -249,43 +187,29 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         this.compositeSequenceGeneMapperService = compositeSequenceGeneMapperService;
     }
 
-    /**
-     * @param compositeSequenceService
-     */
     public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
         this.compositeSequenceService = compositeSequenceService;
     }
 
-    /**
-     * @param designElementDataVectorService
-     */
     public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
         this.designElementDataVectorService = designElementDataVectorService;
     }
 
-    /**
-     * @param expressionExperimentService
-     */
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    /**
-     * @param request
-     * @return Object
-     * @throws ServletException
-     */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
 
-        Long id = null;
+        Long id;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( "Id was not valid Long integer", e );
         }
 
-        ExpressionExperiment ee = null;
+        ExpressionExperiment ee;
         ExpressionExperimentVisualizationCommand eevc = new ExpressionExperimentVisualizationCommand();
 
         if ( StringUtils.isNotBlank( id.toString() ) ) {
@@ -305,19 +229,11 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     }
 
-    /**
-     * @param command
-     * @param errors
-     * @param eevc
-     * @param expressionExperiment
-     * @param quantitationType
-     * @return Collection<DesignElementDataVector>
-     */
-    protected Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
+    private Collection<DesignElementDataVector> getVectors( Object command, BindException errors,
             ExpressionExperimentVisualizationCommand eevc, ExpressionExperiment expressionExperiment,
             QuantitationType quantitationType ) {
 
-        Collection<DesignElementDataVector> vectors = null;
+        Collection<DesignElementDataVector> vectors;
 
         Collection<CompositeSequence> compositeSequences = null;
 
@@ -344,24 +260,16 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
             /* handle search by design element */
             if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_PROBE ) ) {
 
-                if ( arrayDesigns.size() == 0 ) {
-                    String message = "No platforms found for " + expressionExperiment;
-                    log.error( message );
-                    errors.addError( new ObjectError( command.toString(), null, null, message ) );
+                if ( checkIfPlatformsExistAndErrorIfNot( command, errors, expressionExperiment, arrayDesigns ) )
                     return null;
-                }
 
-                compositeSequences = compositeSequenceService.findByNamesInArrayDesigns( searchIdsAsList,
-                        arrayDesigns );
+                compositeSequences = compositeSequenceService
+                        .findByNamesInArrayDesigns( searchIdsAsList, arrayDesigns );
 
             } else if ( eevc.getSearchCriteria().equalsIgnoreCase( SEARCH_BY_GENE ) ) {
                 /* search by gene */
-                if ( arrayDesigns.size() == 0 ) {
-                    String message = "No platforms found for " + expressionExperiment;
-                    log.error( message );
-                    errors.addError( new ObjectError( command.toString(), null, null, message ) );
+                if ( checkIfPlatformsExistAndErrorIfNot( command, errors, expressionExperiment, arrayDesigns ) )
                     return null;
-                }
 
                 compositeSequences = getProbesByGeneSymbols( arrayDesigns, searchIdsAsList );
             }
@@ -381,9 +289,17 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return vectors;
     }
 
-    /**
-     * 
-     */
+    private boolean checkIfPlatformsExistAndErrorIfNot( Object command, BindException errors,
+            ExpressionExperiment expressionExperiment, Collection<ArrayDesign> arrayDesigns ) {
+        if ( arrayDesigns.size() == 0 ) {
+            String message = "No platforms found for " + expressionExperiment;
+            log.error( message );
+            errors.addError( new ObjectError( command.toString(), null, null, message ) );
+            return true;
+        }
+        return false;
+    }
+
     @Override
     @InitBinder
     protected void initBinder( HttpServletRequest request, ServletRequestDataBinder binder ) {
@@ -394,21 +310,18 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     /**
      * Populates drop downs.
-     * 
-     * @param request
-     * @return Map
      */
     @Override
-    protected Map<String, List<? extends Object>> referenceData( HttpServletRequest request ) {
+    protected Map<String, List<?>> referenceData( HttpServletRequest request ) {
 
-        Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
-        List<String> searchCategories = new ArrayList<String>();
+        Map<String, List<?>> searchByMap = new HashMap<>();
+        List<String> searchCategories = new ArrayList<>();
         searchCategories.add( SEARCH_BY_GENE );
         searchCategories.add( SEARCH_BY_PROBE );
         searchByMap.put( "searchCategories", searchCategories );
 
         Collection<QuantitationType> types = getContinuousQuantitationTypes( request );
-        List<QuantitationType> listedTypes = new ArrayList<QuantitationType>();
+        List<QuantitationType> listedTypes = new ArrayList<>();
         listedTypes.addAll( types );
 
         searchByMap.put( "quantitationTypes", listedTypes );
@@ -416,12 +329,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return searchByMap;
     }
 
-    /**
-     * @param request
-     * @return Collection<QuantitationType>
-     */
     private Collection<QuantitationType> getContinuousQuantitationTypes( HttpServletRequest request ) {
-        Long id = null;
+        Long id;
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
@@ -439,12 +348,8 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return types;
     }
 
-    /**
-     * @param expressionDataMatrix
-     * @return
-     */
     private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
-        Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> css = new HashSet<>();
         for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {
             CompositeSequence cs = el.getDesignElement();
             css.add( cs );
@@ -452,18 +357,13 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         return compositeSequenceService.getGenes( css );
     }
 
-    /**
-     * @param arrayDesigns
-     * @param searchIdsAsList
-     * @return
-     */
     private Collection<CompositeSequence> getProbesByGeneSymbols( Collection<ArrayDesign> arrayDesigns,
             List<String> searchIdsAsList ) {
         Collection<CompositeSequence> compositeSequences;
         Map<Gene, Collection<CompositeSequence>> genes2Probes = compositeSequenceGeneMapperService
                 .getGene2ProbeMapByOfficialSymbols( searchIdsAsList, arrayDesigns );
 
-        compositeSequences = new HashSet<CompositeSequence>();
+        compositeSequences = new HashSet<>();
         for ( Gene g : genes2Probes.keySet() ) {
             compositeSequences.addAll( genes2Probes.get( g ) );
             log.debug( "gene official symbol: " + g.getOfficialSymbol() + " has " + compositeSequences.size()
@@ -474,10 +374,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     /**
      * A cookie to store the user preferences.
-     * 
-     * @param request
-     * @param eevc
-     * @return ExpressionExperimentVisualizationCommand
      */
     private ExpressionExperimentVisualizationCommand loadCookie( HttpServletRequest request,
             ExpressionExperimentVisualizationCommand eevc ) {
@@ -528,6 +424,30 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
         eevc.setViewSampling( true );
         return eevc;
+    }
+
+    /**
+     * @author keshav
+     */
+    static class ExpressionExperimentVisualizationCookie extends ConfigurationCookie {
+
+        public ExpressionExperimentVisualizationCookie( ExpressionExperimentVisualizationCommand command ) {
+
+            super( COOKIE_NAME );
+
+            log.debug( "creating cookie" );
+
+            this.setProperty( "searchString", command.getSearchString() );
+            this.setProperty( "viewSampling", command.isViewSampling() );
+            this.setProperty( "maskMissing", command.isMaskMissing() );
+            this.setProperty( SEARCH_CRITERIA, command.getSearchCriteria() );
+            this.setProperty( "quantitationTypeName", command.getQuantitationType().getName() );
+
+            /* set cookie to expire after 2 days. */
+            this.setMaxAge( 172800 );
+            this.setComment( "User selections for visualization form" );
+        }
+
     }
 }
 

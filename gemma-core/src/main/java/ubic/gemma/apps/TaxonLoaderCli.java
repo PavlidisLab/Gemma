@@ -29,27 +29,14 @@ import java.util.Collection;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class TaxonLoaderCli extends AbstractCLIContextCLI {
 
     public static void main( String[] args ) {
         TaxonLoaderCli p = new TaxonLoaderCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "loadTaxa";
@@ -59,30 +46,23 @@ public class TaxonLoaderCli extends AbstractCLIContextCLI {
     public String getShortDesc() {
         return "Populate taxon tables";
     }
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.MISC;
     }
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
+
     @Override
     protected void buildOptions() {
-        return;
+
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         try {
             Exception err = processCommandLine( args );
-            if ( err != null ) return err;
+            if ( err != null )
+                return err;
             TaxonFetcher tf = new TaxonFetcher();
             Collection<LocalFile> files = tf.fetch();
             LocalFile names = null;

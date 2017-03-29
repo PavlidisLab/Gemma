@@ -18,16 +18,15 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * @author tvrossum
- * @version $Id$
  */
 public class ExpressionExperimentSetValueObject
         implements SecureValueObject, Comparable<ExpressionExperimentSetValueObject> {
@@ -66,12 +65,13 @@ public class ExpressionExperimentSetValueObject
     private boolean userOwned = false;
 
     public ExpressionExperimentSetValueObject() {
-        this.expressionExperimentIds = new HashSet<Long>();
+        this.expressionExperimentIds = new HashSet<>();
     }
 
     @Override
     public int compareTo( ExpressionExperimentSetValueObject arg0 ) {
-        if ( this.getName() == null || arg0.getName() == null ) return 0;
+        if ( this.getName() == null || arg0.getName() == null )
+            return 0;
         return this.getName().compareTo( arg0.getName() );
     }
 
@@ -82,13 +82,18 @@ public class ExpressionExperimentSetValueObject
      */
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         ExpressionExperimentSetValueObject other = ( ExpressionExperimentSetValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
         return true;
     }
 
@@ -96,13 +101,25 @@ public class ExpressionExperimentSetValueObject
         return description;
     }
 
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public Collection<Long> getExpressionExperimentIds() {
         return expressionExperimentIds;
+    }
+
+    public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
+        this.expressionExperimentIds = expressionExperimentIds;
     }
 
     @Override
     public Long getId() {
         return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     @Override
@@ -111,24 +128,50 @@ public class ExpressionExperimentSetValueObject
     }
 
     @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
+    }
+
+    @Override
     public boolean getIsShared() {
         return shared;
+    }
+
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.shared = isShared;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     public Integer getSize() {
         return size;
+    }
+
+    public void setSize( Integer numExperiments ) {
+        this.size = numExperiments;
     }
 
     public Integer getNumWithCoexpressionAnalysis() {
         return numWithCoexpressionAnalysis;
     }
 
+    public void setNumWithCoexpressionAnalysis( Integer numWithCoexpressionAnalysis ) {
+        this.numWithCoexpressionAnalysis = numWithCoexpressionAnalysis;
+    }
+
     public Integer getNumWithDifferentialExpressionAnalysis() {
         return numWithDifferentialExpressionAnalysis;
+    }
+
+    public void setNumWithDifferentialExpressionAnalysis( Integer numWithDifferentialExpressionAnalysis ) {
+        this.numWithDifferentialExpressionAnalysis = numWithDifferentialExpressionAnalysis;
     }
 
     @Override
@@ -140,8 +183,16 @@ public class ExpressionExperimentSetValueObject
         return taxonId;
     }
 
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+
     public String getTaxonName() {
         return taxonName;
+    }
+
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;
     }
 
     @Override
@@ -150,15 +201,20 @@ public class ExpressionExperimentSetValueObject
     }
 
     @Override
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.userCanWrite = userCanWrite;
+    }
+
+    @Override
     public boolean getUserOwned() {
         return this.userOwned;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Object#hashCode()
-     */
+    @Override
+    public void setUserOwned( boolean isUserOwned ) {
+        this.userOwned = isUserOwned;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -171,64 +227,8 @@ public class ExpressionExperimentSetValueObject
         return modifiable;
     }
 
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
-        this.expressionExperimentIds = expressionExperimentIds;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    @Override
-    public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    @Override
-    public void setIsShared( boolean isShared ) {
-        this.shared = isShared;
-    }
-
     public void setModifiable( boolean modifiable ) {
         this.modifiable = modifiable;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setSize( Integer numExperiments ) {
-        this.size = numExperiments;
-    }
-
-    public void setNumWithCoexpressionAnalysis( Integer numWithCoexpressionAnalysis ) {
-        this.numWithCoexpressionAnalysis = numWithCoexpressionAnalysis;
-    }
-
-    public void setNumWithDifferentialExpressionAnalysis( Integer numWithDifferentialExpressionAnalysis ) {
-        this.numWithDifferentialExpressionAnalysis = numWithDifferentialExpressionAnalysis;
-    }
-
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
-    public void setTaxonName( String taxonName ) {
-        this.taxonName = taxonName;
-    }
-
-    @Override
-    public void setUserCanWrite( boolean userCanWrite ) {
-        this.userCanWrite = userCanWrite;
-    }
-
-    @Override
-    public void setUserOwned( boolean isUserOwned ) {
-        this.userOwned = isUserOwned;
     }
 
 }

@@ -19,18 +19,8 @@
 
 package ubic.gemma.web.controller.visualization;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -39,19 +29,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.EntityUtils;
 
+import java.util.*;
+
 /**
  * Stores expression profile data from one expression experiment for plotting.
- * 
+ *
  * @author kelsey, paul
- * @version $Id$
  */
 public class VisualizationValueObject {
 
-    private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
+    private static final String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
 
-    private static Log log = LogFactory.getLog( VisualizationValueObject.class );
+    private static final Log log = LogFactory.getLog( VisualizationValueObject.class );
 
-    private Map<Long, String> colorMap = new HashMap<Long, String>();
+    private final Map<Long, String> colorMap = new HashMap<>();
 
     private ExpressionExperimentValueObject eevo = null;
 
@@ -59,9 +50,8 @@ public class VisualizationValueObject {
 
     private Collection<FactorProfile> factorProfiles;
 
-    // (for labels)
     private List<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for
-                                                                   // colouring column headers)
+    // colouring column headers)
 
     /**
      * used for displaying factor info in heatmap
@@ -72,25 +62,23 @@ public class VisualizationValueObject {
 
     private List<String> sampleNames;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     public VisualizationValueObject() {
         super();
-        this.profiles = new HashSet<GeneExpressionProfile>();
+        this.profiles = new HashSet<>();
     }
 
-    /**
-     * @param vectors
-     * @param genes
-     * @param validatedProbeList
-     * @param minPvalue
-     */
     public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, Collection<GeneValueObject> genes,
             Double minPvalue, Collection<DifferentialExpressionValueObject> validatedProbes ) {
         this();
 
         Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
-        populateColorMap( new ArrayList<Long>( idMap.keySet() ) );
+        populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
-        Collection<Long> validatedProbeIdList = new ArrayList<Long>();
+        Collection<Long> validatedProbeIdList = new ArrayList<>();
         if ( validatedProbes != null && !validatedProbes.isEmpty() ) {
             for ( DifferentialExpressionValueObject devo : validatedProbes ) {
                 validatedProbeIdList.add( devo.getProbeId() );
@@ -101,13 +89,14 @@ public class VisualizationValueObject {
             if ( this.eevo == null ) {
                 setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
-                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
-                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+                throw new IllegalArgumentException(
+                        "All vectors have to have the same ee for this constructor. ee1: " + this.eevo.getId()
+                                + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
             String color = null;
             Collection<Long> vectorGeneids = vector.getGenes();
-            Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
+            Collection<GeneValueObject> vectorGenes = new HashSet<>();
             for ( Long g : idMap.keySet() ) {
                 if ( !vectorGeneids.contains( g ) ) {
                     continue;
@@ -130,17 +119,18 @@ public class VisualizationValueObject {
             }
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid, pValue );
 
-            if ( !profile.isAllMissing() ) profiles.add( profile );
+            if ( !profile.isAllMissing() )
+                profiles.add( profile );
 
         }
     }
 
     /**
-     * @param Vectors to be plotted (should come from a single expression experiment)
-     * @param genes Is list so that order is guaranteed. Need this so that colors are consistent.
+     * @param vectors            to be plotted (should come from a single expression experiment)
+     * @param genes              Is list so that order is guaranteed. Need this so that colors are consistent.
      * @param validatedProbeList Probes which are flagged as 'valid' in some sense. For example, in coexpression plots
-     *        these are probes that provided the coexpression evidence, to differentiate them from the ones which are
-     *        just being displayed because they assay the same gene.
+     *                           these are probes that provided the coexpression evidence, to differentiate them from the ones which are
+     *                           just being displayed because they assay the same gene.
      * @throws IllegalArgumentException if vectors are mixed between EEs.
      */
     public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<GeneValueObject> genes,
@@ -148,29 +138,24 @@ public class VisualizationValueObject {
         this( vectors, genes, validatedProbeList, null );
     }
 
-    /**
-     * @param vectors
-     * @param genes
-     * @param validatedProbeList
-     * @param minPvalue
-     */
     public VisualizationValueObject( Collection<DoubleVectorValueObject> vectors, List<GeneValueObject> genes,
             Collection<Long> validatedProbeIdList, Double minPvalue ) {
         this();
 
         Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( genes );
-        populateColorMap( new ArrayList<Long>( idMap.keySet() ) );
+        populateColorMap( new ArrayList<>( idMap.keySet() ) );
 
         for ( DoubleVectorValueObject vector : vectors ) {
             if ( this.eevo == null ) {
                 setEEwithPvalue( vector.getExpressionExperiment(), minPvalue );
             } else if ( !( this.eevo.getId().equals( vector.getExpressionExperiment().getId() ) ) ) {
-                throw new IllegalArgumentException( "All vectors have to have the same ee for this constructor. ee1: "
-                        + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
+                throw new IllegalArgumentException(
+                        "All vectors have to have the same ee for this constructor. ee1: " + this.eevo.getId()
+                                + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
             Collection<Long> vectorGeneids = vector.getGenes();
-            Collection<GeneValueObject> vectorGenes = new HashSet<GeneValueObject>();
+            Collection<GeneValueObject> vectorGenes = new HashSet<>();
 
             String color = "black";
             if ( genes != null && vectorGeneids != null ) {
@@ -192,14 +177,12 @@ public class VisualizationValueObject {
             GeneExpressionProfile profile = new GeneExpressionProfile( vector, vectorGenes, color, valid,
                     vector.getPvalue() );
 
-            if ( !profile.isAllMissing() ) profiles.add( profile );
+            if ( !profile.isAllMissing() )
+                profiles.add( profile );
 
         }
     }
 
-    /**
-     * @param dvvo
-     */
     public VisualizationValueObject( DoubleVectorValueObject dvvo ) {
         this();
         setEevo( dvvo.getExpressionExperiment() );
@@ -207,87 +190,23 @@ public class VisualizationValueObject {
         profiles.add( profile );
     }
 
-    public ExpressionExperimentValueObject getEevo() {
-        return eevo;
-    }
+    /* ********************************
+     * Public methods
+     * ********************************/
 
-    public LinkedHashMap<String, LinkedHashMap<String, String>> getFactorNames() {
-        return factorNames;
-    }
-
-    /**
-     * @return the factorProfiles
-     */
-    public Collection<FactorProfile> getFactorProfiles() {
-        return factorProfiles;
-    }
-
-    public List<List<String>> getFactorValues() {
-        return factorValues;
-    }
-
-    public List<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
-        return factorValueMaps;
-    }
-
-    public Collection<GeneExpressionProfile> getProfiles() {
-        return profiles;
-    }
-
-    /**
-     * @return the sampleNames
-     */
-    public List<String> getSampleNames() {
-        return sampleNames;
-    }
-
-    public void setEevo( ExpressionExperimentValueObject eevo ) {
-        this.eevo = eevo;
-    }
-
-    public void setEEwithPvalue( ExpressionExperimentValueObject ee, Double minP ) {
-        setEevo( ee );
-        this.eevo.setMinPvalue( minP );
-    }
-
-    public void setFactorNames( LinkedHashMap<String, LinkedHashMap<String, String>> factorNames2 ) {
-        this.factorNames = factorNames2;
-    }
-
-    /**
-     * @param factorProfiles the factorProfiles to set
-     */
-    public void setFactorProfiles( Collection<FactorProfile> factorProfiles ) {
-        this.factorProfiles = factorProfiles;
-    }
-
-    public void setFactorValues( List<List<String>> factorValues ) {
-        this.factorValues = factorValues;
-    }
-
-    public void setFactorValuesToNames( List<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
-        this.factorValueMaps = factorValueMaps2;
-    }
-
-    // ---------------------------------
-    // Getters and Setters
-    // ---------------------------------
-
-    public void setProfiles( Collection<GeneExpressionProfile> profiles ) {
-        this.profiles = profiles;
-    }
-
-    /**
-     * @param sampleNames the sampleNames to set
-     */
-    public void setSampleNames( List<String> sampleNames ) {
-        this.sampleNames = sampleNames;
+    @Override
+    public String toString() {
+        final int maxLen = 5;
+        return "VisualizationValueObject [" + ( eevo != null ? "eevo=" + eevo + "\n " : "" ) + (
+                factorProfiles != null ?
+                        factorProfiles.size() + " factorProfiles=\n" + toString( factorProfiles, 20 ) :
+                        "" ) + ( profiles != null ?
+                profiles.size() + " exp. profiles (show up to " + maxLen + "):\n" + toString( profiles, maxLen ) :
+                "" ) + "]";
     }
 
     /**
      * Initialize the factor profiles.
-     * 
-     * @param layout
      */
     public void setUpFactorProfiles(
             LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout ) {
@@ -296,31 +215,82 @@ public class VisualizationValueObject {
             return;
         }
 
-        Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> efs = new HashSet<>();
         for ( LinkedHashMap<ExperimentalFactor, Double> maps : layout.values() ) {
             efs.addAll( maps.keySet() );
         }
 
-        this.factorProfiles = new ArrayList<FactorProfile>();
+        this.factorProfiles = new ArrayList<>();
         for ( ExperimentalFactor experimentalFactor : efs ) {
             this.factorProfiles.add( new FactorProfile( experimentalFactor, layout ) );
         }
     }
 
-    @Override
-    public String toString() {
-        final int maxLen = 5;
-        return "VisualizationValueObject ["
-                + ( eevo != null ? "eevo=" + eevo + "\n " : "" )
-                + ( factorProfiles != null ? factorProfiles.size() + " factorProfiles=\n"
-                        + toString( factorProfiles, 20 ) : "" )
-                + ( profiles != null ? profiles.size() + " exp. profiles (show up to " + maxLen + "):\n"
-                        + toString( profiles, maxLen ) : "" ) + "]";
+    public ExpressionExperimentValueObject getEevo() {
+        return eevo;
     }
 
-    /**
-     * @param genes
-     */
+    public void setEevo( ExpressionExperimentValueObject eevo ) {
+        this.eevo = eevo;
+    }
+
+    public LinkedHashMap<String, LinkedHashMap<String, String>> getFactorNames() {
+        return factorNames;
+    }
+
+    public void setFactorNames( LinkedHashMap<String, LinkedHashMap<String, String>> factorNames2 ) {
+        this.factorNames = factorNames2;
+    }
+
+    public Collection<FactorProfile> getFactorProfiles() {
+        return factorProfiles;
+    }
+
+    public void setFactorProfiles( Collection<FactorProfile> factorProfiles ) {
+        this.factorProfiles = factorProfiles;
+    }
+
+    public List<List<String>> getFactorValues() {
+        return factorValues;
+    }
+
+    public void setFactorValues( List<List<String>> factorValues ) {
+        this.factorValues = factorValues;
+    }
+
+    public List<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
+        return factorValueMaps;
+    }
+
+    public void setFactorValuesToNames( List<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
+        this.factorValueMaps = factorValueMaps2;
+    }
+
+    public Collection<GeneExpressionProfile> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles( Collection<GeneExpressionProfile> profiles ) {
+        this.profiles = profiles;
+    }
+
+    public List<String> getSampleNames() {
+        return sampleNames;
+    }
+
+    public void setSampleNames( List<String> sampleNames ) {
+        this.sampleNames = sampleNames;
+    }
+
+    public void setEEwithPvalue( ExpressionExperimentValueObject ee, Double minP ) {
+        setEevo( ee );
+        this.eevo.setMinPvalue( minP );
+    }
+
+    /* ********************************
+     * PPrivate methods
+     * ********************************/
+
     private void populateColorMap( List<Long> genes ) {
         int i = 0;
         if ( genes.size() > colors.length ) {
@@ -337,7 +307,8 @@ public class VisualizationValueObject {
         builder.append( "[" );
         int i = 0;
         for ( Iterator<?> iterator = collection.iterator(); iterator.hasNext() && i < maxLen; i++ ) {
-            if ( i > 0 ) builder.append( ", " );
+            if ( i > 0 )
+                builder.append( ", " );
             builder.append( iterator.next() );
         }
         builder.append( "]\n" );

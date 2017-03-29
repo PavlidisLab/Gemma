@@ -69,8 +69,7 @@ public abstract class AuditEventType implements java.io.Serializable {
     @Override
     public int hashCode() {
         int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
+        hashCode = 29 * ( hashCode + ( id == null ? 0 : id.hashCode() ) );
         return hashCode;
     }
 

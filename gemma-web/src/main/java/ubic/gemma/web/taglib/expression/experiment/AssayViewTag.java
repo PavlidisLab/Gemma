@@ -18,79 +18,37 @@
  */
 package ubic.gemma.web.taglib.expression.experiment;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.jsp.JspException;
-import javax.servlet.jsp.tagext.TagSupport;
-
+import com.sdicons.json.mapper.JSONMapper;
+import com.sdicons.json.mapper.MapperException;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 
-import com.sdicons.json.mapper.JSONMapper;
-import com.sdicons.json.mapper.MapperException;
+import javax.servlet.jsp.JspException;
+import javax.servlet.jsp.tagext.TagSupport;
+import java.util.*;
 
 /**
  * Used to display table of biomaterials and bioassays. In edit mode this displays allows dragging bioassays around to
  * match up across platforms.
- * 
+ *
  * @author joseph
- * @version $Id$
  */
 public class AssayViewTag extends TagSupport {
-    /**
-     * @author pavlidis
-     * @version $Id$
-     */
-    static class BioMaterialComparator implements Comparator<BioMaterialValueObject> {
-
-        @Override
-        public int compare( BioMaterialValueObject arg0, BioMaterialValueObject arg1 ) {
-
-            return arg0.getName().compareTo( arg1.getName() );
-        }
-    }
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 8754490187937841260L;
-
     /**
      * How many 'extra' biomaterials to add to the editing table, so the user can assing bioassays to new biomaterials.
      */
     private static final int NUM_EXTRA_BIOMATERIALS = 12;
-
     private boolean edit = false;
-
     private Collection<BioAssayValueObject> bioAssays;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doEndTag()
-     */
     @Override
     public int doEndTag() {
         return EVAL_PAGE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
-     */
     @Override
     public int doStartTag() throws JspException {
 
@@ -140,15 +98,16 @@ public class AssayViewTag extends TagSupport {
 
         }
         int materialCount = bioAssayMap.keySet().size();
-        buf.append( "<table class='list'><tr>" );
+        buf.append( "<table class='detail row-separated odd-gray'><tr>" );
         buf.append( "<th>" + materialCount + " BioMaterials</th>" );
         // display arraydesigns
         for ( ArrayDesignValueObject design : designs ) {
             Long count = arrayMaterialCount.get( design );
             buf.append( "<th>" + count
-                    + " BioAssays on<br /><a target='_blank' href=\"/Gemma/arrays/showArrayDesign.html?id="
-                    + design.getId() + "\" title=\"" + design.getName() + "\" >"
-                    + ( design.getShortName() == null ? design.getName() : design.getShortName() ) + "</a></th>" );
+                    + " BioAssays on<br /><a target='_blank' href=\"/Gemma/arrays/showArrayDesign.html?id=" + design
+                    .getId() + "\" title=\"" + design.getName() + "\" >" + ( design.getShortName() == null ?
+                    design.getName() :
+                    design.getShortName() ) + "</a></th>" );
         }
         buf.append( "</tr>" );
 
@@ -171,8 +130,8 @@ public class AssayViewTag extends TagSupport {
                 buf.append( "<tr class='odd' align=justify>" );
             }
 
-            String bmLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> "
-                    + material.getName() + "</a>";
+            String bmLink = "<a href='/Gemma/bioMaterial/showBioMaterial.html?id=" + material.getId() + "'> " + material
+                    .getName() + "</a>";
             buf.append( "<td>" + bmLink + "</td>" );
 
             Map<ArrayDesignValueObject, Collection<BioAssayValueObject>> assayMap = bioAssayMap.get( material );
@@ -191,9 +150,10 @@ public class AssayViewTag extends TagSupport {
 
                     if ( assayMap.get( design ).size() > 1 ) {
                         String link = "<a title='" + StringUtils.join( tooltips.toArray(), "\n" )
-                                + "' href='/Gemma/bioAssay/showAllBioAssays.html?id="
-                                + StringUtils.join( ids.toArray(), "," ) + "'> (list) </a>";
-                        buf.append( "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
+                                + "' href='/Gemma/bioAssay/showAllBioAssays.html?id=" + StringUtils
+                                .join( ids.toArray(), "," ) + "'> (list) </a>";
+                        buf.append(
+                                "<td>" + assayMap.get( design ).size() + link + "&nbsp;" + elementCount + "</td>\n" );
 
                     } else {
 
@@ -205,11 +165,12 @@ public class AssayViewTag extends TagSupport {
                         BioAssayValueObject assay = ( ( List<BioAssayValueObject> ) assayMap.get( design ) ).get( 0 );
                         String shortDesc = StringUtils.abbreviate( assay.getDescription(), 60 );
                         String link = "<a target=\"_blank\" title='" + shortDesc
-                                + "' href='/Gemma/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>"
-                                + assay.getName() + "</a>";
-                        String editAttributes = " align='left' class='dragItem' id='bioassay." + assay.getId()
-                                + "' material='" + material.getId() + "' assay='" + assay.getId() + "' arrayDesign='"
-                                + design.getId() + "'";
+                                + "' href='/Gemma/bioAssay/showBioAssay.html?id=" + assay.getId() + "'>" + assay
+                                .getName() + "</a>";
+                        String editAttributes =
+                                " align='left' class='dragItem' id='bioassay." + assay.getId() + "' material='"
+                                        + material.getId() + "' assay='" + assay.getId() + "' arrayDesign='" + design
+                                        .getId() + "'";
                         if ( edit && designs.size() > 1 ) {
                             buf.append( "\n<td><span " + editAttributes + ">" + image + link );
                         } else {
@@ -257,9 +218,6 @@ public class AssayViewTag extends TagSupport {
         return SKIP_BODY;
     }
 
-    /**
-     * @param edit
-     */
     public void setEdit( String edit ) {
         if ( edit.equalsIgnoreCase( "true" ) ) {
             this.edit = true;
@@ -268,22 +226,13 @@ public class AssayViewTag extends TagSupport {
         }
     }
 
-    /**
-     * @param expressionExperiment
-     */
     public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
         this.bioAssays = bioAssays;
     }
 
     /**
      * Add a 'unused' biomaterial/bioassay combination to the table.
-     * 
-     * @param buf
-     * @param assayToMaterial
-     * @param emptyCount
-     * @param material
-     * @param image
-     * @param design
+     *
      * @return revised count of number of empty items.
      */
     private int addEmpty( StringBuilder buf, Map<String, String> assayToMaterial, int emptyCount,
@@ -304,11 +253,6 @@ public class AssayViewTag extends TagSupport {
         return emptyCount;
     }
 
-    /**
-     * @param assayToMaterial
-     * @param bioAssayId
-     * @param bioMaterialId
-     */
     private void addMaterial( Map<String, String> assayToMaterial, Long bioAssayId, Long bioMaterialId ) {
         String bioAssayStr = "";
         if ( bioAssayId == null ) {
@@ -323,12 +267,6 @@ public class AssayViewTag extends TagSupport {
 
     /**
      * Add places for completely new biomaterials to be added. These are the row labels.
-     * 
-     * @param buf
-     * @param designs
-     * @param assayToMaterial
-     * @param count
-     * @param emptyCount
      */
     private void addNovelBiomaterialSlots( StringBuilder buf, Set<ArrayDesignValueObject> designs,
             Map<String, String> assayToMaterial, int count, int emptyCount ) {
@@ -355,6 +293,18 @@ public class AssayViewTag extends TagSupport {
             }
             buf.append( "</tr>" );
             count++;
+        }
+    }
+
+    /**
+     * @author pavlidis
+     */
+    static class BioMaterialComparator implements Comparator<BioMaterialValueObject> {
+
+        @Override
+        public int compare( BioMaterialValueObject arg0, BioMaterialValueObject arg1 ) {
+
+            return arg0.getName().compareTo( arg1.getName() );
         }
     }
 }

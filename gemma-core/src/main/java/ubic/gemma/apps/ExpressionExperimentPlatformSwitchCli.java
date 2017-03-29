@@ -18,11 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import java.util.Collection;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -34,15 +31,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Switch the array design used to the merged one.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
+    private String arrayDesignName = null;
+    private ArrayDesignService arrayDesignService;
+    private ExpressionExperimentPlatformSwitchService serv;
+
     public static void main( String[] args ) {
         ExpressionExperimentPlatformSwitchCli p = new ExpressionExperimentPlatformSwitchCli();
         Exception e = p.doWork( args );
@@ -51,16 +48,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         }
     }
 
-    String arrayDesignName = null;
-    ArrayDesignService arrayDesignService;
-
-    ExpressionExperimentPlatformSwitchService serv;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "switchExperimentPlatform";
@@ -75,11 +62,8 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option arrayDesignOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Array design" )
-                .withDescription(
-                        "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
+                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
@@ -109,34 +93,6 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
 
     }
 
-    /**
-     * code copied from
-     * 
-     * @param name of the array design to find.
-     * @return
-     */
-    protected ArrayDesign locateArrayDesign( String name ) {
-
-        ArrayDesign arrayDesign = null;
-
-        Collection<ArrayDesign> byname = arrayDesignService.findByName( name.trim().toUpperCase() );
-        if ( byname.size() > 1 ) {
-            throw new IllegalArgumentException( "Ambiguous name: " + name );
-        } else if ( byname.size() == 1 ) {
-            arrayDesign = byname.iterator().next();
-        }
-
-        if ( arrayDesign == null ) {
-            arrayDesign = arrayDesignService.findByShortName( name );
-        }
-
-        if ( arrayDesign == null ) {
-            log.error( "No arrayDesign " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return arrayDesign;
-    }
-
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -154,7 +110,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
             AuditTrailService ats = this.getBean( AuditTrailService.class );
             AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             if ( this.arrayDesignName != null ) {
-                ArrayDesign ad = locateArrayDesign( this.arrayDesignName );
+                ArrayDesign ad = locateArrayDesign( this.arrayDesignName, arrayDesignService );
                 if ( ad == null ) {
                     log.error( "Unknown array design" );
                     bail( ErrorCode.INVALID_OPTION );
