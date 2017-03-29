@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.tasks.analysis.expression.AutoTaggerTaskCommand;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -74,15 +73,6 @@ public class AnnotationController {
 
     public Collection<OntologyTerm> getCategoryTerms() {
         return ontologyService.getCategoryTerms();
-    }
-
-    public String autoTag( Long eeId ) {
-
-        if ( eeId == null ) {
-            throw new IllegalArgumentException( "Id cannot be null" );
-        }
-
-        return taskRunningService.submitRemoteTask( new AutoTaggerTaskCommand( eeId ) );
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {

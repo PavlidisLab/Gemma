@@ -508,7 +508,6 @@
 
 	<bean id="annotationController" class="ubic.gemma.web.controller.expression.experiment.AnnotationController">
 		<dwr:remote javascript="AnnotationController">
-			<dwr:include method="autoTag" />
 			<dwr:include method="findTerm" />
 			<dwr:include method="getCategoryTerms" />
 			<dwr:include method="createExperimentTag" />

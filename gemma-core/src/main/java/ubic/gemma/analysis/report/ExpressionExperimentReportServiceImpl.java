@@ -241,7 +241,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
 
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
-        Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
         Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
         Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
@@ -328,16 +327,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             if ( lastArrayDesignUpdates.containsKey( id ) ) {
                 Date date = lastArrayDesignUpdates.get( id );
                 eeVo.setDateArrayDesignLastUpdated( date );
-            }
-
-            if ( autotaggerEvents.containsKey( ee ) ) {
-                AuditEvent taggerEvent = autotaggerEvents.get( ee );
-
-                if ( taggerEvent.getDate().after( mostRecentDate ) ) {
-                    mostRecentDate = taggerEvent.getDate();
-                }
-
-                eeVo.setAutoTagDate( taggerEvent.getDate() );
             }
 
             if ( sampleRemovalEvents.containsKey( id ) ) {

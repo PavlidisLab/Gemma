@@ -20,7 +20,7 @@ package ubic.gemma.loader.expression.geo.service;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hsqldb.lib.StringInputStream;
+import org.apache.tools.ant.filters.StringInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -244,8 +244,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
     private void initializeLocalInfo() {
         File f = getInfoStoreFile();
         if ( f.exists() ) {
-            try (FileInputStream fis = new FileInputStream( f );
-                    ObjectInputStream ois = new ObjectInputStream( fis )) {
+            try (FileInputStream fis = new FileInputStream( f ); ObjectInputStream ois = new ObjectInputStream( fis )) {
 
                 this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
                 ois.close();

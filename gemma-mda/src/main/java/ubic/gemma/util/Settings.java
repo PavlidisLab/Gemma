@@ -148,13 +148,6 @@ public class Settings {
             log.debug( "version.properties not found" );
         }
 
-        try {
-            PropertiesConfiguration pc = ConfigUtils.loadConfig( "geommtx.properties" );
-            config.addConfiguration( pc );
-        } catch ( Exception e ) {
-            // no big deal...hopefully.
-        }
-
         // step through the result and do a final round of variable substitution. FIXME is this needed?
         for ( Iterator<String> it = config.getKeys(); it.hasNext(); ) {
             String key = it.next();

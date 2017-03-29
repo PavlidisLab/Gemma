@@ -41,7 +41,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private static final long serialVersionUID = -5678747537830051610L;
     private String accession;
     private Integer arrayDesignCount;
-    private Date autoTagDate;
     private String batchFetchEventType;
     private Integer bioAssayCount;
     private Integer bioMaterialCount = null;
@@ -118,8 +117,8 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
         this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
                 otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastNoteUpdateEvent,
-                otherBean.accession, otherBean.arrayDesignCount, otherBean.autoTagDate, otherBean.batchFetchEventType,
-                otherBean.bioAssayCount, otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
+                otherBean.accession, otherBean.arrayDesignCount, otherBean.batchFetchEventType, otherBean.bioAssayCount,
+                otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
                 otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,
                 otherBean.dateArrayDesignLastUpdated, otherBean.dateBatchFetch, otherBean.dateCached,
                 otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis, otherBean.dateMissingValueAnalysis,
@@ -139,12 +138,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
             Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
-            AuditEventValueObject noteEvent, String accession, Integer arrayDesignCount, Date autoTagDate,
-            String batchFetchEventType, Integer bioAssayCount, Integer bioMaterialCount, String clazz,
-            Integer coexpressionLinkCount, Boolean currentUserHasWritePermission, Boolean currentUserIsOwner,
-            Date dateArrayDesignLastUpdated, Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis,
-            Date dateLinkAnalysis, Date dateMissingValueAnalysis, Date datePcaAnalysis,
-            Date dateProcessedDataVectorComputation, Integer designElementDataVectorCount,
+            AuditEventValueObject noteEvent, String accession, Integer arrayDesignCount, String batchFetchEventType,
+            Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
+            Boolean currentUserHasWritePermission, Boolean currentUserIsOwner, Date dateArrayDesignLastUpdated,
+            Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis, Date dateLinkAnalysis,
+            Date dateMissingValueAnalysis, Date datePcaAnalysis, Date dateProcessedDataVectorComputation,
+            Integer designElementDataVectorCount,
             Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses,
             Long experimentalDesign, String externalDatabase, String externalUri, Boolean hasBothIntensities,
             Boolean hasCoexpressionAnalysis, Boolean hasDifferentialExpressionAnalysis, Boolean hasEitherIntensity,
@@ -158,7 +157,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
         this.accession = accession;
         this.arrayDesignCount = arrayDesignCount;
-        this.autoTagDate = autoTagDate;
         this.batchFetchEventType = batchFetchEventType;
         this.bioAssayCount = bioAssayCount;
         this.bioMaterialCount = bioMaterialCount;
@@ -272,14 +270,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setArrayDesignCount( Integer arrayDesignCount ) {
         this.arrayDesignCount = arrayDesignCount;
-    }
-
-    public Date getAutoTagDate() {
-        return autoTagDate;
-    }
-
-    public void setAutoTagDate( Date date ) {
-        this.autoTagDate = date;
     }
 
     public String getBatchFetchEventType() {

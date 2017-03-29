@@ -98,9 +98,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
       name : "dateBatchFetch",
       type : 'date'
    }, {
-      name : "autoTagDate",
-      type : 'date'
-   }, {
       name : "linkAnalysisEventType"
    }, {
       name : "processedDataVectorComputationEventType"
@@ -184,22 +181,6 @@ Gemma.EEManager = Ext.extend( Ext.Component, {
                'showLogButton' : true,
                'showBackgroundButton' : true
             } );
-         },
-         errorHandler : eeManager.onTaskSubmissionError
-      } );
-   },
-
-   autoTag : function( id ) {
-      var eeManager = this;
-      AnnotationController.autoTag( id, {
-         callback : function( taskId ) {
-            var task = new Gemma.ObservableSubmittedTask( {
-               'taskId' : taskId
-            } );
-            task.on( 'task-completed', function( payload ) {
-               eeManager.fireEvent( 'tagsUpdated', payload );
-            } );
-            task.showTaskProgressWindow( {} );
          },
          errorHandler : eeManager.onTaskSubmissionError
       } );

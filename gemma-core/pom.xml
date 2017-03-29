@@ -159,11 +159,6 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>chibi</groupId>
-			<artifactId>GEOMMTx</artifactId>
-			<version>1.2.2</version>
-		</dependency>
-		<dependency>
 			<groupId>aopalliance</groupId>
 			<artifactId>aopalliance</artifactId>
 			<version>1.0</version>
