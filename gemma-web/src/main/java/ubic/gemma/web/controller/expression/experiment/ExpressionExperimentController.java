@@ -1425,6 +1425,9 @@ public class ExpressionExperimentController {
                 eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
+            case 12:
+                eeVOsToKeep = returnNeedsAttention( eeValObjectCol );
+                break;
             default:
                 throw new IllegalArgumentException( "Unknown filter: " + filter );
 
@@ -1816,6 +1819,21 @@ public class ExpressionExperimentController {
 
         for ( ExpressionExperimentValueObject eevo : ees ) {
             if ( eevo.getTroubled() ) {
+                troubled.add( eevo );
+            }
+        }
+
+        return troubled;
+    }
+
+    /**
+     * Read the needs attention flag in each ExpressionExperimentValueObject and return only those object for which it is true
+     */
+    private List<ExpressionExperimentValueObject> returnNeedsAttention( Collection<ExpressionExperimentValueObject> ees ) {
+        List<ExpressionExperimentValueObject> troubled = new ArrayList<>();
+
+        for ( ExpressionExperimentValueObject eevo : ees ) {
+            if ( eevo.getNeedsAttention() ) {
                 troubled.add( eevo );
             }
         }

@@ -882,7 +882,8 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                     data: [[0, 'No filter'], [1, 'Need diff. expression analysis'],
                         [2, 'Need coexpression analysis'], [3, 'Has diff. expression analysis'],
                         [4, 'Has coexpression analysis'], [5, 'Troubled'], [6, 'No factors'], [7, 'No tags'],
-                        [8, 'Needs batch info'], [9, 'Has batch info'], [10, 'Needs PCA'], [11, 'Has PCA']]
+                        [8, 'Needs batch info'], [9, 'Has batch info'], [10, 'Needs PCA'], [11, 'Has PCA'],
+                        [12, 'Needs curators attention']]
                 }),
                 valueField: 'filterType',
                 displayField: 'displayText',
