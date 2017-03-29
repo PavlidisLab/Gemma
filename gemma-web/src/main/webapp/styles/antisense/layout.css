@@ -17,7 +17,7 @@ div#page {
 /* HEADER */
 div#headerclearnopadding {
 	margin: 0 0 2em 0;
-	padding: 0px;
+	padding: 0;
 	text-align: left;
 	height: 50px; /* needed by IE 7 */
 	background-position: right;
@@ -39,13 +39,13 @@ div#headerRight {
 
 div#search {
 	float: right;
-	margin: 0px;
+	margin: 0;
 	padding: 2px 10px 10px 10px;
 }
 
 /* END HEADER */ /* CONTENT */
 div#content {
-	padding-left: 0px;
+	padding-left: 0;
 	text-align: left;
 }
 
@@ -55,7 +55,7 @@ body#error #content {
 
 /* MAIN */
 div#main {
-	padding-left: 0px;
+	padding-left: 0;
 }
 
 div.padded {
@@ -85,7 +85,7 @@ div#sub ul {
 
 div#sub ul li {
 	list-style-type: none;
-	margin-left: 0px;
+	margin-left: 0;
 	padding-bottom: 10px;
 }
 
@@ -93,7 +93,7 @@ div#sub ul li {
 div#footer {
 	color: #666666;
 	width: 100%;
-	margin: 0px;
+	margin: 0;
 	padding-top: 30px;
 	text-align: left;
 	font-size: 0.9em;
@@ -146,12 +146,10 @@ div.pleft-mbot {
 }
 
 .datasummary th {
-	border-width: 1px 1px 1px 1px;
-	padding: 0px;
-	border-style: outset outset outset outset;
-	border-color: blue blue blue blue;
+	padding: 0;
+	border: 1px outset blue;
 	background-color: white;
-	-moz-border-radius: 0px 0px 0px 0px;
+	-moz-border-radius: 0 0 0 0;
 }
 
 .datasummary td {
@@ -161,12 +159,10 @@ div.pleft-mbot {
 }
 
 .datasummary td {
-	border-width: 1px 1px 1px 1px;
-	padding: 0px;
-	border-style: none none none none;
-	border-color: gray gray gray gray;
+	padding: 0;
+	border: 1px none gray;
 	background-color: white;
-	-moz-border-radius: 0px 0px 0px 0px;
+	-moz-border-radius: 0 0 0 0;
 }
 
 .v-padded {
@@ -176,7 +172,7 @@ div.pleft-mbot {
 
 .table-nice-wrapper table {
 	border-collapse: collapse;
-	border-spacing: 0px;
+	border-spacing: 0;
 }
 
 .table-nice-wrapper table td {
@@ -215,17 +211,17 @@ table.info-boxes>tbody>tr>td:nth-child(2) {
 table.row-separated {
 	padding: 2px 0 2px 0;
 	border-collapse: collapse;
-	border-spacing: 0px;
+	border-spacing: 0;
 }
 
 table.row-separated td {
-	padding: 5px 0px 5px 0px;
+	padding: 5px 0 5px 0;
 	border-bottom: 1px solid #cccccc;
 	vertical-align: middle;
 }
 
 table.row-separated tr.last-row td {
-	border: 0px;
+	border: 0;
 }
 
 table.row-separated .buttonBar {
@@ -233,21 +229,20 @@ table.row-separated .buttonBar {
 }
 
 hr.normal {
-	marging: 15px 0;
+	margin: 15px 0;
 	border : 0;
 	clear: both;
 	display: block;
 	width: 100%;
 	background-color: #cccccc;
 	height: 1px;
-	border: 0;
 }
 
 .x-form-item:nth-child(odd){
 	vertical-align: bottom;
 	/* border-bottom: solid 1px #eeeeee; */
 	background: #f4f4f4;
-	padding: 0px 0px;
+	padding: 0;
 	width: 100%;
 	text-align: left;
 }
@@ -279,3 +274,72 @@ i[class*=qtp]{
 	background-color: white;
 }
 
+/* introduced for curation tab */
+.chb-correction{
+	position: relative;
+	top: 3px;
+}
+
+.curationNote-label{
+	display: block;
+}
+
+.width110{
+	display: inline-block;
+	width: 110px;
+}
+
+.width130{
+	display: inline-block;
+	width: 130px;
+}
+
+.width150{
+	display: inline-block;
+	width: 150px;
+}
+.width170{
+	display: inline-block;
+	width: 170px;
+}
+
+.width190{
+	display: inline-block;
+	width: 190px;
+}
+
+.fa-custom-ext:before{
+	content: "\f071";
+	font-family: FontAwesome, monospace;
+	font-style: normal;
+}
+
+.fa-custom-exc:before{
+	content: "\f06a";
+	font-family: FontAwesome, monospace;
+	font-style: normal;
+}
+
+.green{
+	color: #3A3;
+}
+
+.gold{
+	color: gold;
+}
+
+.red{
+	color: #DD2222;
+}
+
+.gray-red{
+	color: #8e5a57;
+}
+
+.dark-gray{
+	color: darkgray;
+}
+
+.bold{
+	font-weight: bold;
+}

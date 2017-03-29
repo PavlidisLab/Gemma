@@ -112,7 +112,7 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
         ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
                 .load( ExperimentalDesignImpl.class, experimentalDesignId );
 
-        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee where ee.experimentalDesign = :ed";
+        final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
         List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );
 
         if ( results.size() == 0 ) {

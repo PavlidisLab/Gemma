@@ -26,35 +26,37 @@ import org.springframework.security.access.annotation.Secured;
  * Creates reports that can be shown on the web pages or in social media feeds.
  * 
  * @author paul
- * @version $Id$
  */
 public interface WhatsNewService {
 
     /**
      * save the report from last week.
-     * 
-     * @param date
+     *
      */
     @Secured({ "GROUP_AGENT" })
-    public void generateWeeklyReport();
+    void generateWeeklyReport();
 
     /**
      * save the report from the date specified.
-     * 
-     * @param date
+     *
      */
-    public void saveReport( Date date );
+    void saveReport( Date date );
 
     /**
-     * @param date
+     *
+     * @return new or updated objects from within one week ago.
+     */
+    WhatsNew getReport();
+
+    /**
      * @return representing the updated or new objects.
      */
-    public WhatsNew getReport( Date date );
+    WhatsNew getReport( Date date );
 
     /**
      * Retrieve the latest WhatsNew report.
      * 
      * @return WhatsNew the latest WhatsNew report cache.
      */
-    public WhatsNew retrieveReport();
+    WhatsNew retrieveReport();
 }

@@ -22,165 +22,72 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+
+import java.util.*;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public class ExpressionExperimentValueObject implements Comparable<ExpressionExperimentValueObject>, SecureValueObject {
+public class ExpressionExperimentValueObject extends AbstractCuratableValueObject
+        implements Comparable<ExpressionExperimentValueObject>, SecureValueObject {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5678747537830051610L;
-
-    /**
-     * @param collection
-     * @return
-     */
-    public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
-            Collection<? extends BioAssaySet> collection ) {
-        Collection<ExpressionExperimentValueObject> result = new ArrayList<>();
-        for ( BioAssaySet ee : collection ) {
-            result.add( new ExpressionExperimentValueObject( ee ) );
-        }
-        return result;
-    }
-
-    /**
-     * @param collection
-     * @return
-     */
-    public static List<ExpressionExperimentValueObject> convert2ValueObjectsOrdered(
-            List<ExpressionExperiment> collection ) {
-        List<ExpressionExperimentValueObject> result = new ArrayList<>();
-        for ( BioAssaySet ee : collection ) {
-            result.add( new ExpressionExperimentValueObject( ee ) );
-        }
-        return result;
-    }
-
     private String accession;
-
     private Integer arrayDesignCount;
-
-    private Date autoTagDate;
-
     private String batchFetchEventType;
-
     private Integer bioAssayCount;
-
     private Integer bioMaterialCount = null;
-
     private String clazz;
-
     private Integer coexpressionLinkCount = null;
-
     private Boolean currentUserHasWritePermission = null;
-
     private Boolean currentUserIsOwner = null;
-
     private Date dateArrayDesignLastUpdated;
-
     private Date dateBatchFetch;
-
     private Date dateCached;
-
-    private Date dateCreated;
-
     private Date dateDifferentialAnalysis;
-
-    private Date dateLastUpdated;
-
     private Date dateLinkAnalysis;
-
     private Date dateMissingValueAnalysis;
-
     private Date datePcaAnalysis;
-
     private Date dateProcessedDataVectorComputation;
-
     private Integer designElementDataVectorCount;
-
     private Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses = new HashSet<>();
-
     private Long experimentalDesign;
-
     private String externalDatabase;
-
     private String externalUri;
-
     private Boolean hasBothIntensities = null;
-
     private Boolean hasCoexpressionAnalysis = null;
-
     private Boolean hasDifferentialExpressionAnalysis = null;
-
     private Boolean hasEitherIntensity = null;
-
     private Boolean hasProbeSpecificForQueryGene;
-
-    private Long id;
-
     private String investigators;
-
     private Boolean isPublic = null;
-
     private Boolean isShared = false;
-
     private Boolean isSubset = false;
-
     private String linkAnalysisEventType;
-
     private Double minPvalue;
-
     private String missingValueAnalysisEventType;
-
     private String name;
-
     private Integer numAnnotations;
-
     private Integer numPopulatedFactors;
-
     private Long parentTaxonId;
-
     private String pcaAnalysisEventType;
-
     private String processedDataVectorComputationEventType;
-
     private Integer processedExpressionVectorCount = null;
-
     private Integer pubmedId;
-
     private Collection<AuditEventValueObject> sampleRemovedFlags;
-
     private String shortName;
-
     private String source;
-
     private Long sourceExperiment;
-
     private String taxon;
-
     private Long taxonId;
-
     private String technologyType;
-
-    private Boolean troubled = false;
-
-    private String troubleDetails = "(Reason for trouble not populated)";
-
-    private Boolean validated = false;
 
     public ExpressionExperimentValueObject() {
     }
@@ -203,107 +110,120 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
 
     /**
      * Copies constructor from other ExpressionExperimentValueObject
-     * 
+     *
      * @param otherBean, cannot be <code>null</code>
      * @throws NullPointerException if the argument is <code>null</code>
      */
     public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), otherBean.getExternalDatabase(), otherBean.getExternalUri(),
-                otherBean.getSource(), otherBean.getAccession(), otherBean.getBioAssayCount(), otherBean.getTaxon(),
-                otherBean.getTaxonId(), otherBean.getBioMaterialCount(), otherBean.getDesignElementDataVectorCount(),
-                otherBean.getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
-                otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidated(), otherBean.getTechnologyType(),
-                otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
-                otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.getIsPublic(),
-                otherBean.getUserCanWrite(), otherBean.getClazz(), otherBean.getSourceExperiment(),
-                otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getDateCreated(),
-                otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(),
-                otherBean.getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
-                otherBean.getDateLinkAnalysis(), otherBean.getDateProcessedDataVectorComputation(),
-                otherBean.getDateMissingValueAnalysis(), otherBean.getProcessedExpressionVectorCount(),
-                otherBean.getDateLastUpdated(), otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(),
-                otherBean.getMinPvalue(), otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(),
-                otherBean.getAutoTagDate(), otherBean.getDifferentialExpressionAnalyses(),
-                otherBean.getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
-                otherBean.getBatchFetchEventType(), otherBean.getTroubleDetails(), otherBean.isSubset(),
-                otherBean.getParentTaxonId(), otherBean.getUserOwned(), otherBean.getIsShared() );
+        this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
+                otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastNoteUpdateEvent,
+                otherBean.accession, otherBean.arrayDesignCount, otherBean.batchFetchEventType, otherBean.bioAssayCount,
+                otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
+                otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,
+                otherBean.dateArrayDesignLastUpdated, otherBean.dateBatchFetch, otherBean.dateCached,
+                otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis, otherBean.dateMissingValueAnalysis,
+                otherBean.datePcaAnalysis, otherBean.dateProcessedDataVectorComputation,
+                otherBean.designElementDataVectorCount, otherBean.differentialExpressionAnalyses,
+                otherBean.experimentalDesign, otherBean.externalDatabase, otherBean.externalUri,
+                otherBean.hasBothIntensities, otherBean.hasCoexpressionAnalysis,
+                otherBean.hasDifferentialExpressionAnalysis, otherBean.hasEitherIntensity,
+                otherBean.hasProbeSpecificForQueryGene, otherBean.id, otherBean.investigators, otherBean.isPublic,
+                otherBean.isShared, otherBean.isSubset, otherBean.linkAnalysisEventType, otherBean.minPvalue,
+                otherBean.missingValueAnalysisEventType, otherBean.name, otherBean.numAnnotations,
+                otherBean.numPopulatedFactors, otherBean.parentTaxonId, otherBean.pcaAnalysisEventType,
+                otherBean.processedDataVectorComputationEventType, otherBean.processedExpressionVectorCount,
+                otherBean.pubmedId, otherBean.sampleRemovedFlags, otherBean.shortName, otherBean.source,
+                otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType );
     }
 
-    public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
-            String source, String accession, Integer bioAssayCount, String taxon, Long taxonId,
-            Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
-            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, Boolean validatedFlag, String technologyType,
-            Boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
-            Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, Boolean isPublic,
-            Boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
-            String investigators, Date dateCreated, Boolean troubleFlag, Integer coexpressionLinkCount,
-            String processedDataVectorComputationEventType, String missingValueAnalysisEventType, Date dateLinkAnalysis,
-            Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
-            Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
-            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity, Long experimentalDesign,
-            Date autoTagDate, Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses,
-            Date batchAnalysisDate, Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType,
-            String troubleDetails, Boolean isSubset, Long parentTaxonId, Boolean currentUserIsOwner,
-            Boolean isShared ) {
-        this.id = id;
-        this.name = name;
+    public ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
+            Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
+            AuditEventValueObject noteEvent, String accession, Integer arrayDesignCount, String batchFetchEventType,
+            Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
+            Boolean currentUserHasWritePermission, Boolean currentUserIsOwner, Date dateArrayDesignLastUpdated,
+            Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis, Date dateLinkAnalysis,
+            Date dateMissingValueAnalysis, Date datePcaAnalysis, Date dateProcessedDataVectorComputation,
+            Integer designElementDataVectorCount,
+            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses,
+            Long experimentalDesign, String externalDatabase, String externalUri, Boolean hasBothIntensities,
+            Boolean hasCoexpressionAnalysis, Boolean hasDifferentialExpressionAnalysis, Boolean hasEitherIntensity,
+            Boolean hasProbeSpecificForQueryGene, Long id, String investigators, Boolean isPublic, Boolean isShared,
+            Boolean isSubset, String linkAnalysisEventType, Double minPvalue, String missingValueAnalysisEventType,
+            String name, Integer numAnnotations, Integer numPopulatedFactors, Long parentTaxonId,
+            String pcaAnalysisEventType, String processedDataVectorComputationEventType,
+            Integer processedExpressionVectorCount, Integer pubmedId,
+            Collection<AuditEventValueObject> sampleRemovedFlags, String shortName, String source,
+            Long sourceExperiment, String taxon, Long taxonId, String technologyType ) {
+        super( id, lastUpdated, troubled, troubledEvent, needsAttention, needsAttentionEvent, curationNote, noteEvent );
+        this.accession = accession;
+        this.arrayDesignCount = arrayDesignCount;
+        this.batchFetchEventType = batchFetchEventType;
+        this.bioAssayCount = bioAssayCount;
+        this.bioMaterialCount = bioMaterialCount;
+        this.clazz = clazz;
+        this.coexpressionLinkCount = coexpressionLinkCount;
+        this.currentUserHasWritePermission = currentUserHasWritePermission;
+        this.currentUserIsOwner = currentUserIsOwner;
+        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
+        this.dateBatchFetch = dateBatchFetch;
+        this.dateCached = dateCached;
+        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
+        this.dateLinkAnalysis = dateLinkAnalysis;
+        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
+        this.datePcaAnalysis = datePcaAnalysis;
+        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
+        this.designElementDataVectorCount = designElementDataVectorCount;
+        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
+        this.experimentalDesign = experimentalDesign;
         this.externalDatabase = externalDatabase;
         this.externalUri = externalUri;
-        this.source = source;
-        this.accession = accession;
-        this.bioAssayCount = bioAssayCount;
-        this.taxon = taxon;
-        this.taxonId = taxonId;
-        this.bioMaterialCount = bioMaterialCount;
-        this.designElementDataVectorCount = designElementDataVectorCount;
-        this.arrayDesignCount = arrayDesignCount;
-        this.shortName = shortName;
-        this.linkAnalysisEventType = linkAnalysisEventType;
-        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
-        this.validated = validatedFlag;
-        this.technologyType = technologyType;
         this.hasBothIntensities = hasBothIntensities;
-        this.numAnnotations = numAnnotations;
-        this.numPopulatedFactors = numPopulatedFactors;
-        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-        this.sampleRemovedFlags = sampleRemovedFlags;
+        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
+        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
+        this.hasEitherIntensity = hasEitherIntensity;
+        this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
+        this.investigators = investigators;
         this.isPublic = isPublic;
         this.isShared = isShared;
-        this.currentUserHasWritePermission = currentUserHasWritePermission;
-        this.clazz = clazz;
-        this.sourceExperiment = sourceExperiment;
-        this.pubmedId = pubmedId;
-        this.investigators = investigators;
-        this.dateCreated = dateCreated;
-        this.troubled = troubleFlag;
-        this.coexpressionLinkCount = coexpressionLinkCount;
-        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
-        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
-        this.dateLinkAnalysis = dateLinkAnalysis;
-        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
-        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
-        this.processedExpressionVectorCount = processedExpressionVectorCount;
-        this.dateLastUpdated = dateLastUpdated;
-        this.dateCached = dateCached;
-        this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
-        this.minPvalue = minPvalue;
-        this.hasEitherIntensity = hasEitherIntensity;
-        this.experimentalDesign = experimentalDesign;
-        this.autoTagDate = autoTagDate;
-        this.differentialExpressionAnalyses = diffAnalyses;
-        this.dateBatchFetch = batchAnalysisDate;
-        this.datePcaAnalysis = pcaAnalysisDate;
-        this.pcaAnalysisEventType = pcaAnalysisEventType;
-        this.batchFetchEventType = batchFetchEventType;
-        this.troubleDetails = troubleDetails;
         this.isSubset = isSubset;
+        this.linkAnalysisEventType = linkAnalysisEventType;
+        this.minPvalue = minPvalue;
+        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
+        this.name = name;
+        this.numAnnotations = numAnnotations;
+        this.numPopulatedFactors = numPopulatedFactors;
         this.parentTaxonId = parentTaxonId;
-        this.currentUserIsOwner = currentUserIsOwner;
+        this.pcaAnalysisEventType = pcaAnalysisEventType;
+        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
+        this.processedExpressionVectorCount = processedExpressionVectorCount;
+        this.pubmedId = pubmedId;
+        this.sampleRemovedFlags = sampleRemovedFlags;
+        this.shortName = shortName;
+        this.source = source;
+        this.sourceExperiment = sourceExperiment;
+        this.taxon = taxon;
+        this.taxonId = taxonId;
+        this.technologyType = technologyType;
     }
 
-    /**
-     * @param sampleRemovedFlags
-     */
+    public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
+            Collection<? extends BioAssaySet> collection ) {
+        Collection<ExpressionExperimentValueObject> result = new ArrayList<>();
+        for ( BioAssaySet ee : collection ) {
+            result.add( new ExpressionExperimentValueObject( ee ) );
+        }
+        return result;
+    }
+
+    public static List<ExpressionExperimentValueObject> convert2ValueObjectsOrdered(
+            List<ExpressionExperiment> collection ) {
+        List<ExpressionExperimentValueObject> result = new ArrayList<>();
+        for ( BioAssaySet ee : collection ) {
+            result.add( new ExpressionExperimentValueObject( ee ) );
+        }
+        return result;
+    }
+
     public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
         Collection<AuditEventValueObject> converted = new HashSet<>();
 
@@ -319,112 +239,61 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.getId().compareTo( arg0.getId() );
     }
 
-    /**
-     * Copies all properties from the argument value object into this value object.
-     * 
-     * @deprecated not used? Needs care to maintain.
-     */
-    @Deprecated
-    public void copy( ExpressionExperimentValueObject otherBean ) {
-        if ( otherBean != null ) {
-            this.setId( otherBean.getId() );
-            this.setName( otherBean.getName() );
-            this.setExternalDatabase( otherBean.getExternalDatabase() );
-            this.setExternalUri( otherBean.getExternalUri() );
-            this.setSource( otherBean.getSource() );
-            this.setAccession( otherBean.getAccession() );
-            this.setBioAssayCount( otherBean.getBioAssayCount() );
-            this.setTaxon( otherBean.getTaxon() );
-            this.setBioMaterialCount( otherBean.getBioMaterialCount() );
-            this.setDesignElementDataVectorCount( otherBean.getDesignElementDataVectorCount() );
-            this.setArrayDesignCount( otherBean.getArrayDesignCount() );
-            this.setShortName( otherBean.getShortName() );
-            this.setLinkAnalysisEventType( otherBean.getLinkAnalysisEventType() );
-            this.setDateArrayDesignLastUpdated( otherBean.getDateArrayDesignLastUpdated() );
-            this.setValidated( otherBean.getValidated() );
-            this.setTechnologyType( otherBean.getTechnologyType() );
-            this.setHasBothIntensities( otherBean.isHasBothIntensities() );
-            this.setNumAnnotations( otherBean.getNumAnnotations() );
-            this.setNumPopulatedFactors( otherBean.getNumPopulatedFactors() );
-            this.setDateDifferentialAnalysis( otherBean.getDateDifferentialAnalysis() );
-            this.setSampleRemovedFlags( otherBean.getSampleRemovedFlags() );
-            this.setIsPublic( otherBean.getIsPublic() );
-            this.setIsShared( otherBean.getIsShared() );
-            this.setClazz( otherBean.getClazz() );
-            this.setSourceExperiment( otherBean.getSourceExperiment() );
-            this.setPubmedId( otherBean.getPubmedId() );
-            this.setInvestigators( otherBean.getInvestigators() );
-            this.setDateCreated( otherBean.getDateCreated() );
-            this.setTroubled( otherBean.getTroubled() );
-            this.setCoexpressionLinkCount( otherBean.getCoexpressionLinkCount() );
-            this.setProcessedDataVectorComputationEventType( otherBean.getProcessedDataVectorComputationEventType() );
-            this.setMissingValueAnalysisEventType( otherBean.getMissingValueAnalysisEventType() );
-            this.setDateLinkAnalysis( otherBean.getDateLinkAnalysis() );
-            this.setDateProcessedDataVectorComputation( otherBean.getDateProcessedDataVectorComputation() );
-            this.setDateMissingValueAnalysis( otherBean.getDateMissingValueAnalysis() );
-            this.setProcessedExpressionVectorCount( otherBean.getProcessedExpressionVectorCount() );
-            this.setDateLastUpdated( otherBean.getDateLastUpdated() );
-            this.setDateCached( otherBean.getDateCached() );
-            this.setHasProbeSpecificForQueryGene( otherBean.getHasProbeSpecificForQueryGene() );
-            this.setMinPvalue( otherBean.getMinPvalue() );
-            this.setDateBatchFetch( otherBean.getDateBatchFetch() );
-            this.setDatePcaAnalysis( otherBean.getDatePcaAnalysis() );
-            this.setPcaAnalysisEventType( otherBean.getPcaAnalysisEventType() );
-            this.setBatchFetchEventType( otherBean.getBatchFetchEventType() );
-
-            this.setTroubleDetails( otherBean.getTroubleDetails() );
-        }
-    }
-
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         ExpressionExperimentValueObject other = ( ExpressionExperimentValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
         return true;
     }
 
-    /**
-     * 
-     */
     public String getAccession() {
         return this.accession;
     }
 
-    /**
-     * 
-     */
+    public void setAccession( String accession ) {
+        this.accession = accession;
+    }
+
     public Integer getArrayDesignCount() {
         return this.arrayDesignCount;
     }
 
-    /**
-     * @return the autoTagDate
-     */
-    public Date getAutoTagDate() {
-        return autoTagDate;
+    public void setArrayDesignCount( Integer arrayDesignCount ) {
+        this.arrayDesignCount = arrayDesignCount;
     }
 
     public String getBatchFetchEventType() {
         return batchFetchEventType;
     }
 
-    /**
-     * 
-     */
+    public void setBatchFetchEventType( String batchFetchEventType ) {
+        this.batchFetchEventType = batchFetchEventType;
+    }
+
     public Integer getBioAssayCount() {
         return this.bioAssayCount;
     }
 
-    /**
-     * 
-     */
+    public void setBioAssayCount( Integer bioAssayCount ) {
+        this.bioAssayCount = bioAssayCount;
+    }
+
     public Integer getBioMaterialCount() {
         return this.bioMaterialCount;
+    }
+
+    public void setBioMaterialCount( Integer bioMaterialCount ) {
+        this.bioMaterialCount = bioMaterialCount;
     }
 
     /**
@@ -436,11 +305,16 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.clazz;
     }
 
-    /**
-     * 
-     */
+    public void setClazz( String clazz ) {
+        this.clazz = clazz;
+    }
+
     public Integer getCoexpressionLinkCount() {
         return this.coexpressionLinkCount;
+    }
+
+    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
+        this.coexpressionLinkCount = coexpressionLinkCount;
     }
 
     /**
@@ -452,8 +326,16 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.dateArrayDesignLastUpdated;
     }
 
+    public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
+        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
+    }
+
     public Date getDateBatchFetch() {
         return dateBatchFetch;
+    }
+
+    public void setDateBatchFetch( Date dateBatchFetch ) {
+        this.dateBatchFetch = dateBatchFetch;
     }
 
     /**
@@ -463,91 +345,113 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.dateCached;
     }
 
-    /**
-     * 
-     */
-    public Date getDateCreated() {
-        return this.dateCreated;
+    public void setDateCached( Date dateCached ) {
+        this.dateCached = dateCached;
     }
 
-    /**
-     * 
-     */
     public Date getDateDifferentialAnalysis() {
         return this.dateDifferentialAnalysis;
     }
 
-    /**
-     * 
-     */
-    public Date getDateLastUpdated() {
-        return this.dateLastUpdated;
+    public void setDateDifferentialAnalysis( Date dateDifferentialAnalysis ) {
+        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
     }
 
-    /**
-     * 
-     */
     public Date getDateLinkAnalysis() {
         return this.dateLinkAnalysis;
     }
 
-    /**
-     * 
-     */
+    public void setDateLinkAnalysis( Date dateLinkAnalysis ) {
+        this.dateLinkAnalysis = dateLinkAnalysis;
+    }
+
     public Date getDateMissingValueAnalysis() {
         return this.dateMissingValueAnalysis;
+    }
+
+    public void setDateMissingValueAnalysis( Date dateMissingValueAnalysis ) {
+        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
     }
 
     public Date getDatePcaAnalysis() {
         return datePcaAnalysis;
     }
 
-    /**
-     * 
-     */
+    public void setDatePcaAnalysis( Date datePcaAnalysis ) {
+        this.datePcaAnalysis = datePcaAnalysis;
+    }
+
     public Date getDateProcessedDataVectorComputation() {
         return this.dateProcessedDataVectorComputation;
     }
 
-    /**
-     * 
-     */
+    public void setDateProcessedDataVectorComputation( Date dateProcessedDataVectorComputation ) {
+        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
+    }
+
     public Integer getDesignElementDataVectorCount() {
         return this.designElementDataVectorCount;
+    }
+
+    public void setDesignElementDataVectorCount( Integer designElementDataVectorCount ) {
+        this.designElementDataVectorCount = designElementDataVectorCount;
     }
 
     public Collection<DifferentialExpressionAnalysisValueObject> getDifferentialExpressionAnalyses() {
         return differentialExpressionAnalyses;
     }
 
+    public void setDifferentialExpressionAnalyses(
+            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
+        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
+    }
+
     public Long getExperimentalDesign() {
         return experimentalDesign;
     }
 
-    /**
-     * 
-     */
+    public void setExperimentalDesign( Long experimentalDesign ) {
+        this.experimentalDesign = experimentalDesign;
+    }
+
     public String getExternalDatabase() {
         return this.externalDatabase;
     }
 
-    /**
-     * 
-     */
+    public void setExternalDatabase( String externalDatabase ) {
+        this.externalDatabase = externalDatabase;
+    }
+
     public String getExternalUri() {
         return this.externalUri;
+    }
+
+    public void setExternalUri( String externalUri ) {
+        this.externalUri = externalUri;
     }
 
     public Boolean getHasBothIntensities() {
         return hasBothIntensities;
     }
 
+    public void setHasBothIntensities( boolean hasBothIntensities ) {
+        this.hasBothIntensities = hasBothIntensities;
+    }
+
     public Boolean getHasCoexpressionAnalysis() {
         return hasCoexpressionAnalysis;
     }
 
+    public void setHasCoexpressionAnalysis( Boolean hasCoexpressionAnalysis ) {
+        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
+    }
+
     public Boolean getHasDifferentialExpressionAnalysis() {
         return hasDifferentialExpressionAnalysis;
+    }
+
+    public void setHasDifferentialExpressionAnalysis( Boolean hasDifferentialExpressionAnalysis ) {
+        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
     }
 
     /**
@@ -557,6 +461,10 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return hasEitherIntensity;
     }
 
+    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
+        this.hasEitherIntensity = hasEitherIntensity;
+    }
+
     /**
      * Used in display of gene-wise analysis results.
      */
@@ -564,107 +472,136 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.hasProbeSpecificForQueryGene;
     }
 
-    /**
-     * 
-     */
-    @Override
-    public Long getId() {
-        return this.id;
+    public void setHasProbeSpecificForQueryGene( Boolean hasProbeSpecificForQueryGene ) {
+        this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
     }
 
-    /**
-     * 
-     */
     public String getInvestigators() {
         return this.investigators;
+    }
+
+    public void setInvestigators( String investigators ) {
+        this.investigators = investigators;
     }
 
     @Override
     public boolean getIsPublic() {
         // FIXME - this is sometimes being left as null, but it shouldn't.
-        if ( this.isPublic == null ) return false;
+        if ( this.isPublic == null )
+            return false;
         return this.isPublic;
+    }
+
+    @Override
+    public void setIsPublic( boolean isPublic ) {
+        this.isPublic = isPublic;
     }
 
     @Override
     public boolean getIsShared() {
         // FIXME - this is sometimes being left as null, but it shouldn't.
-        if ( this.isShared == null ) return false;
+        if ( this.isShared == null )
+            return false;
         return this.isShared;
     }
 
-    /**
-     * 
-     */
+    @Override
+    public void setIsShared( boolean isShared ) {
+        this.isShared = isShared;
+    }
+
     public String getLinkAnalysisEventType() {
         return this.linkAnalysisEventType;
     }
 
-    /**
-     * 
-     */
+    public void setLinkAnalysisEventType( String linkAnalysisEventType ) {
+        this.linkAnalysisEventType = linkAnalysisEventType;
+    }
+
     public Double getMinPvalue() {
         return this.minPvalue;
     }
 
-    /**
-     * 
-     */
+    public void setMinPvalue( Double minPvalue ) {
+        this.minPvalue = minPvalue;
+    }
+
     public String getMissingValueAnalysisEventType() {
         return this.missingValueAnalysisEventType;
     }
 
-    /**
-     * 
-     */
+    public void setMissingValueAnalysisEventType( String missingValueAnalysisEventType ) {
+        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
+    }
+
     public String getName() {
         return this.name;
     }
 
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     /**
-     * 
      * The number of terms (Characteristics) the experiment has to describe it.
-     * 
      */
     public Integer getNumAnnotations() {
         return this.numAnnotations;
     }
 
+    public void setNumAnnotations( Integer numAnnotations ) {
+        this.numAnnotations = numAnnotations;
+    }
+
     /**
      * The number of experimental factors the experiment has (counting those that are populated with biomaterials)
-     * 
      */
     public Integer getNumPopulatedFactors() {
         return this.numPopulatedFactors;
+    }
+
+    public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
+        this.numPopulatedFactors = numPopulatedFactors;
     }
 
     public Long getParentTaxonId() {
         return parentTaxonId;
     }
 
+    public void setParentTaxonId( Long parentTaxonId ) {
+        this.parentTaxonId = parentTaxonId;
+    }
+
     public String getPcaAnalysisEventType() {
         return pcaAnalysisEventType;
     }
 
-    /**
-     * 
-     */
+    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
+        this.pcaAnalysisEventType = pcaAnalysisEventType;
+    }
+
     public String getProcessedDataVectorComputationEventType() {
         return this.processedDataVectorComputationEventType;
     }
 
-    /**
-     * 
-     */
+    public void setProcessedDataVectorComputationEventType( String processedDataVectorComputationEventType ) {
+        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
+    }
+
     public Integer getProcessedExpressionVectorCount() {
         return this.processedExpressionVectorCount;
     }
 
-    /**
-     * 
-     */
+    public void setProcessedExpressionVectorCount( Integer processedExpressionVectorCount ) {
+        this.processedExpressionVectorCount = processedExpressionVectorCount;
+    }
+
     public Integer getPubmedId() {
         return this.pubmedId;
+    }
+
+    public void setPubmedId( Integer pubmedId ) {
+        this.pubmedId = pubmedId;
     }
 
     /**
@@ -675,31 +612,33 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.sampleRemovedFlags;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see gemma.gsec.model.SecureValueObject#getSecurableClass()
-     */
+    public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
+
+        this.sampleRemovedFlags = sampleRemovedFlags;
+    }
+
     @Override
     public Class<? extends Securable> getSecurableClass() {
         if ( this.isSubset ) {
             return ExpressionExperimentSubSetImpl.class;
         }
-        return ExpressionExperimentImpl.class;
+        return ExpressionExperiment.class;
     }
 
-    /**
-     * 
-     */
     public String getShortName() {
         return this.shortName;
     }
 
-    /**
-     * 
-     */
+    public void setShortName( String shortName ) {
+        this.shortName = shortName;
+    }
+
     public String getSource() {
         return this.source;
+    }
+
+    public void setSource( String source ) {
+        this.source = source;
     }
 
     /**
@@ -711,57 +650,58 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return this.sourceExperiment;
     }
 
-    /**
-     * 
-     */
+    public void setSourceExperiment( Long sourceExperiment ) {
+        this.sourceExperiment = sourceExperiment;
+    }
+
     public String getTaxon() {
         return this.taxon;
     }
 
-    /**
-     * @return the taxonId
-     */
+    public void setTaxon( String taxon ) {
+        this.taxon = taxon;
+    }
+
     public Long getTaxonId() {
         return taxonId;
     }
 
-    /**
-     * 
-     */
+    public void setTaxonId( Long taxonId ) {
+        this.taxonId = taxonId;
+    }
+
     public String getTechnologyType() {
         return this.technologyType;
     }
 
-    /**
-     * 
-     */
-    public Boolean getTroubled() {
-        return this.troubled;
-    }
-
-    public String getTroubleDetails() {
-        return troubleDetails;
+    public void setTechnologyType( String technologyType ) {
+        this.technologyType = technologyType;
     }
 
     @Override
     public boolean getUserCanWrite() {
         // FIXME consider making return type Boolean
-        if ( this.currentUserHasWritePermission == null ) return false;
+        if ( this.currentUserHasWritePermission == null )
+            return false;
         return this.currentUserHasWritePermission;
+    }
+
+    @Override
+    public void setUserCanWrite( boolean userCanWrite ) {
+        this.currentUserHasWritePermission = userCanWrite;
     }
 
     @Override
     public boolean getUserOwned() {
         // FIXME consider making return type Boolean
-        if ( this.currentUserIsOwner == null ) return false;
+        if ( this.currentUserIsOwner == null )
+            return false;
         return this.currentUserIsOwner;
     }
 
-    /**
-     * 
-     */
-    public boolean getValidated() {
-        return this.validated;
+    @Override
+    public void setUserOwned( boolean isUserOwned ) {
+        this.currentUserIsOwner = isUserOwned;
     }
 
     @Override
@@ -772,9 +712,6 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return result;
     }
 
-    /**
-     * 
-     */
     public Boolean isHasBothIntensities() {
         return this.hasBothIntensities;
     }
@@ -783,240 +720,8 @@ public class ExpressionExperimentValueObject implements Comparable<ExpressionExp
         return isSubset;
     }
 
-    public void setAccession( String accession ) {
-        this.accession = accession;
-    }
-
-    public void setArrayDesignCount( Integer arrayDesignCount ) {
-        this.arrayDesignCount = arrayDesignCount;
-    }
-
-    /**
-     * @param date
-     */
-    public void setAutoTagDate( Date date ) {
-        this.autoTagDate = date;
-    }
-
-    public void setBatchFetchEventType( String batchFetchEventType ) {
-        this.batchFetchEventType = batchFetchEventType;
-    }
-
-    public void setBioAssayCount( Integer bioAssayCount ) {
-        this.bioAssayCount = bioAssayCount;
-    }
-
-    public void setBioMaterialCount( Integer bioMaterialCount ) {
-        this.bioMaterialCount = bioMaterialCount;
-    }
-
-    public void setClazz( String clazz ) {
-        this.clazz = clazz;
-    }
-
-    public void setCoexpressionLinkCount( Integer coexpressionLinkCount ) {
-        this.coexpressionLinkCount = coexpressionLinkCount;
-    }
-
-    public void setDateArrayDesignLastUpdated( Date dateArrayDesignLastUpdated ) {
-        this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
-    }
-
-    public void setDateBatchFetch( Date dateBatchFetch ) {
-        this.dateBatchFetch = dateBatchFetch;
-    }
-
-    public void setDateCached( Date dateCached ) {
-        this.dateCached = dateCached;
-    }
-
-    public void setDateCreated( Date dateCreated ) {
-        this.dateCreated = dateCreated;
-    }
-
-    public void setDateDifferentialAnalysis( Date dateDifferentialAnalysis ) {
-        this.dateDifferentialAnalysis = dateDifferentialAnalysis;
-    }
-
-    public void setDateLastUpdated( Date dateLastUpdated ) {
-        this.dateLastUpdated = dateLastUpdated;
-    }
-
-    public void setDateLinkAnalysis( Date dateLinkAnalysis ) {
-        this.dateLinkAnalysis = dateLinkAnalysis;
-    }
-
-    public void setDateMissingValueAnalysis( Date dateMissingValueAnalysis ) {
-        this.dateMissingValueAnalysis = dateMissingValueAnalysis;
-    }
-
-    public void setDatePcaAnalysis( Date datePcaAnalysis ) {
-        this.datePcaAnalysis = datePcaAnalysis;
-    }
-
-    public void setDateProcessedDataVectorComputation( Date dateProcessedDataVectorComputation ) {
-        this.dateProcessedDataVectorComputation = dateProcessedDataVectorComputation;
-    }
-
-    public void setDesignElementDataVectorCount( Integer designElementDataVectorCount ) {
-        this.designElementDataVectorCount = designElementDataVectorCount;
-    }
-
-    public void setDifferentialExpressionAnalyses(
-            Collection<DifferentialExpressionAnalysisValueObject> differentialExpressionAnalyses ) {
-        this.differentialExpressionAnalyses = differentialExpressionAnalyses;
-    }
-
-    public void setExperimentalDesign( Long experimentalDesign ) {
-        this.experimentalDesign = experimentalDesign;
-    }
-
-    public void setExternalDatabase( String externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
-    public void setExternalUri( String externalUri ) {
-        this.externalUri = externalUri;
-    }
-
-    public void setHasBothIntensities( boolean hasBothIntensities ) {
-        this.hasBothIntensities = hasBothIntensities;
-    }
-
-    public void setHasCoexpressionAnalysis( Boolean hasCoexpressionAnalysis ) {
-        this.hasCoexpressionAnalysis = hasCoexpressionAnalysis;
-    }
-
-    public void setHasDifferentialExpressionAnalysis( Boolean hasDifferentialExpressionAnalysis ) {
-        this.hasDifferentialExpressionAnalysis = hasDifferentialExpressionAnalysis;
-    }
-
-    public void setHasEitherIntensity( Boolean hasEitherIntensity ) {
-        this.hasEitherIntensity = hasEitherIntensity;
-    }
-
-    public void setHasProbeSpecificForQueryGene( Boolean hasProbeSpecificForQueryGene ) {
-        this.hasProbeSpecificForQueryGene = hasProbeSpecificForQueryGene;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setInvestigators( String investigators ) {
-        this.investigators = investigators;
-    }
-
-    @Override
-    public void setIsPublic( boolean isPublic ) {
-        this.isPublic = isPublic;
-    }
-
-    @Override
-    public void setIsShared( boolean isShared ) {
-        this.isShared = isShared;
-    }
-
-    public void setLinkAnalysisEventType( String linkAnalysisEventType ) {
-        this.linkAnalysisEventType = linkAnalysisEventType;
-    }
-
-    public void setMinPvalue( Double minPvalue ) {
-        this.minPvalue = minPvalue;
-    }
-
-    public void setMissingValueAnalysisEventType( String missingValueAnalysisEventType ) {
-        this.missingValueAnalysisEventType = missingValueAnalysisEventType;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setNumAnnotations( Integer numAnnotations ) {
-        this.numAnnotations = numAnnotations;
-    }
-
-    public void setNumPopulatedFactors( Integer numPopulatedFactors ) {
-        this.numPopulatedFactors = numPopulatedFactors;
-    }
-
-    public void setParentTaxonId( Long parentTaxonId ) {
-        this.parentTaxonId = parentTaxonId;
-    }
-
-    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
-        this.pcaAnalysisEventType = pcaAnalysisEventType;
-    }
-
-    public void setProcessedDataVectorComputationEventType( String processedDataVectorComputationEventType ) {
-        this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
-    }
-
-    public void setProcessedExpressionVectorCount( Integer processedExpressionVectorCount ) {
-        this.processedExpressionVectorCount = processedExpressionVectorCount;
-    }
-
-    public void setPubmedId( Integer pubmedId ) {
-        this.pubmedId = pubmedId;
-    }
-
-    public void setSampleRemovedFlags( Collection<AuditEventValueObject> sampleRemovedFlags ) {
-
-        this.sampleRemovedFlags = sampleRemovedFlags;
-    }
-
-    public void setShortName( String shortName ) {
-        this.shortName = shortName;
-    }
-
-    public void setSource( String source ) {
-        this.source = source;
-    }
-
-    public void setSourceExperiment( Long sourceExperiment ) {
-        this.sourceExperiment = sourceExperiment;
-    }
-
     public void setSubset( boolean isSubset ) {
         this.isSubset = isSubset;
-    }
-
-    public void setTaxon( String taxon ) {
-        this.taxon = taxon;
-    }
-
-    /**
-     * @param taxonId the taxonId to set
-     */
-    public void setTaxonId( Long taxonId ) {
-        this.taxonId = taxonId;
-    }
-
-    public void setTechnologyType( String technologyType ) {
-        this.technologyType = technologyType;
-    }
-
-    public void setTroubled( Boolean troubleFlag ) {
-        this.troubled = troubleFlag;
-    }
-
-    public void setTroubleDetails( String troubleDetails ) {
-        this.troubleDetails = troubleDetails;
-    }
-
-    @Override
-    public void setUserCanWrite( boolean userCanWrite ) {
-        this.currentUserHasWritePermission = userCanWrite;
-    }
-
-    @Override
-    public void setUserOwned( boolean isUserOwned ) {
-        this.currentUserIsOwner = isUserOwned;
-    }
-
-    public void setValidated( Boolean validatedFlag ) {
-        this.validated = validatedFlag;
     }
 
     @Override

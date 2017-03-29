@@ -19,13 +19,39 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 
 /**
  * Representing a person or organization that can be contacted about, or is the source of, data in the system. A contact
  * has role and can be the member of a security group.
+ *
+ * @author Paul
  */
-public abstract class Contact extends Auditable implements gemma.gsec.model.Contact {
+public abstract class Contact extends AbstractAuditable implements gemma.gsec.model.Contact {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 2410750024818017046L;
+    private String email;
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     */
+    public Contact() {
+    }
+
+    /**
+     *
+     */
+    @Override
+    public String getEmail() {
+        return this.email;
+    }
+
+    @Override
+    public void setEmail( String email ) {
+        this.email = email;
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.Contact}.
@@ -38,33 +64,6 @@ public abstract class Contact extends Auditable implements gemma.gsec.model.Cont
             return new ubic.gemma.model.common.auditAndSecurity.ContactImpl();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 2410750024818017046L;
-    private String email;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public Contact() {
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public String getEmail() {
-        return this.email;
-    }
-
-    @Override
-    public void setEmail( String email ) {
-        this.email = email;
     }
 
 }

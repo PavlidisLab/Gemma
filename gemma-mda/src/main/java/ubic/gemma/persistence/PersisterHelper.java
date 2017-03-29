@@ -23,40 +23,34 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.StatusDao;
+import ubic.gemma.model.common.auditAndSecurity.CurationDetailsDao;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
  * Where appropriate, objects are only created anew if they don't already exist in the database, according to rules
  * documented elsewhere.
- * 
+ *
  * @author pavlidis
  * @author keshav
- * @version $Id$
  */
 @Service
 public class PersisterHelper extends RelationshipPersister {
 
     @Autowired
-    private StatusDao statusDao;
+    private CurationDetailsDao curationDetailsDao;
 
     @Autowired
     public PersisterHelper( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.loader.loaderutils.Loader#create(ubic.gemma.model.genome.Gene)
-     */
     @Override
     @Transactional
     public Object persist( Object entity ) {
-
         try {
 
             this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
@@ -64,17 +58,27 @@ public class PersisterHelper extends RelationshipPersister {
             if ( entity instanceof Auditable ) {
                 Auditable auditable = ( Auditable ) entity;
 
-                if ( auditable.getAuditTrail() == null ) auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+                if ( auditable.getAuditTrail() == null ) {
+                    auditable.setAuditTrail( AuditTrail.Factory.newInstance() );
+                }
 
                 auditable.setAuditTrail( persistAuditTrail( auditable.getAuditTrail() ) );
-                auditable.setStatus( statusDao.create() );
+
+                if ( entity instanceof Curatable ) {
+                    this.initializeCurationDetails( ( Curatable ) entity );
+                }
             }
 
-            Object persisted = super.persist( entity );
-
-            return persisted;
+            return super.persist( entity );
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
+        }
+    }
+
+    private void initializeCurationDetails( Curatable curatable ) {
+        if ( curatable.getCurationDetails() == null ) {
+            CurationDetails cd = this.curationDetailsDao.create();
+            curatable.setCurationDetails( cd );
         }
     }
 

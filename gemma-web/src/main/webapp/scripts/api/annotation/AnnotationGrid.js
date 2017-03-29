@@ -10,7 +10,7 @@ Ext.namespace( 'Gemma' );
  * ExpressionExperimentController.getAnnotation )
  * 
  * readParams : an array of parameters that will be passed to the readMethod ( e.e.: [ { id:x,
- * classDelegatingFor:"ExpressionExperimentImpl" } ] ) or a pointer to a function that will return the array of
+ * classDelegatingFor:"ExpressionExperiment" } ] ) or a pointer to a function that will return the array of
  * parameters
  * 
  * editable : if true, the annotations in the grid will be editable
@@ -172,7 +172,6 @@ Gemma.AnnotationGrid = Ext.extend( Gemma.GemmaGridPanel, {
    stateful : false,
    taxonId : null,
    name : 'AnnotationGrid',
-   entityAnnotsAreValidated : false,
 
    viewConfig : {
       enableRowBody : true,
@@ -305,7 +304,6 @@ Gemma.AnnotationGrid = Ext.extend( Gemma.GemmaGridPanel, {
             tbar : new Gemma.AnnotationToolBar( {
                annotationGrid : this,
                showValidateButton : true,
-               isValidated : this.entityAnnotsAreValidated,
                createHandler : function( characteristic, callback ) {
                   this.writeMethod( characteristic, this.entId, callback );
                }.createDelegate( this ),

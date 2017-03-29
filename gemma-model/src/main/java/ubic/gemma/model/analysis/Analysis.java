@@ -19,14 +19,18 @@
 
 package ubic.gemma.model.analysis;
 
+import ubic.gemma.model.common.AbstractAuditable;
+
 /**
  * An analysis of one or more Investigations. The manner in which the analysis was done is described in the Protocol and
  * Description associations. Analyses which use more than one Investigation are meta-analyses.
+ *
+ * @author Paul
  */
-public abstract class Analysis extends ubic.gemma.model.common.Auditable {
+public abstract class Analysis extends AbstractAuditable {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -7666181528240555473L;
     private ubic.gemma.model.common.protocol.Protocol protocol;
@@ -34,17 +38,19 @@ public abstract class Analysis extends ubic.gemma.model.common.Auditable {
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public Analysis() {
     }
 
     /**
-     * 
+     *
      */
     public ubic.gemma.model.common.protocol.Protocol getProtocol() {
         return this.protocol;
+    }
+
+    public void setProtocol( ubic.gemma.model.common.protocol.Protocol protocol ) {
+        this.protocol = protocol;
     }
 
     /**
@@ -53,10 +59,6 @@ public abstract class Analysis extends ubic.gemma.model.common.Auditable {
      */
     public ubic.gemma.model.common.description.ExternalDatabase getSource() {
         return this.source;
-    }
-
-    public void setProtocol( ubic.gemma.model.common.protocol.Protocol protocol ) {
-        this.protocol = protocol;
     }
 
     public void setSource( ubic.gemma.model.common.description.ExternalDatabase source ) {

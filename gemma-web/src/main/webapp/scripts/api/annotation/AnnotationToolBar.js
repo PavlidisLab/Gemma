@@ -18,7 +18,6 @@ Ext.namespace( 'Gemma' );
  *           a function with arguments ( characteristics, callback ) where characteristics is an array of
  *           characteristics to update and callback is the function to be called when the characteristics have been
  *           updated if this argument is not present, there will be no save button in the toolbar
- * @version $Id$
  */
 
 Gemma.AnnotationToolBar = Ext.extend( Ext.Toolbar, {
@@ -122,40 +121,7 @@ Gemma.AnnotationToolBar = Ext.extend( Ext.Toolbar, {
             this.saveButton.enable();
          }.createDelegate( this ) );
       }
-      /*
-       * Disabled until we finish implementation.
-       */
-      // if (this.showValidateButton) {
-      // /*
-      // * TODO show the right icon!
-      // */
-      // this.validateButton = new Ext.Toolbar.Button({
-      // icon : this.isValidated ? Gemma.ICONURL + 'ok.png' : Gemma.ICONURL + 'error.png',
-      // tooltip : this.isValidated ? 'Annotations have been flagged as "valid"'
-      // : 'Click to change the validation status of these annotations',
-      // disabled : false,
-      // handler : function() {
-      // /*
-      // * Validate or invalidate, swap the icon.
-      // */
-      // if (this.isValidated) {
-      // Ext.Msg.alert("Sorry", "Currently you cannot reverse the validation of annotations.");
-      // // AnnotationController.invalidateTags(this.annotationGrid.entId, function() {
-      // // this.validateButton.setIcon(Gemma.ICONURL + 'error.png');
-      // // }.createDelegate(this));
-      // } else {
-      // AnnotationController.validateTags(this.annotationGrid.entId, function() {
-      // this.validateButton.setIcon(Gemma.ICONURL + 'validated.png');
-      // this.isValidated = true;
-      // this.annotationGrid.entityAnnotsAreValidated = true;
-      // }.createDelegate(this));
-      // }
-      // },
-      // scope : this
-      // });
-      // }
       Gemma.AnnotationToolBar.superclass.initComponent.call( this );
-
    },
 
    afterRender : function( l, r ) {
@@ -180,9 +146,6 @@ Gemma.AnnotationToolBar = Ext.extend( Ext.Toolbar, {
 
       this.addFill();
 
-      // if (this.showValidateButton) {
-      // this.add(this.validateButton);
-      // }
       Gemma.AnnotationToolBar.superclass.afterRender.call( this, l, r );
    }
 

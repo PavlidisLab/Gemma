@@ -26,25 +26,14 @@ import ubic.gemma.util.AbstractCLIContextCLI;
 
 /**
  * Add a new external database, but requires editing the code to do so. It can be done by SQL manually as well.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
     public static void main( String[] args ) {
         ExternalDatabaseAdderCli p = new ExternalDatabaseAdderCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
 
     }
 
@@ -53,11 +42,6 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
         return CommandGroup.SYSTEM;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "addExternalDatabase";
@@ -76,7 +60,8 @@ public class ExternalDatabaseAdderCli extends AbstractCLIContextCLI {
     protected Exception doWork( String[] args ) {
         try {
             Exception err = processCommandLine( args );
-            if ( err != null ) return err;
+            if ( err != null )
+                return err;
 
             // ContactService contactService = this.getBean( ContactService.class );
 

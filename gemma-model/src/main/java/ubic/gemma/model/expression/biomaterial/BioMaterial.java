@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -34,7 +35,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * through a directed acyclic graph (represented by treatment(s)). In our implementation, we don't care so much about
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
-public abstract class BioMaterial extends ubic.gemma.model.common.Auditable implements gemma.gsec.model.SecuredChild {
+public abstract class BioMaterial extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
 
     /**
      * 

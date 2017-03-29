@@ -12,7 +12,7 @@
 	version: $Id$
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="expression.arrayDesign.ArrayDesignImpl" alias="arrayDesign" root="true">
+	<class name="expression.arrayDesign.ArrayDesign" alias="arrayDesign" root="true">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>

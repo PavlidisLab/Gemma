@@ -19,22 +19,15 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.util.SecurityUtil;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -43,16 +36,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.tasks.analysis.expression.AutoTaggerTaskCommand;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Controller for methods involving annotation of experiments (and potentially other things); delegates to
  * OntologyService and the ExpressionExperimentAnnotator
- * 
+ *
  * @author paul
- * @version $Id$
  * @see ubic.gemma.web.controller.common.CharacteristicBrowserController for related methods.
  */
+@SuppressWarnings("unused")
 @Controller
 public class AnnotationController {
 
@@ -60,37 +55,24 @@ public class AnnotationController {
 
     @Autowired
     private TaskRunningService taskRunningService;
-    @Autowired
-    private AuditTrailService auditTrailService;
+
     @Autowired
     private BioMaterialService bioMaterialService;
+
     @Autowired
     private CharacteristicService characteristicService;
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
     @Autowired
     private OntologyService ontologyService;
+
     @Autowired
     private TaxonService taxonService;
 
-    /**
-     * @return
-     */
     public Collection<OntologyTerm> getCategoryTerms() {
         return ontologyService.getCategoryTerms();
-    }
-
-    /**
-     * @param eeId
-     * @return taskId
-     */
-    public String autoTag( Long eeId ) {
-
-        if ( eeId == null ) {
-            throw new IllegalArgumentException( "Id cannot be null" );
-        }
-
-        return taskRunningService.submitRemoteTask( new AutoTaggerTaskCommand( eeId ) );
     }
 
     public void createBiomaterialTag( Characteristic vc, Long id ) {
@@ -104,7 +86,7 @@ public class AnnotationController {
 
     /**
      * Ajax
-     * 
+     *
      * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      * @param id of the expression experiment
      */
@@ -120,15 +102,13 @@ public class AnnotationController {
 
     /**
      * AJAX. Find terms for tagging, etc.
-     * 
-     * @param givenQueryString
-     * @param taxonId only used for genes, but generally this restriction is problematic for factorvalues, which is an
-     *        important use case.
-     * @return
+     *
+     * @param taxonId only used for genes, but generally this restriction is problematic for factorValues, which is an
+     *                important use case.
      */
     public Collection<CharacteristicValueObject> findTerm( String givenQueryString, Long taxonId ) {
         if ( StringUtils.isBlank( givenQueryString ) ) {
-            return new HashSet<CharacteristicValueObject>();
+            return new HashSet<>();
         }
         Taxon taxon = null;
         if ( taxonId != null ) {
@@ -148,10 +128,6 @@ public class AnnotationController {
         ontologyService.reinitializeAllOntologies();
     }
 
-    /**
-     * @param vc
-     * @param id
-     */
     public void removeBiomaterialTag( Characteristic vc, Long id ) {
         BioMaterial bm = bioMaterialService.load( id );
         if ( bm == null ) {
@@ -161,12 +137,6 @@ public class AnnotationController {
         ontologyService.removeBioMaterialStatement( vc.getId(), bm );
     }
 
-    /**
-     * Ajax.
-     * 
-     * @param characterIds
-     * @param eeId
-     */
     public void removeExperimentTag( Collection<Long> characterIds, Long eeId ) {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
@@ -179,10 +149,11 @@ public class AnnotationController {
 
         Collection<Characteristic> current = ee.getCharacteristics();
 
-        Collection<Characteristic> found = new HashSet<Characteristic>();
+        Collection<Characteristic> found = new HashSet<>();
 
         for ( Characteristic characteristic : current ) {
-            if ( characterIds.contains( characteristic.getId() ) ) found.add( characteristic );
+            if ( characterIds.contains( characteristic.getId() ) )
+                found.add( characteristic );
 
         }
 
@@ -198,18 +169,6 @@ public class AnnotationController {
             characteristicService.delete( id );
         }
 
-    }
-
-    /**
-     * @param eeId
-     */
-    public void validateTags( Long eeId ) {
-        ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
-        if ( ee == null ) {
-            return;
-        }
-        this.auditTrailService.addUpdateEvent( ee, ValidatedAnnotations.class, "", "" );
     }
 
 }

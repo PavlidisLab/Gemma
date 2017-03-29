@@ -18,29 +18,27 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.auditAndSecurity.AuditEvent</code>.
  * </p>
- * 
+ *
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
  */
 public abstract class AuditEventDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport
         implements ubic.gemma.model.common.auditAndSecurity.AuditEventDao {
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int, java.util.Collection)
-     */
     @Override
-    public java.util.Collection<? extends AuditEvent> create( final java.util.Collection<? extends AuditEvent> entities ) {
+    public java.util.Collection<? extends AuditEvent> create(
+            final java.util.Collection<? extends AuditEvent> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
         }
@@ -51,10 +49,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return entities;
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
     @Override
     public AuditEvent create( final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         if ( auditEvent == null ) {
@@ -64,48 +58,20 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return auditEvent;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getEvents(ubic.gemma.model.common.Auditable)
-     */
     @Override
     public List<AuditEvent> getEvents( Auditable auditable ) {
         return this.handleGetEvents( auditable );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(ubic.gemma.model.common.Auditable,
-     * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
     @Override
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable, type );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(java.util.Collection,
-     * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
-     */
     @Override
     public Map<Auditable, AuditEvent> getLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditables, type );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastTypedAuditEvents(java.util.Collection)
-     */
-    @Override
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables ) {
-        return this.handleGetLastTypedAuditEvents( auditables );
     }
 
     /**
@@ -141,9 +107,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#load(int, java.lang.Long)
-     */
     @Override
     public AuditEvent load( final java.lang.Long id ) {
         if ( id == null ) {
@@ -151,10 +114,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         }
         return this.getHibernateTemplate().get( ubic.gemma.model.common.auditAndSecurity.AuditEventImpl.class, id );
     }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#loadAll(int)
-     */
 
     @Override
     public java.util.Collection<? extends AuditEvent> loadAll() {
@@ -186,9 +145,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         this.getHibernateTemplate().deleteAll( entities );
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#remove(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
     @Override
     public void remove( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         if ( auditEvent == null ) {
@@ -224,9 +180,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         }
     }
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#update(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
     @Override
     public void update( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
         if ( auditEvent == null ) {
@@ -235,29 +188,12 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         this.getHibernateTemplate().update( auditEvent );
     }
 
-    /**
-     * @param auditable
-     * @return
-     */
     protected abstract List<AuditEvent> handleGetEvents( Auditable auditable );
 
-    /**
-     * @param auditable
-     * @param type
-     * @return
-     */
     protected abstract AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
-    /**
-     * @param auditables
-     * @param type
-     * @return
-     */
     protected abstract Map<Auditable, AuditEvent> handleGetLastEvent( Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type );
-
-    protected abstract Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents(
-            Collection<? extends Auditable> auditables );
 
     /**
      * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}

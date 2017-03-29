@@ -25,7 +25,6 @@ import ubic.gemma.loader.expression.geo.fetcher.LocalSeriesFetcher;
  * GEO object generator that works on local files. Created partly to assist in testing.
  * 
  * @author pavlidis
- * @version $Id$
  */
 public class GeoDomainObjectGeneratorLocal extends GeoDomainObjectGenerator {
 

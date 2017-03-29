@@ -18,28 +18,27 @@
  */
 package ubic.gemma.loader.entrez.pubmed;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.basecode.util.FileTools;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.persistence.Persister;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import ubic.basecode.util.FileTools;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.Persister;
-
 /**
  * Manage the loading of large numbers of pubmed entries into the database. Assumes that the XML files are locally
  * available.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
+
 public class PubMedService {
 
     private static Log log = LogFactory.getLog( PubMedService.class.getName() );
@@ -64,7 +63,8 @@ public class PubMedService {
 
         File[] files = directory.listFiles();
         for ( File file : files ) {
-            if ( !file.getAbsolutePath().contains( ".xml" ) ) continue;
+            if ( !file.getAbsolutePath().contains( ".xml" ) )
+                continue;
 
             log.info( "Loading: " + file );
             try (InputStream s = FileTools.getInputStreamFromPlainOrCompressedFile( file.getAbsolutePath() );) {

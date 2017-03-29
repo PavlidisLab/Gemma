@@ -18,25 +18,12 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.genome.FastaCmd;
@@ -56,24 +43,24 @@ import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.Persister;
 
+import java.io.*;
+import java.util.*;
+
 /**
  * Handles collapsing the sequences, attaching sequences to DesignElements, either from provided input or via a fetch.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
+
 public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequenceProcessingService {
 
     private static final int BATCH_SIZE = 100;
-
-    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
-
     /**
      * After seeing more than this number of compositeSequences lacking sequences we don't give a detailed warning.
      */
     private static final int MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS = 20;
-
+    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
     @Autowired
     ArrayDesignReportService arrayDesignReportService;
 
@@ -89,18 +76,11 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Autowired
     private Persister persisterHelper;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#assignSequencesToDesignElements
-     * (java.util.Collection, java.util.Collection)
-     */
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
             Collection<BioSequence> sequences ) {
 
-        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> nameMap = new HashMap<>();
         for ( BioSequence sequence : sequences ) {
             nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
         }
@@ -123,13 +103,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#assignSequencesToDesignElements
-     * (java.util.Collection, java.io.File)
-     */
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException {
@@ -145,10 +118,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * Associate sequences with an array design. It is assumed that the name of the sequences can be matched to the name
      * of a design element. Provided for testing purposes.
-     * 
-     * @param designElements
-     * @param fastaFile
-     * @throws IOException
      */
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile )
@@ -162,13 +131,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         assignSequencesToDesignElements( designElements, sequences );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processAffymetrixDesign(ubic.gemma
-     * .model.expression.arrayDesign.ArrayDesign, java.io.InputStream, ubic.gemma.model.genome.Taxon, boolean)
-     */
     @Override
     public Collection<BioSequence> processAffymetrixDesign( ArrayDesign arrayDesign, InputStream probeSequenceFile,
             Taxon taxon, boolean force ) throws IOException {
@@ -177,7 +139,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         // arrayDesignService.thaw( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
         taxon = validateTaxon( taxon, arrayDesign );
-        Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
+        Collection<BioSequence> bioSequences = new HashSet<>();
 
         int done = 0;
         int percent = 0;
@@ -188,9 +150,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         int total = compositeSequencesFromProbes.size();
 
-        Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
-        List<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
-        Map<String, CompositeSequence> csBuffer = new HashMap<String, CompositeSequence>();
+        Map<String, CompositeSequence> quickFindMap = new HashMap<>();
+        List<BioSequence> sequenceBuffer = new ArrayList<>();
+        Map<String, CompositeSequence> csBuffer = new HashMap<>();
         for ( CompositeSequence newCompositeSequence : compositeSequencesFromProbes ) {
 
             // these composite sequences are just use
@@ -247,8 +209,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 log.debug( originalCompositeSequence + " matches " + compositeSequenceFromParse + " seq is "
                         + compositeSequenceFromParse.getBiologicalCharacteristic() );
 
-                originalCompositeSequence.setBiologicalCharacteristic( compositeSequenceFromParse
-                        .getBiologicalCharacteristic() );
+                originalCompositeSequence
+                        .setBiologicalCharacteristic( compositeSequenceFromParse.getBiologicalCharacteristic() );
 
                 assert originalCompositeSequence.getBiologicalCharacteristic().getId() != null;
 
@@ -272,27 +234,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return bioSequences;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, java.io.InputStream, ubic.gemma.model.genome.biosequence.SequenceType)
-     */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType ) throws IOException {
         return this.processArrayDesign( arrayDesign, sequenceFile, sequenceType, null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, java.io.InputStream, ubic.gemma.model.genome.biosequence.SequenceType,
-     * ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
@@ -313,8 +260,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<BioSequence> bioSequences = fastaParser.getResults();
 
         // make two maps: one for genbank ids, one for the sequence name.
-        Map<String, BioSequence> gbIdMap = new HashMap<String, BioSequence>();
-        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> gbIdMap = new HashMap<>();
+        Map<String, BioSequence> nameMap = new HashMap<>();
 
         int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
         int done = 0;
@@ -340,7 +287,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
-            if ( log.isTraceEnabled() ) log.trace( "Looking for sequence for: " + compositeSequence.getName() );
+            if ( log.isTraceEnabled() )
+                log.trace( "Looking for sequence for: " + compositeSequence.getName() );
 
             BioSequence match = null;
             if ( nameMap.containsKey( compositeSequence.getName() ) ) {
@@ -357,8 +305,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                 BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) {
                     biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
-                    if ( biologicalCharacteristic.getSequenceDatabaseEntry() != null
-                            && gbIdMap.containsKey( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() ) ) {
+                    if ( biologicalCharacteristic.getSequenceDatabaseEntry() != null && gbIdMap
+                            .containsKey( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() ) ) {
                         match = gbIdMap.get( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() );
                         numMatchedByAccession++;
                     } else {
@@ -403,31 +351,24 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, String blastDbHome, Taxon taxon, boolean force ) throws IOException {
-        return processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, blastDbHome, taxon, force, null );
+        return processArrayDesign( arrayDesign, sequenceIdentifierFile, databaseNames, blastDbHome, taxon, force,
+                null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, java.io.InputStream, java.lang.String[], java.lang.String,
-     * ubic.gemma.model.genome.Taxon, boolean)
-     */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceIdentifierFile,
             String[] databaseNames, String blastDbHome, Taxon taxon, boolean force, FastaCmd fc ) throws IOException {
         checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = parseAccessionFile( sequenceIdentifierFile );
-        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
-        Collection<String> notFound = new HashSet<String>();
+        Collection<BioSequence> finalResult = new HashSet<>();
+        Collection<String> notFound = new HashSet<>();
 
         // values that were enot found
         notFound.addAll( probe2acc.values() );
 
         // the actual thing values to search for (with version numbers)
-        Collection<String> accessionsToFetch = new HashSet<String>();
+        Collection<String> accessionsToFetch = new HashSet<>();
         accessionsToFetch.addAll( probe2acc.values() );
 
         // only 1 taxon should be on array design if taxon not supplied on command line
@@ -438,13 +379,15 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
          */
         int versionNumber = 1;
         int numSwitched = 0;
-        if ( fc == null ) fc = new SimpleFastaCmd();
+        if ( fc == null )
+            fc = new SimpleFastaCmd();
         while ( versionNumber < MAX_VERSION_NUMBER ) {
 
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
 
             // map of accessions to sequence.
-            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon, force );
+            Map<String, BioSequence> found = findOrUpdateSequences( accessionsToFetch, retrievedSequences, taxon,
+                    force );
 
             finalResult.addAll( retrievedSequences );
 
@@ -485,7 +428,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         if ( !notFound.isEmpty() && taxon != null ) {
 
-            Collection<String> stillLooking = new HashSet<String>();
+            Collection<String> stillLooking = new HashSet<>();
             stillLooking.addAll( notFound );
             notFound.clear();
 
@@ -530,15 +473,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, java.lang.String[], boolean)
-     */
     @Override
-    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames, boolean force ) {
+    public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
+            boolean force ) {
         return this.processArrayDesign( arrayDesign, databaseNames, null, force );
     }
 
@@ -548,13 +485,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return processArrayDesign( arrayDesign, databaseNames, blastDbHome, force, null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService#processArrayDesign(ubic.gemma.model
-     * .expression.arrayDesign.ArrayDesign, java.lang.String[], java.lang.String, boolean)
-     */
     @Override
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, String[] databaseNames,
             String blastDbHome, boolean force, FastaCmd fc ) {
@@ -569,15 +499,16 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<Taxon> taxaOnArray = arrayDesignService.getTaxa( arrayDesign.getId() );
         // not taxon found
         if ( taxaOnArray.size() == 0 ) {
-            throw new IllegalArgumentException( taxaOnArray.size() + " taxon found for " + arrayDesign
-                    + "please specifiy which taxon to run" );
+            throw new IllegalArgumentException(
+                    taxaOnArray.size() + " taxon found for " + arrayDesign + "please specifiy which taxon to run" );
         }
 
         Collection<String> notFound = accessionsToFetch.keySet();
-        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
+        Collection<BioSequence> finalResult = new HashSet<>();
 
         int versionNumber = 1;
-        if ( fc == null ) fc = new SimpleFastaCmd();
+        if ( fc == null )
+            fc = new SimpleFastaCmd();
         while ( versionNumber < MAX_VERSION_NUMBER ) {
             Collection<BioSequence> retrievedSequences = searchBlastDbs( databaseNames, blastDbHome, notFound, fc );
 
@@ -624,19 +555,17 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * Update a single sequence in the system.
-     * 
-     * @param sequenceId
-     * @param databaseNames
-     * @param blastDbHome
+     *
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
+     *              information in the BioSequence will be overwritten.
      * @return persistent BioSequence.
      */
     @Override
     public BioSequence processSingleAccession( String sequenceId, String[] databaseNames, String blastDbHome,
             boolean force ) {
         BioSequence found = this.searchBlastDbs( databaseNames, blastDbHome, sequenceId, new SimpleFastaCmd() );
-        if ( found == null ) return null;
+        if ( found == null )
+            return null;
         return createOrUpdateGenbankSequence( found, force );
 
     }
@@ -645,8 +574,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * If taxon is null then it has not been provided on the command line, then deduce the taxon from the arrayDesign.
      * If there are 0 or more than one taxon on the array design throw an error as this programme can only be run for 1
      * taxon at a time if processing from a file.
-     * 
-     * @param taxon Taxon as passed in on the command line
+     *
+     * @param taxon       Taxon as passed in on the command line
      * @param arrayDesign Array design to process
      * @return taxon Taxon to process
      * @throws IllegalArgumentException Thrown when there is not exactly 1 taxon.
@@ -664,23 +593,20 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             if ( taxaOnArray.size() == 1 && taxaOnArray.iterator().next() != null ) {
                 return taxaOnArray.iterator().next();
             }
-            throw new IllegalArgumentException( taxaOnArray.size() + " taxa found for " + arrayDesign
-                    + "please specify which taxon to run" );
+            throw new IllegalArgumentException(
+                    taxaOnArray.size() + " taxa found for " + arrayDesign + "please specify which taxon to run" );
         }
         return taxon;
     }
 
-    /**
-     * @param nameMap
-     * @param sequence
-     */
     private void addToMaps( Map<String, BioSequence> gbIdMap, Map<String, BioSequence> nameMap, BioSequence sequence ) {
         nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
 
         if ( sequence.getSequenceDatabaseEntry() != null ) {
             gbIdMap.put( sequence.getSequenceDatabaseEntry().getAccession(), sequence );
         } else {
-            if ( log.isTraceEnabled() ) log.trace( "No sequence database entry for " + sequence.getName() );
+            if ( log.isTraceEnabled() )
+                log.trace( "No sequence database entry for " + sequence.getName() );
         }
     }
 
@@ -695,10 +621,10 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * @param found a new (nonpersistent) biosequence that can be used to create a new entry or update an existing one
-     *        with the sequence. The sequence would have come from Genbank.
+     *              with the sequence. The sequence would have come from Genbank.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if the
-     *        actual sequence information was missing in our DB and 'found' has a sequence.
+     *              information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if the
+     *              actual sequence information was missing in our DB and 'found' has a sequence.
      * @return persistent BioSequence.
      */
     private BioSequence createOrUpdateGenbankSequence( BioSequence found, boolean force ) {
@@ -709,13 +635,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         // genbank (blastdb)
         assert sequenceDatabaseEntry.getExternalDatabase() != null;
 
-        BioSequence existing = null;
+        BioSequence existing;
 
         existing = bioSequenceService.findByAccession( sequenceDatabaseEntry );
 
-        BioSequence result = null;
+        BioSequence result;
         if ( existing == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Find (or creating) new sequence " + found );
+            if ( log.isDebugEnabled() )
+                log.debug( "Find (or creating) new sequence " + found );
 
             result = bioSequenceService.find( found ); // there still might be a match.
 
@@ -742,9 +669,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * When the probe id is in the format ArrayName:ProbeId, just return the ProbeId. For anything else return the
      * entire string.
-     * 
-     * @param probeId
-     * @return
      */
     private String deMangleProbeId( String probeId ) {
         String[] toks = StringUtils.split( probeId, ":" );
@@ -765,9 +689,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
     }
 
-    /**
-     * @param retrievedSequences
-     */
     private void fillInGenbank( Collection<BioSequence> retrievedSequences ) {
         ExternalDatabase genbank = getGenbank();
         assert genbank.getId() != null;
@@ -782,13 +703,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
     }
 
-    /**
-     * @param identifiersToSearch
-     * @param taxon
-     * @return
-     */
     private Map<String, BioSequence> findLocalSequences( Collection<String> identifiersToSearch, Taxon taxon ) {
-        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> found = new HashMap<>();
         for ( String id : identifiersToSearch ) {
             BioSequence template = BioSequence.Factory.newInstance();
             template.setTaxon( taxon );
@@ -803,19 +719,18 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * Copy sequences into the original versions, or create new sequences in the DB, as needed.
-     * 
-     * @param accessionsToFetch
-     * @param retrievedSequences
+     *
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
+     *              information in the BioSequence will be overwritten.
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
 
-        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> found = new HashMap<>();
         for ( BioSequence sequence : retrievedSequences ) {
-            if ( log.isDebugEnabled() ) log.debug( "Processing retrieved sequence: " + sequence );
+            if ( log.isDebugEnabled() )
+                log.debug( "Processing retrieved sequence: " + sequence );
             sequence.setTaxon( taxon );
             sequence = createOrUpdateGenbankSequence( sequence, force );
             String accession = sequence.getSequenceDatabaseEntry().getAccession();
@@ -827,12 +742,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * Copy sequences into the original versions, or create new sequences in the DB, as needed.
-     * 
-     * @param accessionsToFetch accessions that we need to fill in
+     *
+     * @param accessionsToFetch  accessions that we need to fill in
      * @param retrievedSequences candidate sequence information for copying into the database.
-     * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
-     *        information in the BioSequence will be overwritten.
-     * @param taxa Representing taxa on array
+     * @param force              If true, if an existing BioSequence that matches if found in the system, any existing sequence
+     *                           information in the BioSequence will be overwritten.
+     * @param taxa               Representing taxa on array
      * @return Items that were found.
      */
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
@@ -889,9 +804,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     /**
      * Used to check if an IMAGE clone exists to use for an accession. If the IMAGE clone is used instead, we update the
      * composite sequence.
-     * 
-     * @param cs
-     * @return
      */
     private String getAccession( CompositeSequence cs ) {
         BioSequence bs = cs.getBiologicalCharacteristic();
@@ -906,13 +818,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return this.externalDatabaseService.find( "Genbank" );
     }
 
-    /**
-     * @param accessionsToFetch
-     * @param found
-     * @return
-     */
     private Collection<String> getUnFound( Collection<String> accessionsToFetch, Map<String, BioSequence> found ) {
-        Collection<String> notFound = new HashSet<String>();
+        Collection<String> notFound = new HashSet<>();
         for ( String accession : accessionsToFetch ) {
             if ( !found.containsKey( accession ) ) {
                 notFound.add( accession );
@@ -921,28 +828,20 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return notFound;
     }
 
-    /**
-     * @param arrayDesign
-     * @param accessionsToFetch
-     * @param sequenceProvided
-     * @param noSequence
-     */
     private void informAboutFetchListResults( ArrayDesign arrayDesign, Map<String, BioSequence> accessionsToFetch,
             int sequenceProvided, int noSequence ) {
-        log.info( "Array Design has " + accessionsToFetch.size() + " accessions to fetch for "
-                + arrayDesign.getCompositeSequences().size() + " compositeSequences" );
+        log.info( "Array Design has " + accessionsToFetch.size() + " accessions to fetch for " + arrayDesign
+                .getCompositeSequences().size() + " compositeSequences" );
         log.info( sequenceProvided + " had sequences already and will not be replaced" );
         log.info( noSequence + " have no BioSequence association at all and will not be processed further." );
     }
 
     /**
-     * @param arrayDesign
-     * @param accessionsToFetch
      * @param force if true, sequence will be replaced even if it is already there.
      * @return map of biosequence accessions to BioSequences (the existing ones)
      */
     private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, boolean force ) {
-        Map<String, BioSequence> accessionsToFetch = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> accessionsToFetch = new HashMap<>();
         int sequenceProvided = 0;
         int noSequence = 0;
         boolean warned = false;
@@ -962,7 +861,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             String accession = getAccession( cs );
 
             if ( accession == null ) {
-                if ( log.isDebugEnabled() ) log.debug( "No accession for " + cs + ": " + bs );
+                if ( log.isDebugEnabled() )
+                    log.debug( "No accession for " + cs + ": " + bs );
                 continue;
             }
 
@@ -972,11 +872,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return accessionsToFetch;
     }
 
-    /**
-     * @param arrayDesign
-     * @param notFound
-     * @return
-     */
     private void logMissingSequences( ArrayDesign arrayDesign, Collection<String> notFound ) {
         log.warn( notFound.size() + " sequences were not found (or were already filled in) for " + arrayDesign );
         StringBuilder buf = new StringBuilder();
@@ -994,34 +889,29 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         log.info( buf.toString() );
     }
 
-    /**
-     * @param numWithNoSequence
-     * @param compositeSequence
-     */
     private void notifyAboutMissingSequences( int numWithNoSequence, CompositeSequence compositeSequence ) {
         if ( numWithNoSequence == MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
             log.warn( "More than " + MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS + " compositeSequences do not have"
                     + " biologicalCharacteristics, skipping further details." );
         } else if ( numWithNoSequence < MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS ) {
-            log.warn( "No sequence match for " + compositeSequence + " (Description="
-                    + compositeSequence.getDescription() + "); it will not have a biologicalCharacteristic!" );
+            log.warn(
+                    "No sequence match for " + compositeSequence + " (Description=" + compositeSequence.getDescription()
+                            + "); it will not have a biologicalCharacteristic!" );
         }
     }
 
     /**
      * @param sequenceIdentifierFile with two columns: first is probe id, second is genbank accession.
-     * @return
-     * @throws IOException
      */
     private Map<String, String> parseAccessionFile( InputStream sequenceIdentifierFile ) throws IOException {
-        try (BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) );) {
+        try (BufferedReader br = new BufferedReader( new InputStreamReader( sequenceIdentifierFile ) )) {
 
-            String line = null;
+            String line;
 
             StopWatch timer = new StopWatch();
             timer.start();
 
-            Map<String, String> probe2acc = new HashMap<String, String>();
+            Map<String, String> probe2acc = new HashMap<>();
             int count = 0;
             int totalLines = 0;
             while ( ( line = br.readLine() ) != null ) {
@@ -1051,19 +941,13 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * If the sequence already exists
-     * 
-     * @param sequence
-     * @return
      */
     private BioSequence persistSequence( BioSequence sequence ) {
         return ( BioSequence ) persisterHelper.persistOrUpdate( sequence );
     }
 
     /**
-     * @param arrayDesign
      * @param sequenceFile; the expected format is described in {@link ProbeSequenceParser}
-     * @param taxon
-     * @return
      * @see ProbeSequenceParser
      */
     private Collection<BioSequence> processOligoDesign( ArrayDesign arrayDesign, InputStream sequenceFile, Taxon taxon )
@@ -1082,10 +966,11 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         int numWithNoSequence = 0;
 
-        Collection<BioSequence> res = new HashSet<BioSequence>();
+        Collection<BioSequence> res = new HashSet<>();
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
-            if ( log.isTraceEnabled() ) log.trace( "Looking for sequence for: " + compositeSequence.getName() );
+            if ( log.isTraceEnabled() )
+                log.trace( "Looking for sequence for: " + compositeSequence.getName() );
             BioSequence sequence = parser.get( compositeSequence.getName() );
 
             if ( sequence != null ) {
@@ -1117,16 +1002,10 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return res;
     }
 
-    /**
-     * @param databaseNames
-     * @param blastDbHome
-     * @param accessionsToFetch
-     * @return
-     */
     private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
             Collection<String> accessionsToFetch, FastaCmd fc ) {
 
-        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
+        Collection<BioSequence> retrievedSequences = new HashSet<>();
         for ( String dbname : databaseNames ) {
             Collection<BioSequence> moreBioSequences;
             if ( blastDbHome != null ) {
@@ -1136,8 +1015,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             }
 
             if ( log.isDebugEnabled() )
-                log.debug( moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched "
-                        + " from " + dbname );
+                log.debug(
+                        moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched " + " from "
+                                + dbname );
             retrievedSequences.addAll( moreBioSequences );
         }
 
@@ -1148,13 +1028,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * Search for a single accession
-     * 
-     * @param databaseNames
-     * @param blastDbHome
-     * @param accessionToFetch
-     * @return
      */
-    private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch, FastaCmd fc ) {
+    private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch,
+            FastaCmd fc ) {
 
         for ( String dbname : databaseNames ) {
             BioSequence moreBioSequence;
@@ -1163,7 +1039,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             } else {
                 moreBioSequence = fc.getByAccession( accessionToFetch, dbname, null );
             }
-            if ( moreBioSequence != null ) return moreBioSequence;
+            if ( moreBioSequence != null )
+                return moreBioSequence;
         }
         return null;
 
@@ -1171,16 +1048,13 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * Replace information in "existing" with data from "found".
-     * 
-     * @param found
-     * @param existing
-     * @return
      */
     private BioSequence updateExistingWithSequenceData( BioSequence found, BioSequence existing ) {
         assert found != null;
         assert existing != null;
 
-        if ( existing.getType() == null ) existing.setType( found.getType() ); // generic...
+        if ( existing.getType() == null )
+            existing.setType( found.getType() ); // generic...
         existing.setLength( found.getLength() );
         assert found.getSequence() != null;
 
@@ -1194,13 +1068,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         // This is just for debugging purposes -- some array designs give suspicious sequence information.
         if ( existing.getSequence().length() > 10e4 ) {
-            log.warn( existing + " - new sequence is very long for an expression probe ("
-                    + existing.getSequence().length() + " bases)" );
+            log.warn( existing + " - new sequence is very long for an expression probe (" + existing.getSequence()
+                    .length() + " bases)" );
         }
 
         bioSequenceService.update( existing );
         if ( log.isDebugEnabled() )
-            log.debug( "Updated " + existing + " with sequence " + StringUtils.abbreviate( existing.getSequence(), 20 ) );
+            log.debug(
+                    "Updated " + existing + " with sequence " + StringUtils.abbreviate( existing.getSequence(), 20 ) );
 
         assert found.getSequenceDatabaseEntry().getExternalDatabase() != null;
         return existing;
@@ -1208,11 +1083,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
     /**
      * FIXME - factor this out, it might be useful elsewhere.
-     * 
-     * @param totalThingsToDo
-     * @param howManyAreDone
-     * @param percentDoneLastTimeWeChecked
-     * @return
      */
     private int updateProgress( int totalThingsToDo, int howManyAreDone, int percentDoneLastTimeWeChecked ) {
         int newPercent = ( int ) Math.ceil( ( 100.00 * howManyAreDone / totalThingsToDo ) );
@@ -1223,12 +1093,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return newPercent;
     }
 
-    /**
-     * @param noSequence
-     * @param warned
-     * @param cs
-     * @return
-     */
     private boolean warnAboutMissingSequence( int noSequence, boolean warned, CompositeSequence cs ) {
         if ( !warned ) {
             if ( noSequence < 20 ) {

@@ -18,24 +18,10 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.math.distribution.Histogram;
@@ -46,25 +32,22 @@ import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.security.authorization.acl.AclTestUtils;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author keshav, paul
- * @version $Id$
  */
 public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServiceTest {
 
@@ -99,12 +82,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     @Autowired
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
+    
+    @Autowired
+    private AclTestUtils aclTestUtils;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() throws Exception {
 
@@ -112,8 +93,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         if ( ee == null ) {
 
-            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-                    getTestFileBasePath( "gds994Short" ) ) );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gds994Short" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
@@ -132,12 +113,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
-    @Autowired
-    private AclTestUtils aclTestUtils;
-
-    /**
-     * @throws Exception
-     */
     @Test
     public void testAnalyzeAndDelete() throws Exception {
 
@@ -153,8 +128,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
 
-        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.thawFully( analyses.iterator()
-                .next() );
+        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService
+                .thawFully( analyses.iterator().next() );
 
         aclTestUtils.checkHasAcl( analysis );
         aclTestUtils.checkLacksAces( analysis );
@@ -198,8 +173,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     /**
      * Test for bug 2026, not a subsetted analysis.
-     * 
-     * @throws Exception
      */
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
@@ -215,8 +188,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
                 .getExperimentsWithAnalysis( Collections.singleton( ee.getId() ) );
         assertTrue( experimentsWithAnalysis.contains( ee.getId() ) );
 
-        assertTrue( differentialExpressionAnalysisService.getExperimentsWithAnalysis(
-                taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
+        assertTrue( differentialExpressionAnalysisService
+                .getExperimentsWithAnalysis( taxonService.findByCommonName( "mouse" ) ).contains( ee.getId() ) );
 
         differentialExpressionAnalyzerService.deleteAnalysis( ee, analyses.iterator().next() );
 
@@ -224,8 +197,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     /**
      * Tests running with a subset factor, then deleting.
-     * 
-     * @throws Exception
      */
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
@@ -233,7 +204,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
                 .toArray( new ExperimentalFactor[] {} );
 
-        List<ExperimentalFactor> factorsToUse = Arrays.asList( new ExperimentalFactor[] { factors[0] } );
+        List<ExperimentalFactor> factorsToUse = Arrays.asList( factors[0] );
         ExperimentalFactor subsetFactor = factors[1];
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -252,18 +223,12 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @After
     public void tearDown() {
         if ( ee != null ) {
-            try {
-                expressionExperimentService.delete( ee );
-            } catch ( Exception e ) {
-
-            }
+            expressionExperimentService.delete( ee );
         }
     }
 
     /**
      * Test inspired by bug 2605
-     * 
-     * @throws Exception
      */
     @Test
     public void testAnalyzeWithSubsetWhenOneIsNotUsableAndWithInteractionInTheOther() throws Exception {
@@ -287,7 +252,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         ee = expressionExperimentService.thawLite( ee );
 
-        try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" )) {
             assertNotNull( is );
             experimentalDesignImporter.importDesign( ee, is );
         }
@@ -299,7 +265,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         // Wshew, done with setting it up.
 
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> factors = new HashSet<>();
         ExperimentalFactor subsetFactor = null;
         for ( ExperimentalFactor ef : experimentalFactors ) {
             if ( ef.getName().equals( "PooledTreatment" ) ) {
@@ -318,7 +284,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         config.setSubsetFactor( subsetFactor );
         config.setQvalueThreshold( null );
 
-        HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<Collection<ExperimentalFactor>>();
+        HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<>();
         ifacts.add( factors );
         config.setInteractionsToInclude( ifacts );
 
@@ -328,8 +294,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertEquals( "Should have quietly ignored one of the subsets that is not analyzable", 1, analyses.size() );
 
         DifferentialExpressionAnalysis analysis = analyses.iterator().next();
-        assertEquals( "Subsetting was not done correctly", subsetFactor, analysis.getSubsetFactorValue()
-                .getExperimentalFactor() );
+        assertEquals( "Subsetting was not done correctly", subsetFactor,
+                analysis.getSubsetFactorValue().getExperimentalFactor() );
         assertEquals( "Interaction was not retained in the analyzed subset", 3, analysis.getResultSets().size() );
 
         ExpressionExperimentSubSet eeset = ( ExpressionExperimentSubSet ) analysis.getExperimentAnalyzed();
@@ -359,9 +325,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     }
 
-    /**
-     * 
-     */
     @Test
     public void testWritePValuesHistogram() throws Exception {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();

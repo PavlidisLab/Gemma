@@ -15,67 +15,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */package ubic.gemma.persistence;
+ */
+package ubic.gemma.persistence;
 
 import java.util.Collection;
 
 /**
  * Interface that supports basic CRUD operations.
- * 
- * @author paul
- * @version $Id$
+ *
  * @param <T>
+ * @author paul
  */
 public interface BaseDao<T> {
 
-    public Collection<? extends T> create( Collection<? extends T> entities );
+    Collection<? extends T> create( Collection<? extends T> entities );
 
     /**
      * Create an object. If the entity type is immutable, this may also delete any existing entities identified by an
      * appropriate 'find' method.
-     * 
-     * @param entity
-     * @return
      */
-    public T create( T entity );
+    T create( T entity );
 
-    public Collection<? extends T> load( Collection<Long> ids );
+    Collection<? extends T> load( Collection<Long> ids );
 
-    public T load( Long id );
+    T load( Long id );
 
-    public Collection<? extends T> loadAll();
+    Collection<? extends T> loadAll();
 
-    public void remove( Collection<? extends T> entities );
+    void remove( Collection<? extends T> entities );
 
     /**
      * Remove a persistent instance based on its id. The implementer is trusted to know what type of object to remove.
-     * <p>
      * Note that this method is to be avoided for Securables, because it will leave cruft in the ACL tables. We may fix
      * this by having this method return the removed object.
-     * 
-     * @param id
      */
-    public void remove( Long id );
+    void remove( Long id );
 
     /**
      * Remove a persistent instance
-     * 
-     * @param entity
      */
-    public void remove( T entity );
+    void remove( T entity );
 
     /**
      * Update the entities. Not supported if the entities are immutable.
-     * 
-     * @param entities
      */
-    public void update( Collection<? extends T> entities );
+    void update( Collection<? extends T> entities );
 
     /**
      * Update the entity. Not supported if the entity is immutable.
-     * 
-     * @param entities
      */
-    public void update( T entity );
+    void update( T entity );
 
 }

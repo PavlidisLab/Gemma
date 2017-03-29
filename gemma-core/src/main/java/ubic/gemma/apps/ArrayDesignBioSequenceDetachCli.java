@@ -30,27 +30,14 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * delete the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
  * 
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipulatingCli {
 
     public static void main( String[] args ) {
         ArrayDesignBioSequenceDetachCli p = new ArrayDesignBioSequenceDetachCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "detachSequences";
@@ -73,9 +60,6 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
         return null;
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note ) {
         super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceRemoveEvent.Factory.newInstance();

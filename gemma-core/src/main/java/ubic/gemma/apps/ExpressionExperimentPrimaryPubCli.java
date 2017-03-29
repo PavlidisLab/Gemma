@@ -19,18 +19,9 @@
 
 package ubic.gemma.apps;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
+import cern.colt.Arrays;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
@@ -38,36 +29,30 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.Persister;
-import cern.colt.Arrays;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Update the primary publication for experiments.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManipulatingCLI {
-
-    public static void main( String[] args ) {
-        ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
 
     private String pubmedIdFilename;
     private Map<String, Integer> pubmedIds = new HashMap<>();
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
+    public static void main( String[] args ) {
+        ExpressionExperimentPrimaryPubCli p = new ExpressionExperimentPrimaryPubCli();
+        tryDoWorkNoExit( p, args );
+    }
+
     @Override
     public String getCommandName() {
         return "pubmedAssociateToExperiments";
@@ -82,11 +67,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option pubmedOption = OptionBuilder
-                .hasArg()
-                .withArgName( "pubmedIDFile" )
-                .withDescription(
-                        "A text file which contains the list of pubmed IDs associated with each experiment ID. If the pubmed ID is not found, it will try to use the existing pubmed ID associated with the experiment. Each row has two columns: pubmedId and experiment shortName, e.g. 22438826<TAB>GSE27715" )
+        Option pubmedOption = OptionBuilder.hasArg().withArgName( "pubmedIDFile" ).withDescription(
+                "A text file which contains the list of pubmed IDs associated with each experiment ID. If the pubmed ID is not found, it will try to use the existing pubmed ID associated with the experiment. Each row has two columns: pubmedId and experiment shortName, e.g. 22438826<TAB>GSE27715" )
                 .withLongOpt( "pubmedIDFile" ).create( "pmidFile" );
 
         addOption( pubmedOption );
@@ -96,7 +78,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
         ExpressionExperimentService ees = this.getBean( ExpressionExperimentService.class );
 
         Persister ph = this.getPersisterHelper();
@@ -182,9 +165,6 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             this.pubmedIdFilename = this.getOptionValue( "pmidFile" );
             try {
                 this.pubmedIds = parsePubmedIdFile( this.pubmedIdFilename );
-            } catch ( FileNotFoundException e ) {
-                log.error( e.getMessage() );
-                e.printStackTrace();
             } catch ( IOException e ) {
                 log.error( e.getMessage() );
                 e.printStackTrace();
@@ -195,12 +175,8 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
     /**
      * Reads pubmedID and experiment short name from the file and stores it in a HashMap<eeShortName, pubmedId>. E.g.
      * 22438826 GSE27715 22340501 GSE35802
-     * 
-     * @param filename
-     * @throws IOException
-     * @throws FileNotFoundException
      */
-    private Map<String, Integer> parsePubmedIdFile( String filename ) throws FileNotFoundException, IOException {
+    private Map<String, Integer> parsePubmedIdFile( String filename ) throws IOException {
         Map<String, Integer> ids = new HashMap<>();
         final int COL_COUNT = 2;
         try (BufferedReader br = new BufferedReader( new FileReader( filename ) )) {

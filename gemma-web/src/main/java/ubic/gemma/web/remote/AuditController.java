@@ -18,37 +18,32 @@
  */
 package ubic.gemma.web.remote;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditAction;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * This is required solely for exposing auditables to remote services would try to marshall the abstract class
  * Auditable.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class AuditController {
 
-    private static Log log = LogFactory.getLog( AuditController.class.getName() );
+    private static final Log log = LogFactory.getLog( AuditController.class.getName() );
 
     @Autowired
     private ArrayDesignService arrayDesignService;
@@ -62,48 +57,30 @@ public class AuditController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    /**
-     * AJAX
-     * 
-     * @param e
-     * @param auditEventType
-     * @param comment
-     * @param detail
-     */
     @SuppressWarnings("unchecked")
     public void addAuditEvent( EntityDelegator e, String auditEventType, String comment, String detail ) {
-        Auditable entity = getAuditable( e );
+        AbstractAuditable entity = getAuditable( e );
         if ( entity == null ) {
             log.warn( "Couldn't find Auditable represented by " + e );
             return;
         }
 
-        if ( auditEventType.equals( "CommentedEvent" ) ) {
-            auditTrailService.addComment( entity, comment, detail );
-        } else if ( auditEventType.equals( "TroubleStatusFlagEvent" ) ) {
-            auditTrailService.addTroubleFlag( entity, comment, detail );
-        } else if ( auditEventType.equals( "OKStatusFlagEvent" ) ) {
-            auditTrailService.addOkFlag( entity, comment, detail );
-        } else if ( auditEventType.equals( "ValidatedFlagEvent" ) ) {
-            auditTrailService.addValidatedFlag( entity, comment, detail );
-        } else {
-            Class<?> clazz;
-            try {
-                clazz = Class.forName( "ubic.gemma.model.common.auditAndSecurity.eventType." + auditEventType );
-            } catch ( ClassNotFoundException e1 ) {
-                throw new RuntimeException( "Unknown event type: " + auditEventType );
-            }
-            auditTrailService.addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
+        Class<?> clazz;
+        try {
+            clazz = Class.forName( "ubic.gemma.model.common.auditAndSecurity.eventType." + auditEventType );
+        } catch ( ClassNotFoundException e1 ) {
+            throw new RuntimeException( "Unknown event type: " + auditEventType );
         }
 
+        AuditEvent auditEvent = auditTrailService
+                .addUpdateEvent( entity, ( Class<? extends AuditEventType> ) clazz, comment, detail );
+        if ( auditEvent == null ) {
+            log.error( "Persisting the audit event failed! On auditable id " + entity.getId() );
+        } else {
+            log.info( "created new event: " + auditEvent );
+        }
     }
 
-    /**
-     * AJAX
-     * 
-     * @param e
-     * @return
-     */
     public Collection<AuditEventValueObject> getEvents( EntityDelegator e ) {
         Collection<AuditEventValueObject> result = new HashSet<>();
 
@@ -116,11 +93,13 @@ public class AuditController {
 
         Collection<AuditEvent> events = auditEventService.getEvents( entity );
         for ( AuditEvent ev : events ) {
-            if ( ev == null ) continue;
+            if ( ev == null )
+                continue;
             /*
              * Hide generic update events.
              */
-            if ( ev.getAction().equals( AuditAction.UPDATE ) && ev.getEventType() == null ) continue;
+            if ( ev.getAction().equals( AuditAction.UPDATE ) && ev.getEventType() == null )
+                continue;
 
             result.add( new AuditEventValueObject( ev ) );
         }
@@ -130,16 +109,15 @@ public class AuditController {
 
     /**
      * FIXME this relies on the exact class name being available from the EntityDelegator.
-     * 
-     * @param e
-     * @return
      */
-    private Auditable getAuditable( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
-        if ( e.getClassDelegatingFor() == null ) return null;
+    private AbstractAuditable getAuditable( EntityDelegator e ) {
+        if ( e == null || e.getId() == null )
+            return null;
+        if ( e.getClassDelegatingFor() == null )
+            return null;
 
         Class<?> clazz;
-        Auditable result = null;
+        AbstractAuditable result;
         try {
             clazz = Class.forName( e.getClassDelegatingFor() );
         } catch ( ClassNotFoundException e1 ) {
@@ -149,8 +127,6 @@ public class AuditController {
             result = expressionExperimentService.load( e.getId() );
         } else if ( ArrayDesign.class.isAssignableFrom( clazz ) ) {
             result = arrayDesignService.load( e.getId() );
-            // } else if ( Gene.class.isAssignableFrom( clazz ) ) {
-            // result = geneService.load( e.getId() );
         } else {
             log.warn( "We don't support that class yet, sorry" );
             return null;

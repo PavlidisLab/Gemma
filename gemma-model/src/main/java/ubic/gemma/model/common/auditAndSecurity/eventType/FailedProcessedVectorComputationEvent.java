@@ -21,8 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class FailedProcessedVectorComputationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEventImpl {
+public class FailedProcessedVectorComputationEvent extends NeedsAttentionEvent{
 
     /**
      * Constructs new instances of
@@ -34,7 +33,7 @@ public abstract class FailedProcessedVectorComputationEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent();
         }
 
     }

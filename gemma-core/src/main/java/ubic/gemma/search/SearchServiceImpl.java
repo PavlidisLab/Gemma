@@ -1356,7 +1356,7 @@ public class SearchServiceImpl implements SearchService {
      * Takes a list of ontology terms, and classes of objects of interest to be returned. Looks through the
      * characteristic table for an exact match with the given ontology terms. Only tries to match the uri's.
      * 
-     * @param data.clazz Class of objects to restrict the search to (typically ExpressionExperimentImpl.class, for
+     * @param data.clazz Class of objects to restrict the search to (typically ExpressionExperiment.class, for
      *        example).
      * @param terms A list of ontololgy terms to search for
      * @return Collection of search results for the objects owning the found characteristics, where the owner is of

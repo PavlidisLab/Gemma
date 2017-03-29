@@ -22,14 +22,6 @@ import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
 import gemma.gsec.util.CrudUtils;
 import gemma.gsec.util.CrudUtilsImpl;
-
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
-import java.util.NoSuchElementException;
-
-import javax.annotation.PostConstruct;
-
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
@@ -45,8 +37,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -57,17 +48,22 @@ import ubic.gemma.security.authorization.acl.AclAdvice;
 import ubic.gemma.util.ReflectionUtil;
 import ubic.gemma.util.Settings;
 
+import javax.annotation.PostConstruct;
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
+import java.util.NoSuchElementException;
+
 /**
  * Manage audit trails on objects.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class AuditAdvice {
 
     // Note that we have a special logger configured for this class, so delete events get stored.
-    private static Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
+    private static final Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
     private boolean AUDIT_CREATE = true;
 
@@ -86,13 +82,9 @@ public class AuditAdvice {
     private UserManager userManager;
 
     /**
-     * Entry point. This only takes action if the method involves Auditables.
-     * 
-     * @param pjp
-     * @return
-     * @throws Throwable
+     * Entry point. This only takes action if the method involves AbstractAuditables.
      */
-    public void doAuditAdvice( JoinPoint pjp, Object retValue ) throws Throwable {
+    public void doAuditAdvice( JoinPoint pjp, Object retValue ) {
 
         final Signature signature = pjp.getSignature();
         final String methodName = signature.getName();
@@ -100,7 +92,8 @@ public class AuditAdvice {
 
         Object object = getPersistentObject( retValue, methodName, args );
 
-        if ( object == null ) return;
+        if ( object == null )
+            return;
         User user = userManager.getCurrentUser();
 
         if ( user == null ) {
@@ -112,27 +105,23 @@ public class AuditAdvice {
 
         if ( object instanceof Collection ) {
             for ( final Object o : ( Collection<?> ) object ) {
-                if ( Auditable.class.isAssignableFrom( o.getClass() ) ) {
-                    process( methodName, ( Auditable ) o, user );
+                if ( AbstractAuditable.class.isAssignableFrom( o.getClass() ) ) {
+                    process( methodName, ( AbstractAuditable ) o, user );
                 }
             }
-        } else if ( ( Auditable.class.isAssignableFrom( object.getClass() ) ) ) {
-            process( methodName, ( Auditable ) object, user );
+        } else if ( ( AbstractAuditable.class.isAssignableFrom( object.getClass() ) ) ) {
+            process( methodName, ( AbstractAuditable ) object, user );
         }
     }
 
-    /**
-     * @param object
-     * @param propertyName
-     * @return
-     */
-    protected boolean canSkipAssociationCheck( Object object, String propertyName ) {
+
+    private boolean canSkipAssociationCheck( Object object, String propertyName ) {
 
         /*
          * If this is an expression experiment, don't go down the data vectors.
          */
-        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() )
-                && ( propertyName.equals( "rawExpressionDataVectors" ) || propertyName
+        if ( ExpressionExperiment.class.isAssignableFrom( object.getClass() ) && (
+                propertyName.equals( "rawExpressionDataVectors" ) || propertyName
                         .equals( "processedExpressionDataVectors" ) ) ) {
             log.trace( "Skipping vectors" );
             return true;
@@ -141,8 +130,8 @@ public class AuditAdvice {
         /*
          * Array designs...
          */
-        if ( ArrayDesign.class.isAssignableFrom( object.getClass() )
-                && ( propertyName.equals( "compositeSequences" ) || propertyName.equals( "reporters" ) ) ) {
+        if ( ArrayDesign.class.isAssignableFrom( object.getClass() ) && ( propertyName.equals( "compositeSequences" )
+                || propertyName.equals( "reporters" ) ) ) {
             log.trace( "Skipping probes" );
             return true;
         }
@@ -164,22 +153,21 @@ public class AuditAdvice {
 
     /**
      * For cases where don't have a cascade but the other end is auditable.
-     * <p>
      * Implementation note. This is kind of inelegant, but the alternative is to check _every_ association, which will
      * often not be reachable.
-     * 
-     * @param object we are checking
+     *
+     * @param object   we are checking
      * @param property of the object
      * @return true if the association should be followed.
      * @see AclAdvice for similar code
      */
-    protected boolean specialCaseForAssociationFollow( Object object, String property ) {
+    private boolean specialCaseForAssociationFollow( Object object, String property ) {
 
-        if ( BioAssay.class.isAssignableFrom( object.getClass() )
-                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
+        if ( BioAssay.class.isAssignableFrom( object.getClass() ) && ( property.equals( "samplesUsed" ) || property
+                .equals( "arrayDesignUsed" ) ) ) {
             return true;
-        } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() )
-                && property.equals( "bioAssayDimension" ) ) {
+        } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() ) && property
+                .equals( "bioAssayDimension" ) ) {
             return true;
         }
 
@@ -187,14 +175,14 @@ public class AuditAdvice {
     }
 
     /**
-     * Adds 'create' AuditEvent to audit trail of the passed Auditable.
-     * 
-     * @param auditable
-     * @param note Additional text to add to the automatically generated note.
+     * Adds 'create' AuditEvent to audit trail of the passed AbstractAuditable.
+     
+     * @param note      Additional text to add to the automatically generated note.
      */
-    private void addCreateAuditEvent( final Auditable auditable, User user, final String note ) {
+    private void addCreateAuditEvent( final AbstractAuditable auditable, User user, final String note ) {
 
-        if ( isNullOrTransient( auditable ) ) return;
+        if ( isNullOrTransient( auditable ) )
+            return;
 
         AuditTrail auditTrail = auditable.getAuditTrail();
 
@@ -214,8 +202,9 @@ public class AuditAdvice {
         try {
             auditHelper.addCreateAuditEvent( auditable, details, user );
             if ( log.isDebugEnabled() ) {
-                log.debug( "Audited event: " + ( note.length() > 0 ? note : "[no note]" ) + " on "
-                        + auditable.getClass().getSimpleName() + ":" + auditable.getId() + " by " + user.getUserName() );
+                log.debug(
+                        "Audited event: " + ( note.length() > 0 ? note : "[no note]" ) + " on " + auditable.getClass()
+                                .getSimpleName() + ":" + auditable.getId() + " by " + user.getUserName() );
             }
 
         } catch ( UsernameNotFoundException e ) {
@@ -223,10 +212,8 @@ public class AuditAdvice {
         }
     }
 
-    /**
-     * @param d
-     */
-    private void addDeleteAuditEvent( Auditable d, User user ) {
+ 
+    private void addDeleteAuditEvent( AbstractAuditable d, User user ) {
         assert d != null;
         // what else could we do? But need to keep this record in a good place. See log4j.properties.
         if ( log.isInfoEnabled() ) {
@@ -238,10 +225,8 @@ public class AuditAdvice {
         }
     }
 
-    /**
-     * @param auditable
-     */
-    private void addUpdateAuditEvent( final Auditable auditable, User user ) {
+  
+    private void addUpdateAuditEvent( final AbstractAuditable auditable, User user ) {
         assert auditable != null;
 
         AuditTrail auditTrail = auditable.getAuditTrail();
@@ -259,17 +244,16 @@ public class AuditAdvice {
             String note = "Updated " + auditable.getClass().getSimpleName() + " " + auditable.getId();
             auditHelper.addUpdateAuditEvent( auditable, note, user );
             if ( log.isDebugEnabled() ) {
-                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":"
-                        + auditable.getId() + " by " + user.getUserName() );
+                log.debug( "Audited event: " + note + " on " + auditable.getClass().getSimpleName() + ":" + auditable
+                        .getId() + " by " + user.getUserName() );
             }
         }
     }
 
-    /**
-     * @param auditTrail
-     */
+
     private void ensureInSession( AuditTrail auditTrail ) {
-        if ( auditTrail == null ) return;
+        if ( auditTrail == null )
+            return;
         /*
          * Ensure we have the object in the session. It might not be, if we have flushed the session.
          */
@@ -279,18 +263,14 @@ public class AuditAdvice {
         }
     }
 
-    /**
-     * @param retValue
-     * @param m
-     * @param args
-     * @return
-     */
+
     private Object getPersistentObject( Object retValue, String methodName, Object[] args ) {
-        if ( retValue == null
-                && ( CrudUtilsImpl.methodIsDelete( methodName ) || CrudUtilsImpl.methodIsUpdate( methodName ) ) ) {
+        if ( retValue == null && ( CrudUtilsImpl.methodIsDelete( methodName ) || CrudUtilsImpl
+                .methodIsUpdate( methodName ) ) ) {
 
             // Only deal with single-argument update methods.
-            if ( args.length > 1 ) return null;
+            if ( args.length > 1 )
+                return null;
 
             assert args.length > 0;
             return args[0];
@@ -298,23 +278,18 @@ public class AuditAdvice {
         return retValue;
     }
 
-    /**
-     * @param auditable
-     * @return
-     */
-    private boolean isNullOrTransient( final Auditable auditable ) {
+
+    private boolean isNullOrTransient( final AbstractAuditable auditable ) {
         return auditable == null || auditable.getId() == null;
     }
 
     /**
      * Check if the associated object needs to be 'create audited'. Example: gene products are created by cascade when
      * calling update on a gene.
-     * 
-     * @param object
-     * @param auditable
-     * @param auditTrail
+     *
+
      */
-    private void maybeAddCascadeCreateEvent( Object object, Auditable auditable, User user ) {
+    private void maybeAddCascadeCreateEvent( Object object, AbstractAuditable auditable, User user ) {
         if ( log.isDebugEnabled() )
             log.debug( "Checking for whether to cascade create event from " + auditable + " to " + object );
 
@@ -329,11 +304,9 @@ public class AuditAdvice {
 
     /**
      * Process auditing on the object.
-     * 
-     * @param methodName
-     * @param object
+     *
      */
-    private void process( final String methodName, final Auditable auditable, User user ) {
+    private void process( final String methodName, final AbstractAuditable auditable, User user ) {
 
         // do this here, when we are sure to be in a transaction. But might be repetitive when working on a collection.
         this.sessionFactory.getCurrentSession().setReadOnly( user, true );
@@ -342,8 +315,8 @@ public class AuditAdvice {
             log.trace( "***********  Start Audit of " + methodName + " on " + auditable + " *************" );
         }
         assert auditable != null : "Null entity passed to auditing [" + methodName + " on " + auditable + "]";
-        assert auditable.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + auditable
-                + "]";
+        assert auditable.getId() != null :
+                "Transient instance passed to auditing [" + methodName + " on " + auditable + "]";
 
         if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
             addCreateAuditEvent( auditable, user, "" );
@@ -361,23 +334,23 @@ public class AuditAdvice {
             addDeleteAuditEvent( auditable, user );
         }
 
-        if ( log.isTraceEnabled() ) log.trace( "============  End Audit ==============" );
+        if ( log.isTraceEnabled() )
+            log.trace( "============  End Audit ==============" );
     }
 
     /**
      * Fills in audit trails on newly created child objects after a 'create' or 'update'. It does not add 'update'
      * events on the child objects.
-     * <p>
      * Thus if the update is on an expression experiment that has a new Characteristic, the Characteristic will have a
      * 'create' event, and the EEE will get an added update event (via the addUpdateAuditEvent call elsewhere, not here)
-     * 
-     * @param m
-     * @param object
+     *
+
      * @see AclAdvice for similar code for ACLs
      */
     private void processAssociations( String methodName, Object object, User user ) {
 
-        if ( object instanceof AuditTrail ) return; // don't audit audit trails.
+        if ( object instanceof AuditTrail )
+            return; // don't audit audit trails.
 
         EntityPersister persister = crudUtils.getEntityPersister( object );
         if ( persister == null ) {
@@ -392,21 +365,23 @@ public class AuditAdvice {
 
                 String propertyName = propertyNames[j];
 
-                if ( !specialCaseForAssociationFollow( object, propertyName )
-                        && ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) ) ) {
+                if ( !specialCaseForAssociationFollow( object, propertyName ) && (
+                        canSkipAssociationCheck( object, propertyName ) || !crudUtils
+                                .needCascade( methodName, cs ) ) ) {
                     continue;
                 }
 
                 PropertyDescriptor descriptor = BeanUtils.getPropertyDescriptor( object.getClass(), propertyName );
                 Object associatedObject = ReflectionUtil.getProperty( object, descriptor );
 
-                if ( associatedObject == null ) continue;
+                if ( associatedObject == null )
+                    continue;
 
                 Class<?> propertyType = descriptor.getPropertyType();
 
-                if ( Auditable.class.isAssignableFrom( propertyType ) ) {
+                if ( AbstractAuditable.class.isAssignableFrom( propertyType ) ) {
 
-                    Auditable auditable = ( Auditable ) associatedObject;
+                    AbstractAuditable auditable = ( AbstractAuditable ) associatedObject;
                     try {
 
                         maybeAddCascadeCreateEvent( object, auditable, user );
@@ -427,8 +402,8 @@ public class AuditAdvice {
                         Hibernate.initialize( associatedObjects );
                         for ( Object collectionMember : associatedObjects ) {
 
-                            if ( Auditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
-                                Auditable auditable = ( Auditable ) collectionMember;
+                            if ( AbstractAuditable.class.isAssignableFrom( collectionMember.getClass() ) ) {
+                                AbstractAuditable auditable = ( AbstractAuditable ) collectionMember;
                                 try {
                                     Hibernate.initialize( auditable );
                                     maybeAddCascadeCreateEvent( object, auditable, user );
@@ -436,8 +411,8 @@ public class AuditAdvice {
                                 } catch ( HibernateException e ) {
                                     hadErrors = true;
                                     if ( log.isDebugEnabled() )
-                                        log.debug( "Hibernate error while processing " + auditable + ": "
-                                                + e.getMessage() );
+                                        log.debug( "Hibernate error while processing " + auditable + ": " + e
+                                                .getMessage() );
                                     // If this happens, it means the object can't be 'new' so adding audit trail can't
                                     // be necessary. But keep checking.
                                 }
@@ -454,14 +429,13 @@ public class AuditAdvice {
 
                 }
             }
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+        } catch ( IllegalAccessException | InvocationTargetException e ) {
             throw new RuntimeException( e );
         }
+        
         if ( hadErrors ) {
-            // log.warn( "There were hibernate errors during association checking for " + object
-            // + "; probably not critical." );
+            log.warn( "There were hibernate errors during association checking for " + object
+             + "; probably not critical." );
         }
     }
 

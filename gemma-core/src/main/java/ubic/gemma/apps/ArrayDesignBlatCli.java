@@ -18,20 +18,10 @@
  */
 package ubic.gemma.apps;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
@@ -42,45 +32,39 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+
 /**
  * Command line interface to run blat on the sequences for a microarray; the results are persisted in the DB. You must
  * start the BLAT server first before using this.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
+    private Taxon taxon;
+    private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
+    private String blatResultFile = null;
+    private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
+    private boolean sensitive = false;
+    private String taxonName;
+    private TaxonService taxonService;
+
     public static void main( String[] args ) {
         ArrayDesignBlatCli p = new ArrayDesignBlatCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        tryDoWorkNoExit( p, args );
     }
-    
+
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
-
-    Taxon taxon;
-
-    private ArrayDesignSequenceAlignmentService arrayDesignSequenceAlignmentService;
-
-    private String blatResultFile = null;
-
-    private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
-
-    private boolean sensitive = false;
-
-    private String taxonName;
-
-    private TaxonService taxonService;
 
     /*
      * (non-Javadoc)
@@ -97,11 +81,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
     }
 
-    /**
-     * @param skipIfLastRunLaterThan
-     * @param design
-     */
-    void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
         if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
             log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
             // not really an error, but nice to get notification.
@@ -139,28 +119,19 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     protected void buildOptions() {
         super.buildOptions();
 
-        Option blatResultOption = OptionBuilder
-                .hasArg()
-                .withArgName( "PSL file" )
-                .withDescription(
-                        "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple platforms to run); -t option overrides" )
+        Option blatResultOption = OptionBuilder.hasArg().withArgName( "PSL file" ).withDescription(
+                "Blat result file in PSL format (if supplied, BLAT will not be run; will not work with settings that indidate multiple platforms to run); -t option overrides" )
                 .withLongOpt( "blatfile" ).create( 'b' );
 
-        Option blatScoreThresholdOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Blat score threshold" )
-                .withDescription(
-                        "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold
-                                + "]" ).withLongOpt( "scoreThresh" ).create( 's' );
+        Option blatScoreThresholdOption = OptionBuilder.hasArg().withArgName( "Blat score threshold" ).withDescription(
+                "Threshold (0-1.0) for acceptance of BLAT alignments [Default = " + this.blatScoreThreshold + "]" )
+                .withLongOpt( "scoreThresh" ).create( 's' );
 
-        this.addOption( OptionBuilder.withDescription( "Run on more sensitive server, if available" ).create(
-                "sensitive" ) );
+        this.addOption(
+                OptionBuilder.withDescription( "Run on more sensitive server, if available" ).create( "sensitive" ) );
 
-        Option taxonOption = OptionBuilder
-                .hasArg()
-                .withArgName( "taxon" )
-                .withDescription(
-                        "Taxon common name (e.g., human); if platform name not given (analysis will be restricted to sequences on that platform for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
+                "Taxon common name (e.g., human); if platform name not given (analysis will be restricted to sequences on that platform for taxon given), blat will be run for all ArrayDesigns from that taxon (overrides -a and -b)" )
                 .create( 't' );
 
         addOption( taxonOption );
@@ -177,7 +148,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
-        if ( err != null ) return err;
+        if ( err != null )
+            return err;
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
@@ -205,19 +177,17 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                         }
 
                         log.info( "Got " + blatResults.size() + " blat records" );
-                        persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign, taxon,
-                                blatResults );
+                        persistedResults = arrayDesignSequenceAlignmentService
+                                .processArrayDesign( arrayDesign, taxon, blatResults );
                         audit( arrayDesign, "BLAT results read from file: " + blatResultFile );
                     } else {
                         // Run blat from scratch.
-                        persistedResults = arrayDesignSequenceAlignmentService.processArrayDesign( arrayDesign,
-                                this.sensitive );
+                        persistedResults = arrayDesignSequenceAlignmentService
+                                .processArrayDesign( arrayDesign, this.sensitive );
                         audit( arrayDesign, "Based on a fresh alignment analysis; BLAT score threshold was "
                                 + this.blatScoreThreshold + "; sensitive mode was " + this.sensitive );
                     }
                     log.info( "Persisted " + persistedResults.size() + " results" );
-                } catch ( FileNotFoundException e ) {
-                    this.errorObjects.add( e );
                 } catch ( IOException e ) {
                     this.errorObjects.add( e );
                 }
@@ -226,8 +196,8 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         } else if ( taxon != null ) {
 
             Collection<ArrayDesign> allArrayDesigns = arrayDesignService.findByTaxon( taxon );
-            log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** ["
-                    + allArrayDesigns.size() + " items]" );
+            log.warn( "*** Running BLAT for all " + taxon.getCommonName() + " Array designs *** [" + allArrayDesigns
+                    .size() + " items]" );
 
             final SecurityContext context = SecurityContextHolder.getContext();
 
@@ -264,7 +234,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 }
             }
 
-            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<ArrayDesign>( allArrayDesigns.size() );
+            BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
             for ( ArrayDesign ad : allArrayDesigns ) {
                 arrayDesigns.add( ad );
             }
@@ -272,7 +242,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             /*
              * Start the threads
              */
-            Collection<Thread> threads = new ArrayList<Thread>();
+            Collection<Thread> threads = new ArrayList<>();
             for ( int i = 0; i < this.numThreads; i++ ) {
                 Consumer c1 = new Consumer( arrayDesigns );
                 Thread k = new Thread( c1 );
@@ -328,9 +298,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note ) {
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
@@ -339,13 +306,9 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
 
     /**
      * Process blat file which must be for one taxon.
-     * 
-     * @param arrayDesign
-     * @return
-     * @throws IOException
      */
     private Collection<BlatResult> getBlatResultsFromFile( ArrayDesign arrayDesign ) throws IOException {
-        Taxon arrayDesignTaxon = null;
+        Taxon arrayDesignTaxon;
         File f = new File( blatResultFile );
         if ( !f.canRead() ) {
             log.error( "Cannot read from " + blatResultFile );
@@ -359,8 +322,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         parser.setScoreThreshold( this.blatScoreThreshold );
         parser.setTaxon( arrayDesignTaxon );
         parser.parse( f );
-        Collection<BlatResult> blatResults = parser.getResults();
-        return blatResults;
+        return parser.getResults();
     }
 
 }

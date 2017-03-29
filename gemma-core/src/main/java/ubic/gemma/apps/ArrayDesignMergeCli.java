@@ -123,7 +123,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
             String[] names = StringUtils.split( otherArrayDesigName, ',' );
             this.otherArrayDesigns = new HashSet<ArrayDesign>();
             for ( String string : names ) {
-                ArrayDesign o = locateArrayDesign( string );
+                ArrayDesign o = locateArrayDesign( string, arrayDesignService );
                 if ( o == null ) {
                     throw new IllegalArgumentException( "Array design " + string + " not found" );
                 }

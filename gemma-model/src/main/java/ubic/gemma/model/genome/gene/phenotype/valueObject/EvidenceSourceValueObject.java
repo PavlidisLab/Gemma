@@ -6,9 +6,6 @@ import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
 public class EvidenceSourceValueObject extends DatabaseEntryValueObject {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4085159943613845499L;
     // used by neurocarta to find the url of an evidence source
     private String externalUrl = "";

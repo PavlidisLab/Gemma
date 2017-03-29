@@ -508,7 +508,6 @@
 
 	<bean id="annotationController" class="ubic.gemma.web.controller.expression.experiment.AnnotationController">
 		<dwr:remote javascript="AnnotationController">
-			<dwr:include method="autoTag" />
 			<dwr:include method="findTerm" />
 			<dwr:include method="getCategoryTerms" />
 			<dwr:include method="createExperimentTag" />
@@ -726,10 +725,10 @@
 		</dwr:init>
 
 
-		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.FreeTextExpressionExperimentResultsValueObject"
 			javascript="FreeTextExpressionExperimentResultsValueObject" />
 
-		<dwr:convert type="bean" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject"
+		<dwr:convert type="bean" class="ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject"
 			javascript="SessionBoundExpressionExperimentSetValueObject">
 			<dwr:exclude method="securableClass" />
 		</dwr:convert>

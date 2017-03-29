@@ -22,12 +22,13 @@ import gemma.gsec.model.Securable;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 
 /**
  * 
  */
-public abstract class ExperimentalDesign extends ubic.gemma.model.common.Auditable implements
+public abstract class ExperimentalDesign extends AbstractAuditable implements
         gemma.gsec.model.SecuredChild {
 
     /**

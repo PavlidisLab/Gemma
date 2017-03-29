@@ -37,7 +37,7 @@ import junit.framework.TestCase;
 public class ArrayDesignServiceImplTest extends TestCase {
 
     private ArrayDesignServiceImpl arrayDesignService = new ArrayDesignServiceImpl();
-    private ArrayDesignDao arrayDesignDaoMock = null;
+    private ArrayDesignDaoImpl arrayDesignDaoMock = null;
 
     /*
      * @see TestCase#setUp()
@@ -45,7 +45,7 @@ public class ArrayDesignServiceImplTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        arrayDesignDaoMock = createMock( ArrayDesignDao.class );
+        arrayDesignDaoMock = createMock( ArrayDesignDaoImpl.class );
         arrayDesignService.setArrayDesignDao( arrayDesignDaoMock );
     }
 

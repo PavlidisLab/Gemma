@@ -20,42 +20,35 @@ package ubic.gemma.util;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
+import java.util.*;
+
 /**
  * @author paul
- * @version $Id$
  */
 public class EntityUtils {
 
     /**
      * Expert only. Put the given entity into the Session, with LockMode.NONE
-     * <p>
-     * Based on idea from {@link https://forum.hibernate.org/viewtopic.php?p=2284826#p2284826}
-     * 
+     * Based on idea from https://forum.hibernate.org/viewtopic.php?p=2284826#p2284826
+     *
      * @param session Hibernate Session (use factory.getCurrentSession())
-     * @param obj the entity
-     * @param clazz the class type of the persisted entity. Don't use obj.getClass() as this might return a proxy type.
-     * @param id identifier of the obj
+     * @param obj     the entity
+     * @param clazz   the class type of the persisted entity. Don't use obj.getClass() as this might return a proxy type.
+     * @param id      identifier of the obj
      */
     public static void attach( Session session, Object obj, Class<?> clazz, Long id ) {
-        if ( obj == null || id == null ) return;
-        if ( !session.isOpen() ) throw new IllegalArgumentException( "Illegal attempt to use a closed session" );
+        if ( obj == null || id == null )
+            return;
+        if ( !session.isOpen() )
+            throw new IllegalArgumentException( "Illegal attempt to use a closed session" );
         if ( !session.contains( obj ) ) {
 
             Object oldObj = session.get( clazz, id );
@@ -71,35 +64,22 @@ public class EntityUtils {
         return getId( entity, "getId" );
     }
 
-    /**
-     * @param entity
-     * @return
-     */
     public static Long getId( Object entity, String methodName ) {
         try {
-            Method m = entity.getClass().getMethod( methodName, new Class[] {} );
-            return ( Long ) m.invoke( entity, new Object[] {} );
-        } catch ( SecurityException e ) {
-            throw new RuntimeException( e );
-        } catch ( NoSuchMethodException e ) {
-            throw new RuntimeException( e );
-        } catch ( IllegalArgumentException e ) {
-            throw new RuntimeException( e );
-        } catch ( IllegalAccessException e ) {
-            throw new RuntimeException( e );
-        } catch ( InvocationTargetException e ) {
+            Method m = entity.getClass().getMethod( methodName );
+            return ( Long ) m.invoke( entity );
+        } catch ( SecurityException | NoSuchMethodException | InvocationTargetException | IllegalAccessException | IllegalArgumentException e ) {
             throw new RuntimeException( e );
         }
     }
 
     /**
      * Given a set of entities, create a map of their ids to the entities.
-     * 
+     *
      * @param entities where id is called "id"
-     * @return
      */
     public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities ) {
-        Map<Long, T> result = new HashMap<Long, T>();
+        Map<Long, T> result = new HashMap<>();
 
         for ( T object : entities ) {
             result.put( getId( object, "getId" ), object );
@@ -110,12 +90,10 @@ public class EntityUtils {
     }
 
     /**
-     * @param list
      * @param methodName accessor e.g. "getId"
-     * @return
      */
     public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities, String methodName ) {
-        Map<Long, T> result = new HashMap<Long, T>();
+        Map<Long, T> result = new HashMap<>();
 
         for ( T object : entities ) {
             result.put( getId( object, methodName ), object );
@@ -125,17 +103,16 @@ public class EntityUtils {
     }
 
     /**
-     * @param entities
      * @return either a list (if entities was a list) or collection of ids.
      */
-    public static Collection<Long> getIds( Collection<? extends Object> entities ) {
+    public static Collection<Long> getIds( Collection<?> entities ) {
 
         Collection<Long> r;
 
         if ( List.class.isAssignableFrom( entities.getClass() ) ) {
-            r = new ArrayList<Long>();
+            r = new ArrayList<>();
         } else {
-            r = new HashSet<Long>();
+            r = new HashSet<>();
         }
 
         for ( Object object : entities ) {
@@ -146,13 +123,12 @@ public class EntityUtils {
 
     /**
      * Convenience method for pushing an ID into a collection (encapsulates a common idiom)
-     * 
-     * @param gene
+     *
      * @return a collection with one item in it.
      */
     public static Collection<Long> getIds( Object entity ) {
         Collection<Long> r;
-        r = new HashSet<Long>();
+        r = new HashSet<>();
         r.add( getId( entity ) );
         return r;
     }
@@ -171,7 +147,7 @@ public class EntityUtils {
     /**
      * Expert only. Must be called within a session? Not sure why this is necessary. Obtain the implementation for a
      * proxy. If target is not an instanceof HibernateProxy, target is returned.
-     * 
+     *
      * @param target The object to be unproxied.
      * @return the underlying implementation.
      */
@@ -184,7 +160,6 @@ public class EntityUtils {
     }
 
     /**
-     * @param target
      * @return true if the target is a hibernate proxy.
      */
     public static boolean isProxy( Object target ) {
@@ -193,18 +168,17 @@ public class EntityUtils {
 
     /**
      * Expert use only. Used to expose some ACL information to the DAO layer (normally this happens in an interceptor).
-     * 
-     * @param securedclass Securable type
-     * @param ids to be filtered
-     * @param showOnlyEditable
-     * @param showPublic also show public items (won't work if showOnlyEditable is true)
-     * @param sess
+     *
+     * @param securedClass Securable type
+     * @param ids          to be filtered
+     * @param showPublic   also show public items (won't work if showOnlyEditable is true)
      * @return filtered IDs, at the very least limited to those that are readable by the current user
      */
-    public static Collection<Long> securityFilterIds( Class<? extends Securable> securedclass, Collection<Long> ids,
+    public static Collection<Long> securityFilterIds( Class<? extends Securable> securedClass, Collection<Long> ids,
             boolean showOnlyEditable, boolean showPublic, Session sess ) {
 
-        if ( ids.isEmpty() ) return ids;
+        if ( ids.isEmpty() )
+            return ids;
         if ( SecurityUtil.isUserAdmin() ) {
             return ids;
         }
@@ -218,7 +192,7 @@ public class EntityUtils {
         boolean isAnonymous = SecurityUtil.isUserAnonymous();
 
         if ( isAnonymous && ( showOnlyEditable || !showPublic ) ) {
-            return new HashSet<Long>();
+            return new HashSet<>();
         }
 
         String queryString = "select aoi.OBJECT_ID";
@@ -230,16 +204,12 @@ public class EntityUtils {
         queryString += addGroupAndUserNameRestriction( showOnlyEditable, showPublic );
 
         // will be empty if anonymous
-        Collection<String> groups = sess
-                .createQuery(
-                        "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
+        //noinspection unchecked
+        Collection<String> groups = sess.createQuery(
+                "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
                 .setParameter( "user", userName ).list();
 
-        // System.err.println( queryString.replace( ":ids", StringUtils.join( ids, "," ) )
-        // .replace( ":clazz", "'" + securedclass.getName() + "'" )
-        // .replace( ":groups", StringUtils.join( groups, "," ) ).replace( ":userName", "'" + userName + "'" ) );
-
-        Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedclass.getName() )
+        Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedClass.getName() )
                 .setParameterList( "ids", ids );
 
         if ( queryString.contains( ":groups" ) ) {
@@ -250,6 +220,7 @@ public class EntityUtils {
             query.setParameter( "userName", userName );
         }
 
+        //noinspection unchecked
         List<BigInteger> r = query.list();
         Set<Long> rl = new HashSet<>();
         for ( BigInteger bi : r ) {
@@ -266,13 +237,12 @@ public class EntityUtils {
 
     /**
      * Have to add 'and' to start of this if it's a later clause
-     * 
-     * @param groups gruops this user belongs to (empty/ignored if anonymous)
+     * Author: nicolas with fixes to generalize by paul, same code appears in the PhenotypeAssociationDaoImpl
+     *
      * @param showOnlyEditable only show those the user has access to edit
-     * @param showPublic also show public items (wont work if showOnlyEditable is true)
-     * @author nicolas with fixes to generalize by paul, same code appears in the PhenotypeAssociationDaoImpl
+     * @param showPublic       also show public items (wont work if showOnlyEditable is true)
      */
-    private static String addGroupAndUserNameRestriction( boolean showOnlyEditable, boolean showPublic ) {
+    public static String addGroupAndUserNameRestriction( boolean showOnlyEditable, boolean showPublic ) {
 
         String sqlQuery = "";
 

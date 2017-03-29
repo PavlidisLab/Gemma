@@ -44,8 +44,8 @@ Gemma.ExpressionExperimentDetails = Ext
                   + '</a> - ' + ad.name;
 
                if ( arrayDesigns[i].troubled ) {
-                  result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
-                     + arrayDesigns[i].troubleDetails + '"/>';
+                  result = result + ' <i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'
+                     + arrayDesigns[i].troubleDetails + '"></i>';
                }
                if ( i < arrayDesigns.length - 1 ) {
                   result = result + "<br/>";
@@ -97,10 +97,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
          /**
           * Link for samples details page.
-          * 
-          * @param {}
-          *           ee
-          * @return {}
+          *
           */
          renderSamples : function( ee ) {
             var result = ee.bioAssayCount;
@@ -117,14 +114,9 @@ Gemma.ExpressionExperimentDetails = Ext
          renderStatus : function( ee ) {
 
             var result = '';
-            if ( ee.validated ) {
-               result = result
-                  + '<img src="/Gemma/images/icons/emoticon_smile.png" alt="validated" title="validated"/>';
-            }
-
             if ( ee.troubled ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ext:qtip="'
-                  + ee.troubleDetails + '"/>';
+               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" alt="trouble" ext:qtip="'
+                  + ee.troubleDetails + '"></i> ';
             }
 
             result = result
@@ -133,14 +125,14 @@ Gemma.ExpressionExperimentDetails = Ext
             result = result + (ee.batchEffect != null ? ee.batchEffect : ""); // string description.
 
             if ( ee.hasMultiplePreferredQuantitationTypes ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' + 'title="'
+               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'+
                   + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes
-                  + '"/>';
+                  + '"></i>';
             }
 
             if ( ee.hasMultipleTechnologyTypes ) {
-               result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' + 'title="'
-                  + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"/>';
+               result = result + '<i class="red fa fa-exclamation-triangle fa-lg" ext:qtip="'+
+                  + Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes + '"></i>';
             }
 
             var isUserLoggedIn = (Ext.get( 'hasUser' ) && Ext.get( 'hasUser' ).getValue() === 'true') ? true : false;
@@ -148,7 +140,7 @@ Gemma.ExpressionExperimentDetails = Ext
             if ( isUserLoggedIn ) {
                result = result
                   + Gemma.SecurityManager.getSecurityLink(
-                     'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', ee.id, ee.isPublic,
+                     'ubic.gemma.model.expression.experiment.ExpressionExperiment', ee.id, ee.isPublic,
                      ee.isShared, ee.userCanWrite, null, null, null, ee.userOwned );
             }
 
@@ -168,7 +160,7 @@ Gemma.ExpressionExperimentDetails = Ext
                var color = "#000";
                var suggestRun = true;
                var qtip = 'ext:qtip="OK"';
-               if ( type == 'FailedLinkAnalysisEventImpl' ) {
+               if ( type == 'FailedLinkAnalysisEvent' ) {
                   color = 'red';
                   qtip = 'ext:qtip="Failed"';
                } else if ( type == 'TooSmallDatasetLinkAnalysisEventImpl' ) {
@@ -178,7 +170,7 @@ Gemma.ExpressionExperimentDetails = Ext
                }
 
                return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Ext.util.Format.date( ee.dateLinkAnalysis, 'y/M/d' ) + '&nbsp;' + (suggestRun ? runurl : '');
+                  + Gemma.Renderers.dateRenderer( ee.dateLinkAnalysis ) + '&nbsp;' + (suggestRun ? runurl : '');
             } else {
                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
             }
@@ -203,13 +195,13 @@ Gemma.ExpressionExperimentDetails = Ext
                   var color = "#000";
                   var suggestRun = true;
                   var qtip = 'ext:qtip="OK"';
-                  if ( type == 'FailedMissingValueAnalysisEventImpl' ) {
+                  if ( type == 'FailedMissingValueAnalysisEvent' ) {
                      color = 'red';
                      qtip = 'ext:qtip="Failed"';
                   }
 
                   return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Ext.util.Format.date( ee.dateMissingValueAnalysis, 'y/M/d' ) + '&nbsp;'
+                     + Gemma.Renderers.dateRenderer( ee.dateMissingValueAnalysis ) + '&nbsp;'
                      + (suggestRun ? runurl : '');
                } else {
                   return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -243,7 +235,7 @@ Gemma.ExpressionExperimentDetails = Ext
                }
 
                return '<span style="color:' + color + ';" ' + qtip + '>'
-                  + Ext.util.Format.date( ee.dateProcessedDataVectorComputation, 'y/M/d' ) + '&nbsp;'
+                  + Gemma.Renderers.dateRenderer( ee.dateProcessedDataVectorComputation ) + '&nbsp;'
                   + (suggestRun ? runurl : '');
             } else {
                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -266,7 +258,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   var color = "#000";
                   var suggestRun = true;
                   var qtip = 'ext:qtip="OK"';
-                  if ( type == 'FailedDifferentialExpressionAnalysisEventImpl' ) {
+                  if ( type == 'FailedDifferentialExpressionAnalysisEvent' ) {
                      color = 'red';
                      qtip = 'ext:qtip="Failed"';
                   } else if ( record.get( 'differentialExpressionAnalyses' ).length == 0 ) {
@@ -275,7 +267,7 @@ Gemma.ExpressionExperimentDetails = Ext
                   }
 
                   return '<span style="color:' + color + ';" ' + qtip + '>'
-                     + Ext.util.Format.date( ee.dateDifferentialAnalysis, 'y/M/d' ) + '&nbsp;'
+                     + Gemma.Renderers.dateRenderer( ee.dateDifferentialAnalysis ) + '&nbsp;'
                      + (suggestRun ? runurl : '');
                } else {
                   return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
@@ -405,14 +397,13 @@ Gemma.ExpressionExperimentDetails = Ext
             new Gemma.CategoryCombo( {} );
 
             var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'' + e.id
-               + '-eemanager\').tagger(' + e.id + ',' + e.taxonId + ',' + this.editable + ','
-               + (e.validatedAnnotations !== null)
+               + '-eemanager\').tagger(' + e.id + ',' + e.taxonId + ',' + this.editable +
                + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
 
             tagView = new Gemma.AnnotationDataView( {
                readParams : [ {
                   id : e.id,
-                  classDelegatingFor : "ExpressionExperimentImpl"
+                  classDelegatingFor : "ExpressionExperiment"
                } ]
             } );
 
@@ -796,13 +787,12 @@ Gemma.ExpressionExperimentDetails = Ext
                                        pubMedDisplay,
                                        pubMedForm,
                                        {
-                                          fieldLabel : 'Created',
-                                          html : Ext.util.Format.date( e.dateCreated ) + ' from '
-                                             + this.renderSourceDatabaseEntry( e )
+                                          fieldLabel : 'Source',
+                                          html : this.renderSourceDatabaseEntry( e )
                                        },
                                        {
                                           html : 'The last time a platform associated with this experiment was updated: '
-                                             + e.lastArrayDesignUpdateDate,
+                                             + Gemma.Renderers.dateTimeRenderer(e.lastArrayDesignUpdateDate),
                                           hidden : !e.lastArrayDesignUpdateDate
                                        } ]
                            } ]

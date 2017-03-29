@@ -19,9 +19,6 @@ if ( typeof AnnotationController === 'undefined' ) {
    var AnnotationController = {};
 }
 AnnotationController._path = '/Gemma/dwr';
-AnnotationController.autoTag = function( p0, callback ) {
-   dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'autoTag', p0, callback );
-};
 AnnotationController.findTerm = function( p0, p1, callback ) {
    dwr.engine._execute( AnnotationController._path, 'AnnotationController', 'findTerm', p0, p1, callback );
 };

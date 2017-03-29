@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id$ -->
+<!-- $id$ -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx" xmlns:p="http://www.springframework.org/schema/p"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
@@ -92,7 +92,7 @@
 				<value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/curation/CurationDetails.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/search/SearchSettings.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml</value>

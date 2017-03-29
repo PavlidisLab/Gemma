@@ -390,11 +390,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         arrayDesignReportService = getBean( ArrayDesignReportService.class );
 
         if ( hasOption( 't' ) ) {
-            String taxonName = getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( taxonName );
-            if ( taxon == null ) {
-                log.error( "ERROR: Cannot find taxon " + taxonName );
-            }
+            this.taxon = this.setTaxonByName( taxonService );
         }
         if ( hasOption( "ncbiids" ) ) {
             this.useNCBIIds = true;

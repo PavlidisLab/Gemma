@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -75,7 +76,7 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.Auditable#getAuditTrail()
+     * @see Auditable#getAuditTrail()
      */
     public AuditTrail getAuditTrail() {
         return this.user.getAuditTrail();
@@ -209,7 +210,7 @@ public class UserUpdateCommand {
 
     /**
      * @param auditTrail
-     * @see ubic.gemma.model.common.Auditable#setAuditTrail(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
+     * @see Auditable#setAuditTrail(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
     public void setAuditTrail( AuditTrail auditTrail ) {
         this.user.setAuditTrail( auditTrail );

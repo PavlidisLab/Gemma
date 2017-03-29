@@ -27,7 +27,7 @@ Gemma.SecurityManager.isLoggedIn = function() {
  *           elid
  * @param {string}
  *           clazz full qualified class name of Gemma entity impl, e.g.
- *           ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.
+ *           ubic.gemma.model.expression.experiment.ExpressionExperiment.
  * @param {number}
  *           id of the entity
  * @param {string}
@@ -360,7 +360,7 @@ Gemma.SecurityManager.updateSecurityLink = function( elid, clazz, id, isPublic, 
  * 
  * @param {string}
  *           clazz full qualified class name of Gemma entity impl, e.g.
- *           ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.
+ *           ubic.gemma.model.expression.experiment.ExpressionExperiment.
  * @param {string}
  *           id of the entity
  * @param {boolean}
@@ -414,7 +414,7 @@ Gemma.SecurityManager.getSecurityLink = function( clazz, id, isPublic, isShared,
  * 
  * @param {}
  *           clazz full qualified class name of Gemma entity impl, e.g.
- *           ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.
+ *           ubic.gemma.model.expression.experiment.ExpressionExperiment.
  * @param {}
  *           id of the entity
  * @return {} html for the link

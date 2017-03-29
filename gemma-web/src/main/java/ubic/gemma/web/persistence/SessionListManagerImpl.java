@@ -19,16 +19,9 @@
 
 package ubic.gemma.web.persistence;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
@@ -36,14 +29,17 @@ import ubic.gemma.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
 /**
- * TODO Document Me
- * 
  * @author thea
- * @version $Id$
  */
 @Component
 public class SessionListManagerImpl implements SessionListManager {
@@ -66,12 +62,6 @@ public class SessionListManagerImpl implements SessionListManager {
     @Autowired
     private GeneSetService geneSetService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#addExperimentSet(ubic.gemma.expression.experiment.
-     * SessionBoundExpressionExperimentSetValueObject)
-     */
     @Override
     public SessionBoundExpressionExperimentSetValueObject addExperimentSet(
             SessionBoundExpressionExperimentSetValueObject eesvo ) {
@@ -80,12 +70,6 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#addExperimentSet(ubic.gemma.expression.experiment.
-     * SessionBoundExpressionExperimentSetValueObject, boolean)
-     */
     @Override
     public SessionBoundExpressionExperimentSetValueObject addExperimentSet(
             SessionBoundExpressionExperimentSetValueObject eesvo, boolean modified ) {
@@ -94,12 +78,6 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.persistence.SessionListManager#addGeneSet(ubic.gemma.genome.gene.SessionBoundGeneSetValueObject)
-     */
     @Override
     public SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo ) {
 
@@ -107,13 +85,6 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.persistence.SessionListManager#addGeneSet(ubic.gemma.genome.gene.SessionBoundGeneSetValueObject,
-     * boolean)
-     */
     @Override
     public SessionBoundGeneSetValueObject addGeneSet( SessionBoundGeneSetValueObject gsvo, boolean modified ) {
 
@@ -121,44 +92,27 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getAllExperimentSets()
-     */
     @Override
     public Collection<SessionBoundExpressionExperimentSetValueObject> getAllExperimentSets() {
 
-        @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
+        @SuppressWarnings("unchecked") List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
                 .getAllSessionBoundGroups();
 
         return castedCollection;
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getAllGeneSets()
-     */
     @Override
     public Collection<SessionBoundGeneSetValueObject> getAllGeneSets() {
         return getAllGeneSets( null );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getAllGeneSets(java.lang.Long)
-     */
     @Override
     public Collection<SessionBoundGeneSetValueObject> getAllGeneSets( Long taxonId ) {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
+        @SuppressWarnings("unchecked") List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
                 .getAllSessionBoundGroups();
 
         // filter collection if taxonId is specified
@@ -169,27 +123,17 @@ public class SessionListManagerImpl implements SessionListManager {
         return castedCollection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getExperimentIdsInSet(java.lang.Long)
-     */
     @Override
     public Collection<Long> getExperimentIdsInSet( Long id ) {
         ExpressionExperimentSet eeSet = expressionExperimentSetService.load( id ); // secure
         Collection<BioAssaySet> datasets = eeSet.getExperiments(); // Not secure.
-        Collection<Long> eeids = new HashSet<Long>();
+        Collection<Long> eeids = new HashSet<>();
         for ( BioAssaySet ee : datasets ) {
             eeids.add( ee.getId() );
         }
         return eeids;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getExperimentSetById(java.lang.Long)
-     */
     @Override
     public SessionBoundExpressionExperimentSetValueObject getExperimentSetById( Long id ) {
 
@@ -204,25 +148,15 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getExperimentsInSet(java.lang.Long)
-     */
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentsInSet( Long id ) {
         Collection<Long> eeids = getExperimentIdsInSet( id );
-        Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids,
-                false );
+        Collection<ExpressionExperimentValueObject> result = expressionExperimentService
+                .loadValueObjects( eeids, false );
         expressionExperimentReportService.getReportInformation( result );
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getGeneSetById(java.lang.Long)
-     */
     @Override
     public SessionBoundGeneSetValueObject getGeneSetById( Long id ) {
 
@@ -237,18 +171,14 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getGenesInGroup(java.lang.Long)
-     */
     @Override
     public Collection<GeneValueObject> getGenesInGroup( Long groupId ) {
 
-        Collection<GeneValueObject> results = null;
+        Collection<GeneValueObject> results;
 
         GeneSet gs = geneSetService.load( groupId );
-        if ( gs == null ) return null; // FIXME: Send and error code/feedback?
+        if ( gs == null )
+            return null; // FIXME: Send and error code/feedback?
 
         results = GeneValueObject.convertMembers2GeneValueObjects( gs.getMembers() );
 
@@ -256,32 +186,20 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getModifiedExperimentSets()
-     */
     @Override
     public Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets() {
 
-        @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
+        @SuppressWarnings("unchecked") List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
                 .getSessionBoundModifiedGroups();
 
         return castedCollection;
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getModifiedExperimentSets(java.lang.Long)
-     */
     @Override
     public Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId ) {
 
-        @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
+        @SuppressWarnings("unchecked") List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List<SessionBoundExpressionExperimentSetValueObject> ) experimentSetList
                 .getSessionBoundModifiedGroups();
 
         // filter collection if taxonId is specified
@@ -292,35 +210,23 @@ public class SessionListManagerImpl implements SessionListManager {
         return castedCollection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getModifiedGeneSets()
-     */
     @Override
     public Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets() {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
+        @SuppressWarnings("unchecked") List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
                 .getSessionBoundModifiedGroups();
 
         return castedCollection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#getModifiedGeneSets(java.lang.Long)
-     */
     @Override
     public Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets( Long taxonId ) {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
-        @SuppressWarnings("unchecked")
-        List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
+        @SuppressWarnings("unchecked") List<SessionBoundGeneSetValueObject> castedCollection = ( List<SessionBoundGeneSetValueObject> ) geneSetList
                 .getSessionBoundModifiedGroups();
 
         // filter collection if taxonId is specified
@@ -331,32 +237,16 @@ public class SessionListManagerImpl implements SessionListManager {
         return castedCollection;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#incrementAndGetLargestExperimentSetSessionId()
-     */
     @Override
     public Long incrementAndGetLargestExperimentSetSessionId() {
         return experimentSetList.incrementAndGetLargestSessionId();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#incrementAndGetLargestGeneSetSessionId()
-     */
     @Override
     public Long incrementAndGetLargestGeneSetSessionId() {
         return geneSetList.incrementAndGetLargestSessionId();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#removeExperimentSet(ubic.gemma.expression.experiment.
-     * SessionBoundExpressionExperimentSetValueObject)
-     */
     @Override
     public void removeExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo ) {
 
@@ -364,13 +254,6 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.persistence.SessionListManager#removeGeneSet(ubic.gemma.genome.gene.SessionBoundGeneSetValueObject
-     * )
-     */
     @Override
     public void removeGeneSet( SessionBoundGeneSetValueObject gsvo ) {
 
@@ -378,12 +261,6 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.persistence.SessionListManager#updateExperimentSet(ubic.gemma.expression.experiment.
-     * SessionBoundExpressionExperimentSetValueObject)
-     */
     @Override
     public void updateExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo ) {
 
@@ -391,13 +268,6 @@ public class SessionListManagerImpl implements SessionListManager {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.persistence.SessionListManager#updateGeneSet(ubic.gemma.genome.gene.SessionBoundGeneSetValueObject
-     * )
-     */
     @Override
     public void updateGeneSet( SessionBoundGeneSetValueObject gsvo ) {
 
@@ -407,14 +277,10 @@ public class SessionListManagerImpl implements SessionListManager {
 
     /**
      * Return only those sets that have taxonId equal to the taxonId param
-     * 
-     * @param taxonId
-     * @param castedCollection
-     * @return
      */
     private List<SessionBoundExpressionExperimentSetValueObject> filterExperimentSetsByTaxon( Long taxonId,
             List<SessionBoundExpressionExperimentSetValueObject> castedCollection ) {
-        List<SessionBoundExpressionExperimentSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundExpressionExperimentSetValueObject>();
+        List<SessionBoundExpressionExperimentSetValueObject> taxonFilteredCollection = new ArrayList<>();
         for ( SessionBoundExpressionExperimentSetValueObject eesvo : castedCollection ) {
             if ( eesvo.getTaxonId().equals( taxonId ) ) {
                 taxonFilteredCollection.add( eesvo );
@@ -426,14 +292,10 @@ public class SessionListManagerImpl implements SessionListManager {
 
     /**
      * Return only those sets that have taxonId equal to the taxonId param
-     * 
-     * @param taxonId
-     * @param castedCollection
-     * @return
      */
     private List<SessionBoundGeneSetValueObject> filterGeneSetsByTaxon( Long taxonId,
             List<SessionBoundGeneSetValueObject> castedCollection ) {
-        List<SessionBoundGeneSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundGeneSetValueObject>();
+        List<SessionBoundGeneSetValueObject> taxonFilteredCollection = new ArrayList<>();
         for ( SessionBoundGeneSetValueObject gsvo : castedCollection ) {
             if ( gsvo.getTaxonId().equals( taxonId ) ) {
                 taxonFilteredCollection.add( gsvo );

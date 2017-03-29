@@ -29,7 +29,7 @@
       <property name="rankByMax" type="java.lang.Double">
          <column name="RANK_BY_MAX" not-null="false" unique="false" sql-type="DOUBLE"/>
       </property>
-      <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" cascade="none"  lazy="proxy" fetch="select">
+      <many-to-one name="expressionExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment" cascade="none"  lazy="proxy" fetch="select">
          <column name="EXPRESSION_EXPERIMENT_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>

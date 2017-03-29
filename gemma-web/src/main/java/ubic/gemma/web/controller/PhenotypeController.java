@@ -15,15 +15,6 @@
 package ubic.gemma.web.controller;
 
 import gemma.gsec.authentication.UserManager;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.SortedSet;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,28 +23,24 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.UserValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
+
 /**
  * Controller for phenotype
- * 
+ *
  * @author frances
- * @version $Id$
  */
 @Controller
 public class PhenotypeController extends BaseController {
@@ -73,16 +60,16 @@ public class PhenotypeController extends BaseController {
 
     /**
      * Finds bibliographic reference with the given pubmed id.
-     * 
-     * @param pubMedId
+     *
      * @return bibliographic reference with the given pubmed id
      */
-    public Collection<BibliographicReferenceValueObject> findBibliographicReference( String pubMedId, Long evidenceId ) {
+    public Collection<BibliographicReferenceValueObject> findBibliographicReference( String pubMedId,
+            Long evidenceId ) {
         BibliographicReferenceValueObject valueObject = this.phenotypeAssociationManagerService
                 .findBibliographicReference( pubMedId, evidenceId );
 
         // Contain at most 1 element.
-        ArrayList<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>( 1 );
+        ArrayList<BibliographicReferenceValueObject> valueObjects = new ArrayList<>( 1 );
         if ( valueObject != null ) {
             valueObjects.add( valueObject );
         }
@@ -92,25 +79,14 @@ public class PhenotypeController extends BaseController {
 
     /**
      * Returns all genes that have given phenotypes.
-     * 
-     * @param taxonId
-     * @param showOnlyEditable
-     * @param databaseIds
-     * @param phenotypes
-     * @return
      */
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, String[] phenotypes ) {
-        return this.phenotypeAssociationManagerService.findCandidateGenes( new EvidenceFilter( taxonId,
-                showOnlyEditable, databaseIds ), new HashSet<String>( Arrays.asList( phenotypes ) ) );
+        return this.phenotypeAssociationManagerService
+                .findCandidateGenes( new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ),
+                        new HashSet<>( Arrays.asList( phenotypes ) ) );
     }
 
-    /**
-     * @param taxonId
-     * @param limit
-     * @param userName
-     * @return
-     */
     public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
@@ -118,11 +94,11 @@ public class PhenotypeController extends BaseController {
     /**
      * Returns a collection of users who own evidence. Note that a collection of value objects instead of strings is
      * returned for front end convenience.
-     * 
+     *
      * @return a collection of users who own evidence
      */
     public Collection<UserValueObject> findEvidenceOwners() {
-        Collection<UserValueObject> userVOs = new ArrayList<UserValueObject>();
+        Collection<UserValueObject> userVOs = new ArrayList<>();
 
         for ( String userName : this.phenotypeAssociationManagerService.findEvidenceOwners() ) {
             UserValueObject userVO = new UserValueObject();
@@ -134,7 +110,7 @@ public class PhenotypeController extends BaseController {
 
     /**
      * Returns available efo category terms.
-     * 
+     *
      * @return Collection<CharacteristicValueObject>
      */
     public Collection<CharacteristicValueObject> findExperimentCategory() {
@@ -143,30 +119,22 @@ public class PhenotypeController extends BaseController {
 
     public Collection<CharacteristicValueObject> findExperimentOntologyValue( String givenQueryString,
             String categoryUri, Long taxonId ) {
-        return this.phenotypeAssociationManagerService.findExperimentOntologyValue( givenQueryString, categoryUri,
-                taxonId );
+        return this.phenotypeAssociationManagerService
+                .findExperimentOntologyValue( givenQueryString, categoryUri, taxonId );
     }
 
-    /**
-     * @return
-     */
     public Collection<ExternalDatabaseValueObject> findExternalDatabaseName() {
         return this.phenotypeAssociationManagerService.findExternalDatabasesWithEvidence();
     }
 
     /**
      * Important method, returns the big 'tree' data structure shown in phenocarta's page.
-     * 
-     * @param taxonId
-     * @param showOnlyEditable
-     * @param databaseIds
-     * @return
      */
     public Collection<SimpleTreeValueObject> loadAllPhenotypesByTree( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds ) {
 
-        return this.phenotypeAssociationManagerService.loadAllPhenotypesByTree( new EvidenceFilter( taxonId,
-                showOnlyEditable, databaseIds ) );
+        return this.phenotypeAssociationManagerService
+                .loadAllPhenotypesByTree( new EvidenceFilter( taxonId, showOnlyEditable, databaseIds ) );
     }
 
     public ValidateEvidenceValueObject makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
@@ -178,7 +146,7 @@ public class PhenotypeController extends BaseController {
                     .makeDifferentialExpressionEvidencesFromDiffExpressionMetaAnalysis(
                             geneDifferentialExpressionMetaAnalysisId, phenotypes, selectionThreshold );
 
-            // get the permission of the metaAnalaysis
+            // get the permission of the metaAnalysis
             EntityDelegator ed = new EntityDelegator();
             ed.setId( geneDifferentialExpressionMetaAnalysisId );
             ed.setClassDelegatingFor( GeneDifferentialExpressionMetaAnalysis.class.getName() );
@@ -232,9 +200,7 @@ public class PhenotypeController extends BaseController {
 
     /**
      * Returns all phenotypes satisfied the given search criteria.
-     * 
-     * @param query
-     * @param geneId
+     *
      * @return Collection of phenotypes
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String query, Long geneId ) {
@@ -262,12 +228,6 @@ public class PhenotypeController extends BaseController {
         return new ModelAndView( "phenotypeAssociationManager" );
     }
 
-    /**
-     * AJAX
-     * 
-     * @param evidenceValueObject
-     * @return
-     */
     public ValidateEvidenceValueObject validatePhenotypeAssociationForm( EvidenceValueObject evidenceValueObject ) {
         ValidateEvidenceValueObject validateEvidenceValueObject;
         try {
@@ -279,10 +239,6 @@ public class PhenotypeController extends BaseController {
         return validateEvidenceValueObject;
     }
 
-    /**
-     * @param throwable
-     * @return
-     */
     private ValidateEvidenceValueObject generateValidateEvidenceValueObject( Throwable throwable ) {
         final ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
 

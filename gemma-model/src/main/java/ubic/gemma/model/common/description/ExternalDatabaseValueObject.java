@@ -20,35 +20,12 @@ import java.util.TreeSet;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class ExternalDatabaseValueObject implements Serializable, Comparable<ExternalDatabaseValueObject> {
 
     private static final long serialVersionUID = -1714429166594162374L;
-
-    public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
-        if ( eds == null ) return null;
-
-        Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = new TreeSet<ExternalDatabaseValueObject>();
-        for ( ExternalDatabase ed : eds ) {
-            externalDatabaseValueObjects.add( fromEntity( ed ) );
-        }
-
-        return externalDatabaseValueObjects;
-    }
-
-    public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
-        if ( ed == null ) return null;
-        ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
-        vo.setName( ed.getName() );
-        vo.setId( ed.getId() );
-        return vo;
-    }
-
     private String name;
-
     private Long id;
-
     private boolean checked = false;
 
     public ExternalDatabaseValueObject() {
@@ -62,6 +39,27 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
         this.checked = checked;
     }
 
+    public static Collection<ExternalDatabaseValueObject> fromEntity( Collection<ExternalDatabase> eds ) {
+        if ( eds == null )
+            return null;
+
+        Collection<ExternalDatabaseValueObject> externalDatabaseValueObjects = new TreeSet<>();
+        for ( ExternalDatabase ed : eds ) {
+            externalDatabaseValueObjects.add( fromEntity( ed ) );
+        }
+
+        return externalDatabaseValueObjects;
+    }
+
+    public static ExternalDatabaseValueObject fromEntity( ExternalDatabase ed ) {
+        if ( ed == null )
+            return null;
+        ExternalDatabaseValueObject vo = new ExternalDatabaseValueObject();
+        vo.setName( ed.getName() );
+        vo.setId( ed.getId() );
+        return vo;
+    }
+
     @Override
     public int compareTo( ExternalDatabaseValueObject externalDatabaseValueObject ) {
         return this.getName().toLowerCase().compareTo( externalDatabaseValueObject.getName().toLowerCase() );
@@ -69,22 +67,19 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         ExternalDatabaseValueObject other = ( ExternalDatabaseValueObject ) obj;
         if ( name == null ) {
-            if ( other.name != null ) return false;
-        } else if ( !name.equals( other.name ) ) return false;
+            if ( other.name != null )
+                return false;
+        } else if ( !name.equals( other.name ) )
+            return false;
         return true;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -95,19 +90,27 @@ public class ExternalDatabaseValueObject implements Serializable, Comparable<Ext
         return result;
     }
 
-    public boolean isChecked() {
-        return checked;
-    }
-
-    public void setChecked( boolean checked ) {
-        this.checked = checked;
+    public Long getId() {
+        return id;
     }
 
     public void setId( Long id ) {
         this.id = id;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void setName( String name ) {
         this.name = name;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked( boolean checked ) {
+        this.checked = checked;
     }
 }

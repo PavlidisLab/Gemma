@@ -19,20 +19,11 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import gemma.gsec.authentication.UserManager;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
@@ -42,11 +33,16 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+
+import static org.junit.Assert.*;
+
 /**
  * Tests for methods that perform operations on or with expressionExperiment sets
- * 
+ *
  * @author tvrossum
- * @version $Id$
  */
 public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
@@ -68,8 +64,6 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     @Autowired
     BioAssayService bioAssayService;
 
-    private Taxon tax1;
-    private Taxon taxMouse;
     private ExpressionExperiment ee1 = null;
     private ExpressionExperiment ee2 = null;
     private ExpressionExperiment eeMouse = null;
@@ -82,15 +76,15 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         // need persistent entities so that experiment's taxon can be
         // queried from database during methods being tested
 
-        tax1 = this.getTaxon( "human" );
-        taxMouse = this.getTaxon( "mouse" );
+        Taxon tax1 = this.getTaxon( "human" );
+        Taxon taxMouse = this.getTaxon( "mouse" );
 
         ee1 = this.getTestPersistentExpressionExperiment( tax1 );
         ee2 = this.getTestPersistentExpressionExperiment( tax1 );
         eeMouse = this.getTestPersistentExpressionExperiment( taxMouse );
 
         // Make experiment set
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Collection<ExpressionExperiment> ees = new HashSet<>();
         ees.add( ee1 );
         ees.add( ee2 );
 
@@ -110,10 +104,10 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
 
-        // delete by id because otherwise get HibernateException: reassociated object has dirty collection reference
-        expressionExperimentService.delete( ee1.getId() );
-        expressionExperimentService.delete( ee2.getId() );
-        expressionExperimentService.delete( eeMouse.getId() );
+        // delete by id because otherwise get HibernateException: re-associated object has dirty collection reference
+        expressionExperimentService.delete( ee1 );
+        expressionExperimentService.delete( ee2 );
+        expressionExperimentService.delete( eeMouse );
 
         // getting "access is denied" error here, even with this.runAsAdmin()
         // expressionExperimentSetService.delete( eeSet );
@@ -126,7 +120,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
         String newName = "newName";
         String newDesc = "newDesc";
-        Collection<BioAssaySet> newMembers = new HashSet<BioAssaySet>();
+        Collection<BioAssaySet> newMembers = new HashSet<>();
         newMembers.add( ee1 );
 
         eeSet.setName( newName );
@@ -151,7 +145,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Test(expected = Exception.class)
     public void testAddingExperimentOfWrongTaxonUpdate() {
-        Collection<BioAssaySet> newMembers = new LinkedList<BioAssaySet>();
+        Collection<BioAssaySet> newMembers = new LinkedList<>();
         newMembers.add( ee1 );
         newMembers.add( eeMouse );
         eeSet.setExperiments( newMembers );
@@ -161,7 +155,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAddingExperimentOfWrongTaxonUpdateDatabaseEntityMembers() {
-        Collection<Long> newMemberIds = new LinkedList<Long>();
+        Collection<Long> newMemberIds = new LinkedList<>();
         newMemberIds.add( ee1.getId() );
         newMemberIds.add( eeMouse.getId() );
 

@@ -18,12 +18,9 @@
  */
 package ubic.gemma.apps;
 
-import java.io.InputStream;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
@@ -34,43 +31,29 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 
+import java.io.InputStream;
+
 /**
  * Attach sequences to array design, fetching from BLAST database if requested.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipulatingCli {
 
-    public static void main( String[] args ) {
-        ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
-        try {
-            Exception ex = p.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
-    ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
-
+    private ArrayDesignSequenceProcessingService arrayDesignSequenceProcessingService;
     private boolean force = false;
     private String idFile = null;
     private String sequenceFile;
     private String sequenceId = null;
     private String sequenceType;
-
     private String taxonName = null;
-
     private TaxonService taxonService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
+    public static void main( String[] args ) {
+        ArrayDesignSequenceAssociationCli p = new ArrayDesignSequenceAssociationCli();
+        tryDoWorkNoExit( p, args );
+    }
+
     @Override
     public String getCommandName() {
         return "addPlatformSequences";
@@ -97,10 +80,10 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
         addOption( sequenceIdentifierOption );
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         for ( String lit : SequenceType.literals() ) {
-            buf.append( lit + "\n" );
+            buf.append( lit ).append( "\n" );
         }
 
         String seqtypes = buf.toString();
@@ -114,20 +97,15 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
         addOption( OptionBuilder.hasArg().withArgName( "accession" ).withDescription( "A single accession to update" )
                 .withLongOpt( "sequence" ).create( 's' ) );
 
-        Option forceOption = OptionBuilder
-                .withArgName( "Force overwriting of existing sequences" )
-                .withLongOpt( "force" )
-                .withDescription(
+        Option forceOption = OptionBuilder.withArgName( "Force overwriting of existing sequences" )
+                .withLongOpt( "force" ).withDescription(
                         "If biosequences are encountered that already have sequences filled in, "
                                 + "they will be overwritten; default is to leave them." ).create( "force" );
 
         addOption( forceOption );
 
-        Option taxonOption = OptionBuilder
-                .hasArg()
-                .withArgName( "taxon" )
-                .withDescription(
-                        "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).withDescription(
+                "Taxon common name (e.g., human) for sequences (only required if array design is 'naive')" )
                 .create( 't' );
 
         addOption( taxonOption );
@@ -138,7 +116,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
     protected Exception doWork( String[] args ) {
         try {
             Exception err = processCommandLine( args );
-            if ( err != null ) return err;
+            if ( err != null )
+                return err;
 
             // this is kind of an oddball function of this tool.
             if ( this.hasOption( 's' ) ) {
@@ -162,7 +141,8 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
                 }
 
                 if ( this.hasOption( 'f' ) ) {
-                    try (InputStream sequenceFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( sequenceFile );) {
+                    try (InputStream sequenceFileIs = FileTools
+                            .getInputStreamFromPlainOrCompressedFile( sequenceFile )) {
 
                         if ( sequenceFileIs == null ) {
                             log.error( "No file " + sequenceFile + " was readable" );
@@ -180,13 +160,13 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
                         log.info( "Processing ArrayDesign..." );
 
-                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, sequenceFileIs,
-                                sequenceTypeEn, taxon );
+                        arrayDesignSequenceProcessingService
+                                .processArrayDesign( arrayDesign, sequenceFileIs, sequenceTypeEn, taxon );
 
                         audit( arrayDesign, "Sequences read from file: " + sequenceFile );
                     }
                 } else if ( this.hasOption( 'i' ) ) {
-                    try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile );) {
+                    try (InputStream idFileIs = FileTools.getInputStreamFromPlainOrCompressedFile( idFile )) {
 
                         if ( idFileIs == null ) {
                             log.error( "No file " + idFile + " was readable" );
@@ -203,16 +183,16 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
                         log.info( "Processing ArrayDesign..." );
 
-                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs, new String[] {
-                                "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
+                        arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, idFileIs,
+                                new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, taxon, force );
 
                         audit( arrayDesign, "Sequences identifiers from file: " + idFile );
                     }
                 } else {
                     log.info( "Retrieving sequences from BLAST databases" );
                     // FIXME - put in correctdatabases to search. Don't always want to do mouse, human etc.
-                    arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign, new String[] { "nt",
-                            "est_others", "est_human", "est_mouse" }, null, force );
+                    arrayDesignSequenceProcessingService.processArrayDesign( arrayDesign,
+                            new String[] { "nt", "est_others", "est_human", "est_mouse" }, null, force );
                     audit( arrayDesign, "Sequence looked up from BLAST databases" );
                 }
             }
@@ -256,9 +236,6 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note ) {
         // minor : don't add audit event if no sequences were changed, or --force.
         arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );

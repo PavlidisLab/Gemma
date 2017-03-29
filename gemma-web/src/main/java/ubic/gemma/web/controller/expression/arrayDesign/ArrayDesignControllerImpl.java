@@ -18,27 +18,8 @@
  */
 package ubic.gemma.web.controller.expression.arrayDesign;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.lang3.StringEscapeUtils;
+import com.google.common.collect.Lists;
+import gemma.gsec.util.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -49,10 +30,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
-import com.google.common.collect.Lists;
-
-import gemma.gsec.util.SecurityUtil;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
@@ -82,76 +59,28 @@ import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.arrayDesign.ArrayDesignHtmlUtil;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.util.*;
+
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost
  * during proxy creation so DWR can't figure out what type of collection the method should take. See bug 2756. Use
  * arrays instead.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 @Controller
 @RequestMapping("/arrays")
 public class ArrayDesignControllerImpl implements ArrayDesignController {
 
-    /**
-     * Inner class used for building array design summary
-     */
-    class GenerateArraySummaryLocalTask extends AbstractTask<TaskResult, TaskCommand> {
-
-        public GenerateArraySummaryLocalTask( TaskCommand command ) {
-            super( command );
-        }
-
-        @Override
-        public TaskResult execute() {
-
-            if ( this.taskCommand.getEntityId() == null ) {
-                log.info( "Generating summary for all platforms" );
-                arrayDesignReportService.generateArrayDesignReport();
-                return new TaskResult( taskCommand,
-                        new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
-            }
-            ArrayDesignValueObject report = arrayDesignReportService
-                    .generateArrayDesignReport( taskCommand.getEntityId() );
-            return new TaskResult( taskCommand, report );
-
-        }
-    }
-
-    /**
-     * Inner class used for deleting array designs
-     */
-    class RemoveArrayLocalTask extends AbstractTask<TaskResult, TaskCommand> {
-
-        public RemoveArrayLocalTask( TaskCommand command ) {
-            super( command );
-        }
-
-        @Override
-        public TaskResult execute() {
-            ArrayDesign ad = arrayDesignService.load( taskCommand.getEntityId() );
-            if ( ad == null ) {
-                throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );
-            }
-            arrayDesignService.remove( ad );
-            return new TaskResult( taskCommand,
-                    new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
-                            .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );
-
-        }
-
-    }
-
-    private static boolean AJAX = true;
-
     private static final Log log = LogFactory.getLog( ArrayDesignControllerImpl.class.getName() );
-
     /**
      * Instead of showing all the probes for the array, we might only fetch some of them.
      */
     private static final int NUM_PROBES_TO_SHOW = 500;
-
+    private static final boolean AJAX = true;
     @Autowired
     private ArrayDesignMapResultService arrayDesignMapResultService;
     @Autowired
@@ -201,10 +130,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
 
-        JsonReaderResponse<ArrayDesignValueObject> returnVal = new JsonReaderResponse<ArrayDesignValueObject>(
-                new ArrayList<ArrayDesignValueObject>( valueObjects ), count );
-
-        return returnVal;
+        return new JsonReaderResponse<>( new ArrayList<>( valueObjects ), count );
     }
 
     @Override
@@ -217,7 +143,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new EntityNotFoundException( "Must provide an id" );
         }
 
-        Long id = null;
+        Long id;
         try {
             id = Long.parseLong( stringId );
         } catch ( NumberFormatException e ) {
@@ -233,9 +159,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
         if ( assays.size() != 0 ) {
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject(
-                    "message",
-                    "Array  " + arrayDesign.getName() + " can't be deleted. Dataset has a dependency on this Array." );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                    .addObject( "message", "Array  " + arrayDesign.getName()
+                            + " can't be deleted. Dataset has a dependency on this Array." );
         }
 
         String taskId = taskRunningService.submitLocalTask( new TaskCommand( arrayDesign.getId() ) );
@@ -275,13 +201,13 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                     + ". Please contact gemma@chibi.ubc.ca for assistance" );
         }
 
-        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) );) {
+        try (InputStream reader = new BufferedInputStream( new FileInputStream( f ) )) {
 
             response.setHeader( "Content-disposition", "attachment; filename=" + fileName );
             response.setContentLength( ( int ) f.length() );
             // response.setContentType( "application/x-gzip" ); // see Bug4206
 
-            try (OutputStream outputStream = response.getOutputStream();) {
+            try (OutputStream outputStream = response.getOutputStream()) {
 
                 byte[] buf = new byte[1024];
                 int len;
@@ -332,8 +258,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( searchResults.size() == 1 ) {
             ArrayDesign arrayDesign = arrayDesignService.load( searchResults.iterator().next().getId() );
             return new ModelAndView(
-                    new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) ).addObject(
-                            "message",
+                    new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + arrayDesign.getId() ) )
+                    .addObject( "message",
                             "Matched one : " + arrayDesign.getName() + "(" + arrayDesign.getShortName() + ")" );
         }
 
@@ -350,12 +276,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#generateSummary(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/generateArrayDesignSummary.html")
     public ModelAndView generateSummary( HttpServletRequest request, HttpServletResponse response ) {
@@ -367,8 +287,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         if ( StringUtils.isBlank( sId ) ) {
             job = new GenerateArraySummaryLocalTask( new TaskCommand() );
             String taskId = taskRunningService.submitLocalTask( job );
-            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) ).addObject( "taskId",
-                    taskId );
+            return new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                    .addObject( "taskId", taskId );
         }
 
         try {
@@ -383,16 +303,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getArrayDesigns(java.util.Collection,
-     * boolean, boolean)
-     */
     @Override
     public Collection<ArrayDesignValueObject> getArrayDesigns( Long[] arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
-        List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
+        List<ArrayDesignValueObject> result = new ArrayList<>();
 
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( arrayDesignIds == null || arrayDesignIds.length == 0 ) {
@@ -400,21 +314,20 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         } else {// if ids are specified, then display only those arrayDesigns
 
-            Collection<Long> adCol = new LinkedList<Long>( Arrays.asList( arrayDesignIds ) );
+            Collection<Long> adCol = new LinkedList<>( Arrays.asList( arrayDesignIds ) );
             result.addAll( arrayDesignService.loadValueObjects( adCol ) );
         }
 
         // Filter...
-        Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
+        Collection<ArrayDesignValueObject> toHide = new HashSet<>();
         for ( ArrayDesignValueObject a : result ) {
             if ( !showMergees && a.getIsMergee() && a.getExpressionExperimentCount() == 0 ) {
                 toHide.add( a );
             }
-            if ( !showOrphans
-                    && ( a.getExpressionExperimentCount() == null || a.getExpressionExperimentCount() == 0 ) ) {
+            if ( !showOrphans && ( a.getExpressionExperimentCount() == null
+                    || a.getExpressionExperimentCount() == 0 ) ) {
                 toHide.add( a );
             }
-            a.setTroubleDetails( StringEscapeUtils.escapeHtml4( a.getTroubleDetails() ) );
         }
         result.removeAll( toHide );
 
@@ -423,33 +336,19 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getCsSummaries(ubic.gemma.web.remote.
-     * EntityDelegator)
-     */
     @Override
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
         return this.getDesignSummaries( arrayDesign );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getDesignSummaries(ubic.gemma.model.
-     * expression .arrayDesign.ArrayDesign)
-     */
     @Override
     public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
         if ( rawSummaries == null ) {
             return new HashSet<>();
         }
-        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-                .getSummaryMapValueObjects( rawSummaries );
-        return summaries;
+        return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 
     @Override
@@ -463,7 +362,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
 
         ArrayDesignValueObjectExt result = new ArrayDesignValueObjectExt( vo );
-        result.setTroubleDetails( StringEscapeUtils.escapeHtml4( result.getTroubleDetails() ) );
         result = this.setExtRefsAndCounts( result, arrayDesign );
         result = this.setAlternateNames( result, arrayDesign );
         result = this.setExtRefsAndCounts( result, arrayDesign );
@@ -477,9 +375,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Loads, checks not null, and thaws the Array Design with given ID;
-     * 
-     * @param id
-     * @return
      */
     private ArrayDesign getADSafely( Long id ) {
         if ( id == null ) {
@@ -497,10 +392,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Setls alternate names on the given value object.
-     * 
-     * @param result
-     * @param arrayDesign
-     * @return
      */
     private ArrayDesignValueObjectExt setAlternateNames( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
         Collection<String> names = new HashSet<>();
@@ -513,13 +404,9 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Sets external references, design element count and express. experiment count on the given value object.
-     * 
-     * @param result
-     * @param arrayDesign
-     * @return
      */
     private ArrayDesignValueObjectExt setExtRefsAndCounts( ArrayDesignValueObjectExt result, ArrayDesign arrayDesign ) {
-        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign );
+        Integer numCompositeSequences = arrayDesignService.getCompositeSequenceCount( arrayDesign ).intValue();
 
         int numExpressionExperiments = arrayDesignService.numExperiments( arrayDesign );
 
@@ -535,10 +422,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
     /**
      * Sets the summary info on the given value object.
-     * 
-     * @param result
-     * @param id
-     * @return
      */
     private ArrayDesignValueObjectExt setSummaryInfo( ArrayDesignValueObjectExt result, Long id ) {
         ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( id );
@@ -550,12 +433,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getReportHtml(ubic.gemma.web.remote.
-     * EntityDelegator)
-     */
     @Override
     public Map<String, String> getReportHtml( EntityDelegator ed ) {
         assert ed.getId() != null;
@@ -570,16 +447,10 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#getSummaryForArrayDesign(java.lang.Long)
-     */
     @Override
     public String getSummaryForArrayDesign( Long id ) {
 
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         ids.add( id );
         Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjects( ids );
         arrayDesignReportService.fillInValueObjects( advos );
@@ -602,12 +473,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return "[Not avail.]";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#loadArrayDesignsForShowAll(java.util.
-     * Collection)
-     */
     @Override
     public Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Long[] arrayDesignIds ) {
 
@@ -625,23 +490,12 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return valueObjects;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#loadArrayDesignsSummary()
-     */
     @Override
     public ArrayDesignValueObject loadArrayDesignsSummary() {
 
         return arrayDesignReportService.getSummaryObject();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#remove(ubic.gemma.web.remote.
-     * EntityDelegator )
-     */
     @Override
     public String remove( EntityDelegator ed ) {
         ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
@@ -674,8 +528,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         if ( ( name == null ) && ( idStr == null ) ) {
             throw new IllegalArgumentException( "Must provide a platform identifier or name" );
-
         }
+
         ArrayDesign arrayDesign = null;
         if ( idStr != null ) {
             arrayDesign = arrayDesignService.load( Long.parseLong( idStr ) );
@@ -709,13 +563,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return mav;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showCompositeSequences(javax.servlet.http
-     * .HttpServletRequest)
-     */
     @Override
     @RequestMapping("/showCompositeSequenceSummary.html")
     public ModelAndView showCompositeSequences( HttpServletRequest request ) {
@@ -744,13 +591,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return mav;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignController#showExpressionExperiments(javax.servlet
-     * .http.HttpServletRequest)
-     */
     @Override
     @RequestMapping("/showExpressionExperiments.html")
     public ModelAndView showExpressionExperiments( HttpServletRequest request ) {
@@ -781,12 +621,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         return taskRunningService.submitLocalTask( job );
     }
 
-    /**
-     * @param ad
-     * @return
-     */
     private String formatAlternateNames( ArrayDesign ad ) {
-        Collection<String> names = new HashSet<String>();
+        Collection<String> names = new HashSet<>();
         for ( AlternateName an : ad.getAlternateNames() ) {
             names.add( an.getName() );
         }
@@ -796,9 +632,6 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
     /**
      * Recursively populate the status. Recursion only goes 'up' - so the subsumer and merger, not the subsumees and
      * mergees.
-     * 
-     * @param arrayDesign
-     * @param result
      */
     private void populateMergeStatus( ArrayDesign arrayDesign, ArrayDesignValueObjectExt result ) {
         assert arrayDesign != null;
@@ -829,6 +662,55 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             result.setMerger( mergerVo );
             // merger = arrayDesignService.thawLite( merger );
             // populateMergeStatus( merger, mergerVo );
+        }
+
+    }
+
+    /**
+     * Inner class used for building array design summary
+     */
+    class GenerateArraySummaryLocalTask extends AbstractTask<TaskResult, TaskCommand> {
+
+        public GenerateArraySummaryLocalTask( TaskCommand command ) {
+            super( command );
+        }
+
+        @Override
+        public TaskResult execute() {
+
+            if ( this.taskCommand.getEntityId() == null ) {
+                log.info( "Generating summary for all platforms" );
+                arrayDesignReportService.generateArrayDesignReport();
+                return new TaskResult( taskCommand,
+                        new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
+            }
+            ArrayDesignValueObject report = arrayDesignReportService
+                    .generateArrayDesignReport( taskCommand.getEntityId() );
+            return new TaskResult( taskCommand, report );
+
+        }
+    }
+
+    /**
+     * Inner class used for deleting array designs
+     */
+    class RemoveArrayLocalTask extends AbstractTask<TaskResult, TaskCommand> {
+
+        public RemoveArrayLocalTask( TaskCommand command ) {
+            super( command );
+        }
+
+        @Override
+        public TaskResult execute() {
+            ArrayDesign ad = arrayDesignService.load( taskCommand.getEntityId() );
+            if ( ad == null ) {
+                throw new IllegalArgumentException( "Could not load platform with id=" + taskCommand.getEntityId() );
+            }
+            arrayDesignService.remove( ad );
+            return new TaskResult( taskCommand,
+                    new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesigns.html" ) )
+                            .addObject( "message", "Array " + ad.getShortName() + " removed from Database." ) );
+
         }
 
     }

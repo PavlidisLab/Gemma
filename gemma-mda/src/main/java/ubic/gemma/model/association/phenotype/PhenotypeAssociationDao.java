@@ -14,10 +14,6 @@
  */
 package ubic.gemma.model.association.phenotype;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
@@ -28,142 +24,144 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.persistence.BaseDao;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * @author nicolas
- * @version $Id$
  */
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
-    /** counts the evidence that from neurocarta that came from a specific MetaAnalysis */
-    public Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
-
-    /** find category terms currently used in the database by evidence */
-    public Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
-
-    /** return the list of the owners that have evidence in the system */
-    public Collection<String> findEvidenceOwners();
-
-    /** find all evidences from a specific external database */
-    public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
-            Integer limit );
-
-    /** find all evidence that doesn't come from an external course */
-    public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
-
-    /** Gets all External Databases that are used with evidence */
-    public Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
+    /**
+     * counts the evidence that from neurocarta that came from a specific MetaAnalysis
+     */
+    Long countEvidenceWithGeneDifferentialExpressionMetaAnalysis( Long geneDifferentialExpressionMetaAnalysisId );
 
     /**
-     * @param term
-     * @param taxon
+     * find category terms currently used in the database by evidence
+     */
+    Collection<CharacteristicValueObject> findEvidenceCategoryTerms();
+
+    /**
+     * return the list of the owners that have evidence in the system
+     */
+    Collection<String> findEvidenceOwners();
+
+    /**
+     * find all evidences from a specific external database
+     */
+    Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
+            Integer limit );
+
+    /**
+     * find all evidence that doesn't come from an external course
+     */
+    Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName();
+
+    /**
+     * Gets all External Databases that are used with evidence
+     */
+    Collection<ExternalDatabase> findExternalDatabasesWithEvidence();
+
+    /**
      * @param includeIEA if false, electronic annotations will be omitted
      * @return map of gene value objects to the exact phenotype the gene was annotated to. (gives no indication of 'bag
-     *         of terms')
-     * @author paul
+     * of terms')
      */
-    public Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon, boolean includeIEA );
+    Map<GeneValueObject, OntologyTerm> findGenesForPhenotype( OntologyTerm term, Long taxon, boolean includeIEA );
 
-    /** find Genes link to a phenotype */
-    public Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
+    /**
+     * find Genes link to a phenotype
+     */
+    Collection<GeneEvidenceValueObject> findGenesWithPhenotypes( Set<String> phenotypesValueUri, Taxon taxon,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds );
 
-    /** find all PhenotypeAssociation for a specific gene id */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
+    /**
+     * find all PhenotypeAssociation for a specific gene id
+     */
+    Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneId( Long geneId );
 
-    /** find all PhenotypeAssociation for a specific gene id and external Databases ids */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
+    /**
+     * find all PhenotypeAssociation for a specific gene id and external Databases ids
+     */
+    Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneIdAndDatabases( Long geneId,
             Collection<Long> externalDatabaseIds );
 
-    /** find all PhenotypeAssociation for a specific NCBI id */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
+    /**
+     * find all PhenotypeAssociation for a specific NCBI id
+     */
+    Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI );
 
     /**
      * find all PhenotypeAssociation for a specific NCBI id and phenotypes valueUri
-     * 
-     * @param geneNCBI
-     * @param phenotype
-     * @return
      */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype );
+    Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI, Set<String> phenotype );
 
     /**
      * find PhenotypeAssociations satisfying the given filters: ids, taxonId and limit
-     * 
-     * @param ids
-     * @param taxonId
-     * @param limit
-     * @return
      */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids );
+    Collection<PhenotypeAssociation> findPhenotypeAssociationWithIds( Collection<Long> ids );
 
     /**
      * find PhenotypeAssociations associated with a BibliographicReference
-     * 
-     * @param pubMedID
      */
-    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
+    Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 
     /**
      * find private evidence id that the user can modify or owns
-     * 
-     * @param taxonId optional
-     * @param limit optional
      */
-    public Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit );
+    Set<Long> findPrivateEvidenceId( Long taxonId, Integer limit );
 
     /**
      * find all private phenotypes associated with genes on a specific taxon and containing the valuesUri
-     * 
-     * @param taxon
-     * @param valuesUri
-     * @param showOnlyEditable
-     * @param externalDatabaseIds
-     * @return
      */
-    public Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+    Map<String, Set<Integer>> findPrivatePhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
     /**
      * find all public phenotypes associated with genes on a specific taxon and containing the valuesUri
-     * 
-     * @param taxon
-     * @param valuesUri
-     * @param showOnlyEditable
-     * @param externalDatabaseIds
-     * @return
      */
-    public Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
+    Map<String, Set<Integer>> findPublicPhenotypesGenesAssociations( Taxon taxon, Set<String> valuesUri,
             boolean showOnlyEditable, Collection<Long> externalDatabaseIds, boolean noElectronicAnnotation );
 
-    public Collection<String> loadAllDescription();
+    Collection<String> loadAllDescription();
 
     /**
      * find all phenotypes in Neurocarta
      */
-    public Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
+    Collection<PhenotypeValueObject> loadAllNeurocartaPhenotypes();
 
     /**
      * load all valueURI of Phenotype in the database
      */
-    public Set<String> loadAllPhenotypesUri();
+    Set<String> loadAllPhenotypesUri();
 
     /**
      * returns a Collection of DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one
      * exists (can be used to find the threshold and phenotypes for a GeneDifferentialExpressionMetaAnalysis)
      */
-    public Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
+    Collection<DifferentialExpressionEvidence> loadEvidenceWithGeneDifferentialExpressionMetaAnalysis(
             Long geneDifferentialExpressionMetaAnalysisId, Long maxResults );
 
-    /** find statistics all evidences */
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String filePath );
+    /**
+     * find statistics all evidences
+     */
+    ExternalDatabaseStatisticsValueObject loadStatisticsOnAllEvidence( String filePath );
 
-    /** finds all external databases statistics used in neurocarta */
-    public Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String folderPath );
+    /**
+     * finds all external databases statistics used in neurocarta
+     */
+    Collection<ExternalDatabaseStatisticsValueObject> loadStatisticsOnExternalDatabases( String folderPath );
 
-    /** find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.) */
-    public ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String filePath );
+    /**
+     * find statistics for a neurocarta manual curation (numGene, numPhenotypes, etc.)
+     */
+    ExternalDatabaseStatisticsValueObject loadStatisticsOnManualCuration( String filePath );
 
-    /** remove a PhenotypeAssociationPublication **/
-    public void removePhenotypePublication( Long phenotypeAssociationPublicationId );
+    /**
+     * remove a PhenotypeAssociationPublication
+     **/
+    void removePhenotypePublication( Long phenotypeAssociationPublicationId );
 
 }

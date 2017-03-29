@@ -26,7 +26,7 @@ import org.springframework.security.access.AfterInvocationProvider;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.Permission;
 
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * @see AfterInvocationProvider
  */
 public class AclAfterCollectionCompSeqByArrayDesignFilter extends
-        ByAssociationFilteringProvider<ArrayDesignImpl, CompositeSequence> {
+        ByAssociationFilteringProvider<ArrayDesign, CompositeSequence> {
 
     private static final String CONFIG_ATTRIBUTE = "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ";
 
@@ -57,10 +57,10 @@ public class AclAfterCollectionCompSeqByArrayDesignFilter extends
      * @return
      */
     @Override
-    protected ArrayDesignImpl getAssociatedSecurable( Object targetDomainObject ) {
+    protected ArrayDesign getAssociatedSecurable( Object targetDomainObject ) {
 
         if ( CompositeSequence.class.isAssignableFrom( targetDomainObject.getClass() ) ) {
-            return ( ArrayDesignImpl ) ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
+            return ( ArrayDesign ) ( ( CompositeSequence ) targetDomainObject ).getArrayDesign();
         }
 
         throw new IllegalArgumentException( "Don't know how to filter a "

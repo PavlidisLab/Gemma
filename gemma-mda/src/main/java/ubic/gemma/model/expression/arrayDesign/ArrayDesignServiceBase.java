@@ -18,35 +18,38 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
  * Spring Service base class for <code>ubic.gemma.model.expression.arrayDesign.ArrayDesignService</code>, provides
  * access to all services and entities referenced by this service.
- * 
+ *
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService
  */
 public abstract class ArrayDesignServiceBase implements ArrayDesignService {
 
-    Log log = LogFactory.getLog( this.getClass() );
+    protected static final Log log = LogFactory.getLog( ArrayDesignServiceBase.class.getName() );
 
     @Autowired
-    private ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao;
+    protected ArrayDesignDao arrayDesignDao;
 
     @Autowired
-    private AuditEventDao auditEventDao;
+    protected AuditEventDao auditEventDao;
+
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
+    }
 
     /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#compositeSequenceWithoutBioSequences(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
@@ -191,19 +194,11 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
-     * @return the auditEventDao
-     */
-    public AuditEventDao getAuditEventDao() {
-        return auditEventDao;
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer getCompositeSequenceCount(
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public Long getCompositeSequenceCount( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         return this.handleGetCompositeSequenceCount( arrayDesign );
 
@@ -276,28 +271,6 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastTroubleEvent(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Map<Long, AuditEvent> getLastTroubleEvent( final java.util.Collection<Long> ids ) {
-
-        return this.handleGetLastTroubleEvent( ids );
-
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getLastValidationEvent(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Map<Long, AuditEvent> getLastValidationEvent( final java.util.Collection<Long> ids ) {
-
-        return this.handleGetLastValidationEvent( ids );
-
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
      */
     @Override
@@ -309,7 +282,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxon(java.lang.Long)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
      */
     @Override
     @Transactional(readOnly = true)
@@ -426,7 +399,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     @Transactional(readOnly = true)
     public ArrayDesignValueObject loadValueObject( final Long id ) {
 
-        Collection<Long> ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<>();
         ids.add( id );
         Collection<ArrayDesignValueObject> advos = this.handleLoadValueObjects( ids );
         if ( advos == null || advos.size() < 1 )
@@ -619,24 +592,11 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      */
     @Override
     @Transactional
-    public void removeBiologicalCharacteristics( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+    public void removeBiologicalCharacteristics(
+            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
 
         this.handleRemoveBiologicalCharacteristics( arrayDesign );
 
-    }
-
-    /**
-     * Sets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    public void setArrayDesignDao( ubic.gemma.model.expression.arrayDesign.ArrayDesignDao arrayDesignDao ) {
-        this.arrayDesignDao = arrayDesignDao;
-    }
-
-    /**
-     * @param auditEventDao the auditEventDao to set
-     */
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
     }
 
     /**
@@ -669,20 +629,12 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#updateSubsumingStatus(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#updateSubsumingStatus(ArrayDesign, ArrayDesign)
      */
     @Override
     @Transactional
     public Boolean updateSubsumingStatus( final ArrayDesign candidateSubsumer, final ArrayDesign candidateSubsumee ) {
         return this.handleUpdateSubsumingStatus( candidateSubsumer, candidateSubsumee );
-    }
-
-    /**
-     * Gets the reference to <code>arrayDesign</code>'s DAO.
-     */
-    protected ArrayDesignDao getArrayDesignDao() {
-        return this.arrayDesignDao;
     }
 
     /**
@@ -720,7 +672,8 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     /**
      * Performs the core logic for {@link #deleteAlignmentData(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract void handleDeleteAlignmentData( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    protected abstract void handleDeleteAlignmentData(
+            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
      * Performs the core logic for
@@ -766,7 +719,7 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      * Performs the core logic for
      * {@link #getCompositeSequenceCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
      */
-    protected abstract java.lang.Integer handleGetCompositeSequenceCount(
+    protected abstract long handleGetCompositeSequenceCount(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
     /**
@@ -800,16 +753,6 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      * Performs the core logic for {@link #getLastSequenceUpdate(java.util.Collection)}
      */
     protected abstract java.util.Map<Long, AuditEvent> handleGetLastSequenceUpdate( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #getLastTroubleEvent(java.util.Collection)}
-     */
-    protected abstract java.util.Map<Long, AuditEvent> handleGetLastTroubleEvent( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #getLastValidationEvent(java.util.Collection)}
-     */
-    protected abstract java.util.Map<Long, AuditEvent> handleGetLastValidationEvent( java.util.Collection<Long> ids );
 
     /**
      * Performs the core logic for {@link #getTaxa(java.lang.Long)} Lmd 29/07/09 Fishmanomics provide support multi

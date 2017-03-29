@@ -19,12 +19,12 @@
 package ubic.gemma.model.common.protocol;
 
 import gemma.gsec.model.Securable;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 
 /**
  * 
  */
-public abstract class Protocol extends Auditable implements Securable {
+public abstract class Protocol extends AbstractAuditable implements Securable {
     /**
      * 
      */

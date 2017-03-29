@@ -92,7 +92,7 @@ Gemma.BibliographicReference.ColumnModel = new Ext.grid.ColumnModel( {
                  header : "Date",
                  dataIndex : 'publicationDate',
                  width : 70,
-                 renderer : Ext.util.Format.dateRenderer( "Y" )
+                 renderer : Gemma.Renderers.dateRenderer
               },
               {
                  header : "Experiments",

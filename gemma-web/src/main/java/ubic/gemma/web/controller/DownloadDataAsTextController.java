@@ -29,26 +29,11 @@ import ubic.gemma.web.view.TextView;
 
 /**
  * @author anton
- * @version $Id$
  */
 @Controller(value = "downloadDataAsTextController")
 @RequestMapping("/downloadText")
 public class DownloadDataAsTextController {
-    protected static Log log = LogFactory.getLog( DownloadDataAsTextController.class.getName() );
-
-    protected List<Long> extractIds( String idString ) {
-        List<Long> ids = new ArrayList<Long>();
-        if ( idString != null ) {
-            for ( String s : idString.split( "," ) ) {
-                try {
-                    ids.add( Long.parseLong( s.trim() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "invalid id " + s );
-                }
-            }
-        }
-        return ids;
-    }
+    protected static final Log log = LogFactory.getLog( DownloadDataAsTextController.class.getName() );
 
     /*
      * Handle case of text export of the results.
@@ -65,41 +50,40 @@ public class DownloadDataAsTextController {
         List<String> geneSessionGroupQueries = extractParamList( request.getParameter( "gq" ) ); // param.gq.split(',')
         List<String> experimentSessionGroupQueries = extractParamList( request.getParameter( "eq" ) ); // param.eq.split(',')
 
-        List<Long> geneIds = extractIds( request.getParameter( "g" ) ); // gene
-        List<Long> eeIds = extractIds( request.getParameter( "e" ) ); // experiment
-        List<Long> geneGroupIds = extractIds( request.getParameter( "gg" ) ); // gene group
-        List<Long> experimentGroupIds = extractIds( request.getParameter( "eg" ) ); // experiment group
+        List<Long> geneIds = ( List<Long> ) ControllerUtils.extractIds( request.getParameter( "g" ) ); // gene
+        List<Long> eeIds = ( List<Long> ) ControllerUtils.extractIds( request.getParameter( "e" ) ); // experiment
+        List<Long> geneGroupIds = ( List<Long> ) ControllerUtils.extractIds( request.getParameter( "gg" ) ); // gene group
+        List<Long> experimentGroupIds = ( List<Long> ) ControllerUtils.extractIds( request.getParameter( "eg" ) ); // experiment group
 
         /*
          * TODO REWORK BOOKMARKS THEN UNCOMMENT THIS SECTION Collection<Reference> datasetGroupReferences = new
          * LinkedList<Reference> (); Collection<Reference> geneGroupReferences = new LinkedList<Reference> ();
-         * 
+         *
          * for (Long geneId : geneIds) { geneGroupReferences.add( new GeneReference( geneId ) ); }
-         * 
+         *
          * for (Long eeId : eeIds) { datasetGroupReferences.add( new ExpressionExperimentReference( eeId ) ); }
-         * 
+         *
          * for (Long geneGroupId : geneGroupIds) { geneGroupReferences.add( new DatabaseBackedGeneSetReference(
          * geneGroupId ) ); }
-         * 
+         *
          * for (Long experimentGroupId : experimentGroupIds) { datasetGroupReferences.add( new
          * DatabaseBackedExpressionExperimentSetReference( experimentGroupId ) ); }
-         * 
+         *
          * DifferentialExpressionVisualizationValueObject searchResult =
          * diffExSearch.differentialExpressionAnalysisVisualizationSearch(taxonId, datasetGroupReferences,
          * geneGroupReferences, geneSessionGroupQueries, experimentSessionGroupQueries );
-         * 
+         *
          * String text = searchResult.toTextFile();
-         * 
+         *
          * // Convert result to text ModelAndView mav = new ModelAndView( new TextView() ); mav.addObject( "text", text
          * );
          */
-        ModelAndView mav = new ModelAndView( new TextView() );
-        return mav;
+        return new ModelAndView( new TextView() );
 
     }
 
     private List<String> extractParamList( String paramString ) {
-        List<String> paramList = new ArrayList<String>();
+        List<String> paramList = new ArrayList<>();
         if ( paramString != null ) {
             for ( String s : paramString.split( "," ) ) {
                 paramList.add( s.trim() );

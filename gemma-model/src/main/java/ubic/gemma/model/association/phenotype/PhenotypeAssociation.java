@@ -18,21 +18,23 @@
  */
 package ubic.gemma.model.association.phenotype;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.genome.Gene;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
 /**
  * Represents abstract evidence for the association of a gene with a phenotype.
- * @version $Id$
+ *
+ * @author Paul
  */
-public abstract class PhenotypeAssociation extends Auditable implements gemma.gsec.model.Securable {
+public abstract class PhenotypeAssociation extends AbstractAuditable implements gemma.gsec.model.Securable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -40,7 +42,7 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     private static final long serialVersionUID = -1734685902449428500L;
 
     private GOEvidenceCode evidenceCode;
-    private Boolean isNegativeEvidence = Boolean.valueOf( false );
+    private Boolean isNegativeEvidence = Boolean.FALSE;
 
     private String score;
 
@@ -61,13 +63,13 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     private PhenotypeMappingType mappingType;
 
     private String originalPhenotype;
-    
-    private String relationship; // information for a gene-disease relationship 
+
+    private String relationship; // information for a gene-disease relationship
+
+    private Date lastUpdated;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
      */
     public PhenotypeAssociation() {
     }
@@ -80,11 +82,19 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         return this.associationType;
     }
 
+    public void setAssociationType( Characteristic associationType ) {
+        this.associationType = associationType;
+    }
+
     /**
-     * 
+     *
      */
     public GOEvidenceCode getEvidenceCode() {
         return this.evidenceCode;
+    }
+
+    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
+        this.evidenceCode = evidenceCode;
     }
 
     /**
@@ -95,11 +105,19 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         return this.evidenceSource;
     }
 
+    public void setEvidenceSource( DatabaseEntry evidenceSource ) {
+        this.evidenceSource = evidenceSource;
+    }
+
     /**
-     * 
+     *
      */
     public ubic.gemma.model.genome.Gene getGene() {
         return this.gene;
+    }
+
+    public void setGene( ubic.gemma.model.genome.Gene gene ) {
+        this.gene = gene;
     }
 
     /**
@@ -112,6 +130,10 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         return this.isNegativeEvidence;
     }
 
+    public void setIsNegativeEvidence( Boolean isNegativeEvidence ) {
+        this.isNegativeEvidence = isNegativeEvidence;
+    }
+
     /**
      * The phenotype this association is about. A phenotype is (basically) a term from a controlled vocabulary such as a
      * disease.
@@ -120,12 +142,20 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         return this.phenotypes;
     }
 
+    public void setPhenotypes( Collection<Characteristic> phenotypes ) {
+        this.phenotypes = phenotypes;
+    }
+
     /**
      * A score, either provided by the system or (often) imported from an external source. If this is populated, the
      * scoreType should be populated.
      */
     public String getScore() {
         return this.score;
+    }
+
+    public void setScore( String score ) {
+        this.score = score;
     }
 
     /**
@@ -137,48 +167,16 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
         return this.scoreType;
     }
 
+    public void setScoreType( QuantitationType scoreType ) {
+        this.scoreType = scoreType;
+    }
+
     /**
      * The relative strength of the evidence, where higher values are better. This strength may be based on human
      * curation could be from an outside source), automated criteria, or a combination of the two.
      */
     public Double getStrength() {
         return this.strength;
-    }
-
-    public void setAssociationType( Characteristic associationType ) {
-        this.associationType = associationType;
-    }
-
-    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public void setEvidenceSource( DatabaseEntry evidenceSource ) {
-        this.evidenceSource = evidenceSource;
-    }
-
-    public void setGene( ubic.gemma.model.genome.Gene gene ) {
-        this.gene = gene;
-    }
-
-    public void setIsNegativeEvidence( Boolean isNegativeEvidence ) {
-        this.isNegativeEvidence = isNegativeEvidence;
-    }
-
-    public void setPhenotypes( Collection<Characteristic> phenotypes ) {
-        this.phenotypes = phenotypes;
-    }
-    
-    public void setRelationship(String relationship) {
-        this.relationship = relationship;
-    }
-
-    public void setScore( String score ) {
-        this.score = score;
-    }
-
-    public void setScoreType( QuantitationType scoreType ) {
-        this.scoreType = scoreType;
     }
 
     public void setStrength( Double strength ) {
@@ -205,13 +203,24 @@ public abstract class PhenotypeAssociation extends Auditable implements gemma.gs
     public String getOriginalPhenotype() {
         return originalPhenotype;
     }
-    
-    public String getRelationship() {
-        return relationship;
-    }
 
     public void setOriginalPhenotype( String originalPhenotype ) {
         this.originalPhenotype = originalPhenotype;
     }
 
+    public String getRelationship() {
+        return relationship;
+    }
+
+    public void setRelationship( String relationship ) {
+        this.relationship = relationship;
+    }
+
+    public Date getLastUpdated() {
+        return lastUpdated;
+    }
+
+    public void setLastUpdated( Date lastUpdated ) {
+        this.lastUpdated = lastUpdated;
+    }
 }
