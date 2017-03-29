@@ -87,12 +87,15 @@ UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedMissingValueAnalysisEvent" WHERE cl
 UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedPCAAnalysisEvent" WHERE class='FailedPCAAnalysisEventImpl';
 UPDATE AUDIT_EVENT_TYPE SET `class` = "FailedProcessedVectorComputationEvent" WHERE class='FailedProcessedVectorComputationEventImpl';
 
+UPDATE ACLOBJECTIDENTITY SET OBJECT_CLASS = 'ubic.gemma.model.expression.arrayDesign.ArrayDesign' where OBJECT_CLASS = 'ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl';
+UPDATE ACLOBJECTIDENTITY SET OBJECT_CLASS = 'ubic.gemma.model.expression.experiment.ExpressionExperiment' where OBJECT_CLASS = 'ubic.gemma.model.expression.experiment.ExpressionExperimentImpl';
+
 -- TODO: BACKUP AUDIT_EVENT TABLE BEFORE THIS STEP
 -- -- Validation flag is discontinued and was never used consistently. The information these events contain is discarted
 -- -- delete all validation events
 START TRANSACTION;
 
-DELETE AUDIT_EVENT FROM AUDIT_EVENT INNER JOIN AUDIT_EVENT_TYPE ON AUDIT_EVENT.EVENT_TYPE_FK = AUDIT_EVENT_TYPE.ID WHERE class IN ('ValidatedAnnotationsImpl','ValidatedExperimentalDesignImpl','ValidatedFlagEventImpl','ValidatedQualityControlImpl')
+DELETE AUDIT_EVENT FROM AUDIT_EVENT INNER JOIN AUDIT_EVENT_TYPE ON AUDIT_EVENT.EVENT_TYPE_FK = AUDIT_EVENT_TYPE.ID WHERE class IN ('ValidatedAnnotationsImpl','ValidatedExperimentalDesignImpl','ValidatedFlagEventImpl','ValidatedQualityControlImpl');
 DELETE FROM AUDIT_EVENT_TYPE WHERE class in ('ValidatedAnnotationsImpl','ValidatedExperimentalDesignImpl','ValidatedFlagEventImpl','ValidatedQualityControlImpl');
 
 COMMIT;
