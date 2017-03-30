@@ -56,7 +56,7 @@ Gemma.MyDatasetsPanel = Ext.extend(Ext.Panel,
             var ids = null;
             var taxonid = null;
             var filterMode = null;
-            var showPublic = true;// !isAdmin;
+            var showPublic = true;
             if (queryStart > -1) {
                 var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
                 ids = urlParams.ids ? urlParams.ids.split(',') : null;
@@ -340,7 +340,7 @@ Gemma.EEReportGridColumnRenderers = {
                 + value
                 + ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></span>';
 
-            var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+            var isAdmin = (Ext.get('hasAdmin')) ? Ext.get('hasAdmin').getValue() : false;
             if (isAdmin) {
                 adminLink = adminLink
                     + '&nbsp;&nbsp;&nbsp;<span class="link" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
@@ -609,8 +609,8 @@ Gemma.EEReportGridColumnRenderers = {
     isPublicRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
         var id = record.get('id');
         return Gemma.SecurityManager.getSecurityLink('ubic.gemma.model.expression.experiment.ExpressionExperiment',
-                id, record.get('isPublic'), record.get('isShared'), record.get('userCanWrite'), null, null, null,
-                record.get('userOwned'));
+            id, record.get('isPublic'), record.get('isShared'), record.get('userCanWrite'), null, null, null,
+            record.get('userOwned'));
     }
 };
 
@@ -925,11 +925,9 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                 tooltip: "Show/hide your public data sets.",
                 boxLabel: "Show your public data",
                 checked: this.showPublic,
-
-                parent: this,
                 handler: function (checkbox, event) {
-                    parent.showPublic = checkbox.getValue();
-                    this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.filterType]);
+                    this.showPublic = checkbox.getValue();
+                    this.fireEvent('loadStore', [this.taxonid, this.ids, this.limit, this.filterType, this.showPublic]);
                 },
                 scope: this
             });
@@ -943,7 +941,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                             this.taxonCombo.setValue(this.taxonid);
                         } else {
                             this.taxonid = (this.taxonCombo.getStore().getAt(0)) ? this.taxonCombo.getStore().getAt(0)
-                                    .get('id') : "-1";
+                                .get('id') : "-1";
                             this.taxonCombo.setValue(this.taxonid);
                         }
                     }, this);
