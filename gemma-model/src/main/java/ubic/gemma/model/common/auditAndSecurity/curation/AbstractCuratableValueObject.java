@@ -13,7 +13,7 @@ import java.util.Date;
  */
 public abstract class AbstractCuratableValueObject {
 
-    private static final String TROUBLE_DETAILS_NONE = "Not troubled";
+    private static final String TROUBLE_DETAILS_NONE = "Trouble details not found.";
 
     protected Long id;
 
