@@ -280,6 +280,11 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
+    protected Collection<ArrayDesignValueObject> handleLoadValueObjectsForEE( Long eeId ) {
+        return this.arrayDesignDao.loadValueObjectsForEE( eeId );
+    }
+
+    @Override
     protected long handleNumAllCompositeSequenceWithBioSequences() {
         return this.arrayDesignDao.numAllCompositeSequenceWithBioSequences();
     }

@@ -129,21 +129,26 @@ public class CommonQueries {
     }
 
     /**
-     * @return map of array designs to the experiments they were used in.
+     * @return list of array designs used in given expression experiment
      */
-    @SuppressWarnings("unchecked")
     public static Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment ee, Session session ) {
-
         if ( ee == null ) {
             return null;
         }
+        return getArrayDesignsUsed( ee.getId(), session );
+    }
 
+    /**
+     * @return list of array designs used in given expression experiment
+     */
+    @SuppressWarnings("unchecked")
+    public static Collection<ArrayDesign> getArrayDesignsUsed( Long eeId, Session session ) {
         final String eeAdQuery = "select distinct ad from ExpressionExperiment as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee = :ee";
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id = :eeId";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
-        queryObject.setParameter( "ee", ee );
+        queryObject.setParameter( "eeId", eeId );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -155,6 +160,25 @@ public class CommonQueries {
             ad.getTechnologyType();
         }
         return ( Collection<ArrayDesign> ) list;
+    }
+
+    /**
+     *
+     * @return list of array designs IDs used in given expression experiment
+     */
+    @SuppressWarnings("unchecked")
+    public static Collection<Long> getArrayDesignIdsUsed( Long eeId, Session session ) {
+        final String eeAdQuery = "select distinct ad.id from ExpressionExperiment as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad where ee.id = :eeId";
+
+        org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
+        queryObject.setCacheable( true );
+        queryObject.setParameter( "eeId", eeId );
+        queryObject.setReadOnly( true );
+        queryObject.setFlushMode( FlushMode.MANUAL );
+
+        List<?> list = queryObject.list();
+        return ( Collection<Long> ) list;
     }
 
     /**

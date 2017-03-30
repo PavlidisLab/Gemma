@@ -1021,9 +1021,7 @@ public class ExpressionExperimentController {
 
             // Detail VO has many more fields but we currently only use the ADs.
             detailVo.setArrayDesigns(
-                    //TODO: This is ridiculous - a method that actually loads AD VOs based on an EE id should be implemented
-                    arrayDesignService.loadValueObjects(
-                            EntityUtils.getIds( this.getADsSafely( this.getEESafely( vo.getId() ) ) ) ) );
+                    arrayDesignService.loadValueObjectsForEE(vo.getId() ) );
             finalVos.add( detailVo );
         }
 
