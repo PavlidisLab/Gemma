@@ -379,21 +379,20 @@ Gemma.SecurityManager.getSecurityLink = function( clazz, id, isPublic, isShared,
    if ( canEdit ) {
 
       if ( currentUserIsOwner ) {
-         icon = isPublic ? '<img src="/Gemma/images/icons/world_edit_mine.png" ext:qtip="Public; click to edit permissions" ext:qtip="Public" alt="public"/>'
-            : '<img src="/Gemma/images/icons/lock_edit_mine.png" ext:qtip="Private; click to edit permissions" ext:qtip="Private"  alt="private"/>';
+          icon = isPublic ? '<i class="green fa fa-globe fa-lg fa-fw" ext:qtip="Public; click to view details"></i>'
+              : '<i class="green fa fa-lock fa-lg fa-fw" ext:qtip="Private; click to view details"></i>';
 
       } else {
-
-         icon = isPublic ? '<img src="/Gemma/images/icons/world_edit.png" ext:qtip="Public; click to edit permissions" ext:qtip="Public" alt="public"/>'
-            : '<img src="/Gemma/images/icons/lock_edit.png" ext:qtip="Private; click to edit permissions" ext:qtip="Private"  alt="private"/>';
+          icon = isPublic ? '<i class="gray-blue fa fa-globe fa-lg fa-fw" ext:qtip="Public; click to view details"></i>'
+              : '<i class="gray-blue fa fa-lock fa-lg fa-fw" ext:qtip="Private; click to view details"></i>';
       }
 
    } else {
-      icon = isPublic ? '<img src="/Gemma/images/icons/world.png" ext:qtip="Public; click to view details" ext:qtip="Public"  alt="public"/>'
-         : '<img src="/Gemma/images/icons/lock.png" ext:qtip="Private click to view details" ext:qtip="Private"  alt="private"/>';
+      icon = isPublic ? '<i class="dark-gray fa fa-globe fa-lg fa-fw" ext:qtip="Public"></i>'
+         : '<i class="dark-gray fa fa-lock fa-lg fa-fw" ext:qtip="Private"></i>';
    }
 
-   var sharedIcon = isShared ? '<img src="/Gemma/images/icons/group.png" ext:qtip="Shared"  alt="shared"/>' : '';
+   var sharedIcon = isShared ? '<i class="gray-blue fa fa-users fa-lg fa-fw" ext:qtip="Shared" ></i>' : '';
 
    if ( !elid ) {
       var elid = Ext.id();

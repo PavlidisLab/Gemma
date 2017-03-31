@@ -338,14 +338,14 @@ Gemma.EEReportGridColumnRenderers = {
         if (record.get("userCanWrite")) {
             var adminLink = '<span class="link"  onClick="Ext.getCmp(\'eemanager\').updateEEReport('
                 + value
-                + ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  ext:qtip="refresh"/></span>';
+                + ')"><i class="green fa fa-refresh fa-lg fa-fw" ext:qtip="Refresh statistics"></i></span>';
 
             var isAdmin = (Ext.get('hasAdmin')) ? Ext.get('hasAdmin').getValue() : false;
             if (isAdmin) {
                 adminLink = adminLink
                     + '&nbsp;&nbsp;&nbsp;<span class="link" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment('
                     + value
-                    + ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" ext:qtip="delete" /></span>&nbsp;';
+                    + ')"><i class="red fa fa-times fa-lg fa-fw" ext:qtip="Delete the experiment from the system"></i></span>&nbsp;';
             }
             return adminLink;
         }
@@ -387,9 +387,8 @@ Gemma.EEReportGridColumnRenderers = {
         var BIG_ENOUGH_FOR_LINKS = 7;
 
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doLinks('
-                + id
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run coexpression analysis"  alt="link analysis" /></span>';
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doLinks(' + id + ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run coexpression analysis"></i></span>';
         }
 
         if (record.get('bioAssayCount') < BIG_ENOUGH_FOR_LINKS) {
@@ -410,10 +409,10 @@ Gemma.EEReportGridColumnRenderers = {
                 suggestRun = false;
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
-                + (suggestRun ? runurl : '');
+            return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
+                + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
         } else {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+            return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
         }
     },
 
@@ -423,10 +422,8 @@ Gemma.EEReportGridColumnRenderers = {
 
         if (record.get("userCanWrite")) {
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
-                + id
-                + ', '
-                + false
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
+                + id+ ', ' + false + ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
         }
 
         /*
@@ -444,15 +441,13 @@ Gemma.EEReportGridColumnRenderers = {
             }
             // pass in parameter indicating we already have the pca.
             runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca('
-                + id
-                + ', '
-                + true
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
+                + id+ ', ' + true + ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run PCA analysis"></i></span>';
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
-                + (suggestRun ? runurl : '');
+            return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
+                + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
         } else {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+            return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
         }
     },
 
@@ -461,9 +456,8 @@ Gemma.EEReportGridColumnRenderers = {
         var dataSource = record.get('externalDatabase');
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch('
-                + id
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run batch info fetch"  alt="Fetch batch information" /></span>';
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchInfoFetch('+ id + ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run batch info fetch"></i></span>';
         }
 
         // Batch info fetching not allowed for RNA seq and other non-microarray data
@@ -492,12 +486,12 @@ Gemma.EEReportGridColumnRenderers = {
                 }
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
-                + (suggestRun ? runurl : '');
+            return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
+                + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
         } else if (hasBatchInformation) {
             return '<span style="color:#000;">Provided</span>&nbsp;';
         } else if (dataSource == 'GEO' || dataSource == 'ArrayExpress') {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+            return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
         } else
             return '<span style="color:#CCF;" '
                 + 'ext:qtip="Add batch information by creating a \'batch\' experiment factor">' + 'NA' + '</span>&nbsp;';
@@ -508,9 +502,8 @@ Gemma.EEReportGridColumnRenderers = {
 
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('
-                + id
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run missing value analysis" alt="missing value computation"  /></span>';
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doMissingValues('+ id+ ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run missing value analysis"></i></span>';
         }
 
         //Offer missing value analysis if it's possible (this might need tweaking).
@@ -526,10 +519,10 @@ Gemma.EEReportGridColumnRenderers = {
                     qtip = 'ext:qtip="Failed"';
                 }
 
-                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value)
-                    + '&nbsp;' + (suggestRun ? runurl : '');
+                return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
+                    + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
             } else {
-                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
             }
 
         } else {
@@ -541,9 +534,8 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('
-                + id
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run processed vector generation" alt="processed vector generation"/></span>';
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors('+ id + ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run processed vector generation"></i></span>';
         }
 
         if (record.get('dateProcessedDataVectorComputation')) {
@@ -557,10 +549,10 @@ Gemma.EEReportGridColumnRenderers = {
                 qtip = 'ext:qtip="Failed"';
             }
 
-            return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value) + '&nbsp;'
-                + (suggestRun ? runurl : '');
+            return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
+                + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
         } else {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+            return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
         }
     },
 
@@ -573,9 +565,8 @@ Gemma.EEReportGridColumnRenderers = {
 
         var runurl = "";
         if (record.get("userCanWrite")) {
-            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('
-                + id
-                + ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" ext:qtip="Run differential expression analysis"/></span>';
+            runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doDifferential('+ id+ ')">' +
+                '<i class="gray-blue fa fa-play-circle fa-lg fa-fw" ext:qtip="Run differential expression analysis"></i></span>';
         }
 
         if (diffIsPossible(record)) {
@@ -596,10 +587,10 @@ Gemma.EEReportGridColumnRenderers = {
                 }
 
                 // TODO: add tooltip describing the analysis.
-                return '<span style="color:' + color + ';" ' + qtip + '>' + Gemma.Renderers.dateRenderer(value)
-                    + '&nbsp;' + (suggestRun ? runurl : '');
+                return '<span style="color:' + color + ';" ' + qtip + '>' + (suggestRun ? runurl : '')
+                    + Gemma.Renderers.dateRenderer(value) + '&nbsp;';
             } else {
-                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
             }
         } else {
             return '<span style="color:#CCF;" ext:qtip="You must create at least one experimental factor to enable this analysis.">NA</span>';
