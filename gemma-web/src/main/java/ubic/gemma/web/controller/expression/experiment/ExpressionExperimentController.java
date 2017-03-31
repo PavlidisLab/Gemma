@@ -217,9 +217,14 @@ public class ExpressionExperimentController {
             records.add( new ExpressionExperimentDetailsValueObject( ro ) );
         }
 
-        // if user is not admin, remove troubled experiments
         if ( !SecurityUtil.isUserAdmin() ) {
+            // If user is not admin, remove troubled experiments. This method loads the ADs automatically.
             records = removeTroubledExperimentVOs( records );
+        }else{
+            // If user is an admin, we will want to see the troubled details. For this, the ADs have to be filled in.
+            for ( ExpressionExperimentDetailsValueObject vo : records ) {
+                vo.setArrayDesigns( arrayDesignService.loadValueObjectsForEE( vo.getId() ) );
+            }
         }
 
         /*
@@ -237,16 +242,6 @@ public class ExpressionExperimentController {
         // List<ExpressionExperimentDetailsValueObject> valueObjects = new
         // ArrayList<ExpressionExperimentDetailsValueObject>(
         // getExpressionExperimentDetailsValueObjects( records.subList( origStart, pSize ) ) );
-
-        // if admin, want to show why experiment is troubled
-        if ( SecurityUtil.isUserAdmin() ) {
-            for ( ExpressionExperimentDetailsValueObject vo : recordsSubset ) {
-                ExpressionExperiment ee = this.getEESafely( vo.getId() );
-                // trouble details are retrieved automatically if we set the array designs
-                vo.setArrayDesigns(
-                        arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
-            }
-        }
 
         return new JsonReaderResponse<>( recordsSubset, count );
     }
@@ -1013,15 +1008,14 @@ public class ExpressionExperimentController {
             log.info( "Filling in report data for " + vos.size() + " EEs: " + timer.getTime() + "ms" );
         }
 
-        LinkedList<ExpressionExperimentDetailsValueObject> finalVos = new LinkedList<>(  );
+        LinkedList<ExpressionExperimentDetailsValueObject> finalVos = new LinkedList<>();
 
         // We need to convert the VOs to detailVos and add array designs so trouble info can be correctly displayed.
         for ( ExpressionExperimentValueObject vo : vos ) {
-            ExpressionExperimentDetailsValueObject detailVo= new ExpressionExperimentDetailsValueObject( vo );
+            ExpressionExperimentDetailsValueObject detailVo = new ExpressionExperimentDetailsValueObject( vo );
 
             // Detail VO has many more fields but we currently only use the ADs.
-            detailVo.setArrayDesigns(
-                    arrayDesignService.loadValueObjectsForEE(vo.getId() ) );
+            detailVo.setArrayDesigns( arrayDesignService.loadValueObjectsForEE( vo.getId() ) );
             finalVos.add( detailVo );
         }
 
@@ -1783,28 +1777,27 @@ public class ExpressionExperimentController {
         return initialListOfValueObject;
     }
 
+    /**
+     * Fills in the array designs of given EE details VOs, and then removes all troubled experiments. The first
+     * step is necessary because determining whether EE is troubled depends on its AD: if one of the ADs that the
+     * EE belongs to is troubled, the EE is troubled as well.
+     *
+     * @param eevos list containing all the EE details VOs which we want to check for being troubled.
+     * @return new list not containing any EE details VOs that might be troubled.
+     */
     private List<ExpressionExperimentDetailsValueObject> removeTroubledExperimentVOs(
-            List<ExpressionExperimentDetailsValueObject> records ) {
-        List<ExpressionExperimentDetailsValueObject> untroubled = new ArrayList<>( records );
+            List<ExpressionExperimentDetailsValueObject> eevos ) {
 
-        Collection<ExpressionExperimentDetailsValueObject> toRemove = new ArrayList<>();
-        for ( ExpressionExperimentDetailsValueObject record : records ) {
-            if ( record.getArrayDesigns() == null ) {
-                // Loading array designs which we need for the parent trouble check.
-                Collection<ArrayDesign> ads = expressionExperimentService
-                        .getArrayDesignsUsed( expressionExperimentService.load( record.getId() ) );
-                LinkedList<Long> adIds = new LinkedList<>();
-                for ( ArrayDesign ad : ads ) {
-                    adIds.add( ad.getId() );
-                }
-                record.setArrayDesigns( arrayDesignService.loadValueObjects( adIds ) );
+        List<ExpressionExperimentDetailsValueObject> untroubled = new LinkedList<>( eevos );
+        Collection<ExpressionExperimentDetailsValueObject> toRemove = new LinkedList<>();
+
+        for ( ExpressionExperimentDetailsValueObject vo : eevos ) {
+            vo.setArrayDesigns( arrayDesignService.loadValueObjectsForEE( vo.getId() ) );
+            if ( vo.getTroubled() ) {
+                toRemove.add( vo );
             }
-
-            if ( record.getTroubled() ) {
-                toRemove.add( record );
-            }
-
         }
+
         untroubled.removeAll( toRemove );
         return untroubled;
     }
@@ -1827,7 +1820,8 @@ public class ExpressionExperimentController {
     /**
      * Read the needs attention flag in each ExpressionExperimentValueObject and return only those object for which it is true
      */
-    private List<ExpressionExperimentValueObject> returnNeedsAttention( Collection<ExpressionExperimentValueObject> ees ) {
+    private List<ExpressionExperimentValueObject> returnNeedsAttention(
+            Collection<ExpressionExperimentValueObject> ees ) {
         List<ExpressionExperimentValueObject> troubled = new ArrayList<>();
 
         for ( ExpressionExperimentValueObject eevo : ees ) {
