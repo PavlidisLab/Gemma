@@ -340,6 +340,10 @@ i[class*=qtp]{
 	color: darkgray;
 }
 
+.gray-blue{
+	color: #3b5a82;
+}
+
 .bold{
 	font-weight: bold;
 }

@@ -16,13 +16,23 @@ Gemma.Renderers = {
     },
 
     dateRenderer: function (value, metadata, record, rowIndex, colIndex, store) {
-        var time = Date.parse(value);
-        var options = {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric'
-        };
-        return new Date(time).toLocaleDateString(undefined, options);
+        try {
+            var time = Date.parse(value);
+            var options = {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            };
+            var date = new Date(time);
+            if ( isNaN( date.getTime() ) ) {  // d.valueOf() could also work
+                //noinspection ExceptionCaughtLocallyJS
+                throw "Trying to create a date from invalid string: " + value;
+            }
+            return date.toLocaleDateString(undefined, options);
+        }catch(err){
+            console.error(err);
+            return "";
+        }
     },
 
     troubleRenderer: function (value, metadata, record, rowIndex, colIndex, store) {

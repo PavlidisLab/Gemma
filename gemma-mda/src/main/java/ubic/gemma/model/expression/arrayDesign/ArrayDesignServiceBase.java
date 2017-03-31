@@ -426,6 +426,17 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
     }
 
     /**
+     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadValueObjectsForEE(Long)
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId  ) {
+
+        return this.handleLoadValueObjectsForEE( eeId );
+
+    }
+
+    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#numAllCompositeSequenceWithBioSequences()
      */
     @Override
@@ -816,6 +827,12 @@ public abstract class ArrayDesignServiceBase implements ArrayDesignService {
      */
     protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadValueObjects(
             java.util.Collection<Long> ids );
+
+    /**
+     * Performs the core logic for {@link #loadValueObjectsForEE(Long)}
+     */
+    protected abstract java.util.Collection<ArrayDesignValueObject> handleLoadValueObjectsForEE(
+            Long eeId );
 
     /**
      * Performs the core logic for {@link #numAllCompositeSequenceWithBioSequences()}

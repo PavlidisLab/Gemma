@@ -24,7 +24,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
       name : "numPublications",
       type : "int"
    }, {
-      name : "lastUpdated",
+      name : "lastUpdateDate",
       type : "date"
    }, {
       name : "pathToDownloadFile",
@@ -42,7 +42,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
 
          reader : new Ext.data.JsonReader({
             fields : [ 'name', 'description', 'webUri', 'numEvidence',
-                  'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdated', 'pathToDownloadFile' ]
+                  'numGenes', 'numPhenotypes', 'numPublications', 'lastUpdateDate', 'pathToDownloadFile' ]
          })
       });
 
@@ -139,7 +139,7 @@ Gemma.NeurocartaStatistics = Ext.extend(Gemma.GemmaGridPanel, {
                width : 0.55
             }, {
                header : "Last updated",
-               dataIndex : "lastUpdated",
+               dataIndex : "lastUpdateDate",
                tooltip: "The date when we last imported a data source or checked it for updates. If a source itself has not been updated since we last imported it, we do not re-import it.",
                renderer : renderBold,
                width : 0.55,

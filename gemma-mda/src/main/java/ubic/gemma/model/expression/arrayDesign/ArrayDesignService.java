@@ -204,6 +204,12 @@ public interface ArrayDesignService {
     Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
 
     /**
+     * Loads the Value Objects for array designs used by expression experiment with the given ID
+     * @param eeId the id of an expression experiment
+     */
+    Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
+
+    /**
      * Function to return a count of all compositeSequences with bioSequence associations
      */
     long numAllCompositeSequenceWithBioSequences();

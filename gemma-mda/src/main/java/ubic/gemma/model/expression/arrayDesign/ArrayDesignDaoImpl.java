@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
 
 import java.sql.Connection;
@@ -568,6 +569,20 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
     }
 
     @Override
+    public Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId ) {
+        // sanity check
+        if ( eeId == null ) {
+            return new ArrayList<>();
+        }
+        Collection<Long> ids = CommonQueries.getArrayDesignIdsUsed( eeId, this.getSession() );
+        final String queryString = this.getEEValueObjectQueryString() + "where ad.id in (:ids)  ";
+        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+        queryObject.setParameterList( "ids", ids );
+
+        return processADValueObjectQueryResults( null, queryObject );
+    }
+
+    @Override
     @Transactional
     public long numAllCompositeSequenceWithBioSequences() {
         final String queryString =
@@ -1056,7 +1071,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
 
                 v.setTaxon( list.getString( 10 ) );
 
-                if ( !eeCounts.containsKey( v.getId() ) ) {
+                if ( eeCounts == null || !eeCounts.containsKey( v.getId() ) ) {
                     v.setExpressionExperimentCount( 0 );
                 } else {
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );

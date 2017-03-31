@@ -396,11 +396,11 @@ Gemma.ExpressionExperimentDetails = Ext
              */
             new Gemma.CategoryCombo( {} );
 
-            var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'' + e.id
-               + '-eemanager\').tagger(' + e.id + ',' + e.taxonId + ',' + this.editable +
-               + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
+            var taggerurl = "<span style='cursor:pointer' onClick=\"return Ext.getCmp('" + e.id+ "-eemanager')" +
+                ".tagger(" + e.id + "," + e.taxonId + "," + this.editable + ", null)\" >" +
+                "<i class='gray-blue fa fa-tags fa-lg -fa-fw' ext:qtip='add/view tags'></i></span>";
 
-            tagView = new Gemma.AnnotationDataView( {
+            var tagView = new Gemma.AnnotationDataView( {
                readParams : [ {
                   id : e.id,
                   classDelegatingFor : "ExpressionExperiment"

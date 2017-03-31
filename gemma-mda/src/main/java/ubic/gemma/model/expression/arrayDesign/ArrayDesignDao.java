@@ -75,6 +75,8 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
 
+    Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
+
     Collection<CompositeSequence> loadCompositeSequences( Long id );
 
     long numAllCompositeSequenceWithBioSequences();
