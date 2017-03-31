@@ -363,7 +363,7 @@ Gemma.EEReportGridColumnRenderers = {
         var id = record.get('id');
         var url = '<a target="_blank" href="/Gemma/experimentalDesign/showExperimentalDesign.html?eeid='
             + id
-            + '"><img src="/Gemma/images/icons/pencil.png" alt="view/edit experimental design" ext:qtip="view/edit experimental design"/></a>';
+            + '"><i class="gray-blue fa fa-pencil fa-lg -fa-fw" ext:qtip="view/edit experimental design"></i></a>';
         return value + '&nbsp;' + url;
     },
 
@@ -373,7 +373,7 @@ Gemma.EEReportGridColumnRenderers = {
 
         var url = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').tagger(' + id + ',' + taxonId + ','
             + record.get("userCanWrite")
-            + ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" ext:qtip="add/view tags"/></span>';
+            + ')"><i class="gray-blue fa fa-tags fa-lg -fa-fw" ext:qtip="add/view tags"></i></span>';
         value = value + '&nbsp;' + url;
 
         return value;

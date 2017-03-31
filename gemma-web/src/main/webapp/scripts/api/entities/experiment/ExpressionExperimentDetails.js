@@ -398,7 +398,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
             var taggerurl = "<span style='cursor:pointer' onClick=\"return Ext.getCmp('" + e.id+ "-eemanager')" +
                 ".tagger(" + e.id + "," + e.taxonId + "," + this.editable + ", null)\" >" +
-                "<img src='/Gemma/images/icons/pencil.png' alt='view tags' title='view tags'/></span>";
+                "<i class='gray-blue fa fa-tags fa-lg -fa-fw' ext:qtip='add/view tags'></i></span>";
 
             var tagView = new Gemma.AnnotationDataView( {
                readParams : [ {
