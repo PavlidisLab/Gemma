@@ -583,7 +583,7 @@ Gemma.EEReportGridColumnRenderers = {
                     qtip = 'ext:qtip="Failed"';
                 } else if (record.get('differentialExpressionAnalyses').length == 0) {
                     // we ran it, but the analyses were apparently deleted.
-                    return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+                    return '<span style="color:#3A3;">' + runurl + 'Needed</span>&nbsp;';
                 }
 
                 // TODO: add tooltip describing the analysis.

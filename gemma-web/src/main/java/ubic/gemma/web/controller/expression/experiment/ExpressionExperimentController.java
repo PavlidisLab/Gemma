@@ -1768,7 +1768,7 @@ public class ExpressionExperimentController {
         } else if ( taxon != null ) {
             // everything for taxon
             initialListOfValueObject = new ArrayList<>( expressionExperimentService
-                    .loadAllValueObjectsTaxonOrdered( "dateLastUpdated", descending, taxon ) );
+                    .loadAllValueObjectsTaxonOrdered( "lastUpdated", descending, taxon ) );
         } else {
             // everything
             initialListOfValueObject = new ArrayList<>(
