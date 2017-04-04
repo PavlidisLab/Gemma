@@ -18,81 +18,50 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeDao;
-import ubic.gemma.model.genome.ChromosomeLocation;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonDao;
+import ubic.gemma.model.genome.*;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductDao;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultDao;
-import ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResult;
+import ubic.gemma.model.genome.sequenceAnalysis.*;
 import ubic.gemma.util.SequenceBinUtils;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 abstract public class GenomePersister extends CommonPersister {
 
+    private final Map<Object, Taxon> seenTaxa = new HashMap<>();
+    private final Map<Object, Chromosome> seenChromosomes = new HashMap<>();
     @Autowired
-    protected GeneDao geneDao;
-
+    private GeneDao geneDao;
     @Autowired
-    protected ChromosomeDao chromosomeDao;
-
+    private ChromosomeDao chromosomeDao;
     @Autowired
-    protected GeneProductDao geneProductDao;
-
+    private GeneProductDao geneProductDao;
     @Autowired
-    protected BioSequenceDao bioSequenceDao;
-
+    private BioSequenceDao bioSequenceDao;
     @Autowired
-    protected TaxonDao taxonDao;
-
+    private TaxonDao taxonDao;
     @Autowired
-    protected BlatAssociationDao blatAssociationDao;
-
+    private BlatAssociationDao blatAssociationDao;
     @Autowired
-    protected BlatResultDao blatResultDao;
-
+    private BlatResultDao blatResultDao;
     @Autowired
-    protected AnnotationAssociationDao annotationAssociationDao;
+    private AnnotationAssociationDao annotationAssociationDao;
 
-    protected Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
-
-    protected Map<Object, Chromosome> seenChromosomes = new HashMap<Object, Chromosome>();
-
-    protected boolean firstBioSequence = false;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
     @Override
     @Transactional
     public Object persist( Object entity ) {
@@ -114,14 +83,10 @@ abstract public class GenomePersister extends CommonPersister {
         return super.persist( entity );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.CommonPersister#persistOrUpdate(java.lang.Object)
-     */
     @Override
     public Object persistOrUpdate( Object entity ) {
-        if ( entity == null ) return null;
+        if ( entity == null )
+            return null;
 
         if ( entity instanceof BioSequence ) {
             return this.persistOrUpdateBioSequence( ( BioSequence ) entity );
@@ -136,10 +101,8 @@ abstract public class GenomePersister extends CommonPersister {
 
     /**
      * Update a gene.
-     * 
-     * @param existingGene
+     *
      * @param newGeneInfo the non-persistent gene we are copying information from
-     * @return
      */
     public Gene updateGene( Gene existingGene, Gene newGeneInfo ) {
 
@@ -166,8 +129,8 @@ abstract public class GenomePersister extends CommonPersister {
 
                 if ( !found ) {
                     throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
-                            + " has changed and the previous NCBI id on record with NCBI ("
-                            + newGeneInfo.getPreviousNcbiId() + ") doesn't match." );
+                            + " has changed and the previous NCBI id on record with NCBI (" + newGeneInfo
+                            .getPreviousNcbiId() + ") doesn't match." );
                 }
             }
 
@@ -195,7 +158,7 @@ abstract public class GenomePersister extends CommonPersister {
 
         // We assume the taxon hasn't changed.
 
-        Map<String, DatabaseEntry> updatedacMap = new HashMap<String, DatabaseEntry>();
+        Map<String, DatabaseEntry> updatedacMap = new HashMap<>();
         for ( DatabaseEntry de : existingGene.getAccessions() ) {
             updatedacMap.put( de.getAccession(), de );
         }
@@ -225,14 +188,14 @@ abstract public class GenomePersister extends CommonPersister {
          * from different sources. For example, Ensembl or GoldenPath. -- UNLESS the product has an NCBI GI because we
          * know those come from NCBI.
          */
-        Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
+        Map<String, GeneProduct> updatedGpMap = new HashMap<>();
 
         for ( GeneProduct existingGp : existingGene.getProducts() ) {
             updatedGpMap.put( existingGp.getName(), existingGp );
             updatedGpMap.put( existingGp.getNcbiGi(), existingGp );
         }
 
-        Map<String, GeneProduct> usedGIs = new HashMap<String, GeneProduct>();
+        Map<String, GeneProduct> usedGIs = new HashMap<>();
         for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
             if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
                 log.debug( "Updating gene product based on name: " + newGeneProductInfo );
@@ -299,7 +262,7 @@ abstract public class GenomePersister extends CommonPersister {
                 usedGIs.put( newGeneProductInfo.getNcbiGi(), newGeneProductInfo );
         }
 
-        Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
+        Collection<GeneProduct> toRemove = new HashSet<>();
 
         if ( !usedGIs.isEmpty() ) {
             toRemove = handleGeneProductChangedGIs( existingGene, usedGIs );
@@ -320,8 +283,6 @@ abstract public class GenomePersister extends CommonPersister {
 
     /**
      * FIXME this duplicates some code from GeneProductService, but we're using the DAOs here.
-     * 
-     * @param toRemove
      */
     protected void removeGeneProducts( Collection<GeneProduct> toRemove ) {
         Collection<? extends BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
@@ -333,8 +294,9 @@ abstract public class GenomePersister extends CommonPersister {
 
         Collection<AnnotationAssociation> annotationAssociations = this.annotationAssociationDao.find( toRemove );
         if ( !annotationAssociations.isEmpty() ) {
-            log.info( "Removing " + annotationAssociations.size() + " annotationAssociations involving up to "
-                    + toRemove.size() + " products." );
+            log.info(
+                    "Removing " + annotationAssociations.size() + " annotationAssociations involving up to " + toRemove
+                            .size() + " products." );
             this.annotationAssociationDao.remove( annotationAssociations );
         }
 
@@ -343,7 +305,7 @@ abstract public class GenomePersister extends CommonPersister {
         // remove associations to database entries that are still associated with sequences.
         for ( GeneProduct gp : toRemove ) {
             Collection<DatabaseEntry> accessions = gp.getAccessions();
-            Collection<DatabaseEntry> toRelease = new HashSet<DatabaseEntry>();
+            Collection<DatabaseEntry> toRelease = new HashSet<>();
             for ( DatabaseEntry de : accessions ) {
                 if ( this.bioSequenceDao.findByAccession( de ) != null ) {
                     toRelease.add( de );
@@ -356,43 +318,39 @@ abstract public class GenomePersister extends CommonPersister {
         // geneProductDao.remove( toRemove );
     }
 
-    /**
-     * @param bioSequence
-     */
     protected void fillInBioSequenceTaxon( BioSequence bioSequence ) {
         Taxon t = bioSequence.getTaxon();
-        if ( t == null ) throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
-        if ( !isTransient( t ) ) return;
+        if ( t == null )
+            throw new IllegalArgumentException( "BioSequence Taxon cannot be null" );
+        if ( !isTransient( t ) )
+            return;
 
         bioSequence.setTaxon( persistTaxon( t ) );
 
     }
 
-    /**
-     * @param bioSequence
-     */
     protected BioSequence persistBioSequence( BioSequence bioSequence ) {
-        if ( bioSequence == null || !isTransient( bioSequence ) ) return bioSequence;
+        if ( bioSequence == null || !isTransient( bioSequence ) )
+            return bioSequence;
 
         BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
 
         // try to avoid making the instance 'dirty' if we don't have to, to avoid updates.
         if ( existingBioSequence != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
+            if ( log.isDebugEnabled() )
+                log.debug( "Found existing: " + existingBioSequence );
             return existingBioSequence;
         }
 
         return persistNewBioSequence( bioSequence );
     }
 
-    /**
-     * @param bioSequence2GeneProduct
-     * @return
-     */
     protected BioSequence2GeneProduct persistBioSequence2GeneProduct(
             BioSequence2GeneProduct bioSequence2GeneProduct ) {
-        if ( bioSequence2GeneProduct == null ) return null;
-        if ( !isTransient( bioSequence2GeneProduct ) ) return bioSequence2GeneProduct;
+        if ( bioSequence2GeneProduct == null )
+            return null;
+        if ( !isTransient( bioSequence2GeneProduct ) )
+            return bioSequence2GeneProduct;
 
         if ( bioSequence2GeneProduct instanceof BlatAssociation ) {
             return persistBlatAssociation( ( BlatAssociation ) bioSequence2GeneProduct );
@@ -402,9 +360,6 @@ abstract public class GenomePersister extends CommonPersister {
 
     }
 
-    /**
-     * @param association
-     */
     protected BioSequence2GeneProduct persistBlatAssociation( BlatAssociation association ) {
         BlatResult blatResult = association.getBlatResult();
         if ( isTransient( blatResult ) ) {
@@ -418,28 +373,22 @@ abstract public class GenomePersister extends CommonPersister {
         return blatAssociationDao.create( association );
     }
 
-    /**
-     * @param gene
-     * @return
-     */
     protected Gene persistGene( Gene gene ) {
         return persistGene( gene, true );
     }
 
-    /**
-     * @param gene
-     * @param checkFirst check if it exists already.
-     */
-    @SuppressWarnings("unchecked")
     protected Gene persistGene( Gene gene, boolean checkFirst ) {
-        if ( gene == null ) return null;
-        if ( !isTransient( gene ) ) return gene;
+        if ( gene == null )
+            return null;
+        if ( !isTransient( gene ) )
+            return gene;
 
         if ( checkFirst ) {
             Gene existingGene = geneDao.find( gene );
 
             if ( existingGene != null ) {
-                if ( log.isDebugEnabled() ) log.debug( "Gene exists, will not update" );
+                if ( log.isDebugEnabled() )
+                    log.debug( "Gene exists, will not update" );
                 return existingGene;
             }
         }
@@ -456,10 +405,11 @@ abstract public class GenomePersister extends CommonPersister {
         fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
         fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
 
-        if ( log.isInfoEnabled() ) log.info( "New gene: " + gene );
+        if ( log.isInfoEnabled() )
+            log.info( "New gene: " + gene );
         gene = geneDao.create( gene );
 
-        Collection<GeneProduct> geneProductsForNewGene = new HashSet<GeneProduct>();
+        Collection<GeneProduct> geneProductsForNewGene = new HashSet<>();
         for ( GeneProduct product : tempGeneProduct ) {
             GeneProduct existingProduct = geneProductDao.find( product );
             if ( existingProduct != null ) {
@@ -491,6 +441,7 @@ abstract public class GenomePersister extends CommonPersister {
             // we do a separate create because the cascade doesn't trigger auditing correctly - otherwise the
             // products are not persistent until the session is flushed, later. There might be a better way around this,
             // but so far as I know this is the only place this happens.
+            //noinspection unchecked
             gene.setProducts( ( Collection<GeneProduct> ) geneProductDao.create( gene.getProducts() ) );
             geneDao.update( gene );
             return gene;
@@ -504,22 +455,22 @@ abstract public class GenomePersister extends CommonPersister {
 
     }
 
-    /**
-     * @param geneProduct
-     * @return
-     */
     protected GeneProduct persistGeneProduct( GeneProduct geneProduct ) {
-        if ( geneProduct == null ) return null;
-        if ( !isTransient( geneProduct ) ) return geneProduct;
+        if ( geneProduct == null )
+            return null;
+        if ( !isTransient( geneProduct ) )
+            return geneProduct;
 
         GeneProduct existing = geneProductDao.find( geneProduct );
 
         if ( existing != null ) {
-            if ( log.isDebugEnabled() ) log.debug( geneProduct + " exists, will not update" );
+            if ( log.isDebugEnabled() )
+                log.debug( geneProduct + " exists, will not update" );
             return existing;
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "*** New: " + geneProduct + " *** " );
+        if ( log.isDebugEnabled() )
+            log.debug( "*** New: " + geneProduct + " *** " );
 
         fillInGeneProductAssociations( geneProduct );
 
@@ -538,12 +489,9 @@ abstract public class GenomePersister extends CommonPersister {
 
     }
 
-    /**
-     * @param bioSequence
-     * @return
-     */
     protected BioSequence persistOrUpdateBioSequence( BioSequence bioSequence ) {
-        if ( bioSequence == null ) return null;
+        if ( bioSequence == null )
+            return null;
 
         /*
          * Note that this method is only really used by the ArrayDesignSequencePersister: it's for filling in
@@ -553,23 +501,25 @@ abstract public class GenomePersister extends CommonPersister {
         BioSequence existingBioSequence = bioSequenceDao.find( bioSequence );
 
         if ( existingBioSequence == null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+            if ( log.isDebugEnabled() )
+                log.debug( "Creating new: " + bioSequence );
             return persistNewBioSequence( bioSequence );
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "Found existing: " + existingBioSequence );
+        if ( log.isDebugEnabled() )
+            log.debug( "Found existing: " + existingBioSequence );
 
         // the sequence is the main field we might update.
-        if ( bioSequence.getSequence() != null
-                && !bioSequence.getSequence().equals( existingBioSequence.getSequence() ) ) {
+        if ( bioSequence.getSequence() != null && !bioSequence.getSequence()
+                .equals( existingBioSequence.getSequence() ) ) {
             existingBioSequence.setSequence( bioSequence.getSequence() );
         }
 
         /*
          * Can do for all fields that might not be the same: anything besides the name and taxon.
          */
-        if ( bioSequence.getDescription() != null
-                && !bioSequence.getDescription().equals( existingBioSequence.getDescription() ) ) {
+        if ( bioSequence.getDescription() != null && !bioSequence.getDescription()
+                .equals( existingBioSequence.getDescription() ) ) {
             existingBioSequence.setDescription( bioSequence.getDescription() );
         }
 
@@ -577,8 +527,8 @@ abstract public class GenomePersister extends CommonPersister {
             existingBioSequence.setType( bioSequence.getType() );
         }
 
-        if ( bioSequence.getFractionRepeats() != null
-                && !bioSequence.getFractionRepeats().equals( existingBioSequence.getFractionRepeats() ) ) {
+        if ( bioSequence.getFractionRepeats() != null && !bioSequence.getFractionRepeats()
+                .equals( existingBioSequence.getFractionRepeats() ) ) {
             existingBioSequence.setFractionRepeats( bioSequence.getFractionRepeats() );
         }
 
@@ -586,18 +536,18 @@ abstract public class GenomePersister extends CommonPersister {
             existingBioSequence.setLength( bioSequence.getLength() );
         }
 
-        if ( bioSequence.getIsCircular() != null
-                && !bioSequence.getIsCircular().equals( existingBioSequence.getIsCircular() ) ) {
+        if ( bioSequence.getIsCircular() != null && !bioSequence.getIsCircular()
+                .equals( existingBioSequence.getIsCircular() ) ) {
             existingBioSequence.setIsCircular( bioSequence.getIsCircular() );
         }
 
-        if ( bioSequence.getPolymerType() != null
-                && !bioSequence.getPolymerType().equals( existingBioSequence.getPolymerType() ) ) {
+        if ( bioSequence.getPolymerType() != null && !bioSequence.getPolymerType()
+                .equals( existingBioSequence.getPolymerType() ) ) {
             existingBioSequence.setPolymerType( bioSequence.getPolymerType() );
         }
 
-        if ( bioSequence.getSequenceDatabaseEntry() != null
-                && !bioSequence.getSequenceDatabaseEntry().equals( existingBioSequence.getSequenceDatabaseEntry() ) ) {
+        if ( bioSequence.getSequenceDatabaseEntry() != null && !bioSequence.getSequenceDatabaseEntry()
+                .equals( existingBioSequence.getSequenceDatabaseEntry() ) ) {
             existingBioSequence
                     .setSequenceDatabaseEntry( ( DatabaseEntry ) persist( bioSequence.getSequenceDatabaseEntry() ) );
         }
@@ -616,9 +566,10 @@ abstract public class GenomePersister extends CommonPersister {
      */
     protected Gene persistOrUpdateGene( Gene gene ) {
 
-        if ( gene == null ) return null;
+        if ( gene == null )
+            return null;
 
-        Gene existingGene = null;
+        Gene existingGene;
         if ( gene.getId() != null ) {
             existingGene = geneDao.load( gene.getId() );
         } else {
@@ -629,7 +580,8 @@ abstract public class GenomePersister extends CommonPersister {
             return persistGene( gene, false );
         }
 
-        if ( log.isDebugEnabled() ) log.debug( "Updating " + existingGene );
+        if ( log.isDebugEnabled() )
+            log.debug( "Updating " + existingGene );
 
         /*
          * This allows stale data to exist in this Session, but flushing prematurely causes constraint violations.
@@ -641,14 +593,11 @@ abstract public class GenomePersister extends CommonPersister {
 
     }
 
-    /**
-     * @param geneProduct
-     * @return
-     */
     protected GeneProduct persistOrUpdateGeneProduct( GeneProduct geneProduct ) {
-        if ( geneProduct == null ) return null;
+        if ( geneProduct == null )
+            return null;
 
-        GeneProduct existing = null;
+        GeneProduct existing;
         if ( geneProduct.getId() != null ) {
             existing = geneProductDao.load( geneProduct.getId() );
         } else {
@@ -664,12 +613,11 @@ abstract public class GenomePersister extends CommonPersister {
         return existing;
     }
 
-    /**
-     * @param taxon
-     */
     protected Taxon persistTaxon( Taxon taxon ) {
-        if ( taxon == null ) return null;
-        if ( !isTransient( taxon ) ) return taxon;
+        if ( taxon == null )
+            return null;
+        if ( !isTransient( taxon ) )
+            return taxon;
 
         // Avoid trips to the database to get the taxon.
         String scientificName = taxon.getScientificName();
@@ -687,7 +635,8 @@ abstract public class GenomePersister extends CommonPersister {
             assert fTaxon != null;
             assert fTaxon.getId() != null;
 
-            if ( log.isDebugEnabled() ) log.debug( "Fetched or created taxon " + fTaxon );
+            if ( log.isDebugEnabled() )
+                log.debug( "Fetched or created taxon " + fTaxon );
 
             if ( fTaxon.getScientificName() != null ) {
                 seenTaxa.put( fTaxon.getScientificName().toLowerCase(), fTaxon );
@@ -703,12 +652,8 @@ abstract public class GenomePersister extends CommonPersister {
         }
     }
 
-    /**
-     * @param existing
-     * @param geneProduct
-     */
     private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
-        Map<String, DatabaseEntry> updatedGpMap = new HashMap<String, DatabaseEntry>();
+        Map<String, DatabaseEntry> updatedGpMap = new HashMap<>();
         existing = geneProductDao.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
             updatedGpMap.put( de.getAccession(), de );
@@ -721,24 +666,19 @@ abstract public class GenomePersister extends CommonPersister {
         }
     }
 
-    /**
-     * @param chromosomeLocation
-     * @return
-     */
     private void fillChromosomeLocationAssociations( ChromosomeLocation chromosomeLocation, Taxon t ) {
-        if ( chromosomeLocation == null ) return;
+        if ( chromosomeLocation == null )
+            return;
         Chromosome chromosome = persistChromosome( chromosomeLocation.getChromosome(), t );
         chromosomeLocation.setChromosome( chromosome );
     }
 
-    /**
-     * @param geneProduct
-     */
     private void fillInGeneProductAssociations( GeneProduct geneProduct ) {
 
         if ( geneProduct.getPhysicalLocation() != null ) {
-            geneProduct.getPhysicalLocation().setChromosome( persistChromosome(
-                    geneProduct.getPhysicalLocation().getChromosome(), geneProduct.getGene().getTaxon() ) );
+            geneProduct.getPhysicalLocation().setChromosome(
+                    persistChromosome( geneProduct.getPhysicalLocation().getChromosome(),
+                            geneProduct.getGene().getTaxon() ) );
         }
 
         if ( geneProduct.getExons() != null ) {
@@ -754,18 +694,13 @@ abstract public class GenomePersister extends CommonPersister {
         }
     }
 
-    /**
-     * @param physicalLocation
-     * @param t
-     * @return
-     */
     private PhysicalLocation fillPhysicalLocationAssociations( PhysicalLocation physicalLocation, Taxon t ) {
         physicalLocation.setChromosome( persistChromosome( physicalLocation.getChromosome(), t ) );
 
         if ( physicalLocation.getBin() == null && physicalLocation.getNucleotide() != null
                 && physicalLocation.getNucleotideLength() != null ) {
             physicalLocation.setBin( SequenceBinUtils.binFromRange( physicalLocation.getNucleotide().intValue(),
-                    physicalLocation.getNucleotide().intValue() + physicalLocation.getNucleotideLength().intValue() ) );
+                    physicalLocation.getNucleotide().intValue() + physicalLocation.getNucleotideLength() ) );
         }
 
         return physicalLocation;
@@ -774,13 +709,12 @@ abstract public class GenomePersister extends CommonPersister {
     /**
      * Check for deletions or changed GIs. If we have a GI that is not in the collection, then we might delete it from
      * the system.
-     * 
-     * @param existingGene
+     *
      * @param usedGIs return toRemove
      */
     private Collection<GeneProduct> handleGeneProductChangedGIs( Gene existingGene, Map<String, GeneProduct> usedGIs ) {
-        Collection<String> switchedGis = new HashSet<String>();
-        Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
+        Collection<String> switchedGis = new HashSet<>();
+        Collection<GeneProduct> toRemove = new HashSet<>();
         for ( GeneProduct existingGp : existingGene.getProducts() ) {
 
             if ( StringUtils.isBlank( existingGp.getNcbiGi() ) || usedGIs.containsKey( existingGp.getNcbiGi() ) ) {
@@ -872,9 +806,10 @@ abstract public class GenomePersister extends CommonPersister {
             if ( deleteIt ) {
                 toRemove.add( existingGp );
                 existingGp.setGene( null ); // we are erasing this association as we assume it is no longer
-                                            // valid.
-                log.warn( "Removing gene product from system: " + existingGp
-                        + ", it is no longer listed as a product of " + existingGene );
+                // valid.
+                log.warn(
+                        "Removing gene product from system: " + existingGp + ", it is no longer listed as a product of "
+                                + existingGene );
             }
         } // over this gene's gene products.
 
@@ -886,9 +821,6 @@ abstract public class GenomePersister extends CommonPersister {
         return toRemove;
     }
 
-    /**
-     * @param bioSequence
-     */
     private void persistBioSequenceAssociations( BioSequence bioSequence ) {
         fillInBioSequenceTaxon( bioSequence );
 
@@ -906,30 +838,27 @@ abstract public class GenomePersister extends CommonPersister {
     /**
      * NOTE this method is not a regular 'persist' method: It does not use findOrCreate! A new result is made every
      * time.
-     * 
-     * @param blatResult
-     * @return
      */
     private BlatResult persistBlatResult( BlatResult blatResult ) {
-        if ( !isTransient( blatResult ) ) return blatResult;
+        if ( !isTransient( blatResult ) )
+            return blatResult;
         if ( blatResult.getQuerySequence() == null ) {
             throw new IllegalArgumentException( "Blat result with null query sequence" );
         }
         blatResult.setQuerySequence( persistBioSequence( blatResult.getQuerySequence() ) );
         blatResult.setTargetChromosome( persistChromosome( blatResult.getTargetChromosome(), null ) );
         blatResult.setSearchedDatabase( persistExternalDatabase( blatResult.getSearchedDatabase() ) );
-        if ( blatResult.getTargetAlignedRegion() != null ) blatResult.setTargetAlignedRegion(
-                fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion(), null ) );
+        if ( blatResult.getTargetAlignedRegion() != null )
+            blatResult.setTargetAlignedRegion(
+                    fillPhysicalLocationAssociations( blatResult.getTargetAlignedRegion(), null ) );
         return blatResultDao.create( blatResult );
     }
 
-    /**
-     * @param chromosome
-     * @return
-     */
     private Chromosome persistChromosome( Chromosome chromosome, Taxon t ) {
-        if ( chromosome == null ) return null;
-        if ( !isTransient( chromosome ) ) return chromosome;
+        if ( chromosome == null )
+            return null;
+        if ( !isTransient( chromosome ) )
+            return chromosome;
 
         Taxon ct = t;
         if ( ct == null ) {
@@ -982,12 +911,9 @@ abstract public class GenomePersister extends CommonPersister {
 
     }
 
-    /**
-     * @param bioSequence
-     * @return
-     */
     private BioSequence persistNewBioSequence( BioSequence bioSequence ) {
-        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating new: " + bioSequence );
 
         persistBioSequenceAssociations( bioSequence );
 
@@ -995,10 +921,6 @@ abstract public class GenomePersister extends CommonPersister {
         return bioSequenceDao.create( bioSequence );
     }
 
-    /**
-     * @param result
-     * @return
-     */
     private SequenceSimilaritySearchResult persistSequenceSimilaritySearchResult(
             SequenceSimilaritySearchResult result ) {
         if ( result instanceof BlatResult ) {
@@ -1009,9 +931,7 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * @param existingGeneProduct
      * @param updatedGeneProductInfo information from this is copied onto the 'existing' gene product.
-     * @param object
      */
     private void updateGeneProduct( GeneProduct existingGeneProduct, GeneProduct updatedGeneProductInfo ) {
         Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
@@ -1030,8 +950,8 @@ abstract public class GenomePersister extends CommonPersister {
 
         existingGeneProduct.setPhysicalLocation( updatedGeneProductInfo.getPhysicalLocation() );
         if ( existingGeneProduct.getPhysicalLocation() != null ) {
-            existingGeneProduct.getPhysicalLocation()
-                    .setChromosome( persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome(),
+            existingGeneProduct.getPhysicalLocation().setChromosome(
+                    persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome(),
                             geneForExistingGeneProduct.getTaxon() ) );
         }
 
