@@ -8,7 +8,6 @@ Ext.namespace( 'Gemma' );
  * @version $Id$
  * @author paul
  * @see DatasetGroupComboPanel for a convenient way to display this with an edit button.
- * @see ExperimentAndExperimentGroupCombo
  */
 Gemma.DatasetGroupCombo = Ext
    .extend(

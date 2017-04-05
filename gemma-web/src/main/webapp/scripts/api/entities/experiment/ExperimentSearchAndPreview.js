@@ -173,8 +173,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
     * @param combo
     * @param index
     */
-   showPreview : function( combo, record, index ) {
-
+   showPreview : function( combo, storeItem, index ) {
+      var record = storeItem.data;
       // if the EE has changed taxon, reset the experiment combo
       this.searchForm.taxonChanged( record.get( 'taxonId' ), record.get( 'taxonName' ) );
       Gemma.EVENTBUS.fireEvent( 'taxonchanged', record.get( 'taxonId' ) );
@@ -213,7 +213,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend( Ext.Panel, {
          hideTrigger : true
       } );
 
-      this.experimentCombo.on( 'select', this.showPreview, this );
+      this.experimentCombo.on( 'selected', this.showPreview, this );
 
       this.preview = new Gemma.ExperimentSetPreview( {
          hideUnanalyzedDatasets : true,

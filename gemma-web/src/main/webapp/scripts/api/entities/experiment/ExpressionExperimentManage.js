@@ -800,15 +800,24 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
         /**
          * @memberOf Gemma.EEReportGridToolbar
          */
-        filterBySearch: function (record) {
-            this.ids = record.expressionExperimentIds;
-            // If user selected an experiment instead of an experiment group, member ids will be null
-            if (this.ids === null || this.ids.length == 0) {
-                this.ids = [record.id];
-            }
+        filterBySearch: function (combo, storeItem) {
+            if (storeItem && storeItem.data && storeItem.data.resultValueObject) {
+                var resultVO = storeItem.data.resultValueObject;
 
-            this.fireEvent('loadStore', [this.taxonid, this.ids, Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType,
-                this.showPublic]);
+                if (resultVO.expressionExperimentIds) {
+                    // Case when a group was returned.
+                    this.ids = resultVO.expressionExperimentIds;
+                } else if (resultVO.id) {
+                    // Case when a single experiment was returned.
+                    this.ids = [resultVO.id];
+                } else {
+                    // Case when neither was found.
+                    console.log("ComboBox did not return any Expression Experiment ID/IDs.");
+                }
+
+                this.fireEvent('loadStore', [this.taxonid, this.ids, Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType,
+                    this.showPublic]);
+            }
         },
         /**
          * @memberOf Gemma.EEReportGridToolbar
@@ -908,7 +917,7 @@ Gemma.EEReportGridToolbar = Ext.extend(Ext.Toolbar,
                 emptyText: "Search for experiments",
                 listeners: {
                     scope: this,
-                    'recordSelected': this.filterBySearch
+                    'selected': this.filterBySearch
                 }
             });
 

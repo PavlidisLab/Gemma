@@ -521,7 +521,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 hideTrigger: true
             });
 
-            eeCombo.on("groupSelected", function (storeItem) {
+            eeCombo.on("selected", function (combo, storeItem) {
 
                 if (storeItem && storeItem.data && storeItem.data.resultValueObject) {
                     var resultVO = storeItem.data.resultValueObject;

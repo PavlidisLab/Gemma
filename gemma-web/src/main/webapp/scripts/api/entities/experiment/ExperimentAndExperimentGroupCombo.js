@@ -135,10 +135,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
 
          /**
           * Filters the contents on the basis of whether the mode is 'coexpresssion' or differential expression'
-          * 
-          * @param {String}
-          *           mode
-          * @memberOf Gemma.ExperimentAndExperimentGroupCombo
+          *
           */
          setMode : function( mode ) {
             // console.log( "set mode = " + mode );
@@ -311,7 +308,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                   // console.log( 'valid results match the query=' + this.getValue() );
 
                   if ( this.urlInitiatedQuery ) {
-                     this.fireEvent( "groupSelected", records[0] );
+                     this.fireEvent( "selected", this, records[0] );
                      // } else if ( this.getValue() !== records[0].originalQuery ) {
 
                   } else if ( this.getValue() !== query ) {
@@ -361,9 +358,9 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext
                }.createDelegate( this ), 1250 );
             }, this );
             
-            this.on( 'select', function ( element ){
-                  var storeItem = element.store.data.items[element.selectedIndex];
-                  this.fireEvent( "groupSelected", storeItem );
+            this.on( 'select', function ( combo ){
+                  var storeItem = combo.store.data.items[combo.selectedIndex];
+                  this.fireEvent( "selected", combo, storeItem );
                }
             );
 

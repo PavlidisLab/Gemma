@@ -155,7 +155,7 @@ Gemma.ExperimentSetPreview = Ext
           */
          _addToPreviewedSet : function( combo, record, index ) {
             // FIXME see GeneSetPreview._addToPreviewedSet and harmonize.
-            var rvo = record.get( 'resultValueObject' );
+            var rvo = record.data.get( 'resultValueObject' );
 
             if ( rvo instanceof SessionBoundExpressionExperimentSetValueObject ) {
                this._appendAndUpdate( combo, rvo );
@@ -301,7 +301,7 @@ Gemma.ExperimentSetPreview = Ext
 
             this.withinSetExperimentCombo.setTaxonId( this.taxonId );
 
-            this.withinSetExperimentCombo.on( 'select', this._addToPreviewedSet, this );
+            this.withinSetExperimentCombo.on( 'selected', this._addToPreviewedSet, this );
 
             Ext
                .apply(
