@@ -18,22 +18,9 @@
  */
 package ubic.gemma.apps;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.time.StopWatch;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.util.FileTools;
@@ -46,11 +33,7 @@ import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.association.coexpression.CoexpressionService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -63,54 +46,33 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.util.EntityUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.*;
+
 /**
  * Commandline tool to conduct link analysis.
- * 
+ *
  * @author xiangwan
  * @author paul (refactoring)
  * @author vaneet
- * @version $Id$
  */
 public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
-    public static void main( String[] args ) {
-        LinkAnalysisCli analysis = new LinkAnalysisCli();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = analysis.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
-    }
-
     private String analysisTaxon = null;
-
     private String dataFileName = null;
-
-    private FilterConfig filterConfig = new FilterConfig();
-
-    private boolean initalizeFromOldData = false;
-
-    private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
-
+    private final FilterConfig filterConfig = new FilterConfig();
+    private final LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
     private LinkAnalysisService linkAnalysisService;
-
+    private boolean initializeFromOldData = false;
     private boolean updateNodeDegree = false;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
+    public static void main( String[] args ) {
+        LinkAnalysisCli p = new LinkAnalysisCli();
+        tryDoWorkLogTime( p, args );
+    }
+
     @Override
     public String getCommandName() {
         return "coexpAnalyze";
@@ -121,11 +83,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return "Analyze expression data sets for coexpressed genes";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -133,8 +90,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         super.addDateOption();
 
-        Option nodeDegreeUpdate = OptionBuilder.withDescription(
-                "Update the node degree for taxon given by -t option. All other options ignored." ).create( 'n' );
+        Option nodeDegreeUpdate = OptionBuilder
+                .withDescription( "Update the node degree for taxon given by -t option. All other options ignored." )
+                .create( 'n' );
         addOption( nodeDegreeUpdate );
 
         addOption( OptionBuilder.withDescription(
@@ -161,19 +119,16 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( 'a' );
         addOption( absoluteValue );
 
-        Option noNegCorr = OptionBuilder.withDescription( "Omit negative correlated probes in link selection" ).create(
-                "nonegcorr" );
+        Option noNegCorr = OptionBuilder.withDescription( "Omit negative correlated probes in link selection" )
+                .create( "nonegcorr" );
         addOption( noNegCorr );
 
         Option useDB = OptionBuilder.withDescription( "Don't save the results in the database (i.e., testing)" )
                 .withLongOpt( "nodb" ).create( 'd' );
         addOption( useDB );
 
-        Option fileOpt = OptionBuilder
-                .hasArg()
-                .withArgName( "Expression data file" )
-                .withDescription(
-                        "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
+        Option fileOpt = OptionBuilder.hasArg().withArgName( "Expression data file" ).withDescription(
+                "Provide expression data from a tab-delimited text file, rather than from the database. Implies 'nodb' and must also provide 'array' and 't' option" )
                 .create( "dataFile" );
         addOption( fileOpt );
 
@@ -182,18 +137,14 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "t" );
         addOption( taxonNameOption );
 
-        Option arrayOpt = OptionBuilder
-                .hasArg()
-                .withArgName( "Array Design" )
-                .withDescription(
-                        "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
+        Option arrayOpt = OptionBuilder.hasArg().withArgName( "Array Design" ).withDescription(
+                "Provide the short name of the array design used. Only needed if you are using the 'dataFile' option" )
                 .create( "array" );
         addOption( arrayOpt );
 
-        Option textOutOpt = OptionBuilder
-                .withDescription(
-                        "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
-                                + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
+        Option textOutOpt = OptionBuilder.withDescription(
+                "Output links as text. If multiple experiments are analyzed (e.g. using -f option) "
+                        + "results for each are put in a separate file in the current directory with the format {shortname}-links.txt. Otherwise output is to STDOUT" )
                 .create( "text" );
         addOption( textOutOpt );
 
@@ -205,38 +156,32 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .create( "noimages" );
         addOption( imagesOption );
 
-        Option normalizationOption = OptionBuilder
-                .hasArg()
-                .withArgName( "method" )
-                .withDescription(
-                        "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
+        Option normalizationOption = OptionBuilder.hasArg().withArgName( "method" ).withDescription(
+                "Normalization method to apply to the data matrix first: SVD, BALANCE, SPELL or omit this option for none (default=none)" )
                 .create( "normalizemethod" );
         addOption( normalizationOption );
 
-        Option logTransformOption = OptionBuilder.withDescription(
-                "Log-transform the data prior to analysis, if it is not already transformed." ).create( "logtransform" );
+        Option logTransformOption = OptionBuilder
+                .withDescription( "Log-transform the data prior to analysis, if it is not already transformed." )
+                .create( "logtransform" );
         addOption( logTransformOption );
 
-        Option subsetOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Number of coexpression links to print out" )
+        Option subsetOption = OptionBuilder.hasArg().withArgName( "Number of coexpression links to print out" )
                 .withDescription(
                         "Only a random subset of total coexpression links will be written to output with approximate "
                                 + "size given as the argument; recommended if thresholds are loose to avoid memory problems or gigantic files." )
                 .create( "subset" );
         addOption( subsetOption );
 
-        Option chooseCutOption = OptionBuilder
-                .hasArg()
-                .withArgName( "Singular correlation threshold" )
-                .withDescription(
-                        "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
+        Option chooseCutOption = OptionBuilder.hasArg().withArgName( "Singular correlation threshold" ).withDescription(
+                "Choose correlation threshold {fwe|cdfCut} to be used independently to select best links, default is none" )
                 .create( "choosecut" );
         addOption( chooseCutOption );
 
         // finer-grained control is possible, of course.
-        Option skipQC = OptionBuilder.withDescription(
-                "Skip strict QC for outliers, batch effects and correlation distribution" ).create( "noqc" );
+        Option skipQC = OptionBuilder
+                .withDescription( "Skip strict QC for outliers, batch effects and correlation distribution" )
+                .create( "noqc" );
         addOption( skipQC );
 
         // Option probeDegreeThresholdOption = OptionBuilder
@@ -258,7 +203,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             return err;
         }
 
-        if ( initalizeFromOldData ) {
+        if ( initializeFromOldData ) {
             log.info( "Initializing links from old data for " + this.taxon );
             LinkAnalysisPersister s = this.getBean( LinkAnalysisPersister.class );
             s.initializeLinksFromOldData( this.taxon );
@@ -280,7 +225,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
              * Read vectors from file. Could provide as a matrix, but it's easier to provide vectors (less mess in later
              * code)
              */
-
             ArrayDesignService arrayDesignService = this.getBean( ArrayDesignService.class );
 
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( this.linkAnalysisConfig.getArrayName() );
@@ -292,9 +236,9 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             loadTaxon();
             arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
-            Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<ProcessedExpressionDataVector>();
+            Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<>();
 
-            Map<String, CompositeSequence> csMap = new HashMap<String, CompositeSequence>();
+            Map<String, CompositeSequence> csMap = new HashMap<>();
             for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                 csMap.put( cs.getName(), cs );
             }
@@ -345,8 +289,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( expressionExperiments.size() > 1 ) {
                 log.info( "Sorting data sets by number of samples, doing large data sets first." );
 
-                Collection<ExpressionExperimentValueObject> vos = eeService.loadValueObjects(
-                        EntityUtils.getIds( expressionExperiments ), true );
+                Collection<ExpressionExperimentValueObject> vos = eeService
+                        .loadValueObjects( EntityUtils.getIds( expressionExperiments ), true );
                 final Map<Long, ExpressionExperimentValueObject> idMap = EntityUtils.getIdMap( vos );
 
                 // FIXME this doesn't know how to deal with BioAssaySets yet.
@@ -385,7 +329,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         super.processOptions();
 
         if ( hasOption( "init" ) ) {
-            initalizeFromOldData = true;
+            initializeFromOldData = true;
             if ( hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
@@ -422,7 +366,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             if ( hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
             } else {
-                log.error( "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
+                log.error(
+                        "Must provide 'taxon' option if you  use 'dataFile' as RNA taxon may be different to array taxon" );
                 this.bail( ErrorCode.INVALID_OPTION );
             }
 
@@ -493,12 +438,13 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
         if ( hasOption( "choosecut" ) ) {
             String singularThreshold = getOptionValue( "choosecut" );
-            if ( singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" )
-                    || singularThreshold.equals( "none" ) ) {
+            if ( singularThreshold.equals( "fwe" ) || singularThreshold.equals( "cdfCut" ) || singularThreshold
+                    .equals( "none" ) ) {
                 log.info( "Singular correlation threshold chosen" );
                 this.linkAnalysisConfig.setSingularThreshold( SingularThreshold.valueOf( singularThreshold ) );
             } else {
-                log.error( "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );
+                log.error(
+                        "Must choose 'fwe', 'cdfCut', or 'none' as the singular correlation threshold, defaulting to 'none'" );
             }
         }
 
@@ -510,37 +456,24 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @SuppressWarnings("static-access")
     private void buildFilterConfigOptions() {
-        Option minPresentFraction = OptionBuilder
-                .hasArg()
-                .withArgName( "Missing Value Threshold" )
-                .withDescription(
-                        "Fraction of data points that must be present in a profile to be retained , default="
-                                + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
+        Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
+                "Fraction of data points that must be present in a profile to be retained , default="
+                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
         addOption( minPresentFraction );
 
-        Option lowExpressionCut = OptionBuilder
-                .hasArg()
-                .withArgName( "Expression Threshold" )
-                .withDescription(
-                        "Fraction of expression vectors to reject based on low values, default="
-                                + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
+        Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low values, default="
+                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
         addOption( lowExpressionCut );
 
-        Option lowVarianceCut = OptionBuilder
-                .hasArg()
-                .withArgName( "Variance Threshold" )
-                .withDescription(
-                        "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                                + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+        Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
+                "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
+                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
         addOption( lowVarianceCut );
 
-        Option distinctValueCut = OptionBuilder
-                .hasArg()
-                .withArgName( "Fraction distinct values threshold" )
-                .withDescription(
-                        "Fraction of values which must be distinct (NaN counts as one value), default="
-                                + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION ).withLongOpt( "distinctValCut" )
-                .create( "dv" );
+        Option distinctValueCut = OptionBuilder.hasArg().withArgName( "Fraction distinct values threshold" )
+                .withDescription( "Fraction of values which must be distinct (NaN counts as one value), default="
+                        + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION ).withLongOpt( "distinctValCut" ).create( "dv" );
         addOption( distinctValueCut );
 
     }
@@ -560,9 +493,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    /**
-     * 
-     */
     private void loadTaxon() {
         this.taxon = taxonService.findByCommonName( analysisTaxon );
         if ( this.taxon == null || !this.taxon.getIsGenesUsable() ) {
@@ -571,11 +501,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         log.debug( taxon + "is used" );
     }
 
-    /**
-     * @param arrayDesign
-     * @param matrix
-     * @return
-     */
     private BioAssayDimension makeBioAssayDimension( ArrayDesign arrayDesign, DoubleMatrix<String, String> matrix ) {
         BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
         bad.setName( "For " + this.dataFileName );
@@ -598,9 +523,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return bad;
     }
 
-    /**
-     * @return
-     */
     private QuantitationType makeQuantitationType() {
         QuantitationType qtype = QuantitationType.Factory.newInstance();
         qtype.setName( "Dummy" );
@@ -618,9 +540,6 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         return qtype;
     }
 
-    /**
-     * @param ee
-     */
     private void processExperiment( ExpressionExperiment ee ) {
         ee = eeService.thaw( ee );
 
@@ -640,8 +559,8 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         try {
 
             if ( this.expressionExperiments.size() > 1 && linkAnalysisConfig.isTextOut() ) {
-                linkAnalysisConfig.setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() )
-                        + "-links.txt" ) );
+                linkAnalysisConfig
+                        .setOutputFile( new File( FileTools.cleanForFileName( ee.getShortName() ) + "-links.txt" ) );
             }
 
             log.info( "==== Starting: [" + ee.getShortName() + "] ======" );

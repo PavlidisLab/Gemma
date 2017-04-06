@@ -20,8 +20,6 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.lang3.time.StopWatch;
-
 import ubic.gemma.analysis.preprocess.PreprocessingException;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
@@ -32,29 +30,18 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Prepare the "processed" expression data vectors, and can also do batch correction.F
- * 
+ *
  * @author xwan, paul
  * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
-    /**
-     * @param args
-     */
+    private boolean batchCorrect = false;
+    private PreprocessorService preprocessorService;
+
     public static void main( String[] args ) {
-        ProcessedDataComputeCLI computing = new ProcessedDataComputeCLI();
-        StopWatch watch = new StopWatch();
-        watch.start();
-        try {
-            Exception ex = computing.doWork( args );
-            if ( ex != null ) {
-                ex.printStackTrace();
-            }
-            watch.stop();
-            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
-        }
+        ProcessedDataComputeCLI p = new ProcessedDataComputeCLI();
+        tryDoWorkLogTime( p, args );
     }
 
     @Override
@@ -62,14 +49,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         return CommandGroup.EXPERIMENT;
     }
 
-    private boolean batchCorrect = false;
-    private PreprocessorService preprocessorService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "makeProcessedData";
@@ -80,9 +59,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         return "Performs preprocessing and can do batch correction (ComBat)";
     }
 
-    /**
-     * 
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -97,9 +73,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         addOption( outputFileOption );
     }
 
-    /**
-     * 
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
@@ -119,9 +92,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         return null;
     }
 
-    /**
-     * 
-     */
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -134,11 +104,6 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
         }
     }
 
-    /**
-     * @param errorObjects
-     * @param persistedObjects
-     * @param ee
-     */
     private void processExperiment( ExpressionExperiment ee ) {
         if ( isTroubled( ee ) && !force ) {
             log.info( "Skipping troubled experiment " + ee.getShortName() );
@@ -155,10 +120,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             // Note tha auditing is done by the service.
             successObjects.add( ee );
             log.info( "Successfully processed: " + ee );
-        } catch ( PreprocessingException e ) {
-            errorObjects.add( ee + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
-        } catch ( Exception e ) {
+        } catch ( PreprocessingException | Exception e ) {
             errorObjects.add( ee + ": " + e.getMessage() );
             log.error( "**** Exception while processing " + ee + ": " + e.getMessage() + " ********", e );
         }

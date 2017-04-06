@@ -18,6 +18,7 @@
  */
 package ubic.gemma.util;
 
+import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.genome.taxon.service.TaxonService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -56,6 +57,21 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
             if ( ex != null ) {
                 ex.printStackTrace();
             }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    protected static void tryDoWorkLogTime( AbstractCLIContextCLI p, String[] args){
+        StopWatch watch = new StopWatch();
+        watch.start();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+            watch.stop();
+            log.info( "Elapsed time: " + watch.getTime() / 1000 + " seconds" );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
