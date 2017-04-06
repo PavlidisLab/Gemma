@@ -260,12 +260,13 @@ Gemma.CurationTools = Ext.extend(Ext.Panel, {
         // Check whether we need to wait for the note update before we update curation status. We have to wait to prevent
         // race conditions, if we are updating both attributes through different audit events.
         var noteCB = refreshCb;
-        if (needsAttention != this.curatable.needsAttention) {
+        if (needsAttention !== this.curatable.needsAttention) {
             noteCB = updateNeedsAttentionFunction;
         }
 
         // Check for information change
-        if (note != this.curatable.curationNote) {
+        // Only update note if different from stored value, and it is non-empty, unless it has been non-empty before are we are clearing it
+        if ( (note && note !== this.curatable.curationNote) || (this.curatable.curationNote && note !== this.curatable.curationNote)  ) {
             AuditController.addAuditEvent(this.auditable, "CurationNoteUpdateEvent", note, null, {
                 callback: noteCB
             });
