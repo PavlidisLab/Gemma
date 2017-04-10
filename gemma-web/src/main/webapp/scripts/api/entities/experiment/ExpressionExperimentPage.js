@@ -34,12 +34,13 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             return true;
         }
     },
+
     checkURLforInitialTab: function () {
         this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
         if (this.loadSpecificTab) {
             var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
             if (param.tab) {
-                if (this.getComponent(param.tab) != undefined) {
+                if (this.getComponent(param.tab) !== undefined) {
                     this.initialTab = param.tab;
                 }
             }
