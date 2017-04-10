@@ -84,7 +84,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     /**
      *
      * This method creates a new event in the audit trail of the passed Auditable object. If this object also implements
-     * the {@link Curatable} interface, and the passes auditEventType is one of the extensions of
+     * the {@link Curatable} interface, and the passed auditEventType is one of the extensions of
      * {@link CurationDetailsEvent} AuditEventType, this method will pass its result to
      * {@link CurationDetailsService#update(Curatable, AuditEvent)}, to update the curatable objects curation details,
      * before returning it.
