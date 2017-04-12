@@ -52,7 +52,11 @@ Gemma.CategoryCombo = Ext.extend(Ext.form.ComboBox, {
             }else{
                 this.selectedTerm = undefined;
             }
+        });
 
+        // Otherwise the combo is only firing this event after losing focus
+        this.on("select", function (combo, record, index) {
+            this.fireEvent("change", combo);
         });
 
         this.store.load({

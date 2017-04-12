@@ -96,6 +96,9 @@ Gemma.CharacteristicCombo = Ext.extend(Ext.form.ComboBox, {
              * knows we want it to detect a change. See bug 1811
              */
             combo.setValue(record.data.value + "\t");
+
+            // Otherwise the combo is only firing this event after losing focus
+            this.fireEvent("change", combo);
         });
 
     },

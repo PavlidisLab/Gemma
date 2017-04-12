@@ -104,6 +104,8 @@ Gemma.AnnotationToolBar = Ext.extend(Ext.Toolbar, {
                     panel.createHandler(characteristic, panel.annotationGrid.refresh.createDelegate(panel.annotationGrid));
                     panel.charCombo.reset();
                     panel.descriptionField.reset();
+                    panel.termNotNull = false;
+                    panel.createButton.disable();
                 },
                 scope: this
             });
