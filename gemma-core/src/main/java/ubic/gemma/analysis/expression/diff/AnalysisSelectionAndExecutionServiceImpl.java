@@ -18,9 +18,6 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -30,43 +27,30 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * A differential expression analysis tool that executes the appropriate analysis based on the number of experimental
  * factors and factor values, as well as the block design.
- * <p>
  * Implementations of the selected analyses; t-test, one way anova, and two way anova with and without interactions are
  * based on the details of the paper written by P. Pavlidis, Methods 31 (2003) 282-289.
- * <p>
  * See http://www.bioinformatics.ubc.ca/pavlidis/lab/docs/reprints/anova-methods.pdf.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 @Component
 public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelectionAndExecutionService {
 
-    private static Log log = LogFactory.getLog( AnalysisSelectionAndExecutionServiceImpl.class );
+    private static final Log log = LogFactory.getLog( AnalysisSelectionAndExecutionServiceImpl.class );
 
     /*
      * We are context-aware so we can get prototype beans.
      */
     private ApplicationContext applicationContext;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#analyze(ubic.gemma.model.expression.
-     * experiment.ExpressionExperiment, ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
@@ -76,10 +60,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        Collection<DifferentialExpressionAnalysis> analyses = this.applicationContext.getBean( DiffExAnalyzer.class )
+        return this.applicationContext.getBean( DiffExAnalyzer.class )
                 .run( expressionExperiment, config );
-
-        return analyses;
     }
 
     @Override
@@ -91,19 +73,10 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
 
-        DifferentialExpressionAnalysis analysis = this.applicationContext.getBean( DiffExAnalyzer.class ).run( subset,
-                config );
-
-        return analysis;
+        return this.applicationContext.getBean( DiffExAnalyzer.class )
+                .run( subset, config );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#determineAnalysis(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment, java.util.Collection,
-     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
     @Override
     public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
             ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
@@ -148,17 +121,13 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
             if ( factorValues.size() == 1 ) {
                 // one sample t-test.
                 return AnalysisType.OSTTEST;
-            }
-
-            else if ( factorValues.size() == 2 ) {
+            } else if ( factorValues.size() == 2 ) {
                 /*
                  * Return t-test analyzer. This can be taken care of by the one way anova, but keeping it separate for
                  * clarity.
                  */
                 return AnalysisType.TTEST;
-            }
-
-            else {
+            } else {
 
                 /*
                  * Return one way anova analyzer. NOTE: This can take care of the t-test as well, since a one-way anova
@@ -167,9 +136,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 return AnalysisType.OWA;
             }
 
-        }
-
-        else if ( efsToUse.size() == 2 ) {
+        } else if ( efsToUse.size() == 2 ) {
             /*
              * Candidate for ANOVA
              */
@@ -202,9 +169,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
 
             }
             /* Check for block design and execute two way ANOVA (with or without interactions). */
-            if ( !includeInteractionsIfPossible
-                    || !DifferentialExpressionAnalysisUtil.blockComplete( bioAssaySet, experimentalFactors )
-                    || !okForInteraction ) {
+            if ( !includeInteractionsIfPossible || !DifferentialExpressionAnalysisUtil
+                    .blockComplete( bioAssaySet, experimentalFactors ) || !okForInteraction ) {
                 return AnalysisType.TWO_WAY_ANOVA_NO_INTERACTION; // NO interactions
             }
             return AnalysisType.TWO_WAY_ANOVA_WITH_INTERACTION;
@@ -216,14 +182,6 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#determineAnalysis(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment, java.util.Collection,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType,
-     * ubic.gemma.model.expression.experiment.ExperimentalFactor)
-     */
     @Override
     public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
 
@@ -238,7 +196,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 /*
                  * Ensure the config does not have interactions.
                  */
-                log.info( "Any interaction term will be dropped from the configuration as it cannot be analyzed (no replicates? block incomplete?)" );
+                log.info(
+                        "Any interaction term will be dropped from the configuration as it cannot be analyzed (no replicates? block incomplete?)" );
                 config.getInteractionsToInclude().clear();
                 // config.setAnalysisType( type ); // don't need this side-effect.
             }
@@ -288,16 +247,16 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 }
                 for ( ExperimentalFactor experimentalFactor : config.getFactorsToInclude() ) {
                     if ( experimentalFactor.getFactorValues().size() != 1 ) {
-                        throw new IllegalArgumentException( "Need only one level for the factor for one-sample t-test" );
+                        throw new IllegalArgumentException(
+                                "Need only one level for the factor for one-sample t-test" );
                     }
                 }
                 return AnalysisType.OSTTEST;
             case GENERICLM:
-
                 return AnalysisType.GENERICLM;
             default:
-                throw new IllegalArgumentException( "Analyses of that type (" + config.getAnalysisType()
-                        + ")are not yet supported" );
+                throw new IllegalArgumentException(
+                        "Analyses of that type (" + config.getAnalysisType() + ")are not yet supported" );
         }
 
     }
@@ -307,28 +266,16 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         return this.applicationContext.getBean( DiffExAnalyzer.class );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService#setApplicationContext(org.springframework
-     * .context.ApplicationContext)
-     */
     @Override
     public void setApplicationContext( ApplicationContext applicationContext ) throws BeansException {
         this.applicationContext = applicationContext;
     }
 
-    /**
-     * @param bioAssaySet
-     * @param experimentalFactors
-     * @return
-     */
     private Collection<ExperimentalFactor> getFactorsToUse( BioAssaySet bioAssaySet,
             Collection<ExperimentalFactor> experimentalFactors ) {
-        Collection<ExperimentalFactor> efsToUse = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> efsToUse = new HashSet<>();
 
-        ExperimentalDesign design = null;
+        ExperimentalDesign design;
 
         if ( bioAssaySet instanceof ExpressionExperiment ) {
             design = ( ( ExpressionExperiment ) bioAssaySet ).getExperimentalDesign();
@@ -361,10 +308,6 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         return efsToUse;
     }
 
-    /**
-     * @param bioAssaySet
-     * @return
-     */
     private Collection<QuantitationType> getQts( BioAssaySet bioAssaySet ) {
         if ( bioAssaySet instanceof ExpressionExperiment ) {
             return ( ( ExpressionExperiment ) bioAssaySet ).getQuantitationTypes();

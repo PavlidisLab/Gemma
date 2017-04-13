@@ -8,76 +8,41 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.io.Serializable;
-import java.util.Iterator;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+
+import java.io.Serializable;
+import java.util.Iterator;
 
 /**
  * Each factorvalue can be associated with multiple characteristics (or with a measurement). However, for flattening out
  * the objects for client display, there is only one characteristic associated here.
- * <p>
  * Note: this used to be called FactorValueObject and now replaces the old FactorValueValueObject. Confusing!
- * 
- * @author ?, paul updated
- * @version $Id$
+ *
+ * @author Paul
  */
 public class FactorValueValueObject implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
-    /**
-     * @param fv
-     * @return
-     */
-    public static String getFactorValueString( FactorValue fv ) {
-        if ( fv == null ) return "null";
-
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-            String fvString = "";
-            for ( Characteristic c : fv.getCharacteristics() ) {
-                fvString += c.getValue() + " ";
-            }
-            return fvString;
-        } else if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-            return fv.getValue();
-        } else
-            return "absent ";
-    }
-
     private String category;
-
     private String categoryUri;
-
+    private String description;
+    private String factor;
+    private String value;
+    private String valueUri;
     /**
      * It could be the id of the measurement if there is no characteristic.
      */
     private Long charId;
-
-    private String description;
-
-    private String factor;
-
     private Long factorId;
-
     private Long id;
-
     private Boolean isBaseline = false;
-
     private boolean measurement = false;
-
-    private String value;
-
-    private String valueUri;
 
     public FactorValueValueObject() {
         super();
-
     }
 
     /*
@@ -99,9 +64,6 @@ public class FactorValueValueObject implements Serializable {
             this.category = c.getCategory();
     }
 
-    /**
-     * @param fv
-     */
     public FactorValueValueObject( FactorValue fv ) {
         super();
         if ( fv.getCharacteristics().size() == 1 ) {
@@ -117,12 +79,10 @@ public class FactorValueValueObject implements Serializable {
     }
 
     /**
-     * @param value
      * @param c - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
-     *        FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
-     *        confuses things. FIXME this makes no sense and we _do_ pass in the EF category in several places.
-     *        <p>
-     *        If c is null, the plain "value" is used.
+     *          FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
+     *          confuses things. FIXME this makes no sense and we _do_ pass in the EF category in several places.
+     *          If c is null, the plain "value" is used.
      */
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
         super();
@@ -131,24 +91,30 @@ public class FactorValueValueObject implements Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         FactorValueValueObject other = ( FactorValueValueObject ) obj;
         if ( charId == null ) {
-            if ( other.charId != null ) return false;
-        } else if ( !charId.equals( other.charId ) ) return false;
+            if ( other.charId != null )
+                return false;
+        } else if ( !charId.equals( other.charId ) )
+            return false;
 
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        else
-            return id.equals( other.id );
+            if ( other.id != null )
+                return false;
+        } else
+            return id.equals( other.id ) && id.equals( other.id );
 
         if ( value == null ) {
-            if ( other.value != null ) return false;
-        } else if ( !value.equals( other.value ) ) return false;
+            if ( other.value != null )
+                return false;
+        } else if ( !value.equals( other.value ) )
+            return false;
         return true;
     }
 
@@ -159,12 +125,27 @@ public class FactorValueValueObject implements Serializable {
         return category;
     }
 
+    /**
+     * @param category the category to set
+     */
+    public void setCategory( String category ) {
+        this.category = category;
+    }
+
     public String getCategoryUri() {
         return categoryUri;
     }
 
+    public void setCategoryUri( String categoryUri ) {
+        this.categoryUri = categoryUri;
+    }
+
     public Long getCharId() {
         return charId;
+    }
+
+    public void setCharId( Long charId ) {
+        this.charId = charId;
     }
 
     /**
@@ -174,13 +155,29 @@ public class FactorValueValueObject implements Serializable {
         return description;
     }
 
+    /**
+     * @param description the description to set
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public Long getFactorId() {
         return factorId;
+    }
+
+    public void setFactorId( Long factorId ) {
+        this.factorId = factorId;
     }
 
     public String getFactorValue() {
 
         return factor;
+    }
+
+    public void setFactorValue( String value ) {
+
+        this.factor = value;
     }
 
     /**
@@ -190,16 +187,35 @@ public class FactorValueValueObject implements Serializable {
         return id;
     }
 
+    /**
+     * @param id the id to set
+     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public Boolean getIsBaseline() {
         return isBaseline;
+    }
+
+    public void setIsBaseline( Boolean isBaseline ) {
+        this.isBaseline = isBaseline;
     }
 
     public String getValue() {
         return value;
     }
 
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
     public String getValueUri() {
         return valueUri;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
     }
 
     @Override
@@ -220,58 +236,8 @@ public class FactorValueValueObject implements Serializable {
         return measurement;
     }
 
-    /**
-     * @param category the category to set
-     */
-    public void setCategory( String category ) {
-        this.category = category;
-    }
-
-    public void setCategoryUri( String categoryUri ) {
-        this.categoryUri = categoryUri;
-    }
-
-    public void setCharId( Long charId ) {
-        this.charId = charId;
-    }
-
-    /**
-     * @param description the description to set
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setFactorId( Long factorId ) {
-        this.factorId = factorId;
-    }
-
-    public void setFactorValue( String value ) {
-
-        this.factor = value;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsBaseline( Boolean isBaseline ) {
-        this.isBaseline = isBaseline;
-    }
-
     public void setMeasurement( boolean measurement ) {
         this.measurement = measurement;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
-    }
-
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
     }
 
     @Override
@@ -279,17 +245,14 @@ public class FactorValueValueObject implements Serializable {
         return "FactorValueValueObject [factor=" + factor + ", value=" + value + "]";
     }
 
-    /**
-     * @param fv
-     * @return
-     */
     private String getSummaryString( FactorValue fv ) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         if ( fv.getCharacteristics().size() > 0 ) {
             for ( Iterator<Characteristic> iter = fv.getCharacteristics().iterator(); iter.hasNext(); ) {
                 Characteristic c = iter.next();
                 buf.append( c.getValue() == null ? "[Unassigned]" : c.getValue() );
-                if ( iter.hasNext() ) buf.append( ", " );
+                if ( iter.hasNext() )
+                    buf.append( ", " );
             }
         } else if ( fv.getMeasurement() != null ) {
             buf.append( fv.getMeasurement().getValue() );
@@ -301,10 +264,6 @@ public class FactorValueValueObject implements Serializable {
         return buf.toString();
     }
 
-    /**
-     * @param val
-     * @param c
-     */
     private void init( FactorValue val, Characteristic c ) {
         this.setId( val.getId() );
         this.setFactorValue( getSummaryString( val ) );
@@ -331,7 +290,7 @@ public class FactorValueValueObject implements Serializable {
             }
         }
 
-        /**
+        /*
          * Make sure we fill in the Category for this.
          */
         Characteristic factorCategory = val.getExperimentalFactor().getCategory();

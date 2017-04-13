@@ -14,10 +14,7 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import java.util.Collection;
-
 import org.springframework.context.ApplicationContextAware;
-
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -25,54 +22,35 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface AnalysisSelectionAndExecutionService extends ApplicationContextAware {
 
-    /**
-     * @param expressionExperiment
-     * @param config
-     * @return
-     */
-    public abstract Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
+    Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
 
-    /**
-     * @param bioAssaySet
-     * @param config
-     * @return
-     */
-    public abstract AnalysisType determineAnalysis( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config );
+    AnalysisType determineAnalysis( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config );
 
     /**
      * Determines the analysis to execute based on the experimental factors, factor values, and block design.
-     * 
-     * @param bioAssaySet
-     * @param factors which factors to use, or null if to use all from the experiment
-     * @param subsetFactor can be null
+     *
+     * @param experimentalFactors which factors to use, or null if to use all from the experiment
+     * @param subsetFactor        can be null
      * @param includeInteractions if possible
      * @return an appropriate analyzer
-     * @throws an exception if the experiment doesn't have a valid experimental design.
      */
-    public abstract AnalysisType determineAnalysis( BioAssaySet bioAssaySet,
-            Collection<ExperimentalFactor> experimentalFactors, ExperimentalFactor subsetFactor,
-            boolean includeInteractions );
+    AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
+            ExperimentalFactor subsetFactor, boolean includeInteractions );
 
     /**
-     * Return a new instance of a linearmodel analyzer.
-     * 
-     * @return
+     * Return a new instance of a linear model analyzer.
      */
-    public abstract DiffExAnalyzer getAnalyzer();
+    DiffExAnalyzer getAnalyzer();
 
-    /**
-     * @param subset
-     * @param config
-     * @return
-     */
-    public abstract DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
+    DifferentialExpressionAnalysis analyze( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config );
 
 }

@@ -23,8 +23,6 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -58,9 +56,10 @@ import java.util.*;
 @Component
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
-    public static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
+    private static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
     private static final int MINIMUM_NUMBER_OF_HITS_TO_SAVE = 50;
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
+    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
+
     @Autowired
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
@@ -365,7 +364,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     }
 
-    protected int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
+    private int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysis newAnalysis, Collection<ExperimentalFactor> factors ) {
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigation( expressionExperiment );
@@ -806,14 +805,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * @author Paul
      */
     public enum AnalysisType {
-        GENERICLM, OSTTEST /* one-sample */, OWA /* one-way ANOVA */, TTEST, TWO_WAY_ANOVA_WITH_INTERACTION
-           /*
-            * with
-            * interactions
-            */, TWO_WAY_ANOVA_NO_INTERACTION /*
-            * no
-            * interactions
-            */
+        GENERICLM, //
+        OSTTEST, //one-sample
+        OWA, //one-way ANOVA
+        TTEST, //
+        TWO_WAY_ANOVA_WITH_INTERACTION,  //with interactions
+        TWO_WAY_ANOVA_NO_INTERACTION //no interactions
     }
 
 }
