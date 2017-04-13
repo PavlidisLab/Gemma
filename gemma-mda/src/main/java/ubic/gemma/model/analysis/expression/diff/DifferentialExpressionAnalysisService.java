@@ -18,151 +18,117 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.analysis.AnalysisService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
  * @author kelsey
- * @version $Id$
  */
 public interface DifferentialExpressionAnalysisService extends AnalysisService<DifferentialExpressionAnalysis> {
 
     /**
-     * @param par
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
+    Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold );
 
     /**
-     * @param ExpressionAnalysisResultSet
      * @param threshold (double) for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
      * @return an integer count of all the probes that met the given threshold in the given expressionAnalysisResultSet
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
+    Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold );
 
     /**
-     * @param par
      * @param threshold for corrected pvalue. Results may not be accurate for 'unreasonable' thresholds.
-     * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
-
-    /**
-     * 
-     */
+    Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold );
 
     @Secured({ "GROUP_USER" })
-    public DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
+    DifferentialExpressionAnalysis create( DifferentialExpressionAnalysis analysis );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
+    Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
             ExpressionAnalysisResultSet resultSet, double threshold );
 
-    /**
-     * @param ef
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
+    Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     /**
      * Given a collection of ids, return a map of id -> collection of differential expression analysis
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
-            Collection<Long> investigationIds );
+    Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds( Collection<Long> investigationIds );
 
     /**
-     * 
+     *
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon );
+    java.util.Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon );
 
     /**
-     * 
+     *
      */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
+    java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * Return a collection of experiments in which the given gene was analyzed.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
+    Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
 
-    /**
-     * @param expressionExperiment
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
+    Collection<DifferentialExpressionAnalysis> getAnalyses( BioAssaySet expressionExperiment );
 
     /**
-     * @param expressionExperiments
      * @return quite deeply thawed analyses (not the results themselves, but metadata)
      */
-    public Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
+    Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> getAnalyses(
             Collection<? extends BioAssaySet> expressionExperiments );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );
-
-    /**
-     * 
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    void thaw( Collection<DifferentialExpressionAnalysis> expressionAnalyses );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( DifferentialExpressionAnalysis o );
+    void update( DifferentialExpressionAnalysis o );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ExpressionAnalysisResultSet a );
+    void update( ExpressionAnalysisResultSet a );
 
     /**
      * Is the analysis deleteable, or is it tied up with another entity that keeps it from being removed.
-     * 
-     * @param toDelete
-     * @return
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
      * Given a set of ids, find experiments or experimentsubsets that have differential expression analyses. Subsets are
      * handled two ways: if the ID given is of a subset, or if the ID is of an experiment that has subsets. In the
      * latter case, the return value will contain experiments that were not explicitly queried for.
-     * 
+     *
      * @param ids of experiments or experimentsubsets.
      * @return map of bioassayset (valueobjects) to analyses (valueobjects) for each.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    public Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
+    Map<ExpressionExperimentValueObject, Collection<DifferentialExpressionAnalysisValueObject>> getAnalysesByExperiment(
             Collection<Long> ids );
 
 }

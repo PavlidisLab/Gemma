@@ -14,15 +14,6 @@
  */
 package ubic.gemma.analysis.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
@@ -34,13 +25,10 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.util.FactorValueVector;
+
+import java.util.*;
 
 /**
  * @author paul
@@ -49,16 +37,12 @@ import ubic.gemma.util.FactorValueVector;
 public class ExperimentalDesignUtils {
 
     public static final String BATCH_FACTOR_CATEGORY_NAME = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME;
-
     public static final String BATCH_FACTOR_CATEGORY_URI = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_URI;
-
     public static final String BATCH_FACTOR_NAME = ExperimentalFactorService.BATCH_FACTOR_NAME;
-
     public static final String BATCH_FACTOR_NAME_PREFIX = ExperimentalFactorService.BATCH_FACTOR_NAME_PREFIX;
     public static final String FACTOR_VALUE_RNAME_PREFIX = ExperimentalFactorService.FACTOR_VALUE_RNAME_PREFIX;
 
     /**
-     * @param factors
      * @return batch factor, if present, or else null
      */
     public static ExperimentalFactor batchFactor( Collection<ExperimentalFactor> factors ) {
@@ -72,9 +56,7 @@ public class ExperimentalDesignUtils {
 
     /**
      * Check if a factor has missing values (samples that lack an assigned value)
-     * 
-     * @param factor
-     * @param samplesUsed
+     *
      * @param baselines not really important for this
      * @return false if there are any missing values.
      */
@@ -82,7 +64,8 @@ public class ExperimentalDesignUtils {
             Map<ExperimentalFactor, FactorValue> baselines ) {
         for ( BioMaterial samp : samplesUsed ) {
             Object value = extractFactorValueForSample( baselines, samp, factor );
-            if ( value == null ) return false;
+            if ( value == null )
+                return false;
         }
 
         return true;
@@ -91,25 +74,22 @@ public class ExperimentalDesignUtils {
     /**
      * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
      * (defined by samplesUsed).
-     * 
+     *
      * @param factors in the order they will be used
-     * @param samplesUsed
-     * @param baselines
      * @return a design matrix
      */
     public static ObjectMatrix<String, String, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
             List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines ) {
 
-        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<String, String, Object>(
-                samplesUsed.size(), factors.size() );
+        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(), factors.size() );
 
-        Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<ExperimentalFactor, String>();
+        Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<>();
         for ( ExperimentalFactor factor : factors ) {
             factorNamesInR.put( factor, nameForR( factor ) );
         }
-        designMatrix.setColumnNames( new ArrayList<String>( factorNamesInR.values() ) );
+        designMatrix.setColumnNames( new ArrayList<>( factorNamesInR.values() ) );
 
-        List<String> rowNames = new ArrayList<String>();
+        List<String> rowNames = new ArrayList<>();
 
         int row = 0;
         for ( BioMaterial samp : samplesUsed ) {
@@ -166,11 +146,10 @@ public class ExperimentalDesignUtils {
     }
 
     /**
-     * @param factors
      * @return a new collection (same order as the input)
      */
     public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
-        Collection<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
+        Collection<ExperimentalFactor> result = new ArrayList<>();
         for ( ExperimentalFactor f : factors ) {
             if ( !isBatch( f ) ) {
                 result.add( f );
@@ -179,15 +158,10 @@ public class ExperimentalDesignUtils {
         return result;
     }
 
-    /**
-     * @param samplesUsed
-     * @param factors
-     * @return
-     */
     public static Map<ExperimentalFactor, FactorValue> getBaselineConditions( List<BioMaterial> samplesUsed,
             List<ExperimentalFactor> factors ) {
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort.getBaselineLevels(
-                samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
+                .getBaselineLevels( samplesUsed, factors );
 
         /*
          * For factors that don't have an obvious baseline, use the first factorvalue.
@@ -217,10 +191,6 @@ public class ExperimentalDesignUtils {
 
     /**
      * This puts the control samples up front if possible.
-     * 
-     * @param dmatrix
-     * @param factors
-     * @return
      */
     public static List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix,
             List<ExperimentalFactor> factors ) {
@@ -230,37 +200,34 @@ public class ExperimentalDesignUtils {
     }
 
     /**
-     * @param ef
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactor ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) ) return false;
+        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) )
+            return false;
 
         Characteristic category = ef.getCategory();
-        if ( ef.getName().equals( BATCH_FACTOR_NAME ) && category.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) )
-            return true;
-
-        return false;
+        return ef.getName().equals( BATCH_FACTOR_NAME ) && category.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME );
     }
 
     /**
-     * @param ef
      * @return true if this factor appears to be a "batch" factor.
      */
     public static boolean isBatch( ExperimentalFactorValueObject ef ) {
-        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) ) return false;
+        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) )
+            return false;
 
         String category = ef.getCategory();
         if ( category != null && ef.getName() != null ) {
-            if ( category.equals( BATCH_FACTOR_CATEGORY_NAME ) && ef.getName().contains( BATCH_FACTOR_NAME )
-                    && ef.getName().contains( BATCH_FACTOR_NAME_PREFIX ) ) return true;
+            if ( category.equals( BATCH_FACTOR_CATEGORY_NAME ) && ef.getName().contains( BATCH_FACTOR_NAME ) && ef
+                    .getName().contains( BATCH_FACTOR_NAME_PREFIX ) )
+                return true;
         }
 
         return false;
     }
 
     /**
-     * @param experimentalFactor
      * @return true if the factor is continuous; false if it looks to be categorical.
      */
     public static boolean isContinuous( ExperimentalFactor ef ) {
@@ -288,10 +255,6 @@ public class ExperimentalDesignUtils {
         return FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? "_base" : "" );
     }
 
-    /**
-     * @param fv
-     * @return
-     */
     public static String prettyString( FactorValue fv ) {
 
         if ( fv.getMeasurement() != null ) {
@@ -302,22 +265,18 @@ public class ExperimentalDesignUtils {
         StringBuilder buf = new StringBuilder();
         for ( Characteristic c : fv.getCharacteristics() ) {
             buf.append( c.getValue() );
-            if ( fv.getCharacteristics().size() > 1 ) buf.append( " | " );
+            if ( fv.getCharacteristics().size() > 1 )
+                buf.append( " | " );
         }
         return buf.toString();
 
     }
 
     /**
-     * @param expressionExperiment
-     * @param removeBatchFactor if true, any factor(s) that look like "batch information" will be ignored.
-     * @return
      */
-    public static CountingMap<FactorValueVector> getDesignMatrix(
-            ExpressionExperiment expressionExperiment, boolean removeBatchFactor ) {
+    public static CountingMap<FactorValueVector> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
 
-        Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
-                .getExperimentalFactors();
+        Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
 
         for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
             ExperimentalFactor experimentalFactor = iterator.next();
@@ -326,7 +285,7 @@ public class ExperimentalDesignUtils {
             }
         }
 
-        CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
+        CountingMap<FactorValueVector> assayCount = new CountingMap<>();
         for ( BioAssay assay : expressionExperiment.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();
             assayCount.increment( new FactorValueVector( factors, sample.getFactorValues() ) );
@@ -336,19 +295,16 @@ public class ExperimentalDesignUtils {
         return assayCount;
 
     }
-    
+
     /**
-     * @param factors
-     * @param samplesUsed
-     * @param baselines
      * @return Experimental design matrix
      */
     public static ObjectMatrix<BioMaterial, ExperimentalFactor, Object> sampleInfoMatrix(
             List<ExperimentalFactor> factors, List<BioMaterial> samplesUsed,
             Map<ExperimentalFactor, FactorValue> baselines ) {
 
-        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> designMatrix = new ObjectMatrixImpl<BioMaterial, ExperimentalFactor, Object>(
-                samplesUsed.size(), factors.size() );
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> designMatrix = new ObjectMatrixImpl<>( samplesUsed.size(),
+                factors.size() );
 
         designMatrix.setColumnNames( factors );
 
@@ -376,12 +332,9 @@ public class ExperimentalDesignUtils {
 
     /**
      * Sort factors in a consistent way.
-     * 
-     * @param factors
-     * @return
      */
     public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
-        List<ExperimentalFactor> facs = new ArrayList<ExperimentalFactor>();
+        List<ExperimentalFactor> facs = new ArrayList<>();
         facs.addAll( factors );
         Collections.sort( facs, new Comparator<ExperimentalFactor>() {
             @Override
@@ -392,14 +345,8 @@ public class ExperimentalDesignUtils {
         return facs;
     }
 
-    /**
-     * @param baselines
-     * @param samp
-     * @param factor
-     * @return
-     */
-    private static Object extractFactorValueForSample( Map<ExperimentalFactor, FactorValue> baselines,
-            BioMaterial samp, ExperimentalFactor factor ) {
+    private static Object extractFactorValueForSample( Map<ExperimentalFactor, FactorValue> baselines, BioMaterial samp,
+            ExperimentalFactor factor ) {
         FactorValue baseLineFV = baselines.get( factor );
 
         /*
