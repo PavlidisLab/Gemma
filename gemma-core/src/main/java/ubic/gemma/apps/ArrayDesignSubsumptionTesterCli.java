@@ -18,37 +18,31 @@
  */
 package ubic.gemma.apps;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Test two array designs to see if one subsumes the other, and if so update their information.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipulatingCli {
+
+    private Collection<String> otherArrayDesignNames;
 
     public static void main( String[] args ) {
         ArrayDesignSubsumptionTesterCli tester = new ArrayDesignSubsumptionTesterCli();
         tester.doWork( args );
     }
 
-    private Collection<String> otherArrayDesignNames;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "platformSubsumptionTest";
@@ -122,10 +116,8 @@ public class ArrayDesignSubsumptionTesterCli extends ArrayDesignSequenceManipula
         if ( this.hasOption( 'o' ) ) {
             String otherArrayDesigName = getOptionValue( 'o' );
             String[] names = StringUtils.split( otherArrayDesigName, ',' );
-            this.otherArrayDesignNames = new HashSet<String>();
-            for ( String string : names ) {
-                this.otherArrayDesignNames.add( string );
-            }
+            this.otherArrayDesignNames = new HashSet<>();
+            this.otherArrayDesignNames.addAll( Arrays.asList( names ) );
         }
     }
 

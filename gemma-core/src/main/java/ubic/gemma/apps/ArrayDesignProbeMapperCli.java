@@ -62,7 +62,6 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     private boolean ncbiIds = false;
     private ExternalDatabase sourceDatabase = null;
     private Taxon taxon = null;
-    private String taxonName;
     private TaxonService taxonService;
     private boolean useDB = true;
 
@@ -470,26 +469,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         final SecurityContext context = SecurityContextHolder.getContext();
 
-        /*
-         * Here is our task runner. NOTE using more than one thread is disabled.
-         */
-        class Consumer implements Runnable {
-            private final BlockingQueue<ArrayDesign> queue;
+        class ADProbeMapperCliConsumer extends Consumer {
 
-            public Consumer( BlockingQueue<ArrayDesign> q ) {
-                queue = q;
-            }
-
-            @Override
-            public void run() {
-                SecurityContextHolder.setContext( context );
-                while ( true ) {
-                    ArrayDesign ad = queue.poll();
-                    if ( ad == null ) {
-                        break;
-                    }
-                    consume( ad );
-                }
+            private ADProbeMapperCliConsumer( BlockingQueue<ArrayDesign> q ) {
+                super( q, context );
             }
 
             void consume( ArrayDesign x ) {
@@ -510,15 +493,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         }
 
         BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
-        for ( ArrayDesign ad : allArrayDesigns ) {
-            arrayDesigns.add( ad );
-        }
+        arrayDesigns.addAll( allArrayDesigns );
 
-        //   log.info( this.numThreads + " threads" );
-        this.numThreads = 1;
         Collection<Thread> threads = new ArrayList<>();
         for ( int i = 0; i < this.numThreads; i++ ) {
-            Consumer c1 = new Consumer( arrayDesigns );
+            ADProbeMapperCliConsumer c1 = new ADProbeMapperCliConsumer( arrayDesigns );
             Thread k = new Thread( c1 );
             threads.add( k );
             k.start();

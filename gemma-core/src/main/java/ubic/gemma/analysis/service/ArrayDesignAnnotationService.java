@@ -28,8 +28,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.Settings;
 
 /**
- * Methods to generate annotations for array designs, based on information alreay in the database. This can be used to
- * generate annotation files used for ermineJ, for eexample. The file format:
+ * Methods to generate annotations for array designs, based on information already in the database. This can be used to
+ * generate annotation files used for ermineJ, for example. The file format:
  * <ul>
  * <li>The file is tab-delimited text. Comma-delimited files or Excel spreadsheets (for example) are not supported.</li>
  * <li>There is a one-line header included in the file for readability.</li>
@@ -46,36 +46,28 @@ import ubic.gemma.util.Settings;
  * </p>
  * 
  * @author paul
- * @version $Id$
  */
 public interface ArrayDesignAnnotationService {
 
-    public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
-    public static final String BIO_PROCESS_FILE_SUFFIX = "_bioProcess";
-    public static final String NO_PARENTS_FILE_SUFFIX = "_noParents";
+    String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
+    String BIO_PROCESS_FILE_SUFFIX = "_bioProcess";
+    String NO_PARENTS_FILE_SUFFIX = "_noParents";
     /**
      * String included in file names for standard (default) annotation files. These include GO terms and all parents.
      */
-    public static final String STANDARD_FILE_SUFFIX = "";
-    public static final String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
+    String STANDARD_FILE_SUFFIX = "";
+    String ANNOT_DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
             + "microAnnots" + File.separatorChar;
 
-    /**
-     * @param arrayDesign
-     * @throws IOException
-     */
-    public abstract void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
+
+    void deleteExistingFiles( ArrayDesign arrayDesign ) throws IOException;
 
     /**
      * Generate an annotation for a list of genes, instead of probes. The second column will contain the NCBI id, if
      * available.
-     * 
-     * @param writer
-     * @param genes
-     * @param type
-     * @return
+     *
      */
-    public abstract int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
+    int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type );
 
     /**
      * Format details:
@@ -90,28 +82,24 @@ public interface ArrayDesignAnnotationService {
      * <li>Gemma's gene ids, delimited by '|'
      * <li>NCBI gene ids, delimited by '|'
      * </ol>
-     * 
-     * @param writer
+     *
      * @param genesWithSpecificity map of cs ->* physical location ->* ( blat association ->* gene product -> gene)
      * @param ty whether to include parents (OutputType.LONG); only use biological process (OutputType.BIOPROCESS) or
      *        'standard' output (OutputType.SHORT).
      * @return number processed.
-     * @throws IOException
      */
-    public abstract int generateAnnotationFile( Writer writer,
+    int generateAnnotationFile( Writer writer,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity, OutputType ty )
             throws IOException;
 
     /**
      * Opens a file for writing and adds the header.
-     * 
-     * @param arrayDesign
+     *
      * @param fileBaseName if Null, output will be written to standard output.
      * @param overWrite clobber existing file. Otherwise returns null.
      * @return writer to use
-     * @throws IOException
      */
-    public abstract Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite )
+    Writer initOutputFile( ArrayDesign arrayDesign, String fileBaseName, boolean overWrite )
             throws IOException;
 
 }

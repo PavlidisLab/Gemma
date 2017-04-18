@@ -53,8 +53,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     private String blatResultFile = null;
     private Double blatScoreThreshold = Blat.DEFAULT_BLAT_SCORE_THRESHOLD;
     private boolean sensitive = false;
-    private String taxonName;
-    private TaxonService taxonService;
 
     public static void main( String[] args ) {
         ArrayDesignBlatCli p = new ArrayDesignBlatCli();
@@ -66,11 +64,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         return CommandGroup.PLATFORM;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "blatPlatform";
@@ -109,11 +102,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
-     */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
@@ -140,11 +128,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         addOption( blatResultOption );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
-     */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( args );
@@ -206,25 +189,13 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             /*
              * Here is our task runner.
              */
-            class Consumer implements Runnable {
-                private final BlockingQueue<ArrayDesign> queue;
+            class BlatCliConsumer extends Consumer {
 
-                public Consumer( BlockingQueue<ArrayDesign> q ) {
-                    queue = q;
+                private BlatCliConsumer( BlockingQueue<ArrayDesign> q ) {
+                    super( q, context );
                 }
 
                 @Override
-                public void run() {
-                    SecurityContextHolder.setContext( context );
-                    while ( true ) {
-                        ArrayDesign ad = queue.poll();
-                        if ( ad == null ) {
-                            break;
-                        }
-                        consume( ad );
-                    }
-                }
-
                 void consume( ArrayDesign x ) {
 
                     x = arrayDesignService.thaw( x );
@@ -235,16 +206,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             }
 
             BlockingQueue<ArrayDesign> arrayDesigns = new ArrayBlockingQueue<>( allArrayDesigns.size() );
-            for ( ArrayDesign ad : allArrayDesigns ) {
-                arrayDesigns.add( ad );
-            }
+            arrayDesigns.addAll( allArrayDesigns );
 
-            /*
-             * Start the threads
-             */
             Collection<Thread> threads = new ArrayList<>();
             for ( int i = 0; i < this.numThreads; i++ ) {
-                Consumer c1 = new Consumer( arrayDesigns );
+                Consumer c1 = new BlatCliConsumer( arrayDesigns );
                 Thread k = new Thread( c1 );
                 threads.add( k );
                 k.start();
@@ -284,11 +250,11 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
             this.blatScoreThreshold = this.getDoubleOptionValue( 's' );
         }
 
-        this.taxonService = this.getBean( TaxonService.class );
+        TaxonService taxonService = this.getBean( TaxonService.class );
 
         if ( this.hasOption( 't' ) ) {
-            this.taxonName = this.getOptionValue( 't' );
-            this.taxon = taxonService.findByCommonName( this.taxonName );
+            String taxonName = this.getOptionValue( 't' );
+            this.taxon = taxonService.findByCommonName( taxonName );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No taxon named " + taxonName );
             }

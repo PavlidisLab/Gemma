@@ -38,44 +38,26 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 
 /**
- * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
- * {@link OneWayAnovaAnalyzerImpl}.
+ * An abstract differential expression analyzer to be extended by analyzers which will make use of R.
  * 
  * @author keshav
- * @version $Id$
  */
 public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAnalyzer implements DiffExAnalyzer {
 
-    private Log log = LogFactory.getLog( this.getClass() );
+    private final Log log = LogFactory.getLog( this.getClass() );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
-     * , ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
     @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.DiffExAnalyzer#run(ubic.gemma.model.expression.experiment.ExpressionExperiment
-     * , ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix,
-     * ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig)
-     */
     @Override
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
 
     /**
-     * @param pvalues
      * @return normalized ranks of the pvalues, or null if they were invalid/unusable.
      */
-    protected double[] computeRanks( double[] pvalues ) {
+    double[] computeRanks( double[] pvalues ) {
         if ( pvalues == null ) {
             log.error( "Null pvalues" );
             return null;
@@ -100,10 +82,9 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
     }
 
     /**
-     * @param pvalues
      * @return Qvalues, or null if they could not be computed.
      */
-    protected double[] benjaminiHochberg( Double[] pvalues ) {
+    double[] benjaminiHochberg( Double[] pvalues ) {
         DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection.benjaminiHochberg( new DenseDoubleMatrix1D(
                 ArrayUtils.toPrimitive( pvalues ) ) );
         if ( benjaminiHochberg == null ) {
@@ -112,7 +93,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         return benjaminiHochberg.toArray();
     }
 
-    protected DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet ) {
+    DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet ) {
         // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -123,13 +104,11 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
     /**
      * Needed to convert NaN or infinity values to a value we can store in the database.
-     * 
-     * @param e
-     * @return
+     *
      */
-    protected Double nan2Null( Double e ) {
-        boolean isNaN = e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY
-                || e == Double.POSITIVE_INFINITY;
+    Double nan2Null( Double e ) {
+        boolean isNaN = (e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY
+                || e == Double.POSITIVE_INFINITY);
         if ( isNaN ) {
             return null;
         }
@@ -138,15 +117,14 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
     /**
      * Debugging tool. For example, if qvalue failed, save the pvalues to a temporary file for inspection.
-     * 
-     * @param pvaluesToUse
+     *
      * @return path to file where the pvalues were saved (a temporary file)
-     * @throws IOException
      */
+    @SuppressWarnings("unused") // Useful when debugging
     protected String savePvaluesForDebugging( double[] pvaluesToUse ) {
         try {
             File f = File.createTempFile( "diffanalysis_", ".pvalues.txt" );
-            try (FileWriter w = new FileWriter( f );) {
+            try (FileWriter w = new FileWriter( f )) {
                 for ( double d : pvaluesToUse ) {
                     w.write( d + "\n" );
                 }
