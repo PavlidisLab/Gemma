@@ -41,6 +41,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -65,7 +66,6 @@ import java.util.concurrent.*;
  * analyzed per-tissue rather than with tissue as a covariate.
  *
  * @author paul
- * @version $Id$
  */
 @Component
 @Scope(value = "prototype")
@@ -76,6 +76,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private static final double[] qValueThresholdsForHitLists = new double[] { 0.001, 0.005, 0.01, 0.05, 0.1 };
     private static final Log log = LogFactory.getLog( LinearModelAnalyzer.class );
+    private static final List<String> EXCLUDE_CHARACTERISTICS_VALUES = new ArrayList<String>(){{ add("DE_Exclude"); }};
+    private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
     @Override
     public Collection<HitListSize> computeHitListSizes( Collection<DifferentialExpressionAnalysisResult> results,
@@ -372,6 +374,22 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 log.info( "Analyzing subset: " + subsetFactorValue );
 
+                /*
+                 * Checking for DE_Exclude characteristics, which should not be included in the analysis.
+                 * As requested in issue #4458 (bugzilla)
+                 */
+                boolean include = true;
+                for ( Characteristic c : subsetFactorValue.getCharacteristics() ) {
+                    if ( EXCLUDE_CHARACTERISTICS_VALUES.contains( c.getValue() ) ) {
+                        include = false;
+                        break;
+                    }
+                }
+                if ( !include ) {
+                    log.warn( EXCLUDE_WARNING );
+                    break;
+                }
+
                 List<BioMaterial> bioMaterials = ExperimentalDesignUtils
                         .getOrderedSamples( subsets.get( subsetFactorValue ), factors );
 
@@ -401,7 +419,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                  * Run analysis on the subset.
                  */
                 DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, subsetConfig,
-                        subsets.get( subsetFactorValue ), bioMaterials, new ArrayList<>( subsetFactors ), subsetFactorValue );
+                        subsets.get( subsetFactorValue ), bioMaterials, new ArrayList<>( subsetFactors ),
+                        subsetFactorValue );
 
                 if ( analysis == null ) {
                     log.warn( "No analysis results were obtained for subset: " + subsetFactorValue );
@@ -514,7 +533,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             mw.write( writer, dmatrix, null, true, false );
 
-            ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>( out );
+            ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<>(
+                    out );
             dem.writeMatrix( designMatrix, true );
 
         } catch ( IOException e ) {
@@ -1376,8 +1396,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * @return results
      */
     private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
-            final DoubleMatrix<String, String> sNamedMatrix, DesignMatrix designMatrix, QuantitationType quantitationType,
-            final DoubleMatrix1D librarySize ) {
+            final DoubleMatrix<String, String> sNamedMatrix, DesignMatrix designMatrix,
+            QuantitationType quantitationType, final DoubleMatrix1D librarySize ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<>();
 
