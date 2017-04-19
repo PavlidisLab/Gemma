@@ -444,4 +444,6 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperiment expressionExperiment );
 
+    boolean isTroubled( ExpressionExperiment expressionExperiment);
+
 }

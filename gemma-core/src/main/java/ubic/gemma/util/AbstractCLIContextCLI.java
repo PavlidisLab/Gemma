@@ -62,7 +62,7 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    protected static void tryDoWorkLogTime( AbstractCLIContextCLI p, String[] args){
+    protected static void tryDoWorkLogTime( AbstractCLIContextCLI p, String[] args ) {
         StopWatch watch = new StopWatch();
         watch.start();
         try {

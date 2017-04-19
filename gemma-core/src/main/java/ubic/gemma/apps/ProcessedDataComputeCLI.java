@@ -38,6 +38,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
 
     private boolean batchCorrect = false;
     private PreprocessorService preprocessorService;
+    private ExpressionExperimentService expressionExperimentService;
 
     public static void main( String[] args ) {
         ProcessedDataComputeCLI p = new ProcessedDataComputeCLI();
@@ -96,6 +97,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     protected void processOptions() {
         super.processOptions();
         preprocessorService = this.getBean( PreprocessorService.class );
+        expressionExperimentService = this.getBean( ExpressionExperimentService.class );
         this.auditTrailService = this.getBean( AuditTrailService.class );
         eeService = this.getBean( ExpressionExperimentService.class );
 
@@ -105,7 +107,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
-        if ( isTroubled( ee ) && !force ) {
+        if ( expressionExperimentService.isTroubled( ee ) && !force ) {
             log.info( "Skipping troubled experiment " + ee.getShortName() );
             return;
         }

@@ -71,6 +71,7 @@ public class CurationDetails implements java.io.Serializable {
 
     /**
      * Compares the objects type and IDs.
+     *
      * @param object the object to compare this instance to.
      * @return true, if this instance and the given object are the same type and have the same ID. False otherwise.
      */
@@ -87,7 +88,6 @@ public class CurationDetails implements java.io.Serializable {
     }
 
     /**
-     *
      * @return a simple hash code based on this instances ID.
      */
     @Override
@@ -138,6 +138,14 @@ public class CurationDetails implements java.io.Serializable {
         this.lastTroubledEvent = lastTroubledEvent;
     }
 
+    /**
+     * If you are trying to check for trouble of an expression experiment, you might consider using the method
+     * {@link ubic.gemma.expression.experiment.service.ExpressionExperimentService#isTroubled(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
+     * which also checks the parenting array designs
+     *
+     * @return true only if these curation details trouble flag is set to true.
+     */
+    @SuppressWarnings("JavadocReference") // JavaDoc cant see the classes in gemma-core
     public Boolean getTroubled() {
         return troubled;
     }
