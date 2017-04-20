@@ -14,40 +14,32 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface ProcessedExpressionDataVectorCreateService {
 
     /**
      * Like computeProcessedExpressionData, but when the vectors are supplied.
-     * 
-     * @param ee
-     * @param vecs
      */
-    public abstract void createProcessedDataVectors( ExpressionExperiment ee,
-            Collection<ProcessedExpressionDataVector> vecs );
+    void createProcessedDataVectors( ExpressionExperiment ee, Collection<ProcessedExpressionDataVector> vecs );
 
     /**
      * This method should not be called on its own, if possible. Use the PreprocessorService to do all necessary
      * refreshing.
-     * 
-     * @param ee
+     *
      * @see PreprocessorService
      */
-    public abstract void computeProcessedExpressionData( ExpressionExperiment ee );
+    void computeProcessedExpressionData( ExpressionExperiment ee );
 
     /**
      * Creates new bioAssayDimensions to match the experimental design, reorders the data to match, updates.
-     * 
-     * @param ee
      */
-    public abstract void reorderByDesign( Long eeId );
+    void reorderByDesign( Long eeId );
 
 }

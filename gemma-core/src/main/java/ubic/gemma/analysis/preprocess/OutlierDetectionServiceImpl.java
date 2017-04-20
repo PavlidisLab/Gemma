@@ -86,9 +86,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         } else {
             index = ( ( ( n + ( 1.0 / 3.0 ) ) * fraction ) + ( 1.0 / 3.0 ) );
         }
-
         return index;
-
     }
 
     @Override
