@@ -172,7 +172,7 @@ Gemma.EEReportGrid = Ext.extend(Ext.grid.GridPanel,
         },
 
         updateTitle: function (count) {
-            this.setTitle('Experiment Manager &nbsp;&nbsp; ( ' + count + ((count === 1) ? ' row' : ' rows') + ' )');
+            this.setTitle('Dataset Manager (' + count + ((count === 1) ? ' row' : ' rows') + ')');
         },
 
         initComponent: function () {

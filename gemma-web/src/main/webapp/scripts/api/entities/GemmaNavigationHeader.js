@@ -169,7 +169,7 @@ Gemma.GemmaNavigationHeader = Ext
                      href : "/Gemma/expressionExperiment/upload.html",
                      tooltip : "Upload your expression data"
                   }, {
-                     text : 'My Data Sets',
+                     text : 'Dataset manager',
                      href : "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html",
                      tooltip : "Curate your data"
                   }, {

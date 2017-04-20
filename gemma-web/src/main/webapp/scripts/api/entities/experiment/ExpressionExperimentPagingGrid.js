@@ -547,7 +547,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             }, this);
 
             var editMine = new Ext.Button({
-                text: 'Edit my datasets',
+                text: 'Dataset manager',
                 cls: 'x-toolbar-standardbutton',
                 handler: function () {
                     window.location = "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html";
