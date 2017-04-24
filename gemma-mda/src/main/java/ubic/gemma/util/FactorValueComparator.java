@@ -14,11 +14,6 @@ public class FactorValueComparator implements Comparator<FactorValue> {
         return _instance;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-     */
     @Override
     public int compare( FactorValue v1, FactorValue v2 ) {
         if ( v1 == null && v2 == null ) {

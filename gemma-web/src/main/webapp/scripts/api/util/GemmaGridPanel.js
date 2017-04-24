@@ -59,14 +59,7 @@ Gemma.GemmaGridPanel = Ext.extend( Ext.grid.EditorGridPanel, {
    },
 
    refresh : function( params ) {
-      // FIXME is this necessary.
-      var reloadOpts = {
-         callback : this.getView().refresh.createDelegate( this.getView() )
-      };
-      if ( params ) {
-         reloadOpts.params = params;
-      }
-      this.getStore().reload( reloadOpts );
+      this.getStore().reload();
       this.fireEvent( 'refresh' );
    },
 

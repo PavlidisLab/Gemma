@@ -52,7 +52,7 @@ import java.util.Map;
  */
 public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatingCli {
 
-    private static final String GENENAME_LISTFILE_OPTION = "genefile";
+    private static final String GENE_NAME_LIST_FILE_OPTION = "genefile";
     // file info
     private String batchFileName;
     private String fileName = null;
@@ -89,7 +89,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         return "makePlatformAnnotFiles";
     }
 
-    @SuppressWarnings("static-access")
+    @SuppressWarnings("static-access") // This is a much more readable syntax in this case
     @Override
     protected void buildOptions() {
         super.buildOptions();
@@ -115,7 +115,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         Option geneListFile = OptionBuilder.hasArg()
                 .withDescription( "Create from a file containing a list of gene symbols instead of probe ids" )
-                .create( GENENAME_LISTFILE_OPTION );
+                .create( GENE_NAME_LIST_FILE_OPTION );
         addOption( geneListFile );
 
         Option taxonNameOption = OptionBuilder.hasArg().withDescription(
@@ -133,7 +133,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         addOption( fileLoading );
         addOption( batchLoading );
         addOption( overWriteOption );
-
     }
 
     @Override
@@ -213,7 +212,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     /**
      * Goes over all the AD's in the database (possibly limited by taxon) and creates annotation 3 annotation files for
      * each AD that is not merged into or subsumed by another AD. Uses the Accession ID (GPL???) for the name of the
-     * annotation file. Appends noparents, bioProcess, allParents to the file name.
+     * annotation file. Appends noParents, bioProcess, allParents to the file name.
      */
     private void processAllADs() throws IOException {
 
@@ -271,7 +270,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
                 String accession = arguments[0];
                 String annotationFileName = arguments[1];
-                String typeo = arguments[2];
+                String type = arguments[2];
 
                 // Check the syntax of the given line
                 if ( ( accession == null ) || StringUtils.isBlank( accession ) ) {
@@ -285,19 +284,19 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                     log.warn( "No annotation file name specified on line: " + lineNumber
                             + " Using platform name as default annotation file name" );
                 }
-                if ( StringUtils.isBlank( typeo ) ) {
+                if ( StringUtils.isBlank( type ) ) {
                     this.type = OutputType.SHORT;
-                    log.warn( "No type specifed for line: " + lineNumber + " Defaulting to short" );
+                    log.warn( "No type specified for line: " + lineNumber + " Defaulting to short" );
                 } else {
-                    type = OutputType.valueOf( typeo.toUpperCase() );
+                    this.type = OutputType.valueOf( type.toUpperCase() );
                 }
 
-                // need to set these so processing ad works correctly (todo: make
-                // processtype take all 3 parameter)
+                // need to set these so processing ad works correctly
+                // TODO: make process type take all 3 parameter
                 ArrayDesign arrayDesign = locateArrayDesign( accession, arrayDesignService );
 
                 try {
-                    processAD( arrayDesign, annotationFileName, type );
+                    processAD( arrayDesign, annotationFileName, this.type );
                 } catch ( Exception e ) {
                     log.error( "**** Exception while processing " + arrayDesign + ": " + e.getMessage() + " ********" );
                     log.error( e, e );
@@ -341,8 +340,8 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         }
 
-        if ( this.hasOption( GENENAME_LISTFILE_OPTION ) ) {
-            this.geneFileName = this.getOptionValue( GENENAME_LISTFILE_OPTION );
+        if ( this.hasOption( GENE_NAME_LIST_FILE_OPTION ) ) {
+            this.geneFileName = this.getOptionValue( GENE_NAME_LIST_FILE_OPTION );
             if ( !this.hasOption( "taxon" ) ) {
                 throw new IllegalArgumentException( "You must specify the taxon when using --genefile" );
             }
@@ -446,9 +445,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
     }
 
-    /**
-     *
-     */
     private void processGenesForTaxon() {
         GeneService geneService = getBean( GeneService.class );
         TaxonService taxonService = getBean( TaxonService.class );

@@ -19,17 +19,151 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.measurement.Measurement;
 
 import java.io.Serializable;
 import java.util.Collection;
-
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.measurement.Measurement;
 
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
 public abstract class FactorValue implements Serializable, gemma.gsec.model.SecuredChild {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -3783172994360698631L;
+    private ExpressionExperiment securityOwner = null;
+    private String value;
+    private Boolean isBaseline;
+    private Long id;
+    private ExperimentalFactor experimentalFactor;
+    private Measurement measurement;
+    private Collection<Characteristic> characteristics = new java.util.HashSet<>();
+
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public FactorValue() {
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof FactorValue ) ) {
+            return false;
+        }
+        final FactorValue that = ( FactorValue ) object;
+        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    @Override
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    @Override
+    public Securable getSecurityOwner() {
+        return securityOwner;
+    }
+
+    public void setSecurityOwner( ExpressionExperiment ee ) {
+        this.securityOwner = ee;
+    }
+
+    public Collection<Characteristic> getCharacteristics() {
+        return this.characteristics;
+    }
+
+    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+        this.characteristics = characteristics;
+    }
+
+    public ExperimentalFactor getExperimentalFactor() {
+        return this.experimentalFactor;
+    }
+
+    public void setExperimentalFactor( ExperimentalFactor experimentalFactor ) {
+        this.experimentalFactor = experimentalFactor;
+    }
+
+    /**
+     * <p>
+     * True if this is to be considered the baseline condition. This is ignored if the factor is numeric
+     * (non-categorical).
+     * </p>
+     */
+    public Boolean getIsBaseline() {
+        return this.isBaseline;
+    }
+
+    public void setIsBaseline( Boolean isBaseline ) {
+        this.isBaseline = isBaseline;
+    }
+
+    public Measurement getMeasurement() {
+        return this.measurement;
+    }
+
+    public void setMeasurement( ubic.gemma.model.common.measurement.Measurement measurement ) {
+        this.measurement = measurement;
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
+    public void setValue( String value ) {
+        this.value = value;
+    }
+
+    public String getDescriptiveString() {
+        if ( this.characteristics != null && this.characteristics.size() > 0 ) {
+            String fvString = "";
+            for ( Characteristic c : this.characteristics ) {
+                fvString += c.getValue() + " ";
+            }
+            return fvString;
+        } else if ( this.measurement != null ) {
+            return this.measurement.getValue();
+        } else if ( this.value != null && !this.value.isEmpty() ) {
+            return this.value;
+        }
+
+        return "absent ";
+    }
+
+    /* ********************************
+     * Static classes
+     * ********************************/
 
     /**
      * Constructs new instances of {@link FactorValue}.
@@ -51,141 +185,6 @@ public abstract class FactorValue implements Serializable, gemma.gsec.model.Secu
             entity.setExperimentalFactor( experimentalFactor );
             return entity;
         }
-    }
-
-    private ExpressionExperiment securityOwner = null;
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -3783172994360698631L;
-
-    private String value;
-
-    private Boolean isBaseline;
-    private Long id;
-
-    private ExperimentalFactor experimentalFactor;
-
-    private Measurement measurement;
-
-    private Collection<Characteristic> characteristics = new java.util.HashSet<>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public FactorValue() {
-    }
-
-    /**
-     * Returns <code>true</code> if the argument is an FactorValue instance and all identifiers for this entity equal
-     * the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
-    @Override
-    public boolean equals( Object object ) {
-        if ( this == object ) {
-            return true;
-        }
-        if ( !( object instanceof FactorValue ) ) {
-            return false;
-        }
-        final FactorValue that = ( FactorValue ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 
-     */
-    public Collection<Characteristic> getCharacteristics() {
-        return this.characteristics;
-    }
-
-    /**
-     * 
-     */
-    public ExperimentalFactor getExperimentalFactor() {
-        return this.experimentalFactor;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * <p>
-     * True if this is to be considered the baseline condition. This is ignored if the factor is numeric
-     * (non-categorical).
-     * </p>
-     */
-    public Boolean getIsBaseline() {
-        return this.isBaseline;
-    }
-
-    /**
-     * 
-     */
-    public Measurement getMeasurement() {
-        return this.measurement;
-    }
-
-    @Override
-    public Securable getSecurityOwner() {
-        return securityOwner;
-    }
-
-    /**
-     * 
-     */
-    public String getValue() {
-        return this.value;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
-        this.characteristics = characteristics;
-    }
-
-    public void setExperimentalFactor( ExperimentalFactor experimentalFactor ) {
-        this.experimentalFactor = experimentalFactor;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsBaseline( Boolean isBaseline ) {
-        this.isBaseline = isBaseline;
-    }
-
-    public void setMeasurement( ubic.gemma.model.common.measurement.Measurement measurement ) {
-        this.measurement = measurement;
-    }
-
-    public void setSecurityOwner( ExpressionExperiment ee ) {
-        this.securityOwner = ee;
-    }
-
-    public void setValue( String value ) {
-        this.value = value;
     }
 
 }

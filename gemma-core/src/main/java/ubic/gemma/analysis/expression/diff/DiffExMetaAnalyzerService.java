@@ -14,31 +14,20 @@
  */
 package ubic.gemma.analysis.expression.diff;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+
+import java.util.Collection;
 
 /**
  * Used to perform meta-analyses of complete data sets (actually result sets), select the top genes, and potentially
  * store the results.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public interface DiffExMetaAnalyzerService {
 
-    /**
-     * @param analysisResultSetIds
-     * @param name
-     * @param description
-     * @return
-     */
-    public GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds );
+    GeneDifferentialExpressionMetaAnalysis analyze( Collection<Long> analysisResultSetIds );
 
-    /**
-     * @param analysis
-     * @return
-     */
-    public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis );
+    GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis );
 
 }

@@ -18,37 +18,19 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.expression.experiment.FactorValue;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * An analysis of changes in expression levels across experimental conditions
  */
 public abstract class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7855180617739271699L;
-
-    /**
-     * Constructs new instances of {@link DifferentialExpressionAnalysis}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DifferentialExpressionAnalysis} .
-         */
-        public static DifferentialExpressionAnalysis newInstance() {
-            return new DifferentialExpressionAnalysisImpl();
-        }
-
-    }
-
     private FactorValue subsetFactorValue;
-
     private Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
 
     /**
@@ -61,19 +43,29 @@ public abstract class DifferentialExpressionAnalysis extends SingleExperimentAna
         return this.resultSets;
     }
 
-    /**
-     * 
-     */
-    public FactorValue getSubsetFactorValue() {
-        return this.subsetFactorValue;
-    }
-
     public void setResultSets( Collection<ExpressionAnalysisResultSet> resultSets ) {
         this.resultSets = resultSets;
     }
 
+    public FactorValue getSubsetFactorValue() {
+        return this.subsetFactorValue;
+    }
+
     public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
         this.subsetFactorValue = subsetFactorValue;
+    }
+
+    /**
+     * Constructs new instances of {@link DifferentialExpressionAnalysis}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link DifferentialExpressionAnalysis} .
+         */
+        public static DifferentialExpressionAnalysis newInstance() {
+            return new DifferentialExpressionAnalysisImpl();
+        }
+
     }
 
 }

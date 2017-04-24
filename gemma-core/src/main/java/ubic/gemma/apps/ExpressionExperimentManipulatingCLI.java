@@ -74,7 +74,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     protected Taxon taxon = null;
     protected TaxonService taxonService;
     protected SearchService searchService;
-    private Collection<BioAssaySet> excludeExperiments;
+
     private GeneService geneService;
 
     @Override
@@ -139,14 +139,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 return gene;
         }
         return null;
-    }
-
-
-    protected boolean isTroubled( BioAssaySet ee ) {
-        Collection<BioAssaySet> eec = new HashSet<>();
-        eec.add( ee );
-        removeTroubledEes( eec );
-        return eec.size() == 0;
     }
 
     private ExpressionExperiment locateExpressionExperiment( String name ) {
@@ -272,8 +264,9 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
      */
     private void excludeFromFile() {
         String excludeEeFileName = getOptionValue( 'x' );
+        Collection<BioAssaySet> excludeExperiments;
         try {
-            this.excludeExperiments = readExpressionExperimentListFile( excludeEeFileName );
+            excludeExperiments = readExpressionExperimentListFile( excludeEeFileName );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
@@ -330,7 +323,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     /**
      * Use the search engine to locate expression experiments.
-     *
      */
     private Set<BioAssaySet> findExpressionExperimentsByQuery( String query ) {
         Set<BioAssaySet> ees = new HashSet<>();
@@ -353,7 +345,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     /**
      * Load expression experiments based on a list of short names or IDs in a file.
-     *
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
         Set<BioAssaySet> ees = new HashSet<>();
@@ -382,7 +373,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     /**
      * removes EEs that are troubled, or their parent Array design is troubled.
-     *
      */
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {
         if ( ees == null || ees.size() == 0 ) {

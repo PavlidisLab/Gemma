@@ -14,68 +14,62 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-
 /**
  * Summary of a differential expression analysis
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     public static final double DEFAULT_THRESHOLD = 0.05; // should be one of the values stored in the HitListSizes
-
     private static final long serialVersionUID = 622877438067070041L;
 
-    private Collection<Long> arrayDesignsUsed = null;
-
-    private Long bioAssaySetId;
-
     private Map<Long, Collection<FactorValueValueObject>> factorValuesUsed = new HashMap<>();
-
-    private Long id;
-
     private Collection<DiffExResultSetSummaryValueObject> resultSets = new HashSet<>();
-
+    private Collection<Long> arrayDesignsUsed = null;
+    private Long bioAssaySetId;
+    private Long id;
     private Long sourceExperiment;
-
     private ExperimentalFactorValueObject subsetFactor = null;
-
     private FactorValueValueObject subsetFactorValue = null;
 
     /**
      * Does not populate the resultSets.
-     * 
-     * @param analysis
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
         this.id = analysis.getId();
         this.bioAssaySetId = analysis.getExperimentAnalyzed().getId();
         if ( analysis.getSubsetFactorValue() != null ) {
             this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );
-            this.subsetFactor = new ExperimentalFactorValueObject( analysis.getSubsetFactorValue()
-                    .getExperimentalFactor() );
+            this.subsetFactor = new ExperimentalFactorValueObject(
+                    analysis.getSubsetFactorValue().getExperimentalFactor() );
             // fill in the factorValuesUsed separately, needs access to details of the subset.
         }
     }
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         DifferentialExpressionAnalysisValueObject other = ( DifferentialExpressionAnalysisValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
         return true;
     }
 
@@ -83,37 +77,73 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
         return arrayDesignsUsed;
     }
 
+    public void setArrayDesignsUsed( Collection<Long> arrayDesignsUsed ) {
+        this.arrayDesignsUsed = arrayDesignsUsed;
+    }
+
     public Long getBioAssaySetId() {
         return bioAssaySetId;
     }
 
+    public void setBioAssaySetId( Long bioAssaySetId ) {
+        this.bioAssaySetId = bioAssaySetId;
+    }
+
     /**
      * @return Map of ExperimentalFactor IDs to FactorValues that were actually used in the analysis. If this is a NOT a
-     *         subset analysis, then this won't be important (so it may not be populated), but for subset analyses
-     *         (subsetFactor != null), only the factorvalues present in the subset are relevant.
+     * subset analysis, then this won't be important (so it may not be populated), but for subset analyses
+     * (subsetFactor != null), only the factor values present in the subset are relevant.
      */
     public Map<Long, Collection<FactorValueValueObject>> getFactorValuesUsed() {
         return factorValuesUsed;
+    }
+
+    public void setFactorValuesUsed( Map<Long, Collection<FactorValueValueObject>> factorValuesUsed ) {
+        this.factorValuesUsed = factorValuesUsed;
     }
 
     public Long getId() {
         return id;
     }
 
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public Collection<DiffExResultSetSummaryValueObject> getResultSets() {
         return resultSets;
+    }
+
+    public void setResultSets( Collection<DiffExResultSetSummaryValueObject> resultSets ) {
+        this.resultSets = resultSets;
     }
 
     public Long getSourceExperiment() {
         return sourceExperiment;
     }
 
+    /**
+     * If this is a subset analysis
+     */
+    public void setSourceExperiment( Long id ) {
+        this.sourceExperiment = id;
+    }
+
     public ExperimentalFactorValueObject getSubsetFactor() {
         return subsetFactor;
     }
 
+    public void setSubsetFactor( ExperimentalFactorValueObject subsetFactor ) {
+        this.subsetFactor = subsetFactor;
+    }
+
     public FactorValueValueObject getSubsetFactorValue() {
         return subsetFactorValue;
+    }
+
+    public void setSubsetFactorValue( FactorValueValueObject subsetFactorValue ) {
+
+        this.subsetFactorValue = subsetFactorValue;
     }
 
     @Override
@@ -126,44 +156,6 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
 
     public boolean isSubset() {
         return this.subsetFactor != null;
-    }
-
-    public void setArrayDesignsUsed( Collection<Long> arrayDesignsUsed ) {
-        this.arrayDesignsUsed = arrayDesignsUsed;
-    }
-
-    public void setBioAssaySetId( Long bioAssaySetId ) {
-        this.bioAssaySetId = bioAssaySetId;
-    }
-
-    public void setFactorValuesUsed( Map<Long, Collection<FactorValueValueObject>> factorValuesUsed ) {
-        this.factorValuesUsed = factorValuesUsed;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setResultSets( Collection<DiffExResultSetSummaryValueObject> resultSets ) {
-        this.resultSets = resultSets;
-    }
-
-    /**
-     * If this is a subset analysis
-     * 
-     * @param id
-     */
-    public void setSourceExperiment( Long id ) {
-        this.sourceExperiment = id;
-    }
-
-    public void setSubsetFactor( ExperimentalFactorValueObject subsetFactor ) {
-        this.subsetFactor = subsetFactor;
-    }
-
-    public void setSubsetFactorValue( FactorValueValueObject subsetFactorValue ) {
-
-        this.subsetFactorValue = subsetFactorValue;
     }
 
     @Override
