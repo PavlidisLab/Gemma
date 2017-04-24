@@ -19,27 +19,24 @@
 
 package ubic.gemma.analysis.expression.diff;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Utilities for deciding if a factor value is a baseline condition.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class BaselineSelection {
-    public static Set<String> controlGroupTerms = new HashSet<String>();
-
+    private static final Set<String> controlGroupTerms = new HashSet<>();
     // see bug 4316. This term is "control"
-    public static String FORCED_BASELINE_VALUE_URI = "http://www.ebi.ac.uk/efo/EFO_0001461".toLowerCase();
+    private static final String FORCED_BASELINE_VALUE_URI = "http://www.ebi.ac.uk/efo/EFO_0001461".toLowerCase();
 
     static {
         /*
@@ -72,7 +69,7 @@ public class BaselineSelection {
         controlGroupTerms.add( "to_be_treated_with_placebo_role" );
 
         controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0100046".toLowerCase() ); // phosphate buffered
-                                                                                             // saline.
+        // saline.
         controlGroupTerms.add( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#wild_type".toLowerCase() );
 
         controlGroupTerms.add( "http://purl.org/nbirn/birnlex/ontology/BIRNLex-Investigation.owl#birnlex_2201"
@@ -85,20 +82,17 @@ public class BaselineSelection {
                 .toLowerCase() ); // " normal control_group", (retired)
 
         controlGroupTerms.add( "http://purl.obolibrary.org/obo/OBI_0000825".toLowerCase() ); // - to be treated with
-                                                                                             // placebo
+        // placebo
 
         controlGroupTerms.add( "http://www.ebi.ac.uk/efo/EFO_0005168".toLowerCase() ); // wild type genotype
 
         controlGroupTerms.add( "http://www.ebi.ac.uk/efo/EFO_0004425".toLowerCase() ); // initial time point
     }
 
-    /**
-     * @param factorValue
-     * @return
-     */
     public static boolean isBaselineCondition( FactorValue factorValue ) {
 
-        if ( factorValue.getIsBaseline() != null ) return factorValue.getIsBaseline();
+        if ( factorValue.getIsBaseline() != null )
+            return factorValue.getIsBaseline();
 
         // for backwards compatibility we check anyway
 
@@ -108,8 +102,8 @@ public class BaselineSelection {
             /*
              * Just use the value.
              */
-            if ( StringUtils.isNotBlank( factorValue.getValue() )
-                    && controlGroupTerms.contains( factorValue.getValue().toLowerCase() ) ) {
+            if ( StringUtils.isNotBlank( factorValue.getValue() ) && controlGroupTerms
+                    .contains( factorValue.getValue().toLowerCase() ) ) {
                 return true;
             }
         } else {
@@ -119,12 +113,12 @@ public class BaselineSelection {
                     if ( StringUtils.isNotBlank( valueUri ) && controlGroupTerms.contains( valueUri.toLowerCase() ) ) {
                         return true;
                     }
-                    if ( StringUtils.isNotBlank( c.getValue() )
-                            && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
+                    if ( StringUtils.isNotBlank( c.getValue() ) && controlGroupTerms
+                            .contains( c.getValue().toLowerCase() ) ) {
                         return true;
                     }
-                } else if ( StringUtils.isNotBlank( c.getValue() )
-                        && controlGroupTerms.contains( c.getValue().toLowerCase() ) ) {
+                } else if ( StringUtils.isNotBlank( c.getValue() ) && controlGroupTerms
+                        .contains( c.getValue().toLowerCase() ) ) {
                     return true;
                 }
             }
@@ -132,19 +126,16 @@ public class BaselineSelection {
         return false;
     }
 
-    /**
-     * @param factorValue
-     * @return
-     */
     public static boolean isBaselineConditionVO( FactorValueValueObject factorValue ) {
-        if ( factorValue.getIsBaseline() != null ) return factorValue.getIsBaseline();
+        if ( factorValue.getIsBaseline() != null )
+            return factorValue.getIsBaseline();
 
         // for backwards compatibility we check anyway
 
         if ( factorValue.isMeasurement() ) {
             return false;
-        } else if ( StringUtils.isNotBlank( factorValue.getValue() )
-                && BaselineSelection.controlGroupTerms.contains( factorValue.getValue().toLowerCase() ) ) {
+        } else if ( StringUtils.isNotBlank( factorValue.getValue() ) && BaselineSelection.controlGroupTerms
+                .contains( factorValue.getValue().toLowerCase() ) ) {
             return true;
         }
         return false;
@@ -152,9 +143,6 @@ public class BaselineSelection {
 
     /**
      * Check if this factor value is the baseline, overriding other possible baselines.
-     * 
-     * @param fv
-     * @return
      */
     public static boolean isForcedBaseline( FactorValue fv ) {
         if ( fv.getMeasurement() != null || fv.getCharacteristics().isEmpty() ) {
@@ -163,12 +151,10 @@ public class BaselineSelection {
         for ( Characteristic c : fv.getCharacteristics() ) {
             if ( c instanceof VocabCharacteristic ) {
                 String valueUri = ( ( VocabCharacteristic ) c ).getValueUri();
-                if ( StringUtils.isNotBlank( valueUri )
-                        && valueUri.toLowerCase().equals( BaselineSelection.FORCED_BASELINE_VALUE_URI ) ) {
+                if ( StringUtils.isNotBlank( valueUri ) && valueUri.toLowerCase()
+                        .equals( BaselineSelection.FORCED_BASELINE_VALUE_URI ) ) {
                     return true;
                 }
-            } else {
-                continue;
             }
         }
         return false;

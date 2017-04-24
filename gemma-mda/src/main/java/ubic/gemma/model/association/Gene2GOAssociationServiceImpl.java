@@ -19,23 +19,21 @@
 
 package ubic.gemma.model.association;
 
+import net.sf.ehcache.Element;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import net.sf.ehcache.Element;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-
 /**
- * @see ubic.gemma.model.association.Gene2GOAssociationService
  * @author klc
- * @version $Id$
+ * @see ubic.gemma.model.association.Gene2GOAssociationService
  */
 @Service
 public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase {
@@ -44,9 +42,9 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
     @Override
     @Transactional(readOnly = true)
     public Map<Gene, Collection<VocabCharacteristic>> findByGenes( Collection<Gene> genes ) {
-        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<Gene, Collection<VocabCharacteristic>>();
+        Map<Gene, Collection<VocabCharacteristic>> result = new HashMap<>();
 
-        Collection<Gene> needToFind = new HashSet<Gene>();
+        Collection<Gene> needToFind = new HashSet<>();
         for ( Gene gene : genes ) {
             Element element = this.gene2goCache.get( gene );
 
@@ -78,28 +76,18 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
         return this.getGene2GOAssociationDao().find( gene2GOAssociation );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Gene2GOAssociationServiceBase#handleFindAssociationByGene(ubic.gemma.model.genome .Gene)
-     */
     @Override
     protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) {
         return this.getGene2GOAssociationDao().findAssociationByGene( gene );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
-     */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<VocabCharacteristic> handleFindByGene( Gene gene ) {
 
         Element element = this.gene2goCache.get( gene );
 
-        if ( element != null ) return ( Collection<VocabCharacteristic> ) element.getObjectValue();
+        if ( element != null ) //noinspection unchecked
+            return ( Collection<VocabCharacteristic> ) element.getObjectValue();
 
         Collection<VocabCharacteristic> re = this.getGene2GOAssociationDao().findByGene( gene );
 
@@ -115,11 +103,6 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
         return this.getGene2GOAssociationDao().getSets( uris );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
-     */
     @Override
     protected Collection<Gene> handleFindByGOTerm( String goID, Taxon taxon ) {
         return this.getGene2GOAssociationDao().findByGoTerm( goID, taxon );
@@ -133,33 +116,17 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
         return this.getGene2GOAssociationDao().findOrCreate( gene2GOAssociation );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Gene2GOAssociationServiceBase#handleRemoveAll()
-     */
     @Override
     protected void handleRemoveAll() {
         this.getGene2GOAssociationDao().removeAll();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerms(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByGOTerms( Collection<String> termsToFetch ) {
         return this.getGene2GOAssociationDao().getGenes( termsToFetch );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerms(java.util.Collection,
-     * ubic.gemma.model.genome.Taxon)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByGOTerms( Collection<String> termsToFetch, Taxon taxon ) {
@@ -167,11 +134,6 @@ public class Gene2GOAssociationServiceImpl extends Gene2GOAssociationServiceBase
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTermsPerTaxon(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Taxon, Collection<Gene>> findByGOTermsPerTaxon( Collection<String> termsToFetch ) {

@@ -20,7 +20,6 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import java.util.List;
@@ -47,8 +46,8 @@ public interface AuditTrailService {
     AuditEvent addUpdateEvent( Auditable auditable, AuditEventType auditEventType, String note, String detail );
 
     // @PreAuthorize("hasPermission(#auditable, 'write') or hasPermission(#auditable, 'administration')")
-    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note,
-            String detail );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    AuditEvent addUpdateEvent( Auditable auditable, Class<? extends AuditEventType> type, String note, String detail );
 
     /**
      * Add an update event defined by the given parameters, to the given auditable. Returns the generated event.

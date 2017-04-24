@@ -19,7 +19,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 /**
- * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysis
+ * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis
  */
 public class DifferentialExpressionAnalysisImpl extends
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis {

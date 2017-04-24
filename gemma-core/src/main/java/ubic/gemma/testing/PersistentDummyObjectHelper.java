@@ -51,7 +51,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.Persister;
-import ubic.gemma.persistence.PersisterHelper;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -63,7 +62,6 @@ import java.util.*;
  * @author pavlidis
  */
 @Component
-
 public class PersistentDummyObjectHelper {
 
     private static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;

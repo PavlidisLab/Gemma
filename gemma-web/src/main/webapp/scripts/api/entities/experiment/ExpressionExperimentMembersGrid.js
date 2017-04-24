@@ -1030,16 +1030,16 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend( Ext.Toolbar, {
          width : 300,
          emptyText : 'Search for an experiment or group to add',
          listeners : {
-            'select' : {
+            'selected' : {
                fn : function( combo, rec, index ) {
                   this.addBtn.enable();
 
-                  var vo = rec.get( 'resultValueObject' );
+                  var vo = rec.data.get( 'resultValueObject' );
 
-                  if ( rec.get( 'size' ) === 1 ) {
+                  if ( rec.data.get( 'size' ) === 1 ) {
                      this.addBtn.setText( 'Add 1 experiment' );
                   } else {
-                     this.addBtn.setText( 'Add ' + rec.get( 'size' ) + ' experiments' );
+                     this.addBtn.setText( 'Add ' + rec.data.get( 'size' ) + ' experiments' );
                   }
 
                   /*

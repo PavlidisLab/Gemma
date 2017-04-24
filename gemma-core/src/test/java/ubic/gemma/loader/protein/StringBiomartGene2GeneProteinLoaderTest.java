@@ -320,7 +320,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
             }
         }
         Collection<Gene2GeneProteinAssociation> associations = gene2GeneProteinAssociationService.loadAll();
-        assertEquals( 1, associations.size() );
+        assertEquals( 2, associations.size() );
 
         this.gene2GeneProteinAssociationService.deleteAll( associations );
         associations = gene2GeneProteinAssociationService.loadAll();

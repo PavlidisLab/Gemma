@@ -28,7 +28,6 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableDao;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -703,9 +702,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         if ( batch.size() > 0 ) {
 
             //noinspection unchecked
-            results.addAll(
-                    this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "bms", batch )
-                            .list() );
+            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameterList( "bms", batch ).list() );
         }
 
         return results;
@@ -816,9 +814,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         if ( batch.size() > 0 ) {
 
             //noinspection unchecked
-            results.addAll(
-                    this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "eds", batch )
-                            .list() );
+            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameterList( "eds", batch ).list() );
         }
 
         return results;
@@ -903,8 +900,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             return results;
         }
         String queryString = "select e.id,count(c.id) from ExpressionExperiment e inner join e.characteristics c where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "ids", ids )
-                .list();
+        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "ids", ids ).list();
 
         addIdsToResults( results, res );
         return results;
@@ -918,8 +915,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                         + "inner join b.arrayDesignUsed ad " + "inner join ad.auditTrail trail "
                         + "inner join trail.events event " + "where ee.id in (:ids) ";
 
-        List result = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "ids", ids )
-                .list();
+        List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "ids", ids ).list();
 
         Map<Long, Map<Long, Collection<AuditEvent>>> eventMap = new HashMap<>();
         // process list of expression experiment ids that have events
@@ -953,8 +950,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
                 "select ee.id, auditEvent from ExpressionExperiment ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
                         + " where ee.id in (:ids) ";
 
-        List result = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "ids", ids )
-                .list();
+        List result = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "ids", ids ).list();
 
         Map<Long, Collection<AuditEvent>> eventMap = new HashMap<>();
 
@@ -1179,8 +1176,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperiment e inner join e.bioAssays ba"
                 + " inner join ba.sampleUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor "
                 + "ef where e.id in (:ids) group by e.id";
-        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "ids", ids )
-                .list();
+        List res = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameterList( "ids", ids ).list();
 
         addIdsToResults( results, res );
         return results;
@@ -1455,7 +1452,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             Hibernate.initialize( ba.getDerivedDataFiles() );
             Hibernate.initialize( ba.getSampleUsed() );
             BioMaterial bm = ba.getSampleUsed();
-            if(bm != null) {
+            if ( bm != null ) {
                 Hibernate.initialize( bm.getFactorValues() );
                 Hibernate.initialize( bm.getTreatments() );
             }

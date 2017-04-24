@@ -33,6 +33,18 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
         }
     },
 
+    checkURLforInitialTab: function () {
+        this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
+        if (this.loadSpecificTab) {
+            var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
+            if (param.tab) {
+                if (this.getComponent(param.tab) !== undefined) {
+                    this.initialTab = param.tab;
+                }
+            }
+        }
+    },
+
     /**
      * @memberOf Gemma.P
      */
@@ -78,9 +90,6 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
         Gemma.Application.currentUser.on("logOut", function () {
             this.adjustForIsAdmin(false, false);
         }, this);
-
-        this.checkURLforInitialTab();
-        this.setActiveTab(this.initialTab);
     },
 
     // hide/show 'refresh' link to admin tabs.
@@ -134,6 +143,8 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
                     });
 
                     panel.add(panel.toolTab);
+                    panel.checkURLforInitialTab();
+                    panel.setActiveTab(panel.initialTab);
                 }.createDelegate(this),
                 errorHandler: function (er, exception) {
                     Ext.Msg.alert("Error", er + "\n" + exception.stack);
@@ -143,18 +154,5 @@ Gemma.PlatformPage = Ext.extend(Ext.TabPanel, {
         } else if (this.toolTab) {
             this.toolTab.setVisible(isAdmin);
         }
-    },
-
-    checkURLforInitialTab: function () {
-        this.loadSpecificTab = (document.URL.indexOf("?") > -1 && (document.URL.indexOf("tab=") > -1));
-        if (this.loadSpecificTab) {
-            var param = Ext.urlDecode(document.URL.substr(document.URL.indexOf("?") + 1));
-            if (param.tab) {
-                if (this.getComponent(param.tab) != undefined) {
-                    this.initialTab = param.tab;
-                }
-            }
-        }
     }
-
 });

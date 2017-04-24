@@ -20,22 +20,13 @@ package ubic.gemma.model.association;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.config.CacheConfiguration;
-import net.sf.ehcache.config.NonstopConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration;
-import net.sf.ehcache.config.TerracottaConfiguration;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicDao;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.CacheUtils;
 import ubic.gemma.util.Settings;
 
 /**
@@ -43,13 +34,12 @@ import ubic.gemma.util.Settings;
  * Spring Service base class for <code>Gene2GOAssociationService</code>, provides access to all services and entities
  * referenced by this service.
  * </p>
- * 
+ *
  * @see Gene2GOAssociationService
  */
 public abstract class Gene2GOAssociationServiceBase implements Gene2GOAssociationService, InitializingBean {
-    protected Cache gene2goCache;
-
     private static final String G2G_CACHE_NAME = "Gene2GoServiceCache";
+    protected Cache gene2goCache;
 
     @Autowired
     private Gene2GOAssociationDao gene2GOAssociationDao;
@@ -64,40 +54,11 @@ public abstract class Gene2GOAssociationServiceBase implements Gene2GOAssociatio
     public void afterPropertiesSet() throws Exception {
 
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-        int maxElements = 50000;
-        boolean eternal = false;
-        boolean terracottaCoherentReads = false;
-        boolean clearOnFlush = false;
-        int timeToLive = 500;
-        int timeToIdle = 1000;
-        if ( terracottaEnabled ) {
-            CacheConfiguration config = new CacheConfiguration( G2G_CACHE_NAME, maxElements );
-            config.setStatistics( false );
-            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
-            config.setEternal( eternal );
-            config.setTimeToIdleSeconds( timeToIdle );
-            config.setMaxElementsOnDisk( 0 );
-            config.addTerracotta( new TerracottaConfiguration() );
-            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
-            config.clearOnFlush( clearOnFlush );
-
-            config.setTimeToLiveSeconds( timeToLive );
-            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
-            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
-            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
-            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
-            nonstopConfiguration.addTimeoutBehavior( tobc );
-            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
-            this.gene2goCache = new Cache( config );
-
-        } else {
-            this.gene2goCache = new Cache( G2G_CACHE_NAME, maxElements, false, eternal, timeToLive, timeToIdle );
-        }
 
         cacheManager.addCache( gene2goCache );
-        this.gene2goCache = cacheManager.getCache( G2G_CACHE_NAME );
+        this.gene2goCache = CacheUtils
+                .createOrLoadCache( cacheManager, G2G_CACHE_NAME, terracottaEnabled, 5000, false, false, 1000, 500,
+                        false );
 
     }
 
@@ -219,10 +180,25 @@ public abstract class Gene2GOAssociationServiceBase implements Gene2GOAssociatio
     }
 
     /**
+     * Gets the reference to <code>gene2GOAssociation</code>'s DAO.
+     */
+
+    protected Gene2GOAssociationDao getGene2GOAssociationDao() {
+        return this.gene2GOAssociationDao;
+    }
+
+    /**
      * Sets the reference to <code>gene2GOAssociation</code>'s DAO.
      */
     public void setGene2GOAssociationDao( Gene2GOAssociationDao gene2GOAssociationDao ) {
         this.gene2GOAssociationDao = gene2GOAssociationDao;
+    }
+
+    /**
+     * Gets the reference to <code>vocabCharacteristic</code>'s DAO.
+     */
+    protected VocabCharacteristicDao getVocabCharacteristicDao() {
+        return this.vocabCharacteristicDao;
     }
 
     /**
@@ -231,20 +207,6 @@ public abstract class Gene2GOAssociationServiceBase implements Gene2GOAssociatio
     public void setVocabCharacteristicDao(
             ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao ) {
         this.vocabCharacteristicDao = vocabCharacteristicDao;
-    }
-
-    /**
-     * Gets the reference to <code>gene2GOAssociation</code>'s DAO.
-     */
-    protected Gene2GOAssociationDao getGene2GOAssociationDao() {
-        return this.gene2GOAssociationDao;
-    }
-
-    /**
-     * Gets the reference to <code>vocabCharacteristic</code>'s DAO.
-     */
-    protected VocabCharacteristicDao getVocabCharacteristicDao() {
-        return this.vocabCharacteristicDao;
     }
 
     /**

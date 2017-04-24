@@ -24,15 +24,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Specialized command object for removing analysis results.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisRemoveTaskCommand extends DifferentialExpressionAnalysisTaskCommand {
 
     private static final long serialVersionUID = -6881129987842634598L;
 
-    private DifferentialExpressionAnalysis toRemove;
+    private final DifferentialExpressionAnalysis toRemove;
 
     public DifferentialExpressionAnalysisRemoveTaskCommand( ExpressionExperiment ee,
             DifferentialExpressionAnalysis toRemove ) {

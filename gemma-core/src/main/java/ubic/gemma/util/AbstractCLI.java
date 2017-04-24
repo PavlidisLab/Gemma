@@ -18,112 +18,68 @@
  */
 package ubic.gemma.util;
 
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.cli.AlreadySelectedException;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingArgumentException;
-import org.apache.commons.cli.MissingOptionException;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.UnrecognizedOptionException;
+import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.ConsoleAppender;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-import org.apache.log4j.PatternLayout;
-
+import org.apache.log4j.*;
 import ubic.basecode.util.DateUtil;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
+import java.io.File;
+import java.util.*;
+
 /**
  * Base Command Line Interface. Provides some default functionality.
- * <p>
  * To use this, in your concrete subclass, implement a main method. You must implement buildOptions and processOptions
  * to handle any application-specific options (they can be no-ops).
- * <p>
  * To facilitate testing of your subclass, your main method must call a non-static 'doWork' method, that will be exposed
  * for testing. In that method call processCommandline. You should return any non-null return value from
  * processCommandLine.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public abstract class AbstractCLI {
 
-    public enum ErrorCode {
-        AUTHENTICATION_ERROR, FATAL_ERROR, INVALID_OPTION, MISSING_ARGUMENT, MISSING_OPTION, NORMAL
-    }
-
     public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2015 University of British Columbia.";
-
     protected static final String AUTO_OPTION_NAME = "auto";
-
-    protected static Log log = LogFactory.getLog( AbstractCLI.class );
-
     protected static final String THREADS_OPTION = "threads";
+    protected static final Log log = LogFactory.getLog( AbstractCLI.class );
+    private static final String LOGGER_OPTION = "logger";
     private static final int DEFAULT_PORT = 3306;
-    private static int DEFAULT_VERBOSITY = 4; // info.
-
-    /* support for convenience options */
-    private String DEFAULT_HOST = "localhost";
-    private Map<Logger, Level> originalLoggingLevels = new HashMap<Logger, Level>();
-    private int verbosity = DEFAULT_VERBOSITY; // corresponds to "Error".
-
     private static final String HEADER = "Options:";
     private static final char HOST_OPTION = 'H';
     private static final char PASSWORD_CONSTANT = 'p';
     private static final char PORT_OPTION = 'P';
     private static final char USERNAME_OPTION = 'u';
     private static final char VERBOSITY_OPTION = 'v';
-
+    // needs to be concurrently modifiable.
+    protected final Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<>() );
+    protected final Options options = new Options();
+    protected final Collection<Object> successObjects = Collections.synchronizedSet( new HashSet<>() );
+    /* support for convenience options */
+    private final String DEFAULT_HOST = "localhost";
+    private final Map<Logger, Level> originalLoggingLevels = new HashMap<>();
     /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
     protected boolean autoSeek = false;
-
     /**
      * The event type to look for the lack of, when using autoseek.
      */
     protected Class<? extends AuditEventType> autoSeekEventType = null;
-
-    // needs to be concurrently modifiable.
-    protected Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<Object>() );
-    protected String host = DEFAULT_HOST;
     /**
      * Date used to identify which endities to run the tool on (e.g., those which were run less recently than mDate). To
      * enable call addDateOption.
      */
     protected String mDate = null;
-
     protected int numThreads = 1;
-    protected Options options = new Options();
     protected String password;
     protected Option passwordOpt;
     protected int port = DEFAULT_PORT;
-
-    protected Collection<Object> successObjects = Collections.synchronizedSet( new HashSet<Object>() );
-
     protected String username;
-
     protected Option usernameOpt;
-
+    protected String host = DEFAULT_HOST;
     private CommandLine commandLine;
 
     public AbstractCLI() {
@@ -132,8 +88,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param opt
-     * @return
      * @see org.apache.commons.cli.Options#addOption(org.apache.commons.cli.Option)
      */
     public final Options addOption( Option opt ) {
@@ -141,10 +95,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param opt
-     * @param hasArg
-     * @param description
-     * @return
      * @see org.apache.commons.cli.Options#addOption(java.lang.String, boolean, java.lang.String)
      */
     public final Options addOption( String opt, boolean hasArg, String description ) {
@@ -152,11 +102,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param opt
-     * @param longOpt
-     * @param hasArg
-     * @param description
-     * @return
      * @see org.apache.commons.cli.Options#addOption(java.lang.String, java.lang.String, boolean, java.lang.String)
      */
     public final Options addOption( String opt, String longOpt, boolean hasArg, String description ) {
@@ -164,8 +109,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param group
-     * @return
      * @see org.apache.commons.cli.Options#addOptionGroup(org.apache.commons.cli.OptionGroup)
      */
     public final Options addOptionGroup( OptionGroup group ) {
@@ -182,14 +125,12 @@ public abstract class AbstractCLI {
 
     /**
      * A short memorable name for the command that can be used to locate this class.
-     * 
+     *
      * @return name; if null, this will not be available as a shortcut command.
      */
     public abstract String getCommandName();
 
     /**
-     * @param opt
-     * @return
      * @see org.apache.commons.cli.Options#getOption(java.lang.String)
      */
     public final Option getOption( String opt ) {
@@ -197,8 +138,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @param opt
-     * @return
      * @see org.apache.commons.cli.Options#getOptionGroup(org.apache.commons.cli.Option)
      */
     public final OptionGroup getOptionGroup( Option opt ) {
@@ -210,7 +149,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @return
      * @see org.apache.commons.cli.Options#getOptions()
      */
     public final Collection<?> getOptions() {
@@ -242,7 +180,6 @@ public abstract class AbstractCLI {
     }
 
     /**
-     * @return
      * @see org.apache.commons.cli.Options#getRequiredOptions()
      */
     public final List<?> getRequiredOptions() {
@@ -273,13 +210,10 @@ public abstract class AbstractCLI {
 
     @SuppressWarnings("static-access")
     protected void addDateOption() {
-        Option dateOption = OptionBuilder
-                .hasArg()
-                .withArgName( "mdate" )
-                .withDescription(
-                        "Constrain to run only on entities with analyses older than the given date. "
-                                + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                                + "If there is no record of when the analysis was last run, it will be run." )
+        Option dateOption = OptionBuilder.hasArg().withArgName( "mdate" ).withDescription(
+                "Constrain to run only on entities with analyses older than the given date. "
+                        + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
+                        + "If there is no record of when the analysis was last run, it will be run." )
                 .create( "mdate" );
 
         addOption( dateOption );
@@ -287,7 +221,7 @@ public abstract class AbstractCLI {
 
     /**
      * Convenience method to add a standard pair of options to intake a host name and port number. *
-     * 
+     *
      * @param hostRequired Whether the host name is required
      * @param portRequired Whether the port is required
      */
@@ -360,7 +294,7 @@ public abstract class AbstractCLI {
 
     /**
      * Implement this method to add options to your command line, using the OptionBuilder.
-     * 
+     *
      * @see OptionBuilder
      */
     protected abstract void buildOptions();
@@ -372,12 +306,9 @@ public abstract class AbstractCLI {
         Option testOpt = new Option( "testing", false, "Use the test environment" );
         Option logOpt = new Option( "v", "verbosity", true,
                 "Set verbosity level for all loggers (0=silent, 5=very verbose; default is custom, see log4j.properties)" );
-        Option otherLogOpt = OptionBuilder
-                .hasArg()
-                .withArgName( "logger" )
-                .withDescription(
-                        "Configure a specific logger verbosity"
-                                + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
+        Option otherLogOpt = OptionBuilder.hasArg().withArgName( "logger" ).withDescription(
+                "Configure a specific logger verbosity"
+                        + "For example, '--logger ubic.gemma=5' or --logger log4j.logger.org.hibernate.SQL=5" )
                 .create( "logger" );
 
         options.addOption( otherLogOpt );
@@ -387,11 +318,6 @@ public abstract class AbstractCLI {
 
     }
 
-    /**
-     * @param args
-     * @return
-     * @throws Exception
-     */
     protected abstract Exception doWork( String[] args );
 
     protected final double getDoubleOptionValue( char option ) {
@@ -414,10 +340,6 @@ public abstract class AbstractCLI {
         return 0.0;
     }
 
-    /**
-     * @param c
-     * @return
-     */
     protected final String getFileNameOptionValue( char c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
@@ -428,10 +350,6 @@ public abstract class AbstractCLI {
         return fileName;
     }
 
-    /**
-     * @param c
-     * @return
-     */
     protected final String getFileNameOptionValue( String c ) {
         String fileName = commandLine.getOptionValue( c );
         File f = new File( fileName );
@@ -462,9 +380,6 @@ public abstract class AbstractCLI {
         return 0;
     }
 
-    /**
-     * @return
-     */
     protected Date getLimitingDate() {
         Date skipIfLastRunLaterThan = null;
         if ( StringUtils.isNotBlank( mDate ) ) {
@@ -474,8 +389,6 @@ public abstract class AbstractCLI {
         return skipIfLastRunLaterThan;
     }
 
-    /**
-      */
     protected void printHelp() {
         HelpFormatter h = new HelpFormatter();
         h.setWidth( 150 );
@@ -485,16 +398,15 @@ public abstract class AbstractCLI {
     /**
      * This must be called in your main method. It triggers parsing of the command line and processing of the options.
      * Check the error code to decide whether execution of your program should proceed.
-     * 
-     * @param args
+     *
      * @return Exception; null if nothing went wrong.
-     * @throws ParseException
      */
     protected final Exception processCommandLine( String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
         String appVersion = Settings.getAppVersion();
-        if ( appVersion == null ) appVersion = "?";
+        if ( appVersion == null )
+            appVersion = "?";
         System.err.println( "Gemma version " + appVersion );
 
         if ( args == null ) {
@@ -568,16 +480,13 @@ public abstract class AbstractCLI {
     /**
      * Print out a summary of what the program did. Useful when analyzing lists of experiments etc. Use the
      * 'successObjects' and 'errorObjects'
-     * 
-     * @param errorObjects
-     * @param successObjects
      */
     protected void summarizeProcessing() {
         if ( successObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\n   Processed:\n" );
             for ( Object object : successObjects ) {
-                buf.append( "\t" + object + "\n" );
+                buf.append( "\t" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
 
@@ -590,7 +499,7 @@ public abstract class AbstractCLI {
             StringBuilder buf = new StringBuilder();
             buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
             for ( Object object : errorObjects ) {
-                buf.append( "\t" + object + "\n" );
+                buf.append( "\t" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
             log.error( buf );
@@ -620,15 +529,17 @@ public abstract class AbstractCLI {
         }
     }
 
-    /**
-     * @param verbosity2
-     */
     private void configureAllLoggers( int v ) {
         Enumeration<?> currentLoggers = LogManager.getLoggerRepository().getCurrentLoggers();
         while ( currentLoggers.hasMoreElements() ) {
             Logger logger = ( Logger ) currentLoggers.nextElement();
             setLoggerLevel( v, logger );
         }
+        configureLogging( "net", v );
+        configureLogging( "org", v );
+        configureLogging( "com", v );
+        configureLogging( "ubic", v );
+        configureLogging( "gemma", v );
     }
 
     /**
@@ -682,11 +593,11 @@ public abstract class AbstractCLI {
         }
 
         if ( commandLine.hasOption( VERBOSITY_OPTION ) ) {
-            this.verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
+            int verbosity = getIntegerOptionValue( VERBOSITY_OPTION );
             if ( verbosity < 0 || verbosity > 5 ) {
                 throw new RuntimeException( "Verbosity must be from 0 to 5" );
             }
-            configureAllLoggers( this.verbosity );
+            configureAllLoggers( verbosity );
         }
         PatternLayout layout = new PatternLayout( "[Gemma %d] %p [%t] %C.%M(%L) | %m%n" );
         ConsoleAppender cnslAppndr = new ConsoleAppender( layout );
@@ -694,10 +605,11 @@ public abstract class AbstractCLI {
         assert f != null;
         f.addAppender( cnslAppndr );
 
-        if ( commandLine.hasOption( "logger" ) ) {
-            String value = getOptionValue( "logger" );
+        if ( commandLine.hasOption( LOGGER_OPTION ) ) {
+            String value = getOptionValue( LOGGER_OPTION );
             String[] vals = value.split( "=" );
-            if ( vals.length != 2 ) throw new RuntimeException( "Logging value must in format [logger]=[value]" );
+            if ( vals.length != 2 )
+                throw new RuntimeException( "Logging value must in format [logger]=[value]" );
             try {
                 configureLogging( vals[0], Integer.parseInt( vals[1] ) );
             } catch ( NumberFormatException e ) {
@@ -711,10 +623,6 @@ public abstract class AbstractCLI {
 
     }
 
-    /**
-     * @param level
-     * @param log4jLogger
-     */
     private void setLoggerLevel( int level, Logger log4jLogger ) {
         switch ( level ) {
             case 0:
@@ -739,6 +647,10 @@ public abstract class AbstractCLI {
                 throw new RuntimeException( "Verbosity must be from 0 to 5" );
 
         }
+    }
+
+    public enum ErrorCode {
+        AUTHENTICATION_ERROR, FATAL_ERROR, INVALID_OPTION, MISSING_ARGUMENT, MISSING_OPTION, NORMAL
     }
 
 }

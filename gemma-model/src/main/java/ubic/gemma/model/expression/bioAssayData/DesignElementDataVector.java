@@ -21,48 +21,30 @@ package ubic.gemma.model.expression.bioAssayData;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-/**
- * 
- */
 public abstract class DesignElementDataVector extends DataVector {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -4185333066166517308L;
     private BioAssayDimension bioAssayDimension;
     private CompositeSequence designElement;
 
-    /**
-     * 
-     */
     public BioAssayDimension getBioAssayDimension() {
         return this.bioAssayDimension;
     }
 
-    /**
-     * 
-     */
-    public CompositeSequence getDesignElement() {
-        return this.designElement;
-    }
-
-    /**
-     * 
-     */
-    public abstract ExpressionExperiment getExpressionExperiment();
-
     public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
         this.bioAssayDimension = bioAssayDimension;
+    }
+
+    public CompositeSequence getDesignElement() {
+        return this.designElement;
     }
 
     public void setDesignElement( CompositeSequence designElement ) {
         this.designElement = designElement;
     }
 
-    /**
-     * 
-     */
+    public abstract ExpressionExperiment getExpressionExperiment();
+
     public abstract void setExpressionExperiment( ExpressionExperiment expressionExperiment );
 
 }

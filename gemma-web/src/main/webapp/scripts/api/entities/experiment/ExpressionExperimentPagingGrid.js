@@ -43,11 +43,6 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
         totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
         idProperty: "id", // same as default,
         adjustedStart: 'adjustedStart',
-        // used by store to set its sortInfo
-        sortInfo: {
-            field: "lastUpdated",
-            direction: "DESC"
-        },
         fields: [{
             name: "id",
             type: "int"
@@ -79,8 +74,7 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
             name: "curationNote"
         }, {
             name: "lastUpdated",
-            type: "date",
-            sortDir: 'DESC'
+            type: "date"
         }]
     }),
 
@@ -261,7 +255,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 }
             });
 
-            pageStore.setDefaultSort('lastUpdated');
+            pageStore.setDefaultSort('lastUpdated', "DESC");
 
             return pageStore;
         },
@@ -517,7 +511,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 });
             }
 
-            pageStore.setDefaultSort('lastUpdated');
+            pageStore.setDefaultSort('lastUpdated', "DESC");
 
             pageStore.on('load', function (store, records, options) {
             }, this);
@@ -527,7 +521,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
                 hideTrigger: true
             });
 
-            eeCombo.on("groupSelected", function (storeItem) {
+            eeCombo.on("selected", function (combo, storeItem) {
 
                 if (storeItem && storeItem.data && storeItem.data.resultValueObject) {
                     var resultVO = storeItem.data.resultValueObject;
@@ -553,7 +547,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel,
             }, this);
 
             var editMine = new Ext.Button({
-                text: 'Edit my datasets',
+                text: 'Dataset manager',
                 cls: 'x-toolbar-standardbutton',
                 handler: function () {
                     window.location = "/Gemma/expressionExperiment/showAllExpressionExperimentLinkSummaries.html";

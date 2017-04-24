@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
 
-	<title>My Expression Experiments</title>
+	<title>Dataset manager</title>
 	<jwr:script src='/scripts/api/ext/data/DwrProxy.js'
 		useRandomParam="false" />
 

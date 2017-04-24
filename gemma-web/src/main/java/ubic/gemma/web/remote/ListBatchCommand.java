@@ -22,7 +22,6 @@ package ubic.gemma.web.remote;
  * Encapsulates information needed for generic list browsing.
  * 
  * @author paul
- * @version $Id$
  */
 public class ListBatchCommand {
 
@@ -30,14 +29,10 @@ public class ListBatchCommand {
 
     private Integer limit;
 
-    // FIXME rather not use a string here.
-    private String sort = "modDate"; // which column
+    private String sort = "lastUpdated"; // which column
 
     private Integer start;
 
-    /**
-     * @return the dir
-     */
     public String getDir() {
         return dir;
     }
@@ -46,9 +41,6 @@ public class ListBatchCommand {
         return limit;
     }
 
-    /**
-     * @return the sort
-     */
     public String getSort() {
         return sort;
     }
@@ -57,9 +49,6 @@ public class ListBatchCommand {
         return start;
     }
 
-    /**
-     * @param dir the dir to set
-     */
     public void setDir( String dir ) {
         this.dir = dir;
     }
@@ -68,9 +57,6 @@ public class ListBatchCommand {
         this.limit = limit;
     }
 
-    /**
-     * @param sort the sort to set
-     */
     public void setSort( String sort ) {
         this.sort = sort;
     }

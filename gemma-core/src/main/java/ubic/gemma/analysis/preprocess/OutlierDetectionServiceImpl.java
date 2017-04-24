@@ -14,19 +14,11 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.expression.diff.DiffExAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
@@ -40,13 +32,13 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import cern.colt.list.DoubleArrayList;
+
+import java.util.*;
 
 /**
  * Methods to (attempt to) detect outliers in data sets.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class OutlierDetectionServiceImpl implements OutlierDetectionService {
@@ -54,20 +46,14 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     private static final double DEFAULT_FRACTION = 0.90;
 
     private static final int DEFAULT_QUANTILE = 15;
-
-    private static Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
-
     // Optional: the maximum fraction of samples that can be outliers
     @SuppressWarnings("unused")
     private static final double MAX_FRACTION_OUTLIERS = 0.3;
+    private static final Log log = LogFactory.getLog( OutlierDetectionServiceImpl.class );
 
     @Autowired
     private ExpressionExperimentService eeService;
 
-    // // For test purposes. Allows the printing of matrices based on residuals.
-    // private boolean printMatrices = false;
-
-    // For working with filtered data
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
@@ -84,12 +70,12 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     private boolean testMode = false;
 
-    /*
+    /**
      * Calculate index (rank) of desired quantile using R's method #8
      */
     public double findDesiredQuantileIndex( int numCors, int quantileThreshold ) {
 
-        double index = 0.0;
+        double index;
         double n = numCors;
         double fraction = ( quantileThreshold / 100.0 );
 
@@ -100,24 +86,17 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         } else {
             index = ( ( ( n + ( 1.0 / 3.0 ) ) * fraction ) + ( 1.0 / 3.0 ) );
         }
-
         return index;
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.OutlierDetectionService#identifyOutliers(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment)
-     */
     @Override
     public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee ) {
         return this.identifyOutliers( ee, false, DEFAULT_QUANTILE, DEFAULT_FRACTION );
     }
 
-    /* Runs in testmode; returns OutlierDetectionTestDetails */
+    /**
+     * Runs in testmode; returns OutlierDetectionTestDetails
+     */
     @Override
     public OutlierDetectionTestDetails identifyOutliers( ExpressionExperiment ee, boolean useRegression,
             boolean findByMedian ) {
@@ -153,24 +132,12 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return identifyOutliers( ee, cormat, quantileThreshold, fractionThreshold );
     }
 
-    /**
-     * @param ee
-     * @param cormat
-     * @return
-     */
     @Override
     public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat ) {
         return identifyOutliers( ee, cormat, DEFAULT_QUANTILE, DEFAULT_FRACTION );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.preprocess.OutlierDetectionService#identifyOutliers(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.basecode.dataStructure.matrix.DoubleMatrix, int, double)
-     */
     @Override
     public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat, int quantileThreshold, double fractionThreshold ) {
@@ -203,7 +170,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         log.info( "Threshold correlation is " + String.format( "%.2f", valueAtDesiredQuantile ) );
 
         // second pass; for each sample, how many correlations does it have which are below the selected quantile.
-        Collection<OutlierDetails> outliers = new HashSet<OutlierDetails>();
+        Collection<OutlierDetails> outliers = new HashSet<>();
         for ( int i = 0; i < cormat.rows(); i++ ) {
             BioAssay ba = cormat.getRowName( i );
             int countBelow = 0;
@@ -239,7 +206,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
 
     }
 
-    /*
+    /**
      * Runs in testmode; returns OutlierDetectionTestDetails
      */
     @Override
@@ -248,7 +215,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         testMode = true;
         testDetails = new OutlierDetectionTestDetails( ee.getShortName() );
 
-        Collection<OutlierDetails> outliers = new HashSet<OutlierDetails>();
+        Collection<OutlierDetails> outliers = new HashSet<>();
 
         // Always use regression when calculating the correlation matrix:
         DoubleMatrix<BioAssay, BioAssay> cormat = getCorrelationMatrix( ee, true );
@@ -283,8 +250,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
      */
     private double findValueAtDesiredQuantile( DoubleArrayList cors, int quantileThreshold ) {
 
-        double lowerQuantileValue = Double.MIN_VALUE;
-        double upperQuantileValue = Double.MIN_VALUE;
+        double lowerQuantileValue;
+        double upperQuantileValue;
 
         double desiredQuantileIndex = findDesiredQuantileIndex( cors.size(), quantileThreshold );
 
@@ -303,8 +270,8 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         lowerQuantileValue = sortedCors[( int ) ( Math.floor( desiredQuantileIndex ) - 1 )];
         upperQuantileValue = sortedCors[( int ) Math.floor( desiredQuantileIndex )];
 
-        return ( lowerQuantileValue + ( ( desiredQuantileIndex - Math.floor( desiredQuantileIndex ) )
-                * ( upperQuantileValue - lowerQuantileValue ) ) );
+        return ( lowerQuantileValue + ( ( desiredQuantileIndex - Math.floor( desiredQuantileIndex ) ) * (
+                upperQuantileValue - lowerQuantileValue ) ) );
     }
 
     private DoubleArrayList getCorrelationList( DoubleMatrix<BioAssay, BioAssay> cormat ) {
@@ -356,12 +323,14 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         if ( useRegression && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
 
             double importanceThreshold = 0.01;
-            Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee,
-                    ee.getExperimentalDesign().getExperimentalFactors(), importanceThreshold );
+            Set<ExperimentalFactor> importantFactors = svdService
+                    .getImportantFactors( ee, ee.getExperimentalDesign().getExperimentalFactors(),
+                            importanceThreshold );
             /* Remove 'batch' from important factors */
             ExperimentalFactor batch = null;
             for ( ExperimentalFactor factor : importantFactors ) {
-                if ( factor.getName().toLowerCase().equals( "batch" ) ) batch = factor;
+                if ( factor.getName().toLowerCase().equals( "batch" ) )
+                    batch = factor;
             }
             if ( batch != null ) {
                 importantFactors.remove( batch );
@@ -417,20 +386,21 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
     }
 
     private List<BioAssay> getRemainingColumns( DoubleMatrix<BioAssay, BioAssay> cormat, BioAssay outlier ) {
-        List<BioAssay> bas = new ArrayList<BioAssay>();
+        List<BioAssay> bas = new ArrayList<>();
         for ( int i = 0; i < cormat.columns(); i++ ) {
-            if ( cormat.getColName( i ) != outlier ) bas.add( cormat.getColName( i ) );
+            if ( cormat.getColName( i ) != outlier )
+                bas.add( cormat.getColName( i ) );
         }
         return bas;
     }
 
-    /***
+    /**
      * Identify outliers by sorting by median, then looking for non-overlap of first quartile-second quartile range
-     ***/
+     */
     private Collection<OutlierDetails> identifyOutliersByMedianCorrelation( ExpressionExperiment ee,
             DoubleMatrix<BioAssay, BioAssay> cormat ) {
 
-        List<OutlierDetails> allSamples = new ArrayList<OutlierDetails>();
+        List<OutlierDetails> allSamples = new ArrayList<>();
         OutlierDetails sample;
 
         /* Find the 1st, 2nd, and 3rd quartiles of each sample */
@@ -470,11 +440,11 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
             }
         }
 
-        /* TO DO: Add sanity checks here ... */
+        /* TODO: Add sanity checks here ... */
         // if ( numOutliers >= allSamples.size() * MAX_FRACTION_OUTLIERS )
         // numOutliers = 0;
 
-        List<OutlierDetails> outliers = new ArrayList<OutlierDetails>();
+        List<OutlierDetails> outliers = new ArrayList<>();
 
         for ( int m = 0; m < numOutliers; m++ ) {
             outliers.add( allSamples.get( m ) );
@@ -520,13 +490,10 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         return outliers;
     }
 
-    /* 
-     *  
-     */
     private List<OutlierDetails> removeFalsePositives( List<OutlierDetails> allSamples, List<OutlierDetails> outliers,
             int numOutliers ) {
 
-        List<OutlierDetails> inliers = new ArrayList<OutlierDetails>();
+        List<OutlierDetails> inliers = new ArrayList<>();
 
         for ( int j = numOutliers; j < allSamples.size(); j++ ) {
             inliers.add( allSamples.get( j ) );

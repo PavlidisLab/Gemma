@@ -333,9 +333,6 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.StatusFlagEventImpl" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TroubledStatusFlagEvent" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
@@ -354,17 +351,8 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotationsImpl" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedExperimentalDesignImpl"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.NeedsAttentionEvent" maxElementsInMemory="10000"
 		   eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedPreprocessingImpl" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventImpl" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />

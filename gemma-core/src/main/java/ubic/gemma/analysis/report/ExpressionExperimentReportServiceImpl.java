@@ -21,10 +21,6 @@ package ubic.gemma.analysis.report;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
-import net.sf.ehcache.config.*;
-import net.sf.ehcache.config.PersistenceConfiguration.Strategy;
-import net.sf.ehcache.config.TimeoutBehaviorConfiguration.TimeoutBehaviorType;
-import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,6 +38,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.CacheUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.Settings;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
@@ -89,48 +86,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        /*
-         * Initialize the cache; if it already exists it will not be recreated.
-         */
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         boolean diskPersistent = Settings.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
-        int maxElements = 5000;
-        boolean eternal = false;
-        boolean overFlowToDisk = false;
-        int diskExpiryThreadIntervalSeconds = 600;
-        int maxElementsOnDisk = 10000;
-        int secondsToLive = 300;
-        boolean terracottaCoherentReads = false;
-        boolean clearOnFlush = false;
 
-        if ( terracottaEnabled ) {
-            CacheConfiguration config = new CacheConfiguration( EESTATS_CACHE_NAME, maxElements );
-            config.setStatistics( false );
-            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
-            config.addPersistence( new PersistenceConfiguration().strategy( Strategy.NONE ) );
-            config.setEternal( eternal );
-            config.setTimeToIdleSeconds( 0 );
-            config.setTimeToLiveSeconds( secondsToLive );
-            config.setMaxElementsOnDisk( maxElementsOnDisk );
-            config.addTerracotta( new TerracottaConfiguration() );
-            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
-            config.clearOnFlush( clearOnFlush );
-
-            config.getTerracottaConfiguration().setClustered( true );
-            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
-            NonstopConfiguration nonstopConfiguration = new NonstopConfiguration();
-            TimeoutBehaviorConfiguration tobc = new TimeoutBehaviorConfiguration();
-            tobc.setType( TimeoutBehaviorType.NOOP.getTypeName() );
-            nonstopConfiguration.addTimeoutBehavior( tobc );
-            config.getTerracottaConfiguration().addNonstop( nonstopConfiguration );
-            this.statsCache = new Cache( config );
-        } else {
-            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                    null, eternal, secondsToLive, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
-        }
-
-        cacheManager.addCache( statsCache );
-        this.statsCache = cacheManager.getCache( EESTATS_CACHE_NAME );
+        this.statsCache = CacheUtils
+                .createOrLoadCache( cacheManager, EESTATS_CACHE_NAME, terracottaEnabled, 5000, false, false, 0, 300,
+                        diskPersistent );
 
     }
 

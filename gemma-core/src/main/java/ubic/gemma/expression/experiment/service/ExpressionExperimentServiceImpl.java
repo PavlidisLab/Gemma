@@ -485,7 +485,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
             annotationValue.setId( c.getId() );
             annotationValue.setClassName( c.getCategory() );
             annotationValue.setTermName( c.getValue() );
-            annotationValue.setEvidenceCode( c.getEvidenceCode()!=null?c.getEvidenceCode().toString():"" );
+            annotationValue.setEvidenceCode( c.getEvidenceCode() != null ? c.getEvidenceCode().toString() : "" );
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic vc = ( VocabCharacteristic ) c;
                 annotationValue.setClassUri( vc.getCategoryUri() );
@@ -1113,4 +1113,21 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     }
 
+    /**
+     * @param ee the expression experiment to be checked for trouble. This method will usually be preferred over checking
+     *           the curation details of the object directly, as this method also checks all the array designs the given
+     *           experiment belongs to.
+     * @return true, if the given experiment, or any of its parenting array designs is troubled. False otherwise
+     */
+    @Override
+    public boolean isTroubled( ExpressionExperiment ee ) {
+        if ( ee.getCurationDetails().getTroubled() )
+            return true;
+        Collection<ArrayDesign> ads = this.getArrayDesignsUsed( ee );
+        for ( ArrayDesign ad : ads ) {
+            if ( ad.getCurationDetails().getTroubled() )
+                return true;
+        }
+        return false;
+    }
 }

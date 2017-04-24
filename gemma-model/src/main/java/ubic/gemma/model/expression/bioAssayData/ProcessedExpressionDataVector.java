@@ -26,36 +26,19 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public abstract class ProcessedExpressionDataVector extends DesignElementDataVector {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 6524582647944439375L;
-
-    /**
-     * Constructs new instances of {@link ProcessedExpressionDataVector}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ProcessedExpressionDataVector}.
-         */
-        public static ProcessedExpressionDataVector newInstance() {
-            return new ProcessedExpressionDataVectorImpl();
-        }
-
-    }
-
     private Double rankByMean;
-
     private Double rankByMax;
-
     private ExpressionExperiment expressionExperiment;
 
-    /**
-     * 
-     */
     @Override
     public ExpressionExperiment getExpressionExperiment() {
         return this.expressionExperiment;
+    }
+
+    @Override
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
@@ -70,6 +53,10 @@ public abstract class ProcessedExpressionDataVector extends DesignElementDataVec
         return this.rankByMax;
     }
 
+    public void setRankByMax( Double rankByMax ) {
+        this.rankByMax = rankByMax;
+    }
+
     /**
      * The relative expression level of this vector in the study. Used as a quick-and-dirty way to provide feedback
      * about the expession level without referring to any absolute baseline other than the minimum in the entire
@@ -81,17 +68,21 @@ public abstract class ProcessedExpressionDataVector extends DesignElementDataVec
         return this.rankByMean;
     }
 
-    @Override
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public void setRankByMax( Double rankByMax ) {
-        this.rankByMax = rankByMax;
-    }
-
     public void setRankByMean( Double rankByMean ) {
         this.rankByMean = rankByMean;
+    }
+
+    /**
+     * Constructs new instances of {@link ProcessedExpressionDataVector}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ProcessedExpressionDataVector}.
+         */
+        public static ProcessedExpressionDataVector newInstance() {
+            return new ProcessedExpressionDataVectorImpl();
+        }
+
     }
 
 }
