@@ -175,7 +175,7 @@
 			<artifactId>spring-beans</artifactId>
 			<version>${spring.version}</version>
 			<type>jar</type>
-		</dependency>	 
+		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-jdbc</artifactId>
@@ -235,7 +235,7 @@
 			<artifactId>xbean-spring</artifactId>
 			<version>3.11.1</version>
 		</dependency>
-		 
+
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-web</artifactId>
@@ -315,7 +315,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.19-SNAPSHOT</version>
+			<version>1.0.20-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -405,7 +405,7 @@
 								</configuration>
 							</configuration>
 						</plugin>
-						<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-report-plugin</artifactId> <version>2.14.1</version> 
+						<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-surefire-report-plugin</artifactId> <version>2.14.1</version>
 							<configuration> <argLine>-Xmx1.2g -XX:MaxPermSize=512m</argLine> </configuration> </plugin> -->
 <!--						<plugin>
 							<groupId>org.codehaus.mojo</groupId>
