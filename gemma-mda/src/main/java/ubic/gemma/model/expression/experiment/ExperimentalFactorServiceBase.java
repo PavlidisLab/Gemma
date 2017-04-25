@@ -78,7 +78,6 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
     @Transactional(readOnly = true)
     public ExperimentalFactor load( final java.lang.Long id ) {
         return this.handleLoad( id );
-
     }
 
     /**
@@ -101,20 +100,17 @@ public abstract class ExperimentalFactorServiceBase implements ExperimentalFacto
 
     }
 
-    protected DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
+    DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
         return differentialExpressionAnalysisDao;
     }
 
     /**
      * Gets the reference to <code>experimentalFactor</code>'s DAO.
      */
-    protected ExperimentalFactorDao getExperimentalFactorDao() {
+    ExperimentalFactorDao getExperimentalFactorDao() {
         return this.experimentalFactorDao;
     }
 
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.expression.experiment.ExperimentalFactor)}
-     */
     protected abstract ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor );
 
     /**

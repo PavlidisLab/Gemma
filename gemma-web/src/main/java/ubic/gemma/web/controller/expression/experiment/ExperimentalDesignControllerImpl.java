@@ -19,35 +19,18 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import gemma.gsec.SecurityService;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.directwebremoting.extend.AccessDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.expression.experiment.FactorValueDeletion;
 import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
 import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.association.GOEvidenceCode;
-//import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-//import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignEvent;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -55,26 +38,29 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
-import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueService;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.util.AnchorTagUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+
+//import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+//import ubic.gemma.model.common.auditAndSecurity.eventType.ExperimentalDesignEvent;
+
 /**
- * Main entry point to editing and viewing experimental designs. Note: do not use parameterized collections as
+ * Main entry point to editing and viewing experimental designs. Note: do not use parametrized collections as
  * parameters for ajax methods in this class! Type information is lost during proxy creation so DWR can't figure out
  * what type of collection the method should take. See bug 2756. Use arrays instead.
- * 
+ *
  * @author keshav
  * @version $Id$
  */
@@ -103,16 +89,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Autowired
     private SecurityService securityService;
 
-    // @Autowired
-    // private AuditTrailService auditTrailService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#createDesignFromFile(java.lang.Long,
-     * java.lang.String)
-     */
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
@@ -133,7 +109,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new IllegalArgumentException( "Cannot read from file:" + f );
         }
 
-        try (InputStream is = new FileInputStream( f );) {
+        try (InputStream is = new FileInputStream( f )) {
             // removed dry run code, validation and object creation is done before any commits to DB
             // So if validation fails no rollback needed. HWoever, this call is wrapped in a transaction
             // as a fail safe.
@@ -148,16 +124,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#createExperimentalFactor(ubic.gemma
-     * .web.remote.EntityDelegator, ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject)
-     */
     @Override
     public void createExperimentalFactor( EntityDelegator e, ExperimentalFactorValueObject efvo ) {
-        if ( e == null || e.getId() == null ) return;
+        if ( e == null || e.getId() == null )
+            return;
         ExperimentalDesign ed = experimentalDesignService.load( e.getId() );
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
@@ -171,7 +141,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
          * Note: this call should not be needed because of cascade behaviour.
          */
         // experimentalFactorService.create( ef );
-        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
+        if ( ed.getExperimentalFactors() == null )
+            ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
         ed.getExperimentalFactors().add( ef );
 
         experimentalDesignService.update( ed );
@@ -184,21 +155,15 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#createFactorValue(ubic.gemma.web
-     * .remote.EntityDelegator)
-     */
     @Override
     public void createFactorValue( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return;
+        if ( e == null || e.getId() == null )
+            return;
         ExperimentalFactor ef = experimentalFactorService.load( e.getId() );
 
         if ( ef == null ) {
-            throw new EntityNotFoundException( "Experimental factor with ID=" + e.getId()
-                    + " could not be accessed for editing" );
+            throw new EntityNotFoundException(
+                    "Experimental factor with ID=" + e.getId() + " could not be accessed for editing" );
         }
 
         Collection<Characteristic> chars = new HashSet<>();
@@ -226,16 +191,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         expressionExperimentService.addFactorValue( ee, fv );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#createFactorValueCharacteristic(
-     * ubic.gemma.web.remote.EntityDelegator, ubic.gemma.model.common.description.Characteristic)
-     */
     @Override
     public void createFactorValueCharacteristic( EntityDelegator e, Characteristic c ) {
-        if ( e == null || e.getId() == null ) return;
+        if ( e == null || e.getId() == null )
+            return;
         FactorValue fv = factorValueService.load( e.getId() );
 
         if ( fv == null ) {
@@ -256,17 +215,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#deleteExperimentalFactors(ubic.gemma
-     * .web.remote.EntityDelegator, java.util.Collection)
-     */
     @Override
     public void deleteExperimentalFactors( EntityDelegator e, Long[] efIds ) {
 
-        if ( e == null || e.getId() == null ) return;
+        if ( e == null || e.getId() == null )
+            return;
 
         Collection<Long> efCol = new LinkedList<>();
         Collections.addAll( efCol, efIds );
@@ -277,13 +230,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#deleteFactorValueCharacteristics
-     * (java.util.Collection)
-     */
     @Override
     public void deleteFactorValueCharacteristics( FactorValueValueObject[] fvvos ) {
         for ( FactorValueValueObject fvvo : fvvos ) {
@@ -307,17 +253,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#deleteFactorValues(ubic.gemma.web
-     * .remote.EntityDelegator, java.util.Collection)
-     */
     @Override
     public void deleteFactorValues( EntityDelegator e, Long[] fvIds ) {
 
-        if ( e == null || e.getId() == null ) return;
+        if ( e == null || e.getId() == null )
+            return;
         Collection<Long> fvCol = new LinkedList<>();
         Collections.addAll( fvCol, fvIds );
 
@@ -332,16 +272,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#getBioMaterials(ubic.gemma.web.remote
-     * .EntityDelegator)
-     */
     @Override
     public Collection<BioMaterialValueObject> getBioMaterials( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
+        if ( e == null || e.getId() == null )
+            return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
         ee = expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
@@ -368,26 +302,20 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#getExperimentalFactors(ubic.gemma
-     * .web.remote.EntityDelegator)
-     */
     @Override
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
-        if ( e == null || e.getId() == null ) return null;
+        if ( e == null || e.getId() == null )
+            return null;
 
         Collection<ExperimentalFactorValueObject> result = new HashSet<>();
-        Long designId = null;
-        if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" )
-                || e.getClassDelegatingFor().endsWith( ".ExpressionExperiment" ) ) {
+        Long designId;
+        if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExpressionExperiment" ) || e.getClassDelegatingFor()
+                .endsWith( ".ExpressionExperiment" ) ) {
             ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
             designId = ee.getExperimentalDesign().getId();
-        } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" )
-                || e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesignImpl" )
-                || e.getClassDelegatingFor().endsWith( ".ExperimentalDesignImpl" ) ) {
+        } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
+                .equalsIgnoreCase( "ExperimentalDesignImpl" ) || e.getClassDelegatingFor()
+                .endsWith( ".ExperimentalDesignImpl" ) ) {
             designId = e.getId();
         } else {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
@@ -404,19 +332,14 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#getFactorValues(ubic.gemma.web.remote
-     * .EntityDelegator)
-     */
     @Override
     public Collection<FactorValueValueObject> getFactorValues( EntityDelegator e ) {
         // FIXME I'm not sure why this keeps getting called with empty fields.
-        if ( e == null || e.getId() == null ) return new HashSet<>();
+        if ( e == null || e.getId() == null )
+            return new HashSet<>();
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if ( ef == null ) return new HashSet<>();
+        if ( ef == null )
+            return new HashSet<>();
 
         Collection<FactorValueValueObject> result = new HashSet<>();
         for ( FactorValue value : ef.getFactorValues() ) {
@@ -430,19 +353,16 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#getFactorValuesWithCharacteristics
-     * (ubic.gemma.web.remote.EntityDelegator)
-     */
     @Override
     public Collection<FactorValueValueObject> getFactorValuesWithCharacteristics( EntityDelegator e ) {
         Collection<FactorValueValueObject> result = new HashSet<>();
-        if ( e == null || e.getId() == null ) return result;
+        if ( e == null || e.getId() == null ) {
+            return result;
+        }
         ExperimentalFactor ef = this.experimentalFactorService.load( e.getId() );
-        if ( ef == null ) return result;
+        if ( ef == null ) {
+            return result;
+        }
 
         for ( FactorValue value : ef.getFactorValues() ) {
             if ( value.getCharacteristics().size() > 0 ) {
@@ -462,12 +382,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#show(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping("/showExperimentalDesign.html")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
@@ -479,8 +393,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         }
 
         Long designId;
-        ExpressionExperiment ee = null;
-        ExperimentalDesign experimentalDesign = null;
+        ExpressionExperiment ee;
+        ExperimentalDesign experimentalDesign;
         if ( StringUtils.isNotBlank( idstr ) ) {
             try {
                 Long id = Long.parseLong( idstr );
@@ -515,7 +429,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         request.setAttribute( "id", designId );
 
         ee = expressionExperimentService.thawLite( ee );
-        
+
         // strip white spaces
         String desc = ee.getDescription();
         ee.setDescription( StringUtils.strip( desc ) );
@@ -531,25 +445,21 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         return mnv;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#updateBioMaterials(java.util.Collection
-     * )
-     */
     @Override
     public void updateBioMaterials( BioMaterialValueObject[] bmvos ) {
 
-        if ( bmvos == null || bmvos.length == 0 ) return;
+        if ( bmvos == null || bmvos.length == 0 )
+            return;
 
         Collection<BioMaterial> biomaterials = bioMaterialService.updateBioMaterials( Arrays.asList( bmvos ) );
 
-        if ( biomaterials.isEmpty() ) return;
+        if ( biomaterials.isEmpty() )
+            return;
 
         BioMaterial bm = biomaterials.iterator().next();
         ExpressionExperiment ee = expressionExperimentService.findByBioMaterial( bm );
-        if ( ee == null ) throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
+        if ( ee == null )
+            throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
 
         ee = expressionExperimentService.thawLite( ee );
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
@@ -590,17 +500,11 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#updateExperimentalFactors(java.util
-     * .Collection)
-     */
     @Override
     public void updateExperimentalFactors( ExperimentalFactorValueObject[] efvos ) {
 
-        if ( efvos == null || efvos.length == 0 ) return;
+        if ( efvos == null || efvos.length == 0 )
+            return;
 
         for ( ExperimentalFactorValueObject efvo : efvos ) {
             ExperimentalFactor ef = experimentalFactorService.load( efvo.getId() );
@@ -608,7 +512,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ef.setDescription( efvo.getDescription() );
 
             FactorType newType = FactorType.fromString( efvo.getType() );
-            if ( !newType.equals( ef.getType() ) ) {
+            if ( newType == null || !newType.equals( ef.getType() ) ) {
                 // we only allow this if there are no factors
                 if ( ef.getFactorValues().isEmpty() ) {
                     ef.setType( newType );
@@ -639,49 +543,21 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ef.setCategory( vc );
 
             experimentalFactorService.update( ef );
-
-            /*
-             * TODO: we might want to update the Category on the matching FactorValues (that use the original category).
-             * The following code should do this, but is commented out until we evaluate the implications. See bug 1676.
-             */
-            // if ( !originalCategoryUri.equals( vc.getCategoryUri() ) ) {
-            // for ( FactorValue fv : ef.getFactorValues() ) {
-            // for ( Characteristic c : fv.getCharacteristics() ) {
-            // if ( c instanceof VocabCharacteristic
-            // && ( ( VocabCharacteristic ) c ).getCategoryUri().equals( originalCategoryUri ) ) {
-            // c.setCategory( vc.getCategory() );
-            // ( ( VocabCharacteristic ) c ).setCategoryUri( vc.getCategoryUri() );
-            // characteristicService.update( c );
-            // }
-            // }
-            // }
-            // }
         }
 
         ExperimentalFactor ef = experimentalFactorService.load( efvos[0].getId() );
         ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
-        // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class, "ExperimentalFactors updated",
-        // StringUtils.join( efvos, "\n" ) );
-        if ( ee == null ) throw new IllegalArgumentException( "No experiment for factor: " + ef );
+        if ( ee == null )
+            throw new IllegalArgumentException( "No experiment for factor: " + ef );
         this.experimentReportService.evictFromCache( ee.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.expression.experiment.ExperimentalDesignController#updateFactorValueCharacteristics
-     * (java.util.Collection)
-     */
     @Override
     public void updateFactorValueCharacteristics( FactorValueValueObject[] fvvos ) {
 
-        if ( fvvos == null || fvvos.length == 0 ) return;
+        if ( fvvos == null || fvvos.length == 0 )
+            return;
 
-        /*
-         * TODO have this use the same code in CharacteristicBrowserController.updateCharacteristics, probably moving
-         * that code to CharacteristicService.
-         */
         for ( FactorValueValueObject fvvo : fvvos ) {
 
             Long fvID = fvvo.getId();
@@ -719,8 +595,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 }
 
                 if ( !fv.getCharacteristics().contains( c ) ) {
-                    throw new IllegalArgumentException( "Characteristic with id=" + charId
-                            + " does not belong to factorvalue with id=" + fvID );
+                    throw new IllegalArgumentException(
+                            "Characteristic with id=" + charId + " does not belong to factorvalue with id=" + fvID );
                 }
 
             } else {
@@ -775,19 +651,17 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     }
 
     private Characteristic createTemplateCharacteristic( Characteristic source ) {
-        Characteristic template = ( source instanceof VocabCharacteristic ) ? VocabCharacteristic.Factory.newInstance()
-                : Characteristic.Factory.newInstance();
+        Characteristic template = ( source instanceof VocabCharacteristic ) ?
+                VocabCharacteristic.Factory.newInstance() :
+                Characteristic.Factory.newInstance();
         template.setCategory( source.getCategory() );
         if ( source instanceof VocabCharacteristic ) {
-            ( ( VocabCharacteristic ) template ).setCategoryUri( ( ( VocabCharacteristic ) source ).getCategoryUri() );
+            template.setCategoryUri( source.getCategoryUri() );
         }
         template.setEvidenceCode( GOEvidenceCode.IEA ); // automatically added characteristic
         return template;
     }
 
-    /**
-     * @param toDelete
-     */
     private void delete( Collection<ExperimentalFactor> toDelete ) {
         for ( ExperimentalFactor factorRemove : toDelete ) {
             experimentalFactorService.delete( factorRemove );
@@ -797,8 +671,6 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ExpressionExperiment ee = expressionExperimentService.findByFactor( ef );
 
             if ( ee != null ) {
-                // this.auditTrailService.addUpdateEvent( ee, ExperimentalDesignEvent.class,
-                // "ExperimentalFactor deleted: " + ef.getName(), ef.toString() );
                 this.experimentReportService.evictFromCache( ee.getId() );
             }
         }
