@@ -18,21 +18,20 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.AbstractDao;
 import ubic.gemma.util.BusinessKey;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
@@ -40,7 +39,7 @@ import ubic.gemma.util.BusinessKey;
 @Repository
 public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> implements ExperimentalFactorDao {
 
-    private static Log log = LogFactory.getLog( ExperimentalFactorDaoImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ExperimentalFactorDaoImpl.class.getName() );
 
     @Autowired
     public ExperimentalFactorDaoImpl( SessionFactory sessionFactory ) {
@@ -50,21 +49,11 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
 
     @Override
     public ExperimentalFactor load( Long id ) {
-        return ( ExperimentalFactor ) this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "select ef from ExperimentalFactorImpl ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
+        return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
+                "select ef from ExperimentalFactorImpl ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
                 .setParameter( "id", id ).uniqueResult();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#find(ubic.gemma.model.expression.experiment.
-     * ExperimentalFactor)
-     */
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
 
@@ -77,8 +66,9 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
         if ( results != null ) {
             if ( results.size() > 1 ) {
 
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
-                        + ExperimentalFactor.class.getName() + "s were found when executing query" );
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        results.size() + " " + ExperimentalFactor.class.getName()
+                                + "s were found when executing query" );
 
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
@@ -88,13 +78,6 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#findOrCreate(ubic.gemma.model.expression.experiment
-     * .ExperimentalFactor)
-     */
     @Override
     public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor ) {
         ExperimentalFactor existing = this.find( experimentalFactor );

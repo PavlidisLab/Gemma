@@ -1392,7 +1392,7 @@ public class ExpressionExperimentController {
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
-                eeVOsToKeep = returnTroubled( eeValObjectCol );
+                eeVOsToKeep = returnTroubled( eeValObjectCol, true );
                 break;
             case 6:
                 eesToKeep = expressionExperimentService.loadLackingFactors();
@@ -1420,16 +1420,15 @@ public class ExpressionExperimentController {
             case 12:
                 eeVOsToKeep = returnNeedsAttention( eeValObjectCol );
                 break;
+            case 13:
+                eeVOsToKeep = returnTroubled( eeValObjectCol, false );
+                break;
             default:
                 throw new IllegalArgumentException( "Unknown filter: " + filter );
 
         }
 
         assert eesToKeep == null || eesToKeep.size() <= eeValObjectCol.size();
-
-        /*
-         * TODO support more filters, and use an enumeration.
-         */
 
         // get corresponding value objects from collection param
         if ( eesToKeep != null ) {
@@ -1512,10 +1511,6 @@ public class ExpressionExperimentController {
         List<ExpressionExperimentValueObject> eeValObjectCol;
 
         Integer limitToUse = limit;
-        if ( filter != null && filter > 0 ) {
-            // if using a filter, need to load all to guarantee we'll have enough post filtering
-            limitToUse = null;
-        }
 
         // taxon specific?
         if ( taxonId != null && taxonId > 0 ) {
@@ -1803,18 +1798,22 @@ public class ExpressionExperimentController {
     }
 
     /**
-     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for which it is true
+     * Read the troubled flag in each ExpressionExperimentValueObject and return only those object for which it is equal
+     * to the shouldBeTroubled parameter.
+     *
+     * @param shouldBeTroubled set to true if the filter should keep the EEVOs that are troubled, or false to keep only
+     *                         the not-troubled ones.
      */
-    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> ees ) {
-        List<ExpressionExperimentValueObject> troubled = new ArrayList<>();
+    private List<ExpressionExperimentValueObject> returnTroubled( Collection<ExpressionExperimentValueObject> eevos, boolean shouldBeTroubled ) {
+        List<ExpressionExperimentValueObject> filtered = new ArrayList<>();
 
-        for ( ExpressionExperimentValueObject eevo : ees ) {
-            if ( eevo.getTroubled() ) {
-                troubled.add( eevo );
+        for ( ExpressionExperimentValueObject eevo : eevos ) {
+            if ( eevo.getTroubled() == shouldBeTroubled ) {
+                filtered.add( eevo );
             }
         }
 
-        return troubled;
+        return filtered;
     }
 
     /**
