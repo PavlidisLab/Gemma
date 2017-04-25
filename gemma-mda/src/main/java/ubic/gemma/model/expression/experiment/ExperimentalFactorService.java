@@ -24,59 +24,40 @@ import org.springframework.security.access.annotation.Secured;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface ExperimentalFactorService {
 
-    public static final String BATCH_FACTOR_NAME_PREFIX = "Batch_";
+    String BATCH_FACTOR_NAME_PREFIX = "Batch_";
 
-    public static final String BATCH_FACTOR_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0005067"; // block aka batch
+    String BATCH_FACTOR_CATEGORY_URI = "http://www.ebi.ac.uk/efo/EFO_0005067"; // block aka batch
 
-    public static final String BATCH_FACTOR_CATEGORY_NAME = "block";
+    String BATCH_FACTOR_CATEGORY_NAME = "block";
 
-    public static final String BATCH_FACTOR_NAME = "batch";
-    public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
+    String BATCH_FACTOR_NAME = "batch";
+    String FACTOR_VALUE_RNAME_PREFIX = "fv_";
 
     /**
      * Delete the factor, its associated factor values and all differential expression analyses in which it is used.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void delete( ExperimentalFactor experimentalFactor );
+    void delete( ExperimentalFactor experimentalFactor );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExperimentalFactor find( ExperimentalFactor experimentalFactor );
+    ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
+    ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExperimentalFactor load( java.lang.Long id );
+    ExperimentalFactor load( java.lang.Long id );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExperimentalFactor> load( Collection<Long> ids );
+    Collection<ExperimentalFactor> load( Collection<Long> ids );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExperimentalFactor> loadAll();
+    Collection<ExperimentalFactor> loadAll();
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ExperimentalFactor experimentalFactor );
+    void update( ExperimentalFactor experimentalFactor );
 
 }
