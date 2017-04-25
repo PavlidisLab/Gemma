@@ -324,11 +324,6 @@ DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch = f
    dwr.engine._execute( DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
       'getDifferentialExpressionWithoutBatch', p0, p1, p2, callback );
 };
-DifferentialExpressionSearchController.getDiffExpressionForGenes = function( p0, callback ) {
-   googleAnalyticsTrackPageviewIfConfigured( "/Gemma/DifferentialExpressionSearchController/getDiffExpressionForGenes" );
-   dwr.engine._execute( DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-      'getDiffExpressionForGenes', p0, callback );
-};
 DifferentialExpressionSearchController.getFactors = function( p0, callback ) {
    dwr.engine._execute( DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
       'getFactors', p0, callback );

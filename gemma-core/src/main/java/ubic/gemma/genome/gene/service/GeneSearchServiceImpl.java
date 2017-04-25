@@ -24,14 +24,7 @@ import gemma.gsec.util.SecurityUtil;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -71,7 +64,7 @@ import ubic.gemma.search.SearchService;
 @Service
 public class GeneSearchServiceImpl implements GeneSearchService {
 
-    private static Log log = LogFactory.getLog( GeneSearchServiceImpl.class );
+    private static final Log log = LogFactory.getLog( GeneSearchServiceImpl.class );
 
     private static final int MAX_GENES_PER_QUERY = 1000;
 
@@ -167,9 +160,9 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         }
 
         Collection<SearchResultDisplayObject> genes = new ArrayList<>();
-        Collection<SearchResultDisplayObject> geneSets = new ArrayList<>();
+        Collection<SearchResultDisplayObject> geneSets;
 
-        Map<Long, Boolean> isSetOwnedByUser = new HashMap<Long, Boolean>();
+        Map<Long, Boolean> isSetOwnedByUser = new HashMap<>();
 
         if ( taxon != null ) { // filter search results by taxon
 
@@ -203,8 +196,8 @@ public class GeneSearchServiceImpl implements GeneSearchService {
                 genes.add( new SearchResultDisplayObject( sr ) );
             }
 
-            geneSets = new ArrayList<SearchResultDisplayObject>();
-            SearchResultDisplayObject srdo = null;
+            geneSets = new ArrayList<>();
+            SearchResultDisplayObject srdo;
             for ( SearchResult sr : geneSetSearchResults ) {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
                 isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
@@ -235,7 +228,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             return displayResults;
         }
 
-        List<SearchResultDisplayObject> goSRDOs = new ArrayList<>();
+        List<SearchResultDisplayObject> goSRDOs;
         // get GO group results
         log.debug( "Getting GO group results for " + query );
         goSRDOs = getGOGroupResults( query, taxon, MAX_GO_TERMS_TO_PROCESS, MAX_GO_GROUP_SIZE );
@@ -274,10 +267,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return displayResults;
     }
 
-    /**
-     * @param geneSets
-     * @param isSetOwnedByUser
-     */
     private void setUserOwnedForGeneSets( Collection<SearchResultDisplayObject> geneSets,
             Map<Long, Boolean> isSetOwnedByUser ) {
         if ( SecurityUtil.isUserLoggedIn() ) {
@@ -289,33 +278,23 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         }
     }
 
-    /**
-     * @param taxonId
-     * @param geneSetSearchResults
-     * @param isSetOwnedByUser
-     * @return
-     */
+
     private List<SearchResult> retainGeneSetsOfThisTaxon( Long taxonId, List<SearchResult> geneSetSearchResults,
             Map<Long, Boolean> isSetOwnedByUser ) {
-        List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
+        List<SearchResult> taxonCheckedSets = new ArrayList<>();
         for ( SearchResult sr : geneSetSearchResults ) {
             GeneSet gs = ( GeneSet ) sr.getResultObject();
             GeneSetValueObject gsvo = geneSetValueObjectHelper.convertToValueObject( gs );
 
             isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ) );
 
-            if ( gsvo.getTaxonId() == taxonId ) {
+            if ( Objects.equals( gsvo.getTaxonId(), taxonId ) ) {
                 taxonCheckedSets.add( sr );
             }
         }
         return taxonCheckedSets;
     }
 
-    /**
-     * @param taxonId
-     * @param geneSearchResults
-     * @return
-     */
     private List<SearchResult> retainGenesOfThisTaxon( Long taxonId, List<SearchResult> geneSearchResults ) {
         List<SearchResult> taxonCheckedGenes = new ArrayList<>();
         for ( SearchResult sr : geneSearchResults ) {
@@ -329,13 +308,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     /**
      * updates goSets & goSRDOs with GO results
-     * 
-     * @param query
-     * @param taxon
-     * @param maxGoTermsProcessed
-     * @param maxGeneSetSize
-     * @param goSets
-     * @param goSRDOs
+     *
      */
     private List<SearchResultDisplayObject> getGOGroupResults( String query, Taxon taxon, Integer maxGoTermsProcessed,
             Integer maxGeneSetSize ) {
@@ -414,10 +387,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return goSRDOs;
     }
 
-    /**
-     * @param gs
-     * @return
-     */
     private Collection<GeneSet> organizeMultiTaxaSetIntoTaxonSpecificSets( GeneSet gs ) {
 
         HashMap<Long, GeneSet> taxonToGeneSetMap = new HashMap<>();
@@ -451,12 +420,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
     /**
      * updates goSets & goSRDOs with GO results
-     * 
-     * @param query
-     * @param taxon
-     * @param maxGoTermsProcessed
-     * @param goSets
-     * @param goSRDOs
+     *
      */
     private List<SearchResultDisplayObject> getPhenotypeAssociationSearchResults( String query, Taxon taxon ) {
 
@@ -480,16 +444,15 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     /**
      * Get all genes that are associated with phenotypes that match the query string param. If taxon is not specified
      * (null), genes of all taxa will be returned. FIXME not used?
-     * 
-     * @param phenptypeQuery
+     *
      * @param taxon can be null
      * @deprecated not used
      */
     @Deprecated
     @Override
     public Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon ) {
-        Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<Taxon>();
-        Collection<Gene> genes = new ArrayList<Gene>();
+        Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();
+        Collection<Gene> genes = new ArrayList<>();
         // if taxon isn't set, get go groups for each possible taxon
         if ( taxon == null ) {
             taxaForPhenotypeAssoc.addAll( taxonService.loadAllTaxaWithGenes() );
@@ -515,8 +478,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     /**
      * Get all genes that belong to GO groups that match the query string param. If taxon is not specified (null), genes
      * of all taxa will be returned.
-     * 
-     * @param GO Query
+     *
      * @param taxon can be null
      */
     @Override
@@ -524,7 +486,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<Taxon> taxaForPhenotypeAssoc = new ArrayList<>();
-        Collection<Gene> genes = new ArrayList<Gene>();
+        Collection<Gene> genes = new ArrayList<>();
         // if taxon isn't set, get go groups for each possible taxon
         if ( taxon == null ) {
             taxaForPhenotypeAssoc.addAll( taxonService.loadAllTaxaWithGenes() );
@@ -548,35 +510,20 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return genes;
     }
 
-    /**
-     * @param goSet
-     * @param query
-     * @param taxonForGo
-     * @return
-     */
+
     private SearchResultDisplayObject makeGoGroupSearchResult( GeneSet goSet, String goId, String query,
             Taxon taxonForGo ) {
         GOGroupValueObject ggvo = geneSetValueObjectHelper.convertToGOValueObject( goSet, goId, query );
         return getSearchResultForSessionBoundGroupValueObject( taxonForGo, ggvo );
     }
 
-    /**
-     * @param geneSet
-     * @param query
-     * @param taxonForGS
-     * @return
-     */
     private SearchResultDisplayObject makePhenotypeAssociationGroupSearchResult( GeneSetValueObject geneSet,
             String query, Taxon taxonForGS ) {
         PhenotypeGroupValueObject pgvo = PhenotypeGroupValueObject.convertFromGeneSetValueObject( geneSet, query );
         return getSearchResultForSessionBoundGroupValueObject( taxonForGS, pgvo );
     }
 
-    /**
-     * @param taxonForGS
-     * @param pgvo
-     * @return
-     */
+
     private SearchResultDisplayObject getSearchResultForSessionBoundGroupValueObject( Taxon taxonForGS,
             SessionBoundGeneSetValueObject sbgsvo ) {
 
@@ -599,14 +546,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     /**
      * Get a list of SearchResultDisplayObjects that summarise all the results found (one per taxon), so at front end
      * user can "select all"
-     * 
-     * @param query
-     * @param genes
-     * @param geneSets
-     * @param goSRDOs
-     * @param phenotypeSRDOs
-     * @param taxon1
-     * @return
+     *
      */
     private List<SearchResultDisplayObject> addEntryForAllResults( String query,
             Collection<SearchResultDisplayObject> genes, Collection<SearchResultDisplayObject> geneSets,
@@ -650,7 +590,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             // make an entry for each taxon
 
-            Long taxonId = null;
+            Long taxonId;
             Taxon taxon;
             for ( Map.Entry<Long, Set<Long>> entry : geneIdsByTaxonId.entrySet() ) {
                 taxonId = entry.getKey();
@@ -670,10 +610,6 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return summaryResultEntries;
     }
 
-    /**
-     * @param searchResultDisplayObject
-     * @param geneIdsByTaxonId
-     */
     private void updateGeneIdsByTaxonId( Collection<SearchResultDisplayObject> searchResultDisplayObject,
             Map<Long, Set<Long>> geneIdsByTaxonId ) {
         for ( SearchResultDisplayObject srdo : searchResultDisplayObject ) {
@@ -702,8 +638,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     /**
      * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent session-bound
      * sets called by ubic.gemma.web.controller.genome.gene.GenePickerController.searchGenesAndGeneGroups(String, Long)
-     * 
-     * @param taxonId
+     *
      * @return Collection<SearchResultDisplayObject>
      */
     private Collection<SearchResultDisplayObject> searchGenesAndGeneGroupsBlankQuery( Long taxonId ) {
@@ -751,7 +686,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         // separate these out because they go at the top of the list
         List<SearchResultDisplayObject> displayResultsPrivate = new ArrayList<>();
         List<SearchResultDisplayObject> displayResultsPublic = new ArrayList<>();
-        SearchResultDisplayObject newSRDO = null;
+        SearchResultDisplayObject newSRDO;
 
         List<DatabaseBackedGeneSetValueObject> valueObjects = geneSetValueObjectHelper.convertToLightValueObjects(
                 sets, false );
@@ -806,7 +741,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
             }
         }
 
-        return new HashSet<GeneValueObject>();
+        return new HashSet<>();
 
     }
 
@@ -814,15 +749,13 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      * 
      * @param query A list of gene names (symbols), one per line.
-     * @param taxonId
      * @return collection of gene value objects
-     * @throws IOException
      */
     @Override
     public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException {
 
         BufferedReader reader = new BufferedReader( new StringReader( query ) );
-        String line = null;
+        String line;
         Collection<String> queries = new ArrayList<>();
         while ( ( line = reader.readLine() ) != null ) {
             if ( StringUtils.isBlank( line ) ) continue;
@@ -841,9 +774,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      * 
      * @param query A list of gene names (symbols), one per line.
-     * @param taxonId
      * @return map with each gene-query as a key (toLowerCase()) and a collection of the search-results as the value
-     * @throws IOException
      */
     @Override
     public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )

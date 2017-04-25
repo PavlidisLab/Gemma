@@ -18,19 +18,11 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
@@ -45,12 +37,7 @@ import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -58,18 +45,17 @@ import ubic.gemma.tasks.visualization.DifferentialExpressionSearchTaskCommand;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import java.util.*;
+
 /**
  * A controller used to get differential expression analysis and meta analysis results.
- * 
+ *
  * @author keshav
- * @version $Id$ *
  */
 @Controller
 public class DifferentialExpressionSearchController {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionSearchController.class.getName() );
-
-    private static final int MAX_GENES_PER_QUERY = 20;
+    private static final Log log = LogFactory.getLog( DifferentialExpressionSearchController.class.getName() );
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -77,10 +63,8 @@ public class DifferentialExpressionSearchController {
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
     @Autowired
     private GeneService geneService;
-
     @Autowired
     private GeneSetService geneSetService;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
@@ -91,10 +75,6 @@ public class DifferentialExpressionSearchController {
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned.
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
      */
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
 
@@ -104,10 +84,6 @@ public class DifferentialExpressionSearchController {
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned.
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
      */
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
             Integer limit ) {
@@ -125,10 +101,6 @@ public class DifferentialExpressionSearchController {
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned. This method is just like getDifferentialExpression but any analyses
      * with the 'batch' factor are filtered out because they are not biologically relevant
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
      */
     public Collection<DifferentialExpressionValueObject> getDifferentialExpressionWithoutBatch( Long geneId,
             double threshold, Integer limit ) {
@@ -151,91 +123,8 @@ public class DifferentialExpressionSearchController {
     }
 
     /**
-     * AJAX entry. Returns the meta-analysis results.
-     * <p>
-     * Gets the differential expression results for the genes in {@link DiffExpressionSearchCommand}.
-     * 
-     * @param command
-     * @return <p>
-     *         FIXME is this actually used?
-     */
-    public Collection<DifferentialExpressionMetaAnalysisValueObject> getDiffExpressionForGenes(
-            DiffExpressionSearchCommand command ) {
-
-        Collection<Long> eeScopeIds = command.getEeIds();
-        int eeScopeSize = 0;
-
-        if ( eeScopeIds != null && !eeScopeIds.isEmpty() ) {
-
-            // do we need to validate these ids further? It should get checked late (in the analysis stage)
-
-            eeScopeSize = eeScopeIds.size();
-        } else {
-            if ( command.getEeSetName() != null ) {
-                Collection<ExpressionExperimentSet> eeSet = this.expressionExperimentSetService.findByName( command
-                        .getEeSetName() );
-
-                if ( eeSet == null || eeSet.isEmpty() ) {
-                    throw new IllegalArgumentException( "Unknown or ambiguous set name: " + command.getEeSetName() );
-                }
-
-                eeScopeSize = eeSet.iterator().next().getExperiments().size();
-            } else {
-                Long eeSetId = command.getEeSetId();
-                if ( eeSetId >= 0 ) {
-                    ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
-                    // validation/security check.
-                    if ( eeSet == null ) {
-                        throw new IllegalArgumentException( "No such set with id=" + eeSetId );
-                    }
-                    eeScopeSize = eeSet.getExperiments().size();
-                }
-            }
-
-        }
-
-        Collection<Long> geneIds = command.getGeneIds();
-
-        if ( geneIds.size() > MAX_GENES_PER_QUERY ) {
-            throw new IllegalArgumentException( "Too many genes selected, please limit searches to "
-                    + MAX_GENES_PER_QUERY );
-        }
-
-        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = command.getSelectedFactors();
-
-        double threshold = command.getThreshold();
-
-        Collection<DifferentialExpressionMetaAnalysisValueObject> mavos = new ArrayList<DifferentialExpressionMetaAnalysisValueObject>();
-        for ( long geneId : geneIds ) {
-            DifferentialExpressionMetaAnalysisValueObject mavo = getDifferentialExpressionMetaAnalysis( geneId,
-                    selectedFactors, threshold );
-
-            if ( mavo == null ) {
-                continue; // no results.
-            }
-
-            mavo.setSortKey();
-            if ( selectedFactors != null && !selectedFactors.isEmpty() ) {
-                mavo.setNumSearchedExperiments( selectedFactors.size() );
-            }
-
-            mavo.setNumExperimentsInScope( eeScopeSize );
-
-            mavos.add( mavo );
-
-        }
-
-        return mavos;
-    }
-
-    /**
      * AJAX entry.
-     * <p>
      * Value objects returned contain experiments that have 2 factors and have had the diff analysis run on it.
-     * <p>
-     * FIXME Is this actually used?
-     * 
-     * @param eeIds
      */
     public Collection<ExpressionExperimentExperimentalFactorValueObject> getFactors( final Collection<Long> eeIds ) {
 
@@ -247,10 +136,10 @@ public class DifferentialExpressionSearchController {
             return result;
         }
 
-        log.debug( "Getting factors for experiments with ids: "
-                + StringUtils.abbreviate( securityFilteredIds.toString(), 100 ) );
+        log.debug( "Getting factors for experiments with ids: " + StringUtils
+                .abbreviate( securityFilteredIds.toString(), 100 ) );
 
-        Collection<Long> filteredEeIds = new HashSet<Long>();
+        Collection<Long> filteredEeIds = new HashSet<>();
 
         Map<Long, Collection<DifferentialExpressionAnalysis>> diffAnalyses = differentialExpressionAnalysisService
                 .findByInvestigationIds( securityFilteredIds );
@@ -260,10 +149,10 @@ public class DifferentialExpressionSearchController {
             return result;
         }
 
-        Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService.loadValueObjects(
-                diffAnalyses.keySet(), false );
+        Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
+                .loadValueObjects( diffAnalyses.keySet(), false );
 
-        Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<Long, ExpressionExperimentValueObject>();
+        Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             eevoMap.put( eevo.getId(), eevo );
         }
@@ -275,7 +164,7 @@ public class DifferentialExpressionSearchController {
             for ( DifferentialExpressionAnalysis analysis : analyses ) {
                 differentialExpressionAnalysisService.thaw( analysis );
 
-                Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+                Collection<ExperimentalFactor> factors = new HashSet<>();
                 for ( FactorAssociatedAnalysisResultSet fars : analysis.getResultSets() ) {
                     // FIXME includes factors making up interaction terms, but shouldn't
                     // matter, because they will be included as main effects too. If not, this will be wrong!
@@ -296,36 +185,33 @@ public class DifferentialExpressionSearchController {
                 result.add( eeefvo );
             }
         }
-        log.info( "Filtered experiments.  Returning factors for experiments with ids: "
-                + StringUtils.abbreviate( filteredEeIds.toString(), 100 ) );
+        log.info( "Filtered experiments.  Returning factors for experiments with ids: " + StringUtils
+                .abbreviate( filteredEeIds.toString(), 100 ) );
         return result;
     }
 
     /**
      * AJAX - method used for main display metaheatmap.
-     * 
-     * @param taxonId
-     * @param datasetsetFValueObject
-     * @param geneSetValueObject
-     * @return
      */
+    @SuppressWarnings("unused") //used in js DiffExSearchAndVisualize
     public String scheduleDiffExpSearchTask( Long taxonId, ExpressionExperimentSetValueObject eevo,
             GeneSetValueObject gsvo ) {
 
         log.info( "Starting gene x condition search..." );
         // Load experiments
-        Collection<ExpressionExperimentValueObject> experiments = new ArrayList<>();
+        Collection<ExpressionExperimentValueObject> experiments;
         List<String> datasetGroupNames = new ArrayList<>();
         if ( eevo.getExpressionExperimentIds().isEmpty() ) {
             if ( eevo.getId() != null ) {
                 experiments = expressionExperimentSetService.getExperimentValueObjectsInSet( eevo.getId() );
             } else if ( eevo.getName() != null ) {
-                Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService.findByName( eevo.getName() );
+                Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService
+                        .findByName( eevo.getName() );
                 if ( eesets.isEmpty() || eesets.size() > 1 ) {
                     throw new IllegalArgumentException( "Experiment set not found by name=" + eevo.getName() );
                 }
-                experiments = expressionExperimentSetService.getExperimentValueObjectsInSet( eesets.iterator().next()
-                        .getId() );
+                experiments = expressionExperimentSetService
+                        .getExperimentValueObjectsInSet( eesets.iterator().next().getId() );
 
             } else {
                 throw new IllegalArgumentException(
@@ -338,7 +224,7 @@ public class DifferentialExpressionSearchController {
         datasetGroupNames.add( eevo.getName() );
 
         // Load genes
-        Collection<GeneValueObject> genes = new ArrayList<>();
+        Collection<GeneValueObject> genes;
         if ( gsvo.getGeneIds().isEmpty() ) {
             genes = geneSetService.getGenesInGroup( gsvo );
         } else {
@@ -359,11 +245,6 @@ public class DifferentialExpressionSearchController {
 
     /**
      * Returns the results of the meta-analysis.
-     * 
-     * @param geneId
-     * @param selectedFactors
-     * @param threshold
-     * @return
      */
     private DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( Long geneId,
             Collection<DiffExpressionSelectedFactorCommand> selectedFactors, double threshold ) {
@@ -384,22 +265,23 @@ public class DifferentialExpressionSearchController {
         }
 
         /* the 'chosen' factors (and their associated experiments) */
-        Map<Long, Long> eeFactorsMap = new HashMap<Long, Long>();
+        Map<Long, Long> eeFactorsMap = new HashMap<>();
         for ( DiffExpressionSelectedFactorCommand selectedFactor : selectedFactors ) {
             Long eeId = selectedFactor.getEeId();
             eeFactorsMap.put( eeId, selectedFactor.getEfId() );
-            if ( log.isDebugEnabled() ) log.debug( eeId + " --> " + selectedFactor.getEfId() );
+            if ( log.isDebugEnabled() )
+                log.debug( eeId + " --> " + selectedFactor.getEfId() );
         }
 
         /*
          * filter experiments that had the diff cli run on it and are in the scope of eeFactorsMap eeIds
          * (active/available to the user).
          */
-        Collection<BioAssaySet> activeExperiments = null;
+        Collection<BioAssaySet> activeExperiments;
         if ( eeFactorsMap.keySet() == null || eeFactorsMap.isEmpty() ) {
             activeExperiments = experimentsAnalyzed;
         } else {
-            activeExperiments = new ArrayList<BioAssaySet>();
+            activeExperiments = new ArrayList<>();
             for ( BioAssaySet ee : experimentsAnalyzed ) {
                 if ( eeFactorsMap.keySet().contains( ee.getId() ) ) {
                     activeExperiments.add( ee );
@@ -412,23 +294,17 @@ public class DifferentialExpressionSearchController {
                     "No results were found: none of the experiments selected analyzed those genes" );
         }
 
-        DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
+        return geneDifferentialExpressionService
                 .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
-
-        return mavo;
     }
 
-    /**
-     * @param ids
-     * @return
-     */
     private Collection<ExpressionExperimentValueObject> loadExperimentsByIds( Collection<Long> ids ) {
         if ( ids.isEmpty() ) {
             throw new IllegalArgumentException( "No ids were provided" );
         }
 
-        Collection<ExpressionExperimentValueObject> experiments = expressionExperimentService.loadValueObjects( ids,
-                false );
+        Collection<ExpressionExperimentValueObject> experiments = expressionExperimentService
+                .loadValueObjects( ids, false );
 
         if ( experiments.isEmpty() ) {
             throw new EntityNotFoundException( "Could not access any experiments for " + ids.size() + " ids" );
@@ -437,17 +313,13 @@ public class DifferentialExpressionSearchController {
         return experiments;
     }
 
-    /**
-     * @param ids
-     * @return
-     */
     private Collection<Long> securityFilterExpressionExperimentIds( Collection<Long> ids ) {
         /*
          * Because this method returns the results, we have to screen.
          */
         Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
 
-        Collection<Long> filteredIds = new HashSet<Long>();
+        Collection<Long> filteredIds = new HashSet<>();
         for ( ExpressionExperiment ee : securityScreened ) {
             filteredIds.add( ee.getId() );
         }
