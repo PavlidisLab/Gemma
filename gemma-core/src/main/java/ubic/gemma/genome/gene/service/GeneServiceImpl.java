@@ -465,6 +465,7 @@ public class GeneServiceImpl implements GeneService {
         gvo.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
+        geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
 
         gvo.setHomologues( homologues );
@@ -508,7 +509,7 @@ public class GeneServiceImpl implements GeneService {
     @Transactional(readOnly = true)
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         Gene gene = load( geneId );
-
+        gene = thaw( gene );
         GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
         GeneValueObject details = new GeneValueObject( initialResult );
 
@@ -528,6 +529,7 @@ public class GeneServiceImpl implements GeneService {
         details.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
         details.setHomologues( homologues );
 

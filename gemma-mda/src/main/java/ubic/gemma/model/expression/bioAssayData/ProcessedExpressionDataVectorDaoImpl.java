@@ -798,7 +798,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         List r = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct e, bad from ExpressionExperiment e, BioAssayDimensionImpl bad"
                         + " inner join e.bioAssays b inner join bad.bioAssays badba where e in (:ees) and b in (badba) " )
-                .setParameter( "ees", ees ).list();
+                .setParameterList( "ees", ees ).list();
 
         for ( Object o : r ) {
             Object[] tup = ( Object[] ) o;

@@ -74,10 +74,11 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
 
         for ( SearchResult sr : geneSearchResults ) {
-            genes.add( ( Gene ) sr.getResultObject() );
-            log.debug( "Gene search result: " + ( ( Gene ) sr.getResultObject() ).getOfficialSymbol() );
+            Gene g = ( Gene ) sr.getResultObject();
+            g = geneService.thaw( g );
+            genes.add( g );
+            log.debug( "Gene search result: " + g.getOfficialSymbol() );
         }
-
         Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;

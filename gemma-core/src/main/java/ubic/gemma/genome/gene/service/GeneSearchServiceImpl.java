@@ -737,6 +737,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
             if ( results != null ) {
+                results = geneService.thawLite( results );
                 return GeneValueObject.convert2ValueObjects( results );
             }
         }

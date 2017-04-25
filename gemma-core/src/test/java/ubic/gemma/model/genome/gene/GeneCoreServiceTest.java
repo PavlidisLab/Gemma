@@ -18,15 +18,9 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Chromosome;
@@ -35,9 +29,13 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 /**
  * @author cmcdonald
- * @version $Id$
  */
 public class GeneCoreServiceTest extends BaseSpringContextTest {
 
@@ -108,7 +106,7 @@ public class GeneCoreServiceTest extends BaseSpringContextTest {
 
         gene = geneDao.create( gene );
 
-        Collection<GeneValueObject> searchResults = geneCoreService.searchGenes( "test_search", 1l );
+        Collection<GeneValueObject> searchResults = geneCoreService.searchGenes( "test_search", 1L );
 
         assertNotNull( searchResults );
 
