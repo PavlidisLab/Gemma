@@ -20,6 +20,7 @@ package ubic.gemma.util;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.util.SecurityUtil;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -87,6 +88,24 @@ public class EntityUtils {
 
         return result;
 
+    }
+
+    /**
+     * @param methodName accessor e.g. "getId"
+     */
+    public static <T> Map<Long, T> getNestedIdMap( Collection<? extends T> entities, String nestedProperty,
+            String methodName ) {
+        Map<Long, T> result = new HashMap<>();
+
+        for ( T object : entities ) {
+            try {
+                result.put( getId( FieldUtils.readField(object, nestedProperty, true), methodName ), object );
+            } catch ( IllegalAccessException e ) {
+                throw new RuntimeException( e );
+            }
+        }
+
+        return result;
     }
 
     /**

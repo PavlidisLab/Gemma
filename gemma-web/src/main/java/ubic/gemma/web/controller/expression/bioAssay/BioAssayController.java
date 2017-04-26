@@ -18,14 +18,13 @@
  */
 package ubic.gemma.web.controller.expression.bioAssay;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -91,8 +90,7 @@ public class BioAssayController {
         // this used to be in a separate method.
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
-
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getIdMap( outliers, "getBioAssayId" );
+        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedIdMap( outliers, "bioAssay", "getId" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 
