@@ -240,7 +240,6 @@
 			<dwr:include method="getDiffExpSearchResult" />
 			<dwr:include method="getDifferentialExpressionWithoutBatch" />
 			<dwr:include method="getDifferentialExpression" />
-			<dwr:include method="getDiffExpressionForGenes" />
 			<dwr:include method="getFactors" />
 		</dwr:remote>
 	</bean>

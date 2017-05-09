@@ -18,14 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.bioAssay;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.OutlierDetails;
 import ubic.gemma.analysis.preprocess.OutlierDetectionService;
@@ -49,9 +40,15 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * @author keshav
- * @version $Id$
  */
 @Controller
 @RequestMapping("/bioAssay")
@@ -75,10 +72,6 @@ public class BioAssayController {
     @Autowired
     private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
-    /**
-     * @param eeId
-     * @return
-     */
     public Collection<BioAssayValueObject> getBioAssays( Long eeId ) {
         ExpressionExperiment ee = eeService.load( eeId );
         if ( ee == null ) {
@@ -91,8 +84,7 @@ public class BioAssayController {
         // this used to be in a separate method.
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
         Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
-
-        Map<Long, OutlierDetails> outlierMap = EntityUtils.getIdMap( outliers, "getBioAssayId" );
+        Map<Long, OutlierDetails> outlierMap = EntityUtils.getNestedIdMap( outliers, "bioAssay", "getId" );
 
         for ( BioAssay assay : ee.getBioAssays() ) {
 
@@ -110,60 +102,16 @@ public class BioAssayController {
         return result;
     }
 
-    // /**
-    // * @param eeId
-    // * @return
-    // * @deprecated
-    // */
-    // public Collection<BioAssayValueObject> getIdentifiedOutliers( Long eeId ) {
-    // if ( eeId == null ) {
-    // log.warn( "No id!" );
-    // return null;
-    // }
-    //
-    // ExpressionExperiment ee = eeService.load( eeId );
-    // if ( ee == null ) {
-    // log.warn( "Could not load experiment with id " + eeId );
-    // return null;
-    // }
-    // ee = eeService.thawLite( ee );
-    // Collection<BioAssayValueObject> result = new HashSet<>();
-    // DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService.findOrCreate( ee );
-    // Collection<OutlierDetails> outliers = outlierDetectionService.identifyOutliers( ee, sampleCorrelationMatrix );
-    //
-    // for ( OutlierDetails details : outliers ) {
-    // BioAssay bioAssay = details.getBioAssay();
-    // bioAssayService.thaw( bioAssay );
-    // BioAssayValueObject bioAssayValueObject = new BioAssayValueObject( bioAssay );
-    // result.add( bioAssayValueObject );
-    // }
-    //
-    // log.debug( "Loaded " + result.size() + " bioassays for experiment ID=" + eeId );
-    //
-    // return result;
-    // }
-
-    /**
-     * AJAX
-     * 
-     * @param id
-     * @return
-     */
     public String markOutlier( Collection<Long> ids ) {
         return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids ) );
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
     @RequestMapping(value = { "/showBioAssay.html", "/" })
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         log.debug( request.getParameter( "id" ) );
 
-        Long id = null;
+        Long id;
 
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
@@ -182,11 +130,6 @@ public class BioAssayController {
         return new ModelAndView( "bioAssay.detail" ).addObject( "bioAssay", new BioAssayValueObject( bioAssay ) );
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
     @RequestMapping("/showAllBioAssays.html")
     public ModelAndView showAllBioAssays( HttpServletRequest request, HttpServletResponse response ) {
         String sId = request.getParameter( "id" );
@@ -198,8 +141,8 @@ public class BioAssayController {
             bioAssays = bioAssayService.loadAll();
         } else {
             String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                Long id = Long.parseLong( idList[i] );
+            for ( String anIdList : idList ) {
+                Long id = Long.parseLong( anIdList );
                 BioAssay bioAssay = bioAssayService.load( id );
                 if ( bioAssay == null ) {
                     throw new EntityNotFoundException( id + " not found" );
@@ -211,12 +154,6 @@ public class BioAssayController {
         return new ModelAndView( "bioAssays" ).addObject( "bioAssays", bioAssays );
     }
 
-    /**
-     * AJAX
-     * 
-     * @param id
-     * @return
-     */
     public String unmarkOutlier( Collection<Long> ids ) {
         return taskRunningService.submitLocalTask( new BioAssayOutlierProcessingTaskCommand( ids, true ) );
     }

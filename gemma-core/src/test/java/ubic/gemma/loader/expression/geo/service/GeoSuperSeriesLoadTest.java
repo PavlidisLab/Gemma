@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2008 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,9 +44,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * This test can fail if there is already data in the system.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
@@ -76,7 +75,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
             try {
                 removeOldData( ee );
             } catch ( Exception e ) {
-
+                log.warn( "Removing expression experiment thew an Exception" );
             }
         }
 
@@ -85,7 +84,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
             try {
                 ees.delete( ee4 );
             } catch ( Exception e ) {
-
+                log.warn( "Removing all expression experiments thew an Exception" );
             }
         }
 
@@ -98,15 +97,12 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
                 adService.remove( a );
             } catch ( Exception e ) {
-
+                log.warn( "Removing all array designs thew an Exception" );
             }
         }
 
     }
 
-    /**
-     * @param ee2
-     */
     private void removeOldData( ExpressionExperiment ee2 ) {
 
         Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee2 );
@@ -123,25 +119,9 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         }
     }
 
-    // @Test
-    // public void testFetchAndLoadSuperSeries() throws Exception {
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal(
-    // getTestFileBasePath( "GSE11897SuperSeriesShort" ) ) );
-    // try {
-    // Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
-    // "GSE11897", false, true, false, false, true, false );
-    // assertEquals( 1, results.size() );
-    // ee = results.iterator().next();
-    // } catch ( AlreadyExistsInSystemException e ) {
-    // ee = ( ExpressionExperiment ) e.getData();
-    // }
-    //
-    // }
-
     /**
      * See bug 2064. GSE14618 is a superseries of GSE14613 and GSE14615
-     * 
-     * @throws Exception
+     *
      */
     @Test
     public void testFetchAndLoadSuperSeriesB() throws Exception {
@@ -151,6 +131,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         ee = ees.findByShortName( "GSE14618" );
         tearDown();
 
+        //noinspection unchecked
         Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
                 "GSE14618", false, true, false, false, true, false );
         assertEquals( 1, results.size() );
@@ -165,7 +146,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
         Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee );
 
-        Collection<ArrayDesign> others = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> others = new HashSet<>();
         others.add( ( ArrayDesign ) arrayDesignsUsed.toArray()[1] );
 
         ArrayDesign arrayDesign = ( ArrayDesign ) arrayDesignsUsed.toArray()[0];

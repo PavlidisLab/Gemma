@@ -53,10 +53,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
    /**
     * The data get from the server is not compatible with flotr out-of-the box. A little transformation is needed.
     * 
-    * @param {}
-    *           data for one record.
-    * @return {}
-    * @overrride
+    * @param data for one record.
     * @memberOf Gemma.DataVectorThumbnailsView
     */
    prepareData : function( data ) {
@@ -101,10 +98,7 @@ Gemma.DataVectorThumbnailsView = Ext.extend( Ext.DataView, {
 
 /**
  * Takes a collection of VisualizationValueObjects, which in turn each contain a collection of GeneExpressionProfiles.
- * 
- * @param {}
- *           data
- * @return {}
+ *
  */
 Gemma.prepareProfiles = function( data ) {
    var preparedData = [];
@@ -125,7 +119,7 @@ Gemma.prepareProfiles = function( data ) {
       var fade = factor < 2;
 
       if ( fade ) {
-         color = color == 'red' ? Gemma.HOT_FADE_COLOR : Gemma.COLD_FADE_COLOR;
+         color = color === 'red' ? Gemma.HOT_FADE_COLOR : Gemma.COLD_FADE_COLOR;
       }
 
       /*
@@ -145,7 +139,7 @@ Gemma.prepareProfiles = function( data ) {
                + Ext.util.Format.ellipsis( gene.officialSymbol, Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR ) + '</a> ';
 
             // put the query gene first.
-            if ( this.queryGene && geneName == this.queryGene ) {
+            if ( this.queryGene && geneName === this.queryGene ) {
                orderedGeneLinksArr.unshift( link );
                orderedGeneNamesArr.unshift( geneName );
             } else {
@@ -171,7 +165,7 @@ Gemma.prepareProfiles = function( data ) {
 
       // Label for the thumbnail legend.
       var pvalueLabel = "";
-      if ( pvalue != undefined ) {
+      if ( pvalue !== undefined ) {
          pvalueLabel = sprintf( "%.2e ", pvalue );
       }
 
@@ -317,15 +311,10 @@ Gemma.HeatmapTemplate = Ext.extend( Ext.XTemplate, {
 
 /**
  * Pick the appropriate template
- * 
- * @param {}
- *           heatmap
- * @param {}
- *           havePvalues
- * @return {}
+ *
  */
 Gemma.getProfileThumbnailTemplate = function( heatmap, havePvalues, smooth, cmpID ) {
-   if ( cmpID == undefined || cmpID === null ) {
+   if ( cmpID === undefined || cmpID === null ) {
       cmpID = '';
    }
    var pvalueString = "";
@@ -737,11 +726,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       }
    },
 
-   /**
-    * 
-    * @param {}
-    *           record
-    */
+
    zoom : function( record ) {
       if ( !record ) {
          return;
@@ -755,12 +740,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       this.zoomPanel.update( eevo, profiles, sampleNames, conditionLabels, conditionLabelKey );
    },
 
-   /**
-    * handler
-    * 
-    * @param {}
-    *           btn
-    */
    toggleForceFit : function( btn ) {
       if ( this.forceFitPlots ) {
          this.forceFitPlots = false;
@@ -778,12 +757,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       this.zoom( record );
    },
 
-   /**
-    * handler
-    * 
-    * @param {}F
-    *           btn
-    */
    toggleSampleNames : function( btn ) {
 
       if ( this.showSampleNames ) {
@@ -806,6 +779,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
 
       this.zoom( record );
    },
+
    toggleLegend : function( btn ) {
       // if (this.heatmapMode) {
       // return;
@@ -832,48 +806,10 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       this.zoom( record );
    },
 
-   /**
-    * Handler
-    * 
-    * @param {}
-    *           btn
-    */
    downloadData : function( btn ) {
       if ( this.downloadLink ) {
          window.open( this.downloadLink );
       }
-   },
-
-   /**
-    * handler
-    * 
-    * @param {}
-    *           btn
-    */
-   toggleSmooth : function( btn ) {
-      // if (this.heatmapMode) {
-      // return;
-      // }
-      //
-      // if (this.smoothLineGraphs) {
-      // this.smoothLineGraphs = false;
-      // this.zoomPanel.smoothLineGraphs = false;
-      // btn.setText("Smooth");
-      // } else {
-      // this.smoothLineGraphs = true;
-      // this.zoomPanel.smoothLineGraphs = true;
-      // btn.setText("Unsmooth");
-      // }
-      //
-      // // force a refresh of the thumbnails.
-      // var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode,
-      // this.havePvalues, this.smoothLineGraphs);
-      // this.dv.setTemplate(template);
-      //
-      // // force a refresh of the zoom.
-      // var record = this.dv.getSelectedOrFirst();
-      //
-      // this.zoom(record);
    },
 
    updateTemplate : function() {
@@ -882,12 +818,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend( Ext.Panel, {
       this.dv.setTemplate( template ); // causes update of thumbnails.
    },
 
-   /**
-    * handler
-    * 
-    * @param {}
-    *           btn
-    */
    switchView : function( btn ) {
       // var smoothBtn = Ext.getCmp(this.smoothBtnId);
       var toggleLegendBtn = this.getBottomToolbar().toggleLegendBtn;

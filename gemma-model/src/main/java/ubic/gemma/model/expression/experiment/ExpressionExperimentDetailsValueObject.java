@@ -295,6 +295,7 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
      * @return html-escaped string with trouble info.
      * @see #getTroubleDetails(boolean)
      */
+    @Override
     public String getTroubleDetails() {
         return this.getTroubleDetails( true );
     }

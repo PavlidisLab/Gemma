@@ -19,20 +19,13 @@
 
 package ubic.gemma.genome.gene.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import ubic.gemma.analysis.service.GeneMultifunctionalityPopulationService;
+import ubic.gemma.apps.MultifunctionalityCli;
 import ubic.gemma.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.association.Gene2GOAssociation;
@@ -46,18 +39,8 @@ import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.RelativeLocationData;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneAlias;
-import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductValueObject;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.*;
+import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
@@ -65,16 +48,18 @@ import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 
+import java.util.*;
+import java.util.Map.Entry;
+
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
- * @see gene.GeneService
+ * @see GeneService
  */
 @Service
 public class GeneServiceImpl implements GeneService {
 
-    private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
     @Autowired
     private AnnotationAssociationService annotationAssociationService;
@@ -171,7 +156,7 @@ public class GeneServiceImpl implements GeneService {
     }
 
     /**
-     * @see GeneService#findByNCBIId(String)
+     * @see GeneService#findByNCBIId(Integer)
      */
     @Override
     public Gene findByNCBIId( Integer accession ) {
@@ -203,11 +188,6 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().findByOfficialName( officialName );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneService#findByOfficialNameInexact(java.lang.String)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
@@ -241,11 +221,6 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.genome.gene.service.GeneService#findByOfficialSymbols(java.util.Collection, java.lang.Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
@@ -260,8 +235,9 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
-        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
-        Collection<AnnotationValueObject> ontos = new HashSet<AnnotationValueObject>();
+        if ( geneId == null )
+            throw new IllegalArgumentException( "Null id for gene" );
+        Collection<AnnotationValueObject> ontos = new HashSet<>();
         Gene g = load( geneId );
 
         if ( g == null ) {
@@ -272,7 +248,8 @@ public class GeneServiceImpl implements GeneService {
 
         for ( Gene2GOAssociation assoc : associations ) {
 
-            if ( assoc.getOntologyEntry() == null ) continue;
+            if ( assoc.getOntologyEntry() == null )
+                continue;
 
             AnnotationValueObject annot = new AnnotationValueObject();
 
@@ -331,19 +308,16 @@ public class GeneServiceImpl implements GeneService {
         return this.getGeneDao().getGenesByTaxon( taxon );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.gene.GeneService#getMaxPhysicalLength(ubic.gemma.model.genome.Gene)
-     */
     @Override
     @Transactional(readOnly = true)
     public PhysicalLocation getMaxPhysicalLength( Gene gene ) {
-        if ( gene == null ) return null;
+        if ( gene == null )
+            return null;
 
         Collection<GeneProduct> gpCollection = gene.getProducts();
 
-        if ( gpCollection == null ) return null;
+        if ( gpCollection == null )
+            return null;
 
         Long minStartNt = Long.MAX_VALUE;
         Long maxEndNt = Long.MIN_VALUE;
@@ -354,13 +328,14 @@ public class GeneServiceImpl implements GeneService {
 
             PhysicalLocation pLoc = gp.getPhysicalLocation();
             if ( pLoc == null ) {
-                log.warn( "No physical location for Gene: " + gene.getOfficialSymbol() + "'s Gene Product: "
-                        + gp.getId() + ". Skipping." );
+                log.warn(
+                        "No physical location for Gene: " + gene.getOfficialSymbol() + "'s Gene Product: " + gp.getId()
+                                + ". Skipping." );
                 continue;
             }
 
             String currentStrand = pLoc.getStrand();
-            Chromosome currentChromosone = pLoc.getChromosome();
+            Chromosome currentChromosome = pLoc.getChromosome();
             Long currentStartNt = pLoc.getNucleotide();
             Long currentEndNt = currentStartNt + pLoc.getNucleotideLength();
 
@@ -369,7 +344,7 @@ public class GeneServiceImpl implements GeneService {
                 minStartNt = currentStartNt;
                 maxEndNt = currentEndNt;
                 strand = currentStrand;
-                chromosome = currentChromosone;
+                chromosome = currentChromosome;
                 continue;
             }
 
@@ -383,17 +358,19 @@ public class GeneServiceImpl implements GeneService {
                 continue;
             }
 
-            if ( !currentChromosone.equals( chromosome ) ) {
+            if ( !currentChromosome.equals( chromosome ) ) {
                 log.warn( "Gene products for " + gene.getOfficialSymbol() + " , Id=" + gene.getId()
-                        + " are on different chromosones. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
+                        + " are on different chromosomes. Unable to compute distance when gene products are on different chromosomes. Skipping Gene product: "
                         + gp.getId() );
 
                 continue;
             }
 
-            if ( currentStartNt < minStartNt ) minStartNt = currentStartNt;
+            if ( currentStartNt < minStartNt )
+                minStartNt = currentStartNt;
 
-            if ( currentEndNt > maxEndNt ) maxEndNt = currentEndNt;
+            if ( currentEndNt > maxEndNt )
+                maxEndNt = currentEndNt;
 
         } // for each gene product
 
@@ -410,12 +387,14 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<GeneProductValueObject> getProducts( Long geneId ) {
-        if ( geneId == null ) throw new IllegalArgumentException( "Null id for gene" );
+        if ( geneId == null )
+            throw new IllegalArgumentException( "Null id for gene" );
         Gene gene = load( geneId );
 
-        if ( gene == null ) throw new IllegalArgumentException( "No gene with id " + geneId );
+        if ( gene == null )
+            throw new IllegalArgumentException( "No gene with id " + geneId );
 
-        Collection<GeneProductValueObject> result = new ArrayList<GeneProductValueObject>();
+        Collection<GeneProductValueObject> result = new ArrayList<>();
         for ( GeneProduct gp : gene.getProducts() ) {
             result.add( new GeneProductValueObject( gp ) );
         }
@@ -424,7 +403,7 @@ public class GeneServiceImpl implements GeneService {
     }
 
     /**
-     * @see GeneService#load(long)
+     * @see GeneService#load(Long)
      */
     @Override
     @Transactional(readOnly = true)
@@ -454,25 +433,23 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public GeneValueObject loadFullyPopulatedValueObject( Long id ) {
-        Collection<Long> ids = new ArrayList<Long>( 1 );
-        ids.add( id );
-        Collection<Gene> gCollection = this.getGeneDao().loadThawed( ids );
-        if ( gCollection == null || gCollection.isEmpty() ) return null;
+        Gene gene = this.getGeneDao().load( id );
+        if ( gene == null ) {
+            return null;
+        }
+        gene = this.getGeneDao().thaw( gene );
 
-        Gene g = gCollection.iterator().next();
+        GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
-        GeneValueObject gvo = GeneValueObject.convert2ValueObjects( gCollection ).iterator().next();
-
-        Collection<GeneAlias> aliasObjs = g.getAliases();
-        Collection<String> aliasStrs = new ArrayList<String>();
+        Collection<GeneAlias> aliasObjs = gene.getAliases();
+        Collection<String> aliasStrs = new ArrayList<>();
         for ( GeneAlias ga : aliasObjs ) {
             aliasStrs.add( ga.getAlias() );
         }
         gvo.setAliases( aliasStrs );
 
-        if ( g.getMultifunctionality() != null ) {
-            gvo.setNumGoTerms( g.getMultifunctionality().getNumGoTerms() );
-            gvo.setMultifunctionalityRank( g.getMultifunctionality().getRank() );
+        if ( gene.getMultifunctionality() != null ) {
+            gvo.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
         }
 
         Long compositeSequenceCount = getCompositeSequenceCountById( id );
@@ -481,19 +458,20 @@ public class GeneServiceImpl implements GeneService {
         Integer platformCount = this.geneDao.getPlatformCountById( id );
         gvo.setPlatformCount( platformCount );
 
-        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( g );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
         gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
 
         gvo.setGeneSets( gsvos );
 
-        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( g );
+        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
+        geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
 
         gvo.setHomologues( homologues );
 
-        Collection<PhenotypeAssociation> phenoAssocs = g.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cvos = new HashSet<CharacteristicValueObject>();
+        Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
+        Collection<CharacteristicValueObject> cvos = new HashSet<>();
         for ( PhenotypeAssociation pa : phenoAssocs ) {
             cvos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
         }
@@ -512,7 +490,7 @@ public class GeneServiceImpl implements GeneService {
             }
         }
 
-        GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( g );
+        GeneCoexpressionNodeDegreeValueObject nodeDegree = coexpressionService.getNodeDegree( gene );
 
         if ( nodeDegree != null ) {
             gvo.setNodeDegreesPos( nodeDegree.asIntArrayPos() );
@@ -531,20 +509,12 @@ public class GeneServiceImpl implements GeneService {
     @Transactional(readOnly = true)
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         Gene gene = load( geneId );
-
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( gene.getId() );
-        Collection<GeneValueObject> initialResults = loadValueObjects( ids );
-
-        if ( initialResults.size() == 0 ) {
-            return null;
-        }
-
-        GeneValueObject initialResult = initialResults.iterator().next();
+        gene = thaw( gene );
+        GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
         GeneValueObject details = new GeneValueObject( initialResult );
 
         Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<String>();
+        Collection<String> aliasStrs = new ArrayList<>();
         for ( GeneAlias ga : aliasObjs ) {
             aliasStrs.add( ga.getAlias() );
         }
@@ -554,11 +524,12 @@ public class GeneServiceImpl implements GeneService {
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
         gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
 
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        geneHomologues = this.thawLite( geneHomologues );
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
         details.setHomologues( homologues );
 
@@ -600,11 +571,11 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public GeneValueObject loadValueObject( Long id ) {
-        Collection<Long> ids = new ArrayList<Long>( 1 );
-        ids.add( id );
-        Collection<Gene> g = this.getGeneDao().loadThawed( ids );
-        if ( g == null || g.isEmpty() ) return null;
-        return GeneValueObject.convert2ValueObjects( g ).iterator().next();
+        Gene g = this.getGeneDao().load( id );
+        if ( g == null)
+            return null;
+        g = this.getGeneDao().thaw( g );
+        return GeneValueObject.convert2ValueObject( g );
     }
 
     @Override
@@ -631,19 +602,12 @@ public class GeneServiceImpl implements GeneService {
     }
 
     /**
-     * @see GeneService#remove(String)
+     * @see GeneService#remove(Gene)
      */
     @Override
     @Transactional
     public void remove( Gene gene ) {
         this.getGeneDao().remove( gene );
-    }
-
-    /**
-     * Sets the reference to <code>gene</code>'s DAO.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
     }
 
     /**
@@ -658,8 +622,6 @@ public class GeneServiceImpl implements GeneService {
 
     /**
      * Only thaw the Aliases, very light version
-     * 
-     * @param gene
      */
     @Override
     @Transactional(readOnly = true)
@@ -712,10 +674,10 @@ public class GeneServiceImpl implements GeneService {
     }
 
     /**
-     * @see gene.GeneService#handleFindByID(java.lang.long)
+     * Sets the reference to <code>gene</code>'s DAO.
      */
-    protected Gene handleFindByID( Long id ) {
-        return this.getGeneDao().load( id );
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
     }
 
 }

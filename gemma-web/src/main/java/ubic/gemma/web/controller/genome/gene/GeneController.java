@@ -145,6 +145,8 @@ public class GeneController extends BaseController {
                 collFilteredDVO.addAll( evo.getPhenotypes() );
         }
         gvo.setPhenotypes( collFilteredDVO );
+        gvo.setNumGoTerms( this.findGOTerms( geneId ).size() );
+
         return gvo;
     }
 

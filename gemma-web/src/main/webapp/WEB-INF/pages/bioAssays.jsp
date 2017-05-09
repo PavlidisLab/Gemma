@@ -18,7 +18,11 @@
                 window.location.reload(true);
             });
 
-            new Gemma.BioAssayGrid({editable: true, renderTo: 'bioAssayTable', eeId: Ext.get("eeId").getValue()});
+            new Gemma.BioAssayGrid({
+                editable: true,
+                renderTo: 'bioAssayTable',
+                eeId: Ext.get("eeId").getValue()
+            });
 
         });
     </script>
@@ -45,7 +49,8 @@
                         hasCorrDist="${hasCorrDist}"
                         eeManagerId="eemanager"/>
 
-    <div id="bioAssayTable" class="v-padded"></div>
+    <span id="bioAssayTable" class="v-padded"></span>
+
 
     <input id="eeId" type="hidden" value="${expressionExperiment.id}"/>
 

@@ -20,18 +20,14 @@ import ubic.gemma.model.genome.Taxon;
  * Populate/update the gene multifunctionality information in the system.
  * 
  * @author paul
- * @version $Id$
  */
 public interface GeneMultifunctionalityPopulationService {
 
     /**
      * Update for all taxa
      */
-    public void updateMultifunctionality();
+    void updateMultifunctionality();
 
-    /**
-     * @param t
-     */
-    public void updateMultifunctionality( Taxon t );
+    void updateMultifunctionality( Taxon t );
 
 }

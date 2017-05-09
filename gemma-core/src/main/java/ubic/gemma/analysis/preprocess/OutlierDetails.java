@@ -58,7 +58,7 @@ public class OutlierDetails {
         }
     };
 
-    private final BioAssay bioAssay;
+    final BioAssay bioAssay;
 
     private double firstQuartile = Double.MIN_VALUE;
     private double median = Double.MIN_VALUE;

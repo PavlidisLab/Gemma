@@ -185,9 +185,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     makeVisualisationTab: function (experimentDetails, isAdmin) {
         var eeId = this.eeId;
         var title = "Data for a 'random' sampling of probes";
-        var downloadLink = '';
         var geneList = [];
-        downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
+        var downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
         var viz = new Gemma.VisualizationWithThumbsPanel({
             thumbnails: false,
             downloadLink: downloadLink,
