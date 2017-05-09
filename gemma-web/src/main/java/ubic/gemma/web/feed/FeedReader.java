@@ -29,7 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndFeed;

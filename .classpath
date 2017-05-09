@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/src/main/java"/>
-	<classpathentry kind="src" path="gemma-core/src/main/groovy"/>
+	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-backend/src/main/java"/>
+	<classpathentry kind="src" path="gemma-backend/src/main/groovy"/>
 	<classpathentry kind="src" output="test-build" path="gemma-web/src/test/resources"/>
 	<classpathentry excluding="default.properties" kind="src" output="test-build" path="gemma-util/src/test/resources"/>
 	<classpathentry excluding="**/*.class|**/*.xml|**/empty.file|**/gemma*.jar|scripts/*|styles/**" including="**/*.jar|**/version.properties" kind="src" output="build/Gemma" path="gemma-web/target/Gemma"/>
-	<classpathentry excluding="mail.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-core/src/main/resources"/>
-	<classpathentry kind="src" output="test-build" path="gemma-core/src/test/java"/>
-	<classpathentry excluding="Gemma.properties|data/pubmed-test.xml|log4j.properties" kind="src" output="test-build" path="gemma-core/src/test/resources"/>
-	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/java"/>
-	<classpathentry kind="src" output="test-build" path="gemma-mda/src/test/java"/>
-	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/target/generated-sources/java"/>
-	<classpathentry excluding="hibernate.properties|sql/" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/src/main/resources"/>
-	<classpathentry excluding="ehcache.xml|hibernate.cfg.xml" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-mda/target/generated-sources/resources"/>
+	<classpathentry excluding="mail.properties" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-backend/src/main/resources"/>
+	<classpathentry kind="src" output="test-build" path="gemma-backend/src/test/java"/>
+	<classpathentry excluding="Gemma.properties|data/pubmed-test.xml|log4j.properties" kind="src" output="test-build" path="gemma-backend/src/test/resources"/>
+	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-backend/src/main/java"/>
+	<classpathentry kind="src" output="test-build" path="gemma-backend/src/test/java"/>
+	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-backend/target/generated-sources/java"/>
+	<classpathentry excluding="hibernate.properties|sql/" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-backend/src/main/resources"/>
+	<classpathentry excluding="ehcache.xml|hibernate.cfg.xml" kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-backend/target/generated-sources/resources"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-util/src/main/java"/>
 	<classpathentry kind="src" output="test-build" path="gemma-util/src/test/java"/>
 	<classpathentry kind="src" output="build/Gemma/WEB-INF/classes" path="gemma-web/src/main/java"/>

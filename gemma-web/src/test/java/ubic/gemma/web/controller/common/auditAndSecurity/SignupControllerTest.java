@@ -31,9 +31,9 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 
 /**
  * Tortures the signup system by starting many threads and signing up many users, while at the same time creating a lot

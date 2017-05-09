@@ -17,12 +17,12 @@ package ubic.gemma.web.services.rest;
 import com.sun.jersey.api.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayDao;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 

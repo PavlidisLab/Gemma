@@ -1,0 +1,4 @@
+~/java/workspace/Gemma/gemma-backend/src/test/script/chopSoft.pl -n 100 -s GSE11897.soft.gz GDS3254.soft.gz
+~/java/workspace/Gemma/gemma-backend/src/test/script/chopSoft.pl -n 100 -s GSE7774.soft.gz
+~/java/workspace/Gemma/gemma-backend/src/test/script/chopSoft.pl -n 100 -s GSE7775.soft.gz
+~/java/workspace/Gemma/gemma-backend/src/test/script/chopSoft.pl -n 100 -s GSE7776.soft.gz

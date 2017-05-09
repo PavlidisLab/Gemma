@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:bp="http://www.biopax.org/release/biopax-level2.owl#" xmlns:owl="http://www.w3.org/2002/07/owl#" xmlns="http://cbio.mskcc.org/cpath#" xml:base="http://cbio.mskcc.org/cpath">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://www.biopax.org/release/biopax-level2.owl" />
+  </owl:Ontology>
+  <bp:physicalInteraction rdf:ID="CPATH-502565">
+    <bp:EVIDENCE>
+      <bp:evidence rdf:ID="CPATH-LOCAL-6522680">
+        <bp:COMMENT rdf:datatype="xsd:string">Identification of EhICP1, a chagasin-like cysteine protease inhibitor of Entamoeba histolytica.</bp:COMMENT>
+        <bp:EVIDENCE-CODE>
+          <bp:openControlledVocabulary rdf:ID="CPATH-LOCAL-6522681">
+            <bp:TERM rdf:datatype="xsd:string">experimental interaction detection</bp:TERM>
+            <bp:XREF>
+              <bp:unificationXref rdf:ID="CPATH-LOCAL-6522682">
+                <bp:DB rdf:datatype="xsd:string">PSI-MI</bp:DB>
+                <bp:ID rdf:datatype="xsd:string">MI:0045</bp:ID>
+              </bp:unificationXref>
+            </bp:XREF>
+          </bp:openControlledVocabulary>
+        </bp:EVIDENCE-CODE>
+        <bp:XREF>
+          <bp:publicationXref rdf:ID="CPATH-LOCAL-6522683">
+            <bp:DB rdf:datatype="xsd:string">PUBMED</bp:DB>
+            <bp:ID rdf:datatype="xsd:string">15757643</bp:ID>
+          </bp:publicationXref>
+        </bp:XREF>
+        <bp:EXPERIMENTAL-FORM>
+          <bp:experimentalForm rdf:ID="CPATH-LOCAL-6522684">
+            <bp:EXPERIMENTAL-FORM-TYPE>
+              <bp:openControlledVocabulary rdf:ID="CPATH-LOCAL-6522685">
+                <bp:TERM rdf:datatype="xsd:string">prey</bp:TERM>
+                <bp:XREF>
+                  <bp:unificationXref rdf:ID="CPATH-LOCAL-6522686">
+                    <bp:DB rdf:datatype="xsd:string">PSI-MI</bp:DB>
+                    <bp:ID rdf:datatype="xsd:string">MI:0498</bp:ID>
+                  </bp:unificationXref>
+                </bp:XREF>
+              </bp:openControlledVocabulary>
+            </bp:EXPERIMENTAL-FORM-TYPE>
+          </bp:experimentalForm>
+        </bp:EXPERIMENTAL-FORM>
+        <bp:EXPERIMENTAL-FORM>
+          <bp:experimentalForm rdf:ID="CPATH-LOCAL-6522687">
+            <bp:EXPERIMENTAL-FORM-TYPE>
+              <bp:openControlledVocabulary rdf:ID="CPATH-LOCAL-6522688">
+                <bp:TERM rdf:datatype="xsd:string">bait</bp:TERM>
+                <bp:XREF>
+                  <bp:unificationXref rdf:ID="CPATH-LOCAL-6522689">
+                    <bp:DB rdf:datatype="xsd:string">PSI-MI</bp:DB>
+                    <bp:ID rdf:datatype="xsd:string">MI:0496</bp:ID>
+                  </bp:unificationXref>
+                </bp:XREF>
+              </bp:openControlledVocabulary>
+            </bp:EXPERIMENTAL-FORM-TYPE>
+          </bp:experimentalForm>
+        </bp:EXPERIMENTAL-FORM>
+      </bp:evidence>
+    </bp:EVIDENCE>
+    <bp:SHORT-NAME rdf:datatype="xsd:string">icp1-icp1</bp:SHORT-NAME>
+    <bp:PARTICIPANTS>
+      <bp:sequenceParticipant rdf:ID="CPATH-LOCAL-6522690">
+        <bp:SEQUENCE-FEATURE-LIST>
+          <bp:sequenceFeature rdf:ID="CPATH-LOCAL-6522691">
+            <bp:FEATURE-TYPE>
+              <bp:openControlledVocabulary rdf:ID="CPATH-LOCAL-6522692">
+                <bp:TERM rdf:datatype="xsd:string">tagged molecule</bp:TERM>
+                <bp:XREF>
+                  <bp:unificationXref rdf:ID="CPATH-LOCAL-6522693">
+                    <bp:DB rdf:datatype="xsd:string">PSI-MI</bp:DB>
+                    <bp:ID rdf:datatype="xsd:string">MI:0507</bp:ID>
+                  </bp:unificationXref>
+                </bp:XREF>
+              </bp:openControlledVocabulary>
+            </bp:FEATURE-TYPE>
+          </bp:sequenceFeature>
+        </bp:SEQUENCE-FEATURE-LIST>
+        <bp:PHYSICAL-ENTITY rdf:resource="#CPATH-503333" />
+      </bp:sequenceParticipant>
+    </bp:PARTICIPANTS>
+    <bp:PARTICIPANTS>
+      <bp:sequenceParticipant rdf:ID="CPATH-LOCAL-6522694">
+        <bp:PHYSICAL-ENTITY rdf:resource="#CPATH-503333" />
+      </bp:sequenceParticipant>
+    </bp:PARTICIPANTS>
+    <bp:DATA-SOURCE>
+      <bp:dataSource rdf:ID="CPATH-LOCAL-6522695">
+        <bp:NAME rdf:datatype="xsd:string">MINT, Dpt of Biology, University of Rome Tor Vergata</bp:NAME>
+        <bp:XREF>
+          <bp:unificationXref rdf:ID="CPATH-LOCAL-6522696">
+            <bp:DB rdf:datatype="xsd:string">MINT</bp:DB>
+            <bp:ID rdf:datatype="xsd:string">MINT-58238</bp:ID>
+          </bp:unificationXref>
+        </bp:XREF>
+      </bp:dataSource>
+    </bp:DATA-SOURCE>
+    <bp:XREF>
+      <bp:unificationXref rdf:ID="CPATH-LOCAL-6535555">
+        <bp:DB rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CPATH</bp:DB>
+        <bp:ID rdf:datatype="http://www.w3.org/2001/XMLSchema#string">502565</bp:ID>
+      </bp:unificationXref>
+    </bp:XREF>
+  </bp:physicalInteraction>
+  <bp:protein rdf:ID="CPATH-503333">
+    <bp:NAME rdf:datatype="xsd:string">Amoebiasin-1</bp:NAME>
+    <bp:SEQUENCE rdf:datatype="xsd:string">MSLTEDNNNTTITIAKGENKEIILHGNPTTGYSWVVDSCEGLSNTVEYVADQHAPGICGCGGKYHIKITGTQTGEGKIVLVYRRPWAPNANDRTFTLKVNVQ</bp:SEQUENCE>
+    <bp:XREF>
+      <bp:unificationXref rdf:ID="CPATH-LOCAL-6533293">
+        <bp:DB rdf:datatype="xsd:string">UNIPROT</bp:DB>
+        <bp:ID rdf:datatype="xsd:string">Q6KCA4</bp:ID>
+      </bp:unificationXref>
+    </bp:XREF>
+    <bp:ORGANISM>
+      <bp:bioSource rdf:ID="CPATH-LOCAL-6533294">
+        <bp:NAME rdf:datatype="xsd:string">Entamoeba histolytica</bp:NAME>
+        <bp:TAXON-XREF>
+          <bp:unificationXref rdf:ID="CPATH-LOCAL-6533295">
+            <bp:DB rdf:datatype="xsd:string">NCBI</bp:DB>
+            <bp:ID rdf:datatype="xsd:string">5759</bp:ID>
+          </bp:unificationXref>
+        </bp:TAXON-XREF>
+      </bp:bioSource>
+    </bp:ORGANISM>
+    <bp:SYNONYMS rdf:datatype="xsd:string">ICP1</bp:SYNONYMS>
+    <bp:SYNONYMS rdf:datatype="xsd:string">AMS</bp:SYNONYMS>
+    <bp:XREF>
+      <bp:unificationXref rdf:ID="CPATH-LOCAL-6535628">
+        <bp:DB rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CPATH</bp:DB>
+        <bp:ID rdf:datatype="http://www.w3.org/2001/XMLSchema#string">503333</bp:ID>
+      </bp:unificationXref>
+    </bp:XREF>
+  </bp:protein>
+
+</rdf:RDF>

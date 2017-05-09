@@ -28,11 +28,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 

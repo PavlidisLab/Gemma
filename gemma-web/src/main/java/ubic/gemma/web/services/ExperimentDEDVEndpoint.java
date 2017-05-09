@@ -27,11 +27,11 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 

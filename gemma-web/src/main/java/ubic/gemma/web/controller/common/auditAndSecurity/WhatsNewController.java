@@ -31,8 +31,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.analysis.report.WhatsNew;
-import ubic.gemma.analysis.report.WhatsNewService;
+import ubic.gemma.core.analysis.report.WhatsNew;
+import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.web.controller.WebConstants;
 
 /**

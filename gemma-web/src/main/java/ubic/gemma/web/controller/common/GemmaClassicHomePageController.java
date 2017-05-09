@@ -29,11 +29,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.report.WhatsNew;
-import ubic.gemma.analysis.report.WhatsNewService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.core.analysis.report.WhatsNew;
+import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.web.controller.WebConstants;
 

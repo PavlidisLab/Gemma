@@ -15,9 +15,7 @@
 		<url>http://www.chibi.ubc.ca/</url>
 	</organization>
 	<modules>
-		<module>gemma-model</module>
-		<module>gemma-mda</module>
-		<module>gemma-core</module>
+		<module>gemma-backend</module>
 		<module>gemma-web</module>
 	</modules>
 	<packaging>pom</packaging>

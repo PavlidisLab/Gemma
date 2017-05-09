@@ -7,7 +7,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
-	<name>Gemma web</name>
+	<name>Gemma Web</name>
 	<description>Gemma web application</description>
 	<build>
 		<directory>target</directory>
@@ -132,7 +132,7 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- This isn't for web - it's for the CLI. So it should be in gemma-core -->
+				<!-- This isn't for web - it's for the CLI. So it should be in gemma-backend -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
@@ -213,7 +213,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
-			<artifactId>gemma-core</artifactId>
+			<artifactId>gemma-backend</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

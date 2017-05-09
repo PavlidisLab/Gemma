@@ -41,7 +41,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 
 /**

@@ -1,7 +1,0 @@
-target
-*.log
-andromda*.exc
-cobertura.ser
-spring*.exc
-hibernate*.exc
-.settings

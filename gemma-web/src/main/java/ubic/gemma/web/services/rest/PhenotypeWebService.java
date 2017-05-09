@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;

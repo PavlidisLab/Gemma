@@ -41,10 +41,10 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.analysis.service.ArrayDesignAnnotationServiceImpl;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 

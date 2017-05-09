@@ -19,12 +19,12 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeService;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.RelativeLocationData;
+import ubic.gemma.persistence.service.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
 
 public class GenesAtPhysicalLocationEndpoint extends AbstractGemmaEndpoint {

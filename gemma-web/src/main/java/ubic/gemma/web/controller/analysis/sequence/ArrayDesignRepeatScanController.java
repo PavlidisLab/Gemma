@@ -21,10 +21,10 @@ package ubic.gemma.web.controller.analysis.sequence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.core.tasks.analysis.sequence.ArrayDesignRepeatScanTaskCommand;
 
 /**
  * A controller to run array design repeat scan either locally or in a space.

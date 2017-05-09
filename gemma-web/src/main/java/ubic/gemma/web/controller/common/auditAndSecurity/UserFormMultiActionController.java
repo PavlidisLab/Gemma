@@ -42,7 +42,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 
 /**

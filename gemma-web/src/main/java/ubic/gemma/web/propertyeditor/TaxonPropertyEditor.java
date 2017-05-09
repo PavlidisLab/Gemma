@@ -23,7 +23,7 @@ import java.beans.PropertyEditorSupport;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
 
 /**

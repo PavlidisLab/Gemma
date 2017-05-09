@@ -32,10 +32,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.core.ontology.OntologyService;
 
 /**
  * RESTful interface to AnnotationController methods.

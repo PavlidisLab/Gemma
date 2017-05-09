@@ -30,12 +30,12 @@ import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Lists;
 
-import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.service.GeneCoreService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.core.genome.gene.service.GeneCoreService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Chromosome;
-import ubic.gemma.model.genome.ChromosomeService;
+import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.PhysicalLocationImpl;

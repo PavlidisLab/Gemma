@@ -29,8 +29,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.support.SessionStatus;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.web.controller.BaseController;
 

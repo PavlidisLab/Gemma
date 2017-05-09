@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Class to handle saving client-side javascript error messages and warnings to a server-side log.

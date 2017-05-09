@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
 
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**

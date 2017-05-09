@@ -22,13 +22,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 import java.util.Collection;

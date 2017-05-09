@@ -31,8 +31,8 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.mail.SimpleMailMessage;
 
-import ubic.gemma.util.Settings;
-import ubic.gemma.util.MailEngine;
+import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
 
 /**

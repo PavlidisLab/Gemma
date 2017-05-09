@@ -28,12 +28,12 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.job.SubmittedTask;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.job.progress.ProgressData;
-import ubic.gemma.job.progress.ProgressStatusService;
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskCommand;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.progress.ProgressData;
+import ubic.gemma.core.job.progress.ProgressStatusService;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.web.util.MockLongJobController;
 
 /**

@@ -29,9 +29,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.AbstractController;
 
-import ubic.gemma.analysis.sequence.BlatResult2Psl;
+import ubic.gemma.core.analysis.sequence.BlatResult2Psl;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.web.view.TextView;
 
 /**

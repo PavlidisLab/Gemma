@@ -26,20 +26,20 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
-import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.

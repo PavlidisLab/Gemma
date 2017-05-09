@@ -28,12 +28,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 
