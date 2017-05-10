@@ -89,7 +89,6 @@
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/eventType/AuditEventType.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/measurement/Measurement.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/measurement/Unit.hbm.xml</value>
-				<value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/quantitationType/QuantitationType.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/common/auditAndSecurity/curation/CurationDetails.hbm.xml</value>

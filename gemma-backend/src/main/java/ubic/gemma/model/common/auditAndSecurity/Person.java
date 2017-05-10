@@ -18,15 +18,25 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
-/**
- * 
- */
-public abstract class Person extends ContactImpl implements gemma.gsec.model.Person {
+public class Person extends Contact implements gemma.gsec.model.Person {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7873047856249494633L;
+    private String lastName;
+
+    @Override
+    public String getFullName() {
+        return this.getName() + " " + this.getLastName();
+    }
+
+    @Override
+    public String getLastName() {
+        return this.lastName;
+    }
+
+    @Override
+    public void setLastName( String lastName ) {
+        this.lastName = lastName;
+    }
 
     /**
      * Constructs new instances of {@link Person}.
@@ -36,30 +46,9 @@ public abstract class Person extends ContactImpl implements gemma.gsec.model.Per
          * Constructs a new instance of {@link Person}.
          */
         public static Person newInstance() {
-            return new PersonImpl();
+            return new Person();
         }
 
-    }
-
-    private String lastName;
-
-    /**
-     * 
-     */
-    @Override
-    public abstract String getFullName();
-
-    /**
-     * 
-     */
-    @Override
-    public String getLastName() {
-        return this.lastName;
-    }
-
-    @Override
-    public void setLastName( String lastName ) {
-        this.lastName = lastName;
     }
 
 }

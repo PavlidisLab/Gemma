@@ -54,7 +54,7 @@ public class SignupControllerTest extends BaseSpringWebTest {
     public void setup() {
         suc.setRecaptchaTester( new RecaptchaTester() {
             @Override
-            public boolean validateCaptcha( HttpServletRequest request, String recatpchaPvtKey ) {
+            public boolean validateCaptcha( HttpServletRequest request, String recaptchaPvtKey ) {
                 return true;
             }
         } );

@@ -19,18 +19,15 @@
 
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.sql.Date;
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
+
+import java.util.Collection;
 
 /**
  * @author Paul
- * @version $Id$
  */
 @Service
 public class UserQueryServiceImpl implements UserQueryService {
@@ -42,18 +39,6 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Transactional
     public UserQuery create( UserQuery userQuery ) {
         return userQueryDao.create( userQuery );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<UserQuery> findByUser( User user ) {
-        return userQueryDao.findByUser( user );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public UserQuery findMostRecentForUser( User user ) {
-        return userQueryDao.findMostRecentForUser( user );
     }
 
     @Override
@@ -74,21 +59,4 @@ public class UserQueryServiceImpl implements UserQueryService {
     public void remove( UserQuery userQuery ) {
         userQueryDao.remove( userQuery );
     }
-
-    @Override
-    @Transactional
-    public void removeAllForUser( User user ) {
-        userQueryDao.removeAllForUser( user );
-    }
-
-    @Override
-    @Transactional
-    public void removeOldForUser( User user, Date staleDate ) {
-        userQueryDao.removeOldForUser( user, staleDate );
-    }
-
-    public void setUserQueryDao( UserQueryDao userQueryDao ) {
-        this.userQueryDao = userQueryDao;
-    }
-
 }

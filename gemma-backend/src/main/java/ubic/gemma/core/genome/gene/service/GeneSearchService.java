@@ -18,58 +18,52 @@
  */
 package ubic.gemma.core.genome.gene.service;
 
+import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.core.search.SearchResultDisplayObject;
-
 /**
  * Service for searching genes (and gene sets)
- * 
+ *
  * @author tvrossum
- * @version $Id: GeneSearchService.java,
  */
 public interface GeneSearchService {
 
     /**
      * get all genes in the given taxon that are annotated with the given go id, including its child terms in the
      * hierarchy
-     * 
-     * @param goId GO id that must be in the format "GO_#######"
+     *
+     * @param goId    GO id that must be in the format "GO_#######"
      * @param taxonId must not be null and must correspond to a taxon
      * @return Collection<GeneSetValueObject> empty if goId was blank or taxonId didn't correspond to a taxon
      */
-    public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
+    Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId );
 
-    public Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
+    Collection<Gene> getGOGroupGenes( String goQuery, Taxon taxon );
 
-    public Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon );
+    Collection<Gene> getPhenotypeAssociatedGenes( String phenptypeQuery, Taxon taxon );
 
-    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId );
+    Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId );
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
-     * 
+     *
      * @param query A list of gene names (symbols), one per line.
-     * @param taxonId
      * @return collection of gene value objects
-     * @throws IOException
      */
-    public Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException;
+    Collection<GeneValueObject> searchMultipleGenes( String query, Long taxonId ) throws IOException;
 
     /**
      * Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
-     * 
+     *
      * @param query gene names (symbols)
-     * @param taxonId
      * @return query with match. Null values means nothing was found for that key (query)
-     * @throws IOException
      */
-    public Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId )
-            throws IOException;
+    Map<String, GeneValueObject> searchMultipleGenesGetMap( Collection<String> query, Long taxonId ) throws IOException;
 
 }

@@ -19,34 +19,21 @@
 
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 
-import java.sql.Date;
 import java.util.Collection;
 
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public interface UserQueryDao {
 
-    public UserQuery create( UserQuery userQuery );
+    UserQuery create( UserQuery userQuery );
 
-    public Collection<UserQuery> findByUser( User user );
+    UserQuery load( Long id );
 
-    public UserQuery findMostRecentForUser( User user );
+    Collection<? extends UserQuery> loadAll();
 
-    public UserQuery load( Long id );
-
-    public Collection<? extends UserQuery> loadAll();
-
-    public void remove( UserQuery userQuery );
-
-    public void removeAllForUser( User user );
-
-    public void removeOldForUser( User user, Date staleDate );
+    void remove( UserQuery userQuery );
 
 }

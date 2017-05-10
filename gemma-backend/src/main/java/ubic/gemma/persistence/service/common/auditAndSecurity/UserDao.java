@@ -18,56 +18,36 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.User
- * @version $Id$
  * @author Gemma
+ * @see ubic.gemma.model.common.auditAndSecurity.User
  */
 public interface UserDao extends BaseDao<User> {
 
     /**
-     * 
+     *
      */
-    public void addAuthority( User user, String roleName );
+    void addAuthority( User user, String roleName );
 
     /**
-     * @param user
      * @param password - encrypted
      */
-    public void changePassword( User user, String password );
+    void changePassword( User user, String password );
 
-    /**
-     * @param contact
-     * @return
-     */
-    public User find( User contact );
+    User find( User contact );
+    
+    User findByEmail( String email );
 
-    /**
-     * 
-     */
-    public User findByEmail( String email );
+    User findByUserName( String userName );
 
-    /**
-     * 
-     */
-    public User findByUserName( String userName );
+    Collection<GroupAuthority> loadGroupAuthorities( User u );
 
-    /**
-     * @param u
-     * @return
-     */
-    public Collection<GroupAuthority> loadGroupAuthorities( User u );
-
-    /**
-     * @param user
-     * @return
-     */
-    public Collection<UserGroup> loadGroups( User user );
+    Collection<UserGroup> loadGroups( User user );
 }

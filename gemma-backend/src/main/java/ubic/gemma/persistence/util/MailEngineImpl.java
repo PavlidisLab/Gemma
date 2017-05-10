@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.util;
 
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.velocity.app.VelocityEngine;
@@ -32,10 +30,11 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.velocity.VelocityEngineUtils;
 
+import java.util.Map;
+
 /**
  * @author pavlidis
  * @author Matt Raible
- * @version $Id$
  */
 @Component
 public class MailEngineImpl implements MailEngine {
@@ -47,18 +46,13 @@ public class MailEngineImpl implements MailEngine {
     @Autowired
     private VelocityEngine velocityEngine;
 
-    /**
-     * @param msg
-     * @param templateName
-     * @param model
-     */
     @Override
     public void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model ) {
         String result = null;
 
         try {
-            result = VelocityEngineUtils.mergeTemplateIntoString( velocityEngine, templateName,
-                    RuntimeConstants.ENCODING_DEFAULT, model );
+            result = VelocityEngineUtils
+                    .mergeTemplateIntoString( velocityEngine, templateName, RuntimeConstants.ENCODING_DEFAULT, model );
         } catch ( VelocityException e ) {
             e.printStackTrace();
         }
@@ -67,9 +61,6 @@ public class MailEngineImpl implements MailEngine {
         send( msg );
     }
 
-    /**
-     * @param msg
-     */
     @Override
     public void send( SimpleMailMessage msg ) {
         try {
@@ -83,9 +74,6 @@ public class MailEngineImpl implements MailEngine {
 
     /**
      * Sends a message to the gemma administrator as defined in the Gemma.properties file
-     * 
-     * @param bodyText
-     * @param subject
      */
     @Override
     public void sendAdminMessage( String bodyText, String subject ) {

@@ -23,33 +23,32 @@ import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.util.JSONUtil;
 import gemma.gsec.util.SecurityUtil;
+import net.tanesha.recaptcha.ReCaptchaImpl;
+import net.tanesha.recaptcha.ReCaptchaResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.web.controller.BaseController;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import net.tanesha.recaptcha.ReCaptchaImpl;
-import net.tanesha.recaptcha.ReCaptchaResponse;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
-import ubic.gemma.persistence.util.Settings;
-import ubic.gemma.web.controller.BaseController;
+interface RecaptchaTester {
+    boolean validateCaptcha( HttpServletRequest request, String recaptchaPvtKey );
+}
 
 /**
  * Controller to signup new users. See also the {@see UserListController}.
- * 
+ *
  * @author pavlidis
  * @author keshav
- * @version $Id$
  */
 @Controller
 public class SignupController extends BaseController {
@@ -68,7 +67,7 @@ public class SignupController extends BaseController {
         JSONUtil jsonUtil = new JSONUtil( request, response );
 
         String jsonText = "{success:false}";
-        String userName = null;
+        String userName;
 
         try {
 
@@ -91,10 +90,6 @@ public class SignupController extends BaseController {
 
     /**
      * This is hit when a user clicks on the confirmation link they received by email.
-     * 
-     * @param request
-     * @param response
-     * @throws Exception
      */
     @RequestMapping("/confirmRegistration.html")
     public void confirmRegistration( HttpServletRequest request, HttpServletResponse response ) throws Exception {
@@ -120,21 +115,21 @@ public class SignupController extends BaseController {
 
     /**
      * AJAX DWR
-     * 
+     *
      * @return loginDetails
      */
     public LoginDetailsValueObject loginCheck() {
 
-        LoginDetailsValueObject ldvo = new LoginDetailsValueObject();
+        LoginDetailsValueObject LDVo = new LoginDetailsValueObject();
 
         if ( userManager.loggedIn() ) {
-            ldvo.setUserName( userManager.getCurrentUsername() );
-            ldvo.setLoggedIn( true );
+            LDVo.setUserName( userManager.getCurrentUsername() );
+            LDVo.setLoggedIn( true );
         } else {
-            ldvo.setLoggedIn( false );
+            LDVo.setLoggedIn( false );
         }
 
-        return ldvo;
+        return LDVo;
 
     }
 
@@ -154,10 +149,6 @@ public class SignupController extends BaseController {
 
     /**
      * Used when a user signs themselves up.
-     * 
-     * @param request
-     * @param response
-     * @throws Exception
      */
     @RequestMapping(value = "/signup.html", method = RequestMethod.POST)
     public void signup( HttpServletRequest request, HttpServletResponse response ) throws Exception {
@@ -169,11 +160,11 @@ public class SignupController extends BaseController {
 
         String cPass = request.getParameter( "passwordConfirm" );
 
-        String recatpchaPvtKey = Settings.getString( "gemma.recaptcha.privateKey" );
+        String recaptchaPvtKey = Settings.getString( "gemma.recaptcha.privateKey" );
 
-        if ( StringUtils.isNotBlank( recatpchaPvtKey ) ) {
+        if ( StringUtils.isNotBlank( recaptchaPvtKey ) ) {
 
-            boolean valid = recaptchaTester.validateCaptcha( request, recatpchaPvtKey );
+            boolean valid = recaptchaTester.validateCaptcha( request, recaptchaPvtKey );
 
             if ( !valid ) {
                 jsonText = "{success:false,message:'Captcha was not entered correctly.'}";
@@ -193,17 +184,18 @@ public class SignupController extends BaseController {
 
         String username = request.getParameter( "username" );
 
-        String encodedPassword = passwordEncoder.encodePassword( password, username );
+        String encodedPassword = passwordEncoder.encode( password );
 
         String email = request.getParameter( "email" );
 
         String cEmail = request.getParameter( "emailConfirm" );
 
         /*
-         * Validate that it is a valid email....this regex adapted from extjs; a word possibly containingi '-', '+' or
+         * Validate that it is a valid email....this regex adapted from extjs; a word possibly containing '-', '+' or
          * '.', following by '@', followed by up to 5 chunks separated by '.', finally a 2-4 letter alphabetic suffix.
          */
-        if ( !email.matches( "^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$" ) || !email.equals( cEmail ) ) {
+        if ( !email.matches( "^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$" ) || !email
+                .equals( cEmail ) ) {
             jsonText = "{success:false,message:'Email was not valid or didn't match'}";
             jsonUtil.writeToResponse( jsonText );
             return;
@@ -213,11 +205,9 @@ public class SignupController extends BaseController {
 
         Date now = new Date();
 
-        boolean enabled = false;
-        UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, enabled, null, email, key, now );
+        UserDetailsImpl u = new UserDetailsImpl( encodedPassword, username, false, null, email, key, now );
 
         try {
-
             userManager.createUser( u );
             sendSignupConfirmationEmail( request, u );
 
@@ -241,62 +231,40 @@ public class SignupController extends BaseController {
 
     /**
      * Send an email to request signup confirmation.
-     * 
-     * @param request
-     * @param u
      */
     private void sendSignupConfirmationEmail( HttpServletRequest request, UserDetailsImpl u ) {
+        String email = u.getEmail();
 
-        try {
-            Map<String, Object> model = new HashMap<String, Object>();
-            model.put( "username", u.getUsername() );
+            Map<String, Object> model = new HashMap<>();
             model.put( "siteurl", Settings.getBaseUrl() );
-            model.put( "confirmLink", Settings.getBaseUrl() + "confirmRegistration.html?key=" + u.getSignupToken()
-                    + "&username=" + u.getUsername() );
 
-            String templateName = "accountCreated.vm";
-            sendEmail( u.getUsername(), u.getEmail(), getText( "signup.email.subject", request.getLocale() ),
-                    templateName, model );
+            this.sendConfirmationEmail( request, u.getSignupToken(), u.getUsername(), email, model, "accountCreated.vm" );
 
             // See if this comes from AjaxRegister.js, if it does don't save confirmation message
             String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
 
             if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
-                this.saveMessage( request, "signup.email.sent", u.getEmail(),
+                this.saveMessage( request, "signup.email.sent", email,
                         "A confirmation email was sent. Please check your mail and click the link it contains" );
             }
-
-        } catch ( Exception e ) {
-            log.error( "Couldn't send email to " + u.getEmail(), e );
-        }
-
     }
 
     public void setRecaptchaTester( RecaptchaTester recaptchaTester ) {
         this.recaptchaTester = recaptchaTester;
-
     }
 }
 
-interface RecaptchaTester {
-    public boolean validateCaptcha( HttpServletRequest request, String recatpchaPvtKey );
-}
-
 class DefaultRecaptchaTester implements RecaptchaTester {
-    /**
-     * @param request
-     * @param recatpchaPvtKey
-     * @return
-     */
+
     @Override
-    public boolean validateCaptcha( HttpServletRequest request, String recatpchaPvtKey ) {
+    public boolean validateCaptcha( HttpServletRequest request, String recaptchaPvtKey ) {
         String rcChallenge = request.getParameter( "recaptcha_challenge_field" );
         String rcResponse = request.getParameter( "recaptcha_response_field" );
 
-        String remoteAddr = request.getRemoteAddr();
+        String remoteAddress = request.getRemoteAddr();
         ReCaptchaImpl reCaptcha = new ReCaptchaImpl();
-        reCaptcha.setPrivateKey( recatpchaPvtKey );
-        ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer( remoteAddr, rcChallenge, rcResponse );
+        reCaptcha.setPrivateKey( recaptchaPvtKey );
+        ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer( remoteAddress, rcChallenge, rcResponse );
         return reCaptchaResponse.isValid();
     }
 }

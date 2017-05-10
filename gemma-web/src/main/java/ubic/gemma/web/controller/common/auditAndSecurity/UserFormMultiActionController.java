@@ -22,32 +22,29 @@ import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.User;
 import gemma.gsec.util.JSONUtil;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Controller to edit profile of users.
- * 
+ *
  * @author pavlidis
  * @author keshav
  * @version $Id$
@@ -65,10 +62,6 @@ public class UserFormMultiActionController extends BaseController {
 
     /**
      * Entry point for updates.
-     * 
-     * @param request
-     * @param response
-     * @throws Exception
      */
     @RequestMapping("/editUser.html")
     public void editUser( HttpServletRequest request, HttpServletResponse response ) throws Exception {
@@ -96,14 +89,11 @@ public class UserFormMultiActionController extends BaseController {
                 throw new RuntimeException( "You must be logged in to edit your profile." );
             }
 
-            // userManager.reauthenticate( originalUserName, oldPassword ); // not necessary.
-
             UserDetailsImpl user = ( UserDetailsImpl ) userManager.loadUserByUsername( username );
 
             boolean changed = false;
 
             if ( StringUtils.isNotBlank( email ) && !user.getEmail().equals( email ) ) {
-                // if ( !email.matches( "/^(\\w+)([-+.][\\w]+)*@(\\w[-\\w]*\\.){1,5}([A-Za-z]){2,4}$/;" ) ) {
                 if ( !EmailValidator.getInstance().isValid( email ) ) {
                     jsonText = "{success:false,message:'The email address does not look valid'}";
                     jsonUtil.writeToResponse( jsonText );
@@ -117,7 +107,7 @@ public class UserFormMultiActionController extends BaseController {
                 if ( !StringUtils.equals( password, passwordConfirm ) ) {
                     throw new RuntimeException( "Passwords do not match." );
                 }
-                String encryptedPassword = passwordEncoder.encodePassword( password, username );
+                String encryptedPassword = passwordEncoder.encode( password );
                 userManager.changePassword( oldPassword, encryptedPassword );
             }
 
@@ -139,9 +129,6 @@ public class UserFormMultiActionController extends BaseController {
 
     /**
      * AJAX entry point. Loads a user.
-     * 
-     * @param request
-     * @param response
      */
     @RequestMapping("/loadUser.html")
     public void loadUser( HttpServletRequest request, HttpServletResponse response ) {
@@ -155,7 +142,7 @@ public class UserFormMultiActionController extends BaseController {
         }
 
         Object o = authentication.getPrincipal();
-        String username = null;
+        String username;
 
         if ( o instanceof UserDetails ) {
             username = ( ( UserDetails ) o ).getUsername();
@@ -174,8 +161,9 @@ public class UserFormMultiActionController extends BaseController {
                 // this shouldn't happen.
                 jsonText = "{success:false,message:'No user with name " + username + "}";
             } else {
-                jsonText = "{success:true, data:{username:" + "\"" + username + "\"" + ",email:" + "\""
-                        + user.getEmail() + "\"" + "}}";
+                jsonText =
+                        "{success:true, data:{username:" + "\"" + username + "\"" + ",email:" + "\"" + user.getEmail()
+                                + "\"" + "}}";
             }
 
         } catch ( Exception e ) {
@@ -192,9 +180,6 @@ public class UserFormMultiActionController extends BaseController {
 
     /**
      * Resets the password to a random alphanumeric (of length MIN_PASSWORD_LENGTH).
-     * 
-     * @param request
-     * @param response
      */
     @RequestMapping("/resetPassword.html")
     public void resetPassword( HttpServletRequest request, HttpServletResponse response ) {
@@ -206,7 +191,7 @@ public class UserFormMultiActionController extends BaseController {
         String username = request.getParameter( "username" );
 
         JSONUtil jsonUtil = new JSONUtil( request, response );
-        String txt = null;
+        String txt;
         String jsonText = null;
 
         /* look up the user's information and reset password. */
@@ -223,8 +208,7 @@ public class UserFormMultiActionController extends BaseController {
             String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
                     .toLowerCase();
 
-            String token = userManager.changePasswordForUser( email, username,
-                    passwordEncoder.encodePassword( pwd, username ) );
+            String token = userManager.changePasswordForUser( email, username, passwordEncoder.encode( pwd ) );
 
             sendResetConfirmationEmail( request, token, username, pwd, email );
 
@@ -243,39 +227,19 @@ public class UserFormMultiActionController extends BaseController {
     }
 
     /**
-     * Send an email to request signup confirmation. FIXME this is very similar to code in SignupController.
-     * 
-     * @param request
-     * @param u
+     * Send an email to request signup confirmation.
      */
-    private void sendResetConfirmationEmail( HttpServletRequest request, String token, String username,
-            String password, String email ) {
+    private void sendResetConfirmationEmail( HttpServletRequest request, String token, String username, String password,
+            String email ) {
 
-        // Send an account information e-mail
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setFrom( Settings.getAdminEmailAddress() );
-        mailMessage.setSubject( getText( "signup.email.subject", request.getLocale() ) );
         try {
             Map<String, Object> model = new HashMap<>();
-            model.put( "username", username );
             model.put( "password", password );
-
-            /*
-             * FIXME: make this url configurable.
-             */
-            String host = "www.chibi.ubc.ca";
-
-            model.put( "confirmLink", "http://" + host + "/Gemma/confirmRegistration.html?key=" + token + "&username="
-                    + username );
             model.put( "message", getText( "login.passwordReset.emailMessage", request.getLocale() ) );
 
-            /*
-             * FIXME: make the template name configurable.
-             */
-            String templateName = "passwordReset.vm";
-            sendEmail( username, email, "Password reset for Gemma", templateName, model );
-            saveMessage( request,
-                    getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
+            this.sendConfirmationEmail( request, token, username, email, model, "passwordReset.vm" );
+
+            saveMessage( request, getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
         } catch ( Exception e ) {
             throw new RuntimeException( "Couldn't send password change confirmation email to " + email, e );
         }

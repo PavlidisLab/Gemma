@@ -18,19 +18,22 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
-import java.util.Collection;
-
+import org.hibernate.jdbc.Work;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.biosequence.BioSequence</code>.
- * 
+ *
  * @see ubic.gemma.model.genome.biosequence.BioSequence
- * @version $Id$
  */
 public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements BioSequenceDao {
 
@@ -42,127 +45,104 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements 
         try {
             return this.handleCountAll();
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'BioSequenceDao.countAll()' --> " + th, th );
+            throw new java.lang.RuntimeException( "Error performing 'BioSequenceDao.countAll()' --> " + th, th );
         }
     }
 
     /**
-     * @see BioSequenceDao#create(int, java.util.Collection)
+     * @see BioSequenceDao#create(Collection)
      */
     @Override
-    public java.util.Collection<? extends BioSequence> create(
-            final java.util.Collection<? extends BioSequence> entities ) {
+    public Collection<? extends BioSequence> create( final Collection<? extends BioSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioSequence.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BioSequence> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( BioSequence entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
         return entities;
     }
 
     /**
-     * @see BioSequenceDao#create(int transform,
-     *      ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see BioSequenceDao#create(Object)
      */
     @Override
     public BioSequence create( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         if ( bioSequence == null ) {
             throw new IllegalArgumentException( "BioSequence.create - 'bioSequence' can not be null" );
         }
-        this.getHibernateTemplate().save( bioSequence );
+        this.getSessionFactory().getCurrentSession().save( bioSequence );
         return bioSequence;
     }
 
     /**
-     * @see BioSequenceDao#findByGenes(java.util.Collection)
+     * @see BioSequenceDao#findByGenes(Collection)
      */
     @Override
-    public java.util.Map<Gene, Collection<BioSequence>> findByGenes( final java.util.Collection<Gene> genes ) {
-
+    public Map<Gene, Collection<BioSequence>> findByGenes( final Collection<Gene> genes ) {
         return this.handleFindByGenes( genes );
-
     }
 
     /**
      * @see BioSequenceDao#findByName(java.lang.String)
      */
     @Override
-    public java.util.Collection<BioSequence> findByName( final java.lang.String name ) {
-
+    public Collection<BioSequence> findByName( final java.lang.String name ) {
         return this.handleFindByName( name );
-
     }
 
     /**
      * @see BioSequenceDao#getGenesByAccession(java.lang.String)
      */
     @Override
-    public java.util.Collection<Gene> getGenesByAccession( final java.lang.String search ) {
-
+    public Collection<Gene> getGenesByAccession( final java.lang.String search ) {
         return this.handleGetGenesByAccession( search );
-
     }
 
     /**
      * @see BioSequenceDao#getGenesByName(java.lang.String)
      */
     @Override
-    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
-
+    public Collection<Gene> getGenesByName( final java.lang.String search ) {
         return this.handleGetGenesByName( search );
-
     }
 
     /**
-     * @see BioSequenceDao#load(int, java.lang.Long)
+     * @see BioSequenceDao#load(java.lang.Long)
      */
-
     @Override
     public BioSequence load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "BioSequence.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.genome.biosequence.BioSequenceImpl.class, id );
-        return ( ubic.gemma.model.genome.biosequence.BioSequence ) entity;
+        return ( BioSequence ) this.getSessionFactory().getCurrentSession().get( BioSequenceImpl.class, id );
     }
 
     /**
-     * @see BioSequenceDao#load(java.util.Collection)
+     * @see BioSequenceDao#load(Collection)
      */
     @Override
-    public java.util.Collection<BioSequence> load( final java.util.Collection<Long> ids ) {
-
+    public Collection<BioSequence> load( final Collection<Long> ids ) {
         return this.handleLoad( ids );
-
     }
 
     /**
-     * @see BioSequenceDao#loadAll(int)
+     * @see BioSequenceDao#loadAll()
      */
-
     @Override
-    public java.util.Collection<? extends BioSequence> loadAll() {
-        final java.util.Collection<? extends BioSequence> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.genome.biosequence.BioSequenceImpl.class );
-        return results;
+    public Collection<? extends BioSequence> loadAll() {
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createCriteria( BioSequenceImpl.class ).list();
     }
 
     /**
      * @see BioSequenceDao#remove(java.lang.Long)
      */
-
     @Override
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
@@ -174,34 +154,29 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements 
         }
     }
 
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-
     @Override
-    public void remove( java.util.Collection<? extends BioSequence> entities ) {
+    public void remove( Collection<? extends BioSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioSequence.remove - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().deleteAll( entities );
+        for ( BioSequence b : entities ) {
+            this.remove( b );
+        }
     }
 
-    /**
-     * @see BioSequenceDao#remove(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
     @Override
     public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         if ( bioSequence == null ) {
             throw new IllegalArgumentException( "BioSequence.remove - 'bioSequence' can not be null" );
         }
-        this.getHibernateTemplate().delete( bioSequence );
+        this.getSessionFactory().getCurrentSession().delete( bioSequence );
     }
 
     /**
-     * @see BioSequenceDao#thaw(java.util.Collection)
+     * @see BioSequenceDao#thaw(Collection)
      */
     @Override
-    public Collection<BioSequence> thaw( final java.util.Collection<BioSequence> bioSequences ) {
+    public Collection<BioSequence> thaw( final Collection<BioSequence> bioSequences ) {
 
         return this.handleThaw( bioSequences );
 
@@ -217,38 +192,31 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements 
 
     }
 
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-
     @Override
-    public void update( final java.util.Collection<? extends BioSequence> entities ) {
+    public void update( final Collection<? extends BioSequence> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "BioSequence.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BioSequence> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( BioSequence entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
+
     }
 
     /**
-     * @see BioSequenceDao#update(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see BioSequenceDao#update(Object)
      */
     @Override
     public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
         if ( bioSequence == null ) {
             throw new IllegalArgumentException( "BioSequence.update - 'bioSequence' can not be null" );
         }
-        this.getHibernateTemplate().update( bioSequence );
+        this.getSessionFactory().getCurrentSession().update( bioSequence );
     }
 
     /**
@@ -257,34 +225,34 @@ public abstract class BioSequenceDaoBase extends HibernateDaoSupport implements 
     protected abstract java.lang.Integer handleCountAll();
 
     /**
-     * Performs the core logic for {@link #findByGenes(java.util.Collection)}
+     * Performs the core logic for {@link #findByGenes(Collection)}
      */
-    protected abstract java.util.Map<Gene, Collection<BioSequence>> handleFindByGenes( java.util.Collection<Gene> genes );
+    protected abstract Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes );
 
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract java.util.Collection<BioSequence> handleFindByName( java.lang.String name );
+    protected abstract Collection<BioSequence> handleFindByName( java.lang.String name );
 
     /**
      * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
      */
-    protected abstract java.util.Collection<Gene> handleGetGenesByAccession( java.lang.String search );
+    protected abstract Collection<Gene> handleGetGenesByAccession( java.lang.String search );
 
     /**
      * Performs the core logic for {@link #getGenesByName(java.lang.String)}
      */
-    protected abstract java.util.Collection<Gene> handleGetGenesByName( java.lang.String search );
+    protected abstract Collection<Gene> handleGetGenesByName( java.lang.String search );
 
     /**
-     * Performs the core logic for {@link #load(java.util.Collection)}
+     * Performs the core logic for {@link #load(Collection)}
      */
-    protected abstract java.util.Collection<BioSequence> handleLoad( java.util.Collection<Long> ids );
+    protected abstract Collection<BioSequence> handleLoad( Collection<Long> ids );
 
     /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
+     * Performs the core logic for {@link #thaw(Collection)}
      */
-    protected abstract Collection<BioSequence> handleThaw( java.util.Collection<BioSequence> bioSequences );
+    protected abstract Collection<BioSequence> handleThaw( Collection<BioSequence> bioSequences );
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}

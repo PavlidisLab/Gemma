@@ -22,26 +22,27 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
-import ubic.gemma.persistence.service.expression.biomaterial.CompoundDao;
-import ubic.gemma.persistence.service.expression.experiment.*;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.protocol.ProtocolApplication;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.*;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.Compound;
+import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDao;
+import ubic.gemma.persistence.service.expression.biomaterial.CompoundDao;
+import ubic.gemma.persistence.service.expression.experiment.*;
+import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -81,8 +82,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-    // FIXME not very thread safe.
-    private Map<String, BioAssayDimension> bioAssayDimensionCache = new ConcurrentHashMap<>();
+    private final Map<String, BioAssayDimension> bioAssayDimensionCache = new ConcurrentHashMap<>();
 
     @Override
     @Transactional
@@ -289,7 +289,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         boolean hadFactors = false;
         BioMaterial material = bioAssay.getSampleUsed();
         for ( FactorValue factorValue : material.getFactorValues() ) {
-            // Factors are not compositioned in any more, but by association with the ExperimentalFactor.
+            // Factors are not composed in any more, but by association with the ExperimentalFactor.
             fillInFactorValueAssociations( factorValue );
             persistFactorValue( factorValue );
             hadFactors = true;
@@ -315,10 +315,10 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( rawDataFile != null ) {
             if ( isTransient( rawDataFile ) ) {
                 rawDataFile.setId( null ); // in case of retry.
-                // rawfile is unique for bioassay.
+                // raw file is unique for bioassay.
                 bioAssay.setRawDataFile( persistLocalFile( rawDataFile, true ) );
             } else {
-                // resynch.
+                // re-sync.
                 this.localFileDao.update( rawDataFile );
             }
             log.debug( "raw data file done" );
@@ -355,11 +355,11 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         return bioAssayDimension;
     }
 
-    private ExperimentalFactor fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor ) {
+    private void fillInExperimentalFactorAssociations( ExperimentalFactor experimentalFactor ) {
         if ( experimentalFactor == null )
-            return null;
+            return;
         if ( !isTransient( experimentalFactor ) )
-            return experimentalFactor;
+            return;
 
         Collection<Characteristic> annotations = experimentalFactor.getAnnotations();
         for ( Characteristic c : annotations ) {
@@ -372,7 +372,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         persistCollectionElements( annotations );
 
-        return experimentalFactor;
     }
 
     private Collection<BioAssay> fillInExpressionExperimentDataVectorAssociations( ExpressionExperiment ee,
@@ -436,20 +435,19 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     }
 
-    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( DesignElementDataVector vect,
+    private BioAssayDimension getBioAssayDimensionFromCacheOrCreate( DesignElementDataVector vector,
             ArrayDesignsForExperimentCache c ) {
-        if ( !isTransient( vect.getBioAssayDimension() ) )
-            return vect.getBioAssayDimension();
+        if ( !isTransient( vector.getBioAssayDimension() ) )
+            return vector.getBioAssayDimension();
 
-        assert bioAssayDimensionCache != null;
-        String dimensionName = vect.getBioAssayDimension().getName();
+        String dimensionName = vector.getBioAssayDimension().getName();
         if ( bioAssayDimensionCache.containsKey( dimensionName ) ) {
-            vect.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
+            vector.setBioAssayDimension( bioAssayDimensionCache.get( dimensionName ) );
         } else {
-            vect.getBioAssayDimension().setId( null );
-            BioAssayDimension bAd = persistBioAssayDimension( vect.getBioAssayDimension(), c );
+            vector.getBioAssayDimension().setId( null );
+            BioAssayDimension bAd = persistBioAssayDimension( vector.getBioAssayDimension(), c );
             bioAssayDimensionCache.put( dimensionName, bAd );
-            vect.setBioAssayDimension( bAd );
+            vector.setBioAssayDimension( bAd );
         }
         BioAssayDimension bioAssayDimension = bioAssayDimensionCache.get( dimensionName );
         assert !isTransient( bioAssayDimension );
@@ -504,7 +502,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         log.debug( "Persisting " + entity );
         fillInDatabaseEntry( entity.getExternalAccession() );
 
-        log.debug( "dbentry done" );
+        log.debug( "db entry done" );
         entity.setSourceTaxon( persistTaxon( entity.getSourceTaxon() ) );
 
         log.debug( "taxon done" );
@@ -513,11 +511,6 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             Characteristic action = treatment.getAction();
             log.debug( treatment + " action: " + action );
-
-            for ( ProtocolApplication protocolApplication : treatment.getProtocolApplications() ) {
-                fillInProtocolApplication( protocolApplication );
-                log.debug( "protocol done" );
-            }
             log.debug( "treatment done" );
         }
         log.debug( "start save" );
@@ -565,7 +558,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
             throw new IllegalArgumentException( "Cannot make a subset with no bioassays" );
         } else if ( isTransient( entity.getSourceExperiment() ) ) {
             throw new IllegalArgumentException(
-                    "Subsets are only supported for expressionexperiments that are already persistent" );
+                    "Subsets are only supported for expression experiments that are already persistent" );
         }
 
         return expressionExperimentSubSetDao.findOrCreate( entity );
@@ -574,18 +567,18 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     /**
      * If we get here first (e.g., via bioAssay->bioMaterial) we have to override the cascade.
      */
-    private FactorValue persistFactorValue( FactorValue factorValue ) {
+    private void persistFactorValue( FactorValue factorValue ) {
         if ( factorValue == null )
-            return null;
+            return;
         if ( !isTransient( factorValue ) )
-            return factorValue;
+            return;
         if ( isTransient( factorValue.getExperimentalFactor() ) ) {
             throw new IllegalArgumentException(
                     "You must fill in the experimental factor before persisting a factorvalue" );
         }
         fillInFactorValueAssociations( factorValue );
 
-        return factorValueDao.findOrCreate( factorValue );
+        factorValueDao.findOrCreate( factorValue );
 
     }
 
@@ -654,7 +647,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 factorValue.setExperimentalFactor( experimentalFactor );
                 fillInFactorValueAssociations( factorValue );
 
-                // this cascades from updates to the factor, but because autoflush is off, we have to do this here to
+                // this cascades from updates to the factor, but because auto-flush is off, we have to do this here to
                 // get ACLs populated.
                 factorValueDao.create( factorValue );
             }

@@ -15,34 +15,27 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import gemma.gsec.AuthorityConstants;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.UserImpl;
 import ubic.gemma.persistence.util.BusinessKey;
+
+import java.util.*;
 
 /**
  * DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.auditAndSecurity.User</code>.
- * 
+ *
  * @see ubic.gemma.model.common.auditAndSecurity.User
- * @version $Id$
  */
 @Repository
 public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
@@ -91,19 +84,15 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
 
     @Override
     public User findByEmail( final String email ) {
-        return this.findByEmail( "from UserImpl c where c.email = :email", email );
+        return this.handleFindByEmail( email );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see UserDao#findByUserName(java.lang.String)
-     */
     @Override
     public User findByUserName( final String userName ) {
         Session session = this.getSessionFactory().getCurrentSession();
 
-        List<User> users = session.createCriteria( UserImpl.class ).setFlushMode( FlushMode.MANUAL )
+        //noinspection unchecked
+        List<User> users = session.createCriteria( User.class ).setFlushMode( FlushMode.MANUAL )
                 .add( Restrictions.eq( "userName", userName ) ).list();
 
         if ( users.isEmpty() ) {
@@ -118,7 +107,9 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
 
     @Override
     public Collection<? extends User> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from UserImpl where id in (:ids)", "ids", ids );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "from User where id in (:ids)" )
+                .setParameterList( "ids", ids ).list();
     }
 
     @Override
@@ -126,27 +117,30 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         if ( id == null ) {
             throw new IllegalArgumentException( "User.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get( UserImpl.class, id );
-        return ( User ) entity;
+        return ( User ) this.getSessionFactory().getCurrentSession().get( User.class, id );
     }
 
     @Override
     public Collection<? extends User> loadAll() {
-        final Collection<? extends User> results = this.getHibernateTemplate().loadAll( UserImpl.class );
-        return results;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createCriteria( User.class ).list();
     }
 
     @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user",
-                user );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user " )
+                .setParameter( "user", user ).list();
+
     }
 
     @Override
     public Collection<UserGroup> loadGroups( User user ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user " )
+                .setParameter( "user", user ).list();
     }
 
     @Override
@@ -154,7 +148,9 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         if ( entities == null ) {
             throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().deleteAll( entities );
+        for ( User u : entities ) {
+            this.remove( u );
+        }
     }
 
     @Override
@@ -175,21 +171,14 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         }
 
         if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
-            throw new IllegalArgumentException( "Cannot delete user "
-                    + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
+            throw new IllegalArgumentException(
+                    "Cannot delete user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
         }
-
-        this.getHibernateTemplate().delete( user );
+        this.getSessionFactory().getCurrentSession().delete( user );
     }
 
     @Override
     public void update( final Collection<? extends User> entities ) {
-        // if ( entities == null ) {
-        // throw new IllegalArgumentException( "User.update - 'entities' can not be null" );
-        // }
-        // for ( User user : entities ) {
-        // update( user );
-        // }
         throw new UnsupportedOperationException( "Cannot update users in bulk" );
     }
 
@@ -200,13 +189,14 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         }
 
         // check the original isn't 'administrator'. See init-acls.sql
-        if ( user.getId() == AuthorityConstants.REQUIRED_ADMINISTRATOR_ID
+        if ( Objects.equals( user.getId(), AuthorityConstants.REQUIRED_ADMINISTRATOR_ID )
                 && !AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME.equals( user.getName() ) ) {
-            throw new IllegalArgumentException( "Cannot modify name of user ID="
-                    + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
+            throw new IllegalArgumentException(
+                    "Cannot modify name of user ID=" + AuthorityConstants.REQUIRED_ADMINISTRATOR_ID );
         }
 
         // FIXME for reasons that remain obscure, I cannot get this to work using a regular session.update.
+        // May 11th 2015 just spent 2 hours on this with no result or leads - Steven.
         this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getPassword() ).executeUpdate();
 
@@ -219,25 +209,19 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
         this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getEnabled() ? 1 : 0 ).executeUpdate();
 
-        // / this.getSessionFactory().getCurrentSession().update( user ); // no SQL gets fired.
     }
 
-    /**
-     * @param queryString
-     * @param email
-     * @return
-     */
-    private User findByEmail( final String queryString, final String email ) {
-        List<String> argNames = new ArrayList<>();
-        List<Object> args = new ArrayList<>();
-        args.add( email );
-        argNames.add( "email" );
-        Set<User> results = new LinkedHashSet<>( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+    private User handleFindByEmail( final String email ) {
+        //noinspection unchecked
+        List<User> list = this.getSessionFactory().getCurrentSession().createQuery(
+                "from User c where c.email = :email" )
+                .setParameter( "email", email ).list();
+        Set<User> results = new HashSet<>(list);
         User result = null;
         if ( results.size() > 1 ) {
-            throw new InvalidDataAccessResourceUsageException( "More than one instance of 'Contact"
-                    + "' was found when executing query --> '" + queryString + "'" );
+            throw new InvalidDataAccessResourceUsageException(
+                    "More than one instance of 'Contact" + "' was found when executing query --> '" + "from User c where c.email = :email"
+                            + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }

@@ -24,7 +24,7 @@
          <key foreign-key="USER_USER_GROUPS_FKC">
             <column name="USER_GROUPS_FK" sql-type="BIGINT"/>
          </key>
-         <many-to-many class="ubic.gemma.model.common.auditAndSecurity.UserImpl" >
+         <many-to-many class="ubic.gemma.model.common.auditAndSecurity.User" >
             <column name="GROUP_MEMBERS_FK" sql-type="BIGINT"/>
          </many-to-many>
       </set>

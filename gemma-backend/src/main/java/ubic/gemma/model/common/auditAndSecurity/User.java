@@ -23,12 +23,84 @@ import java.util.Collection;
 /**
  * A user of the software system, who is authenticated.
  */
-public abstract class User extends PersonImpl implements gemma.gsec.model.User {
+public class User extends Person implements gemma.gsec.model.User {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5910497757956461559L;
+    private String userName;
+    private String password;
+    private String passwordHint;
+    private Boolean enabled;
+    private String signupToken;
+    private java.util.Date signupTokenDatestamp;
+    private Collection<JobInfo> jobs = new java.util.HashSet<>();
+
+    @Override
+    public Boolean getEnabled() {
+        return this.enabled;
+    }
+
+    @Override
+    public void setEnabled( Boolean enabled ) {
+        this.enabled = enabled;
+    }
+
+    public Collection<JobInfo> getJobs() {
+        return this.jobs;
+    }
+
+    public void setJobs( Collection<JobInfo> jobs ) {
+        this.jobs = jobs;
+    }
+
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    @Override
+    public void setPassword( String password ) {
+        this.password = password;
+    }
+
+    @Override
+    public String getPasswordHint() {
+        return this.passwordHint;
+    }
+
+    @Override
+    public void setPasswordHint( String passwordHint ) {
+        this.passwordHint = passwordHint;
+    }
+
+    @Override
+    public String getSignupToken() {
+        return this.signupToken;
+    }
+
+    @Override
+    public void setSignupToken( String signupToken ) {
+        this.signupToken = signupToken;
+    }
+
+    @Override
+    public java.util.Date getSignupTokenDatestamp() {
+        return this.signupTokenDatestamp;
+    }
+
+    @Override
+    public void setSignupTokenDatestamp( java.util.Date signupTokenDatestamp ) {
+        this.signupTokenDatestamp = signupTokenDatestamp;
+    }
+
+    @Override
+    public String getUserName() {
+        return this.userName;
+    }
+
+    @Override
+    public void setUserName( String userName ) {
+        this.userName = userName;
+    }
 
     /**
      * Constructs new instances of {@link User}.
@@ -38,125 +110,9 @@ public abstract class User extends PersonImpl implements gemma.gsec.model.User {
          * Constructs a new instance of {@link User}.
          */
         public static User newInstance() {
-            return new UserImpl();
+            return new User();
         }
 
-    }
-
-    private String userName;
-
-    private String password;
-
-    private String passwordHint;
-
-    private Boolean enabled;
-
-    private String signupToken;
-
-    private java.util.Date signupTokenDatestamp;
-
-    private Collection<JobInfo> jobs = new java.util.HashSet<JobInfo>();
-
-    private Collection<UserQuery> savedQueries = new java.util.HashSet<UserQuery>();
-
-    /**
-     * 
-     */
-    @Override
-    public Boolean getEnabled() {
-        return this.enabled;
-    }
-
-    /**
-     * 
-     */
-    public Collection<JobInfo> getJobs() {
-        return this.jobs;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public String getPasswordHint() {
-        return this.passwordHint;
-    }
-
-    /**
-    *
-     */
-    public Collection<UserQuery> getSavedQueries() {
-        return this.savedQueries;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public String getSignupToken() {
-        return this.signupToken;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public java.util.Date getSignupTokenDatestamp() {
-        return this.signupTokenDatestamp;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public String getUserName() {
-        return this.userName;
-    }
-
-    @Override
-    public void setEnabled( Boolean enabled ) {
-        this.enabled = enabled;
-    }
-
-    public void setJobs( Collection<JobInfo> jobs ) {
-        this.jobs = jobs;
-    }
-
-    @Override
-    public void setPassword( String password ) {
-        this.password = password;
-    }
-
-    @Override
-    public void setPasswordHint( String passwordHint ) {
-        this.passwordHint = passwordHint;
-    }
-
-    public void setSavedQueries( Collection<UserQuery> savedQueries ) {
-        this.savedQueries = savedQueries;
-    }
-
-    @Override
-    public void setSignupToken( String signupToken ) {
-        this.signupToken = signupToken;
-    }
-
-    @Override
-    public void setSignupTokenDatestamp( java.util.Date signupTokenDatestamp ) {
-        this.signupTokenDatestamp = signupTokenDatestamp;
-    }
-
-    @Override
-    public void setUserName( String userName ) {
-        this.userName = userName;
     }
 
 }

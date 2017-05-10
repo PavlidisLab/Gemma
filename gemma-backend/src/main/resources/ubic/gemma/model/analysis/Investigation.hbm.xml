@@ -30,7 +30,7 @@
 			</key>
 			<one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl" />
 		</set>
-		<many-to-one name="owner" class="ubic.gemma.model.common.auditAndSecurity.ContactImpl" lazy="proxy" fetch="select">
+		<many-to-one name="owner" class="ubic.gemma.model.common.auditAndSecurity.Contact" lazy="proxy" fetch="select">
 			<column name="OWNER_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
 		<many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReferenceImpl"
@@ -49,7 +49,7 @@
 			<key foreign-key="CONTACT_INVESTIGATION_FKC">
 				<column name="INVESTIGATION_FK" sql-type="BIGINT" />
 			</key>
-			<many-to-many class="ubic.gemma.model.common.auditAndSecurity.ContactImpl">
+			<many-to-many class="ubic.gemma.model.common.auditAndSecurity.Contact">
 				<column name="INVESTIGATORS_FK" sql-type="BIGINT" />
 			</many-to-many>
 		</set>

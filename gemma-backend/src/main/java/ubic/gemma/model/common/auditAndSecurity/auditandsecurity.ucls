@@ -59,8 +59,8 @@
       <operations public="false" package="false" protected="true" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="7" language="java" name="ubic.gemma.model.common.auditAndSecurity.UserImpl" project="gemma-backend"
-    file="/gemma-backend/src/main/java/ubic/gemma/model/common/auditAndSecurity/UserImpl.java" binary="false"
+  <class id="7" language="java" name="ubic.gemma.model.common.auditAndSecurity.User" project="gemma-backend"
+    file="/gemma-backend/src/main/java/ubic/gemma/model/common/auditAndSecurity/User.java" binary="false"
     corner="BOTTOM_RIGHT">    
     <position height="59" width="201" x="509" y="1162"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -69,8 +69,8 @@
       <operations public="false" package="false" protected="true" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="8" language="java" name="ubic.gemma.model.common.auditAndSecurity.ContactImpl" project="gemma-backend"
-    file="/gemma-backend/src/main/java/ubic/gemma/model/common/auditAndSecurity/ContactImpl.java" binary="false"
+  <class id="8" language="java" name="ubic.gemma.model.common.auditAndSecurity.Contact" project="gemma-backend"
+    file="/gemma-backend/src/main/java/ubic/gemma/model/common/auditAndSecurity/Contact.java" binary="false"
     corner="BOTTOM_RIGHT">    
     <position height="59" width="201" x="60" y="478"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 
@@ -79,8 +79,8 @@
       <operations public="false" package="false" protected="true" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="9" language="java" name="ubic.gemma.model.common.auditAndSecurity.PersonImpl" project="gemma-backend"
-    file="/gemma-backend/src/main/java/ubic/gemma/model/common/auditAndSecurity/PersonImpl.java" binary="false"
+  <class id="9" language="java" name="ubic.gemma.model.common.auditAndSecurity.Person" project="gemma-backend"
+    file="/gemma-backend/src/main/java/ubic/gemma/model/common/auditAndSecurity/Person.java" binary="false"
     corner="BOTTOM_RIGHT">    
     <position height="59" width="201" x="301" y="820"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" 

@@ -18,30 +18,27 @@
  */
 package ubic.gemma.core.security.principal;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
-
-import java.util.Date;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
-
 import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import java.util.Date;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Test that we can log users in, etc.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class PrincipalTest extends BaseSpringContextTest {
 
@@ -80,6 +77,7 @@ public class PrincipalTest extends BaseSpringContextTest {
         String encodedPassword = passwordEncoder.encodePassword( newpwd, username );
 
         String token = userManager.changePasswordForUser( email, username, encodedPassword );
+        System.out.println( "passwd changed" );
 
         assertTrue( !userManager.loadUserByUsername( username ).isEnabled() );
 
@@ -87,20 +85,18 @@ public class PrincipalTest extends BaseSpringContextTest {
          * User has to unlock the account, we mimic that:
          */
         assertTrue( userManager.validateSignupToken( username, token ) );
+        System.out.println( "token validated" );
 
         Authentication auth = new UsernamePasswordAuthenticationToken( username, newpwd );
-        Authentication authentication = ( ( ProviderManager ) authenticationManager ).authenticate( auth );
+        Authentication authentication = ( authenticationManager ).authenticate( auth );
         assertTrue( authentication.isAuthenticated() );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testLogin() throws Exception {
         Authentication auth = new UsernamePasswordAuthenticationToken( username, pwd );
 
-        Authentication authentication = ( ( ProviderManager ) authenticationManager ).authenticate( auth );
+        Authentication authentication = ( authenticationManager ).authenticate( auth );
         assertTrue( authentication.isAuthenticated() );
     }
 
@@ -109,7 +105,7 @@ public class PrincipalTest extends BaseSpringContextTest {
         Authentication auth = new UsernamePasswordAuthenticationToken( "bad user", "wrong password" );
 
         try {
-            ( ( ProviderManager ) authenticationManager ).authenticate( auth );
+            ( authenticationManager ).authenticate( auth );
             fail( "Should have gotten a bad credentials exception" );
         } catch ( BadCredentialsException e ) {
             //
@@ -121,7 +117,7 @@ public class PrincipalTest extends BaseSpringContextTest {
         Authentication auth = new UsernamePasswordAuthenticationToken( username, "wrong password" );
 
         try {
-            ( ( ProviderManager ) authenticationManager ).authenticate( auth );
+            ( authenticationManager ).authenticate( auth );
             fail( "Should have gotten a bad credentials exception" );
         } catch ( BadCredentialsException e ) {
             //

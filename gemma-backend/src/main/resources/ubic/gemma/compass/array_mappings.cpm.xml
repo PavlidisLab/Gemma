@@ -29,7 +29,7 @@
 		<component name="designProvider" ref-alias="contact" />
 		<component name="alternateNames" ref-alias="alternateName" />
 	</class>
-	<class name="common.auditAndSecurity.ContactImpl" alias="contact" root="false">
+	<class name="common.auditAndSecurity.Contact" alias="contact" root="false">
 		<id name="id" />
 		<property name="name">
 			<meta-data store="no">name</meta-data>

@@ -32,7 +32,7 @@
       <property name="type" type="ubic.gemma.model.common.description.DatabaseTypeEnum">
          <column name="TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.ContactImpl" cascade="none"  lazy="proxy" fetch="select">
+      <many-to-one name="databaseSupplier" class="ubic.gemma.model.common.auditAndSecurity.Contact" cascade="none"  lazy="proxy" fetch="select">
          <column name="DATABASE_SUPPLIER_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <set name="flatFiles" lazy="true" fetch="select" inverse="false">

@@ -26,7 +26,7 @@
             <column name="DETAIL" not-null="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
         </property>
         <many-to-one access="field"
-                     class="ubic.gemma.model.common.auditAndSecurity.UserImpl"
+                     class="ubic.gemma.model.common.auditAndSecurity.User"
                      fetch="select" lazy="false" name="performer">
             <column name="PERFORMER_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>

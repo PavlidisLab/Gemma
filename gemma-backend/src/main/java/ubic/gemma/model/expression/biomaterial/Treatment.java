@@ -21,8 +21,6 @@ package ubic.gemma.model.expression.biomaterial;
 
 import ubic.gemma.model.common.AbstractAuditable;
 
-import java.util.Collection;
-
 /**
  * @author Paul
  */
@@ -34,7 +32,6 @@ public abstract class Treatment extends AbstractAuditable {
     private static final long serialVersionUID = 7148213633537076048L;
     private Integer orderApplied = 1;
     private ubic.gemma.model.common.measurement.Measurement actionMeasurement;
-    private Collection<ubic.gemma.model.common.protocol.ProtocolApplication> protocolApplications = new java.util.HashSet<>();
     private ubic.gemma.model.common.description.Characteristic action;
 
     /**
@@ -43,9 +40,6 @@ public abstract class Treatment extends AbstractAuditable {
     public Treatment() {
     }
 
-    /**
-     *
-     */
     public ubic.gemma.model.common.description.Characteristic getAction() {
         return this.action;
     }
@@ -54,9 +48,6 @@ public abstract class Treatment extends AbstractAuditable {
         this.action = action;
     }
 
-    /**
-     *
-     */
     public ubic.gemma.model.common.measurement.Measurement getActionMeasurement() {
         return this.actionMeasurement;
     }
@@ -74,18 +65,6 @@ public abstract class Treatment extends AbstractAuditable {
 
     public void setOrderApplied( Integer orderApplied ) {
         this.orderApplied = orderApplied;
-    }
-
-    /**
-     *
-     */
-    public Collection<ubic.gemma.model.common.protocol.ProtocolApplication> getProtocolApplications() {
-        return this.protocolApplications;
-    }
-
-    public void setProtocolApplications(
-            Collection<ubic.gemma.model.common.protocol.ProtocolApplication> protocolApplications ) {
-        this.protocolApplications = protocolApplications;
     }
 
     /**

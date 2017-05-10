@@ -35,7 +35,7 @@
       <property name="taskId" type="java.lang.String">
          <column name="TASK_ID" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="user" class="ubic.gemma.model.common.auditAndSecurity.UserImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="user" class="ubic.gemma.model.common.auditAndSecurity.User"  lazy="proxy" fetch="select">
          <column name="USER_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
    </class>

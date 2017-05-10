@@ -27,22 +27,20 @@ import ubic.gemma.model.common.AbstractAuditable;
  *
  * @author Paul
  */
-public abstract class Contact extends AbstractAuditable implements gemma.gsec.model.Contact {
+public class Contact extends AbstractAuditable implements gemma.gsec.model.Contact {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 2410750024818017046L;
     private String email;
+
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Contact() {
     }
 
-    /**
-     *
-     */
     @Override
     public String getEmail() {
         return this.email;
@@ -61,7 +59,7 @@ public abstract class Contact extends AbstractAuditable implements gemma.gsec.mo
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.Contact}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.Contact newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.ContactImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.Contact();
         }
 
     }

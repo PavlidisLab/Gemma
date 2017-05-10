@@ -115,7 +115,7 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.PersonImpl#getFullName()
+     * @see ubic.gemma.model.common.auditAndSecurity.Person#getFullName()
      */
     public String getFullName() {
         return this.user.getFullName();
@@ -131,7 +131,7 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getJob()
+     * @see User#getJobs()
      */
     public Collection<JobInfo> getJobs() {
         return this.user.getJobs();

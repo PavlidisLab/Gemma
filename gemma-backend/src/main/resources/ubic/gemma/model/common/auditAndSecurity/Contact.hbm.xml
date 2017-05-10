@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.common.auditAndSecurity.ContactImpl" table="CONTACT" dynamic-insert="false" dynamic-update="false" discriminator-value="ContactImpl">
+   <class name="ubic.gemma.model.common.auditAndSecurity.Contact" table="CONTACT" dynamic-insert="false" dynamic-update="false" discriminator-value="Contact">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -24,11 +24,11 @@
       <property name="email" type="java.lang.String">
          <column name="EMAIL" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <subclass name="ubic.gemma.model.common.auditAndSecurity.PersonImpl" discriminator-value="PersonImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+      <subclass name="ubic.gemma.model.common.auditAndSecurity.Person" discriminator-value="Person" dynamic-insert="false" dynamic-update="false" abstract="false">
          <property name="lastName" type="java.lang.String">
             <column name="LAST_NAME" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
          </property>
-         <subclass name="ubic.gemma.model.common.auditAndSecurity.UserImpl" discriminator-value="UserImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+         <subclass name="ubic.gemma.model.common.auditAndSecurity.User" discriminator-value="User" dynamic-insert="false" dynamic-update="false" abstract="false">
             <property name="userName" type="java.lang.String">
                <column name="USER_NAME" not-null="false" unique="true" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
             </property>
@@ -53,13 +53,6 @@
                   <column name="USER_FK" sql-type="BIGINT"/>
                </key>
                <one-to-many class="ubic.gemma.model.common.auditAndSecurity.JobInfoImpl"/>
-            </set>
-            <set name="savedQueries" lazy="true" fetch="select" inverse="false" cascade="all">
-               <cache usage="read-write" />
-               <key foreign-key="USER_QUERY_USER_FKC">
-                  <column name="USER_FK" sql-type="BIGINT"/>
-               </key>
-               <one-to-many class="ubic.gemma.model.common.auditAndSecurity.UserQueryImpl"/>
             </set>
          </subclass>
       </subclass>

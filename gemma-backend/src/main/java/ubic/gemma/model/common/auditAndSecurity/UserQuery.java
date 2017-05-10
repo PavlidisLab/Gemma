@@ -21,63 +21,14 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import ubic.gemma.model.common.search.SearchSettings;
 
-/**
- * 
- */
-public abstract class UserQuery implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
+public class UserQuery implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2790140985613402440L;
-
-    /**
-     * Constructs new instances of {@link UserQuery}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link UserQuery}.
-         */
-        public static UserQuery newInstance() {
-            return new UserQueryImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link UserQuery}, taking all required and/or read-only properties as arguments.
-         */
-        public static UserQuery newInstance( String url, java.util.Date lastUsed ) {
-            final UserQuery entity = new UserQueryImpl();
-            entity.setUrl( url );
-            entity.setLastUsed( lastUsed );
-            return entity;
-        }
-
-        /**
-         * Constructs a new instance of {@link UserQuery}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
-        public static UserQuery newInstance( String url, String name, java.util.Date lastUsed,
-                Integer autoRunFrequencyHours, SearchSettings searchSettings ) {
-            final UserQuery entity = new UserQueryImpl();
-            entity.setUrl( url );
-            entity.setName( name );
-            entity.setLastUsed( lastUsed );
-            entity.setAutoRunFrequencyHours( autoRunFrequencyHours );
-            entity.setSearchSettings( searchSettings );
-            return entity;
-        }
-    }
-
     private String url;
-
     private String name;
-
     private java.util.Date lastUsed;
-
     private Integer autoRunFrequencyHours;
-
     private Long id;
-
     private SearchSettings searchSettings;
 
     /**
@@ -93,10 +44,7 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
             return false;
         }
         final UserQuery that = ( UserQuery ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
     /**
@@ -108,40 +56,49 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
         return this.autoRunFrequencyHours;
     }
 
-    /**
-     * 
-     */
+    public void setAutoRunFrequencyHours( Integer autoRunFrequencyHours ) {
+        this.autoRunFrequencyHours = autoRunFrequencyHours;
+    }
+
     @Override
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public java.util.Date getLastUsed() {
         return this.lastUsed;
     }
 
-    /**
-     * 
-     */
+    public void setLastUsed( java.util.Date lastUsed ) {
+        this.lastUsed = lastUsed;
+    }
+
     public String getName() {
         return this.name;
     }
 
-    /**
-     * 
-     */
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     public SearchSettings getSearchSettings() {
         return this.searchSettings;
     }
 
-    /**
-     * 
-     */
+    public void setSearchSettings( SearchSettings searchSettings ) {
+        this.searchSettings = searchSettings;
+    }
+
     public String getUrl() {
         return this.url;
+    }
+
+    public void setUrl( String url ) {
+        this.url = url;
     }
 
     /**
@@ -155,28 +112,41 @@ public abstract class UserQuery implements java.io.Serializable, gemma.gsec.mode
         return hashCode;
     }
 
-    public void setAutoRunFrequencyHours( Integer autoRunFrequencyHours ) {
-        this.autoRunFrequencyHours = autoRunFrequencyHours;
-    }
+    /**
+     * Constructs new instances of {@link UserQuery}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link UserQuery}.
+         */
+        public static UserQuery newInstance() {
+            return new UserQuery();
+        }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+        /**
+         * Constructs a new instance of {@link UserQuery}, taking all required and/or read-only properties as arguments.
+         */
+        public static UserQuery newInstance( String url, java.util.Date lastUsed ) {
+            final UserQuery entity = new UserQuery();
+            entity.setUrl( url );
+            entity.setLastUsed( lastUsed );
+            return entity;
+        }
 
-    public void setLastUsed( java.util.Date lastUsed ) {
-        this.lastUsed = lastUsed;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setSearchSettings( SearchSettings searchSettings ) {
-        this.searchSettings = searchSettings;
-    }
-
-    public void setUrl( String url ) {
-        this.url = url;
+        /**
+         * Constructs a new instance of {@link UserQuery}, taking all possible properties (except the identifier(s))as
+         * arguments.
+         */
+        public static UserQuery newInstance( String url, String name, java.util.Date lastUsed,
+                Integer autoRunFrequencyHours, SearchSettings searchSettings ) {
+            final UserQuery entity = new UserQuery();
+            entity.setUrl( url );
+            entity.setName( name );
+            entity.setLastUsed( lastUsed );
+            entity.setAutoRunFrequencyHours( autoRunFrequencyHours );
+            entity.setSearchSettings( searchSettings );
+            return entity;
+        }
     }
 
 }

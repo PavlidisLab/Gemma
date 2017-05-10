@@ -19,22 +19,21 @@
 package ubic.gemma.persistence.persister;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.model.common.auditAndSecurity.*;
+import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.ContactDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.PersonDao;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.persistence.service.common.description.LocalFileDao;
-import ubic.gemma.model.common.auditAndSecurity.*;
-import ubic.gemma.model.common.description.*;
-import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.persistence.service.common.measurement.MeasurementDao;
-import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.persistence.service.common.measurement.UnitDao;
-import ubic.gemma.model.common.protocol.Protocol;
-import ubic.gemma.model.common.protocol.ProtocolApplication;
 import ubic.gemma.persistence.service.common.protocol.ProtocolDao;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeDao;
 
 import java.util.Collection;
@@ -85,11 +84,6 @@ abstract public class CommonPersister extends AbstractPersister {
     @Autowired
     private UnitDao unitDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
-     */
     @Override
     public Object persist( Object entity ) {
 
@@ -162,30 +156,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return;
         if ( protocol == null ) {
             log.warn( "Null protocol" );
-        }
-
-    }
-
-    void fillInProtocolApplication( ProtocolApplication protocolApplication ) {
-        if ( !isTransient( protocolApplication ) )
-            return;
-        if ( protocolApplication == null )
-            return;
-
-        log.debug( "Filling in protocolApplication" );
-
-        Protocol protocol = protocolApplication.getProtocol();
-        if ( protocol == null )
-            throw new IllegalStateException( "Must have protocol associated with ProtocolApplication" );
-
-        if ( protocol.getName() == null )
-            throw new IllegalStateException( "Protocol must have a name" );
-
-        protocolApplication.setProtocol( persistProtocol( protocol ) );
-
-        for ( Person performer : protocolApplication.getPerformers() ) {
-            log.debug( "Filling in performer" );
-            personDao.findOrCreate( performer );
         }
 
     }

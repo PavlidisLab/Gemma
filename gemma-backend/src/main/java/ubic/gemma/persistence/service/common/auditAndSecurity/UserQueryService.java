@@ -18,43 +18,26 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.sql.Date;
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
 
+import java.util.Collection;
+
 /**
- * TODO Document Me
- * 
  * @author Paul
- * @version $Id$
  */
 public interface UserQueryService {
 
     @Secured({ "GROUP_USER" })
-    public UserQuery create( UserQuery userQuery );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    public Collection<UserQuery> findByUser( User user );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_READ" })
-    public UserQuery findMostRecentForUser( User user );
+    UserQuery create( UserQuery userQuery );
 
     @Secured({ "GROUP_USER" })
-    public UserQuery load( Long id );
+    UserQuery load( Long id );
 
     @Secured({ "GROUP_USER" })
-    public Collection<UserQuery> loadAll();
+    Collection<UserQuery> loadAll();
 
     @Secured({ "GROUP_USER" })
-    public void remove( UserQuery userQuery );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void removeAllForUser( User user );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void removeOldForUser( User user, Date staleDate );
+    void remove( UserQuery userQuery );
 
 }

@@ -78,20 +78,18 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
             auditable.setAuditTrail( trail );
         } else {
 
-            // if ( this.getHibernateTemplate().get( trail ) ) {
             /*
              * This assumes that nobody else in this session has modified this audit trail.
              */
             if ( trail.getId() != null )
                 trail = ( AuditTrail ) this.getSessionFactory().getCurrentSession()
                         .get( AuditTrailImpl.class, trail.getId() );
-            // }
 
         }
 
         trail.addEvent( auditEvent );
 
-        this.getHibernateTemplate().saveOrUpdate( trail );
+        this.getSessionFactory().getCurrentSession().saveOrUpdate( trail );
 
         auditable.setAuditTrail( trail );
 
@@ -108,27 +106,30 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.create - 'auditTrail' can not be null" );
         }
-        this.getHibernateTemplate().save( auditTrail );
+        this.getSessionFactory().getCurrentSession().save( auditTrail );
         return auditTrail;
     }
 
     @Override
     public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from  AuditTrailImpl where id in (:ids)", "ids", ids );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "from  AuditTrailImpl where id in (:ids)" )
+                .setParameterList( "ids", ids ).list();
     }
 
     @Override
-    public AuditTrail load( final java.lang.Long id ) {
+    public AuditTrail load( final Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AuditTrail.load - 'id' can not be null" );
         }
-        final Object entity = this.getHibernateTemplate().get( AuditTrailImpl.class, id );
+        final Object entity = this.getSessionFactory().getCurrentSession().get( AuditTrailImpl.class, id );
         return ( AuditTrail ) entity;
     }
 
     @Override
     public Collection<? extends AuditTrail> loadAll() {
-        return this.getHibernateTemplate().loadAll( AuditTrailImpl.class );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createCriteria( AuditTrailImpl.class ).list();
     }
 
     @Override
@@ -136,7 +137,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
         }
-        this.getHibernateTemplate().delete( auditTrail );
+        this.getSessionFactory().getCurrentSession().delete( auditTrail );
     }
 
     @Override
@@ -144,11 +145,13 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         if ( entities == null ) {
             throw new IllegalArgumentException( "AuditTrail.remove - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().deleteAll( entities );
+        for ( AuditTrail a : entities ) {
+            this.remove( a );
+        }
     }
 
     @Override
-    public void remove( java.lang.Long id ) {
+    public void remove( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "AuditTrail.remove - 'id' can not be null" );
         }
@@ -163,7 +166,7 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         if ( auditTrail == null ) {
             throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );
         }
-        this.getHibernateTemplate().update( auditTrail );
+        this.getSessionFactory().getCurrentSession().update( auditTrail );
     }
 
     @Override
@@ -201,8 +204,10 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
             return null;
         }
 
-        String queryString = "from UserImpl where userName=:userName";
-        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, "userName", name );
+        String queryString = "from User where userName=:userName";
+
+        java.util.List<?> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "userName", name ).list();
 
         assert results.size() == 1;
         Object result = results.iterator().next();

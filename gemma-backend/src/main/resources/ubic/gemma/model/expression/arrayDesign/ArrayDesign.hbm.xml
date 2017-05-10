@@ -69,7 +69,7 @@
          </key>
          <one-to-many class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"/>
       </set>
-      <many-to-one name="designProvider" class="ubic.gemma.model.common.auditAndSecurity.ContactImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="designProvider" class="ubic.gemma.model.common.auditAndSecurity.Contact"  lazy="proxy" fetch="select">
          <column name="DESIGN_PROVIDER_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <set name="localFiles" lazy="true" fetch="select" inverse="false" cascade="all">

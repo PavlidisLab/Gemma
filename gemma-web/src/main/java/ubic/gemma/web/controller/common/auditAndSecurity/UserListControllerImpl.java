@@ -18,41 +18,38 @@
  */
 package ubic.gemma.web.controller.common.auditAndSecurity;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.UncategorizedSQLException;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 
 /**
- * For display and editing of users. Note: do not use parameterized collections as parameters for ajax methods in this
+ * For display and editing of users. Note: do not use parametrized collections as parameters for ajax methods in this
  * class! Type information is lost during proxy creation so DWR can't figure out what type of collection the method
  * should take. See bug 2756. Use arrays instead.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  * @see UserFormMultiActionController
  * @see SignupController
  */
 @Controller
 public class UserListControllerImpl implements UserListController {
 
-    private static Log log = LogFactory.getLog( UserListControllerImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( UserListControllerImpl.class.getName() );
 
     @Autowired
     private UserManager userManager;
@@ -60,18 +57,13 @@ public class UserListControllerImpl implements UserListController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.UserListController#getUsers()
-     */
     @Override
     public Collection<UserValueObject> getUsers() {
         if ( log.isDebugEnabled() ) {
             log.debug( "entering 'getUsers' method..." );
         }
 
-        Collection<UserValueObject> userValueObjects = new ArrayList<UserValueObject>();
+        Collection<UserValueObject> userValueObjects = new ArrayList<>();
 
         try {
             Collection<gemma.gsec.model.User> users = userManager.loadAll();
@@ -79,20 +71,12 @@ public class UserListControllerImpl implements UserListController {
                 UserValueObject uv = new UserValueObject( u );
                 userValueObjects.add( uv );
             }
-        } catch ( UncategorizedSQLException e ) {
-            log.error( e );
-        } catch ( LazyInitializationException e ) {
+        } catch ( UncategorizedSQLException | LazyInitializationException e ) {
             log.error( e );
         }
         return userValueObjects;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.auditAndSecurity.UserListController#handleRequest(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     @RequestMapping(value = "/admin/activeUsers.html", method = RequestMethod.GET)
     public ModelAndView handleRequest( HttpServletRequest request, HttpServletResponse response ) {
@@ -102,22 +86,13 @@ public class UserListControllerImpl implements UserListController {
         Collection<gemma.gsec.model.User> users = null;
         try {
             users = userManager.loadAll();
-        } catch ( UncategorizedSQLException e ) {
-            log.error( e );
-        } catch ( LazyInitializationException e ) {
+        } catch ( UncategorizedSQLException | LazyInitializationException e ) {
             log.error( e );
         }
 
         return new ModelAndView( "/admin/activeUsers", "users", users );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.auditAndSecurity.UserListController#saveUser(ubic.gemma.web.controller.common
-     * .auditAndSecurity.UserValueObject)
-     */
     @Override
     public void saveUser( UserValueObject user ) {
 
@@ -128,9 +103,8 @@ public class UserListControllerImpl implements UserListController {
 
         boolean newUser = false;
         if ( u == null ) {
-            userDetails = new UserDetailsImpl( passwordEncoder.encodePassword( user.getPassword(), user.getUserName() ),
-                    user.getUserName(), false, null, user.getEmail(),
-                    userManager.generateSignupToken( user.getUserName() ), new Date() );
+            userDetails = new UserDetailsImpl( passwordEncoder.encode( user.getPassword() ), user.getUserName(), false,
+                    null, user.getEmail(), userManager.generateSignupToken( user.getUserName() ), new Date() );
         } else {
             u.setEmail( user.getEmail() );
             u.setEnabled( user.isEnabled() );

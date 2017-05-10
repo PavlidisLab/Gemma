@@ -18,147 +18,130 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
+import org.hibernate.jdbc.Work;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.Person;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.auditAndSecurity.Person</code>.
  * </p>
- * 
+ *
  * @see ubic.gemma.model.common.auditAndSecurity.Person
  */
 public abstract class PersonDaoBase extends HibernateDaoSupport implements PersonDao {
 
     /**
-     * @see PersonDao#create(int, java.util.Collection)
+     * @see PersonDao#create(java.util.Collection)
      */
-
     @Override
     public java.util.Collection<? extends Person> create( final java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( Person entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+
         return entities;
     }
 
     /**
-     * @see PersonDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.Person)
+     * @see PersonDao#create(Object)
      */
     @Override
     public Person create( final Person person ) {
         if ( person == null ) {
             throw new IllegalArgumentException( "Person.create - 'person' can not be null" );
         }
-        this.getHibernateTemplate().save( person );
+        this.getSessionFactory().getCurrentSession().save( person );
         return person;
     }
 
     /**
-     * @see PersonDao#findByFullName(int, java.lang.String, java.lang.String)
+     * @see PersonDao#findByFullName(String, String)
      */
     @Override
-    public java.util.Collection<Person> findByFullName( final java.lang.String name, final java.lang.String secondName ) {
+    public java.util.Collection<Person> findByFullName( final String name, final String secondName ) {
         return this.findByFullName(
-                "from PersonImpl p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
+                "from Person p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
                 name, secondName );
     }
 
     /**
-     * @see PersonDao#findByFullName(int, java.lang.String, java.lang.String,
-     *      java.lang.String)
+     * @see PersonDao#findByFullName(String, String)
      */
     @SuppressWarnings("unchecked")
-    public java.util.Collection<Person> findByFullName( final java.lang.String queryString,
-            final java.lang.String name, final java.lang.String secondName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        args.add( secondName );
-        argNames.add( "secondName" );
-        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return ( Collection<Person> ) results;
+    private java.util.Collection<Person> findByFullName( final String queryString, final String name,
+            final String secondName ) {
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "name", name )
+                .setParameter( "secondName", secondName ).list();
     }
 
     /**
-     * @see PersonDao#findByLastName(int, java.lang.String)
+     * @see PersonDao#findByLastName(String)
      */
     @Override
-    public java.util.Collection<Person> findByLastName( final java.lang.String lastName ) {
+    public java.util.Collection<Person> findByLastName( final String lastName ) {
         return this.findByLastName(
                 "from ubic.gemma.model.common.auditAndSecurity.Person as person where person.lastName = :lastName",
                 lastName );
     }
 
     /**
-     * @see PersonDao#findByLastName(int, java.lang.String, java.lang.String)
+     * @see PersonDao#findByLastName(String)
      */
-
     @SuppressWarnings("unchecked")
-    public Collection<Person> findByLastName( final java.lang.String queryString, final java.lang.String lastName ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( lastName );
-        argNames.add( "lastName" );
-        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return ( Collection<Person> ) results;
+    private Collection<Person> findByLastName( final String queryString, final String lastName ) {
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                .setParameter( "lastName", lastName ).list();
     }
 
     @Override
     public Collection<? extends Person> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from PersonImpl where id in (:ids)", "ids", ids );
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Person where id in (:ids)" )
+                .setParameterList( "ids", ids ).list();
     }
 
     /**
-     * @see PersonDao#load(int, java.lang.Long)
+     * @see PersonDao#load(Long)
      */
-
     @Override
-    public Person load( final java.lang.Long id ) {
+    public Person load( final Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Person.load - 'id' can not be null" );
         }
-        final Person entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.auditAndSecurity.PersonImpl.class, id );
-        return entity;
+        return ( Person ) this.getSessionFactory().getCurrentSession().get( Person.class, id );
     }
 
     /**
-     * @see PersonDao#loadAll(int)
+     * @see PersonDao#loadAll()
      */
 
     @Override
     public java.util.Collection<? extends Person> loadAll() {
-        final java.util.Collection<? extends Person> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.auditAndSecurity.PersonImpl.class );
-        return results;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createCriteria( Person.class ).list();
     }
 
     /**
-     * @see PersonDao#remove(java.lang.Long)
+     * @see PersonDao#remove(Long)
      */
 
     @Override
-    public void remove( java.lang.Long id ) {
+    public void remove( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Person.remove - 'id' can not be null" );
         }
@@ -168,61 +151,51 @@ public abstract class PersonDaoBase extends HibernateDaoSupport implements Perso
         }
     }
 
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-
     @Override
-    public void remove( java.util.Collection<? extends Person> entities ) {
+    public void remove( Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.remove - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().deleteAll( entities );
+        for ( Person p : entities ) {
+            this.remove( p );
+        }
     }
 
     /**
-     * @see PersonDao#remove(ubic.gemma.model.common.auditAndSecurity.Person)
+     * @see PersonDao#remove(Object)
      */
     @Override
-    public void remove( ubic.gemma.model.common.auditAndSecurity.Person person ) {
+    public void remove( Person person ) {
         if ( person == null ) {
             throw new IllegalArgumentException( "Person.remove - 'person' can not be null" );
         }
-        this.getHibernateTemplate().delete( person );
+        this.getSessionFactory().getCurrentSession().delete( person );
     }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
 
     @Override
     public void update( final java.util.Collection<? extends Person> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Person.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Person> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( Person entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
     }
 
     /**
-     * @see PersonDao#update(ubic.gemma.model.common.auditAndSecurity.Person)
+     * @see PersonDao#update(Object)
      */
     @Override
-    public void update( ubic.gemma.model.common.auditAndSecurity.Person person ) {
+    public void update( Person person ) {
         if ( person == null ) {
             throw new IllegalArgumentException( "Person.update - 'person' can not be null" );
         }
-        this.getHibernateTemplate().update( person );
+        this.getSessionFactory().getCurrentSession().update( person );
     }
 
 }

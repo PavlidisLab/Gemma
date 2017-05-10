@@ -19,26 +19,14 @@ import org.springframework.mail.SimpleMailMessage;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface MailEngine {
 
-    /**
-     * @param bodyText
-     * @param subject
-     */
-    public abstract void sendAdminMessage( String bodyText, String subject );
 
-    /**
-     * @param msg
-     */
-    public abstract void send( SimpleMailMessage msg );
+    void sendAdminMessage( String bodyText, String subject );
 
-    /**
-     * @param msg
-     * @param templateName
-     * @param model
-     */
-    public abstract void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model );
+    void send( SimpleMailMessage msg );
+
+    void sendMessage( SimpleMailMessage msg, String templateName, Map<String, Object> model );
 
 }

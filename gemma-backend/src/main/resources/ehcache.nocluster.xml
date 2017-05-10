@@ -229,7 +229,7 @@
 	<cache name="ubic.gemma.model.common.description.KeywordImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.PersonImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.Person" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl" maxElementsInMemory="10000" eternal="false"
@@ -241,27 +241,27 @@
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.authorities" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.ContactImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.Contact" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" maxElementsInMemory="200000" eternal="true"
 		overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.User" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.referenceLists" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.User.referenceLists" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.jobs" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.User.jobs" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserImpl.savedQueries" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.User.savedQueries" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserQueryImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.UserQuery" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl" maxElementsInMemory="1200" eternal="false"
@@ -390,15 +390,6 @@
 
 	<cache name="ubic.gemma.model.common.protocol.ParameterValueImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.ProtocolApplicationImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.ProtocolApplicationImpl.softwareApplications" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.ProtocolApplicationImpl.hardwareApplications" maxElementsInMemory="10000"
-		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.protocol.ProtocolImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
