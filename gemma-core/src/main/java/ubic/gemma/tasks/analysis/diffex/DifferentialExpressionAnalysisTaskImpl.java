@@ -19,7 +19,6 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -38,17 +37,17 @@ import java.util.HashSet;
 
 /**
  * A differential expression analysis spaces task
- * 
+ *
  * @author keshav
  * @version $Id$
  */
 @Component
 @Scope("prototype")
-public class DifferentialExpressionAnalysisTaskImpl extends
-        AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand> implements
-        DifferentialExpressionAnalysisTask {
+public class DifferentialExpressionAnalysisTaskImpl
+        extends AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand>
+        implements DifferentialExpressionAnalysisTask {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
+    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
@@ -59,12 +58,6 @@ public class DifferentialExpressionAnalysisTaskImpl extends
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid
-     * .javaspaces.task .diff. SpacesDifferentialExpressionAnalysisCommand)
-     */
     @Override
     public TaskResult execute() {
 
@@ -84,7 +77,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
 
         Collection<DifferentialExpressionAnalysis> results = doAnalysis();
 
-        Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<DifferentialExpressionAnalysis>();
+        Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<>();
         for ( DifferentialExpressionAnalysis r : results ) {
 
             /* Don't send the full analysis to the space. Instead, create a minimal result. */
@@ -95,19 +88,14 @@ public class DifferentialExpressionAnalysisTaskImpl extends
             minimalResults.add( minimalResult );
         }
 
-        TaskResult result = new TaskResult( taskCommand, minimalResults );
-
-        return result;
+        return new TaskResult( taskCommand, minimalResults );
     }
 
-    /**
-     * @param command
-     * @return
-     */
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
-
+        System.out.println("Beginning doAnalysis");
         if ( taskCommand.getToRedo() != null ) {
+            System.out.println("get to redo not null");
             if ( taskCommand.isUpdateStatsOnly() ) {
                 log.info( "Refreshing stats" );
                 differentialExpressionAnalyzerService.updateSummaries( taskCommand.getToRedo() );
@@ -117,18 +105,19 @@ public class DifferentialExpressionAnalysisTaskImpl extends
             }
             log.info( "Redoing analysis" );
             ee = expressionExperimentService.thawLite( ee );
-            return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(),
-                    taskCommand.getQvalueThreshold() );
+            return differentialExpressionAnalyzerService
+                    .redoAnalysis( ee, taskCommand.getToRedo(), taskCommand.getQvalueThreshold() );
 
         }
-
+        System.out.println("not redoing.. continuing normally");
         ee = expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( ee );
 
         if ( !diffAnalyses.isEmpty() ) {
-            log.info( "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
+            log.info(
+                    "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
         }
 
         Collection<DifferentialExpressionAnalysis> results;

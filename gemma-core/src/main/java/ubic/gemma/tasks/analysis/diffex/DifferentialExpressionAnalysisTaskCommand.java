@@ -32,7 +32,7 @@ import java.util.Collection;
 
 /**
  * A command object to be used by spaces.
- * 
+ *
  * @author keshav
  * @version $Id$
  */
@@ -48,32 +48,18 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     private ExpressionExperiment expressionExperiment = null;
 
     private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
-
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
-    }
-
-    public void setQvalueThreshold( Double qvalueThreshold ) {
-        this.qvalueThreshold = qvalueThreshold;
-    }
-
     /**
      * The factors to actually use in the analysis. If null the system tries to figure it out.
      */
     private Collection<ExperimentalFactor> factors;
-
     private boolean forceAnalysis = false;
-
     /**
      * Whether interactions among the factors should be included. The implementation may limit this to two-way
      * interactions for only up to two factors, so this may not have the effect desired.
      */
     private boolean includeInteractions = false;
-
     private ExperimentalFactor subsetFactor;
-
     private DifferentialExpressionAnalysis toRedo;
-
     private boolean updateStatsOnly = true;
 
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
@@ -82,10 +68,8 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     }
 
     /**
-     * @param ee
-     * @param toRedo
      * @param updateAnalysis if true, the analysis is updated. If false, only the summary statistics are updated (e.g.,
-     *        the pvalue distribution ).
+     *                       the pvalue distribution ).
      */
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee, DifferentialExpressionAnalysis toRedo,
             boolean updateAnalysis ) {
@@ -96,11 +80,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
-    /**
-     * @param taskId
-     * @param forceAnalysis
-     * @param expressionExperiment
-     */
     public DifferentialExpressionAnalysisTaskCommand( String taskId, boolean forceAnalysis,
             ExpressionExperiment expressionExperiment ) {
         super();
@@ -110,16 +89,36 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
+    public Double getQvalueThreshold() {
+        return qvalueThreshold;
+    }
+
+    public void setQvalueThreshold( Double qvalueThreshold ) {
+        this.qvalueThreshold = qvalueThreshold;
+    }
+
     public AnalysisType getAnalysisType() {
         return analysisType;
+    }
+
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
     }
 
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
     }
 
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
     public Collection<ExperimentalFactor> getFactors() {
         return factors;
+    }
+
+    public void setFactors( Collection<ExperimentalFactor> factors ) {
+        this.factors = factors;
     }
 
     /**
@@ -129,47 +128,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return subsetFactor;
     }
 
-    public DifferentialExpressionAnalysis getToRedo() {
-        return toRedo;
-    }
-
-    public boolean isForceAnalysis() {
-        return forceAnalysis;
-    }
-
-    public boolean isIncludeInteractions() {
-        return includeInteractions;
-    }
-
-    public boolean isUpdateStatsOnly() {
-        return updateStatsOnly;
-    }
-
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public void setFactors( Collection<ExperimentalFactor> factors ) {
-        this.factors = factors;
-    }
-
-    public void setForceAnalysis( boolean forceAnalysis ) {
-        this.forceAnalysis = forceAnalysis;
-    }
-
-    /**
-     * Sets preference for interactions to be included.
-     * 
-     * @param includeInteractions
-     */
-    public void setIncludeInteractions( boolean includeInteractions ) {
-        this.includeInteractions = includeInteractions;
-    }
-
     /**
      * @param subsetFactor the subsetFactor to set
      */
@@ -177,8 +135,35 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.subsetFactor = subsetFactor;
     }
 
+    public DifferentialExpressionAnalysis getToRedo() {
+        return toRedo;
+    }
+
     public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
         this.toRedo = toRedo;
+    }
+
+    public boolean isForceAnalysis() {
+        return forceAnalysis;
+    }
+
+    public void setForceAnalysis( boolean forceAnalysis ) {
+        this.forceAnalysis = forceAnalysis;
+    }
+
+    public boolean isIncludeInteractions() {
+        return includeInteractions;
+    }
+
+    /**
+     * Sets preference for interactions to be included.
+     */
+    public void setIncludeInteractions( boolean includeInteractions ) {
+        this.includeInteractions = includeInteractions;
+    }
+
+    public boolean isUpdateStatsOnly() {
+        return updateStatsOnly;
     }
 
     public void setUpdateStatsOnly( boolean updateStatsOnly ) {
@@ -186,7 +171,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return DifferentialExpressionAnalysisTask.class;
     }
 }

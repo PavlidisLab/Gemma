@@ -54,6 +54,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
     @Override
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
+        System.out.println("and deeper");
         AnalysisType analyzer = determineAnalysis( expressionExperiment, config );
 
         if ( analyzer == null ) {

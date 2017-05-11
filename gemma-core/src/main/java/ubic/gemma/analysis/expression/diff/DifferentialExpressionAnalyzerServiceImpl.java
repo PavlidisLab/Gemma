@@ -285,6 +285,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     public Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config ) {
         try {
+            System.out.println("going deeper");
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                     .analyze( expressionExperiment, config );
 

@@ -76,7 +76,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private static final double[] qValueThresholdsForHitLists = new double[] { 0.001, 0.005, 0.01, 0.05, 0.1 };
     private static final Log log = LogFactory.getLog( LinearModelAnalyzer.class );
-    private static final List<String> EXCLUDE_CHARACTERISTICS_VALUES = new ArrayList<String>(){{ add("DE_Exclude"); }};
+    private static final List<String> EXCLUDE_CHARACTERISTICS_VALUES = new ArrayList<String>() {{
+        add( "DE_Exclude" );
+    }};
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
     @Override
@@ -328,6 +330,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
 
+        System.out.println( "end of the rabbit hole.. or is it?!" );
         /*
          * I apologize for this being so complicated. Basically there are four phases:
          * 
@@ -641,7 +644,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
-
+        System.out.println("ok now maybe?");
         if ( factors.isEmpty() ) {
             log.error( "Must provide at least one factor" );
             return null;
@@ -717,12 +720,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         Map<String, List<Double>> pvaluesForQvalue = new HashMap<>();
 
         for ( String factorName : label2Factors.keySet() ) {
+            System.out.println("Putting factor "+factorName);
             resultLists.put( factorName, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( factorName, new ArrayList<Double>() );
         }
 
         for ( String[] fs : interactionFactorLists ) {
             String intF = StringUtils.join( fs, ":" );
+            System.out.println("Putting whatever this is: "+intF);
             resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( intF, new ArrayList<Double>() );
         }
@@ -740,7 +745,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         int notUsable = 0;
         int processed = 0;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
-
+            System.out.println("Doing for composite sequence "+el.getName());
             if ( ++processed % 15000 == 0 ) {
                 log.info( "Processed results for " + processed + " elements ..." );
             }
@@ -760,7 +765,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             }
 
             for ( String factorName : label2Factors.keySet() ) {
-
+                System.out.println("doing factor "+factorName);
                 if ( !pvaluesForQvalue.containsKey( factorName ) ) {
                     // was dropped.
                     continue;
@@ -847,7 +852,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                         Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
 
                         for ( String term : mainEffectContrastPvalues.keySet() ) {
-
+                            System.out.println("make contrast for term "+term);
                             Double contrastPvalue = mainEffectContrastPvalues.get( term );
 
                             makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
@@ -1264,6 +1269,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         if ( !( interactionFactorLists == null ) && !interactionFactorLists.isEmpty() ) {
             for ( String[] in : interactionFactorLists ) {
+                System.out.println("adding interaction of length "+in.length);
                 // we actually only support (tested etc.) one interaction at a time, but this should actually work for
                 // multiple
                 properDesignMatrix.addInteraction( in );
@@ -1271,6 +1277,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         for ( ExperimentalFactor ef : baselineConditions.keySet() ) {
+            System.out.println("making design matrix for EF "+ef.getName());
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
                 continue;
             }
@@ -1408,8 +1415,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         long lasttime = 0;
 
         // this analysis should take just 10 or 20 seconds for most data sets.
-        double MAX_ANALYSIS_TIME = 60 * 1000 * 20; // 20 minutes.
-        double updateIntervalMillis = 60 * 1000;// 1 minute
+        double MAX_ANALYSIS_TIME = 60 * 1000 * 40; // 40 minutes.
+        double updateIntervalMillis = 60 * 1000; // 1 minute.
         while ( !f.isDone() ) {
             try {
                 Thread.sleep( 1000 );
@@ -1442,6 +1449,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             log.warn( "Job was interrupted" );
             return rawResults;
         } catch ( ExecutionException e ) {
+            log.trace( e );
             throw new RuntimeException( e );
         }
 
