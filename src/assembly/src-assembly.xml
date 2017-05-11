@@ -22,7 +22,7 @@
 	<moduleSets>
 		<moduleSet>
 			<includes>
-				<include>gemma:gemma-backend</include>
+				<include>gemma:gemma-core</include>
 				<include>gemma:gemma-web</include>
 			</includes>
 			<sources>

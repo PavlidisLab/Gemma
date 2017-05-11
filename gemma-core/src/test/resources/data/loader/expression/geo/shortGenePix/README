@@ -1,0 +1,1 @@
+~/java/workspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 500  -s GSE2221_family.soft.gz

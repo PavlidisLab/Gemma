@@ -1,0 +1,5 @@
+# this has two subseries.
+
+~/dev/eclipseworkspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 20 -s GSE14618.soft.gz
+~/dev/eclipseworkspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 20 -s GSE14613.soft.gz
+~/dev/eclipseworkspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 20 -s GSE14615.soft.gz

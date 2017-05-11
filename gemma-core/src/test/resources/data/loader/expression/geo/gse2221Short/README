@@ -1,0 +1,2 @@
+# Original GSE is very big (> 110Mb) 
+~/java/workspace/Gemma/gemma-core/src/test/script/chopSoft.pl -n 100 -s GSE2221_family.soft.gz GDS1829.soft.gz GDS1830.soft.gz

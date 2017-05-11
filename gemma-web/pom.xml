@@ -132,7 +132,7 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- This isn't for web - it's for the CLI. So it should be in gemma-backend -->
+				<!-- This isn't for web - it's for the CLI. So it should be in gemma-core -->
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
 				<executions>
@@ -213,7 +213,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>gemma</groupId>
-			<artifactId>gemma-backend</artifactId>
+			<artifactId>gemma-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<dependency>

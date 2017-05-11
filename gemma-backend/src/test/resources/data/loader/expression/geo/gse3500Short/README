@@ -1,2 +1,0 @@
-# This data set has problems loading, the samples are not all in the same format (column order)
-/Data/java/workspace/Gemma/gemma-backend/src/test/script/chopSoft.pl -n 5 -s GSE3500.soft.gz
