@@ -27,14 +27,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
-import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
-import ubic.gemma.analysis.preprocess.svd.SVDService;
-import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
+import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -42,15 +43,15 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.util.EntityUtils;
-import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.core.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.web.controller.ControllerUtils;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
 import ubic.gemma.web.view.TextView;
@@ -1333,7 +1334,7 @@ public class DEDVController {
             seenSamples.add( ba.getSample() );
 
             // double should be the factorValue id, defined in
-            // ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
+            // ubic.gemma.core.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment,
             // BioAssayDimension)
             LinkedHashMap<ExperimentalFactor, Double> factorMap = eeLayouts.get( ba );
             LinkedHashMap<String, String[]> factorNamesToValueColourPairs = new LinkedHashMap<>( factorNames.size() );
@@ -1354,7 +1355,7 @@ public class DEDVController {
                 /*
                  * the double is only a double because it is meant to hold measurements when the factor is continuous if
                  * the factor is categorical, the double value is set to the value's id see
-                 * ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
+                 * ubic.gemma.core.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(
                  * ExpressionExperiment, BioAssayDimension)
                  */
                 if ( valueOrId == null || factor.getType() == null || (

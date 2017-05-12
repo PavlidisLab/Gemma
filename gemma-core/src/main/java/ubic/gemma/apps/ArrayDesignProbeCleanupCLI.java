@@ -23,9 +23,9 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 
 import java.io.*;
 

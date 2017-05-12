@@ -19,7 +19,7 @@
 
 package ubic.gemma.apps;
 
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -45,7 +45,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -65,7 +65,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

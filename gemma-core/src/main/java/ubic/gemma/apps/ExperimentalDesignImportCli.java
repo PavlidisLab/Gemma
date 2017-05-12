@@ -23,10 +23,10 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.*;
 
@@ -60,7 +60,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -75,7 +75,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -103,7 +103,7 @@ public class ExperimentalDesignImportCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

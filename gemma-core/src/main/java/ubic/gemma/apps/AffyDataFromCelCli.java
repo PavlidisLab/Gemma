@@ -23,8 +23,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.expression.geo.DataUpdater;
+import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -77,7 +76,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -107,7 +106,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {
@@ -214,11 +213,11 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
+     * @see ubic.gemma.core.util.AbstractCLIContextCLI#getCommandGroup()
      */
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.EXPERIMENT;
     }
 
 }

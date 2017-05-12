@@ -21,10 +21,10 @@ package ubic.gemma.web.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
+import ubic.gemma.core.tasks.maintenance.ExpressionExperimentReportTaskCommand;
 
 /**
  * @author klc

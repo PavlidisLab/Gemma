@@ -14,7 +14,7 @@
  */
 package ubic.gemma.apps;
 
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -36,7 +36,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLIContextCLI#getCommandGroup()
+     * @see ubic.gemma.core.util.AbstractCLIContextCLI#getCommandGroup()
      */
     @Override
     public CommandGroup getCommandGroup() {
@@ -46,7 +46,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -61,7 +61,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
+     * @see ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @Override
     protected void buildOptions() {
@@ -72,7 +72,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

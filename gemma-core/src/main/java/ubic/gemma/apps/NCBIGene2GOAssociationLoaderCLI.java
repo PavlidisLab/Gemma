@@ -28,14 +28,14 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.association.NCBIGene2GOAssociationLoader;
-import ubic.gemma.loader.association.NCBIGene2GOAssociationParser;
-import ubic.gemma.loader.util.fetcher.HttpFetcher;
-import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.loader.association.NCBIGene2GOAssociationLoader;
+import ubic.gemma.core.loader.association.NCBIGene2GOAssociationParser;
+import ubic.gemma.core.loader.util.fetcher.HttpFetcher;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Load GO -> gene associations from NCBI.
@@ -61,7 +61,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -79,7 +79,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -93,7 +93,7 @@ public class NCBIGene2GOAssociationLoaderCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

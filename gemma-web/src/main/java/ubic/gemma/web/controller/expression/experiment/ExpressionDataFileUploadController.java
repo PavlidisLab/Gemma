@@ -39,20 +39,20 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.analysis.preprocess.PreprocessingException;
-import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.AbstractTask;
+import ubic.gemma.core.tasks.AbstractTask;
 
 /**
  * Replaces SimpleExpressionExperimentLoadController

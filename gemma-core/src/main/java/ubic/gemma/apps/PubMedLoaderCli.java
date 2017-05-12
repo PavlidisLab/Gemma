@@ -24,8 +24,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.entrez.pubmed.PubMedService;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Load PubMed files from XML files -- not used routinely!
@@ -54,7 +54,7 @@ public class PubMedLoaderCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

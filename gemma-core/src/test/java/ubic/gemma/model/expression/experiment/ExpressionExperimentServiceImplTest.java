@@ -28,7 +28,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import junit.framework.TestCase;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentServiceImpl;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentServiceImpl;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;

@@ -109,7 +109,7 @@
 
 
 	<!-- Job details -->
-	<bean id="indexJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="indexJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="indexService" />
 		</property>
@@ -118,7 +118,7 @@
 			<value>indexAll</value>
 		</property>
 	</bean>
-	<bean id="arrayDesignReportJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="arrayDesignReportJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="arrayDesignReportService" />
 		</property>
@@ -127,7 +127,7 @@
 			<value>generateArrayDesignReport</value>
 		</property>
 	</bean>
-	<bean id="expressionExperimentReportJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="expressionExperimentReportJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="expressionExperimentReportService" />
 		</property>
@@ -136,7 +136,7 @@
 			<value>generateSummaryObjects</value>
 		</property>
 	</bean>
-	<bean id="whatsNewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="whatsNewJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="whatsNewService" />
 		</property>
@@ -146,7 +146,7 @@
 		</property>
 	</bean>
 
-	<bean id="gene2CsUpdateJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="gene2CsUpdateJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="tableMaintenanceUtil" />
 		</property>
@@ -155,7 +155,7 @@
 			<value>updateGene2CsEntries</value>
 		</property>
 	</bean>
-	<bean id="twitterOutboundJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="twitterOutboundJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="twitterOutbound" />
 		</property>
@@ -164,7 +164,7 @@
 			<value>sendDailyFeed</value>
 		</property>
 	</bean>
-	<bean id="neurocartaJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
+	<bean id="neurocartaJobDetail" class="ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean">
 		<property name="targetObject">
 			<ref bean="phenotypeAssociationManagerService" />
 		</property>
@@ -176,10 +176,10 @@
 
 	<!-- Configure Twitter feeds <bean id="twitterOutbound" class="ubic.gemma.web.feed.TwitterOutbound" /> -->
 
-	<!-- <bean id="viewJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean"> <property 
+	<!-- <bean id="viewJobDetail" claubic.gemma.core.securityrity.authentication.SecureMethodInvokingJobDetailFactoryBean"> <property
 		name="targetObject"> <ref bean="databaseViewGenerator" /> </property> <property name="concurrent" value="false" /> <property 
 		name="targetMethod"> <value>runAll</value> </property> </bean> -->
-	<!--<bean id="monitorSpaceJobDetail" class="ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean"> -->
+	<!--<bean id="monitorSpaceJobDetail" claubic.gemma.core.securityrity.authentication.SecureMethodInvokingJobDetailFactoryBean"> -->
 	<!--<property name="targetObject"> -->
 	<!--<ref bean="spaceMonitor" /> -->
 	<!--</property> -->

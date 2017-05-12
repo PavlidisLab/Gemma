@@ -30,7 +30,6 @@ _$*
 *.Z
 *.elc
 *.ln
-core
 **/DS_Store
 # Project ignores (converted from .cvsignore files)
 gemma-web/.settings/org.eclipse.m2e.core.prefs
@@ -105,13 +104,13 @@ gemma-core/src/main/native/libBlat.la
 gemma-core/src/test/resources/data/loader/expression/geo/meta-analysis/.Rhistory
 gemma-core/src/test/resources/data/loader/expression/geo/meta-analysis/.RData
 gemma-core/src/test/resources/data/search/io/file/index
-gemma-mda/*.log
-gemma-mda/andromda*.exc
-gemma-mda/cobertura.ser
-gemma-mda/spring*.exc
-gemma-mda/hibernate*.exc
-gemma-mda/src/main/uml/*.uml
-gemma-mda/src/main/uml/*.bak
+gemma-core/*.log
+gemma-core/andromda*.exc
+gemma-core/cobertura.ser
+gemma-core/spring*.exc
+gemma-core/hibernate*.exc
+gemma-core/src/main/uml/*.uml
+gemma-core/src/main/uml/*.bak
 
 # disablyng everything IDEA related - consider changing if more people start using IDEA.
 .idea

@@ -32,7 +32,7 @@ import org.springframework.web.multipart.support.ByteArrayMultipartFileEditor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.SimpleFormController;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.util.MailEngine;
+import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.web.util.MessageUtil;
 
 import javax.servlet.http.HttpServletRequest;

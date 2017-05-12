@@ -2,7 +2,7 @@
  * Print out the locations of the alignments for probes on a given platform (basically in PSL format)
  */
 package ubic.gemma.script.example
-import ubic.gemma.analysis.sequence.BlatResult2Psl
+import ubic.gemma.core.analysis.sequence.BlatResult2Psl
 import ubic.gemma.script.framework.GemmaCliBuilder
 import ubic.gemma.script.framework.SpringSupport
 

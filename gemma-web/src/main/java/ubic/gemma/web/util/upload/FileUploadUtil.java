@@ -34,7 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Utility methods for uploading files.

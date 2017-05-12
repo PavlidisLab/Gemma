@@ -2,13 +2,12 @@ package ubic.gemma.apps;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.expression.experiment.service.ExperimentalDesignService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExperimentalDesignService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.util.AbstractCLIContextCLI;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 
@@ -24,8 +23,8 @@ public class ExperimentalDesignViewCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.ANALYSIS;
     }
 
     @Override

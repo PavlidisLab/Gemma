@@ -17,11 +17,10 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.analysis.service.GeneMultifunctionalityPopulationService;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * @author paul
@@ -42,7 +41,7 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -55,8 +54,8 @@ public class MultifunctionalityCli extends AbstractCLIContextCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.SYSTEM;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.SYSTEM;
     }
 
     @SuppressWarnings("static-access")

@@ -24,7 +24,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryDao;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis

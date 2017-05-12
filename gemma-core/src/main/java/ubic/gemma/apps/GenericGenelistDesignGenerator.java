@@ -23,31 +23,31 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.analysis.report.ArrayDesignReportService;
-import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.core.analysis.report.ArrayDesignReportService;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Creates an array design based on the current set of transcripts for a taxon.
@@ -91,7 +91,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

@@ -23,10 +23,10 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Scans GEO for experiments that are not in Gemma.
@@ -52,7 +52,7 @@ public class GeoGrabberCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

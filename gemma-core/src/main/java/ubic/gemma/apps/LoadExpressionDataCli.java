@@ -30,19 +30,19 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
-import ubic.gemma.analysis.preprocess.PreprocessingException;
-import ubic.gemma.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
+import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
@@ -97,7 +97,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -112,7 +112,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -165,7 +165,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

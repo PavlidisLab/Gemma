@@ -22,9 +22,8 @@ package ubic.gemma.apps;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.genome.gene.ExternalFileGeneLoaderService;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.IOException;
 
@@ -76,7 +75,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
+     * @see ubic.gemma.core.loader.util.AbstractSpringAwareCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -140,8 +139,8 @@ public class ExternalFileGeneLoaderCLI extends AbstractCLIContextCLI {
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.SYSTEM;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.SYSTEM;
     }
 
 }

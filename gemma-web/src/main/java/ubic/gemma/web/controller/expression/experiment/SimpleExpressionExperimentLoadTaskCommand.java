@@ -20,7 +20,7 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.util.HashSet;
 
-import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 

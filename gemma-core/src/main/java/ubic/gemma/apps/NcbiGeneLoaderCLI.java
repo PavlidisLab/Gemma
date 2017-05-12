@@ -23,10 +23,10 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.File;
 
@@ -122,7 +122,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
+     * @see ubic.gemma.core.loader.util.AbstractSpringAwareCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -165,7 +165,7 @@ public class NcbiGeneLoaderCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

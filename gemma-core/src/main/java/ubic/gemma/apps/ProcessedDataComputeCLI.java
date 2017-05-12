@@ -20,11 +20,10 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import ubic.gemma.analysis.preprocess.PreprocessingException;
-import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -32,7 +31,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * Prepare the "processed" expression data vectors, and can also do batch correction.F
  *
  * @author xwan, paul
- * @see ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateServiceImpl
+ * @see ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateServiceImpl
  */
 public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI {
 
@@ -46,8 +45,8 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.EXPERIMENT;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.EXPERIMENT;
     }
 
     @Override

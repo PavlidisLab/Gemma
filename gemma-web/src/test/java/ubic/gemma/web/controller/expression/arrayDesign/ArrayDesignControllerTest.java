@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 
 /**
  * @author keshav

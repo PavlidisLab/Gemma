@@ -22,13 +22,14 @@ import gemma.gsec.SecurityService;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.*;
 
@@ -71,7 +72,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -81,7 +82,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
     public String getShortDesc() {
@@ -91,7 +92,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
+     * @see ubic.gemma.core.apps.AbstractGeneExpressionExperimentManipulatingCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -156,7 +157,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {
@@ -325,7 +326,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
+     * @see ubic.gemma.core.apps.AbstractGeneExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override
     protected void processOptions() {

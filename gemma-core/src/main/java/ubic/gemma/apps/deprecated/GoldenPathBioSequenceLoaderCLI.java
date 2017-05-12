@@ -22,13 +22,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.externalDb.GoldenPathDumper;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.core.externalDb.GoldenPathDumper;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.IOException;
 

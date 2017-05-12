@@ -2,15 +2,17 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.10.4</version>
+		<version>1.11</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-core</artifactId>
-	<name>Gemma Core</name>
-	<description>Module containing core gemma functionality.</description>
+	<name>Gemma Backend</name>
+	<description>Module containing gemma backend logic.</description>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
 		<outputDirectory>target/classes</outputDirectory>
 		<testOutputDirectory>target/test-classes</testOutputDirectory>
@@ -140,33 +142,51 @@
 	</profiles>
 	<dependencies>
 		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-mda</artifactId>
-			<version>${project.version}</version>
+			<groupId>pavlab</groupId>
+			<artifactId>gemma-gsec</artifactId>
+			<version>0.0.1</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.javaewah</groupId>
+			<artifactId>JavaEWAH</artifactId>
+			<version>0.7.9</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ubc.chibi.compass-fork</groupId>
+			<artifactId>compass-fork</artifactId>
+			<version>1.0</version>
 			<exclusions>
 				<exclusion>
-					<artifactId>openjpa-kernel</artifactId>
-					<groupId>org.apache.openjpa</groupId>
+					<artifactId>commons-lang</artifactId>
+					<groupId>commons-lang</groupId>
 				</exclusion>
 				<exclusion>
-					<artifactId>cglib-nodep</artifactId>
-					<groupId>cglib</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>icu4j</artifactId>
-					<groupId>com.ibm.icu</groupId>
+					<groupId>javax.servlet</groupId>
+					<artifactId>jsp-api</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity</artifactId>
+			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.retry</groupId>
+			<artifactId>spring-retry</artifactId>
+			<version>1.0.2.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>aopalliance</groupId>
 			<artifactId>aopalliance</artifactId>
 			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>1.8.3</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -300,6 +320,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.5</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
 		</dependency>
 	</dependencies>
 	<repositories>

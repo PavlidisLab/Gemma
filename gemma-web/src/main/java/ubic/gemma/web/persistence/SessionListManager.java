@@ -3,7 +3,7 @@ package ubic.gemma.web.persistence;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
-import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 

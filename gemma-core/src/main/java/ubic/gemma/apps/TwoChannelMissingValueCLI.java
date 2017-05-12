@@ -28,18 +28,18 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.analysis.preprocess.PreprocessingException;
-import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.core.analysis.preprocess.PreprocessingException;
+import ubic.gemma.core.analysis.preprocess.PreprocessorService;
+import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -88,7 +88,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -103,7 +103,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -133,7 +133,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

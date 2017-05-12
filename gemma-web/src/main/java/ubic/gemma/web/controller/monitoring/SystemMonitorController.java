@@ -32,10 +32,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.report.TwitterOutbound;
-import ubic.gemma.job.grid.util.JMSBrokerMonitor;
-import ubic.gemma.util.monitor.CacheMonitor;
-import ubic.gemma.util.monitor.HibernateMonitor;
+import ubic.gemma.core.analysis.report.TwitterOutbound;
+import ubic.gemma.core.job.grid.util.JMSBrokerMonitor;
+import ubic.gemma.persistence.util.monitor.CacheMonitor;
+import ubic.gemma.persistence.util.monitor.HibernateMonitor;
 
 /**
  * Provide statistics about the system: hibernate, caches etc.

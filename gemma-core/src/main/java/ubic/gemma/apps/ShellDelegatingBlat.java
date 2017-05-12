@@ -42,17 +42,17 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.analysis.sequence.SequenceManipulation;
-import ubic.gemma.analysis.sequence.SequenceWriter;
-import ubic.gemma.loader.genome.BlatResultParser;
+import ubic.gemma.core.analysis.sequence.SequenceManipulation;
+import ubic.gemma.core.analysis.sequence.SequenceWriter;
+import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.description.DatabaseType;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.util.Settings;
-import ubic.gemma.util.TimeUtil;
-import ubic.gemma.util.concurrent.GenericStreamConsumer;
+import ubic.gemma.persistence.util.Settings;
+import ubic.gemma.core.util.TimeUtil;
+import ubic.gemma.core.util.concurrent.GenericStreamConsumer;
 
 /**
  * Class to manage the gfServer and run BLAT searches. Delegates to the command-line shell to run blat.
@@ -176,7 +176,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence)
+     * @see Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
     public Collection<BlatResult> blatQuery( BioSequence b ) throws IOException {
@@ -191,7 +191,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence,
+     * @see Blat#blatQuery(ubic.gemma.model.genome.biosequence.BioSequence,
      * ubic.gemma.model.genome.Taxon, boolean)
      */
     @Override
@@ -224,7 +224,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#blatQuery(java.util.Collection, boolean, ubic.gemma.model.genome.Taxon)
+     * @see Blat#blatQuery(java.util.Collection, boolean, ubic.gemma.model.genome.Taxon)
      */
     @Override
     public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, boolean sensitive,
@@ -271,7 +271,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#blatQuery(java.util.Collection, ubic.gemma.model.genome.Taxon)
+     * @see Blat#blatQuery(java.util.Collection, ubic.gemma.model.genome.Taxon)
      */
     @Override
     public Map<BioSequence, Collection<BlatResult>> blatQuery( Collection<BioSequence> sequences, Taxon taxon )
@@ -282,7 +282,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getBlatScoreThreshold()
+     * @see Blat#getBlatScoreThreshold()
      */
     @Override
     public double getBlatScoreThreshold() {
@@ -292,7 +292,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getGfClientExe()
+     * @see Blat#getGfClientExe()
      */
     @Override
     public String getGfClientExe() {
@@ -302,7 +302,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getGfServerExe()
+     * @see Blat#getGfServerExe()
      */
     @Override
     public String getGfServerExe() {
@@ -312,7 +312,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getHost()
+     * @see Blat#getHost()
      */
     @Override
     public String getHost() {
@@ -322,7 +322,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getHumanServerPort()
+     * @see Blat#getHumanServerPort()
      */
     @Override
     public int getHumanServerPort() {
@@ -332,7 +332,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getMouseServerPort()
+     * @see Blat#getMouseServerPort()
      */
     @Override
     public int getMouseServerPort() {
@@ -342,7 +342,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getRatServerPort()
+     * @see Blat#getRatServerPort()
      */
     @Override
     public int getRatServerPort() {
@@ -352,7 +352,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getSeqDir()
+     * @see Blat#getSeqDir()
      */
     @Override
     public String getSeqDir() {
@@ -362,7 +362,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#getSeqFiles(ubic.gemma.apps.ShellDelegatingBlat.BlattableGenome)
+     * @see Blat#getSeqFiles(ShellDelegatingBlat.BlattableGenome)
      */
     @Override
     public String getSeqFiles( BlattableGenome genome ) {
@@ -382,7 +382,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#processPsl(java.io.InputStream, ubic.gemma.model.genome.Taxon)
+     * @see Blat#processPsl(java.io.InputStream, ubic.gemma.model.genome.Taxon)
      */
     @Override
     public Collection<BlatResult> processPsl( InputStream inputStream, Taxon taxon ) throws IOException {
@@ -404,7 +404,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#setBlatScoreThreshold(double)
+     * @see Blat#setBlatScoreThreshold(double)
      */
     @Override
     public void setBlatScoreThreshold( double blatScoreThreshold ) {
@@ -414,7 +414,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#startServer(ubic.gemma.apps.ShellDelegatingBlat.BlattableGenome, int)
+     * @see Blat#startServer(ShellDelegatingBlat.BlattableGenome, int)
      */
     @Override
     public void startServer( BlattableGenome genome, int port ) throws IOException {
@@ -453,7 +453,7 @@ public class ShellDelegatingBlat implements Blat {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.Blat#stopServer(int)
+     * @see Blat#stopServer(int)
      */
     @Override
     public void stopServer( int port ) {

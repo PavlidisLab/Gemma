@@ -18,7 +18,7 @@
  */
 package ubic.gemma.apps;
 
-import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
+import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -44,7 +44,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

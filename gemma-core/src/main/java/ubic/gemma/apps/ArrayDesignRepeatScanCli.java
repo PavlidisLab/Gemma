@@ -20,14 +20,13 @@ package ubic.gemma.apps;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import ubic.gemma.analysis.sequence.RepeatScan;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
+import ubic.gemma.core.analysis.sequence.RepeatScan;
+import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServiceImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.util.Collection;
 import java.util.Date;
@@ -49,8 +48,8 @@ public class ArrayDesignRepeatScanCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.PLATFORM;
     }
 
     @Override

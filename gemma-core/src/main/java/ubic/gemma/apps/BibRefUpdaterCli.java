@@ -1,5 +1,5 @@
 /*
- * The gemma-core project
+ * The gemma project
  * 
  * Copyright (c) 2013 University of British Columbia
  * 
@@ -25,10 +25,10 @@ import java.util.Collection;
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Refreshes the information in all the bibliographic references in the system.
@@ -53,7 +53,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -71,7 +71,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @Override
     protected void buildOptions() {
@@ -82,7 +82,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

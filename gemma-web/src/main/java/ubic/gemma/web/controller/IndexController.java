@@ -17,8 +17,8 @@ package ubic.gemma.web.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.search.indexer.IndexService;
-import ubic.gemma.tasks.maintenance.IndexerTaskCommand;
+import ubic.gemma.core.search.indexer.IndexService;
+import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 
 /**
  * TODO Document Me

@@ -34,7 +34,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

@@ -24,7 +24,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignMergeService;
+import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**
@@ -59,7 +59,7 @@ public class ArrayDesignMergeCli extends ArrayDesignSequenceManipulatingCli {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

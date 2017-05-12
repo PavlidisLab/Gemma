@@ -34,12 +34,12 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.loader.entrez.pubmed.PubMedXMLParser;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLParser;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 
 /**
  * Tests the BibliographicReferenceController

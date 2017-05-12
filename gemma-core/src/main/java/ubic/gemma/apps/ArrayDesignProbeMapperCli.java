@@ -4,21 +4,20 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.analysis.sequence.ProbeMapperConfig;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
+import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 
 import java.io.File;
 import java.io.IOException;
@@ -71,8 +70,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.PLATFORM;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.PLATFORM;
     }
 
     @Override
@@ -397,7 +396,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     /**
      * See 'configure' for how the other options are handled. (non-Javadoc)
      *
-     * @see ubic.gemma.apps.ArrayDesignSequenceManipulatingCli#processOptions()
+     * @see ArrayDesignSequenceManipulatingCli#processOptions()
      */
     @Override
     protected void processOptions() {

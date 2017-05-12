@@ -22,13 +22,13 @@ package ubic.gemma.apps;
 import cern.colt.Arrays;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
-import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
+import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.Persister;
+import ubic.gemma.persistence.persister.Persister;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

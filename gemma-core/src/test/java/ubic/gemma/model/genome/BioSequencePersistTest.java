@@ -28,8 +28,8 @@ import org.junit.Test;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis

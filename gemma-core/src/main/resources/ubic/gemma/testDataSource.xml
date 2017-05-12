@@ -9,7 +9,7 @@
    http://www.springframework.org/schema/context 
    http://www.springframework.org/schema/context/spring-context-3.2.xsd">
 
-   <context:component-scan base-package="ubic.gemma.testing" />
+   <context:component-scan base-package="ubic.gemma.core.testing" />
 
    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
       <property name="driverClassName">
@@ -30,5 +30,5 @@
    </bean>
    
    
-   <bean id="mailSender" class="ubic.gemma.testing.DummyMailSender"/>
+   <bean id="mailSender" class="ubic.gemma.core.testing.DummyMailSender"/>
 </beans>

@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.loader.expression.geo.model.GeoRecord;
-import ubic.gemma.loader.expression.geo.service.GeoBrowserService;
+import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 
 /**
  * @version $Id$

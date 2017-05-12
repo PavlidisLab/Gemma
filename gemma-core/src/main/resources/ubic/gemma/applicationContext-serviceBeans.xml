@@ -13,10 +13,10 @@
 
 	<aop:aspectj-autoproxy />
 
-	<!-- See ubic.gemma.util.monitor.MonitorAdvice and Monitored. <bean id="monitorAdvice" class="ubic.gemma.util.monitor.MonitorAdvice" 
+	<!-- MonitorAdvicevice and Monitored. <bean id="monitorAdvice" claMonitorAdvicevice"
 		/> -->
 
-	<!-- setup/teardown for long-running tasks. <bean id="taskMethodAdvice" class="ubic.gemma.job.TaskMethodAdvice"> <property 
+	<!-- setup/teardown for long-running tasks. <bean id="taskMethodAdvice" claubic.gemma.core.job.job.TaskMethodAdvice"> <property
 		name="spacesUtil" ref="spacesUtil" /> </bean> -->
 
 	<!-- Message source for this context, loaded from localized "messages_xx" files -->
@@ -41,7 +41,7 @@
 
 	<bean id="userProperties" class="org.apache.commons.configuration.PropertiesConfiguration" />
 
-	<bean id="configurationPropertyConfigurer" class="ubic.gemma.util.CommonsConfigurationPropertyPlaceholderConfigurer"
+	<bean id="configurationPropertyConfigurer" class="ubic.gemma.persistence.util.CommonsConfigurationPropertyPlaceholderConfigurer"
 		depends-on="userPropertiesFileHandler">
 		<property name="configuration">
 			<ref local="userProperties" />

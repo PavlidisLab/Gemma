@@ -1,5 +1,5 @@
 /*
- * The gemma-mda project
+ * The gemma project
  * 
  * Copyright (c) 2014 University of British Columbia
  * 

@@ -24,12 +24,12 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.protein.StringProteinInteractionLoader;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.loader.protein.StringProteinInteractionLoader;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,7 +103,7 @@ public class StringProteinLoadCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

@@ -27,10 +27,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.tasks.AbstractTask;
+import ubic.gemma.core.job.TaskCommand;
+import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.AbstractTask;
 
 /**
  * Controller that does nothing except wait a while. Used for tests.
@@ -77,7 +77,7 @@ public class MockLongJobControllerImpl implements MockLongJobController {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.web.util.MockLongJobController#runJob(ubic.gemma.job.TaskCommand)
+     * @see ubic.gemma.web.util.MockLongJobController#runJob(ubic.gemma.core.job.TaskCommand)
      */
     @Override
     public String runJob( TaskCommand command ) {

@@ -24,9 +24,9 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.job.SubmittedTask;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.job.SubmittedTask;
+import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 
 /**
  * Generic controller that looks for a finished job. Used when a job is done to get the result.

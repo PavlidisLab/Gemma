@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis

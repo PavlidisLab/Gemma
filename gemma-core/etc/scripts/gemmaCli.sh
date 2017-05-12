@@ -10,6 +10,6 @@ APPARGS=$@
 
 JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
-CMD="$JAVACMD -classpath ${GEMMA_LIB}:${JARS} ubic.gemma.apps.GemmaCLI $APPARGS"
+CMD="$JAVACMD -classpath ${GEMMA_LIB}:${JARS} GemmaCLI $APPARGS"
 
 $CMD

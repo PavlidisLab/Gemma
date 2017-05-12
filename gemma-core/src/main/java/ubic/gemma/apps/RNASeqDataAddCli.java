@@ -20,9 +20,9 @@ import java.util.Collection;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.expression.geo.DataUpdater;
+import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -61,7 +61,7 @@ public class RNASeqDataAddCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

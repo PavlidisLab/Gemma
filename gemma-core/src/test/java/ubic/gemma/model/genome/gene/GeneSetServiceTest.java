@@ -34,15 +34,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.ontology.providers.GeneOntologyService;
-import ubic.gemma.search.GeneSetSearch;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author klc

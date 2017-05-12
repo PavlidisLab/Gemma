@@ -25,7 +25,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
+import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -53,7 +53,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -63,7 +63,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
     public String getShortDesc() {
@@ -73,7 +73,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
+     * @see ExpressionExperimentManipulatingCLI#buildOptions()
      */
     @Override
     @SuppressWarnings("static-access")
@@ -88,7 +88,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {
@@ -119,7 +119,7 @@ public class ExperimentalDesignWriterCLI extends ExpressionExperimentManipulatin
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#processOptions()
+     * @see ExpressionExperimentManipulatingCLI#processOptions()
      */
     @Override
     protected void processOptions() {

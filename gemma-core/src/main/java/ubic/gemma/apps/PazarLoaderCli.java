@@ -20,9 +20,9 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.pazar.PazarLoader;
-import ubic.gemma.model.association.TfGeneAssociationService;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.loader.pazar.PazarLoader;
+import ubic.gemma.persistence.service.association.TfGeneAssociationService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * @author paul
@@ -43,7 +43,7 @@ public class PazarLoaderCli extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

@@ -30,10 +30,10 @@ import org.directwebremoting.spring.BeanCreator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.image.LinkOutValueObject;
-import ubic.gemma.image.aba.AllenBrainAtlasService;
-import ubic.gemma.image.aba.Image;
-import ubic.gemma.image.aba.ImageSeries;
+import ubic.gemma.core.image.LinkOutValueObject;
+import ubic.gemma.core.image.aba.AllenBrainAtlasService;
+import ubic.gemma.core.image.aba.Image;
+import ubic.gemma.core.image.aba.ImageSeries;
 
 /**
  * A controller for getting details from other web resources (like allen brain atlas)

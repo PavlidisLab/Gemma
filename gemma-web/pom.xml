@@ -2,12 +2,12 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.10.4</version>
+		<version>1.11</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-web</artifactId>
 	<packaging>war</packaging>
-	<name>Gemma web</name>
+	<name>Gemma Web</name>
 	<description>Gemma web application</description>
 	<build>
 		<directory>target</directory>

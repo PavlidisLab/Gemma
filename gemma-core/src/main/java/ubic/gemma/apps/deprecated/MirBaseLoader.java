@@ -22,13 +22,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
-import ubic.gemma.loader.genome.GffParser;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.loader.genome.GffParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.Persister;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -58,7 +58,7 @@ public class MirBaseLoader extends AbstractCLIContextCLI {
     }
 
     /* (non-Javadoc)
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

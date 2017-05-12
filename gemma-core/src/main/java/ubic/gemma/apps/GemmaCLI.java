@@ -33,7 +33,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.RegexPatternTypeFilter;
 
-import ubic.gemma.util.AbstractCLI;
+import ubic.gemma.core.util.AbstractCLI;
 
 /**
  * Generic command line for Gemma. Commands are referred by shorthand names; this class prints out available commands
@@ -66,8 +66,8 @@ public class GemmaCLI {
             provider.addIncludeFilter( new RegexPatternTypeFilter( Pattern.compile( ".*" ) ) );
 
             // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
-            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.apps" );
-            classes.addAll( provider.findCandidateComponents( "ubic.gemma.loader.association.phenotype" ) );
+            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.core.apps" );
+            classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.loader.association.phenotype" ) );
             classes.addAll( provider.findCandidateComponents( "chibi.gemmaanalysis" ) );
 
             for ( BeanDefinition bean : classes ) {
@@ -158,7 +158,7 @@ public class GemmaCLI {
         System.err.println( "============ Gemma command line tools ============" );
 
         System.err.print( "To operate Gemma tools, run a command like:\n\njava [jre options] -classpath ${GEMMA_LIB} "
-                + "ubic.gemma.apps.GemmaCLI <commandName> [options]\n\n"
+                + "GemmaCLI <commandName> [options]\n\n"
                 + "You can use gemmaCli.sh as a shortcut as in 'gemmaCli.sh <commandName> [options]'.\n\n"
                 + "Here is a list of available commands, grouped by category:\n" );
 

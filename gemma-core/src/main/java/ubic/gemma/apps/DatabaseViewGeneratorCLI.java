@@ -24,9 +24,9 @@ import java.io.IOException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.analysis.report.DatabaseViewGenerator;
+import ubic.gemma.core.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 /**
  * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
@@ -57,7 +57,7 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -67,7 +67,7 @@ public class DatabaseViewGeneratorCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#getShortDesc()
+     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#getShortDesc()
      */
     @Override
     public String getShortDesc() {

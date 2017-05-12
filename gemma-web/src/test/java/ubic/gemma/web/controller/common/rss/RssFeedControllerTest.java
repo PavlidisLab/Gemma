@@ -32,10 +32,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.basecode.util.RegressionTesting;
-import ubic.gemma.analysis.report.WhatsNew;
-import ubic.gemma.analysis.report.WhatsNewService;
+import ubic.gemma.core.analysis.report.WhatsNew;
+import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 
 /**
  * @author sshao

@@ -27,7 +27,7 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.apps.ArrayDesignSequenceManipulatingCli;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeRenamingService;
+import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeRenamingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -63,7 +63,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {

@@ -26,10 +26,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.analysis.report.WhatsNewService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.security.authentication.SecureMethodInvokingJobDetailFactoryBean;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.analysis.report.WhatsNewService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.security.authentication.SecureMethodInvokingJobDetailFactoryBean;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * Tests security of methods run by Quartz.

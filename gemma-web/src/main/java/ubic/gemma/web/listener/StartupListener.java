@@ -35,10 +35,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
-import ubic.gemma.util.CompassUtils;
-import ubic.gemma.util.QuartzUtils;
-import ubic.gemma.util.Settings;
+import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.persistence.util.CompassUtils;
+import ubic.gemma.core.util.QuartzUtils;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.util.Constants;
 
 /**

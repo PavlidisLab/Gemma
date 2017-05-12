@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import org.apache.commons.lang3.StringUtils;
 
-import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
+import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 
 /**
  * @author keshav

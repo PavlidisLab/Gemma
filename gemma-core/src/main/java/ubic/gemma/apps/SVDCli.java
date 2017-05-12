@@ -19,7 +19,7 @@
 
 package ubic.gemma.apps;
 
-import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -58,7 +58,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -82,7 +82,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {

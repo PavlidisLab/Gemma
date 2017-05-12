@@ -34,10 +34,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import ubic.gemma.genome.gene.service.GeneServiceImpl;
+import ubic.gemma.core.genome.gene.service.GeneServiceImpl;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDao;
+import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 

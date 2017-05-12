@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringWebTest;
+import ubic.gemma.core.testing.BaseSpringWebTest;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityController;
 import ubic.gemma.web.controller.common.auditAndSecurity.SecurityInfoValueObject;
 import ubic.gemma.web.remote.EntityDelegator;

@@ -29,8 +29,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -62,7 +62,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -77,7 +77,7 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override

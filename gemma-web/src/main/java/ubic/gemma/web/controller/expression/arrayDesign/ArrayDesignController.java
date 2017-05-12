@@ -16,7 +16,7 @@ package ubic.gemma.web.controller.expression.arrayDesign;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.analysis.sequence.CompositeSequenceMapValueObject;
+import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.web.remote.EntityDelegator;

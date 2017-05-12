@@ -18,9 +18,8 @@
  */
 package ubic.gemma.apps;
 
-import ubic.gemma.analysis.sequence.ArrayDesignMapResultService;
-import ubic.gemma.analysis.sequence.CompositeSequenceMapSummary;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
+import ubic.gemma.core.analysis.sequence.CompositeSequenceMapSummary;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 import java.util.Collection;
@@ -43,8 +42,8 @@ public class ArrayDesignMapSummaryCli extends ArrayDesignSequenceManipulatingCli
     }
 
     @Override
-    public CommandGroup getCommandGroup() {
-        return CommandGroup.ANALYSIS;
+    public GemmaCLI.CommandGroup getCommandGroup() {
+        return GemmaCLI.CommandGroup.ANALYSIS;
     }
 
     @Override

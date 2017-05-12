@@ -25,8 +25,8 @@ import org.apache.commons.lang3.time.StopWatch;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.util.AbstractCLIContextCLI;
-import ubic.gemma.util.CompassUtils;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.util.CompassUtils;
 
 /**
  * Simple command line to index the gemma db. Can index gene's, Expression experiments or array Designs
@@ -72,7 +72,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#getCommandName()
+     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
      */
     @Override
     public String getCommandName() {
@@ -87,7 +87,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#buildOptions()
+     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
@@ -122,7 +122,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
      */
     @Override
     protected Exception doWork( String[] args ) {
@@ -173,7 +173,7 @@ public class IndexGemmaCLI extends AbstractCLIContextCLI {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.util.AbstractSpringAwareCLI#processOptions()
+     * @see ubic.gemma.core.util.AbstractSpringAwareCLI#processOptions()
      */
     @Override
     protected void processOptions() {

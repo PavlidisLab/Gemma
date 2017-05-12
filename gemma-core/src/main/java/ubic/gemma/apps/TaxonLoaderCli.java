@@ -19,11 +19,11 @@
 package ubic.gemma.apps;
 
 import ubic.gemma.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.loader.genome.taxon.TaxonFetcher;
-import ubic.gemma.loader.genome.taxon.TaxonLoader;
+import ubic.gemma.core.loader.genome.taxon.TaxonFetcher;
+import ubic.gemma.core.loader.genome.taxon.TaxonLoader;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.PersisterHelper;
-import ubic.gemma.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.persister.PersisterHelper;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.util.Collection;
 
