@@ -313,7 +313,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.20-SNAPSHOT</version>
+			<version>1.0.19</version>
 		</dependency>
 	</dependencies>
 	<build>
