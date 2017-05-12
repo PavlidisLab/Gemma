@@ -25,7 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.LazyInitializationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.UncategorizedSQLException;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import  org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -103,7 +103,7 @@ public class UserListControllerImpl implements UserListController {
 
         boolean newUser = false;
         if ( u == null ) {
-            userDetails = new UserDetailsImpl( passwordEncoder.encode( user.getPassword() ), user.getUserName(), false,
+            userDetails = new UserDetailsImpl( passwordEncoder.encodePassword( user.getPassword(), user.getUserName() ), user.getUserName(), false,
                     null, user.getEmail(), userManager.generateSignupToken( user.getUserName() ), new Date() );
         } else {
             u.setEmail( user.getEmail() );

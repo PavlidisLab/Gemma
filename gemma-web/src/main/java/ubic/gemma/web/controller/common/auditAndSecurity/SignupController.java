@@ -27,7 +27,7 @@ import net.tanesha.recaptcha.ReCaptchaImpl;
 import net.tanesha.recaptcha.ReCaptchaResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import  org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -184,7 +184,7 @@ public class SignupController extends BaseController {
 
         String username = request.getParameter( "username" );
 
-        String encodedPassword = passwordEncoder.encode( password );
+        String encodedPassword = passwordEncoder.encodePassword( password, username );
 
         String email = request.getParameter( "email" );
 

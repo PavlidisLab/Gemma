@@ -26,14 +26,12 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.EmailValidator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.controller.BaseController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +45,6 @@ import java.util.Map;
  *
  * @author pavlidis
  * @author keshav
- * @version $Id$
  */
 @Controller
 public class UserFormMultiActionController extends BaseController {
@@ -107,7 +104,7 @@ public class UserFormMultiActionController extends BaseController {
                 if ( !StringUtils.equals( password, passwordConfirm ) ) {
                     throw new RuntimeException( "Passwords do not match." );
                 }
-                String encryptedPassword = passwordEncoder.encode( password );
+                String encryptedPassword = passwordEncoder.encodePassword( password, user.getUsername() );
                 userManager.changePassword( oldPassword, encryptedPassword );
             }
 
@@ -208,7 +205,7 @@ public class UserFormMultiActionController extends BaseController {
             String pwd = RandomStringUtils.randomAlphanumeric( UserFormMultiActionController.MIN_PASSWORD_LENGTH )
                     .toLowerCase();
 
-            String token = userManager.changePasswordForUser( email, username, passwordEncoder.encode( pwd ) );
+            String token = userManager.changePasswordForUser( email, username, passwordEncoder.encodePassword( pwd, username ) );
 
             sendResetConfirmationEmail( request, token, username, pwd, email );
 
@@ -239,7 +236,8 @@ public class UserFormMultiActionController extends BaseController {
 
             this.sendConfirmationEmail( request, token, username, email, model, "passwordReset.vm" );
 
-            saveMessage( request, getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
+            saveMessage( request,
+                    getText( "login.passwordReset", new Object[] { username, email }, request.getLocale() ) );
         } catch ( Exception e ) {
             throw new RuntimeException( "Couldn't send password change confirmation email to " + email, e );
         }

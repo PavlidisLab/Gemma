@@ -90,7 +90,7 @@
 	</bean>
 
 	<!-- declared separately so we can use it directly. -->
-	<bean id="passwordEncoder" class="org.springframework.security.crypto.password.StandardPasswordEncoder" />
+	<bean id="passwordEncoder" class=" org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
 
 
 	<!--- global method security configuration -->
