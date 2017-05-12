@@ -84,6 +84,41 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<configuration>
+					<target>
+						<echo message="******* Building DDL file *******" />
+						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
+							<classpath>
+								<path refid="maven.dependency.classpath" />
+							</classpath>
+						</taskdef>
+						<mkdir dir="target/schema" />
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";" output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+							<fileset dir="src/main/resources" includes="**/*.hbm.xml" />
+						</schemaexport>
+					</target>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.hibernate</groupId>
+						<artifactId>hibernate-core</artifactId>
+						<version>3.6.7.Final</version>
+						<type>jar</type>
+					</dependency>
+				</dependencies>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -117,24 +152,105 @@
 	</build>
 	<profiles>
 		<profile>
-			<id>Slow tests</id>
+			<id>testdb.build</id>
 			<activation>
+				<activeByDefault>false</activeByDefault>
 				<property>
-					<name>alltests</name>
+					<name>testdb.build</name>
 				</property>
 			</activation>
 			<build>
 				<plugins>
 					<plugin>
-						<artifactId>maven-surefire-plugin</artifactId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>2.8</version>
+						<executions>
+							<execution>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>unpack</goal>
+								</goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>pavlab</groupId>
+											<artifactId>gemma-gsec</artifactId>
+											<version>0.0.1</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>${project.build.directory}/schema</outputDirectory>
+											<includes>**/*.sql</includes>
+										</artifactItem>
+										<artifactItem>
+											<groupId>gemma</groupId>
+											<artifactId>gemma-model</artifactId>
+											<version>1.10.1</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>${project.build.directory}/schema</outputDirectory>
+											<includes>**/*.sql</includes>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>sql-maven-plugin</artifactId>
+						<version>1.5</version>
+						<dependencies><!-- yes, this needs to be here. -->
+							<dependency>
+								<groupId>mysql</groupId>
+								<artifactId>mysql-connector-java</artifactId>
+								<version>5.1.10</version>
+								<type>jar</type>
+							</dependency>
+						</dependencies>
+						<!-- common configuration shared by all executions -->
 						<configuration>
-							<excludes>
-								<exclude>**/*Abstract*</exclude>
-							</excludes>
-							<includes>
-								<include>**/*Test.java</include>
-							</includes>
+							<driver>com.mysql.jdbc.Driver</driver>
+							<username>${gemma.db.build.user}</username>
+							<password>${gemma.db.build.password}</password>
+							<onError>continue</onError>
+							<autocommit>true</autocommit>
 						</configuration>
+						<executions>
+							<execution>
+								<id>drop-add-testdb</id>
+								<phase>initialize</phase>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<url>${bootstrap.db.url}</url>
+									<autocommit>false</autocommit>
+									<sqlCommand>
+										<![CDATA[drop database if exists ${gemma.testdb.name};
+									create database ${gemma.testdb.name}]]>
+									</sqlCommand>
+								</configuration>
+							</execution>
+							<execution>
+								<id>load-testdb-schema</id>
+								<phase>process-test-resources</phase>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<url>${gemma.testdb.build.url}</url>
+									<srcFiles>
+										<srcFile>target/schema/gemma-ddl.sql</srcFile>
+										<srcFile>target/schema/gsec-acl-ddl.sql</srcFile>
+										<scrFile>target/schema/sql/init-acl-indices.sql</scrFile>
+										<srcFile>src/main/resources/sql/init-acls.sql</srcFile>
+										<scrFile>src/main/resources/sql/init-indices.sql</scrFile>
+										<srcFile>src/main/resources/sql/init-entities.sql</srcFile>
+									</srcFiles>
+									<onError>abort</onError>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
