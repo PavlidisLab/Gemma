@@ -66,7 +66,7 @@ public class GemmaCLI {
             provider.addIncludeFilter( new RegexPatternTypeFilter( Pattern.compile( ".*" ) ) );
 
             // searching entire hierarchy is 1) slow and 2) generates annoying logging from static initialization code.
-            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.core.apps" );
+            final Set<BeanDefinition> classes = provider.findCandidateComponents( "ubic.gemma.apps" );
             classes.addAll( provider.findCandidateComponents( "ubic.gemma.core.loader.association.phenotype" ) );
             classes.addAll( provider.findCandidateComponents( "chibi.gemmaanalysis" ) );
 
