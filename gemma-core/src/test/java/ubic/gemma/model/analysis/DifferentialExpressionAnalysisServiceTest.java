@@ -31,12 +31,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.util.EntityUtils;
 
 /**
  * @author klc

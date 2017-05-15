@@ -29,10 +29,7 @@
 	<moduleSets>
 		<moduleSet>
 			<includes>
-				<include>gemma:gemma-mda</include>
 				<include>gemma:gemma-core</include>
-				<include>gemma:gemma-web</include>
-				<include>gemma:gemma-util</include>
 			</includes>
 			<binaries>
 				<useDefaultExcludes>true</useDefaultExcludes>

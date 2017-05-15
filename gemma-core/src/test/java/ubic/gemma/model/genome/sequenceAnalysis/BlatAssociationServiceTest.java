@@ -29,14 +29,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDaoImpl;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneProductService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
@@ -67,7 +70,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
+     * @see ubic.gemma.core.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
     @Before
     public void setup() {
@@ -120,7 +123,7 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
 
     /**
      * Test method for
-     * {@link ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoImpl#find(ubic.gemma.model.genome.biosequence.BioSequence)}
+     * {@link BlatResultDaoImpl#find(ubic.gemma.model.genome.biosequence.BioSequence)}
      * .
      */
     @Test

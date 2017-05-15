@@ -40,7 +40,7 @@ package ubic.gemma.web.image.aba;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.image.aba.Image;
+import ubic.gemma.core.image.aba.Image;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**

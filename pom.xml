@@ -4,7 +4,7 @@
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
 	<artifactId>gemma</artifactId>
-	<version>1.11-SNAPSHOT</version>
+	<version>1.12-SNAPSHOT</version>
 	<inceptionYear>2005</inceptionYear>
 	<description>
 		The Gemma Project for meta-analysis of genomics data
@@ -15,8 +15,6 @@
 		<url>http://www.chibi.ubc.ca/</url>
 	</organization>
 	<modules>
-		<module>gemma-model</module>
-		<module>gemma-mda</module>
 		<module>gemma-core</module>
 		<module>gemma-web</module>
 	</modules>
@@ -315,7 +313,7 @@
 		<dependency>
 			<groupId>baseCode</groupId>
 			<artifactId>baseCode</artifactId>
-			<version>1.0.20-SNAPSHOT</version>
+			<version>1.0.19</version>
 		</dependency>
 	</dependencies>
 	<build>

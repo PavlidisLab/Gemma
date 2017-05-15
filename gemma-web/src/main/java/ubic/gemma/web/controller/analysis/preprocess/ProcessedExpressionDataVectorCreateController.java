@@ -21,11 +21,11 @@ package ubic.gemma.web.controller.analysis.preprocess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
+import ubic.gemma.core.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 
 /**
  * A controller to preprocess expression data vectors.

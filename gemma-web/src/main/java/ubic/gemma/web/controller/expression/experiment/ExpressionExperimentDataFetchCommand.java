@@ -18,7 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import ubic.gemma.job.TaskCommand;
+import ubic.gemma.core.job.TaskCommand;
 
 /**
  * @author paul

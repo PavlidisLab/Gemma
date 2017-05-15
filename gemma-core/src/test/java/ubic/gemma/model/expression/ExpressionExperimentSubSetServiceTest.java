@@ -22,9 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.security.authorization.acl.AclTestUtils;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author paul

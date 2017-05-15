@@ -35,8 +35,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;

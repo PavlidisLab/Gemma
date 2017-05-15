@@ -1,6 +1,6 @@
 package ubic.gemma.script.framework
-import ubic.gemma.util.SpringContextUtil
-import ubic.gemma.security.authentication.ManualAuthenticationService
+import ubic.gemma.persistence.util.SpringContextUtil
+import ubic.gemma.core.security.authentication.ManualAuthenticationService
 import java.util.concurrent.atomic.AtomicBoolean
 import org.apache.commons.lang3.time.StopWatch
 

@@ -26,8 +26,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultServiceImpl;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
@@ -43,7 +45,7 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
+     * @see ubic.gemma.core.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
      */
     @Before
     public void setup() {
@@ -57,7 +59,7 @@ public class BlatResultServiceTest extends BaseSpringContextTest {
 
     /**
      * Test method for
-     * {@link ubic.gemma.model.genome.sequenceAnalysis.BlatResultServiceImpl#find(ubic.gemma.model.genome.biosequence.BioSequence)}
+     * {@link BlatResultServiceImpl#find(ubic.gemma.model.genome.biosequence.BioSequence)}
      * .
      */
     @Test

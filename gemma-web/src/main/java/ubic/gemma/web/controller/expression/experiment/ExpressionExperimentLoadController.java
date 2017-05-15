@@ -27,8 +27,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.job.executor.webapp.TaskRunningService;
-import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.tasks.analysis.expression.ExpressionExperimentLoadTaskCommand;
 
 /**
  * Handles loading of Expression data into the system when the source is GEO or ArrayExpress, via Spring MVC or AJAX,

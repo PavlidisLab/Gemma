@@ -28,13 +28,13 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
-import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
+import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.persistence.util.EntityUtils;
 
 /**
  * Allows access to the gene co-expression analysis. Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,

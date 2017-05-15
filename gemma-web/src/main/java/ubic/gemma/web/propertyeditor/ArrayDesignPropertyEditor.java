@@ -24,7 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**
  * Used to convert ArrayDesigns from and into strings for display in forms.

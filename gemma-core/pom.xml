@@ -2,15 +2,17 @@
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
-		<version>1.11-SNAPSHOT</version>
+		<version>1.12-SNAPSHOT</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gemma-core</artifactId>
-	<name>Gemma Core</name>
-	<description>Module containing core gemma functionality.</description>
+	<name>Gemma Backend</name>
+	<description>Module containing gemma backend logic.</description>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
 	<build>
 		<sourceDirectory>src/main/java</sourceDirectory>
-		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
 		<outputDirectory>target/classes</outputDirectory>
 		<testOutputDirectory>target/test-classes</testOutputDirectory>
@@ -82,6 +84,41 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<configuration>
+					<target>
+						<echo message="******* Building DDL file *******" />
+						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
+							<classpath>
+								<path refid="maven.dependency.classpath" />
+							</classpath>
+						</taskdef>
+						<mkdir dir="target/schema" />
+						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";" output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
+							<fileset dir="src/main/resources" includes="**/*.hbm.xml" />
+						</schemaexport>
+					</target>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.hibernate</groupId>
+						<artifactId>hibernate-core</artifactId>
+						<version>3.6.7.Final</version>
+						<type>jar</type>
+					</dependency>
+				</dependencies>
+			</plugin>
 		</plugins>
 		<pluginManagement>
 			<plugins>
@@ -115,24 +152,105 @@
 	</build>
 	<profiles>
 		<profile>
-			<id>Slow tests</id>
+			<id>testdb.build</id>
 			<activation>
+				<activeByDefault>false</activeByDefault>
 				<property>
-					<name>alltests</name>
+					<name>testdb.build</name>
 				</property>
 			</activation>
 			<build>
 				<plugins>
 					<plugin>
-						<artifactId>maven-surefire-plugin</artifactId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>2.8</version>
+						<executions>
+							<execution>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>unpack</goal>
+								</goals>
+								<configuration>
+									<artifactItems>
+										<artifactItem>
+											<groupId>pavlab</groupId>
+											<artifactId>gemma-gsec</artifactId>
+											<version>0.0.1</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>${project.build.directory}/schema</outputDirectory>
+											<includes>**/*.sql</includes>
+										</artifactItem>
+										<artifactItem>
+											<groupId>gemma</groupId>
+											<artifactId>gemma-model</artifactId>
+											<version>1.10.1</version>
+											<type>jar</type>
+											<overWrite>true</overWrite>
+											<outputDirectory>${project.build.directory}/schema</outputDirectory>
+											<includes>**/*.sql</includes>
+										</artifactItem>
+									</artifactItems>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>sql-maven-plugin</artifactId>
+						<version>1.5</version>
+						<dependencies><!-- yes, this needs to be here. -->
+							<dependency>
+								<groupId>mysql</groupId>
+								<artifactId>mysql-connector-java</artifactId>
+								<version>5.1.10</version>
+								<type>jar</type>
+							</dependency>
+						</dependencies>
+						<!-- common configuration shared by all executions -->
 						<configuration>
-							<excludes>
-								<exclude>**/*Abstract*</exclude>
-							</excludes>
-							<includes>
-								<include>**/*Test.java</include>
-							</includes>
+							<driver>com.mysql.jdbc.Driver</driver>
+							<username>${gemma.db.build.user}</username>
+							<password>${gemma.db.build.password}</password>
+							<onError>continue</onError>
+							<autocommit>true</autocommit>
 						</configuration>
+						<executions>
+							<execution>
+								<id>drop-add-testdb</id>
+								<phase>initialize</phase>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<url>${bootstrap.db.url}</url>
+									<autocommit>false</autocommit>
+									<sqlCommand>
+										<![CDATA[drop database if exists ${gemma.testdb.name};
+									create database ${gemma.testdb.name}]]>
+									</sqlCommand>
+								</configuration>
+							</execution>
+							<execution>
+								<id>load-testdb-schema</id>
+								<phase>process-test-resources</phase>
+								<goals>
+									<goal>execute</goal>
+								</goals>
+								<configuration>
+									<url>${gemma.testdb.build.url}</url>
+									<srcFiles>
+										<srcFile>target/schema/gemma-ddl.sql</srcFile>
+										<srcFile>target/schema/gsec-acl-ddl.sql</srcFile>
+										<scrFile>target/schema/sql/init-acl-indices.sql</scrFile>
+										<srcFile>src/main/resources/sql/init-acls.sql</srcFile>
+										<scrFile>src/main/resources/sql/init-indices.sql</scrFile>
+										<srcFile>src/main/resources/sql/init-entities.sql</srcFile>
+									</srcFiles>
+									<onError>abort</onError>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
@@ -140,33 +258,51 @@
 	</profiles>
 	<dependencies>
 		<dependency>
-			<groupId>gemma</groupId>
-			<artifactId>gemma-mda</artifactId>
-			<version>${project.version}</version>
+			<groupId>pavlab</groupId>
+			<artifactId>gemma-gsec</artifactId>
+			<version>0.0.1</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>com.googlecode.javaewah</groupId>
+			<artifactId>JavaEWAH</artifactId>
+			<version>0.7.9</version>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ubc.chibi.compass-fork</groupId>
+			<artifactId>compass-fork</artifactId>
+			<version>1.0</version>
 			<exclusions>
 				<exclusion>
-					<artifactId>openjpa-kernel</artifactId>
-					<groupId>org.apache.openjpa</groupId>
+					<artifactId>commons-lang</artifactId>
+					<groupId>commons-lang</groupId>
 				</exclusion>
 				<exclusion>
-					<artifactId>cglib-nodep</artifactId>
-					<groupId>cglib</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>icu4j</artifactId>
-					<groupId>com.ibm.icu</groupId>
+					<groupId>javax.servlet</groupId>
+					<artifactId>jsp-api</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity</artifactId>
+			<version>1.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.retry</groupId>
+			<artifactId>spring-retry</artifactId>
+			<version>1.0.2.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>aopalliance</groupId>
 			<artifactId>aopalliance</artifactId>
 			<version>1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>1.8.3</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-net</groupId>
@@ -300,6 +436,11 @@
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.5</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
 		</dependency>
 	</dependencies>
 	<repositories>

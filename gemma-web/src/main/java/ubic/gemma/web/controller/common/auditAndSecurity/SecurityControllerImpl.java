@@ -44,20 +44,20 @@ import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.User;
 import gemma.gsec.util.SecurityUtil;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.genome.gene.service.GeneSetService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.util.MailEngine;
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.MailEngine;
+import ubic.gemma.persistence.util.Settings;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**

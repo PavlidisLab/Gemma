@@ -20,7 +20,7 @@ package ubic.gemma.persistence;
 
 import org.junit.Test;
 
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * Tests for deadlocking issues; see bug 2888.

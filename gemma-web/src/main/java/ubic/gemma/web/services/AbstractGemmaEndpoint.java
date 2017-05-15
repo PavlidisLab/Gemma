@@ -45,7 +45,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Abstracts out the security and a few constants.

@@ -18,36 +18,38 @@
  */
 package ubic.gemma.web.controller.diff;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+
+import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
+import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
-import ubic.gemma.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
-
-import java.util.Collection;
-import java.util.HashSet;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisRemoveTaskCommand;
+import ubic.gemma.core.tasks.analysis.diffex.DifferentialExpressionAnalysisTaskCommand;
 
 /**
  * A controller to run differential expression analysis either locally or in a space.
- *
+ * 
  * @author keshav
+ * @version $Id$
  */
 @Controller
 public class DifferentialExpressionAnalysisController {
-    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisController.class.getName() );
+    protected static Log log = LogFactory.getLog( DifferentialExpressionAnalysisController.class.getName() );
 
     @Autowired
     private TaskRunningService taskRunningService;
@@ -62,6 +64,9 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.
+     * 
+     * @param id
+     * @return
      */
     public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -71,11 +76,11 @@ public class DifferentialExpressionAnalysisController {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils
-                .factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() );
+        Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
+                .getExperimentalDesign().getExperimentalFactors() );
 
-        AnalysisType analyzer = this.analysisSelectionAndExecutionService
-                .determineAnalysis( ee, factorsWithoutBatch, null, true );
+        AnalysisType analyzer = this.analysisSelectionAndExecutionService.determineAnalysis( ee, factorsWithoutBatch,
+                null, true );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
@@ -100,8 +105,13 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point to redo an analysis.
+     * 
+     * @param eeId
+     * @param id
+     * @return
+     * @throws Exception
      */
-    public String redo( Long eeId, Long id ) {
+    public String redo( Long eeId, Long id ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
@@ -112,12 +122,17 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access analysis with id=" + id );
         }
         this.experimentReportService.evictFromCache( ee.getId() );
-        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo,
-                true );
+        DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee, toRedo, true );
         return taskRunningService.submitRemoteTask( cmd );
     }
 
-    public String refreshStats( Long eeId, Long id ) {
+    /**
+     * @param eeId
+     * @param id
+     * @return
+     * @throws Exception
+     */
+    public String refreshStats( Long eeId, Long id ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
@@ -135,8 +150,12 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point to remove an analysis given by the ID
+     * 
+     * @param id
+     * @return
+     * @throws Exception
      */
-    public String remove( Long eeId, Long id ) {
+    public String remove( Long eeId, Long id ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
         if ( ee == null ) {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + eeId );
@@ -154,8 +173,11 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point when running completely automatically.
+     * 
+     * @return
+     * @throws Exception
      */
-    public String run( Long id ) {
+    public String run( Long id ) throws Exception {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
@@ -165,8 +187,8 @@ public class DifferentialExpressionAnalysisController {
         ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
-        cmd.setFactors(
-                ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign().getExperimentalFactors() ) );
+        cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
+                .getExperimentalFactors() ) );
         cmd.setIncludeInteractions( true ); // if possible, might get dropped.
 
         return taskRunningService.submitRemoteTask( cmd );
@@ -174,8 +196,15 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point for 'customized' analysis.
+     * 
+     * @param id
+     * @param includeInteractions
+     * @param subsetFactorId optional
+     * @return
+     * @throws Exception
      */
-    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId ) {
+    public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
+            throws Exception {
 
         if ( factorids.isEmpty() ) {
             throw new IllegalArgumentException( "You must provide at least one factor to analyze" );
@@ -191,7 +220,7 @@ public class DifferentialExpressionAnalysisController {
         /*
          * Get the factors matching the factorids
          */
-        Collection<ExperimentalFactor> factors = new HashSet<>();
+        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( factorids.contains( ef.getId() ) ) {
                 factors.add( ef );
@@ -215,8 +244,7 @@ public class DifferentialExpressionAnalysisController {
             }
 
             if ( factors.contains( subsetFactor ) ) {
-                throw new IllegalArgumentException(
-                        "Subset factor must not be one of the factors used in the analysis" );
+                throw new IllegalArgumentException( "Subset factor must not be one of the factors used in the analysis" );
             }
         }
 

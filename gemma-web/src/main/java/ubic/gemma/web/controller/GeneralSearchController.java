@@ -25,7 +25,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
-import ubic.gemma.search.SearchResult;
+import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**

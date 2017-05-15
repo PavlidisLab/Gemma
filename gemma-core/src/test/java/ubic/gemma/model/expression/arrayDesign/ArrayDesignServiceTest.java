@@ -24,15 +24,16 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateObjectRetrievalFailureException;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -345,7 +346,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
 
     /*
      * Test method for
-     * 'ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceImpl.numCompositeSequences(ArrayDesign)'
+     * 'ArrayDesignServiceImpl.numCompositeSequences(ArrayDesign)'
      */
     @Test
     public void testNumCompositeSequencesArrayDesign() {

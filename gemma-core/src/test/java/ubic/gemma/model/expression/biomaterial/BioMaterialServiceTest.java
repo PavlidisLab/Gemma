@@ -24,8 +24,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialDaoImpl;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
@@ -54,7 +56,7 @@ public class BioMaterialServiceTest extends BaseSpringContextTest {
 
     /**
      * Test method for
-     * {@link ubic.gemma.model.expression.biomaterial.BioMaterialDaoImpl#find(ubic.gemma.model.expression.biomaterial.BioMaterial)}
+     * {@link BioMaterialDaoImpl#find(ubic.gemma.model.expression.biomaterial.BioMaterial)}
      * .
      */
     @Test

@@ -9,7 +9,7 @@ CONFIGS=~/configs
 
 JAVACMD="${JAVA_HOME}/bin/java $JAVA_OPTS"
 
-CMD="$JAVACMD -classpath ${CONFIGS}:${JARS} ubic.gemma.job.executor.worker.WorkerCLI"
+CMD="$JAVACMD -classpath ${CONFIGS}:${JARS} ubic.gemma.core.job.executor.worker.WorkerCLI"
 $CMD
 
 

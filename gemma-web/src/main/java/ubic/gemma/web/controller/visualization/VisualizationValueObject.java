@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
 

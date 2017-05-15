@@ -24,13 +24,13 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObjectHelper;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.HashSet;

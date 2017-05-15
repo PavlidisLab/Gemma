@@ -1,6 +1,6 @@
 package ubic.gemma.web.util;
 
-import ubic.gemma.job.TaskCommand;
+import ubic.gemma.core.job.TaskCommand;
 
 /**
  * Note: do not use parameterized collections as parameters for ajax methods in this class! Type information is lost

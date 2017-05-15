@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis

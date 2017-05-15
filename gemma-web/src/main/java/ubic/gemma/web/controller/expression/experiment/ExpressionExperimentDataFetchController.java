@@ -40,15 +40,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.analysis.service.ExpressionDataFileService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.AbstractTask;
-import ubic.gemma.util.Settings;
+import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene

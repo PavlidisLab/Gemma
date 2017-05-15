@@ -34,24 +34,26 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
-import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoService;
-import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
+import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
+import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.TableMaintenenceUtil;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.persistence.service.TableMaintenenceUtil;
+import ubic.gemma.persistence.util.EntityUtils;
 
 /**
  * @author Paul
@@ -98,7 +100,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
     /**
      * Test method for
-     * {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl#getProcessedDataArrays(java.util.Collection, java.util.Collection)}
+     * {@link ProcessedExpressionDataVectorDaoImpl#getProcessedDataArrays(java.util.Collection, java.util.Collection)}
      * .
      */
     @Test

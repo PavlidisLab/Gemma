@@ -25,12 +25,12 @@ import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
-import ubic.gemma.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
-import ubic.gemma.util.BeanPropertyCompleter;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.util.BeanPropertyCompleter;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.WebConstants;
 

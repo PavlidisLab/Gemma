@@ -30,16 +30,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.genome.gene.GOGroupValueObject;
-import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
-import ubic.gemma.genome.gene.service.GeneCoreService;
-import ubic.gemma.genome.gene.service.GeneSearchService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.core.genome.gene.GOGroupValueObject;
+import ubic.gemma.core.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.core.genome.gene.service.GeneCoreService;
+import ubic.gemma.core.genome.gene.service.GeneSearchService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.search.GeneSetSearch;
-import ubic.gemma.search.SearchResultDisplayObject;
+import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchResultDisplayObject;
 import ubic.gemma.web.persistence.SessionListManager;
 
 /**

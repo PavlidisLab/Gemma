@@ -31,13 +31,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+import ubic.gemma.persistence.service.association.coexpression.LinkCreator;
+import ubic.gemma.persistence.service.association.coexpression.NonPersistentNonOrderedCoexpLink;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.EntityUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.util.EntityUtils;
 
 /**
  * @author klc

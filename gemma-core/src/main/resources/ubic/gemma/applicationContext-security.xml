@@ -90,7 +90,7 @@
 	</bean>
 
 	<!-- declared separately so we can use it directly. -->
-	<bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
+	<bean id="passwordEncoder" class=" org.springframework.security.authentication.encoding.ShaPasswordEncoder" />
 
 
 	<!--- global method security configuration -->
@@ -118,7 +118,7 @@
 	<!-- Aspect that adds ACLs for new entities, and deletes them for deleted entities. -->
 	<aop:config>
 		<aop:aspect id="aclAspect" ref="aclAdvice" order="4">
-			<aop:after-returning method="doAclAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
+			<aop:after-returning method="doAclAdvice" pointcut="ubic.gemma.core.util.SystemArchitectureAspect.modifier()"
 				returning="retValue" />
 		</aop:aspect>
 	</aop:config>
@@ -126,7 +126,7 @@
 	<!-- Aspect to add audit info for objects after CRUD operations. -->
 	<aop:config>
 		<aop:aspect id="auditAspect" ref="auditAdvice" order="5">
-			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.util.SystemArchitectureAspect.modifier()"
+			<aop:after-returning method="doAuditAdvice" pointcut="ubic.gemma.core.util.SystemArchitectureAspect.modifier()"
 				returning="retValue" />
 		</aop:aspect>
 	</aop:config>
@@ -134,7 +134,7 @@
 	<!-- filters (gemma-specific) -->
 
 	<!-- After reading collection of composite sequences -->
-	<bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
+	<bean id="afterAclArrayDesignCollectionRead" class="ubic.gemma.core.security.authorization.acl.AclAfterCollectionCompSeqByArrayDesignFilter">
 		<constructor-arg ref="aclService" />
 		<constructor-arg>
 			<list>
@@ -146,7 +146,7 @@
 	</bean>
 
 	<!-- After reading collection of vectors -->
-	<bean id="afterAclDataVectorCollectionRead" class="ubic.gemma.security.authorization.acl.AclAfterCollectionDataVectorByExpressionExperimentFilter">
+	<bean id="afterAclDataVectorCollectionRead" class="ubic.gemma.core.security.authorization.acl.AclAfterCollectionDataVectorByExpressionExperimentFilter">
 		<constructor-arg ref="aclService" />
 		<constructor-arg>
 			<list>

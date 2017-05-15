@@ -30,22 +30,22 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.expression.coexpression.CoexpressionMetaValueObject;
-import ubic.gemma.analysis.expression.coexpression.CoexpressionSearchCommand;
-import ubic.gemma.analysis.expression.coexpression.CoexpressionValueObjectExt;
-import ubic.gemma.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.genome.gene.service.GeneSetService;
-import ubic.gemma.job.TaskCommand;
-import ubic.gemma.job.TaskResult;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.analysis.expression.coexpression.CoexpressionMetaValueObject;
+import ubic.gemma.core.analysis.expression.coexpression.CoexpressionSearchCommand;
+import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
+import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.job.TaskCommand;
+import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
-import ubic.gemma.tasks.AbstractTask;
-import ubic.gemma.util.EntityUtils;
-import ubic.gemma.util.Settings;
+import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.persistence.util.EntityUtils;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author luke

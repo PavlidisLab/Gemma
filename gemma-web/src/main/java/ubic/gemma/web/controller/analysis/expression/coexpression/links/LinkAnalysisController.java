@@ -21,13 +21,13 @@ package ubic.gemma.web.controller.analysis.expression.coexpression.links;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisConfig;
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.analysis.expression.coexpression.links.LinkAnalysisConfig;
+import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.tasks.analysis.coexp.LinkAnalysisTaskCommand;
+import ubic.gemma.core.tasks.analysis.coexp.LinkAnalysisTaskCommand;
 
 /**
  * A controller to preprocess expression data vectors.

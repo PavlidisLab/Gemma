@@ -34,13 +34,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
-import ubic.gemma.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.analysis.expression.diff.GeneDiffExMetaAnalysisHelperService;
+import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.BaseValueObject;
-import ubic.gemma.model.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisDetailValueObject;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisSummaryValueObject;
-import ubic.gemma.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
+import ubic.gemma.core.tasks.analysis.diffex.DiffExMetaAnalyzerTaskCommand;
 
 /**
  * A controller to analyze result sets either locally or in a space.

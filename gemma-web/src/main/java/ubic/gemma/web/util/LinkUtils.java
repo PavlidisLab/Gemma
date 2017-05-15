@@ -23,7 +23,7 @@ import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-import ubic.gemma.util.Settings;
+import ubic.gemma.persistence.util.Settings;
 
 /**
  * Methods to generate links and/or urls to common resources.

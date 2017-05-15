@@ -37,9 +37,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.genome.gene.service.GeneService;
-import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -57,8 +57,8 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueOb
 import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
-import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'

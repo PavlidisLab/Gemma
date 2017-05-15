@@ -18,7 +18,7 @@ import java.util.Collection;
 
 import org.springframework.dao.DataIntegrityViolationException;
 
-import ubic.gemma.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -59,13 +59,13 @@ public interface SecurityController {
 
     /**
      * @return
-     * @see ubic.gemma.security.SecurityServiceImpl#getAuthenticatedUserCount()
+     * @see ubic.gemma.core.security.SecurityServiceImpl#getAuthenticatedUserCount()
      */
     public abstract Integer getAuthenticatedUserCount();
 
     /**
      * @return
-     * @see ubic.gemma.security.SecurityServiceImpl#getAuthenticatedUserNames()
+     * @see ubic.gemma.core.security.SecurityServiceImpl#getAuthenticatedUserNames()
      */
     public abstract Collection<String> getAuthenticatedUserNames();
 
