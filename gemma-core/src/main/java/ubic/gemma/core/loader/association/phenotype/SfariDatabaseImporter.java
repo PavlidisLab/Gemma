@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import ubic.basecode.util.StringUtil;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ScoreValueObject;
 
 /**

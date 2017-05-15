@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;

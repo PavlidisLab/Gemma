@@ -42,7 +42,7 @@ import ubic.basecode.ontology.ncbo.AnnotatorResponse;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MedicOntologyService;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;

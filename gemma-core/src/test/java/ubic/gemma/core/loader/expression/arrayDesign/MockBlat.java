@@ -8,8 +8,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 
-import ubic.gemma.apps.Blat;
-import ubic.gemma.apps.ShellDelegatingBlat.BlattableGenome;
+import ubic.gemma.core.apps.Blat;
+import ubic.gemma.core.apps.ShellDelegatingBlat.BlattableGenome;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;

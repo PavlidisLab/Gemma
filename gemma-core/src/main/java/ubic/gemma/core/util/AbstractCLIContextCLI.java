@@ -19,7 +19,7 @@
 package ubic.gemma.core.util;
 
 import org.apache.commons.lang3.time.StopWatch;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;

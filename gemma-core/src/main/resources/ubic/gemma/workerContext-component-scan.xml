@@ -8,9 +8,9 @@
    <!-- This defines which classes are picked up by annotation-scanning for beans (e.g. @Component, @Service, @Repository -->
    <context:component-scan base-package="ubic.gemma" name-generator="ubic.gemma.persistence.util.BeanNameGenerator">
       <context:exclude-filter type="regex" expression="ubic\.gemma\.web\..*" />
-      <context:exclude-filter type="regex" expression="ubic\.gemma\.job\.executor\.webapp\..*" />
-      <context:exclude-filter type="regex" expression="ubic\.gemma\.search\.indexer\..*" />
-      <context:exclude-filter type="regex" expression="ubic\.gemma\.job\.progress\..*" />
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.job\.executor\.webapp\..*" />
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.search\.indexer\..*" />
+      <context:exclude-filter type="regex" expression="ubic\.gemma\.core\.job\.progress\..*" />
    </context:component-scan>
 
 </beans>

@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.apps.Blat;
+import ubic.gemma.core.apps.Blat;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 

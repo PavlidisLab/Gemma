@@ -25,7 +25,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 
