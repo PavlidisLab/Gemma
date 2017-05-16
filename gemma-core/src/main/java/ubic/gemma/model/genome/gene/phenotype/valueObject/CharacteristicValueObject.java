@@ -28,11 +28,12 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * CharacteristicValueObject containing a category to a value
+ * ValueObject wrapper for a Characteristic.
+ * @see Characteristic
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
-    private static Log log = LogFactory.getLog( CharacteristicValueObject.class );
+    private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
     /**
      * id used by url on the client side
      */
@@ -45,9 +46,8 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
      * child term from a root
      */
     private boolean child = false;
-    private Long id = null; // MUST be initialized with null or have equality
+    private Long id = null; // MUST be initialized with null, otherwise causes JS equality inconsistencies.
     private int numTimesUsed = 0;
-    // problems in javascript.
     /**
      * what Ontology uses this term
      */
@@ -133,8 +133,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
                 .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( taxon, o.taxon, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( value, o.value, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .result();
+                .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() ).result();
     }
 
     @Override

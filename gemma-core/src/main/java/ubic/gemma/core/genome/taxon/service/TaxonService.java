@@ -18,78 +18,76 @@
  */
 package ubic.gemma.core.genome.taxon.service;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 
+import java.util.Collection;
+
 /**
  * @author kelsey
- * @version $Id$
  */
 public interface TaxonService {
 
-    public Taxon find( Taxon taxon );
+    Taxon find( Taxon taxon );
 
-    public Taxon findByAbbreviation( String abbreviation );
+    Taxon findByAbbreviation( String abbreviation );
 
-    public Taxon findByCommonName( String commonName );
+    Taxon findByCommonName( String commonName );
 
-    public Taxon findByScientificName( String scientificName );
+    Taxon findByScientificName( String scientificName );
 
-    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
-
-    @Secured({ "GROUP_USER" })
-    public Taxon findOrCreate( Taxon taxon );
-
-    public Taxon load( Long id );
-
-    public TaxonValueObject loadValueObject( Long id );
-
-    public Collection<Taxon> loadAll();
+    Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
     @Secured({ "GROUP_USER" })
-    public void remove( Taxon taxon );
+    Taxon findOrCreate( Taxon taxon );
+
+    Taxon load( Long id );
+
+    TaxonValueObject loadValueObject( Long id );
+
+    Collection<Taxon> loadAll();
 
     @Secured({ "GROUP_USER" })
-    public void update( Taxon taxon );
+    void remove( Taxon taxon );
 
-    public void thaw( Taxon taxon );
+    @Secured({ "GROUP_USER" })
+    void update( Taxon taxon );
+
+    void thaw( Taxon taxon );
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
-    public Collection<Taxon> loadAllTaxaWithGenes();
+    Collection<Taxon> loadAllTaxaWithGenes();
 
-    public Collection<TaxonValueObject> loadAllValueObjects();
+    Collection<TaxonValueObject> loadAllValueObjects();
 
     /**
      * @return Taxon that are species. (only returns usable taxa)
      */
-    public Collection<TaxonValueObject> getTaxaSpecies();
+    Collection<TaxonValueObject> getTaxaSpecies();
 
-    public Collection<TaxonValueObject> getTaxaWithEvidence();
+    Collection<TaxonValueObject> getTaxaWithEvidence();
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
-    public Collection<TaxonValueObject> getTaxaWithGenes();
+    Collection<TaxonValueObject> getTaxaWithGenes();
 
     /**
      * @return collection of taxa that have expression experiments available.
      */
-    public Collection<TaxonValueObject> getTaxaWithDatasets();
+    Collection<TaxonValueObject> getTaxaWithDatasets();
 
     /**
      * @return List of taxa with array designs in gemma
      */
-    public Collection<TaxonValueObject> getTaxaWithArrays();
+    Collection<TaxonValueObject> getTaxaWithArrays();
 
     /**
      * @return Taxon that are on NeuroCarta evidence
      */
-    public java.util.Collection<Taxon> loadTaxonWithEvidence();
+    java.util.Collection<Taxon> loadTaxonWithEvidence();
 
 }

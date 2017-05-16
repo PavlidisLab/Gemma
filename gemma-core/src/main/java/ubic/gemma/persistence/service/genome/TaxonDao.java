@@ -18,55 +18,46 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.genome.Taxon
  */
 public interface TaxonDao extends BaseDao<Taxon> {
 
-    /**
-     * 
-     */
-    public Taxon find( Taxon taxon );
+    Taxon find( Taxon taxon );
 
     /**
      * <p>
      * A finder method to find a taxon based on an abbreviation.
      * </p>
      */
-    public Taxon findByAbbreviation( String abbreviation );
+    Taxon findByAbbreviation( String abbreviation );
+
+    Taxon findByCommonName( String commonName );
 
     /**
-     * 
+     * Searches for a taxon by its scientific name, case insensitive.
+     * @param scientificName the scientific name to be matched
+     * @return a Taxon whose scientific name matches the given string.
      */
-    public Taxon findByCommonName( String commonName );
-
-    /**
-     * 
-     */
-    public Taxon findByScientificName( String scientificName );
+    Taxon findByScientificName( String scientificName );
 
     /**
      * Find the child<code>taxa</code> for this parent.
      */
-    public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
+    Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
-    /**
-     * 
-     */
-    public Taxon findOrCreate( Taxon taxon );
+    Taxon findOrCreate( Taxon taxon );
 
     /**
      * Thaw the taxon
-     * 
-     * @param taxon
      */
-    public void thaw( Taxon taxon );
+    void thaw( Taxon taxon );
 
-    public Collection<Taxon> findTaxonUsedInEvidence();
+    Collection<Taxon> findTaxonUsedInEvidence();
 
 }

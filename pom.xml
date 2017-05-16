@@ -611,7 +611,7 @@
 				<site>
 					<id>localDeploy</id>
 					<name>localDeploy</name>
-					<url>file:///space/gemmaData/gemma-devsite</url>
+					<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite</url>
 				</site>
 				<repository>
 					<id>repo</id>
@@ -630,18 +630,18 @@
 		<site>
 			<id>website</id>
 			<url>
-				scpexe://otto.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
+				scpexe://apu.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
 			</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scpexe://otto.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scpexe://otto.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>scpexe://apu.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 	<properties>

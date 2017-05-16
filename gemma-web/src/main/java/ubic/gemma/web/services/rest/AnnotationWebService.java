@@ -19,60 +19,60 @@
 
 package ubic.gemma.web.services.rest;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.web.services.rest.util.TaxonArg;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import java.util.Collection;
 
 /**
  * RESTful interface to AnnotationController methods.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
-@Path("/annot")
+@Path("/annotations")
 public class AnnotationWebService {
 
-    @Autowired
     private OntologyService ontologyService;
-    @Autowired
     private TaxonService taxonService;
 
+    public AnnotationWebService() {
+    }
+
+    @Autowired
+    public AnnotationWebService( OntologyService ontologyService, TaxonService taxonService ) {
+        this.ontologyService = ontologyService;
+        this.taxonService = taxonService;
+    }
+
+    /* ********************************
+     * API GET Methods
+     * ********************************/
+
     /**
-     * This is the same as the controller method, but can't delegate to it. I could have annotated the Controller
-     * version, but currently all web services have to be under the services/rest package. This can be changed (one
-     * cost: slightly slower system startup).
-     * 
-     * @param givenQueryString
-     * @param taxonId can be null
-     * @return
+     * Does a search for ontology terms based on the given string.
+     *
+     * @param givenQueryString the search input query.
+     * @param taxonArg         whether to limit the search to a specific taxon, can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
+     *                         scientific name, common name, abbreviation. Using the ID is most efficient.
+     * @return a collection of found terms wrapped in a CharacteristicValueObject
+     * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
+     * @see CharacteristicValueObject for the output object structure.
+     * FIXME are taxons attached to ANY terms at all? - possible redundant optional argument TaxonArg
      */
     @GET
-    @Path("/findTerm")
+    @Path("/terms/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<CharacteristicValueObject> findTerm( @QueryParam("query") String givenQueryString,
-            @QueryParam("taxonId") Long taxonId ) {
-        if ( StringUtils.isBlank( givenQueryString ) ) {
-            return new HashSet<CharacteristicValueObject>();
-        }
-        Taxon taxon = null;
-        if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
-        }
-        return ontologyService.findTermsInexact( givenQueryString, taxon );
+    public Collection<CharacteristicValueObject> searchTerms( @PathParam("query") String givenQueryString,
+            @QueryParam("taxon") TaxonArg taxonArg ) {
+        return ontologyService.findTermsInexact( givenQueryString, TaxonArg.getTaxon( taxonArg, this.taxonService ) );
     }
+
 }
