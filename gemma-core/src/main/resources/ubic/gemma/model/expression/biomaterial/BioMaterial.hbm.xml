@@ -20,7 +20,7 @@
       <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
          <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="sourceTaxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="sourceTaxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
          <column name="SOURCE_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="factorValues" table="BIO_MATERIAL_FACTOR_VALUES" lazy="false" fetch="select" inverse="false">

@@ -145,7 +145,7 @@
 	<cache name="ubic.gemma.model.genome.BehavioralQtlImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.genome.TaxonImpl" maxElementsInMemory="100" eternal="true" overflowToDisk="false" />
+	<cache name="ubic.gemma.model.genome.Taxon" maxElementsInMemory="100" eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.genome.GeneImpl" maxElementsInMemory="50000" eternal="true" overflowToDisk="false" />
 

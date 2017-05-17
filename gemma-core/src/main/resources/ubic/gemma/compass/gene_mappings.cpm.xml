@@ -32,7 +32,7 @@
 		</property>
 		<!-- <property name="description"> <meta-data>description</meta-data> </property> -->
 	</class>
-	<class name="genome.TaxonImpl" alias="taxon" root="false"
+	<class name="genome.Taxon" alias="taxon" root="false"
 		support-unmarshall="false">
 		<id name="id" />
 		<property name="scientificName">

@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.protein.StringProteinInteractionLoader;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;

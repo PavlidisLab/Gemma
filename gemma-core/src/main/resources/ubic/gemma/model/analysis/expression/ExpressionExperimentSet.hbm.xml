@@ -23,7 +23,7 @@
         <property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
             <column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci"/>
         </property>
-        <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="proxy" fetch="select">
+        <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
             <column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <set name="experiments" table="EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS"  lazy="true" fetch="select" inverse="false">

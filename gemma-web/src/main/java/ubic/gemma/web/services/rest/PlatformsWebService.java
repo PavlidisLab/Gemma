@@ -14,97 +14,66 @@
  */
 package ubic.gemma.web.services.rest;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
+import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.web.remote.JsonReaderResponse;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
-import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
-import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.web.remote.JsonReaderResponse;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.regex.Pattern;
 
 /**
- * RESTful services. Used by ErmineJ
- * 
- * @author paul
- * @version $Id$
+ * RESTful interface for platforms.
+ *
+ * @author tesarst
  */
 @Component
-@Path("/arraydesign")
-public class ArrayDesignWebService {
+@Path("/platforms")
+public class PlatformsWebService extends AbstractWebService{
 
-    private static Log log = LogFactory.getLog( ArrayDesignWebService.class );
-
-    @Autowired
-    private ArrayDesignService arrayDesignService = null;
+    private ArrayDesignService arrayDesignService;
 
     /**
-     * Fetch the platform annotation file for the indicated shortName. GO annotations are the "no parents" ones.
-     * 
-     * @param shortName
-     * @param servletResponse
-     * @return
-     * @deprecated because of problems with some shortNames (e.g., those containing '/'; see ermineJ bug 3480
+     * Required by spring
      */
-    @Deprecated
-    @GET
-    @Path("/fetchAnnotations/{shortName}")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public String fetchAnnotations( @PathParam("shortName") final String shortName,
-            @Context HttpServletResponse servletResponse ) {
-
-        log.info( "Fetching annotation file for: " + shortName );
-
-        ArrayDesign arrayDesign = arrayDesignService.findByShortName( shortName );
-        if ( arrayDesign == null ) {
-            log.error( "No array design with shortName=" + shortName + " found" );
-            ResponseBuilder builder = Response.status( Status.NOT_FOUND );
-            builder.type( MediaType.TEXT_PLAIN );
-            throw new WebApplicationException( builder.build() );
-        }
-        return fetchAnnotations( arrayDesign, servletResponse );
-
+    public PlatformsWebService() {
     }
 
     /**
+     * Constructor for service autowiring
+     */
+    @Autowired
+    public PlatformsWebService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /* ********************************
+     * API GET Methods
+     * ********************************/
+
+    /**
      * Fetch the platform annotation file for the indicated id. GO annotations are the "no parents" ones.
-     * 
-     * @param shortName
-     * @param servletResponse
-     * @return
+     *
      */
     @GET
-    @Path("/fetchAnnotationsById/{id}")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/{id}/annotations")
+    @Produces(MediaType.APPLICATION_JSON)
     public String fetchAnnotationsById( @PathParam("id") final Long id, @Context HttpServletResponse servletResponse ) {
         ArrayDesign arrayDesign = arrayDesignService.load( id );
         if ( arrayDesign == null ) {
-            log.error( "No array design with id=" + id + " found" );
             ResponseBuilder builder = Response.status( Status.NOT_FOUND );
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );
@@ -114,7 +83,7 @@ public class ArrayDesignWebService {
 
     /**
      * Fetch a list of all the available platforms, limited to those which have annotation files available.
-     * 
+     *
      * @return JSON representing a collection of ArrayDesignValueObjects.
      */
     @GET
@@ -137,11 +106,10 @@ public class ArrayDesignWebService {
         return new JsonReaderResponse<ArrayDesignValueObject>( new ArrayList<ArrayDesignValueObject>( vos ) );
     }
 
-    /**
-     * @param arrayDesign
-     * @param servletResponse
-     * @return
-     */
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private String fetchAnnotations( ArrayDesign arrayDesign, HttpServletResponse servletResponse ) {
 
         String fileBaseName = arrayDesign.getShortName().replaceAll( Pattern.quote( "/" ), "_" );
@@ -151,7 +119,7 @@ public class ArrayDesignWebService {
         File f = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + fileName );
 
         if ( !f.canRead() ) {
-            log.error( "No annotation file for arraydesign " + arrayDesign.getShortName() + " found in " + fileName );
+            //log.error( "No annotation file for arraydesign " + arrayDesign.getShortName() + " found in " + fileName );
             ResponseBuilder builder = Response.status( Status.NOT_FOUND );
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );

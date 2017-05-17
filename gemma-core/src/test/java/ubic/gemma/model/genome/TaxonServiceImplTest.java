@@ -33,7 +33,7 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 public class TaxonServiceImplTest extends BaseSpringContextTest {
 
     /**
-     * Test method for {@link ubic.gemma.core.genome.taxon.service.TaxonServiceBase#findOrCreate(ubic.gemma.model.genome.Taxon)}.
+     * Test method for {@link ubic.gemma.persistence.service.genome.service.TaxonServiceBase#findOrCreate(ubic.gemma.model.genome.Taxon)}.
      * Situation where the secondary id is treated as the primary, we must not make a new taxon!
      */
     @Test

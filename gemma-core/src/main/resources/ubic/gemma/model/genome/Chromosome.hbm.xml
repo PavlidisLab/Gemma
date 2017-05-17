@@ -20,7 +20,7 @@
       <many-to-one  access="field" name="sequence" class="ubic.gemma.model.genome.biosequence.BioSequenceImpl"  lazy="proxy" fetch="select">
          <column name="SEQUENCE_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one  access="field" name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="proxy" fetch="select">
+      <many-to-one  access="field" name="taxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
          <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>

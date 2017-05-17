@@ -41,7 +41,7 @@
       <many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="proxy" fetch="select">
          <column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="false" fetch="select">
+      <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon"  lazy="false" fetch="select">
          <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">

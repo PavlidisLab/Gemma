@@ -59,7 +59,7 @@
       <property name="useGo" type="java.lang.Boolean">
          <column name="USE_GO" not-null="true" unique="false" sql-type="TINYINT"/>
       </property>
-      <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">
          <column name="TAXON_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="platformConstraint" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">

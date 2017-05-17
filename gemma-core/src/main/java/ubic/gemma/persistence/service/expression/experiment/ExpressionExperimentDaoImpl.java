@@ -1129,7 +1129,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         //noinspection unchecked
         List<Object[]> tp = this.getSessionFactory().getCurrentSession()
-                .createQuery( "select t, p from TaxonImpl t left outer join t.parentTaxon p" ).list();
+                .createQuery( "select t, p from Taxon t left outer join t.parentTaxon p" ).list();
         for ( Object[] o : tp ) {
             taxonParents.put( ( Taxon ) o[0], ( Taxon ) o[1] );
         }

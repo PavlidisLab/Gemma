@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.persistence.service.genome;
+package ubic.gemma.persistence.service.genome.taxon;
 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
@@ -41,6 +41,7 @@ public interface TaxonDao extends BaseDao<Taxon> {
 
     /**
      * Searches for a taxon by its scientific name, case insensitive.
+     *
      * @param scientificName the scientific name to be matched
      * @return a Taxon whose scientific name matches the given string.
      */

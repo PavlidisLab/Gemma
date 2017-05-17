@@ -23,7 +23,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.externalDb.GoldenPathDumper;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.genome.goldenpath.GoldenPathBioSequenceLoader;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;

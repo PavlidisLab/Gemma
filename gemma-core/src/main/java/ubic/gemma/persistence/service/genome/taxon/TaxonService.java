@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.genome.taxon.service;
+package ubic.gemma.persistence.service.genome.taxon;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;

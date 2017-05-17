@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

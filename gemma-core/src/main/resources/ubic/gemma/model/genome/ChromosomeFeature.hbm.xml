@@ -90,7 +90,7 @@
 				</key>
 				<one-to-many class="ubic.gemma.model.genome.gene.GeneAliasImpl" />
 			</set>
-			<many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl" lazy="false" fetch="select">
+			<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
 				<column name="TAXON_FK" not-null="false" sql-type="BIGINT" />
 			</many-to-one>
 			<set name="accessions" lazy="true" fetch="select" inverse="false" cascade="all">

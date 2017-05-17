@@ -32,7 +32,7 @@
       <property name="technologyType" type="ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum">
          <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.TaxonImpl" lazy="proxy" fetch="select">
+      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="externalReferences"  lazy="true" fetch="select" inverse="false" cascade="all">

@@ -21,33 +21,44 @@ package ubic.gemma.web.services.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.web.services.rest.util.TaxonArg;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.util.Collection;
 
 /**
- * RESTful interface to AnnotationController methods.
+ * RESTful interface for annotations.
  *
- * @author paul
+ * @author tesarst
  */
 @Component
 @Path("/annotations")
-public class AnnotationWebService {
+public class AnnotationsWebService extends AbstractWebService {
+
+    private static final String ERR_MSG_INCOMPLETE_PATH = "Incomplete path. Use /annotations/search/{query}";
 
     private OntologyService ontologyService;
     private TaxonService taxonService;
 
-    public AnnotationWebService() {
+    /**
+     * Required by spring
+     */
+    public AnnotationsWebService() {
     }
 
+    /**
+     * Constructor for service autowiring
+     */
     @Autowired
-    public AnnotationWebService( OntologyService ontologyService, TaxonService taxonService ) {
+    public AnnotationsWebService( OntologyService ontologyService, TaxonService taxonService ) {
         this.ontologyService = ontologyService;
         this.taxonService = taxonService;
     }
@@ -55,6 +66,24 @@ public class AnnotationWebService {
     /* ********************************
      * API GET Methods
      * ********************************/
+
+    @GET
+    @Path("")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject annotations( // Params:
+            @Context final HttpServletResponse sr // the servlet response, needed for response code setting.
+    ) {
+        return Responder.code404( ERR_MSG_INCOMPLETE_PATH, sr );
+    }
+
+    @GET
+    @Path("/search")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject search( // Params:
+            @Context final HttpServletResponse sr // the servlet response, needed for response code setting.
+    ) {
+        return Responder.code404( ERR_MSG_INCOMPLETE_PATH, sr );
+    }
 
     /**
      * Does a search for ontology terms based on the given string.
@@ -68,11 +97,15 @@ public class AnnotationWebService {
      * FIXME are taxons attached to ANY terms at all? - possible redundant optional argument TaxonArg
      */
     @GET
-    @Path("/terms/search/{query}")
+    @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<CharacteristicValueObject> searchTerms( @PathParam("query") String givenQueryString,
-            @QueryParam("taxon") TaxonArg taxonArg ) {
-        return ontologyService.findTermsInexact( givenQueryString, TaxonArg.getTaxon( taxonArg, this.taxonService ) );
+    public ResponseDataObject query( // Params:
+            @PathParam("query") String givenQueryString, // Required, part of url
+            @QueryParam("taxon") TaxonArg taxonArg, // Optional, default null
+            @Context final HttpServletResponse sr // the servlet response, needed for response code setting.
+    ) {
+        return Responder.autoCode(
+                ontologyService.findTermsInexact( givenQueryString, TaxonArg.getTaxon( taxonArg, this.taxonService ) ),
+                sr );
     }
-
 }

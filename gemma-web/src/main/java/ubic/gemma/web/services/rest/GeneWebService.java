@@ -33,7 +33,7 @@ import com.google.common.collect.Lists;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.persistence.service.genome.ChromosomeService;
 import ubic.gemma.model.genome.Gene;
