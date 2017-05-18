@@ -142,10 +142,13 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
         },
 
         getTemplateDiv: function (bgColor, extra) {
-            return '<div style="font-size:11px;background-color:' + bgColor + '" class="x-combo-list-item" '
+            var div = '<div style="font-size:11px;background-color:' + bgColor + '" class="x-combo-list-item" '
                 + 'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: '
-                + extra
                 + '{description} ({size}) <span style="color:grey">({taxonName})</span></div>';
+            if(extra){
+                div += extra;
+            }
+            return div;
         },
 
         initComponent: function () {
