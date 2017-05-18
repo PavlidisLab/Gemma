@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 Columbia University
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,7 +44,7 @@ import ubic.gemma.persistence.util.Settings;
 /**
  * Has the unpleasant task of figuring out what the quantitation type should look like, given a description and name
  * string.
- * 
+ *
  * @author Paul
  * @version $Id$
  * @see GeoValues for a list of Quantitation Type names which are skipped (so some of the below might not be needed)
@@ -53,30 +53,30 @@ public class QuantitationTypeParameterGuesser {
 
     private static Log log = LogFactory.getLog( QuantitationTypeParameterGuesser.class.getName() );
 
-    private static Set<String> measuredSignalDescPatterns = new HashSet<String>();
-    private static Set<String> derivedSignalDescPatterns = new HashSet<String>();
-    private static Set<String> ratioDescPatterns = new HashSet<String>();
-    private static Set<String> measuredSignalNamePatterns = new HashSet<String>();
-    private static Set<String> derivedSignalNamePatterns = new HashSet<String>();
+    private static Set<String> measuredSignalDescPatterns = new HashSet<>();
+    private static Set<String> derivedSignalDescPatterns = new HashSet<>();
+    private static Set<String> ratioDescPatterns = new HashSet<>();
+    private static Set<String> measuredSignalNamePatterns = new HashSet<>();
+    private static Set<String> derivedSignalNamePatterns = new HashSet<>();
     // private static Set<String> ratioStringNamePatterns = new HashSet<String>();
 
-    private static Set<String> isNormalizedPatterns = new HashSet<String>();
-    private static Set<String> isBackgroundSubtractedNamePatterns = new HashSet<String>();
-    private static Set<String> isBackgroundSubtractedDescPatterns = new HashSet<String>();
-    private static Set<String> isPreferredNamePatterns = new HashSet<String>();
+    private static Set<String> isNormalizedPatterns = new HashSet<>();
+    private static Set<String> isBackgroundSubtractedNamePatterns = new HashSet<>();
+    private static Set<String> isBackgroundSubtractedDescPatterns = new HashSet<>();
+    private static Set<String> isPreferredNamePatterns = new HashSet<>();
     // private static Set<String> isPreferredDescPatterns = new HashSet<String>();
 
-    private static Map<ScaleType, Set<String>> scaleDescPatterns = new HashMap<ScaleType, Set<String>>();
-    private static Map<StandardQuantitationType, Set<String>> typeDescPatterns = new HashMap<StandardQuantitationType, Set<String>>();
-    private static Map<PrimitiveType, Set<String>> representationDescPatterns = new HashMap<PrimitiveType, Set<String>>();
-    private static Map<Boolean, Set<String>> isBackgroundDescPatterns = new HashMap<Boolean, Set<String>>();
+    private static Map<ScaleType, Set<String>> scaleDescPatterns = new HashMap<>();
+    private static Map<StandardQuantitationType, Set<String>> typeDescPatterns = new HashMap<>();
+    private static Map<PrimitiveType, Set<String>> representationDescPatterns = new HashMap<>();
+    private static Map<Boolean, Set<String>> isBackgroundDescPatterns = new HashMap<>();
 
-    private static Map<ScaleType, Set<String>> scaleNamePatterns = new HashMap<ScaleType, Set<String>>();
-    private static Map<StandardQuantitationType, Set<String>> typeNamePatterns = new HashMap<StandardQuantitationType, Set<String>>();
-    private static Map<PrimitiveType, Set<String>> representationNamePatterns = new HashMap<PrimitiveType, Set<String>>();
-    private static Map<Boolean, Set<String>> isBackgroundNamePatterns = new HashMap<Boolean, Set<String>>();
-    private static Map<Boolean, Set<String>> isRatioNamePatterns = new HashMap<Boolean, Set<String>>();
-    private static Map<Boolean, Set<String>> isRatioDescPatterns = new HashMap<Boolean, Set<String>>();
+    private static Map<ScaleType, Set<String>> scaleNamePatterns = new HashMap<>();
+    private static Map<StandardQuantitationType, Set<String>> typeNamePatterns = new HashMap<>();
+    private static Map<PrimitiveType, Set<String>> representationNamePatterns = new HashMap<>();
+    private static Map<Boolean, Set<String>> isBackgroundNamePatterns = new HashMap<>();
+    private static Map<Boolean, Set<String>> isRatioNamePatterns = new HashMap<>();
+    private static Map<Boolean, Set<String>> isRatioDescPatterns = new HashMap<>();
 
     static {
         CompositeConfiguration config = new CompositeConfiguration();
@@ -135,8 +135,10 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.put( ScaleType.LOG10, new HashSet<String>() );
         scaleDescPatterns.put( ScaleType.LOGBASEUNKNOWN, new HashSet<String>() );
         scaleDescPatterns.put( ScaleType.UNSCALED, new HashSet<String>() );
-
+        scaleDescPatterns.put( ScaleType.LN, new HashSet<String>() );
+        
         scaleNamePatterns.put( ScaleType.PERCENT, new HashSet<String>() );
+        scaleNamePatterns.put( ScaleType.LN, new HashSet<String>() );
         scaleNamePatterns.put( ScaleType.LINEAR, new HashSet<String>() );
         scaleNamePatterns.put( ScaleType.LOG2, new HashSet<String>() );
         scaleNamePatterns.put( ScaleType.LOG10, new HashSet<String>() );
@@ -145,7 +147,6 @@ public class QuantitationTypeParameterGuesser {
 
         scaleDescPatterns.get( ScaleType.PERCENT ).add( "^(the\\s)?percent(age)?.*" );
         scaleDescPatterns.get( ScaleType.PERCENT ).add( "^%.*" );
-
         scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*log( )?2.*" );
         scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
         scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
@@ -153,6 +154,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma(\\W.*)?" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( ".*?\\brma\\b.*?" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "mas(\\s)?[56](\\.[0-9])? signal.*" );
+        scaleDescPatterns.get( ScaleType.LN ).add( ".*?natural log.*" );
 
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
@@ -201,7 +203,8 @@ public class QuantitationTypeParameterGuesser {
 
         typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add(
                 ".*(array_row|array_column|top|left|right|bot).*" );
-        typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add( "(x_coord|y_coord|x_location|y_location|x|y)" );
+        typeNamePatterns.get( StandardQuantitationType.COORDINATE )
+                .add( "(x_coord|y_coord|x_location|y_location|x|y)" );
         typeNamePatterns.get( StandardQuantitationType.COORDINATE ).add( "(row|column)" );
 
         typeNamePatterns.get( StandardQuantitationType.OTHER ).add( "^pairs.*" );
@@ -301,7 +304,7 @@ public class QuantitationTypeParameterGuesser {
 
     /**
      * Attempt to fill in the details of the quantitation type.
-     * 
+     *
      * @param qt QuantitationType to fill in details for.
      * @param namelc of the quantitation type from the GEO sample column
      * @param descriptionlc of the quantitation type from the GEO sample column
@@ -583,7 +586,7 @@ public class QuantitationTypeParameterGuesser {
 
     /**
      * Determine if a quantitation type is 'preferred'.
-     * 
+     *
      * @param qt
      * @return
      */
