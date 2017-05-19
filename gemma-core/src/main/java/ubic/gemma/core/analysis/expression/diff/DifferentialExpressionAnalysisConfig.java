@@ -65,6 +65,9 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
 
+    // save to db or output to console?
+    private boolean persist = true;
+
     private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
 
     private ExperimentalFactor subsetFactor;
@@ -89,13 +92,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
-     * @return true if empirical Bayes moderated test statisics should be used
-     */
-    public boolean getModerateStatistics() {
-        return this.ebayes;
-    }
-
-    /**
      * @return the factorsToInclude
      */
     public List<ExperimentalFactor> getFactorsToInclude() {
@@ -107,6 +103,17 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
      */
     public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
         return interactionsToInclude;
+    }
+
+    /**
+     * @return true if empirical Bayes moderated test statisics should be used
+     */
+    public boolean getModerateStatistics() {
+        return this.ebayes;
+    }
+
+    public boolean getPersist() {
+        return this.persist;
     }
 
     /**
@@ -163,6 +170,14 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
      */
     public void setModerateStatistics( boolean ebayes ) {
         this.ebayes = ebayes;
+    }
+
+    /**
+     * @param persist
+     */
+    public void setPersist( boolean persist ) {
+        this.persist = persist;
+
     }
 
     /**

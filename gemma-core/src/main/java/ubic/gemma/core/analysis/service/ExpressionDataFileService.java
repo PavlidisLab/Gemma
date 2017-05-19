@@ -38,15 +38,15 @@ public interface ExpressionDataFileService {
     public static final String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
-    public static final String TMP_DATA_DIR = Settings.getString( "gemma.tmpdata.home" ) + File.separatorChar
-            + "dataFiles" + File.separatorChar;
+    public static final String DATA_FILE_SUFFIX = ".data.txt";
 
     public static final String DATA_FILE_SUFFIX_COMPRESSED = ".data.txt.gz";
-    public static final String DATA_FILE_SUFFIX = ".data.txt";
     public static final String DISCLAIMER = "# If you use this file for your research, please cite: \n"
             + "# Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. "
             + "Bioinformatics, 2012. \n";
     public static final String JSON_FILE_SUFFIX = ".data.json.gz";
+    public static final String TMP_DATA_DIR = Settings.getString( "gemma.tmpdata.home" ) + File.separatorChar
+            + "dataFiles" + File.separatorChar;
 
     /**
      * @param results
@@ -77,17 +77,6 @@ public interface ExpressionDataFileService {
     public void deleteAllFiles( ExpressionExperiment ee ) throws IOException;
 
     /**
-     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
-     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
-     * set with contrasts info (such as fold change for each factor value)
-     * 
-     * @param analysis
-     * @param forceRewrite
-     * @return
-     */
-    public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
-
-    /**
      * Intended for use when the analysis is not yet persisted fully, and before results below threshold are removed.
      * 
      * @param experimentAnalyzed
@@ -97,6 +86,17 @@ public interface ExpressionDataFileService {
      */
     public File getDiffExpressionAnalysisArchiveFile( BioAssaySet experimentAnalyzed,
             DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets );
+
+    /**
+     * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
+     * contains following files: - differential expression analysis file (q-values per factor) - file for each result
+     * set with contrasts info (such as fold change for each factor value)
+     * 
+     * @param analysis
+     * @param forceRewrite
+     * @return
+     */
+    public File getDiffExpressionAnalysisArchiveFile( Long analysisId, boolean forceCreate );
 
     /**
      * @param ee
@@ -162,16 +162,6 @@ public interface ExpressionDataFileService {
     public File writeOrLocateDataFile( ExpressionExperiment ee, boolean forceWrite, boolean filtered );
 
     /**
-     * create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
-     * expression applied (currently supports default settings only).
-     * 
-     * @param ee
-     * @param filtered
-     * @return
-     */
-    public File writeTemporaryDataFile( ExpressionExperiment ee, boolean filtered );
-
-    /**
      * Locate or create a new data file for the given quantitation type. The output will include gene information if it
      * can be located from its own file.
      * 
@@ -189,8 +179,6 @@ public interface ExpressionDataFileService {
      * @return
      */
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite );
-
-    public File writeTemporaryDesignFile( ExpressionExperiment ee );
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment.
@@ -217,9 +205,30 @@ public interface ExpressionDataFileService {
     public File writeOrLocateJSONDataFile( QuantitationType type, boolean forceWrite );
 
     /**
+     * create a data file containing the 'preferred and masked' expression data matrix, with filtering for low
+     * expression applied (currently supports default settings only).
+     * 
+     * @param ee
+     * @param filtered
+     * @return
+     */
+    public File writeTemporaryDataFile( ExpressionExperiment ee, boolean filtered );
+
+    public File writeTemporaryDesignFile( ExpressionExperiment ee );
+
+    /**
      * @param analysis
      * @throws IOException
      */
     void deleteDiffExArchiveFile( DifferentialExpressionAnalysis analysis ) throws IOException;
+
+    /**
+     * Writes to the configured gemma.appdata.home
+     * 
+     * @param experiment
+     * @param analysis
+     * @throws IOException
+     */
+    public void writeDiffExArchiveFile( BioAssaySet ee, DifferentialExpressionAnalysis analysis ) throws IOException;
 
 }

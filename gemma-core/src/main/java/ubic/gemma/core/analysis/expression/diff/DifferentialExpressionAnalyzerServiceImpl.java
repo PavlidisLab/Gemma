@@ -290,7 +290,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses = analysisSelectionAndExecutionService
                     .analyze( expressionExperiment, config );
 
-            diffExpressionAnalyses = persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+            if ( config.getPersist() ) {
+                diffExpressionAnalyses = persistAnalyses( expressionExperiment, diffExpressionAnalyses, config );
+            } else {
+                log.info( "Will not persist results" );
+            }
 
             return diffExpressionAnalyses;
         } catch ( Exception e ) {

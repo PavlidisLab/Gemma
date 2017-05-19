@@ -22,10 +22,13 @@ import gemma.gsec.SecurityService;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.velocity.runtime.directive.Foreach;
+
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
+import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -52,6 +55,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean ignoreBatch = true;
     private boolean delete = false;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private ExpressionDataFileService expressionDataFileService;
+
     private final List<Long> factorIds = new ArrayList<>();
     private final List<String> factorNames = new ArrayList<>();
     private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
@@ -62,11 +67,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * Used when processing a single experiment.
      */
     private AnalysisType type = null;
-    
+
     /**
      * Use moderated statistics.
      */
     private boolean ebayes = false;
+    private boolean persist = true;
 
     public static void main( String[] args ) {
         DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
@@ -135,7 +141,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
                         + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions)" ).create( "type" );
+                        + " GENERICLM (generic LM, no interactions)" )
+                .create( "type" );
 
         super.addOption( analysisType );
 
@@ -156,7 +163,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.addOption( "qvalue", true,
                 "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
                         + String.format( "%.2f", DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD ) );
-        
+
         super.addOption( "ebayes", false, "Use emperical-Bayes moderated statistics" );
 
     }
@@ -252,7 +259,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
                 config.setQvalueThreshold( this.qvalueThreshold );
-                config.setModerateStatistics(this.ebayes);
+                config.setModerateStatistics( this.ebayes );
+                config.setPersist( this.persist );
 
                 /*
                  * Interactions included by default. It's actually only complicated if there is a subset factor.
@@ -319,7 +327,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
             }
 
-            // expressionDataFileService.writeOrLocateDiffExpressionDataFile( results.iterator().next(), true );
+            if ( !this.persist ) {
+                log.info( "Writing results to disk" );
+                for ( DifferentialExpressionAnalysis r : results ) {
+                    expressionDataFileService.writeDiffExArchiveFile( ee, r );
+                }
+            }
 
             successObjects.add( ee.toString() );
 
@@ -341,6 +354,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.processOptions();
         differentialExpressionAnalyzerService = this.getBean( DifferentialExpressionAnalyzerService.class );
         differentialExpressionAnalysisService = this.getBean( DifferentialExpressionAnalysisService.class );
+        expressionDataFileService = this.getBean( ExpressionDataFileService.class );
         if ( hasOption( "type" ) ) {
 
             if ( this.expressionExperiments.size() > 1 ) {
@@ -392,9 +406,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         if ( hasOption( "delete" ) ) {
             this.delete = true;
         }
-        
-        if (hasOption("ebayes")) {
+
+        if ( hasOption( "ebayes" ) ) {
             this.ebayes = true;
+        }
+
+        if ( hasOption( "nodb" ) ) {
+            this.persist = false;
         }
 
         this.tryToCopyOld = hasOption( "redo" );
@@ -527,7 +545,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * Run the analysis using configuration based on an old analysis.
      *
-
+     * 
      */
     private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
