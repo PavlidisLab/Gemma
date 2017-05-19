@@ -1456,7 +1456,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         long lasttime = 0;
 
         // this analysis should take just 10 or 20 seconds for most data sets.
-        double MAX_ANALYSIS_TIME = 60 * 1000 * 20; // 20 minutes.
+        double MAX_ANALYSIS_TIME = 60 * 1000 * 30; // 30 minutes.
         double updateIntervalMillis = 60 * 1000;// 1 minute
         while ( !f.isDone() ) {
             try {
