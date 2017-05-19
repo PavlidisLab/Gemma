@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */package ubic.gemma.web.controller.expression.experiment;
+ */
+package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -333,7 +334,6 @@ public class ExpressionDataFileUploadController {
         o.setName( scrub( o.getName() ) );
         o.setDescription( scrub( o.getDescription() ) );
         o.setShortName( scrub( o.getShortName() ) );
-
     }
 
     private String scrub( String s ) {

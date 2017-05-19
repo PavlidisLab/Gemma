@@ -28,7 +28,7 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.MatrixStats;
-import ubic.basecode.math.SingularValueDecomposition;
+import ubic.basecode.math.linalg.SingularValueDecomposition;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter;
 import ubic.gemma.core.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.core.analysis.preprocess.filter.RowLevelFilter;

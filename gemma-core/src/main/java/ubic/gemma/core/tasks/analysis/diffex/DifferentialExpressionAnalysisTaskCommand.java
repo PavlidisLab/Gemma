@@ -47,16 +47,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private ExpressionExperiment expressionExperiment = null;
 
-    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
-
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
-    }
-
-    public void setQvalueThreshold( Double qvalueThreshold ) {
-        this.qvalueThreshold = qvalueThreshold;
-    }
-
     /**
      * The factors to actually use in the analysis. If null the system tries to figure it out.
      */
@@ -70,6 +60,13 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     private boolean includeInteractions = false;
 
+    /**
+     * Whether to moderate test statistics via empirical Bayes
+     */
+    private boolean moderateStatistics = false;
+
+    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
+
     private ExperimentalFactor subsetFactor;
 
     private DifferentialExpressionAnalysis toRedo;
@@ -80,7 +77,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         super();
         this.expressionExperiment = ee;
     }
-
+    
     /**
      * @param ee
      * @param toRedo
@@ -122,11 +119,20 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return factors;
     }
 
+    public Double getQvalueThreshold() {
+        return qvalueThreshold;
+    }
+
     /**
      * @return the subsetFactor
      */
     public ExperimentalFactor getSubsetFactor() {
         return subsetFactor;
+    }
+
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
+        return DifferentialExpressionAnalysisTask.class;
     }
 
     public DifferentialExpressionAnalysis getToRedo() {
@@ -139,6 +145,10 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     public boolean isIncludeInteractions() {
         return includeInteractions;
+    }
+
+    public boolean isModerateStatistics() {
+        return moderateStatistics;
     }
 
     public boolean isUpdateStatsOnly() {
@@ -170,6 +180,14 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.includeInteractions = includeInteractions;
     }
 
+    public void setModerateStatistics( boolean moderateStatistics ) {
+        this.moderateStatistics = moderateStatistics;
+    }
+
+    public void setQvalueThreshold( Double qvalueThreshold ) {
+        this.qvalueThreshold = qvalueThreshold;
+    }
+
     /**
      * @param subsetFactor the subsetFactor to set
      */
@@ -183,10 +201,5 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     public void setUpdateStatsOnly( boolean updateStatsOnly ) {
         this.updateStatsOnly = updateStatsOnly;
-    }
-
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
-        return DifferentialExpressionAnalysisTask.class;
     }
 }

@@ -458,22 +458,26 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private void buildFilterConfigOptions() {
         Option minPresentFraction = OptionBuilder.hasArg().withArgName( "Missing Value Threshold" ).withDescription(
                 "Fraction of data points that must be present in a profile to be retained , default="
-                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION ).withLongOpt( "missingcut" ).create( 'm' );
+                        + FilterConfig.DEFAULT_MINPRESENT_FRACTION )
+                .withLongOpt( "missingcut" ).create( 'm' );
         addOption( minPresentFraction );
 
         Option lowExpressionCut = OptionBuilder.hasArg().withArgName( "Expression Threshold" ).withDescription(
                 "Fraction of expression vectors to reject based on low values, default="
-                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT ).withLongOpt( "lowcut" ).create( 'l' );
+                        + FilterConfig.DEFAULT_LOWEXPRESSIONCUT )
+                .withLongOpt( "lowcut" ).create( 'l' );
         addOption( lowExpressionCut );
 
         Option lowVarianceCut = OptionBuilder.hasArg().withArgName( "Variance Threshold" ).withDescription(
                 "Fraction of expression vectors to reject based on low variance (or coefficient of variation), default="
-                        + FilterConfig.DEFAULT_LOWVARIANCECUT ).withLongOpt( "lowvarcut" ).create( "lv" );
+                        + FilterConfig.DEFAULT_LOWVARIANCECUT )
+                .withLongOpt( "lowvarcut" ).create( "lv" );
         addOption( lowVarianceCut );
 
         Option distinctValueCut = OptionBuilder.hasArg().withArgName( "Fraction distinct values threshold" )
                 .withDescription( "Fraction of values which must be distinct (NaN counts as one value), default="
-                        + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION ).withLongOpt( "distinctValCut" ).create( "dv" );
+                        + FilterConfig.DEFAULT_DISTINCTVALUE_FRACTION )
+                .withLongOpt( "distinctValCut" ).create( "dv" );
         addOption( distinctValueCut );
 
     }

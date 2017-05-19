@@ -43,7 +43,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * for bug 3927
  * 
  * @author Paul
- * @version $Id$
  */
 public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
 

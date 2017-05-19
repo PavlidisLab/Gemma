@@ -77,6 +77,12 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 .run( subset, config );
     }
 
+    /**
+     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
+     * EXCLUDE_CHARACTERISTICS_VALUES
+     * 
+     * @return AnalysisType
+     */
     @Override
     public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, Collection<ExperimentalFactor> experimentalFactors,
             ExperimentalFactor subsetFactor, boolean includeInteractionsIfPossible ) {
@@ -182,6 +188,12 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
         }
     }
 
+    /**
+     * FIXME this should probably deal with the case of outliers and also the {@link LinearModelAnalyzer}'s
+     * EXCLUDE_CHARACTERISTICS_VALUES
+     * 
+     * @return selected type of analysis such as t-test, two-way ANOVA, etc.
+     */
     @Override
     public AnalysisType determineAnalysis( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
 
@@ -197,7 +209,8 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                  * Ensure the config does not have interactions.
                  */
                 log.info(
-                        "Any interaction term will be dropped from the configuration as it cannot be analyzed (no replicates? block incomplete?)" );
+                        "Any interaction term will be dropped from the configuration as it "
+                                + "cannot be analyzed (no replicates? block incomplete?)" );
                 config.getInteractionsToInclude().clear();
                 // config.setAnalysisType( type ); // don't need this side-effect.
             }

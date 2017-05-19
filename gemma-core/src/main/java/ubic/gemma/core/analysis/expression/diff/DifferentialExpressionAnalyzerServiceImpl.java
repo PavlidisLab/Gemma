@@ -123,9 +123,9 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         File f = prepareDirectoryForDistributions( ee );
 
-        String histFileName =
-                FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "." + "pvalues"
-                        + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+        String histFileName = FileTools.cleanForFileName( ee.getShortName() ) + ".an" + analysis.getId() + "."
+                + "pvalues"
+                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         File oldf = new File( f, histFileName );
         if ( oldf.exists() && oldf.canWrite() ) {
             if ( !oldf.delete() ) {
@@ -391,8 +391,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             /*
              * Match if: factors are the same, and if this is a subset, it's the same subset factorvalue.
              */
-            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors ) && (
-                    subsetFactorValueForExisting == null || subsetFactorValueForExisting
+            if ( factorsInAnalysis.size() == factors.size() && factorsInAnalysis.containsAll( factors )
+                    && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting
                             .equals( newAnalysis.getSubsetFactorValue() ) ) ) {
 
                 log.info( "Deleting analysis with ID=" + existingAnalysis.getId() );
@@ -429,9 +429,15 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private boolean configsAreEqual( ExpressionAnalysisResultSet temprs, ExpressionAnalysisResultSet oldrs ) {
         return temprs.getBaselineGroup().equals( oldrs.getBaselineGroup() )
                 && temprs.getExperimentalFactors().size() == oldrs.getExperimentalFactors().size() && temprs
-                .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
+                        .getExperimentalFactors().containsAll( oldrs.getExperimentalFactors() );
     }
 
+    /**
+     * 
+     * @param copyMe
+     * @param qValueThreshold
+     * @return
+     */
     private DifferentialExpressionAnalysisConfig copyConfig( DifferentialExpressionAnalysis copyMe,
             Double qValueThreshold ) {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -811,7 +817,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         OSTTEST, //one-sample
         OWA, //one-way ANOVA
         TTEST, //
-        TWO_WAY_ANOVA_WITH_INTERACTION,  //with interactions
+        TWO_WAY_ANOVA_WITH_INTERACTION, //with interactions
         TWO_WAY_ANOVA_NO_INTERACTION //no interactions
     }
 

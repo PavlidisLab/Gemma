@@ -109,7 +109,8 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.core.analysis.preprocess.VectorMergingService#mergeVectors(ubic.gemma.model.expression.experiment.
+     * @see
+     * ubic.gemma.core.analysis.preprocess.VectorMergingService#mergeVectors(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment)
      */
     @Override

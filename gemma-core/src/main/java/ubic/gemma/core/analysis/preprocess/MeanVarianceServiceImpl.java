@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import cern.colt.matrix.DoubleMatrix2D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.basecode.math.MeanVarianceEstimator;
+import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
@@ -160,7 +160,8 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.preprocess.MeanVarianceService#find(ubic.gemma.model.expression.experiment.ExpressionExperiment
+     * ubic.gemma.core.analysis.preprocess.MeanVarianceService#find(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment
      * )
      */
     @Override

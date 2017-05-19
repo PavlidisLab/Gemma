@@ -368,6 +368,12 @@
 			<artifactId>saaj-api</artifactId>
 			<version>1.3</version>
 			<scope>runtime</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>javax.activation</groupId>
+					<artifactId>activation</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.xml.messaging.saaj</groupId>
@@ -423,6 +429,10 @@
 				<exclusion>
 					<artifactId>stax-api</artifactId>
 					<groupId>stax</groupId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.activation</groupId>
+					<artifactId>activation</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>

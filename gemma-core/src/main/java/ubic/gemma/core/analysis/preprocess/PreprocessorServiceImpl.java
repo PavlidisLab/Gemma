@@ -180,7 +180,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Checks all the given expression experiments bio assays for outlier flags and returns them in a collection
      *
      * @param ee the expression experiment to be checked
-     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware of.
+     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
+     *         of.
      */
     private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = new LinkedList<>();

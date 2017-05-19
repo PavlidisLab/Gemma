@@ -62,6 +62,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * Used when processing a single experiment.
      */
     private AnalysisType type = null;
+    
+    /**
+     * Use moderated statistics.
+     */
+    private boolean ebayes = false;
 
     public static void main( String[] args ) {
         DifferentialExpressionAnalysisCli analysisCli = new DifferentialExpressionAnalysisCli();
@@ -151,6 +156,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.addOption( "qvalue", true,
                 "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
                         + String.format( "%.2f", DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD ) );
+        
+        super.addOption( "ebayes", false, "Use emperical-Bayes moderated statistics" );
 
     }
 
@@ -245,6 +252,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
                 config.setQvalueThreshold( this.qvalueThreshold );
+                config.setModerateStatistics(this.ebayes);
 
                 /*
                  * Interactions included by default. It's actually only complicated if there is a subset factor.
@@ -383,6 +391,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         if ( hasOption( "delete" ) ) {
             this.delete = true;
+        }
+        
+        if (hasOption("ebayes")) {
+            this.ebayes = true;
         }
 
         this.tryToCopyOld = hasOption( "redo" );
