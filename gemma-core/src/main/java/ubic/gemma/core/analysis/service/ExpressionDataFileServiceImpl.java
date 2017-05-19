@@ -1123,7 +1123,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private String makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis,
             Collection<ExpressionAnalysisResultSet> resultSets, Map<Long, String[]> geneAnnotations ) {
 
-        differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
+        if ( analysis.getId() != null ) // might be if we are using -nodb
+            differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
 
         StringBuilder buf = new StringBuilder();
 
