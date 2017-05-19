@@ -22,6 +22,7 @@ import gemma.gsec.SecurityService;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -338,7 +339,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         } catch ( Exception e ) {
             log.error( "Error while processing " + ee + ": " + e.getMessage() );
-
+            ExceptionUtils.printRootCauseStackTrace( e );
             errorObjects.add( ee + ": " + e.getMessage() );
         }
 
