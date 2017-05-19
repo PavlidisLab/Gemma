@@ -109,16 +109,11 @@ public class DifferentialExpressionAnalysisTaskImpl extends
 
         if ( taskCommand.getToRedo() != null ) {
             if ( taskCommand.isUpdateStatsOnly() ) {
-                log.info( "Refreshing stats" );
-                differentialExpressionAnalyzerService.updateSummaries( taskCommand.getToRedo() );
-                Collection<DifferentialExpressionAnalysis> result = new HashSet<>();
-                result.add( taskCommand.getToRedo() );
-                return result;
+                throw new UnsupportedOperationException( "Updatestats functionality has been removed" ); 
             }
             log.info( "Redoing analysis" );
             ee = expressionExperimentService.thawLite( ee );
-            return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(),
-                    taskCommand.getQvalueThreshold() );
+            return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(), true );
 
         }
 

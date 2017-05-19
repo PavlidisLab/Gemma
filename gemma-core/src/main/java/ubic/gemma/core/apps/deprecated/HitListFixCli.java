@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import ubic.gemma.core.apps.ExpressionExperimentManipulatingCLI;
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -36,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * be re-run automagically.
  * 
  * @author Paul
- * @version $Id$
  * @deprecated because it should not be needed any more; for isolated problems it is easier to simply rerun the
  *             analysis.
  */
@@ -81,7 +79,6 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
 
         super.processCommandLine( args );
 
-        DifferentialExpressionAnalyzerService diffXs = this.getBean( DifferentialExpressionAnalyzerService.class );
         DifferentialExpressionAnalysisService diffS = this.getBean( DifferentialExpressionAnalysisService.class );
 
         Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysis>> allAnalyses = diffS
@@ -101,14 +98,6 @@ public class HitListFixCli extends ExpressionExperimentManipulatingCLI {
                 if ( analyses == null ) {
                     log.debug( "No analyses for " + expressionExperiment );
                     continue;
-                }
-
-                log.info( "Processing analyses for " + bas );
-
-                for ( DifferentialExpressionAnalysis analysis : analyses ) {
-
-                    diffXs.updateSummaries( analysis );
-
                 }
 
                 log.info( "Done with " + bas );

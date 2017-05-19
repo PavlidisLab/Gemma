@@ -18,34 +18,44 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
-import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.*;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.PvalueDistribution;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedDifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.model.genome.Gene;
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 
 /**
  * Differential expression service to run the differential expression analysis (and persist the results using the
@@ -58,7 +68,6 @@ import java.util.*;
 @Component
 public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialExpressionAnalyzerService {
 
-    private static final String FACTOR_NAME_MANGLING_DELIMITER = "__";
     private static final int MINIMUM_NUMBER_OF_HITS_TO_SAVE = 50;
     private static final Log log = LogFactory.getLog( DifferentialExpressionAnalyzerServiceImpl.class );
 
@@ -66,8 +75,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
     @Autowired
     private AuditTrailService auditTrailService = null;
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
+
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
     @Autowired
@@ -256,13 +264,12 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe ) {
-        return this.redoAnalysis( ee, copyMe, DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD );
+            DifferentialExpressionAnalysis copyMe, boolean persist ) {
+        return this.redoAnalysis( ee, copyMe, DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD, persist );
     }
 
-    @Override
-    public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, Double qValueThreshold ) {
+    private Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
+            DifferentialExpressionAnalysis copyMe, Double qValueThreshold, boolean persist ) {
 
         if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
             throw new IllegalArgumentException(
@@ -277,10 +284,10 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         Collection<DifferentialExpressionAnalysis> results = redoWithoutSave( ee, copyMe, config );
 
-        /*
-         * Finally, persist it.
-         */
-        return persistAnalyses( ee, results, config );
+        if ( persist ) {
+            return persistAnalyses( ee, results, config );
+        }
+        return results;
     }
 
     @Override
@@ -308,66 +315,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             }
             throw new RuntimeException( e );
         }
-    }
-
-    @Override
-    public void updateScoreDistributionFiles( ExpressionExperiment ee ) {
-
-        Collection<DifferentialExpressionAnalysis> analyses = this.getAnalyses( ee );
-
-        if ( analyses.size() == 0 ) {
-            log.info( "No  analyses for experiment " + ee.getShortName()
-                    + ".  The differential expression analysis may not have been run on this experiment yet." );
-            return;
-        }
-
-        for ( DifferentialExpressionAnalysis analysis : analyses ) {
-            writeDistributions( ee, this.differentialExpressionAnalysisService.thawFully( analysis ) );
-        }
-
-    }
-
-    @Override
-    public void updateSummaries( DifferentialExpressionAnalysis analysis ) {
-
-        DiffExAnalyzer lma = analysisSelectionAndExecutionService.getAnalyzer();
-        Map<CompositeSequence, Collection<Gene>> probe2GeneMap = new HashMap<>();
-
-        log.info( "Reading the analysis ..." );
-        differentialExpressionAnalysisService.thaw( analysis );
-        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-            differentialExpressionResultService.thaw( resultSet );
-            List<DifferentialExpressionAnalysisResult> results = new ArrayList<>( resultSet.getResults() );
-            for ( DifferentialExpressionAnalysisResult d : results ) {
-                CompositeSequence probe = d.getProbe();
-                probe2GeneMap.put( probe, new HashSet<Gene>() );
-            }
-        }
-
-        log.info( "Retrieving gene-element information ..." );
-        probe2GeneMap = compositeSequenceService.getGenes( probe2GeneMap.keySet() );
-
-        if ( probe2GeneMap.isEmpty() )
-            throw new IllegalStateException( "The elements do not map to genes" );
-
-        int i = 1;
-        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-            log.info( "Updating stats for " + i + "/" + analysis.getResultSets().size()
-                    + " resultsets for the analysis" );
-            List<DifferentialExpressionAnalysisResult> results = new ArrayList<>( resultSet.getResults() );
-            Collection<HitListSize> hitlists = lma.computeHitListSizes( results, probe2GeneMap );
-            resultSet.getHitListSizes().clear();
-            resultSet.getHitListSizes().addAll( hitlists );
-            resultSet.setNumberOfGenesTested( lma.getNumberOfGenesTested( results, probe2GeneMap ) );
-            resultSet.setNumberOfProbesTested( results.size() );
-            differentialExpressionResultService.update( resultSet );
-            i++;
-        }
-
-        log.info( "Writing distributions" );
-        writeDistributions( analysis.getExperimentAnalyzed(), analysis );
-        log.info( "Done" );
-
     }
 
     private int deleteOldAnalyses( ExpressionExperiment expressionExperiment,
@@ -550,26 +497,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
     }
 
-    private void fillDists( List<String> factorNames, List<Histogram> histograms, DoubleMatrix<String, String> dists ) {
-
-        assert !histograms.isEmpty();
-
-        int i = 0;
-        for ( Histogram h : histograms ) {
-            if ( i == 0 ) {
-                dists.setRowNames( Arrays.asList( h.getBinEdgesStrings() ) );
-                dists.setColumnNames( factorNames );
-            }
-
-            double[] binHeights = h.getArray();
-            for ( int j = 0; j < binHeights.length; j++ ) {
-                dists.set( j, i, binHeights[j] );
-
-            }
-            i++;
-        }
-    }
-
     private Collection<DifferentialExpressionAnalysis> persistAnalyses( ExpressionExperiment expressionExperiment,
             Collection<DifferentialExpressionAnalysis> diffExpressionAnalyses,
             DifferentialExpressionAnalysisConfig config ) {
@@ -669,67 +596,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
     }
 
-    /**
-     * Print the distributions to a file.
-     */
-    private void saveDistributionMatrixToFile( DoubleMatrix<String, String> histograms,
-            BioAssaySet expressionExperiment, List<ExpressionAnalysisResultSet> resultSetList ) {
-
-        Long analysisId = resultSetList.iterator().next().getAnalysis().getId();
-
-        assert analysisId != null;
-
-        File f = prepareDirectoryForDistributions( expressionExperiment );
-
-        String shortName;
-
-        if ( expressionExperiment instanceof ExpressionExperimentSubSet ) {
-            ExpressionExperimentSubSet ss = ( ExpressionExperimentSubSet ) expressionExperiment;
-            ExpressionExperiment source = ss.getSourceExperiment();
-            shortName = source.getShortName();
-        } else if ( expressionExperiment instanceof ExpressionExperiment ) {
-            shortName = ( ( ExpressionExperiment ) expressionExperiment ).getShortName();
-        } else {
-            throw new IllegalStateException( "Cannot handle bioassay sets of type=" + expressionExperiment.getClass() );
-        }
-
-        String histFileName = FileTools.cleanForFileName( shortName ) + ".an" + analysisId + "." + "pvalues"
-                + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-
-        File outputFile = new File( f, histFileName );
-
-        /*
-         * clobber, but usually won't since file names are per Analysis
-         */
-        try (FileWriter out = new FileWriter( outputFile, true )) {
-
-            out.write( "# Gemma: differential expression statistics - " + "pvalues" + "\n" );
-            out.write( "# Generated=" + ( new Date() ) + "\n" );
-            out.write( ExpressionDataFileService.DISCLAIMER );
-            out.write( "# exp=" + expressionExperiment.getId() + " " + shortName + " " + expressionExperiment.getName()
-                    + " \n" );
-
-            for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
-                BioAssaySet analyzedSet = resultSet.getAnalysis().getExperimentAnalyzed();
-
-                if ( analyzedSet instanceof ExpressionExperimentSubSet ) {
-                    out.write( "# SubSet id=" + analyzedSet.getId() + " " + analyzedSet.getName() + " " + analyzedSet
-                            .getDescription() + "\n" );
-                }
-
-                Long resultSetId = resultSet.getId();
-                out.write( "# ResultSet id=" + resultSetId + ", analysisId=" + analysisId + "\n" );
-
-            }
-            MatrixWriter<String, String> writer = new MatrixWriter<>( out );
-            writer.writeMatrix( histograms, true );
-
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
-
-    }
-
     private int trimAboveThreshold( Collection<DifferentialExpressionAnalysisResult> results, Double qvalueThreshold ) {
         int i = 0;
         for ( Iterator<DifferentialExpressionAnalysisResult> it = results.iterator(); it.hasNext(); ) {
@@ -744,63 +610,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         }
         return i;
-    }
-
-    /**
-     * Print the p-value and score distributions. Note that if there are multiple analyses for the experiment, each one
-     * will get a set of files. The analysis must be 'thawed' already.
-     *
-     * @param diffExpressionAnalysis - could be on a subset of the experiment.
-     */
-    private void writeDistributions( BioAssaySet expressionExperiment,
-            DifferentialExpressionAnalysis diffExpressionAnalysis ) {
-
-        assert diffExpressionAnalysis.getId() != null;
-
-        /*
-         * write histograms
-         *
-         * Of 1) pvalues, // (following not used now) 2) scores, 3) qvalues
-         *
-         * Put all pvalues in one file etc so we don't get 9 files for a 2x anova with interactions.
-         */
-        StopWatch timer = new StopWatch();
-        timer.start();
-        List<Histogram> pvalueHistograms = new ArrayList<>();
-
-        List<ExpressionAnalysisResultSet> resultSetList = new ArrayList<>();
-        resultSetList.addAll( diffExpressionAnalysis.getResultSets() );
-
-        List<String> factorNames = new ArrayList<>();
-
-        for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
-
-            String factorName = "";
-
-            // these will be headings on the
-            for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
-                // Make a unique column heading.
-                factorName = factorName + ( factorName.equals( "" ) ? "" : ":" ) + factor.getName()
-                        + FACTOR_NAME_MANGLING_DELIMITER + factor.getId();
-            }
-            factorNames.add( factorName );
-
-            Histogram pvalHist = addPvalueDistribution( resultSet );
-            this.differentialExpressionResultService.update( resultSet );
-
-            pvalueHistograms.add( pvalHist );
-
-        }
-
-        DoubleMatrix<String, String> pvalueDists = new DenseDoubleMatrix<>( 100, resultSetList.size() );
-
-        fillDists( factorNames, pvalueHistograms, pvalueDists );
-
-        saveDistributionMatrixToFile( pvalueDists, expressionExperiment, resultSetList );
-
-        if ( timer.getTime() > 5000 ) {
-            log.info( "Done writing distributions: " + timer.getTime() + "ms" );
-        }
     }
 
     /**

@@ -71,13 +71,14 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     private DifferentialExpressionAnalysis toRedo;
 
+    @Deprecated
     private boolean updateStatsOnly = true;
 
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
         super();
         this.expressionExperiment = ee;
     }
-    
+
     /**
      * @param ee
      * @param toRedo
@@ -131,7 +132,7 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     }
 
     @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
         return DifferentialExpressionAnalysisTask.class;
     }
 

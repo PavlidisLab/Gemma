@@ -22,7 +22,6 @@ import gemma.gsec.SecurityService;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.velocity.runtime.directive.Foreach;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
@@ -152,13 +151,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( ignoreBatchOption );
 
-        super.addOption( "nodb", false, "Output only to STDOUT instead of database" );
+        super.addOption( "nodb", false, "Output files only to your gemma.appdata.home instead of database" );
 
         super.addOption( "redo", false, "If using automatic analysis "
                 + "try to base analysis on previous analyses. Will re-run all analyses for the experiment" );
 
         super.addOption( "delete", false,
-                "Instead of running the analyssi on the given experiments, delete the old analyses. Use with care!" );
+                "Instead of running the analysis on the given experiments, delete the old analyses. Use with care!" );
 
         super.addOption( "qvalue", true,
                 "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
@@ -311,6 +310,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
                     config.setFactorsToInclude( factorsToUse );
                     config.setQvalueThreshold( this.qvalueThreshold );
+                    config.setPersist( this.persist );
 
                     if ( factorsToUse.size() == 2 ) {
                         // include intearactions by default
@@ -544,7 +544,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /**
      * Run the analysis using configuration based on an old analysis.
-     *
      * 
      */
     private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
@@ -559,7 +558,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
             results.addAll(
-                    this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe, this.qvalueThreshold ) );
+                    this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe, this.persist ) );
         }
         return results;
 

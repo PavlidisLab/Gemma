@@ -214,7 +214,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
                 try {
-                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe, true ) );
                 } catch ( Exception e ) {
                     log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
                 }
