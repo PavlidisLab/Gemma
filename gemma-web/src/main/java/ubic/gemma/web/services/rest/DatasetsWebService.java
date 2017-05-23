@@ -25,11 +25,11 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.*;
 
@@ -39,33 +39,36 @@ import java.util.*;
  * @author anton
  */
 @Service
-@Path("/eedesign")
-public class EEDesignWebService {
+@Path("/datasets")
+public class DatasetsWebService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private BioAssayDao bioAssayDao;
-
-    @GET
-    @Path("/getAllDatasetNames")
-    @Produces(MediaType.APPLICATION_JSON)
-    public List<String> getAllDatasetNames() {
-
-        List<String> result = new LinkedList<>();
-
-        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();
-        if ( experiments == null ) {
-            throw new NotFoundException( "No datasets were found." );
-        }
-
-        for ( ExpressionExperiment experiment : experiments ) {
-            result.add( experiment.getShortName() );
-        }
-
-        return result;
-    }
+//
+//    @GET
+//    @Path("/")
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public List<String> getAllDatasetNames( // Params:
+//            @QueryParam("taxon") TaxonArg taxonArg, // Optional, default null
+//            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+//    ) {
+//
+//        List<String> result = new LinkedList<>();
+//
+//        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();
+//        if ( experiments == null ) {
+//            throw new NotFoundException( "No datasets were found." );
+//        }
+//
+//        for ( ExpressionExperiment experiment : experiments ) {
+//            result.add( experiment.getShortName() );
+//        }
+//
+//        return result;
+//    }
 
     @GET
     @Path("/findByShortName/{shortName}")

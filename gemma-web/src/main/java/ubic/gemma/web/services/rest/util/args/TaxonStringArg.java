@@ -36,7 +36,7 @@ public class TaxonStringArg extends TaxonArg<String> {
         }
 
         if ( taxon != null ) {
-            System.out.println( "Found taxon id: " + taxon.getId() );
+            System.out.println( "Recognized taxon by one of its names, id: " + taxon.getId() + " (" + taxon.getScientificName() + ")" );
         } else {
             System.out.println( "No taxons found for String value: " + value );
         }

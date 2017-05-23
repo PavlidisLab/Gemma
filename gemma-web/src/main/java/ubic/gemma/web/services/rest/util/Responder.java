@@ -67,15 +67,32 @@ public class Responder {
     /**
      * Creates a new 404 response object. Use this method when you are certain that the resource the client requested
      * does not exist. To denote an empty collection or an array, it is preffered to use {@link this#code204(HttpServletResponse)}.
+     * According the <a href=http://www.ietf.org/rfc/rfc2616.txt>HTTP RFC</a>, 400 - Bad request means:
+     * <quote>The request could not be understood by the server due to malformed syntax.</quote>
      *
-     * @param message A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
-     *                For automatic null object detection, use {@link this#autoCode(Object, HttpServletResponse)}.
+     * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
+     * @param servletResponse the object to set the appropriate response code on.
+     * @return {@link ResponseErrorObject} with the given toReturn parameter set as the error payload.
+     */
+    public static ResponseDataObject code400( String message, HttpServletResponse servletResponse ) {
+        Response.Status code = Response.Status.BAD_REQUEST;
+        return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
+    }
+
+    /**
+     * Creates a new 404 response object. Use this method when you are certain that the resource the client requested
+     * does not exist. To denote an empty collection or an array, it is preffered to use {@link this#code204(HttpServletResponse)}.
+     * According the <a href=http://www.ietf.org/rfc/rfc2616.txt>HTTP RFC</a>, 404 - Not found means:
+     * <quote>The server has not found anything matching the Request-URI.</quote>
+     *
+     * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
+     *                        For automatic null object detection, use {@link this#autoCode(Object, HttpServletResponse)}.
      * @param servletResponse the object to set the appropriate response code on.
      * @return {@link ResponseErrorObject} with the given toReturn parameter set as the error payload.
      */
     public static ResponseDataObject code404( String message, HttpServletResponse servletResponse ) {
-        return code( Response.Status.NOT_FOUND,
-                new WellComposedErrorBody( Response.Status.NOT_FOUND.getStatusCode() + "", message ), servletResponse );
+        Response.Status code = Response.Status.NOT_FOUND;
+        return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
     }
 
     /**
@@ -98,7 +115,7 @@ public class Responder {
                 ( toReturn instanceof Collection<?> && ( ( Collection<?> ) toReturn ).isEmpty() ) //
                         || ( toReturn.getClass().isArray() && Array.getLength( toReturn ) == 0 )  //
                 ) {
-            //FIXME Remove for production - keeping this as a special case, in case we decide to handle it differently.
+            // Keeping this as a special case, in case we decide to handle it differently.
             return code200( toReturn, servletResponse );
         }
 

@@ -25,8 +25,10 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.web.services.rest.util.AbstractWebService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.ResponseErrorObject;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.servlet.http.HttpServletResponse;
@@ -42,8 +44,6 @@ import javax.ws.rs.core.MediaType;
 @Component
 @Path("/annotations")
 public class AnnotationsWebService extends AbstractWebService {
-
-    private static final String ERR_MSG_INCOMPLETE_PATH = "Incomplete path. Use /annotations/search/{query}";
 
     private OntologyService ontologyService;
     private TaxonService taxonService;
@@ -68,21 +68,20 @@ public class AnnotationsWebService extends AbstractWebService {
      * ********************************/
 
     @GET
-    @Path("")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject annotations( // Params:
-            @Context final HttpServletResponse sr // the servlet response, needed for response code setting.
+    public ResponseDataObject all( // Params:
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERR_MSG_INCOMPLETE_PATH, sr );
+        return Responder.code404( ERR_MSG_UNMAPPED_PATH, sr );
     }
 
     @GET
-    @Path("/search")
+    @Path("/search/")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject search( // Params:
-            @Context final HttpServletResponse sr // the servlet response, needed for response code setting.
+    public ResponseDataObject emptySearch( // Params:
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.code404( ERR_MSG_INCOMPLETE_PATH, sr );
+        return Responder.code400( "Search query empty.", sr );
     }
 
     /**
@@ -99,10 +98,10 @@ public class AnnotationsWebService extends AbstractWebService {
     @GET
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseDataObject query( // Params:
+    public ResponseDataObject search( // Params:
             @PathParam("query") String givenQueryString, // Required, part of url
             @QueryParam("taxon") TaxonArg taxonArg, // Optional, default null
-            @Context final HttpServletResponse sr // the servlet response, needed for response code setting.
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode(
                 ontologyService.findTermsInexact( givenQueryString, TaxonArg.getTaxon( taxonArg, this.taxonService ) ),

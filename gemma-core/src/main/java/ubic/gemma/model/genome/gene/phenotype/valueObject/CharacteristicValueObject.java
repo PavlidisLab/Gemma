@@ -29,6 +29,7 @@ import java.util.List;
 
 /**
  * ValueObject wrapper for a Characteristic.
+ *
  * @see Characteristic
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
@@ -65,6 +66,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String value = "";
     private String valueUri = null;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     public CharacteristicValueObject() {
         super();
     }
@@ -78,7 +83,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
         this.id = characteristic.getId();
-
     }
 
     public CharacteristicValueObject( String valueUri ) {
@@ -110,6 +114,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.value = value;
     }
 
+    /* ********************************
+     * Static methods
+     * ********************************/
+
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<? extends Characteristic> characteristics ) {
 
@@ -125,6 +133,27 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             characteristicValueObjects.add( characteristicValueObject );
         }
         return characteristicValueObjects;
+    }
+
+    /* ********************************
+     * Object override methods
+     * ********************************/
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        if ( this.valueUri != null ) {
+            result = prime * result + this.valueUri.hashCode();
+        } else {
+            result = prime * result + this.value.hashCode();
+        }
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
     }
 
     @Override
@@ -160,6 +189,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
         return true;
     }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     public String getCategory() {
         return this.category;
@@ -252,18 +285,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             this.valueUri = valueUri.toLowerCase();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        if ( this.valueUri != null ) {
-            result = prime * result + this.valueUri.hashCode();
-        } else {
-            result = prime * result + this.value.hashCode();
-        }
-        return result;
-    }
-
     public void incrementOccurrenceCount() {
         this.numTimesUsed++;
     }
@@ -300,10 +321,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.root = root;
     }
 
-    @Override
-    public String toString() {
-        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
-    }
+    /* ********************************
+     * Private methods
+     * ********************************/
 
     private void parseUrlId() {
         if ( StringUtils.isBlank( valueUri ) )

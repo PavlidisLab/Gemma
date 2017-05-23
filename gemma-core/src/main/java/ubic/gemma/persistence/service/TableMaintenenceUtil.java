@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface TableMaintenenceUtil {
 
@@ -32,10 +31,10 @@ public interface TableMaintenenceUtil {
      */
     @Transactional
     @Secured({ "GROUP_AGENT" })
-    public void updateGene2CsEntries();
+    void updateGene2CsEntries();
 
     // for tests only, to keep from getting emails.
     @Secured({ "GROUP_ADMIN" })
-    public void disableEmail();
+    void disableEmail();
 
 }

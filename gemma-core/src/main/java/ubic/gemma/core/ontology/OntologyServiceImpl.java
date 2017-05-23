@@ -322,15 +322,15 @@ public class OntologyServiceImpl implements OntologyService {
         // that's probably all we are returning (?)
         searchForGenes( queryString, taxon, searchResults );
 
-        for ( AbstractOntologyService serv : this.ontologyServices ) {
-            if ( !serv.isOntologyLoaded() )
+        for ( AbstractOntologyService service : this.ontologyServices ) {
+            if ( !service.isOntologyLoaded() )
                 continue;
-            results = serv.findResources( queryString );
+            results = service.findResources( queryString );
 
             if ( results.isEmpty() )
                 continue;
             if ( log.isDebugEnabled() )
-                log.debug( "found " + results.size() + " from " + serv.getClass().getSimpleName() + " in " + watch
+                log.debug( "found " + results.size() + " from " + service.getClass().getSimpleName() + " in " + watch
                         .getTime() + " ms" );
             searchResults.addAll(
                     CharacteristicValueObject.characteristic2CharacteristicVO( termsToCharacteristics( results ) ) );
@@ -868,7 +868,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     /**
-     * * Convert raw ontology resources into VocabCharacteristics.
+     * Convert raw ontology resources into VocabCharacteristics.
      */
     private Collection<VocabCharacteristic> termsToCharacteristics(
             final Collection<? extends OntologyResource> terms ) {

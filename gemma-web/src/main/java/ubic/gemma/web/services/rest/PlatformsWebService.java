@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  */
 @Component
 @Path("/platforms")
-public class PlatformsWebService extends AbstractWebService{
+public class PlatformsWebService{
 
     private ArrayDesignService arrayDesignService;
 

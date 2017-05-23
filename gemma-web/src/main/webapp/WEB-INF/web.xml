@@ -304,7 +304,6 @@
       <url-pattern>/rest/v2/*</url-pattern>
    </servlet-mapping>
 
-
    <session-config>
       <session-timeout>60</session-timeout>
    </session-config>
