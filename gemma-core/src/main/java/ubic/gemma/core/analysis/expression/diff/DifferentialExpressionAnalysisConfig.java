@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,29 +37,40 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
+ * Holds the settings used for differential expression analysis, and defines some defaults.
+ * 
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisConfig implements Serializable {
-
-    private static final long serialVersionUID = 622877438067070041L;
 
     /**
      * The default value used for retention of the results. If null, everything will be stored.
      */
     public static final Double DEFAULT_QVALUE_THRESHOLD = null;
 
+    /**
+     * Default value for whether empirical Bayes moderation of test statistics should be used.
+     */
+    private static final boolean DEFAULT_EBAYES = false;
+
+    private static final long serialVersionUID = 622877438067070041L;
+
     private AnalysisType analysisType;
 
-    private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<ExperimentalFactor, FactorValue>();
+    private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<>();
 
-    private List<ExperimentalFactor> factorsToInclude = new ArrayList<ExperimentalFactor>();
+    private boolean ebayes = DEFAULT_EBAYES;
 
-    private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
+    private List<ExperimentalFactor> factorsToInclude = new ArrayList<>();
 
-    private ExperimentalFactor subsetFactor;
+    private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
+
+    // save to db or output to console?
+    private boolean persist = true;
 
     private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
+
+    private ExperimentalFactor subsetFactor;
 
     public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
         interactionsToInclude.add( factors );
@@ -92,6 +103,17 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
      */
     public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
         return interactionsToInclude;
+    }
+
+    /**
+     * @return true if empirical Bayes moderated test statisics should be used
+     */
+    public boolean getModerateStatistics() {
+        return this.ebayes;
+    }
+
+    public boolean getPersist() {
+        return this.persist;
     }
 
     /**
@@ -144,6 +166,21 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
+     * @param ebayes
+     */
+    public void setModerateStatistics( boolean ebayes ) {
+        this.ebayes = ebayes;
+    }
+
+    /**
+     * @param persist
+     */
+    public void setPersist( boolean persist ) {
+        this.persist = persist;
+
+    }
+
+    /**
      * @param qValueThreshold threshold for retention of results. Set to null to retain all.
      */
     public void setQvalueThreshold( Double qValueThreshold ) {
@@ -171,7 +208,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     @Override
@@ -197,6 +234,10 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
             for ( ExperimentalFactor ef : baseLineFactorValues.keySet() ) {
                 buf.append( ef + "-->" + baseLineFactorValues.get( ef ) + "\n" );
             }
+        }
+
+        if ( this.ebayes ) {
+            buf.append( "Empirical Bayes moderated statistics used\n" );
         }
 
         return buf.toString();

@@ -52,37 +52,20 @@ public interface DifferentialExpressionAnalyzerService {
     Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
-     * @param qvalueThreshold to use for the re-run.
-     */
-    Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, Double qvalueThreshold );
-
-    /**
      * Redo with the default qvalueThreshold.
+     * 
+     * @param experiment
+     * @param analysis to base new one on
+     * @param whether the results should be persisted
      */
     Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe );
+            DifferentialExpressionAnalysis copyMe, boolean persist );
 
     /**
      * @return persistent analyses. The qvalue threshold configured for retention will be applied.
      */
     Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
-
-    /**
-     * @deprecated because we store this in the database, not a file; and it shouldn't be a problem any more
-     */
-    @Deprecated
-    void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException;
-
-    /**
-     * Update the pvalue distributions and the hit count sizes, in cases where these are corrupted etc. One could use
-     * redoAnalysis but this should be faster.
-     *
-     * @deprecated because we store this in the database and it shouldn't be a problem any more
-     */
-    @Deprecated
-    void updateSummaries( DifferentialExpressionAnalysis toUpdate );
 
     /**
      * Made public for testing purposes only.

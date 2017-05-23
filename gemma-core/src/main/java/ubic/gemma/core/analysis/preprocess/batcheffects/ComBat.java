@@ -39,8 +39,8 @@ import ubic.basecode.dataStructure.matrix.MatrixUtil;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.DescriptiveWithMissing;
-import ubic.basecode.math.DesignMatrix;
-import ubic.basecode.math.LeastSquaresFit;
+import ubic.basecode.math.linearmodels.DesignMatrix;
+import ubic.basecode.math.linearmodels.LeastSquaresFit;
 import ubic.basecode.math.distribution.Histogram;
 
 import java.awt.*;

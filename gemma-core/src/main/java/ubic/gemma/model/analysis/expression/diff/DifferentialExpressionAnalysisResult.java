@@ -20,6 +20,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
@@ -45,8 +46,12 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4986999013709498648L;
+
     private Double pvalue;
 
+    /**
+     * Typically actually a qvalue.
+     */
     private Double correctedPvalue;
 
     private Double rank;
@@ -55,7 +60,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
 
     private Long id;
 
-    private Collection<ContrastResult> contrasts = new java.util.HashSet<>();
+    private Collection<ContrastResult> contrasts = new HashSet<>();
 
     private ExpressionAnalysisResultSet resultSet;
 
@@ -69,10 +74,6 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
     public DifferentialExpressionAnalysisResult() {
     }
 
-    /**
-     * Returns <code>true</code> if the argument is an DifferentialExpressionAnalysisResult instance and all identifiers
-     * for this entity equal the identifiers of the argument entity. Returns <code>false</code> otherwise.
-     */
     @Override
     public boolean equals( Object object ) {
         if ( this == object ) {
@@ -105,9 +106,9 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
     }
 
     /**
-     * <p>
+     * 
      * Gives an indexable parameter for the corrected qvalue, to speed searches.
-     * </p>
+     * 
      */
     public Integer getCorrectedPValueBin() {
         return this.correctedPValueBin;
@@ -123,24 +124,20 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
     /**
      * 
      */
-    public ubic.gemma.model.expression.designElement.CompositeSequence getProbe() {
+    public CompositeSequence getProbe() {
         return this.probe;
     }
 
     /**
-     * <p>
      * The p-value from the test for rejection of the null hypothesis of no effect
-     * </p>
      */
     public Double getPvalue() {
         return this.pvalue;
     }
 
     /**
-     * <p>
      * The fractional rank of this result, relative to the others in the ResultSet. Thus the best (lowest p-value) will
      * have a fractional rank of 0.0, the worst wil lbe 1.0.
-     * </p>
      */
     public Double getRank() {
         return this.rank;
@@ -153,9 +150,6 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
         return this.resultSet;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -180,7 +174,7 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
         this.id = id;
     }
 
-    public void setProbe( ubic.gemma.model.expression.designElement.CompositeSequence probe ) {
+    public void setProbe( CompositeSequence probe ) {
         this.probe = probe;
     }
 

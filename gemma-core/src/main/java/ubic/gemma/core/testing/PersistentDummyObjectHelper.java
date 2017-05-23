@@ -220,7 +220,7 @@ public class PersistentDummyObjectHelper {
 
     /**
      * @return another experiment using the same platform (assumed to be generated using
-     * getTestExpressionExperimentWithAllDependencies(true)
+     *         getTestExpressionExperimentWithAllDependencies(true)
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( ExpressionExperiment prototype ) {
 
@@ -368,8 +368,8 @@ public class PersistentDummyObjectHelper {
      * created, they are each associated with a single generated Reporter.
      *
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
-     * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
-     * @param dosequence            If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
+     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
+     * @param dosequence If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
      * @return ArrayDesign
      */
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,

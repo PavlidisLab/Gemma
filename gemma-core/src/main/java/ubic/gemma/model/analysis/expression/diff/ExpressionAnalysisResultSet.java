@@ -20,6 +20,7 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -83,7 +84,7 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
 
     private PvalueDistribution pvalueDistribution;
 
-    private Collection<HitListSize> hitListSizes = new java.util.HashSet<HitListSize>();
+    private Collection<HitListSize> hitListSizes = new HashSet<>();
 
     /**
      * 

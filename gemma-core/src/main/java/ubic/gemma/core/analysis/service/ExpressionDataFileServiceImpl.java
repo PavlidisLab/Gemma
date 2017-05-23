@@ -86,7 +86,6 @@ import ubic.gemma.persistence.util.EntityUtils;
  * <p>
  * 
  * @author paul
- * @version $Id$
  */
 @Component
 public class ExpressionDataFileServiceImpl implements ExpressionDataFileService {
@@ -178,7 +177,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#analysisResultSetToString(ubic.gemma.model.analysis.expression
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#analysisResultSetToString(ubic.gemma.model.analysis.
+     * expression
      * .diff.ExpressionAnalysisResultSet, java.util.Map, java.lang.StringBuilder, java.util.Map, java.util.List)
      */
     @Override
@@ -396,7 +396,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFile(ubic.gemma.model.analysis
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFile(ubic.gemma.model.
+     * analysis
      * .expression.diff.DifferentialExpressionAnalysis, boolean)
      */
     @Override
@@ -449,7 +450,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileService#getDiffExpressionAnalysisArchiveFile(ubic.gemma.model.
+     * @see
+     * ubic.gemma.core.analysis.service.ExpressionDataFileService#getDiffExpressionAnalysisArchiveFile(ubic.gemma.model.
      * expression.experiment.BioAssaySet, ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis,
      * java.util.Collection)
      */
@@ -504,7 +506,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * @param experimentAnalyzed
      * @param analysis
      */
-    private void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis )
+    @Override
+    public void writeDiffExArchiveFile( BioAssaySet experimentAnalyzed, DifferentialExpressionAnalysis analysis )
             throws IOException {
         Collection<ArrayDesign> arrayDesigns = this.expressionExperimentService
                 .getArrayDesignsUsed( experimentAnalyzed );
@@ -547,7 +550,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#getOutputFile(ubic.gemma.model.expression.experiment.
+     * @see
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#getOutputFile(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, boolean)
      */
     @Override
@@ -617,7 +621,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateCoexpressionDataFile(ubic.gemma.model.expression
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateCoexpressionDataFile(ubic.gemma.model.
+     * expression
      * .experiment.ExpressionExperiment, boolean)
      */
     @Override
@@ -647,7 +652,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDataFile(ubic.gemma.model.expression.experiment
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDataFile(ubic.gemma.model.expression.
+     * experiment
      * .ExpressionExperiment, boolean, boolean)
      */
     @Override
@@ -682,7 +688,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDataFile(ubic.gemma.model.common.quantitationtype
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDataFile(ubic.gemma.model.common.
+     * quantitationtype
      * .QuantitationType, boolean)
      */
     @Override
@@ -717,7 +724,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDesignFile(ubic.gemma.model.expression.experiment
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDesignFile(ubic.gemma.model.expression.
+     * experiment
      * .ExpressionExperiment, boolean)
      */
     @Override
@@ -745,7 +753,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.service.ExpressionDataFileService#writeTemporaryDesignFile(ubic.gemma.model.expression.experiment
+     * ubic.gemma.core.analysis.service.ExpressionDataFileService#writeTemporaryDesignFile(ubic.gemma.model.expression.
+     * experiment
      * .ExpressionExperiment)
      */
     @Override
@@ -771,7 +780,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFiles(ubic.gemma.model.
+     * @see
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateDiffExpressionDataFiles(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment, boolean)
      */
     @Override
@@ -782,7 +792,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         Collection<DifferentialExpressionAnalysis> analyses = this.differentialExpressionAnalysisService
                 .getAnalyses( ee );
 
-        Collection<File> result = new HashSet<File>();
+        Collection<File> result = new HashSet<>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
             assert analysis.getId() != null;
             result.add( this.getDiffExpressionAnalysisArchiveFile( analysis.getId(), forceWrite ) );
@@ -795,7 +805,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateJSONDataFile(ubic.gemma.model.expression.
+     * @see
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateJSONDataFile(ubic.gemma.model.expression.
      * experiment.ExpressionExperiment, boolean, boolean)
      */
     @Override
@@ -824,7 +835,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateJSONDataFile(ubic.gemma.model.common.
+     * @see
+     * ubic.gemma.core.analysis.service.ExpressionDataFileSerivce#writeOrLocateJSONDataFile(ubic.gemma.model.common.
      * quantitationtype.QuantitationType, boolean)
      */
     @Override
@@ -1111,7 +1123,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     private String makeDiffExpressionFileHeader( DifferentialExpressionAnalysis analysis,
             Collection<ExpressionAnalysisResultSet> resultSets, Map<Long, String[]> geneAnnotations ) {
 
-        differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
+        if ( analysis.getId() != null ) // might be if we are using -nodb
+            differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
 
         StringBuilder buf = new StringBuilder();
 

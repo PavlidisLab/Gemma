@@ -180,7 +180,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Checks all the given expression experiments bio assays for outlier flags and returns them in a collection
      *
      * @param ee the expression experiment to be checked
-     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware of.
+     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
+     *         of.
      */
     private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = new LinkedList<>();
@@ -213,7 +214,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
                 try {
-                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe, true ) );
                 } catch ( Exception e ) {
                     log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
                 }

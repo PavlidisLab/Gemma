@@ -571,7 +571,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     /**
      * Populate the phenotypes for an PhenotypeAssociation using an EvidenceValueObject
      *
-     * @param phe                 The phenotype association (parent class of an evidence) we are interested in populating
+     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
      * @param evidenceValueObject the value object representing a phenotype
      */
     private void populatePheAssoPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {

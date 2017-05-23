@@ -27,7 +27,6 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class ScaleTypeConverter extends StringConverter {
     @Override

@@ -10,6 +10,8 @@ TAGS
 .make.state
 .nse_depinfo
 *~
+**/.DS_Store
+.DS_Store
 #*
 .#*
 ,*
@@ -30,7 +32,6 @@ _$*
 *.Z
 *.elc
 *.ln
-**/DS_Store
 # Project ignores (converted from .cvsignore files)
 gemma-web/.settings/org.eclipse.m2e.core.prefs
 gemma-web/surefire*

@@ -22,8 +22,7 @@ package ubic.gemma.model.analysis.expression.diff;
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisResultImpl extends
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult {
+public class DifferentialExpressionAnalysisResultImpl extends DifferentialExpressionAnalysisResult {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
