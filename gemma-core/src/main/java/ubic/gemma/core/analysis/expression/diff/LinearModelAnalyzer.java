@@ -367,6 +367,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Map<FactorValue, ExpressionDataDoubleMatrix> subsets = makeSubSets( config, dmatrix, samplesUsed,
                     subsetFactor );
 
+            log.info( "Total number of subsets: " + subsets.size() );
+
             /*
              * Now analyze each subset
              */
@@ -387,7 +389,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 }
                 if ( !include ) {
                     log.warn( EXCLUDE_WARNING );
-                    break;
+                    continue;
                 }
 
                 List<BioMaterial> bioMaterials = ExperimentalDesignUtils
