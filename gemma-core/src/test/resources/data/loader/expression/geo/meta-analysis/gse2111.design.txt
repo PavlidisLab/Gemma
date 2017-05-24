@@ -7,15 +7,15 @@
 # Zoubarev, A., et al., Gemma: A resource for the re-use, sharing and meta-analysis of expression profiling data. Bioinformatics, 2012. 
 #$agent : Category=molecular_entity Type=Categorical
 Bioassay	ExternalID	agent
-GSE2111_Biomat_7___BioAssayImplId=648Name=Control1	GSM38117	control
-GSE2111_Biomat_1___BioAssayImplId=644Name=V1	GSM38121	zinc
-GSE2111_Biomat_8___BioAssayImplId=645Name=Control4	GSM38120	control
-GSE2111_Biomat_5___BioAssayImplId=646Name=Control2	GSM38119	control
-GSE2111_Biomat_6___BioAssayImplId=647Name=Control3	GSM38118	control
-GSE2111_Biomat_11___BioAssayImplId=640Name=Zn1	GSM38125	zinc
-GSE2111_Biomat_4___BioAssayImplId=641Name=V4	GSM38124	zinc
-GSE2111_Biomat_3___BioAssayImplId=642Name=V3	GSM38123	zinc
-GSE2111_Biomat_2___BioAssayImplId=643Name=V2	GSM38122	zinc
-GSE2111_Biomat_9___BioAssayImplId=637Name=Zn4	GSM38128	zinc
-GSE2111_Biomat_10___BioAssayImplId=638Name=Zn3	GSM38127	zinc
-GSE2111_Biomat_12___BioAssayImplId=639Name=Zn2	GSM38126	zinc
+GSE2111_Biomat_7___BioAssayId=648Name=Control1	GSM38117	control
+GSE2111_Biomat_1___BioAssayId=644Name=V1	GSM38121	zinc
+GSE2111_Biomat_8___BioAssayId=645Name=Control4	GSM38120	control
+GSE2111_Biomat_5___BioAssayId=646Name=Control2	GSM38119	control
+GSE2111_Biomat_6___BioAssayId=647Name=Control3	GSM38118	control
+GSE2111_Biomat_11___BioAssayId=640Name=Zn1	GSM38125	zinc
+GSE2111_Biomat_4___BioAssayId=641Name=V4	GSM38124	zinc
+GSE2111_Biomat_3___BioAssayId=642Name=V3	GSM38123	zinc
+GSE2111_Biomat_2___BioAssayId=643Name=V2	GSM38122	zinc
+GSE2111_Biomat_9___BioAssayId=637Name=Zn4	GSM38128	zinc
+GSE2111_Biomat_10___BioAssayId=638Name=Zn3	GSM38127	zinc
+GSE2111_Biomat_12___BioAssayId=639Name=Zn2	GSM38126	zinc

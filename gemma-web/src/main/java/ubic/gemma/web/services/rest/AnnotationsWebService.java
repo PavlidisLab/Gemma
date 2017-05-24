@@ -25,10 +25,9 @@ import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.web.services.rest.util.AbstractWebService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
-import ubic.gemma.web.services.rest.util.ResponseErrorObject;
+import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.args.TaxonArg;
 
 import javax.servlet.http.HttpServletResponse;
@@ -43,10 +42,14 @@ import javax.ws.rs.core.MediaType;
  */
 @Component
 @Path("/annotations")
-public class AnnotationsWebService extends AbstractWebService {
+public class AnnotationsWebService extends WebService {
 
     private OntologyService ontologyService;
     private TaxonService taxonService;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     /**
      * Required by spring
@@ -67,6 +70,9 @@ public class AnnotationsWebService extends AbstractWebService {
      * API GET Methods
      * ********************************/
 
+    /**
+     * Placeholder for root call
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject all( // Params:
@@ -75,6 +81,9 @@ public class AnnotationsWebService extends AbstractWebService {
         return Responder.code404( ERR_MSG_UNMAPPED_PATH, sr );
     }
 
+    /**
+     * Placeholder for search call without a query parameter
+     */
     @GET
     @Path("/search/")
     @Produces(MediaType.APPLICATION_JSON)
@@ -87,10 +96,11 @@ public class AnnotationsWebService extends AbstractWebService {
     /**
      * Does a search for ontology terms based on the given string.
      *
-     * @param givenQueryString the search input query.
+     * @param query the search input query.
      * @param taxonArg         whether to limit the search to a specific taxon, can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
      *                         scientific name, common name, abbreviation. Using the ID is most efficient.
-     * @return a collection of found terms wrapped in a CharacteristicValueObject
+     * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
+     * FIXME do we want to be returning value objects or original objects?
      * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
      * FIXME are taxons attached to ANY terms at all? - possible redundant optional argument TaxonArg
@@ -99,12 +109,12 @@ public class AnnotationsWebService extends AbstractWebService {
     @Path("/search/{query}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
-            @PathParam("query") String givenQueryString, // Required, part of url
+            @PathParam("query") String query, // Required, part of url
             @QueryParam("taxon") TaxonArg taxonArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         return Responder.autoCode(
-                ontologyService.findTermsInexact( givenQueryString, TaxonArg.getTaxon( taxonArg, this.taxonService ) ),
+                ontologyService.findTermsInexact( query, TaxonArg.getTaxon( taxonArg, this.taxonService ) ),
                 sr );
     }
 }

@@ -72,7 +72,7 @@ public class Responder {
      *
      * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
      * @param servletResponse the object to set the appropriate response code on.
-     * @return {@link ResponseErrorObject} with the given toReturn parameter set as the error payload.
+     * @return see {@link this#code(Response.Status, Object, HttpServletResponse)}
      */
     public static ResponseDataObject code400( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.BAD_REQUEST;
@@ -88,10 +88,22 @@ public class Responder {
      * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
      *                        For automatic null object detection, use {@link this#autoCode(Object, HttpServletResponse)}.
      * @param servletResponse the object to set the appropriate response code on.
-     * @return {@link ResponseErrorObject} with the given toReturn parameter set as the error payload.
+     * return see {@link this#code(Response.Status, Object, HttpServletResponse)}
      */
     public static ResponseDataObject code404( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.NOT_FOUND;
+        return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
+    }
+
+    /**
+     * Creates a 503 response object. Use this when you want to signal that this particular service is temporarily unavailable.
+     *
+     * @param message         A String that will be used in the {@link ResponseErrorObject} as a message describing the problem.
+     * @param servletResponse the object to set the appropriate response code on.
+     * return see {@link this#code(Response.Status, Object, HttpServletResponse)}
+     */
+    public static ResponseDataObject code503( String message, HttpServletResponse servletResponse ) {
+        Response.Status code = Response.Status.SERVICE_UNAVAILABLE;
         return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
     }
 
@@ -103,9 +115,7 @@ public class Responder {
      *
      * @param toReturn        an object to be wrapped in a ResponseObject to be published to the API.
      * @param servletResponse the object to set the appropriate response code on.
-     * @return If the guessed code is denoting a problem (codes 4xx/5xx), the returned object will be an instance of {@link ResponseErrorObject} with
-     * the given toReturn parameter set as its error payload. For other codes, a {@link ResponseDataObject} will be returned, with the toReturn object
-     * as its payload.
+     * @return see {@link this#code(Response.Status, Object, HttpServletResponse)}.
      */
     public static ResponseDataObject autoCode( Object toReturn, HttpServletResponse servletResponse ) {
         if ( toReturn == null ) { // object is null

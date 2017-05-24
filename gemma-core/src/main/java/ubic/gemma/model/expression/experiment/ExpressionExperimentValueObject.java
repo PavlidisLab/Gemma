@@ -712,14 +712,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         return result;
     }
 
-    public Boolean isHasBothIntensities() {
-        return this.hasBothIntensities;
-    }
-
-    public Boolean isSubset() {
-        return isSubset;
-    }
-
     public void setSubset( boolean isSubset ) {
         this.isSubset = isSubset;
     }

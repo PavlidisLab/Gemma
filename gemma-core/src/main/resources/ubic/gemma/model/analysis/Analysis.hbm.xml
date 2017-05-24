@@ -82,8 +82,8 @@
 						<column name="SAMPLE_COEXPRESSION_MATRIX_FK" not-null="false" sql-type="BIGINT" unique="true" />
 					</many-to-one>
 				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl"
-					discriminator-value="DifferentialExpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+				<subclass name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
+					discriminator-value="DifferentialExpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
 					<many-to-one name="subsetFactorValue" class="ubic.gemma.model.expression.experiment.FactorValueImpl"
 						lazy="proxy" fetch="select">
 						<column name="SUBSET_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT" />

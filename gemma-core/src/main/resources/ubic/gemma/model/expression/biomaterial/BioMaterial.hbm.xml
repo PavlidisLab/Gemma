@@ -36,7 +36,7 @@
          <key foreign-key="BIO_ASSAY_SAMPLE_USED_FKC">
             <column name="SAMPLE_USED_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssayImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay"/>
       </set>
       <set name="treatments"  lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />

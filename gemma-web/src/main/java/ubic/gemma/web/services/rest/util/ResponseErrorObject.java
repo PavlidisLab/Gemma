@@ -1,7 +1,5 @@
 package ubic.gemma.web.services.rest.util;
 
-import ubic.gemma.web.services.rest.DefaultWebService;
-
 /**
  * Created by tesarst on 17/05/17.
  * Wrapper for an error response payload compliant with the
@@ -10,7 +8,10 @@ import ubic.gemma.web.services.rest.DefaultWebService;
 @SuppressWarnings("unused")
 // Some properties might show as unused, but they are still serialised to JSON and published through API for client consumption.
 public class ResponseErrorObject {
-    public final String apiVersion = DefaultWebService.API_VERSION;
+    /**
+     * Adds the apiVersion property to the final JSON object
+     */
+    public final String apiVersion = WebService.API_VERSION;
 
     private WellComposedErrorBody error;
 

@@ -20,12 +20,15 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.web.services.rest.util.args.TaxonArg;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.web.services.rest.util.Responder;
+import ubic.gemma.web.services.rest.util.ResponseDataObject;
+import ubic.gemma.web.services.rest.util.WebService;
+import ubic.gemma.web.services.rest.util.args.DatasetArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -34,41 +37,79 @@ import javax.ws.rs.core.MediaType;
 import java.util.*;
 
 /**
- * Simple web service to return sample annotations for curated dataset.
+ * RESTful interface for datasets.
  *
- * @author anton
+ * @author tesarst
  */
 @Service
 @Path("/datasets")
-public class DatasetsWebService {
+public class DatasetsWebService extends WebService {
 
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
-    @Autowired
     private BioAssayDao bioAssayDao;
-//
-//    @GET
-//    @Path("/")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public List<String> getAllDatasetNames( // Params:
-//            @QueryParam("taxon") TaxonArg taxonArg, // Optional, default null
-//            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
-//    ) {
-//
-//        List<String> result = new LinkedList<>();
-//
-//        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();
-//        if ( experiments == null ) {
-//            throw new NotFoundException( "No datasets were found." );
-//        }
-//
-//        for ( ExpressionExperiment experiment : experiments ) {
-//            result.add( experiment.getShortName() );
-//        }
-//
-//        return result;
-//    }
+
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * Required by spring
+     */
+    public DatasetsWebService() {
+    }
+
+    /**
+     * Constructor for service autowiring
+     */
+    @Autowired
+    public DatasetsWebService( ExpressionExperimentService expressionExperimentService, BioAssayDao bioAssayDao ) {
+        this.expressionExperimentService = expressionExperimentService;
+        this.bioAssayDao = bioAssayDao;
+    }
+
+    /* ********************************
+     * API GET Methods
+     * ********************************/
+
+    /**
+     * Lists all datasets available in gemma.
+     *
+     * @param accessionGsmId optional parameter, filtering the results by accession.
+     * @return
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject all( // Params:
+            @QueryParam("accession") String accessionGsmId, // Optional, default null
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        //TODO implement
+        return Responder.code503( "Not yet implemented", sr );
+    }
+
+    /**
+     * Retrieves single dataset based on the given identifier.
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
+     *                   is most efficient.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9]+}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ResponseDataObject dataset( // Params:
+            @PathParam("datasetArg") DatasetArg datasetArg, // Optional, default null
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        //FIXME currently not filtering out troubled
+        return Responder.autoCode( DatasetArg.getValueObject( datasetArg, this.expressionExperimentService ), sr );
+    }
+
+
+    /* ********************************
+     * OLD METHODS
+     * TODO REMOVE
+     * ********************************/
 
     @GET
     @Path("/findByShortName/{shortName}")

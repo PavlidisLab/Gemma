@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -146,7 +145,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
         differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory()
                 .getCurrentSession()
-                .load( DifferentialExpressionAnalysisImpl.class, differentialExpressionAnalysis.getId() );
+                .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
         Collection<ExpressionAnalysisResultSet> thawed = new HashSet<ExpressionAnalysisResultSet>();
         for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
             thawed.add( this.thaw( rs ) );

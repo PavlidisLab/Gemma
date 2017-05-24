@@ -36,7 +36,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     private static final long serialVersionUID = -1342753625018841735L;
     private DatabaseEntry accession;
-    private Collection<BioAssay> bioAssays = new HashSet<>();
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
     private MeanVarianceRelation meanVarianceRelation;

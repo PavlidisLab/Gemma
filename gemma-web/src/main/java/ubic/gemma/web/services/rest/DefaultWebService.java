@@ -1,6 +1,6 @@
 package ubic.gemma.web.services.rest;
 
-import ubic.gemma.web.services.rest.util.AbstractWebService;
+import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 
@@ -16,9 +16,7 @@ import javax.ws.rs.core.MediaType;
  * Handles calls to the root API url.
  */
 @Path("/")
-public class DefaultWebService extends AbstractWebService {
-
-    public static final String API_VERSION = "2.0";
+public class DefaultWebService extends WebService {
 
     /**
      * Required by spring

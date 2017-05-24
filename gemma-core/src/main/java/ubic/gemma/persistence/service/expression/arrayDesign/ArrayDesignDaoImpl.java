@@ -388,7 +388,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign> implem
 
     @Override
     public Collection<BioAssay> getAllAssociatedBioAssays( Long id ) {
-        final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
+        final String queryString = "select b from BioAssay as b inner join b.arrayDesignUsed a where a.id = :id";
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "id", id ).list();
     }

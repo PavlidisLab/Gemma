@@ -98,7 +98,7 @@
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
 					</key>
-					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssayImpl" />
+					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" />
 				</set>
 				<many-to-one name="meanVarianceRelation" class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelationImpl"
 					cascade="all" lazy="proxy" fetch="select">
@@ -133,7 +133,7 @@
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC">
 						<column name="EXPRESSION_EXPERIMENT_SUB_SET_FK" sql-type="BIGINT" />
 					</key>
-					<many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssayImpl">
+					<many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay">
 						<column name="BIO_ASSAYS_FK" sql-type="BIGINT" />
 					</many-to-many>
 				</set>

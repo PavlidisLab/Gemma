@@ -41,7 +41,7 @@
                </key>
                <one-to-many class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResultImpl"/>
             </set>
-            <many-to-one name="analysis" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" cascade="none"  lazy="proxy" fetch="select">
+            <many-to-one name="analysis" class="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis" cascade="none"  lazy="proxy" fetch="select">
                <column name="ANALYSIS_FK" not-null="false" sql-type="BIGINT"/>
             </many-to-one>
             <many-to-one name="pvalueDistribution" class="ubic.gemma.model.analysis.expression.diff.PvalueDistributionImpl"  cascade="all" lazy="proxy" fetch="select">

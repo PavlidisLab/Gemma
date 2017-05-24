@@ -310,7 +310,7 @@ public class ExpressionExperimentSetDaoImpl extends HibernateDaoSupport implemen
         //noinspection unchecked
         List<Object[]> withDiffEx = this.getSessionFactory().getCurrentSession().createQuery(
                 "select e.id, count(distinct an.experimentAnalyzed) "
-                        + "from ExpressionExperimentSetImpl e, DifferentialExpressionAnalysisImpl an join e.experiments ea "
+                        + "from ExpressionExperimentSetImpl e, DifferentialExpressionAnalysis an join e.experiments ea "
                         + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
 

@@ -82,7 +82,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByParentTaxon( Taxon taxon ) {
-        final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
+        final String queryString = "select distinct e, a from DifferentialExpressionAnalysis a"
                 + "   inner join a.resultSetsIncluded rs inner join rs.analysis ra inner join ra.experimentAnalyzed"
                 + " ee inner join ee.bioAssays as ba " + "inner join ba.sampleUsed as sample "
                 + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";

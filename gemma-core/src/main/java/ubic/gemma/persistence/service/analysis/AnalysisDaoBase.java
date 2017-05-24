@@ -26,6 +26,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractDao;
 
 /**
  * <p>
@@ -35,7 +36,11 @@ import ubic.gemma.model.genome.Taxon;
  * 
  * @see ubic.gemma.model.analysis.Analysis
  */
-public abstract class AnalysisDaoBase<T extends Analysis> extends HibernateDaoSupport implements AnalysisDao<T> {
+public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T> implements AnalysisDao<T> {
+
+    public AnalysisDaoBase( Class elementClass ) {
+        super( elementClass );
+    }
 
     /**
      * @see AnalysisDao#findByInvestigation(ubic.gemma.model.analysis.Investigation)

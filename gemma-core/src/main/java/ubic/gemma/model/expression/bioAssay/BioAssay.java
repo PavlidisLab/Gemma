@@ -19,74 +19,93 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import gemma.gsec.model.Securable;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
 /**
  * Represents the bringing together of a biomaterial with an assay of some sort (typically an expression assay). We
  * don't distinguish between "physical" and "computational" BioAssays, so this is a concrete class. This has several
  * slots that are used specifically to support sequence-based data, but is intended to be generic.
  */
-public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
+public class BioAssay extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7868768731812964045L;
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
-         */
-        public static BioAssay newInstance() {
-            return new BioAssayImpl();
-        }
-
-    }
-
+    private Boolean sequencePairedReads = false;
+    private Boolean isOutlier = false;
     private Date processingDate;
-
     private Integer sequenceReadCount;
-
     private Integer sequenceReadLength;
 
-    private Boolean sequencePairedReads = Boolean.FALSE;
-
-    private Boolean isOutlier = Boolean.FALSE;
-
     private ArrayDesign arrayDesignUsed;
-
+    private BioMaterial sampleUsed;
     private DatabaseEntry accession;
-
     private LocalFile rawDataFile;
 
     private Collection<LocalFile> derivedDataFiles = new HashSet<>();
 
-    private BioMaterial sampleUsed;
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
-    /**
-     * 
-     */
+    @Override
+    public boolean equals( Object object ) {
+
+        if ( !( object instanceof BioAssay ) ) {
+            return false;
+        }
+        final BioAssay that = ( BioAssay ) object;
+        if ( this.getId() != null && that.getId() != null ) return this.getId().equals( that.getId() );
+
+        if ( this.getName() != null && that.getName() != null && !this.getName().equals( that.getName() ) )
+            return false;
+
+        if ( this.getDescription() != null && that.getDescription() != null
+                && !this.getDescription().equals( that.getDescription() ) ) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode;
+
+        if ( this.getId() != null ) {
+            return 29 * getId().hashCode();
+        }
+        int nameHash = this.getName() == null ? 0 : getName().hashCode();
+
+        int descHash = this.getDescription() == null ? 0 : getDescription().hashCode();
+        hashCode = 29 * nameHash + descHash;
+
+        return hashCode;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     public DatabaseEntry getAccession() {
         return this.accession;
     }
 
-    /**
-     * 
-     */
+    public void setAccession( DatabaseEntry accession ) {
+        this.accession = accession;
+    }
+
     public ubic.gemma.model.expression.arrayDesign.ArrayDesign getArrayDesignUsed() {
         return this.arrayDesignUsed;
+    }
+
+    public void setArrayDesignUsed( ArrayDesign arrayDesignUsed ) {
+        this.arrayDesignUsed = arrayDesignUsed;
     }
 
     /**
@@ -94,6 +113,10 @@ public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.m
      */
     public Collection<LocalFile> getDerivedDataFiles() {
         return this.derivedDataFiles;
+    }
+
+    public void setDerivedDataFiles( Collection<LocalFile> derivedDataFiles ) {
+        this.derivedDataFiles = derivedDataFiles;
     }
 
     /**
@@ -104,12 +127,20 @@ public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.m
         return this.isOutlier;
     }
 
+    public void setIsOutlier( Boolean isOutlier ) {
+        this.isOutlier = isOutlier;
+    }
+
     /**
      * Indicates the date that the assay was processed in the original study. This would correspond to "batch"
      * information and will often be a "scan date" or similar information extracted from the raw data files.
      */
     public Date getProcessingDate() {
         return this.processingDate;
+    }
+
+    public void setProcessingDate( Date processingDate ) {
+        this.processingDate = processingDate;
     }
 
     /**
@@ -119,11 +150,16 @@ public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.m
         return this.rawDataFile;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.biomaterial.BioMaterial getSampleUsed() {
+    public void setRawDataFile( LocalFile rawDataFile ) {
+        this.rawDataFile = rawDataFile;
+    }
+
+    public BioMaterial getSampleUsed() {
         return this.sampleUsed;
+    }
+
+    public void setSampleUsed( BioMaterial sampleUsed ) {
+        this.sampleUsed = sampleUsed;
     }
 
     @Override
@@ -139,12 +175,20 @@ public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.m
         return this.sequencePairedReads;
     }
 
+    public void setSequencePairedReads( Boolean sequencePairedReads ) {
+        this.sequencePairedReads = sequencePairedReads;
+    }
+
     /**
      * For sequence-read based data, the total number of reads in the sample, computed from the data as the total of the
      * values for the elements assayed.
      */
     public Integer getSequenceReadCount() {
         return this.sequenceReadCount;
+    }
+
+    public void setSequenceReadCount( Integer sequenceReadCount ) {
+        this.sequenceReadCount = sequenceReadCount;
     }
 
     /**
@@ -156,44 +200,25 @@ public abstract class BioAssay extends AbstractAuditable implements gemma.gsec.m
         return this.sequenceReadLength;
     }
 
-    public void setAccession( DatabaseEntry accession ) {
-        this.accession = accession;
-    }
-
-    public void setArrayDesignUsed( ArrayDesign arrayDesignUsed ) {
-        this.arrayDesignUsed = arrayDesignUsed;
-    }
-
-    public void setDerivedDataFiles( Collection<LocalFile> derivedDataFiles ) {
-        this.derivedDataFiles = derivedDataFiles;
-    }
-
-    public void setIsOutlier( Boolean isOutlier ) {
-        this.isOutlier = isOutlier;
-    }
-
-    public void setProcessingDate( Date processingDate ) {
-        this.processingDate = processingDate;
-    }
-
-    public void setRawDataFile( LocalFile rawDataFile ) {
-        this.rawDataFile = rawDataFile;
-    }
-
-    public void setSampleUsed( BioMaterial sampleUsed ) {
-        this.sampleUsed = sampleUsed;
-    }
-
-    public void setSequencePairedReads( Boolean sequencePairedReads ) {
-        this.sequencePairedReads = sequencePairedReads;
-    }
-
-    public void setSequenceReadCount( Integer sequenceReadCount ) {
-        this.sequenceReadCount = sequenceReadCount;
-    }
-
     public void setSequenceReadLength( Integer sequenceReadLength ) {
         this.sequenceReadLength = sequenceReadLength;
+    }
+
+    /* ********************************
+     * Public classes
+     * ********************************/
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.expression.bioAssay.BioAssay}.
+         */
+        public static BioAssay newInstance() {
+            return new BioAssay();
+        }
+
     }
 
 }

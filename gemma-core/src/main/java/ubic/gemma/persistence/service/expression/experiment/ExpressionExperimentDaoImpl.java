@@ -1739,7 +1739,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
         //noinspection unchecked
         List<Long> withDiffEx = this.getSessionFactory().getCurrentSession().createQuery(
-                "select experimentAnalyzed.id from DifferentialExpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
+                "select experimentAnalyzed.id from DifferentialExpressionAnalysis where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", vo.keySet() ).list();
 
         for ( Long id : withDiffEx ) {

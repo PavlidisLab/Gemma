@@ -37,7 +37,6 @@ import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -214,7 +213,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             // Hibernate.initialize( bad.getBioAssays() );
             //
             // for ( BioAssay ba : bad.getBioAssays() ) {
-            // EntityUtils.attach( session, ba, BioAssayImpl.class, ba.getId() );
+            // EntityUtils.attach( session, ba, BioAssay.class, ba.getId() );
             // Hibernate.initialize( ba );
             // Hibernate.initialize( ba.getSampleUsed() );
             // Hibernate.initialize( ba.getArrayDesignUsed() );
@@ -301,7 +300,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         // thaw the bioassays.
         for ( BioAssay ba : designElementDataVector.getBioAssayDimension().getBioAssays() ) {
-            ba = ( BioAssay ) session.get( BioAssayImpl.class, ba.getId() );
+            ba = ( BioAssay ) session.get( BioAssay.class, ba.getId() );
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getSampleUsed() );
             Hibernate.initialize( ba.getDerivedDataFiles() );

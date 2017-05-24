@@ -47,8 +47,6 @@ public abstract class ExpressionExperimentSubSet extends BioAssaySet implements 
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1880425342951467283L;
-
-    private Collection<BioAssay> bioAssays = new java.util.HashSet<>();
     private ExpressionExperiment sourceExperiment;
 
     /**

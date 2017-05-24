@@ -28,7 +28,7 @@
       <component name="primaryPublication" ref-alias="primaryPublication" />
       <component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
    </class>
-   <class name="expression.bioAssay.BioAssayImpl" alias="bioAssay" root="false">
+   <class name="expression.bioAssay.BioAssay" alias="bioAssay" root="false">
       <id name="id" />
       <property name="name">
          <meta-data>name</meta-data>

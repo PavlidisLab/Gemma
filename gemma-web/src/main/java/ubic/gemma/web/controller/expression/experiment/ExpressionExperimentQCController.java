@@ -569,7 +569,7 @@ public class ExpressionExperimentQCController extends BaseController {
         List<String> rowNames = new ArrayList<String>();
         int i = 0;
         Pattern p = Pattern.compile( "^.*?ID=([0-9]+).*$", Pattern.CASE_INSENSITIVE );
-        Pattern bipattern = Pattern.compile( "BioAssayImpl Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
+        Pattern bipattern = Pattern.compile( "BioAssay Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
         int MAX_BIO_ASSAY_NAME_LEN = 30;
 
         for ( String rn : rawRowNames ) {

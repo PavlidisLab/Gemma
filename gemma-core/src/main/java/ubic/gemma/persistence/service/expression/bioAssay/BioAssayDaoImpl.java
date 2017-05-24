@@ -18,104 +18,70 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
+import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.EntityUtils;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 @Repository
-public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao {
+public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDao {
 
-    private static Log log = LogFactory.getLog( BioAssayDaoImpl.class.getName() );
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    public BioAssayDaoImpl() {
+        super( BioAssay.class );
+    }
 
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( BioAssay.class );
+        setSessionFactory( sessionFactory );
     }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     /**
      * @see BioAssayDao#countAll()
      */
     @Override
-    public java.lang.Integer countAll() {
+    public Integer countAll() {
         try {
             return this.handleCountAll();
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'BioAssayDao.countAll()' --> " + th, th );
+            throw new RuntimeException( "Error performing 'BioAssayDao.countAll()' --> " + th, th );
         }
     }
 
-    /**
-     * @see BioAssayDao#create(int, java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<BioAssay> create( final java.util.Collection<? extends BioAssay> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioAssay.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BioAssay> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-        return ( Collection<BioAssay> ) entities;
-    }
-
-    /**
-     * @see BioAssayDao#create(int transform,
-     *      ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public BioAssay create( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        if ( bioAssay == null ) {
-            throw new IllegalArgumentException( "BioAssay.create - 'bioAssay' can not be null" );
-        }
-        this.getHibernateTemplate().save( bioAssay );
-        return bioAssay;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#find(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSessionFactory().getCurrentSession(),
-                    bioAssay );
+            Criteria queryObject = BusinessKey
+                    .createQueryObject( super.getSessionFactory().getCurrentSession(), bioAssay );
 
-            java.util.List<?> results = queryObject.list();
+            List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -133,229 +99,78 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public java.util.Collection<BioAssayDimension> findBioAssayDimensions( final java.lang.String queryString,
-            final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bioAssay );
-        argNames.add( "bioAssay" );
-        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return ( Collection<BioAssayDimension> ) results;
-    }
-
     /**
-     * @see BioAssayDao#findBioAssayDimensions(int,
-     *      ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see BioAssayDao#findBioAssayDimensions(BioAssay)
      */
     @Override
-    public java.util.Collection<BioAssayDimension> findBioAssayDimensions(
-            final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        return this.findBioAssayDimensions(
-                "select bad from BioAssayDimensionImpl bad inner join bad.bioAssays as ba where :bioAssay in ba ",
-                bioAssay );
+    public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
+        //noinspection unchecked
+        return this.getSession().createQuery(
+                "select bad from BioAssayDimensionImpl bad inner join bad.bioAssays as ba where :bioAssay in ba " )
+                .setParameter( "bioAssay", bioAssay ).list();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioAssayDao#findByAccession(java.lang.String)
-     */
     @Override
     public Collection<BioAssay> findByAccession( String accession ) {
-        if ( StringUtils.isBlank( accession ) ) return new HashSet<BioAssay>();
+        if ( StringUtils.isBlank( accession ) )
+            return new HashSet<>();
 
-        return this.getHibernateTemplate().findByNamedParam(
-                "select distinct b from BioAssayImpl b inner join b.accession a where a.accession = :query", "query",
-                accession );
+        //noinspection unchecked
+        return this.getSession().createQuery(
+                "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
+                .setParameter( "accession", accession ).list();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
     @Override
     public BioAssay findOrCreate( BioAssay bioAssay ) {
-        if ( bioAssay == null || bioAssay.getName() == null ) {
-            throw new IllegalArgumentException( "BioAssay was null or had no name : " + bioAssay );
-        }
         BioAssay newBioAssay = find( bioAssay );
         if ( newBioAssay != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing bioAssay: " + newBioAssay );
+            if ( log.isDebugEnabled() )
+                log.debug( "Found existing bioAssay: " + newBioAssay );
             return newBioAssay;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new bioAssay: " + bioAssay );
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating new bioAssay: " + bioAssay );
         return create( bioAssay );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#handleThaw(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public void handleThaw( final BioAssay bioAssay ) throws Exception {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.buildLockRequest( LockOptions.NONE ).lock( bioAssay );
-                Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-                Hibernate.initialize( bioAssay.getDerivedDataFiles() );
-                BioMaterial bm = bioAssay.getSampleUsed();
-                session.buildLockRequest( LockOptions.NONE ).lock( bm );
-                Hibernate.initialize( bm );
-                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                Hibernate.initialize( bm.getFactorValues() );
-                session.evict( bm );
-
-                session.evict( bioAssay );
-                return null;
-            }
-        } );
-    }
-
     @Override
-    public Collection<? extends BioAssay> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from BioAssayImpl where id in (:ids)", "ids", ids );
-    }
-
-    /**
-     * @see BioAssayDao#load(int, java.lang.Long)
-     */
-    @Override
-    public BioAssay load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BioAssay.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.expression.bioAssay.BioAssayImpl.class,
-                id );
-        return ( BioAssay ) entity;
-    }
-
-    /**
-     * @see BioAssayDao#loadAll(int)
-     */
-
-    @Override
-    public java.util.Collection<? extends BioAssay> loadAll() {
-        final java.util.Collection<? extends BioAssay> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.expression.bioAssay.BioAssayImpl.class );
-        return results;
-    }
-
-    /**
-     * @see BioAssayDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BioAssay.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.expression.bioAssay.BioAssay entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection<? extends BioAssay> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioAssay.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see BioAssayDao#remove(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public void remove( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        if ( bioAssay == null ) {
-            throw new IllegalArgumentException( "BioAssay.remove - 'bioAssay' can not be null" );
-        }
-        this.getHibernateTemplate().delete( bioAssay );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioAssayDao#thaw(java.util.Collection)
-     */
-    @Override
-    @SuppressWarnings("unchecked")
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
-        if ( bioAssays.isEmpty() ) return bioAssays;
+        if ( bioAssays.isEmpty() )
+            return bioAssays;
         List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
-                "select distinct b from BioAssayImpl b left join fetch b.arrayDesignUsed"
+                "select distinct b from BioAssay b left join fetch b.arrayDesignUsed"
                         + " left join fetch b.derivedDataFiles join fetch b.sampleUsed bm"
                         + " left join bm.factorValues left join bm.bioAssaysUsedIn left join fetch "
                         + " b.auditTrail at left join fetch at.events where b.id in (:ids) ", "ids",
                 EntityUtils.getIds( bioAssays ) );
+        //noinspection unchecked
         return ( Collection<BioAssay> ) thawedBioassays;
     }
 
     /**
-     * @see BioAssayDao#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see BioAssayDao#thaw(BioAssay)
      */
     @Override
-    public void thaw( final ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
+    public void thaw( final BioAssay bioAssay ) {
         try {
             this.handleThaw( bioAssay );
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'BioAssayDao.thaw(ubic.gemma.model.expression.bioAssay.BioAssay bioAssay)' --> "
-                            + th, th );
+            throw new RuntimeException( "Error performing 'BioAssayDao.thaw(BioAssay bioAssay)' --> " + th, th );
         }
     }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
 
     @Override
-    public void update( final java.util.Collection<? extends BioAssay> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioAssay.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BioAssay> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+    public Collection<BioAssay> loadValueObjects( Collection<Long> ids ) {
+        return null;
     }
 
-    /**
-     * @see BioAssayDao#update(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    @Override
-    public void update( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay ) {
-        if ( bioAssay == null ) {
-            throw new IllegalArgumentException( "BioAssay.update - 'bioAssay' can not be null" );
-        }
-        this.getHibernateTemplate().update( bioAssay );
-    }
+    /* ********************************
+     * Protected methods
+     * ********************************/
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#handleCountAll()
-     */
     protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from BioAssayImpl";
+        final String query = "select count(*) from BioAssay";
         try {
             org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
             queryObject.setCacheable( true );
@@ -365,14 +180,27 @@ public class BioAssayDaoImpl extends HibernateDaoSupport implements BioAssayDao 
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioAssayDao#loadValueObjects(java.util.Collection)
-     */
-    @Override
-    public Collection<BioAssay> loadValueObjects( Collection<Long> ids ) {
-        throw new UnsupportedOperationException( "Sorry, not yet implemented" );
+    /* ********************************
+     * Private methods
+     * ********************************/
+
+    private void handleThaw( final BioAssay bioAssay ) throws Exception {
+
+        this.getSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+                Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+                Hibernate.initialize( bioAssay.getDerivedDataFiles() );
+                BioMaterial bm = bioAssay.getSampleUsed();
+                getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
+                Hibernate.initialize( bm );
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                Hibernate.initialize( bm.getFactorValues() );
+                getSession().evict( bm );
+                getSession().evict( bioAssay );
+            }
+        } );
     }
 
 }

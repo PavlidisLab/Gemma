@@ -27,16 +27,11 @@ import java.util.HashSet;
 /**
  * An analysis of changes in expression levels across experimental conditions
  */
-public abstract class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
+public class DifferentialExpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = -7855180617739271699L;
     private FactorValue subsetFactorValue;
     private Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
-    
-    /*
-     * TODO save other configuration information
-     */
-    private Boolean moderatedStatistics;
 
     /**
      * Groups of results produced by this ExpressionAnalysis. For example, in a two-way ANOVA, the model has 2 or 3
@@ -68,7 +63,7 @@ public abstract class DifferentialExpressionAnalysis extends SingleExperimentAna
          * Constructs a new instance of {@link DifferentialExpressionAnalysis} .
          */
         public static DifferentialExpressionAnalysis newInstance() {
-            return new DifferentialExpressionAnalysisImpl();
+            return new DifferentialExpressionAnalysis();
         }
 
     }

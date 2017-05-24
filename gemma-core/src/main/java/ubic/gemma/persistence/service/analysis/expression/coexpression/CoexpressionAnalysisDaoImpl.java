@@ -18,34 +18,58 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.coexpression;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * @see ubic.gemma.model.analysis.CoexpressionAnalysis
+ * <p>
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
+ * <code>ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis</code>.
+ * </p>
+ *
+ * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis
  */
 @Repository
-public class CoexpressionAnalysisDaoImpl extends CoexpressionAnalysisDaoBase {
+public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAnalysis>
+        implements CoexpressionAnalysisDao {
 
-    @SuppressWarnings("unused")
-    private static Log log = LogFactory.getLog( CoexpressionAnalysisDaoImpl.class.getName() );
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    public CoexpressionAnalysisDaoImpl() {
+        super( CoexpressionAnalysis.class );
+    }
 
     @Autowired
     public CoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
+        super( CoexpressionAnalysis.class );
         super.setSessionFactory( sessionFactory );
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    /**
+     * @see CoexpressionAnalysisDao#findByName(String)
+     */
+    @Override
+    public Collection<CoexpressionAnalysis> findByName( final String name ) {
+        //noinspection unchecked
+        return this.getSession().createQuery( "select a from CoexpressionAnalysisImpl as a where a.name = :name" )
+                .setParameter( "name", name ).list();
     }
 
     @Override
@@ -58,41 +82,32 @@ public class CoexpressionAnalysisDaoImpl extends CoexpressionAnalysisDaoBase {
     }
 
     @Override
-    public Boolean hasCoexpCorrelationDistribution(ExpressionExperiment ee) {
+    public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
         String q = "select ccd from CoexpressionAnalysisImpl pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
+        return this.getSessionFactory().getCurrentSession().createQuery( q )
                 .setParameter( "ee", ee ).uniqueResult() != null;
     }
-    
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CoexpressionAnalysisDao#getExperimentsWithAnalysis(java.util
-     * .Collection)
-     */
+
     @Override
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
-        return this
-                .getSessionFactory()
-                .getCurrentSession()
-                .createQuery(
-                        "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }
 
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
         final String queryString = "select distinct a from CoexpressionAnalysisImpl a where :e = a.experimentAnalyzed";
+        //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
     @Override
     protected Map<Investigation, Collection<CoexpressionAnalysis>> handleFindByInvestigations(
             Collection<Investigation> investigations ) {
-        Map<Investigation, Collection<CoexpressionAnalysis>> results = new HashMap<Investigation, Collection<CoexpressionAnalysis>>();
+        Map<Investigation, Collection<CoexpressionAnalysis>> results = new HashMap<>();
         for ( Investigation ee : investigations ) {
             Collection<CoexpressionAnalysis> ae = this.findByInvestigation( ee );
             results.put( ee, ae );
@@ -100,24 +115,27 @@ public class CoexpressionAnalysisDaoImpl extends CoexpressionAnalysisDaoBase {
         return results;
     }
 
-    /*
+    /**
      * FIXME not used and broken/ (non-Javadoc)
-     * 
-     * @see AnalysisDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome.Taxon)
      */
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
-        final String queryString = "select distinct an from CoexpressionAnalysisImpl an"
-                + " inner join an.experimentAnalyzed ee " + "inner join ee.bioAssays ba "
-                + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
+        final String queryString =
+                "select distinct an from CoexpressionAnalysisImpl an" + " inner join an.experimentAnalyzed ee "
+                        + "inner join ee.bioAssays ba "
+                        + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
+        //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct an from CoexpressionAnalysisImpl an"
-                + " inner join an.experimentAnalyzed ee " + "inner join ee.bioAssays ba "
-                + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
+        final String queryString =
+                "select distinct an from CoexpressionAnalysisImpl an" + " inner join an.experimentAnalyzed ee "
+                        + "inner join ee.bioAssays ba "
+                        + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
+        //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
+
 }

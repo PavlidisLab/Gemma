@@ -1,5 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Taxon;
 
@@ -17,7 +18,12 @@ public class TaxonIdArg extends TaxonArg<Long> {
     }
 
     @Override
-    protected Taxon getTaxon( TaxonService service ) {
+    protected Taxon getPersistentObject( TaxonService service ) {
         return service.load( this.value );
+    }
+
+    @Override
+    protected TaxonValueObject getValueObject( TaxonService service ) {
+        return service.loadValueObject( this.value );
     }
 }

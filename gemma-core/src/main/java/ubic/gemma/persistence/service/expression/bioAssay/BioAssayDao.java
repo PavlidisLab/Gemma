@@ -18,59 +18,31 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssay;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+
 /**
- * @see ubic.gemma.model.expression.bioAssay.BioAssay
+ * @see BioAssay
  */
 public interface BioAssayDao extends BaseDao<BioAssay> {
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
 
-    /**
-     * /**
-     */
-    public ubic.gemma.model.expression.bioAssay.BioAssay find( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    java.lang.Integer countAll();
 
-    /**
-     * 
-     */
-    public java.util.Collection<BioAssayDimension> findBioAssayDimensions(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    BioAssay find( BioAssay bioAssay );
 
-    /**
-     * @param accession
-     * @return
-     */
-    public Collection<BioAssay> findByAccession( String accession );
+    java.util.Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.bioAssay.BioAssay findOrCreate(
-            ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    Collection<BioAssay> findByAccession( String accession );
 
-    /**
-     * @param bioAssays
-     * @return
-     */
-    public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
+    BioAssay findOrCreate( BioAssay bioAssay );
 
-    /**
-     * 
-     */
-    public void thaw( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay );
+    Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
-    /**
-     * @param ids
-     * @return
-     */
-    public Collection<BioAssay> loadValueObjects( Collection<Long> ids );
+    void thaw( BioAssay bioAssay );
+
+    Collection<BioAssay> loadValueObjects( Collection<Long> ids );
 
 }

@@ -1,7 +1,8 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
  * Created by tesarst on 16/05/17.
@@ -21,24 +22,35 @@ public class TaxonStringArg extends TaxonArg<String> {
      * any Taxon that would match the string.
      */
     @Override
-    protected Taxon getTaxon( TaxonService service ) {
-        // Case when the original API argument was null, we can skip the search.
-        if ( this.value == null )
-            return null;
+    protected Taxon getPersistentObject( TaxonService service ) {
+        return this.value == null ? null : this.tryAllNameProperties( service );
+    }
 
+    /**
+     * Tries to retrieve a TaxonValueObject object based on its properties.
+     *
+     * @see #getPersistentObject(TaxonService)
+     */
+    @Override
+    protected TaxonValueObject getValueObject( TaxonService service ) {
+        return service.loadValueObject( this.getPersistentObject( service ).getId() );
+    }
+
+    /**
+     * Tries to retrieve a Taxon based on its names.
+     * @param service the TaxonService that handles the search.
+     * @return Taxon or null if no taxon with any property matching this#value was found.
+     */
+    private Taxon tryAllNameProperties(TaxonService service){
         // Most commonly used
         Taxon taxon = service.findByCommonName( this.value );
+
         if ( taxon == null ) {
             taxon = service.findByScientificName( this.value );
         }
+
         if ( taxon == null ) {
             taxon = service.findByAbbreviation( this.value );
-        }
-
-        if ( taxon != null ) {
-            System.out.println( "Recognized taxon by one of its names, id: " + taxon.getId() + " (" + taxon.getScientificName() + ")" );
-        } else {
-            System.out.println( "No taxons found for String value: " + value );
         }
 
         return taxon;
