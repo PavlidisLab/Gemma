@@ -93,7 +93,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             // At this point, the ee is probably still in the session, as the service already has gotten it
             // in this transaction.
             session.flush();
-            session.clear();
 
             session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
