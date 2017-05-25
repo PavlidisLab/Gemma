@@ -69,7 +69,7 @@
 			cascade="all" lazy="false" fetch="select">
 			<column name="ASSOCIATION_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
-		<many-to-one name="evidenceSource" class="ubic.gemma.model.common.description.DatabaseEntryImpl" lazy="proxy"
+		<many-to-one name="evidenceSource" class="ubic.gemma.model.common.description.DatabaseEntry" lazy="proxy"
 			fetch="select">
 			<column name="EVIDENCE_SOURCE_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>

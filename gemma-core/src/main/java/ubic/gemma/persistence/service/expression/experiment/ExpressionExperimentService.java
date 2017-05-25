@@ -16,13 +16,15 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -73,7 +75,7 @@ public interface ExpressionExperimentService {
     /**
      * Count how many ExpressionExperiments are in the database
      */
-    java.lang.Integer countAll();
+    Integer countAll();
 
     @Secured({ "GROUP_USER" })
     ExpressionExperiment create( ExpressionExperiment expressionExperiment );
@@ -104,14 +106,13 @@ public interface ExpressionExperimentService {
      * in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
+    Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
     /**
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByBibliographicReference(
-            ubic.gemma.model.common.description.BibliographicReference bibRef );
+    Collection<ExpressionExperiment> findByBibliographicReference( BibliographicReference bibRef );
 
     /**
      * Given a bioAssay returns an expressionExperiment
@@ -123,7 +124,7 @@ public interface ExpressionExperimentService {
      * Given a bioMaterial returns an expressionExperiment
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment findByBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bm );
+    ExpressionExperiment findByBioMaterial( BioMaterial bm );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bioMaterials );
@@ -158,7 +159,7 @@ public interface ExpressionExperimentService {
             ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> findByName( java.lang.String name );
+    Collection<ExpressionExperiment> findByName( String name );
 
     /**
      * gets all EE that match the given parent Taxon
@@ -170,7 +171,7 @@ public interface ExpressionExperimentService {
     ExpressionExperiment findByQuantitationType( QuantitationType type );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment findByShortName( java.lang.String shortName );
+    ExpressionExperiment findByShortName( String shortName );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByTaxon( Taxon taxon );
@@ -229,7 +230,7 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     Collection<DesignElementDataVector> getDesignElementDataVectors( Collection<CompositeSequence> designElements,
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+            QuantitationType quantitationType );
 
     /**
      * Get all the vectors for the given quantitation types.
@@ -297,7 +298,7 @@ public interface ExpressionExperimentService {
     /**
      * Function to get a count of an expressionExperiment's design element data vectors, grouped by quantitation type
      */
-    Map<QuantitationType, Integer> getQuantitationTypeCountById( java.lang.Long Id );
+    Map<QuantitationType, Integer> getQuantitationTypeCountById( Long Id );
 
     /**
      * Return all the quantitation types used by the given expression experiment
@@ -323,8 +324,7 @@ public interface ExpressionExperimentService {
      * To view processed data vectors, you should use ProcessedExpressionDataVectorService.getProcessedVectors instead.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
-    Collection<DesignElementDataVector> getSamplingOfVectors(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
+    Collection<DesignElementDataVector> getSamplingOfVectors( QuantitationType quantitationType, Integer limit );
 
     /**
      * Return any ExpressionExperimentSubSets this Experiment might have.
@@ -344,10 +344,14 @@ public interface ExpressionExperimentService {
 
     @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ExpressionExperiment load( java.lang.Long id );
+    ExpressionExperiment load( Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadAll();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
+            String accession );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
@@ -444,6 +448,6 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperiment expressionExperiment );
 
-    boolean isTroubled( ExpressionExperiment expressionExperiment);
+    boolean isTroubled( ExpressionExperiment expressionExperiment );
 
 }

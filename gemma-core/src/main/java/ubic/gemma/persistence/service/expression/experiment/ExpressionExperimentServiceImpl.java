@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.logging.Log;
@@ -31,51 +31,49 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.preprocess.svd.SVDService;
 import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
-import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
-import ubic.gemma.model.common.description.AnnotationValueObject;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.*;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 
 import java.util.*;
 
 /**
  * @author pavlidis
  * @author keshav
- * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentService
+ * @see ExpressionExperimentService
  */
 @SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Service
@@ -93,6 +91,9 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
 
     @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
+
+    @Autowired
+    private DatabaseEntryService databaseEntryService;
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
@@ -230,7 +231,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer countAll() {
+    public Integer countAll() {
         return this.expressionExperimentDao.countAll();
     }
 
@@ -304,17 +305,16 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
+     * @see ExpressionExperimentService#findByAccession(DatabaseEntry)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByAccession(
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
+    public Collection<ExpressionExperiment> findByAccession( final DatabaseEntry accession ) {
         return this.expressionExperimentDao.findByAccession( accession );
     }
 
     /**
-     * @see ExpressionExperimentService#findByBibliographicReference(ubic.gemma.model.common.description.BibliographicReference)
+     * @see ExpressionExperimentService#findByBibliographicReference(BibliographicReference)
      */
     @Override
     @Transactional(readOnly = true)
@@ -323,20 +323,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByBioAssay(ubic.gemma.model.expression.bioAssay.BioAssay)
+     * @see ExpressionExperimentService#findByBioAssay(BioAssay)
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment findByBioAssay( final ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
+    public ExpressionExperiment findByBioAssay( final BioAssay ba ) {
         return this.expressionExperimentDao.findByBioAssay( ba );
     }
 
     /**
-     * @see ExpressionExperimentService#findByBioMaterial(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @see ExpressionExperimentService#findByBioMaterial(BioMaterial)
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment findByBioMaterial( final ubic.gemma.model.expression.biomaterial.BioMaterial bm ) {
+    public ExpressionExperiment findByBioMaterial( final BioMaterial bm ) {
         return this.expressionExperimentDao.findByBioMaterial( bm );
     }
 
@@ -350,12 +350,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByExpressedGene(ubic.gemma.model.genome.Gene, double)
+     * @see ExpressionExperimentService#findByExpressedGene(Gene, double)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByExpressedGene( final ubic.gemma.model.genome.Gene gene,
-            final double rank ) {
+    public Collection<ExpressionExperiment> findByExpressedGene( final Gene gene, final double rank ) {
         return this.expressionExperimentDao.findByExpressedGene( gene, rank );
     }
 
@@ -396,16 +395,16 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByGene(ubic.gemma.model.genome.Gene)
+     * @see ExpressionExperimentService#findByGene(Gene)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByGene( final ubic.gemma.model.genome.Gene gene ) {
+    public Collection<ExpressionExperiment> findByGene( final Gene gene ) {
         return this.expressionExperimentDao.findByGene( gene );
     }
 
     /**
-     * @see ExpressionExperimentService#findByInvestigator(ubic.gemma.model.common.auditAndSecurity.Contact)
+     * @see ExpressionExperimentService#findByInvestigator(Contact)
      */
     @Override
     @Transactional(readOnly = true)
@@ -414,20 +413,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByName(java.lang.String)
+     * @see ExpressionExperimentService#findByName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByName( final java.lang.String name ) {
+    public Collection<ExpressionExperiment> findByName( final String name ) {
         return this.expressionExperimentDao.findByName( name );
     }
 
     /**
-     * @see ExpressionExperimentService#findByParentTaxon(ubic.gemma.model.genome.Taxon)
+     * @see ExpressionExperimentService#findByParentTaxon(Taxon)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public Collection<ExpressionExperiment> findByParentTaxon( final Taxon taxon ) {
         return this.expressionExperimentDao.findByParentTaxon( taxon );
     }
 
@@ -438,20 +437,20 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#findByShortName(java.lang.String)
+     * @see ExpressionExperimentService#findByShortName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment findByShortName( final java.lang.String shortName ) {
+    public ExpressionExperiment findByShortName( final String shortName ) {
         return this.expressionExperimentDao.findByShortName( shortName );
     }
 
     /**
-     * @see ExpressionExperimentService#findByTaxon(ubic.gemma.model.genome.Taxon)
+     * @see ExpressionExperimentService#findByTaxon(Taxon)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public Collection<ExpressionExperiment> findByTaxon( final Taxon taxon ) {
         return this.expressionExperimentDao.findByTaxon( taxon );
     }
 
@@ -616,13 +615,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
+     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection, QuantitationType)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            final Collection<CompositeSequence> designElements,
-            final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
+            final Collection<CompositeSequence> designElements, final QuantitationType quantitationType ) {
         return this.expressionExperimentDao.getDesignElementDataVectors( designElements, quantitationType );
     }
 
@@ -760,11 +758,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getQuantitationTypeCountById(java.lang.Long)
+     * @see ExpressionExperimentService#getQuantitationTypeCountById(Long)
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final java.lang.Long Id ) {
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
         return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
     }
 
@@ -778,12 +776,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment, ArrayDesign)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
+            final ArrayDesign arrayDesign ) {
         return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
@@ -830,11 +828,11 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#load(java.lang.Long)
+     * @see ExpressionExperimentService#load(Long)
      */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment load( final java.lang.Long id ) {
+    public ExpressionExperiment load( final Long id ) {
         return this.expressionExperimentDao.load( id );
     }
 
@@ -846,6 +844,13 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadAll() {
         return this.expressionExperimentDao.loadAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
+            String accession ) {
+        return this.expressionExperimentDao.listFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
     }
 
     @Override
@@ -885,9 +890,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.loadLackingTags();
     }
 
-    /**
-     * @see ExpressionExperimentService#loadMultiple(Collection)
-     */
     @SuppressWarnings("unchecked")
     @Override
     @Transactional(readOnly = true)

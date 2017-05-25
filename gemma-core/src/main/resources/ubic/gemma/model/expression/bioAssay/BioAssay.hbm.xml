@@ -38,7 +38,7 @@
       <many-to-one name="arrayDesignUsed" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="ARRAY_DESIGN_USED_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="false" fetch="join">
+      <many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="join">
          <column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFileImpl"  cascade="all" lazy="false" fetch="select">

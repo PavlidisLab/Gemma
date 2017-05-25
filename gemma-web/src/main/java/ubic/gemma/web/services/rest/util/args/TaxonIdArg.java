@@ -15,15 +15,16 @@ public class TaxonIdArg extends TaxonArg<Long> {
      */
     TaxonIdArg( long l ) {
         this.value = l;
+        this.nullCause = "The identifier was recognised to be an ID, but no taxon with this ID exists.";
     }
 
     @Override
-    protected Taxon getPersistentObject( TaxonService service ) {
-        return service.load( this.value );
-    }
-
-    @Override
-    protected TaxonValueObject getValueObject( TaxonService service ) {
+    public TaxonValueObject getValueObject( TaxonService service ) {
         return service.loadValueObject( this.value );
+    }
+
+    @Override
+    public Taxon getPersistentObject( TaxonService service ) {
+        return service.load( this.value );
     }
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import java.util.Collection;
 
@@ -31,7 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,
  * provides access to all services and entities referenced by this service.
  * 
- * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService
+ * @see ExpressionExperimentSetService
  */
 public abstract class ExpressionExperimentSetServiceBase implements ExpressionExperimentSetService {
 
@@ -39,7 +39,7 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
     @Transactional
@@ -48,7 +48,7 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
      */
     @Override
     @Transactional
@@ -69,7 +69,7 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#findByName(java.lang.String)
+     * @see ExpressionExperimentSetService#findByName(java.lang.String)
      */
     @Override
     @Transactional(readOnly = true)
@@ -80,7 +80,7 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
 
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
+     * @see ExpressionExperimentSetService#load(java.lang.Long)
      */
     @Override
     @Transactional(readOnly = true)
@@ -90,7 +90,7 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#loadAll()
+     * @see ExpressionExperimentSetService#loadAll()
      */
     @Override
     @Transactional(readOnly = true)
@@ -100,7 +100,7 @@ public abstract class ExpressionExperimentSetServiceBase implements ExpressionEx
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
+     * @see ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
      */
     @Override
     @Transactional(readOnly = true)

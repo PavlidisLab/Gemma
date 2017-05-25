@@ -50,7 +50,7 @@
          </many-to-one>
       </subclass>
       <subclass name="ubic.gemma.model.association.ReferenceAssociationImpl" discriminator-value="ReferenceAssociationImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         <many-to-one name="referencedDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  lazy="proxy" fetch="select">
+         <many-to-one name="referencedDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"  lazy="proxy" fetch="select">
             <column name="REFERENCED_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT"/>
          </many-to-one>
       </subclass>

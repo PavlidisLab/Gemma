@@ -17,7 +17,7 @@ package ubic.gemma.web.services.rest;
 import com.sun.jersey.api.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -28,12 +28,14 @@ import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorSe
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
-import ubic.gemma.web.services.rest.util.args.DatasetArg;
+import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
+import ubic.gemma.web.services.rest.util.args.*;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.*;
 
 /**
@@ -75,17 +77,30 @@ public class DatasetsWebService extends WebService {
     /**
      * Lists all datasets available in gemma.
      *
-     * @param accessionGsmId optional parameter, filtering the results by accession.
-     * @return
+     * @param accession optional parameter, filtering the results by accession - either provide the accession gsm id, or the gemma ID of
+     *                  appropriate database entry.
+     * @param offset    optional parameter (defaults to 0) skips the specified amount of the datasets when retrieving them from the database.
+     * @param limit     optional parameter (defaults to 100) limits the result to specified amount of datasets. Use 0 for no limit.
+     * @param sort      optional parameter (defaults to +id) sets the ordering property and direction. Format is [+,-][property name].
+     *                  E.g. -accession will convert to descending ordering by the Accession property. Note that this will not necessarily
+     *                  sort the objects in the response, but rather tells the SQL query how to order the table before cropping it as
+     *                  specified in the offset and limit.
+     * @return all datasets in the database, skipping the first [{@code offset}] of dataset, and limiting the amount in the result to
+     * the value of the {@code limit} parameter. If the {@code accessionGsmId} parameter is non-null, will limit the result to datasets
+     * with specified accession. Note that if the accession GSM id is not valid or no datasets with it are found, a 404 response will be
+     * supplied instead.
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject all( // Params:
-            @QueryParam("accession") String accessionGsmId, // Optional, default null
-            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+            @QueryParam("accession") String accession, // Optional, default null
+            @QueryParam("offset") @DefaultValue("0") IntArg offset,
+            @QueryParam("limit") @DefaultValue("100") IntArg limit,
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort, @Context final HttpServletResponse sr
+            // The servlet response, needed for response code setting.
     ) {
-        //TODO implement
-        return Responder.code503( "Not yet implemented", sr );
+        return Responder.autoCode( expressionExperimentService
+                .loadAllFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ), sr );
     }
 
     /**
@@ -95,14 +110,20 @@ public class DatasetsWebService extends WebService {
      *                   is most efficient.
      */
     @GET
-    @Path("/{datasetArg: [a-zA-Z0-9]+}")
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject dataset( // Params:
-            @PathParam("datasetArg") DatasetArg datasetArg, // Optional, default null
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         //FIXME currently not filtering out troubled
-        return Responder.autoCode( DatasetArg.getValueObject( datasetArg, this.expressionExperimentService ), sr );
+        Object response = datasetArg.getValueObject( expressionExperimentService );
+        if(response == null){
+            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND, "Dataset with the given identifier does not exist" );
+            WellComposedErrorBody.addExceptionFields( error, new IllegalArgumentException( datasetArg.getNullCause() ) );
+            response = error;
+        }
+        return Responder.autoCode( response, sr );
     }
 
 

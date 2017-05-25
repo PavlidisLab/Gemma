@@ -107,10 +107,10 @@
 	<cache name="ubic.gemma.model.genome.gene.BibReferenceCandidateGeneImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.genome.gene.GeneInvestigationImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.genome.gene.GeneInvestigation" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.genome.gene.GeneInvestigationImpl.candidateLists" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.gene.GeneInvestigation.candidateLists" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.genome.gene.CandidateGeneListImpl" maxElementsInMemory="10000" eternal="false"
@@ -163,7 +163,7 @@
 	<cache name="ubic.gemma.model.genome.ProbeAlignedRegionImpl" maxElementsInMemory="50000" eternal="true"
 		overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.DatabaseEntryImpl" maxElementsInMemory="200000" eternal="true"
+	<cache name="ubic.gemma.model.common.description.DatabaseEntry" maxElementsInMemory="200000" eternal="true"
 		overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.description.ExternalDatabaseImpl" maxElementsInMemory="100" eternal="true"
@@ -690,7 +690,7 @@
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 
-	<cache name="ubic.gemma.model.analysis.InvestigationImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.Investigation.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 

@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;

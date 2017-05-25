@@ -96,11 +96,10 @@ public class AnnotationsWebService extends WebService {
     /**
      * Does a search for ontology terms based on the given string.
      *
-     * @param query the search input query.
-     * @param taxonArg         whether to limit the search to a specific taxon, can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
-     *                         scientific name, common name, abbreviation. Using the ID is most efficient.
+     * @param query    the search input query.
+     * @param taxonArg whether to limit the search to a specific taxon, can be either null (to search all taxons), or Taxon ID or one of its string identifiers:
+     *                 scientific name, common name, abbreviation. Using the ID is most efficient.
      * @return response data object with a collection of found terms, each wrapped in a CharacteristicValueObject.
-     * FIXME do we want to be returning value objects or original objects?
      * @see OntologyService#findTermsInexact(String, Taxon) for better description of the search process.
      * @see CharacteristicValueObject for the output object structure.
      * FIXME are taxons attached to ANY terms at all? - possible redundant optional argument TaxonArg
@@ -110,11 +109,11 @@ public class AnnotationsWebService extends WebService {
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseDataObject search( // Params:
             @PathParam("query") String query, // Required, part of url
-            @QueryParam("taxon") TaxonArg taxonArg, // Optional, default null
+            @QueryParam("taxon") @DefaultValue("") TaxonArg<Object> taxonArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode(
-                ontologyService.findTermsInexact( query, TaxonArg.getTaxon( taxonArg, this.taxonService ) ),
-                sr );
+        return Responder
+                .autoCode( ontologyService.findTermsInexact( query, taxonArg.getPersistentObject( this.taxonService ) ),
+                        sr );
     }
 }

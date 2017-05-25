@@ -88,6 +88,6 @@ public interface TaxonService {
     /**
      * @return Taxon that are on NeuroCarta evidence
      */
-    java.util.Collection<Taxon> loadTaxonWithEvidence();
+    Collection<Taxon> loadTaxonWithEvidence();
 
 }

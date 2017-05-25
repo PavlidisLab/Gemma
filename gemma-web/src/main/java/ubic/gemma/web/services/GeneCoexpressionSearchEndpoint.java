@@ -32,7 +32,7 @@ import org.w3c.dom.Element;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionMetaValueObject;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;

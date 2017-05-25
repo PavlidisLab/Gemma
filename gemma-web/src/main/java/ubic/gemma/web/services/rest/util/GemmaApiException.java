@@ -17,7 +17,7 @@ public class GemmaApiException extends RuntimeException implements Serializable 
     }
 
     public GemmaApiException( WellComposedErrorBody body, Response.Status code ) {
-        super( body.message );
+        super( body.getMessage() );
         this.errorObject = new ResponseErrorObject( body );
         this.code = code;
     }

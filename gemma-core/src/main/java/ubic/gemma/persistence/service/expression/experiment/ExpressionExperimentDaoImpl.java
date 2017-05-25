@@ -20,12 +20,13 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -43,6 +44,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.AbstractCuratableDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.ChannelUtils;
 import ubic.gemma.persistence.util.CommonQueries;
@@ -245,7 +247,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
     @Override
     public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
-        String queryString = "from InvestigationImpl i inner join Contact c on c in elements(i.investigators) or c = i.owner where c = :investigator";
+        String queryString = "from Investigation i inner join Contact c on c in elements(i.investigators) or c = i.owner where c = :investigator";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "investigator", investigator );
 
@@ -266,6 +268,51 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     @Override
     public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
         return this.thawLiter( expressionExperiment, false );
+    }
+
+    /**
+     * Queries the database to retrieve all expression experiments, based on the given parameters, and then
+     * converts them to value objects.
+     *
+     * @param offset    amount of EEs to skip.
+     * @param limit     maximum amount of EEs to retrieve.
+     * @param orderBy   the field to order the EEs by. Has to be a valid identifier, or exception is thrown.
+     * @param asc       true, to order by the {@code orderBy} in ascending, or false for descending order.
+     * @param accession specify to limit the list to EEs of specific accession. Ignored if null.
+     * @return list of value objects representing the EEs that matched the criteria.
+     */
+    public Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
+            DatabaseEntry accession ) {
+
+        // Base criterion for EE class
+        Criteria criteria = this.getSession().createCriteria( ExpressionExperiment.class );
+
+        // Order by and direction
+        if ( asc ) {
+            criteria.addOrder( Order.asc( orderBy ) );
+        } else {
+            criteria.addOrder( Order.desc( orderBy ) );
+        }
+
+        // Offset
+        criteria.setFirstResult( offset );
+
+        // Limit
+        if ( limit > 0 ) {
+            criteria.setMaxResults( limit );
+        }
+
+        criteria.setProjection( Projections.id() );
+
+        // Limit to specific accession
+        if ( accession != null ) {
+            criteria.add( Restrictions.eq( "accession", accession ) );
+        }
+
+        // FIXME should be returning value objects;
+
+        //noinspection unchecked
+        return this.loadValueObjects( criteria.list(), false );
     }
 
     @Override
@@ -451,9 +498,8 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     @Override
     public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select distinct e from ExpressionExperiment e join e.bioAssays b where b.isOutlier = 1" )
-                .list();
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct e from ExpressionExperiment e join e.bioAssays b where b.isOutlier = true" ).list();
     }
 
     @Override
@@ -976,8 +1022,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
     @Override
     public Integer getBioAssayCountById( long Id ) {
-        final String queryString =
-                "select count(ba) from ExpressionExperiment ee " + "inner join ee.bioAssays dedv where ee.id = :ee";
+        final String queryString = "select count(ba) from ExpressionExperiment ee inner join ee.bioAssays ba where ee.id = :ee";
 
         List list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "ee", Id )
                 .list();

@@ -27,7 +27,7 @@
          </key>
          <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
       </set>
-      <many-to-one name="sourceAccession" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="false" fetch="select">
+      <many-to-one name="sourceAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="select">
          <column name="SOURCE_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <set name="literatureSources" table="GENE_SETS2LITERATURE_SOURCES" lazy="true" fetch="select" inverse="false">

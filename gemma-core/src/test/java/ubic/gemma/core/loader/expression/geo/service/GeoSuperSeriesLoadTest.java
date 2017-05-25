@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.VectorMergingService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;

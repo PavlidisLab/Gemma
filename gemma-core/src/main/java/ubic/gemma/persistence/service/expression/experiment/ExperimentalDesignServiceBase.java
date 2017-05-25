@@ -16,20 +16,19 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
  * access to all services and entities referenced by this service.
  * 
- * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService
+ * @see ExperimentalDesignService
  */
 public abstract class ExperimentalDesignServiceBase implements ExperimentalDesignService {
 
@@ -37,7 +36,7 @@ public abstract class ExperimentalDesignServiceBase implements ExperimentalDesig
     private ExperimentalDesignDao experimentalDesignDao;
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
+     * @see ExperimentalDesignService#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
     @Transactional(readOnly = true)
@@ -46,7 +45,7 @@ public abstract class ExperimentalDesignServiceBase implements ExperimentalDesig
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
+     * @see ExperimentalDesignService#getExpressionExperiment(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
     @Transactional(readOnly = true)
@@ -55,7 +54,7 @@ public abstract class ExperimentalDesignServiceBase implements ExperimentalDesig
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService#load(java.lang.Long)
+     * @see ExperimentalDesignService#load(java.lang.Long)
      */
     @Override
     @Transactional(readOnly = true)
@@ -64,7 +63,7 @@ public abstract class ExperimentalDesignServiceBase implements ExperimentalDesig
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService#loadAll()
+     * @see ExperimentalDesignService#loadAll()
      */
     @Override
     @Transactional(readOnly = true)
@@ -80,7 +79,7 @@ public abstract class ExperimentalDesignServiceBase implements ExperimentalDesig
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService#update(ubic.gemma.model.expression.experiment.ExperimentalDesign)
+     * @see ExperimentalDesignService#update(ubic.gemma.model.expression.experiment.ExperimentalDesign)
      */
     @Override
     @Transactional

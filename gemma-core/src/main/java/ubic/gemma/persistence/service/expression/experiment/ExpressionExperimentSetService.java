@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;

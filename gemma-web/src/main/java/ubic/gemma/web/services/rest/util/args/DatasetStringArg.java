@@ -1,6 +1,6 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
@@ -12,6 +12,7 @@ public class DatasetStringArg extends DatasetArg<String> {
 
     DatasetStringArg( String s ) {
         this.value = s;
+        this.nullCause = "The identifier was recognised to be a short name, but dataset with this short name does not exist.";
     }
 
     /**
@@ -22,17 +23,18 @@ public class DatasetStringArg extends DatasetArg<String> {
      * any dataset that would match the string.
      */
     @Override
-    protected ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
+    public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
         return this.value == null ? null : service.findByShortName( this.value );
     }
 
     /**
      * Tries to retrieve an ExpressionExperimentValueObject by the datasets short name.
      *
-     * @see #getPersistentObject(ExpressionExperimentService)
+     * @see MutableArg#getPersistentObject(Object)
      */
     @Override
-    protected ExpressionExperimentValueObject getValueObject( ExpressionExperimentService service ) {
-        return service.loadValueObject( this.getPersistentObject( service ).getId() );
+    public ExpressionExperimentValueObject getValueObject( ExpressionExperimentService service ) {
+        ExpressionExperiment ee = this.getPersistentObject( service );
+        return ee == null ? null : service.loadValueObject( ee.getId() );
     }
 }

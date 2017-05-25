@@ -47,7 +47,7 @@
 				<key foreign-key="DATABASE_ENTRY_GENE_PRODUCT_FKC">
 					<column name="GENE_PRODUCT_FK" sql-type="BIGINT" />
 				</key>
-				<one-to-many class="ubic.gemma.model.common.description.DatabaseEntryImpl" />
+				<one-to-many class="ubic.gemma.model.common.description.DatabaseEntry" />
 			</set>
 			<set name="exons" lazy="true" fetch="select" inverse="false" cascade="all">
 				<cache usage="read-write" />
@@ -98,7 +98,7 @@
 				<key foreign-key="DATABASE_ENTRY_GENE_FKC">
 					<column name="GENE_FK" sql-type="BIGINT" />
 				</key>
-				<one-to-many class="ubic.gemma.model.common.description.DatabaseEntryImpl" />
+				<one-to-many class="ubic.gemma.model.common.description.DatabaseEntry" />
 			</set>
 			<many-to-one name="multifunctionality" class="ubic.gemma.model.genome.gene.MultifunctionalityImpl"
 				cascade="all" lazy="proxy" fetch="select">

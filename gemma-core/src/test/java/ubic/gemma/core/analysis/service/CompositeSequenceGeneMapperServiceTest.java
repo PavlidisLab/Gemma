@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
 import ubic.gemma.core.apps.ShellDelegatingBlat;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;

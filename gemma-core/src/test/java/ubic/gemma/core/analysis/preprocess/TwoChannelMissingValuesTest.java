@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.core.loader.expression.geo.GeoConverter;
 import ubic.gemma.core.loader.expression.geo.GeoConverterImpl;

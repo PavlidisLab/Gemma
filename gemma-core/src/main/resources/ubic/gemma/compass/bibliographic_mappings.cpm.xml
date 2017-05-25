@@ -78,7 +78,7 @@
 		<component name="meshTerms" ref-alias="meshTerms" />
 		<component name="chemicals" ref-alias="chemicals" />
 	</class>
-	<class name="common.description.DatabaseEntryImpl" alias="pubAccession" root="false">
+	<class name="common.description.DatabaseEntry" alias="pubAccession" root="false">
 		<id name="id" />
 		<property name="accession">
 			<meta-data>accession</meta-data>
@@ -104,7 +104,7 @@
 		<component name="externalLIMS" ref-alias="externalLIMS" />
 		<component name="compoundIndices" ref-alias="compoundIndices" />
 	</class>
-	<class name="common.description.DatabaseEntryImpl" alias="externalLIMS" root="false">
+	<class name="common.description.DatabaseEntry" alias="externalLIMS" root="false">
 		<id name="id" />
 		<property name="accession">
 			<meta-data>accession</meta-data>

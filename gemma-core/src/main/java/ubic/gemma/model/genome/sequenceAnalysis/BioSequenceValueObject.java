@@ -23,7 +23,7 @@ public class BioSequenceValueObject {
         vo.setDescription( bs.getDescription() );
         vo.setId( bs.getId() );
         vo.setSequence( bs.getSequence() );
-        vo.setSequenceDatabaseEntry( DatabaseEntryValueObject.fromEntity( bs.getSequenceDatabaseEntry() ) );
+        vo.setSequenceDatabaseEntry( new DatabaseEntryValueObject( bs.getSequenceDatabaseEntry() )) ;
         vo.setLength( bs.getLength() );
         vo.setType( bs.getType() );
         vo.setFractionRepeats( bs.getFractionRepeats() );

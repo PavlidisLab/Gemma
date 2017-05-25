@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import java.util.Collection;
 
@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author pavlidis
  * @author keshav
  * @version $Id$
- * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService
+ * @see ExperimentalDesignService
  */
 @Service
 public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase {
@@ -61,7 +61,7 @@ public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExperimentalDesignService#getExperimentalDesigns()
+     * @see ExperimentalDesignService#getExperimentalDesigns()
      */
     @SuppressWarnings("unchecked")
     @Override

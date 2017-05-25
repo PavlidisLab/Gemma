@@ -1,10 +1,8 @@
 package ubic.gemma.web.services.rest.util.args;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 /**
  * Created by tesarst on 24/05/17.
@@ -17,15 +15,16 @@ public class DatasetIdArg extends DatasetArg<Long> {
      */
     DatasetIdArg( long l ) {
         this.value = l;
+        this.nullCause = "The identifier was recognised to be an ID, but dataset with this ID does not exist.";
     }
 
     @Override
-    protected ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
+    public ExpressionExperiment getPersistentObject( ExpressionExperimentService service ) {
         return service.load( this.value );
     }
 
     @Override
-    protected ExpressionExperimentValueObject getValueObject( ExpressionExperimentService service ) {
+    public ExpressionExperimentValueObject getValueObject( ExpressionExperimentService service ) {
         return service.loadValueObject( value );
     }
 }

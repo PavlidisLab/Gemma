@@ -304,7 +304,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.gene.GeneInvestigationImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.gene.GeneInvestigation" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -385,7 +385,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.DatabaseEntryImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.DatabaseEntry" maxElementsOnDisk="10000"
 		maxElementsInMemory="200000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1736,7 +1736,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.InvestigationImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.analysis.Investigation" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1894,7 +1894,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.InvestigationImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.Investigation.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">

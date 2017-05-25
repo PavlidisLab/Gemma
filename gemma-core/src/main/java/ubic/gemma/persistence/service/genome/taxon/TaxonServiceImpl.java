@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -272,7 +272,7 @@ public class TaxonServiceImpl implements TaxonService {
     @Override
     @Transactional(readOnly = true)
     public void remove( final Taxon taxon ) {
-        this.taxonDao.remove( ( Taxon ) taxon );
+        this.taxonDao.remove( taxon );
     }
 
     /**

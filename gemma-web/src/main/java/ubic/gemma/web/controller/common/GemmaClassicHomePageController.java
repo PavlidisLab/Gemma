@@ -31,7 +31,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.core.analysis.report.WhatsNew;
 import ubic.gemma.core.analysis.report.WhatsNewService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.genome.Taxon;

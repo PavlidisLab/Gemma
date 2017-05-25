@@ -23,30 +23,21 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**
  * @author kelsey
- * @version $Id$
  */
 public interface DatabaseEntryService {
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    Integer countAll();
 
-    /**
-     * 
-     */
-    public DatabaseEntry find( DatabaseEntry databaseEntry );
+    DatabaseEntry find( DatabaseEntry databaseEntry );
 
-    /**
-     * 
-     */
+    DatabaseEntry load(Long id);
+
+    DatabaseEntry load(String accession);
+
     @Secured({ "GROUP_USER" })
-    public void remove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    void remove( DatabaseEntry databaseEntry );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    void update( DatabaseEntry databaseEntry );
 
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.core.expression.experiment.service;
+package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +40,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 /**
- * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService
+ * @see ExpressionExperimentSetService
  */
 @Service
 public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetServiceBase {
@@ -274,7 +274,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#update(ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#update(ExpressionExperimentSet)
      */
     @Override
     @Transactional
@@ -455,7 +455,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#create(ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#create(ExpressionExperimentSet)
      */
     @Override
     protected ExpressionExperimentSet handleCreate( ExpressionExperimentSet expressionExperimentSet ) {
@@ -463,7 +463,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#delete(ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#delete(ExpressionExperimentSet)
      */
     @Override
     protected void handleDelete( ExpressionExperimentSet expressionExperimentSet ) {
@@ -476,7 +476,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#load(java.lang.Long)
+     * @see ExpressionExperimentSetService#load(java.lang.Long)
      */
     @Override
     protected ExpressionExperimentSet handleLoad( java.lang.Long id ) {
@@ -484,7 +484,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#loadAll()
+     * @see ExpressionExperimentSetService#loadAll()
      */
     @SuppressWarnings("unchecked")
     @Override
@@ -494,7 +494,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#loadUserSets(User)
+     * @see ExpressionExperimentSetService#loadUserSets(User)
      */
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadUserSets( User user ) {
@@ -505,7 +505,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     }
 
     /**
-     * @see ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService#update(ExpressionExperimentSet)
+     * @see ExpressionExperimentSetService#update(ExpressionExperimentSet)
      */
     @Override
     protected void handleUpdate( ExpressionExperimentSet expressionExperimentSet ) {

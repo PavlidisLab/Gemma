@@ -81,7 +81,7 @@
 					</key>
 					<one-to-many class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" />
 				</set>
-				<many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntryImpl" cascade="all"
+				<many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
 					lazy="proxy" fetch="select">
 					<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>

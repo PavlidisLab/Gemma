@@ -12,6 +12,18 @@ public class TaxonStringArg extends TaxonArg<String> {
 
     TaxonStringArg( String s ) {
         this.value = s;
+        this.nullCause = "The identifier was recognised to be a name, but no taxon with such scientific or common name, or abbreviation, exists.";
+    }
+
+    /**
+     * Tries to retrieve a TaxonValueObject object based on its properties.
+     *
+     * @see MutableArg#getPersistentObject(Object)
+     */
+    @Override
+    public TaxonValueObject getValueObject( TaxonService service ) {
+        Taxon t = this.getPersistentObject( service );
+        return t == null ? null : service.loadValueObject( t.getId() );
     }
 
     /**
@@ -22,18 +34,8 @@ public class TaxonStringArg extends TaxonArg<String> {
      * any Taxon that would match the string.
      */
     @Override
-    protected Taxon getPersistentObject( TaxonService service ) {
+    public Taxon getPersistentObject( TaxonService service ) {
         return this.value == null ? null : this.tryAllNameProperties( service );
-    }
-
-    /**
-     * Tries to retrieve a TaxonValueObject object based on its properties.
-     *
-     * @see #getPersistentObject(TaxonService)
-     */
-    @Override
-    protected TaxonValueObject getValueObject( TaxonService service ) {
-        return service.loadValueObject( this.getPersistentObject( service ).getId() );
     }
 
     /**

@@ -34,8 +34,8 @@ import ubic.gemma.core.analysis.expression.coexpression.CoexpressionMetaValueObj
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionSearchCommand;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;

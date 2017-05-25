@@ -43,7 +43,7 @@ import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;

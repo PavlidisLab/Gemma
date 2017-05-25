@@ -40,7 +40,7 @@
          <key foreign-key="DATABASE_ENTRY_ARRAY_DESIGN_FKC">
             <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.DatabaseEntryImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.DatabaseEntry"/>
       </set>
       <set name="compositeSequences"  lazy="true" fetch="select" inverse="true" cascade="all">
          <cache usage="read-write" />

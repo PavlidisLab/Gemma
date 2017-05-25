@@ -17,56 +17,31 @@ package ubic.gemma.model.common.description;
 import java.io.Serializable;
 
 /**
- * @author ??
- * @version $Id$
+ * ValueObject for database entry
  */
 public class DatabaseEntryValueObject implements Serializable {
 
     private static final long serialVersionUID = -527323410580090L;
-
-    public static DatabaseEntryValueObject fromEntity( DatabaseEntry de ) {
-        if ( de == null ) return null;
-        DatabaseEntryValueObject vo = new DatabaseEntryValueObject();
-        vo.setAccession( de.getAccession() );
-        vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() ) );
-        return vo;
-    }
-
     private String accession;
-
     private ExternalDatabaseValueObject externalDatabase;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     public DatabaseEntryValueObject() {
     }
 
     public DatabaseEntryValueObject( DatabaseEntry de ) {
-        if ( de == null ) throw new IllegalArgumentException( "Database entry is null" );
+        if ( de == null )
+            throw new IllegalArgumentException( "Database entry is null" );
         this.accession = de.getAccession();
         this.externalDatabase = ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() );
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-        DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
-        if ( this.accession == null ) {
-            if ( other.accession != null ) return false;
-        } else if ( !this.accession.equals( other.accession ) ) return false;
-        if ( this.externalDatabase == null ) {
-            if ( other.externalDatabase != null ) return false;
-        } else if ( !this.externalDatabase.equals( other.externalDatabase ) ) return false;
-        return true;
-    }
-
-    public String getAccession() {
-        return this.accession;
-    }
-
-    public ExternalDatabaseValueObject getExternalDatabase() {
-        return this.externalDatabase;
-    }
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     @Override
     public int hashCode() {
@@ -77,8 +52,42 @@ public class DatabaseEntryValueObject implements Serializable {
         return result;
     }
 
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
+        DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
+        if ( this.accession == null ) {
+            if ( other.accession != null )
+                return false;
+        } else if ( !this.accession.equals( other.accession ) )
+            return false;
+        if ( this.externalDatabase == null ) {
+            if ( other.externalDatabase != null )
+                return false;
+        } else if ( !this.externalDatabase.equals( other.externalDatabase ) )
+            return false;
+        return true;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    public String getAccession() {
+        return this.accession;
+    }
+
     public void setAccession( String accession ) {
         this.accession = accession;
+    }
+
+    public ExternalDatabaseValueObject getExternalDatabase() {
+        return this.externalDatabase;
     }
 
     public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {

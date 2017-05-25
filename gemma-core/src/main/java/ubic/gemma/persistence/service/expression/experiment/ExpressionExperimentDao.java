@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -17,6 +16,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 
 import java.util.Collection;
 import java.util.Date;
@@ -38,6 +38,8 @@ public interface ExpressionExperimentDao extends InitializingBean, CuratableDao<
     ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
 
     ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
+
+    Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc, DatabaseEntry accession );
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 

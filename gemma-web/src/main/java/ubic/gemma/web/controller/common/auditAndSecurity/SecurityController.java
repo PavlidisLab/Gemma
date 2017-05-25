@@ -18,7 +18,7 @@ import java.util.Collection;
 
 import org.springframework.dao.DataIntegrityViolationException;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**

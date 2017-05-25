@@ -23,23 +23,14 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.persistence.service.BaseDao;
 
 /**
- * @see ubic.gemma.model.common.description.DatabaseEntry
+ * @see DatabaseEntry
  */
 public interface DatabaseEntryDao extends BaseDao<DatabaseEntry> {
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    Integer countAll();
 
-    /**
-     * 
-     */
-    public DatabaseEntry find( DatabaseEntry databaseEntry );
+    DatabaseEntry find( DatabaseEntry databaseEntry );
 
-    /**
-     * 
-     */
-    public DatabaseEntry findByAccession( java.lang.String accession, ExternalDatabase externalDb );
+    DatabaseEntry findByAccession( String accession);
 
 }

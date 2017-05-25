@@ -19,6 +19,7 @@
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Date;
 
@@ -140,7 +141,7 @@ public class CurationDetails implements java.io.Serializable {
 
     /**
      * If you are trying to check for trouble of an expression experiment, you might consider using the method
-     * {@link ubic.gemma.core.expression.experiment.service.ExpressionExperimentService#isTroubled(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
+     * {@link ExpressionExperimentService#isTroubled(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      * which also checks the parenting array designs
      *
      * @return true only if these curation details trouble flag is set to true.

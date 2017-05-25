@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.model.GeoRecord;
 import ubic.gemma.core.loader.expression.geo.service.GeoBrowserService;
 import ubic.gemma.core.util.AbstractCLIContextCLI;

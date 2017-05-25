@@ -11,7 +11,7 @@ import java.util.Collection;
  */
 public class Responder {
 
-    private static final String DEFAULT_ERR_MSG_NULL_OBJECT = "Backend returned a null object";
+    private static final String DEFAULT_ERR_MSG_NULL_OBJECT = "Requested resource was not found in our database.";
 
     /**
      * @param code            the http status code that you want the API response to show. This code must be a valid code that the
@@ -76,7 +76,7 @@ public class Responder {
      */
     public static ResponseDataObject code400( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.BAD_REQUEST;
-        return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
+        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
@@ -92,7 +92,7 @@ public class Responder {
      */
     public static ResponseDataObject code404( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.NOT_FOUND;
-        return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
+        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
@@ -104,7 +104,7 @@ public class Responder {
      */
     public static ResponseDataObject code503( String message, HttpServletResponse servletResponse ) {
         Response.Status code = Response.Status.SERVICE_UNAVAILABLE;
-        return code( code, new WellComposedErrorBody( code.getStatusCode() + "", message ), servletResponse );
+        return code( code, new WellComposedErrorBody( code, message ), servletResponse );
     }
 
     /**
@@ -112,21 +112,24 @@ public class Responder {
      * Code defaults to 200 - OK, even for empty collections and arrays.
      * Common recognised codes:
      * toReturn is null: 404 - Not found. - use {@link this#code204(HttpServletResponse)} if you wish to set 204 - No content instead
+     * toReturn is an instance of {@link WellComposedErrorBody}: reads the code from the object.
      *
      * @param toReturn        an object to be wrapped in a ResponseObject to be published to the API.
      * @param servletResponse the object to set the appropriate response code on.
      * @return see {@link this#code(Response.Status, Object, HttpServletResponse)}.
      */
     public static ResponseDataObject autoCode( Object toReturn, HttpServletResponse servletResponse ) {
-        if ( toReturn == null ) { // object is null
+        if ( toReturn == null ) { // object is null.
             return code404( DEFAULT_ERR_MSG_NULL_OBJECT, servletResponse );
 
-        } else if (  // empty collection/array
+        } else if (  // empty collection/array.
                 ( toReturn instanceof Collection<?> && ( ( Collection<?> ) toReturn ).isEmpty() ) //
                         || ( toReturn.getClass().isArray() && Array.getLength( toReturn ) == 0 )  //
                 ) {
             // Keeping this as a special case, in case we decide to handle it differently.
             return code200( toReturn, servletResponse );
+        } else if ( toReturn instanceof WellComposedErrorBody){ // pre-prepared error body.
+            return code( ( ( WellComposedErrorBody ) toReturn ).getStatus(), toReturn, servletResponse);
         }
 
         //TODO add more cases. Update javadoc.
