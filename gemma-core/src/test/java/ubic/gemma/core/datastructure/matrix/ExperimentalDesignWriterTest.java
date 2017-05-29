@@ -67,13 +67,13 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
             Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
     }
 
     @After
     public void tearDown() throws Exception {
         if ( ee != null ) {
-            this.eeService.delete( ee );
+            this.eeService.remove( ee );
         }
     }
 

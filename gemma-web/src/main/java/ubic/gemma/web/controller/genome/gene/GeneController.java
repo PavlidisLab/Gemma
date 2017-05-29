@@ -30,6 +30,7 @@ import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneCoreService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.image.aba.AllenBrainAtlasService;
 import ubic.gemma.core.image.aba.Image;
@@ -99,7 +100,7 @@ public class GeneController extends BaseController {
      */
     public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
         Collection<ImageValueObject> images = new ArrayList<>();
-        GeneValueObject gene = geneService.loadValueObject( geneId );
+        GeneValueObject gene = geneService.loadValueObjectById( geneId );
 
         String queryGeneSymbol = gene.getOfficialSymbol();
         GeneValueObject mouseGene = gene;
@@ -134,10 +135,10 @@ public class GeneController extends BaseController {
     public GeneValueObject loadGeneDetails( Long geneId ) {
         // return geneCoreService.loadGeneDetails( geneId );
         GeneValueObject gvo = geneCoreService.loadGeneDetails( geneId );
-        Collection<EvidenceValueObject> collEVO = phenotypeAssociationManagerService
+        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> collEVO = phenotypeAssociationManagerService
                 .findEvidenceByGeneId( geneId, new HashSet<String>(),
                         new EvidenceFilter( gvo.getTaxonId(), false, null ) );
-        Iterator<EvidenceValueObject> iter = collEVO.iterator();
+        Iterator<EvidenceValueObject<? extends PhenotypeAssociation>> iter = collEVO.iterator();
         Collection<CharacteristicValueObject> collFilteredDVO = new HashSet<>();
         while ( iter.hasNext() ) {
             EvidenceValueObject evo = iter.next();
@@ -153,7 +154,7 @@ public class GeneController extends BaseController {
     /**
      * AJAX used to show gene info in the phenotype tab FIXME Why is the taxonId a parameter, since we have the gene ID?
      */
-    public Collection<EvidenceValueObject> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadGeneEvidence( Long taxonId, boolean showOnlyEditable,
             Collection<Long> databaseIds, Long geneId, String[] phenotypeValueUris ) {
         return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, phenotypeValueUris == null ?
                         new HashSet<String>() :
@@ -180,7 +181,7 @@ public class GeneController extends BaseController {
             if ( StringUtils.isNotBlank( idString ) ) {
                 Long id = Long.parseLong( idString );
 
-                geneVO = geneService.loadValueObject( id );
+                geneVO = geneService.loadValueObjectById( id );
 
                 if ( geneVO == null ) {
                     addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
@@ -197,7 +198,7 @@ public class GeneController extends BaseController {
                 if ( foundGenes.size() == 1 ) {
                     Gene gene = foundGenes.iterator().next();
                     if ( gene != null ) {
-                        geneVO = geneService.loadValueObject( gene.getId() );
+                        geneVO = geneService.loadValueObjectById( gene.getId() );
                     }
                 }
             } else if ( StringUtils.isNotBlank( geneName ) && StringUtils.isNotBlank( taxonName ) ) {
@@ -205,7 +206,7 @@ public class GeneController extends BaseController {
                 if ( taxon != null ) {
                     Gene gene = geneService.findByOfficialSymbol( geneName, taxon );
                     if ( gene != null ) {
-                        geneVO = geneService.loadValueObject( gene.getId() );
+                        geneVO = geneService.loadValueObjectById( gene.getId() );
                     }
                 }
             }
@@ -253,7 +254,7 @@ public class GeneController extends BaseController {
 
             for ( String anIdList : idList ) {
                 Long id = Long.parseLong( anIdList );
-                GeneValueObject gene = geneService.loadValueObject( id );
+                GeneValueObject gene = geneService.loadValueObjectById( id );
                 if ( gene == null ) {
                     addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
                 }
@@ -286,7 +287,7 @@ public class GeneController extends BaseController {
         Collection<GeneValueObject> genes = new ArrayList<>();
         if ( geneIds != null ) {
             for ( Long id : geneIds ) {
-                genes.add( geneService.loadValueObject( id ) );
+                genes.add( geneService.loadValueObjectById( id ) );
             }
         }
         if ( geneSetIds != null ) {

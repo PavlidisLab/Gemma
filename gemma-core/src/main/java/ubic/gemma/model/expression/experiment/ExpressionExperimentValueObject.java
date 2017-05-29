@@ -27,18 +27,25 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
 
 /**
  * @author kelsey
  */
-public class ExpressionExperimentValueObject extends AbstractCuratableValueObject
+public class ExpressionExperimentValueObject extends AbstractCuratableValueObject<ExpressionExperiment>
         implements Comparable<ExpressionExperimentValueObject>, SecureValueObject {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5678747537830051610L;
+
+    protected Long sourceExperiment;
+
+    private Boolean isSubset = false;
     private String accession;
     private Integer arrayDesignCount;
     private String batchFetchEventType;
@@ -69,7 +76,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String investigators;
     private Boolean isPublic = null;
     private Boolean isShared = false;
-    private Boolean isSubset = false;
     private String linkAnalysisEventType;
     private Double minPvalue;
     private String missingValueAnalysisEventType;
@@ -84,35 +90,45 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private Collection<AuditEventValueObject> sampleRemovedFlags;
     private String shortName;
     private String source;
-    private Long sourceExperiment;
     private String taxon;
     private Long taxonId;
     private String technologyType;
 
-    public ExpressionExperimentValueObject() {
-    }
+    /* ********************************
+     * Constructors
+     * ********************************/
 
-    public ExpressionExperimentValueObject( BioAssaySet ee ) {
-        this.id = ee.getId();
-        if ( ee instanceof ExpressionExperiment ) {
-            this.shortName = ( ( ExpressionExperiment ) ee ).getShortName();
-        } else {
-            assert ee instanceof ExpressionExperimentSubSet;
-            this.isSubset = true;
-            this.sourceExperiment = ( ( ExpressionExperimentSubSet ) ee ).getSourceExperiment().getId();
-        }
-
-        this.name = ee.getName();
-        /*
-         * FIXME this doesn't populate enough stuff.
-         */
+    public ExpressionExperimentValueObject( Long id ) {
+        super( id );
     }
 
     /**
-     * Copies constructor from other ExpressionExperimentValueObject
+     * Constructor using this VO for EESubSets - does not populate most of VO properties.
+     */
+    public ExpressionExperimentValueObject( ExpressionExperimentSubSet ee ) {
+        super( ee.getId() );
+        this.isSubset = true;
+        this.sourceExperiment = ee.getSourceExperiment().getId();
+    }
+
+    public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
+        this( ee.getCurationDetails().getLastUpdated(), ee.getCurationDetails().getTroubled(),
+                new AuditEventValueObject( ee.getCurationDetails().getLastTroubledEvent() ),
+                ee.getCurationDetails().getNeedsAttention(),
+                new AuditEventValueObject( ee.getCurationDetails().getLastNeedsAttentionEvent() ),
+                ee.getCurationDetails().getCurationNote(),
+                new AuditEventValueObject( ee.getCurationDetails().getLastNoteUpdateEvent() ),
+                ee.getAccession().toString(), null, null, ee.getBioAssays().size(), null, ee.getClass().getName(), null,
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                ee.getExperimentalDesign().getId(), null, null, null, null, null, null, null, ee.getId(), null, null,
+                null, null, null, null, null, ee.getName(), null, null, null, null, null, null, null, null,
+                ee.getShortName(), ee.getSource(), null, null, null, null );
+    }
+
+    /**
+     * Creates a copy of given ExpressionExperimentValueObject
      *
-     * @param otherBean, cannot be <code>null</code>
-     * @throws NullPointerException if the argument is <code>null</code>
+     * @param otherBean the bean to create copy of.
      */
     public ExpressionExperimentValueObject( ExpressionExperimentValueObject otherBean ) {
         this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
@@ -136,7 +152,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
                 otherBean.sourceExperiment, otherBean.taxon, otherBean.taxonId, otherBean.technologyType );
     }
 
-    public ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
+    private ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
             Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
             AuditEventValueObject noteEvent, String accession, Integer arrayDesignCount, String batchFetchEventType,
             Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
@@ -206,33 +222,30 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.technologyType = technologyType;
     }
 
+    /* ********************************
+     * Class methods
+     * ********************************/
+
+    public static ExpressionExperimentValueObject createValueObject( BioAssaySet bioAssaySet ) {
+        if ( bioAssaySet instanceof ExpressionExperiment ) {
+            return new ExpressionExperimentValueObject( ( ExpressionExperiment ) bioAssaySet );
+        } else {
+            return new ExpressionExperimentValueObject( ( ExpressionExperimentSubSet ) bioAssaySet );
+        }
+    }
+
     public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
-            Collection<? extends BioAssaySet> collection ) {
+            Collection<ExpressionExperiment> collection ) {
         Collection<ExpressionExperimentValueObject> result = new ArrayList<>();
-        for ( BioAssaySet ee : collection ) {
+        for ( ExpressionExperiment ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }
         return result;
     }
 
-    public static List<ExpressionExperimentValueObject> convert2ValueObjectsOrdered(
-            List<ExpressionExperiment> collection ) {
-        List<ExpressionExperimentValueObject> result = new ArrayList<>();
-        for ( BioAssaySet ee : collection ) {
-            result.add( new ExpressionExperimentValueObject( ee ) );
-        }
-        return result;
-    }
-
-    public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
-        Collection<AuditEventValueObject> converted = new HashSet<>();
-
-        for ( AuditEvent ae : s ) {
-            converted.add( new AuditEventValueObject( ae ) );
-        }
-
-        this.sampleRemovedFlags = converted;
-    }
+    /* ********************************
+     * Object override
+     * ********************************/
 
     @Override
     public int compareTo( ExpressionExperimentValueObject arg0 ) {
@@ -254,6 +267,33 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         } else if ( !id.equals( other.id ) )
             return false;
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return this.getShortName() + " (id = " + this.getId() + ")";
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    public void auditEvents2SampleRemovedFlags( Collection<AuditEvent> s ) {
+        Collection<AuditEventValueObject> converted = new HashSet<>();
+
+        for ( AuditEvent ae : s ) {
+            converted.add( new AuditEventValueObject( ae ) );
+        }
+
+        this.sampleRemovedFlags = converted;
     }
 
     public String getAccession() {
@@ -704,21 +744,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.currentUserIsOwner = isUserOwned;
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
-    }
-
     public void setSubset( boolean isSubset ) {
         this.isSubset = isSubset;
     }
-
-    @Override
-    public String toString() {
-        return this.getShortName() + " (id = " + this.getId() + ")";
-    }
-
 }

@@ -69,7 +69,7 @@ public interface ExperimentalDesignController {
     /**
      * Deletes the specified Characteristics from their parent FactorValues.
      * 
-     * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to delete
+     * @param fvvos a collection of FactorValueValueObjects containing the Characteristics to remove
      */
     public abstract void deleteFactorValueCharacteristics( FactorValueValueObject[] fvvos );
 

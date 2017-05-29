@@ -313,7 +313,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.CytogeneticLocationImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.CytogeneticLocation" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1229,7 +1229,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1239,7 +1239,7 @@
 	</cache>
 
 	<!-- we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.factorValues" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor.factorValues" maxElementsOnDisk="10000"
 		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1248,7 +1248,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.annotations" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor.annotations" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1849,8 +1849,8 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+	<cache name="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" maxElementsOnDisk="10000"
+           maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />

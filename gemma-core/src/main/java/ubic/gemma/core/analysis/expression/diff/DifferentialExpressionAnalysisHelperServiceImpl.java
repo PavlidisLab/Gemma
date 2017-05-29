@@ -54,6 +54,7 @@ public class DifferentialExpressionAnalysisHelperServiceImpl implements Differen
     @Override
     @Transactional
     public DifferentialExpressionAnalysis persistStub( DifferentialExpressionAnalysis entity ) {
+        // FIXME this isn't working? 
         entity.setProtocol( ( Protocol ) persisterHelper.persist( entity.getProtocol() ) );
 
         // Sometimes we have made a new EESubSet as part of the analysis.

@@ -47,7 +47,7 @@ public interface HomologeneService {
     void init( boolean force );
 
     /**
-     * @param taxonCommonName desired taxon to find homolouge in
+     * @param taxonCommonName desired taxon to find homologue in
      * @return Finds the homologue of the given gene for the taxon specified, or null if there is no homologue
      */
 

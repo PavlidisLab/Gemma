@@ -19,76 +19,27 @@
 
 package ubic.gemma.model.common.auditAndSecurity;
 
+import gemma.gsec.model.SecuredNotChild;
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
+import java.util.Date;
+
 /**
- * 
+ *
  */
-public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.SecuredNotChild {
+public abstract class JobInfo implements Identifiable, Serializable, SecuredNotChild {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -4998165708433543706L;
-
-    /**
-     * Constructs new instances of {@link JobInfo}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link JobInfo}.
-         */
-        public static JobInfo newInstance() {
-            return new JobInfoImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link JobInfo}, taking all required and/or read-only properties as arguments.
-         */
-        public static JobInfo newInstance( Boolean runningStatus, java.util.Date startTime, Integer phases ) {
-            final JobInfo entity = new JobInfoImpl();
-            entity.setRunningStatus( runningStatus );
-            entity.setStartTime( startTime );
-            entity.setPhases( phases );
-            return entity;
-        }
-
-        /**
-         * Constructs a new instance of {@link JobInfo}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
-        public static JobInfo newInstance( Boolean runningStatus, String failedMessage, java.util.Date startTime,
-                java.util.Date endTime, Integer phases, String description, String messages, String taskId, User user ) {
-            final JobInfo entity = new JobInfoImpl();
-            entity.setRunningStatus( runningStatus );
-            entity.setFailedMessage( failedMessage );
-            entity.setStartTime( startTime );
-            entity.setEndTime( endTime );
-            entity.setPhases( phases );
-            entity.setDescription( description );
-            entity.setMessages( messages );
-            entity.setTaskId( taskId );
-            entity.setUser( user );
-            return entity;
-        }
-    }
-
-    private Boolean runningStatus = Boolean.valueOf( true );
-
+    private Boolean runningStatus = Boolean.TRUE;
     private String failedMessage;
-
-    private java.util.Date startTime;
-
-    private java.util.Date endTime;
-
-    private Integer phases = Integer.valueOf( 1 );
-
+    private Date startTime;
+    private Date endTime;
+    private Integer phases = 1;
     private String description;
-
     private String messages;
-
     private String taskId;
-
     private Long id;
-
     private User user;
 
     /**
@@ -111,32 +62,48 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
     }
 
     /**
-     * 
+     * Returns a hash code based on this entity's identifiers.
      */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
     public String getDescription() {
         return this.description;
     }
 
-    /**
-     * 
-     */
-    public java.util.Date getEndTime() {
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+
+    public Date getEndTime() {
         return this.endTime;
     }
 
-    /**
-     * 
-     */
+    public void setEndTime( Date endTime ) {
+        this.endTime = endTime;
+    }
+
     public String getFailedMessage() {
         return this.failedMessage;
     }
 
-    /**
-     * 
-     */
+    public void setFailedMessage( String failedMessage ) {
+        this.failedMessage = failedMessage;
+    }
+
     @Override
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -148,25 +115,33 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
         return this.messages;
     }
 
-    /**
-     * 
-     */
+    public void setMessages( String messages ) {
+        this.messages = messages;
+    }
+
     public Integer getPhases() {
         return this.phases;
     }
 
-    /**
-     * 
-     */
+    public void setPhases( Integer phases ) {
+        this.phases = phases;
+    }
+
+
     public Boolean getRunningStatus() {
         return this.runningStatus;
     }
 
-    /**
-     * 
-     */
-    public java.util.Date getStartTime() {
+    public void setRunningStatus( Boolean runningStatus ) {
+        this.runningStatus = runningStatus;
+    }
+
+    public Date getStartTime() {
         return this.startTime;
+    }
+
+    public void setStartTime( Date startTime ) {
+        this.startTime = startTime;
     }
 
     /**
@@ -178,6 +153,10 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
         return this.taskId;
     }
 
+    public void setTaskId( String taskId ) {
+        this.taskId = taskId;
+    }
+
     /**
      * <p>
      * The user who started the job. Can be left null to indicate job was run by an anonymous user.
@@ -187,55 +166,51 @@ public abstract class JobInfo implements java.io.Serializable, gemma.gsec.model.
         return this.user;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setEndTime( java.util.Date endTime ) {
-        this.endTime = endTime;
-    }
-
-    public void setFailedMessage( String failedMessage ) {
-        this.failedMessage = failedMessage;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setMessages( String messages ) {
-        this.messages = messages;
-    }
-
-    public void setPhases( Integer phases ) {
-        this.phases = phases;
-    }
-
-    public void setRunningStatus( Boolean runningStatus ) {
-        this.runningStatus = runningStatus;
-    }
-
-    public void setStartTime( java.util.Date startTime ) {
-        this.startTime = startTime;
-    }
-
-    public void setTaskId( String taskId ) {
-        this.taskId = taskId;
-    }
-
     public void setUser( User user ) {
         this.user = user;
+    }
+
+    /**
+     * Constructs new instances of {@link JobInfo}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link JobInfo}.
+         */
+        public static JobInfo newInstance() {
+            return new JobInfoImpl();
+        }
+
+        /**
+         * Constructs a new instance of {@link JobInfo}, taking all required and/or read-only properties as arguments.
+         */
+        public static JobInfo newInstance( Boolean runningStatus, Date startTime, Integer phases ) {
+            final JobInfo entity = new JobInfoImpl();
+            entity.setRunningStatus( runningStatus );
+            entity.setStartTime( startTime );
+            entity.setPhases( phases );
+            return entity;
+        }
+
+        /**
+         * Constructs a new instance of {@link JobInfo}, taking all possible properties (except the identifier(s))as
+         * arguments.
+         */
+        public static JobInfo newInstance( Boolean runningStatus, String failedMessage, Date startTime,
+                Date endTime, Integer phases, String description, String messages, String taskId,
+                User user ) {
+            final JobInfo entity = new JobInfoImpl();
+            entity.setRunningStatus( runningStatus );
+            entity.setFailedMessage( failedMessage );
+            entity.setStartTime( startTime );
+            entity.setEndTime( endTime );
+            entity.setPhases( phases );
+            entity.setDescription( description );
+            entity.setMessages( messages );
+            entity.setTaskId( taskId );
+            entity.setUser( user );
+            return entity;
+        }
     }
 
 }

@@ -18,28 +18,27 @@
  */
 package ubic.gemma.persistence.service.analysis;
 
-import java.util.Collection;
-import java.util.Map;
-
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.analysis.Analysis</code>.
  * </p>
- * 
+ *
  * @see ubic.gemma.model.analysis.Analysis
  */
 public abstract class AnalysisDaoBase<T extends Analysis> extends AbstractDao<T> implements AnalysisDao<T> {
 
-    public AnalysisDaoBase( Class elementClass ) {
-        super( elementClass );
+    public AnalysisDaoBase( Class elementClass, SessionFactory sessionFactory ) {
+        super( elementClass, sessionFactory );
     }
 
     /**

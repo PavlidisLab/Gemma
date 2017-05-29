@@ -107,7 +107,7 @@ public class SchedulerSecurityTest extends BaseSpringContextTest {
          * Mimics configuration in xml.
          */
         SecureMethodInvokingJobDetailFactoryBean jobDetail = new SecureMethodInvokingJobDetailFactoryBean();
-        jobDetail.setTargetMethod( "delete" );
+        jobDetail.setTargetMethod( "remove" );
         jobDetail.setArguments( new Object[] { null } );
         jobDetail.setTargetObject( expressionExperimentService ); // no access
         jobDetail.setConcurrent( false );

@@ -18,96 +18,40 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface GeneProductService {
+public interface GeneProductService extends BaseVoEnabledService<GeneProduct, GeneProductValueObject> {
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    GeneProduct find( GeneProduct gProduct );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public ubic.gemma.model.genome.gene.GeneProduct create( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public void delete( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.gene.GeneProduct find( ubic.gemma.model.genome.gene.GeneProduct gProduct );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
+    GeneProduct findOrCreate( GeneProduct geneProduct );
 
     /**
      * Returns all the genes that share the given gene product name
-     * 
-     * @param search
-     * @return
      */
-    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
+    Collection<Gene> getGenesByName( String search );
 
     /**
      * Returns all the genes that share the given gene product ncbi id
-     * 
-     * @param search
-     * @return
      */
-    public java.util.Collection<Gene> getGenesByNcbiId( java.lang.String search );
-
-    /**
-     * Returns all the genes that share the given gene product id
-     * 
-     * @param id
-     * @return
-     */
-    public ubic.gemma.model.genome.gene.GeneProduct load( java.lang.Long id );
-
-    /**
-     * <p>
-     * loads geneProducts specified by the given ids.
-     * </p>
-     */
-    public java.util.Collection<GeneProduct> loadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public void update( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
-
-    public GeneProduct thaw( GeneProduct existing );
+    Collection<Gene> getGenesByNcbiId( String search );
 
     @Secured({ "GROUP_ADMIN" })
-    public void remove( Collection<GeneProduct> toRemove );
+    void remove( Collection<GeneProduct> toRemove );
 
-    /**
-     * @param string
-     * @return
-     */
-    public GeneProduct findByGi( String string );
+    GeneProduct findByGi( String string );
 
-    public Collection<GeneProduct> findByName( String name, Taxon taxon );
+    Collection<GeneProduct> findByName( String name, Taxon taxon );
 
 }

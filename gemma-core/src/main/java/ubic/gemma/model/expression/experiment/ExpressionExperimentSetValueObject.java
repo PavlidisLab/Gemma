@@ -20,7 +20,8 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecureValueObject;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,43 +29,30 @@ import java.util.HashSet;
 /**
  * @author tvrossum
  */
-public class ExpressionExperimentSetValueObject
+public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<ExpressionExperimentSet>
         implements SecureValueObject, Comparable<ExpressionExperimentSetValueObject> {
 
     private static final long serialVersionUID = -6852364688337216390L;
 
     private String description = "";
-
     private Collection<Long> expressionExperimentIds = new HashSet<>();
-
-    private Long id = null;
-
     private boolean isPublic = false;
-
     /**
      * If modifying the set is constrained by existing analyses.
      */
     private boolean modifiable = true;
-
     private String name = "";
-
     private Integer size = 0;
-
     private Integer numWithCoexpressionAnalysis = 0;
-
     private Integer numWithDifferentialExpressionAnalysis = 0;
-
     private boolean shared = false;
-
     private Long taxonId;
-
     private String taxonName;
-
     private boolean userCanWrite = false;
-
     private boolean userOwned = false;
 
-    public ExpressionExperimentSetValueObject() {
+    public ExpressionExperimentSetValueObject(Long id) {
+        super(id);
         this.expressionExperimentIds = new HashSet<>();
     }
 
@@ -75,11 +63,6 @@ public class ExpressionExperimentSetValueObject
         return this.getName().compareTo( arg0.getName() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see Object#equals(Object)
-     */
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj )
@@ -111,15 +94,6 @@ public class ExpressionExperimentSetValueObject
 
     public void setExpressionExperimentIds( Collection<Long> expressionExperimentIds ) {
         this.expressionExperimentIds = expressionExperimentIds;
-    }
-
-    @Override
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     @Override
@@ -176,7 +150,7 @@ public class ExpressionExperimentSetValueObject
 
     @Override
     public Class<? extends Securable> getSecurableClass() {
-        return ExpressionExperimentSetImpl.class;
+        return ExpressionExperimentSet.class;
     }
 
     public Long getTaxonId() {

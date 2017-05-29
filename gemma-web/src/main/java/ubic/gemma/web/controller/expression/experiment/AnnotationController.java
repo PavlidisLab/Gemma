@@ -25,17 +25,17 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -95,9 +95,9 @@ public class AnnotationController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "No such experiment with id=" + id );
         }
-        ee = expressionExperimentService.thawLite( ee );
-        ontologyService.saveExpressionExperimentStatement( vc, ee );
-
+        expressionExperimentService.thawLite( ee );
+        ontologyService.addExpressionExperimentStatement( vc, ee );
+        expressionExperimentService.update( ee );
     }
 
     /**
@@ -145,7 +145,7 @@ public class AnnotationController {
             return;
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<Characteristic> current = ee.getCharacteristics();
 
@@ -166,7 +166,7 @@ public class AnnotationController {
         expressionExperimentService.update( ee );
 
         for ( Long id : characterIds ) {
-            characteristicService.delete( id );
+            characteristicService.remove( id );
         }
 
     }

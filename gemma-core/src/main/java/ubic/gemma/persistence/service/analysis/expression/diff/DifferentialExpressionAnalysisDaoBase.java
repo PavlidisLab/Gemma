@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -34,8 +35,8 @@ import java.util.Map;
 public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoBase<DifferentialExpressionAnalysis>
         implements DifferentialExpressionAnalysisDao {
 
-    public DifferentialExpressionAnalysisDaoBase() {
-        super( DifferentialExpressionAnalysis.class );
+    public DifferentialExpressionAnalysisDaoBase( SessionFactory sessionFactory ) {
+        super( DifferentialExpressionAnalysis.class, sessionFactory );
     }
 
     /**

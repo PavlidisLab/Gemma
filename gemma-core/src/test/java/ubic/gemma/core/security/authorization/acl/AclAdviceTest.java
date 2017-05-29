@@ -33,10 +33,10 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
@@ -272,7 +272,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkEEAcls( ee );
 
         /*
-         * Now associate with ee set, delete the set and then the ee, make sure things are done correctly!
+         * Now associate with ee set, remove the set and then the ee, make sure things are done correctly!
          */
 
         ExpressionExperimentSet ees = ExpressionExperimentSet.Factory.newInstance();
@@ -288,7 +288,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         assertNull( eeacl.getParentAcl() );
 
-        expressionExperimentSetService.delete( ees );
+        expressionExperimentSetService.remove( ees );
 
         // make sure ACL for ees is gone
         aclTestUtils.checkDeletedAcl( ees );
@@ -296,7 +296,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         // make sure the ACL for ee is still there
         aclTestUtils.checkHasAcl( ee );
 
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
 
@@ -373,7 +373,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkEEAcls( ee );
 
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
     }

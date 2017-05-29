@@ -27,14 +27,4 @@ public class DatasetStringArg extends DatasetArg<String> {
         return this.value == null ? null : service.findByShortName( this.value );
     }
 
-    /**
-     * Tries to retrieve an ExpressionExperimentValueObject by the datasets short name.
-     *
-     * @see MutableArg#getPersistentObject(Object)
-     */
-    @Override
-    public ExpressionExperimentValueObject getValueObject( ExpressionExperimentService service ) {
-        ExpressionExperiment ee = this.getPersistentObject( service );
-        return ee == null ? null : service.loadValueObject( ee.getId() );
-    }
 }

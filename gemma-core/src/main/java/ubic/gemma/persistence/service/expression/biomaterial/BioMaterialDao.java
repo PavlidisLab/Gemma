@@ -18,75 +18,30 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
 
 /**
  * @see BioMaterial
- * @version $Id$
  */
-public interface BioMaterialDao extends BaseDao<BioMaterial> {
+public interface BioMaterialDao extends BaseVoEnabledDao<BioMaterial, BioMaterialValueObject> {
 
-    /**
-     * 
-     */
-    public BioMaterial copy( BioMaterial bioMaterial );
+    BioMaterial copy( BioMaterial bioMaterial );
 
-    /**
-     * 
-     */
-    public Integer countAll();
+    Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 
-    /**
-     * 
-     */
-    public BioMaterial find( BioMaterial bioMaterial );
-
-    /**
-     * @param experiment
-     * @return
-     */
-    public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
-
-    /**
-     * @param fv
-     * @return
-     */
-    public Collection<BioMaterial> findByFactorValue( FactorValue fv );
-
-    /**
-     * 
-     */
-    public BioMaterial findOrCreate( BioMaterial bioMaterial );
+    Collection<BioMaterial> findByFactorValue( FactorValue fv );
 
     /**
      * Return the experiment the biomaterial appears in
-     * 
-     * @param bioMaterialId
-     * @return
      */
-    public ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
+    ExpressionExperiment getExpressionExperiment( Long bioMaterialId );
 
-    /**
-     * @param ids
-     * @return
-     */
-    @Override
-    public Collection<BioMaterial> load( Collection<Long> ids );
-
-    /**
-     * @param bioMaterial
-     */
-    public void thaw( BioMaterial bioMaterial );
-
-    /**
-     * @param bioMaterials
-     * @return
-     */
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
+    void thaw( Collection<BioMaterial> bioMaterials );
 
 }

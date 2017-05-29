@@ -21,17 +21,15 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.Person
+ * @see Person
  */
 public interface PersonDao extends BaseDao<Person> {
 
-    public ubic.gemma.model.common.auditAndSecurity.Person find( ubic.gemma.model.common.auditAndSecurity.Person person );
+    Collection<Person> findByFullName( String firstName, String secondName );
 
-    public java.util.Collection<Person> findByFullName( java.lang.String name, java.lang.String secondName );
-
-    public java.util.Collection<Person> findByLastName( java.lang.String lastName );
-
-    public Person findOrCreate( Person person );
+    Collection<Person> findByLastName( String lastName );
 
 }

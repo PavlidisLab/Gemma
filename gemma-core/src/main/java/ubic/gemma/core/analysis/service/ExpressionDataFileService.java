@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -34,7 +35,7 @@ import ubic.gemma.persistence.util.Settings;
  */
 public interface ExpressionDataFileService {
 
-    public static final String DATA_ARCHIVE_FILE_SUFFIX = ".archive.zip";
+    public static final String DATA_ARCHIVE_FILE_SUFFIX = ".zip";
     public static final String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar
             + "dataFiles" + File.separatorChar;
 
@@ -75,17 +76,6 @@ public interface ExpressionDataFileService {
      * @throws IOException
      */
     public void deleteAllFiles( ExpressionExperiment ee ) throws IOException;
-
-    /**
-     * Intended for use when the analysis is not yet persisted fully, and before results below threshold are removed.
-     * 
-     * @param experimentAnalyzed
-     * @param analysis
-     * @param resultSets
-     * @return
-     */
-    public File getDiffExpressionAnalysisArchiveFile( BioAssaySet experimentAnalyzed,
-            DifferentialExpressionAnalysis analysis, Collection<ExpressionAnalysisResultSet> resultSets );
 
     /**
      * Locate or create the differential expression data file(s) for a given experiment. We generate an archive that
@@ -224,11 +214,18 @@ public interface ExpressionDataFileService {
 
     /**
      * Writes to the configured gemma.appdata.home
+     * <p>
+     * The file created is a zip archive containing at least two files. The first is the summary model fit statistics,
+     * ANOVA-style. The others are the contrast details for each factor.
+     * They should be R-friendly (e.g., readable with
+     * <code>read.delim("analysis.results.txt", header=T, comment.char="#", row.names=1)</code>
      * 
      * @param experiment
      * @param analysis
+     * @param config
      * @throws IOException
      */
-    public void writeDiffExArchiveFile( BioAssaySet ee, DifferentialExpressionAnalysis analysis ) throws IOException;
+    public void writeDiffExArchiveFile( BioAssaySet ee, DifferentialExpressionAnalysis analysis, DifferentialExpressionAnalysisConfig config )
+            throws IOException;
 
 }

@@ -121,11 +121,6 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
         }
     }
 
-    /**
-     * Test method for
-     * {@link BlatResultDaoImpl#find(ubic.gemma.model.genome.biosequence.BioSequence)}
-     * .
-     */
     @Test
     public final void testFindBioSequence() {
         BioSequence bs = BioSequence.Factory.newInstance();

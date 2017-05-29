@@ -15,97 +15,31 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
  * @see FactorValueService
  */
 @Service
 public class FactorValueServiceImpl extends FactorValueServiceBase {
 
+    @Autowired
+    public FactorValueServiceImpl( FactorValueDao factorValueDao ) {
+        super( factorValueDao );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public Collection<FactorValue> findByValue( String valuePrefix ) {
-        return this.getFactorValueDao().findByValue( valuePrefix );
-    }
-
-    @Override
-    protected FactorValue handleCreate( FactorValue factorValue ) {
-        return this.getFactorValueDao().create( factorValue );
-    }
-
-    @Override
-    protected void handleDelete( FactorValue factorValue ) {
-        this.getFactorValueDao().remove( factorValue );
-    }
-
-    @Override
-    protected FactorValue handleFindOrCreate( FactorValue factorValue ) {
-        return this.getFactorValueDao().findOrCreate( factorValue );
-    }
-
-    /**
-     * @see FactorValueService#getAllFactorValues()
-     */
-    @SuppressWarnings("unchecked")
-    protected java.util.Collection<FactorValue> handleGetAllFactorValues() {
-        return ( Collection<FactorValue> ) this.getFactorValueDao().loadAll();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see FactorValueServiceBase#handleLoad(java.lang.Long)
-     */
-    @Override
-    protected FactorValue handleLoad( Long id ) {
-        return this.getFactorValueDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see FactorValueServiceBase#handleLoadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<FactorValue> handleLoadAll() {
-        return ( Collection<FactorValue> ) this.getFactorValueDao().loadAll();
-    }
-
-    /**
-     * @see FactorValueService#saveFactorValue(ubic.gemma.model.expression.experiment.FactorValue)
-     */
-    protected void handleSaveFactorValue( ubic.gemma.model.expression.experiment.FactorValue factorValue ) {
-        this.getFactorValueDao().create( factorValue );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see FactorValueServiceBase#handleUpdate(java.util.Collection)
-     */
-    @Override
-    protected void handleUpdate( Collection<FactorValue> factorValues ) {
-        this.getFactorValueDao().update( factorValues );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * FactorValueServiceBase#handleUpdate(ubic.gemma.model.expression.experiment
-     * .FactorValue)
-     */
-    @Override
-    protected void handleUpdate( FactorValue factorValue ) {
-        this.getFactorValueDao().update( factorValue );
+        return this.factorValueDao.findByValue( valuePrefix );
     }
 
 }

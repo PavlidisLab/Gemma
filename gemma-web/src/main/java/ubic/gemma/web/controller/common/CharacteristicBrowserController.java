@@ -78,8 +78,7 @@ public class CharacteristicBrowserController {
     private CharacteristicService characteristicService;
 
     public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
-        Integer count = characteristicService.count(); // fixme: maybe don't do this every time. It's actually fast once
-        // it's cached.
+        Integer count = characteristicService.countAll();
 
         List<AnnotationValueObject> results = new ArrayList<>();
 
@@ -147,7 +146,7 @@ public class CharacteristicBrowserController {
     }
 
     public Integer count() {
-        return characteristicService.count();
+        return characteristicService.countAll();
     }
 
 

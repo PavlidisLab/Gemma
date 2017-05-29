@@ -14,104 +14,82 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.persistence.util.EntityUtils;
-import cern.colt.list.DoubleArrayList;
+
+import java.util.*;
 
 /**
  * Provides access to {@link DifferentialExpressionAnalysisResult}s and meta-analysis results.
- * 
+ *
  * @author keshav, anton
- * @version $Id$
  */
 @Component
 public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialExpressionService {
 
     private static final String FV_SEP = ", ";
+    private static final int MAX_PVAL = 1;
+    private static final Log log = LogFactory.getLog( GeneDifferentialExpressionServiceImpl.class );
+
+    private final DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
-    private DifferentialExpressionResultService differentialExpressionResultService = null;
+    public GeneDifferentialExpressionServiceImpl(
+            DifferentialExpressionResultService differentialExpressionResultService ) {
+        this.differentialExpressionResultService = differentialExpressionResultService;
+    }
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
-    private final int MAX_PVAL = 1;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#configExperimentalFactorValueObject(ubic
-     * .gemma.model.expression.experiment.ExperimentalFactor)
-     */
     @Override
     public ExperimentalFactorValueObject configExperimentalFactorValueObject( ExperimentalFactor ef ) {
-        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject();
-        efvo.setId( ef.getId() );
+        ExperimentalFactorValueObject efvo = new ExperimentalFactorValueObject( ef.getId() );
         efvo.setName( ef.getName() );
         efvo.setDescription( ef.getDescription() );
         Characteristic category = ef.getCategory();
         if ( category != null ) {
             efvo.setCategory( category.getCategory() );
             if ( category instanceof VocabCharacteristic ) {
-                efvo.setCategoryUri( ( ( VocabCharacteristic ) category ).getCategoryUri() );
+                efvo.setCategoryUri( category.getCategoryUri() );
             }
         }
         Collection<FactorValue> fvs = ef.getFactorValues();
-        String factorValuesAsString = StringUtils.EMPTY;
+        StringBuilder factorValuesAsString = new StringBuilder( StringUtils.EMPTY );
 
         for ( FactorValue fv : fvs ) {
             String fvName = fv.toString();
             if ( StringUtils.isNotBlank( fvName ) ) {
-                factorValuesAsString += fvName + FV_SEP;
+                factorValuesAsString.append( fvName ).append( FV_SEP );
             }
         }
 
         /* clean up the start and end of the string */
-        factorValuesAsString = StringUtils.remove( factorValuesAsString, ef.getName() + ":" );
-        factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, FV_SEP );
+        factorValuesAsString = new StringBuilder(
+                StringUtils.remove( factorValuesAsString.toString(), ef.getName() + ":" ) );
+        factorValuesAsString = new StringBuilder( StringUtils.removeEnd( factorValuesAsString.toString(), FV_SEP ) );
 
         /*
          * Preformat the factor name; due to Ext PropertyGrid limitations we can't do this on the client. // FIXME???
          */
-        efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString, 50 ) + ")" );
+        efvo.setName( ef.getName() + " (" + StringUtils.abbreviate( factorValuesAsString.toString(), 50 ) + ")" );
 
-        efvo.setFactorValues( factorValuesAsString );
+        efvo.setFactorValues( factorValuesAsString.toString() );
         return efvo;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#configExpressionExperimentValueObject(ubic
-     * .gemma.model.expression.experiment.BioAssaySet)
-     */
     @Override
     public ExpressionExperimentValueObject configExpressionExperimentValueObject( ExpressionExperimentValueObject ee ) {
 
@@ -126,13 +104,6 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         return ee;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#getDifferentialExpression(ubic.gemma.model
-     * .genome.Gene, java.util.Collection)
-     */
     @Override
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene,
             Collection<BioAssaySet> ees ) {
@@ -140,7 +111,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         timer.start();
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
-        if ( gene == null ) return devos;
+        if ( gene == null )
+            return devos;
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
                 .find( gene, EntityUtils.getIds( ees ) );
@@ -148,16 +120,9 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         if ( timer.getTime() > 1000 ) {
             log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
-        return postProcessDiffExResults( gene, -1, results );
+        return postProcessDiffExResults( results );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#getDifferentialExpression(ubic.gemma.model
-     * .genome.Gene, java.util.Collection, double, java.lang.Integer)
-     */
     @Override
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene,
             Collection<BioAssaySet> ees, double threshold, Integer limit ) {
@@ -165,7 +130,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         timer.start();
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
-        if ( gene == null ) return devos;
+        if ( gene == null )
+            return devos;
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results = differentialExpressionResultService
                 .find( gene, EntityUtils.getIds( ees ), threshold, limit );
@@ -173,16 +139,9 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         if ( timer.getTime() > 1000 ) {
             log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
-        return postProcessDiffExResults( gene, threshold, results );
+        return postProcessDiffExResults( results );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#getDifferentialExpression(ubic.gemma.model
-     * .genome.Gene, double, java.util.Collection)
-     */
     @Override
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
             Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
@@ -190,7 +149,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         timer.start();
         Collection<DifferentialExpressionValueObject> result = new ArrayList<>();
 
-        if ( gene == null ) return result;
+        if ( gene == null )
+            return result;
 
         Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> rawDiffEx = differentialExpressionResultService
                 .find( gene, threshold, null );
@@ -206,8 +166,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         for ( ExpressionExperimentValueObject ee : rawDiffEx.keySet() ) {
             for ( DifferentialExpressionValueObject raw : rawDiffEx.get( ee ) ) {
                 if ( eeId2FactorCommand.containsKey( raw.getExpressionExperiment().getId() ) ) {
-                    DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand.get( raw
-                            .getExpressionExperiment().getId() );
+                    DiffExpressionSelectedFactorCommand factorCommandForEE = eeId2FactorCommand
+                            .get( raw.getExpressionExperiment().getId() );
 
                     assert !raw.getExperimentalFactors().isEmpty();
 
@@ -219,7 +179,6 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                     ExperimentalFactorValueObject efvo = raw.getExperimentalFactors().iterator().next();
                     if ( factorCommandForEE.getEfId().equals( efvo.getId() ) ) {
                         result.add( raw );
-                        continue;
                     }
                 }
             }
@@ -231,20 +190,14 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#getDifferentialExpression(ubic.gemma.model
-     * .genome.Gene, double, java.lang.Integer)
-     */
     @Override
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Gene gene, double threshold,
             Integer limit ) {
 
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
-        if ( gene == null ) return devos;
+        if ( gene == null )
+            return devos;
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -256,16 +209,9 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             log.info( "Diff raw ex results: " + timer.getTime() + " ms" );
         }
 
-        return postProcessDiffExResults( gene, threshold, results );
+        return postProcessDiffExResults( results );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService#getDifferentialExpressionMetaAnalysis(double
-     * , ubic.gemma.model.genome.Gene, java.util.Map, java.util.Collection)
-     */
     @Override
     public DifferentialExpressionMetaAnalysisValueObject getDifferentialExpressionMetaAnalysis( double threshold,
             Gene g, Map<Long, Long> eeFactorsMap, Collection<BioAssaySet> activeExperiments ) {
@@ -289,7 +235,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
         /* a gene can have multiple probes that map to it, so store one diff value object for each probe */
         Collection<DifferentialExpressionValueObject> devos = new ArrayList<>();
 
-        Collection<Long> eesThatMetThreshold = new HashSet<Long>();
+        Collection<Long> eesThatMetThreshold = new HashSet<>();
 
         for ( ExpressionExperimentValueObject ee : resultsMap.keySet() ) {
 
@@ -339,10 +285,12 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
              * probes map to the same gene.
              */
             DifferentialExpressionValueObject res = findMinPenalizedProbeResult( filteredResults );
-            if ( res == null ) continue;
+            if ( res == null )
+                continue;
 
             Double p = res.getP();
-            if ( p == null ) continue;
+            if ( p == null )
+                continue;
 
             /*
              * Moderate the pvalues by setting all values to be no smaller than PVALUE_CLIP_THRESHOLD
@@ -356,18 +304,18 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
                 Collection<ExperimentalFactorValueObject> efs = r.getExperimentalFactors();
                 if ( efs == null ) {
                     // This should not happen any more, but just in case.
-                    log.warn( "No experimentalfactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
+                    log.warn( "No experimentalFactor(s) for DifferentialExpressionAnalysisResult: " + r.getId() );
                     continue;
                 }
 
-                Boolean metThreshold = r.getCorrP() != null && ( r.getCorrP() <= threshold ? true : false );
+                Boolean metThreshold = r.getCorrP() != null && ( r.getCorrP() <= threshold );
                 r.setMetThreshold( metThreshold );
 
                 if ( metThreshold ) {
                     eesThatMetThreshold.add( eevo.getId() );
                 }
 
-                Boolean fisherContribution = r.equals( res ) ? true : false;
+                Boolean fisherContribution = r.equals( res );
                 r.setFisherContribution( fisherContribution );
 
             }
@@ -394,9 +342,8 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
     }
 
     /**
-     * When n probes map to the same gene, penalize by multiplying each pval by n and then take the 'best' value.
-     * 
-     * @param results
+     * When n probes map to the sa
+     *
      * @return the result with the min p value.
      */
     private DifferentialExpressionValueObject findMinPenalizedProbeResult(
@@ -416,12 +363,14 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
             /*
              * FIXME use the contrasts.
              */
-            r.getContrasts();
+            //r.getContrasts();
 
-            if ( r.getP() == null ) continue;
+            if ( r.getP() == null )
+                continue;
             /* penalize pvals */
             double pval = r.getP() * numProbesForGene;
-            if ( pval > MAX_PVAL ) pval = MAX_PVAL;
+            if ( pval > MAX_PVAL )
+                pval = MAX_PVAL;
 
             /* find the best pval */
             if ( i == 0 || pval <= min ) {
@@ -437,13 +386,7 @@ public class GeneDifferentialExpressionServiceImpl implements GeneDifferentialEx
 
     }
 
-    /**
-     * @param gene
-     * @param threshold
-     * @param devos
-     * @param results
-     */
-    private Collection<DifferentialExpressionValueObject> postProcessDiffExResults( Gene gene, double threshold,
+    private Collection<DifferentialExpressionValueObject> postProcessDiffExResults(
             Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> results ) {
         StopWatch timer = new StopWatch();
         timer.start();

@@ -18,19 +18,19 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
@@ -40,15 +40,9 @@ public class BlatResultDaoImpl extends BlatResultDaoBase {
 
     @Autowired
     public BlatResultDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BlatResultDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
@@ -73,54 +67,44 @@ public class BlatResultDaoImpl extends BlatResultDaoBase {
         return ( Collection<BlatResult> ) results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BlatResultDao#thaw(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
-     */
     @Override
-    public BlatResult thaw( BlatResult blatResult ) {
-        if ( blatResult.getId() == null ) return blatResult;
-        return ( BlatResult ) this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select b from BlatResultImpl b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
-                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join fetch tc.taxon left join fetch tc.sequence"
-                                + " left join fetch qs.taxon t left join t.parentTaxon "
-                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
-                                + " left join fetch s.externalDatabase" + " where b.id = :id", "id", blatResult.getId() )
-                .iterator().next();
+    public void thaw( BlatResult blatResult ) {
+        Hibernate.initialize( blatResult.getQuerySequence() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon().getParentTaxon() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon().getExternalDatabase() );
+        Hibernate.initialize( blatResult.getQuerySequence().getSequenceDatabaseEntry() );
+        Hibernate.initialize( blatResult.getQuerySequence().getSequenceDatabaseEntry().getExternalDatabase() );
+        Hibernate.initialize( blatResult.getTargetSequence() );
+        Hibernate.initialize( blatResult.getSearchedDatabase() );
+        Hibernate.initialize( blatResult.getTargetChromosome() );
+        Hibernate.initialize( blatResult.getTargetChromosome().getTaxon() );
+        Hibernate.initialize( blatResult.getTargetChromosome().getSequence() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatResultDao#thaw(java.util.Collection)
-     */
     @Override
-    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
-        if ( blatResults.isEmpty() ) return blatResults;
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct b from BlatResultImpl b left join fetch b.querySequence qs left join fetch b.targetSequence ts  "
-                                + " left join fetch b.searchedDatabase left join fetch b.targetChromosome tc left join tc.taxon left join fetch tc.sequence"
-                                + " left join fetch qs.taxon t "
-                                + " left join fetch t.externalDatabase left join fetch qs.sequenceDatabaseEntry s "
-                                + " left join fetch s.externalDatabase" + " where b.id in ( :ids)", "ids",
-                        EntityUtils.getIds( blatResults ) );
+    public BlatResult find( BlatResult entity ) {
+        return load( entity.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatResultDaoBase#handleLoad(java.util.Collection)
-     */
     @Override
-    protected Collection<BlatResult> handleLoad( Collection<Long> ids ) throws Exception {
-        final String queryString = "select distinct blatResult from BlatResultImpl blatResult where blatResult.id in (:ids)";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+    public void thaw( Collection<BlatResult> blatResults ) {
+        for ( BlatResult br : blatResults ) {
+            thaw( br );
+        }
     }
 
+    @Override
+    public BlatResultValueObject loadValueObject( BlatResult entity ) {
+        return new BlatResultValueObject( entity );
+    }
+
+    @Override
+    public Collection<BlatResultValueObject> loadValueObjects( Collection<BlatResult> entities ) {
+        Collection<BlatResultValueObject> vos = new LinkedHashSet<>();
+        for ( BlatResult e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

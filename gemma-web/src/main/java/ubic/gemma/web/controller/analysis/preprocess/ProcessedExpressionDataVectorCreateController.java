@@ -57,7 +57,7 @@ public class ProcessedExpressionDataVectorCreateController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
         experimentReportService.evictFromCache( id );

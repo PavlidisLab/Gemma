@@ -27,7 +27,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
  * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
  * oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are misleading. This method
  * can be used to clear those until the "right" sequences can be identified and filled in. Note that this does not
- * delete the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
+ * remove the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
  * 
  * @author pavlidis
  */
@@ -61,7 +61,7 @@ public class ArrayDesignBioSequenceDetachCli extends ArrayDesignSequenceManipula
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign.getId() );
+        super.getArrayDesignReportService().generateArrayDesignReport( arrayDesign );
         AuditEventType eventType = ArrayDesignSequenceRemoveEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

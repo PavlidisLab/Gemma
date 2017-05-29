@@ -150,7 +150,7 @@ public class BioMaterialController {
     }
 
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
-        return bioMaterialService.loadMultiple( ids );
+        return bioMaterialService.load( ids );
     }
 
     /**
@@ -162,7 +162,7 @@ public class BioMaterialController {
             throw new EntityNotFoundException( "Expression experiment with id=" + id + " not found" );
         }
 
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<>();
         for ( BioAssay assay : bioAssays ) {

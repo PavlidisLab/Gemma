@@ -18,50 +18,38 @@
  */
 package ubic.gemma.model.expression.designElement;
 
-import java.io.Serializable;
-
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
+import java.io.Serializable;
+
 /**
  * @author anton
- * @version $Id$
  */
-public class CompositeSequenceValueObject implements Serializable {
+public class CompositeSequenceValueObject extends IdentifiableValueObject<CompositeSequence> implements Serializable {
 
     private static final long serialVersionUID = 4915680501039784666L;
 
-    private Long id;
-
     private String name;
-
     private String description;
     private ArrayDesignValueObject arrayDesign;
 
-    // for java bean contract
-    public CompositeSequenceValueObject() {
-
+    public CompositeSequenceValueObject(Long id) {
+        super(id);
     }
 
     public CompositeSequenceValueObject( CompositeSequence cs ) {
-        this.id = cs.getId();
-        this.name = cs.getName();
-        this.description = cs.getDescription();
-        this.arrayDesign = new ArrayDesignValueObject();
-        arrayDesign.setId( cs.getArrayDesign().getId() );
+        this(cs.getId(), cs.getName(), cs.getDescription(), new ArrayDesignValueObject(cs.getArrayDesign().getId()));
     }
 
-    public CompositeSequenceValueObject( Describable describable, ArrayDesignValueObject arrayDesign ) {
-        super();
-        this.id = describable.getId();
-        this.name = describable.getName();
-        this.description = describable.getDescription();
-        this.arrayDesign = arrayDesign;
+    public CompositeSequenceValueObject( Describable describable, ArrayDesignValueObject arrayDesignVo ) {
+        this(describable.getId(), describable.getName(), describable.getDescription(), arrayDesignVo);
     }
 
-    public CompositeSequenceValueObject( Long id, String name, String description, ArrayDesignValueObject arrayDesign ) {
-        super();
-        this.id = id;
+    public CompositeSequenceValueObject( Long id, String name, String description,
+            ArrayDesignValueObject arrayDesign ) {
+        super(id);
         this.name = name;
         this.description = description;
         this.arrayDesign = arrayDesign;
@@ -69,32 +57,19 @@ public class CompositeSequenceValueObject implements Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         CompositeSequenceValueObject other = ( CompositeSequenceValueObject ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
         return true;
-    }
-
-    public ArrayDesignValueObject getArrayDesign() {
-        return arrayDesign;
-    }
-
-    // all getters and setters required for java bean contract
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -105,16 +80,24 @@ public class CompositeSequenceValueObject implements Serializable {
         return result;
     }
 
+    public ArrayDesignValueObject getArrayDesign() {
+        return arrayDesign;
+    }
+
     public void setArrayDesign( ArrayDesignValueObject arrayDesign ) {
         this.arrayDesign = arrayDesign;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription( String description ) {
         this.description = description;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    public String getName() {
+        return name;
     }
 
     public void setName( String name ) {

@@ -18,15 +18,15 @@
  */
 package ubic.gemma.persistence.service.genome.taxon;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.*;
 
@@ -34,9 +34,7 @@ import java.util.*;
  * @author keshav
  */
 @Service
-public class TaxonServiceImpl implements TaxonService {
-
-    private static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+public class TaxonServiceImpl extends VoEnabledService<Taxon, TaxonValueObject> implements TaxonService {
 
     private static final Comparator<TaxonValueObject> TAXON_VO_COMPARATOR = new Comparator<TaxonValueObject>() {
         @Override
@@ -51,34 +49,33 @@ public class TaxonServiceImpl implements TaxonService {
         }
     };
 
-    private final ExpressionExperimentService expressionExperimentService;
-    private final ArrayDesignService arrayDesignService;
-    private final TaxonDao taxonDao;
+    private ExpressionExperimentService expressionExperimentService;
+    private ArrayDesignService arrayDesignService;
+    private TaxonDao taxonDao;
 
     /* ********************************
      * Constructors
      * ********************************/
 
     @Autowired
-    public TaxonServiceImpl( ExpressionExperimentService expressionExperimentService,
-            ArrayDesignService arrayDesignService, TaxonDao taxonDao ) {
-        this.expressionExperimentService = expressionExperimentService;
-        this.arrayDesignService = arrayDesignService;
+    public TaxonServiceImpl( TaxonDao taxonDao ) {
+        super( taxonDao );
         this.taxonDao = taxonDao;
+    }
+
+    @Autowired
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    @Autowired
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
     }
 
     /* ********************************
      * Public methods
      * ********************************/
-
-    /**
-     * @see TaxonService#find(Taxon)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Taxon find( final Taxon taxon ) {
-        return this.taxonDao.find( taxon );
-    }
 
     /**
      * @see TaxonService#findByAbbreviation(String)
@@ -114,15 +111,6 @@ public class TaxonServiceImpl implements TaxonService {
     @Transactional(readOnly = true)
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxa ) {
         return this.taxonDao.findChildTaxaByParent( parentTaxa );
-    }
-
-    /**
-     * @see TaxonService#findOrCreate(Taxon)
-     */
-    @Override
-    @Transactional
-    public Taxon findOrCreate( final Taxon taxon ) {
-        return this.taxonDao.findOrCreate( taxon );
     }
 
     /**
@@ -205,25 +193,6 @@ public class TaxonServiceImpl implements TaxonService {
     }
 
     /**
-     * @see TaxonService#load(Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Taxon load( final Long id ) {
-        return this.taxonDao.load( id );
-    }
-
-    /**
-     * @see TaxonService#loadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Taxon> loadAll() {
-        return ( Collection<Taxon> ) this.taxonDao.loadAll();
-    }
-
-    /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     @Override
@@ -238,16 +207,6 @@ public class TaxonServiceImpl implements TaxonService {
         return taxaWithGenes;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<TaxonValueObject> loadAllValueObjects() {
-        Collection<TaxonValueObject> result = new ArrayList<>();
-        for ( Taxon tax : loadAll() ) {
-            result.add( TaxonValueObject.fromEntity( tax ) );
-        }
-        return result;
-    }
-
     /**
      * @see TaxonService#loadTaxonWithEvidence()
      */
@@ -255,42 +214,6 @@ public class TaxonServiceImpl implements TaxonService {
     @Transactional(readOnly = true)
     public Collection<Taxon> loadTaxonWithEvidence() {
         return this.taxonDao.findTaxonUsedInEvidence();
-    }
-
-    /**
-     * @see TaxonService#loadValueObject(Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public TaxonValueObject loadValueObject( Long id ) {
-        return TaxonValueObject.fromEntity( load( id ) );
-    }
-
-    /**
-     * @see TaxonService#remove(Taxon)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public void remove( final Taxon taxon ) {
-        this.taxonDao.remove( taxon );
-    }
-
-    /**
-     * @see TaxonService#thaw(Taxon)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( final Taxon taxon ) {
-        this.taxonDao.thaw( taxon );
-    }
-
-    /**
-     * @see TaxonService#update(Taxon)
-     */
-    @Override
-    @Transactional
-    public void update( final Taxon taxon ) {
-        this.taxonDao.update( taxon );
     }
 
 }

@@ -266,7 +266,9 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( protocol == null )
             return protocol;
         fillInProtocol( protocol );
-        return protocolDao.findOrCreate( protocol );
+        // I changed this to create instead of findOrCreate because in 
+        // practice protocols are not shared; we use them to store information about analyses we run. PP2017
+        return protocolDao.create( protocol );
     }
 
     QuantitationType persistQuantitationType( QuantitationType qType ) {

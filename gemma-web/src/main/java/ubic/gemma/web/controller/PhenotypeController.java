@@ -26,6 +26,7 @@ import org.springframework.web.servlet.ModelAndView;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerServiceImpl;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
@@ -87,7 +88,7 @@ public class PhenotypeController extends BaseController {
                         new HashSet<>( Arrays.asList( phenotypes ) ) );
     }
 
-    public Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, Integer limit, String userName ) {
         return this.phenotypeAssociationManagerService.findEvidenceByFilters( taxonId, limit, userName );
     }
 

@@ -112,7 +112,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         this.checkArrayDesign( ee );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         this.checkCorrectable( ee );
 
@@ -142,7 +142,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Override
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         try {
             removeInvalidatedData( ee );
@@ -197,8 +197,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ) {
-        // // refresh into context.
-        ee = expressionExperimentService.thawLite( ee );
+        // refresh into context.
+        expressionExperimentService.thawLite( ee );
 
         assert ee.getNumberOfDataVectors() != null;
 
@@ -254,7 +254,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         TechnologyType tt = arrayDesignUsed.getTechnologyType();
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
             log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             twoChannelMissingValueService.computeMissingValues( ee );
             wasProcessed = true;
         }

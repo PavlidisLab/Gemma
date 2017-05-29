@@ -18,26 +18,25 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.Collection;
-import java.util.TreeSet;
-
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
-public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
+import java.util.Collection;
+import java.util.TreeSet;
 
-    /**
-     * 
-     */
+public class ExperimentalEvidenceValueObject extends EvidenceValueObject<ExperimentalEvidence> {
+
     private static final long serialVersionUID = 4243531745086284715L;
-    private Collection<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
+    private Collection<CharacteristicValueObject> experimentCharacteristics = new TreeSet<>();
 
-    public ExperimentalEvidenceValueObject() {
-        super();
+    public ExperimentalEvidenceValueObject( Long id ) {
+        super( id );
     }
 
-    /** Entity to Value Object */
+    /**
+     * Entity to Value Object
+     */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
 
@@ -55,14 +54,14 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
                         valueUri = voCha.getValueUri();
                     }
 
-                    CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getValue(),
+                    CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getId(), voCha.getValue(),
                             voCha.getCategory(), valueUri, voCha.getCategoryUri() );
 
-                    chaValueObject.setId( voCha.getId() );
 
                     this.experimentCharacteristics.add( chaValueObject );
                 } else {
-                    this.experimentCharacteristics.add( new CharacteristicValueObject( c.getValue(), c.getCategory() ) );
+                    this.experimentCharacteristics
+                            .add( new CharacteristicValueObject( c.getId(), c.getValue(), c.getCategory() ) );
                 }
             }
         }
@@ -70,9 +69,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( !super.equals( obj ) ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( !super.equals( obj ) )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
 
         if ( this.experimentCharacteristics.size() != other.experimentCharacteristics.size() ) {
@@ -86,10 +88,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return true;
     }
 
-    public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
-        return this.experimentCharacteristics;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -99,6 +97,10 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         }
 
         return result;
+    }
+
+    public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
+        return this.experimentCharacteristics;
     }
 
     public void setExperimentCharacteristics( Collection<CharacteristicValueObject> experimentCharacteristics ) {

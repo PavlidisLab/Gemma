@@ -19,18 +19,6 @@
 
 package ubic.gemma.core.visualization;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -38,7 +26,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
@@ -47,7 +34,6 @@ import ubic.basecode.graphics.MatrixDisplay;
 import ubic.gemma.core.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -58,26 +44,39 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tools for visualizing experimental designs. The idea is to generate a overview of the design that can be put over
- * heatmaps or line graphs.
- * 
+ * heat maps or line graphs.
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalDesignVisualizationService {
 
-    protected Log log = LogFactory.getLog( getClass().getName() );
-
     /**
      * Cache of layouts for experiments, keyed by experiment ID. TODO: use ehcache so we can manage this.
      */
-    private Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> cachedLayouts = new ConcurrentHashMap<>();
+    private final Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> cachedLayouts = new ConcurrentHashMap<>();
+    private final Log log = LogFactory.getLog( getClass().getName() );
+    private final ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    public ExperimentalDesignVisualizationServiceImpl( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public void clearCaches() {
@@ -89,38 +88,33 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         this.clearCachedLayouts( eeId );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.visualization.ExperimentalDesignVisualizationService#sortVectorDataByDesign(java.util.Collection)
-     */
     @Override
     public Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
-            Collection<DoubleVectorValueObject> dedvs ) {
+            Collection<DoubleVectorValueObject> dedVs ) {
 
         // cachedLayouts.clear(); // uncomment FOR DEBUGGING.
 
-        if ( dedvs == null ) {
+        if ( dedVs == null ) {
             return new HashMap<>( 0 );
         }
 
         Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<>(
-                dedvs.size() );
+                dedVs.size() );
 
         StopWatch timer = new StopWatch();
         timer.start();
 
         /*
-         * This is shared across experiments that might show up in the dedvs; this should be okay...saves computation.
+         * This is shared across experiments that might show up in the dedVs; this should be okay...saves computation.
          * This is the only slow part.
          */
-        prepare( dedvs );
+        prepare( dedVs );
 
         /*
          * This loop is not a performance issue.
          */
         Map<DoubleVectorValueObject, List<BioAssayValueObject>> newOrderingsForBioAssayDimensions = new HashMap<>();
-        for ( DoubleVectorValueObject vec : dedvs ) {
+        for ( DoubleVectorValueObject vec : dedVs ) {
 
             if ( vec.isReorganized() ) {
                 continue;
@@ -175,15 +169,15 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             Map<BioAssayValueObject, Integer> ordering = getOrdering( newOrdering );
 
-            Long eeId = null;
+            Long eeId;
             eeId = vec.getExpressionExperiment().getId(); // might be subset id.
 
             if ( !returnedLayouts.containsKey( eeId ) ) {
                 if ( vec.isSliced() ) {
                     LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> trimmedLayout = new LinkedHashMap<>();
 
-                    for ( BioAssayValueObject bavo : newOrdering ) {
-                        trimmedLayout.put( bavo, layout.get( bavo ) );
+                    for ( BioAssayValueObject baVo : newOrdering ) {
+                        trimmedLayout.put( baVo, layout.get( baVo ) );
                     }
 
                     returnedLayouts.put( eeId, trimmedLayout );
@@ -228,10 +222,12 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
         }
 
-        for ( DoubleVectorValueObject vec : dedvs ) {
-            if ( vec.getBioAssayDimension().isReordered() ) continue;
+        for ( DoubleVectorValueObject vec : dedVs ) {
+            if ( vec.getBioAssayDimension().isReordered() )
+                continue;
             List<BioAssayValueObject> newOrdering = newOrderingsForBioAssayDimensions.get( vec );
-            if ( newOrdering == null ) continue; // data was empty, etc.
+            if ( newOrdering == null )
+                continue; // data was empty, etc.
             vec.getBioAssayDimension().reorder( newOrdering );
         }
 
@@ -243,17 +239,20 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     }
 
+    /* ********************************
+     * Protected methods
+     * ********************************/
     /**
      * Test method for now, shows how this can be used.
-     * 
-     * @param e
      */
+    @SuppressWarnings("unused") // Test method for now, shows how this can be used.
     protected void plotExperimentalDesign( ExpressionExperiment e ) {
-        LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout = getExperimentalDesignLayout( e );
+        LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> layout = getExperimentalDesignLayout(
+                e );
 
-        List<String> efStrings = new ArrayList<String>();
-        List<String> baStrings = new ArrayList<String>();
-        List<double[]> rows = new ArrayList<double[]>();
+        List<String> efStrings = new ArrayList<>();
+        List<String> baStrings = new ArrayList<>();
+        List<double[]> rows = new ArrayList<>();
         boolean first = true;
         int i = 0;
         for ( BioAssayValueObject ba : layout.keySet() ) {
@@ -290,10 +289,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         }
     }
 
-    /**
-     * @param vec
-     * @return
-     */
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private boolean allNaN( DoubleVectorValueObject vec ) {
         boolean allNaN = true;
         for ( double d : vec.getData() ) {
@@ -310,30 +309,26 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     }
 
     /**
-     * See bug 3775. For experiments which have more than one bioassaydimension, we typically have to "extend" the
-     * layout to include more bioassays. Because the ordering is defined by the factorvalues associated with the
+     * See bug 3775. For experiments which have more than one bioassay dimension, we typically have to "extend" the
+     * layout to include more bioassays. Because the ordering is defined by the factor values associated with the
      * underlying biomaterials, this is going to be okay.
-     * 
-     * @param vec
-     * @param eeId
-     * @return
      */
     private LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> extendLayout(
             DoubleVectorValueObject vec, Long eeId ) {
         BioAssayDimensionValueObject bioAssayDimension = getBioAssayDimensionForVector( vec );
 
         ExpressionExperimentValueObject ee = vec.getExpressionExperiment();
-        ExpressionExperiment actualee = getExperimentForVector( vec, ee );
+        ExpressionExperiment actualEe = getExperimentForVector( vec, ee );
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> extension = getExperimentalDesignLayout(
-                actualee, expressionExperimentService.getBioAssayDimensions( actualee ) );
+                actualEe, expressionExperimentService.getBioAssayDimensions( actualEe ) );
 
-        for ( BioAssayValueObject vbavo : bioAssayDimension.getBioAssays() ) {
-            assert extension.containsKey( vbavo );
+        for ( BioAssayValueObject vbaVo : bioAssayDimension.getBioAssays() ) {
+            assert extension.containsKey( vbaVo );
         }
 
-        for ( BioAssayValueObject vbavo : vec.getBioAssays() ) {
-            assert extension.containsKey( vbavo );
+        for ( BioAssayValueObject vbaVo : vec.getBioAssays() ) {
+            assert extension.containsKey( vbaVo );
         }
 
         cachedLayouts.get( eeId ).putAll( extension );
@@ -341,10 +336,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return cachedLayouts.get( eeId );
     }
 
-    /**
-     * @param vec
-     * @return
-     */
     private BioAssayDimensionValueObject getBioAssayDimensionForVector( DoubleVectorValueObject vec ) {
         BioAssayDimensionValueObject bioAssayDimension = vec.getBioAssayDimension();
 
@@ -360,13 +351,6 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         return bioAssayDimension;
     }
 
-    /*
-     * (non-Javadoc) Only used in tests
-     * 
-     * @see
-     * ubic.gemma.core.visualization.ExperimentalDesignVisualizationService#getExperimentalDesignLayout(ubic.gemma.model.
-     * expression.experiment.ExpressionExperiment)
-     */
     private LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
             ExpressionExperiment e ) {
 
@@ -381,26 +365,25 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
          * might not be if curation is incomplete.
          */
         // if ( bds.size() > 1 ) {
-        // log.debug( "More than one bioassaydimension for visualization, only using the first one" );
+        // log.debug( "More than one bioassay dimension for visualization, only using the first one" );
         // }
 
         // BioAssayDimensionValueObject bd = new BioAssayDimensionValueObject( bds.iterator().next() );
 
         // needed?
-        ExpressionExperiment tee = this.expressionExperimentService.thawLite( e );
+        this.expressionExperimentService.thawLite( e );
 
         LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> result = this
-                .getExperimentalDesignLayout( tee, bds );
+                .getExperimentalDesignLayout( e, bds );
 
-        cachedLayouts.put( tee.getId(), result );
+        cachedLayouts.put( e.getId(), result );
 
         return result;
     }
 
     /**
-     * @param experiment
-     * @param bd a BioAssayDimension that represents the BioAssayDimensionValueObject. This is only needed to avoid
-     *        making ExpressionMatrix use value objects, otherwise we could use the BioAssayDimensionValueObject
+     * @param bds a BioAssayDimension that represents the BioAssayDimensionValueObject. This is only needed to avoid
+     *            making ExpressionMatrix use value objects, otherwise we could use the BioAssayDimensionValueObject
      * @return A "Layout": a map of bioassays to map of factors to doubles that represent the position in the layout.
      */
     private LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
@@ -427,9 +410,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                 Collection<BioAssay> bas = mat.getBioAssaysForColumn( j );
 
                 for ( BioAssay ba : bas ) {
-                    BioAssayValueObject bavo = new BioAssayValueObject( ba );
-                    result.put( bavo, new LinkedHashMap<ExperimentalFactor, Double>() );
-                    result.get( bavo ).put( dummyFactor, 0.0 );
+                    BioAssayValueObject baVo = new BioAssayValueObject( ba );
+                    result.put( baVo, new LinkedHashMap<ExperimentalFactor, Double>() );
+                    result.get( baVo ).put( dummyFactor, 0.0 );
                 }
 
             }
@@ -460,10 +443,10 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
         assert !fvV.isEmpty();
         assert !bms.isEmpty();
 
-        // if the same biomaterial was used in more than one bioassay (thus more than one bioassaydimension), and they
+        // if the same biomaterial was used in more than one bioassay (thus more than one bioassay dimension), and they
         // are in the same column, this is resolved here; we assign the same layout value for both bioassays, so the
         // ordering is the same for vectors coming from
-        // either bioassaydimension.
+        // either bioassay dimension.
         for ( BioMaterial bm : bms ) {
             int j = mat.getColumnIndex( bm );
 
@@ -472,13 +455,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
             Collection<FactorValue> fvs = bm.getFactorValues();
 
             for ( BioAssay ba : bas ) {
-                BioAssayValueObject bavo = new BioAssayValueObject( ba );
-                result.put( bavo, new LinkedHashMap<ExperimentalFactor, Double>( fvs.size() ) );
+                BioAssayValueObject baVo = new BioAssayValueObject( ba );
+                result.put( baVo, new LinkedHashMap<ExperimentalFactor, Double>( fvs.size() ) );
                 for ( FactorValue fv : fvs ) {
                     assert fv.getId() != null;
                     assert fvV.containsKey( fv.getId() );
                     ExperimentalFactor ef = fv.getExperimentalFactor();
-                    Double value = null;
+                    Double value;
                     if ( fv.getMeasurement() != null ) {
                         try {
                             value = Double.parseDouble( fv.getMeasurement().getValue() );
@@ -488,9 +471,9 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
                     } else {
                         value = fvV.get( fv.getId() );
                     }
-                    assert result.containsKey( bavo );
+                    assert result.containsKey( baVo );
                     assert value != null;
-                    result.get( bavo ).put( ef, value );
+                    result.get( baVo ).put( ef, value );
 
                 }
             }
@@ -500,34 +483,31 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     }
 
     /**
-     * @param vec
-     * @param ee
      * @return the experiment; if the vector is for a subset, we return the source experiment
      */
-    private ExpressionExperiment getExperimentForVector( DoubleVectorValueObject vec, ExpressionExperimentValueObject ee ) {
+    private ExpressionExperiment getExperimentForVector( DoubleVectorValueObject vec,
+            ExpressionExperimentValueObject ee ) {
         /*
          * The following is the really slow part if we don't use a cache.
          */
-        ExpressionExperiment actualee = null;
+        ExpressionExperiment actualEe;
         if ( vec.isSliced() ) {
             /*
              * Then we are looking at a subset, so associate it with the original experiment.
              */
             assert vec.getExpressionExperiment().getSourceExperiment() != null;
-            actualee = expressionExperimentService.thawLiter( expressionExperimentService.load( vec
-                    .getExpressionExperiment().getSourceExperiment() ) );
+            actualEe = expressionExperimentService.load( vec.getExpressionExperiment().getSourceExperiment() );
+            expressionExperimentService.thawLiter( actualEe );
         } else {
-            actualee = expressionExperimentService.thawLiter( expressionExperimentService.load( ee.getId() ) );
+            actualEe = expressionExperimentService.load( ee.getId() );
+            expressionExperimentService.thawLiter( actualEe );
             // plotExperimentalDesign( ee ); // debugging/testing
         }
-        return actualee;
+        return actualEe;
     }
 
     /**
      * Get the order that bioassays need to be in for the 'real' data.
-     * 
-     * @param bioAssaysInOrder
-     * @return
      */
     private Map<BioAssayValueObject, Integer> getOrdering( List<BioAssayValueObject> bioAssaysInOrder ) {
         assert !bioAssaysInOrder.isEmpty();
@@ -543,14 +523,13 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
     /**
      * Gets the bioassay dimensions for the experiments associated with the given vectors. These are cached for later
      * re-use.
-     * 
-     * @param dvvos
      */
-    private void prepare( Collection<DoubleVectorValueObject> dvvos ) {
+    private void prepare( Collection<DoubleVectorValueObject> dvvOs ) {
 
-        if ( dvvos == null ) return;
+        if ( dvvOs == null )
+            return;
 
-        for ( DoubleVectorValueObject vec : dvvos ) {
+        for ( DoubleVectorValueObject vec : dvvOs ) {
             if ( vec == null ) {
                 log.debug( "DoubleVectorValueObject is null" );
                 continue;
@@ -565,20 +544,20 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
             /*
              * Problem: we can't have two layouts for one experiment, which is actually required if there is more than
-             * one bioassaydimension. However, this rarely matters. See bug 3775
+             * one bioassay dimension. However, this rarely matters. See bug 3775
              */
-            if ( cachedLayouts.containsKey( ee.getId() )
-                    || ( ee.getSourceExperiment() != null && cachedLayouts.containsKey( ee.getSourceExperiment() ) ) ) {
+            if ( cachedLayouts.containsKey( ee.getId() ) || ( ee.getSourceExperiment() != null && cachedLayouts
+                    .containsKey( ee.getSourceExperiment() ) ) ) {
                 continue;
             }
 
             BioAssayDimensionValueObject bioAssayDimension = getBioAssayDimensionForVector( vec );
 
-            ExpressionExperiment actualee = getExperimentForVector( vec, ee );
+            ExpressionExperiment actualEe = getExperimentForVector( vec, ee );
 
             assert bioAssayDimension != null;
             LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
-                    actualee, expressionExperimentService.getBioAssayDimensions( actualee ) );
+                    actualEe, expressionExperimentService.getBioAssayDimensions( actualEe ) );
 
             cachedLayouts.put( ee.getId(), experimentalDesignLayout );
 
@@ -588,17 +567,11 @@ public class ExperimentalDesignVisualizationServiceImpl implements ExperimentalD
 
     /**
      * Test method.
-     * 
-     * @param matrix
-     * @param location
-     * @param fileName
-     * @throws IOException
      */
-    private void writeImage( ColorMatrix<String, String> matrix, File outputfile ) throws IOException {
-        log.info( outputfile );
-        MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( matrix );
+    private void writeImage( ColorMatrix<String, String> matrix, File outputFile ) throws IOException {
+        MatrixDisplay<String, String> writer = new MatrixDisplay<>( matrix );
         writer.setCellSize( new Dimension( 18, 18 ) );
-        writer.saveImage( matrix, outputfile.getAbsolutePath(), true, false, true );
+        writer.saveImage( matrix, outputFile.getAbsolutePath(), true, false, true );
     }
 
 }

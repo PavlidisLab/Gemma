@@ -20,10 +20,9 @@ package ubic.gemma.model.genome.gene;
 
 /**
  * @author pavlidis
- * @version $Id$
  * @see ubic.gemma.model.genome.gene.GeneProduct
  */
-public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
+public class GeneProductImpl extends GeneProduct {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -50,11 +49,8 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
             boolean bothHaveGene = this.getGene() != null && that.getGene() != null;
             boolean bothHaveSymbol = this.getName() != null && that.getName() != null;
 
-            if ( bothHaveSymbol && bothHaveGene && this.getName().equals( that.getName() )
-                    && this.getGene().equals( that.getGene() ) ) {
-                return true;
-            }
-            return false; //
+            return bothHaveSymbol && bothHaveGene && this.getName().equals( that.getName() ) && this.getGene()
+                    .equals( that.getGene() );
 
         }
         return true;
@@ -74,17 +70,13 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
         buf.append( this.getClass().getSimpleName() );
 
         if ( this.getId() != null ) {
-            buf.append( " Id=" + this.getId() + " " );
+            buf.append( " Id=" ).append( this.getId() ).append( " " );
         } else {
             buf.append( " " );
         }
 
-        if ( this.getNcbiGi() != null ) {
-
-        }
-
-        buf.append( this.getName() + ( this.getName() == null ? "" : " GI:" + this.getNcbiGi() ) );
-        buf.append( " [Gene = " + this.getGene() + "]" );
+        buf.append( this.getName() ).append( this.getName() == null ? "" : " GI:" + this.getNcbiGi() );
+        buf.append( " [Gene = " ).append( this.getGene() ).append( "]" );
 
         return buf.toString();
 

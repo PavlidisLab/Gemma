@@ -18,33 +18,25 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.expression.experiment.FactorValue
- * @version $Id$
  */
-public interface FactorValueDao extends BaseDao<FactorValue> {
+public interface FactorValueDao extends BaseVoEnabledDao<FactorValue, FactorValueValueObject> {
 
-    /**
-     * 
-     */
-    public FactorValue find( FactorValue factorValue );
+    FactorValue find( FactorValue factorValue );
 
     /**
      * Locate based on string value of the value.
-     * 
-     * @param valuePrefix
-     * @return
      */
-    public Collection<FactorValue> findByValue( String valuePrefix );
+    Collection<FactorValue> findByValue( String valuePrefix );
 
-    /**
-     * 
-     */
-    public FactorValue findOrCreate( FactorValue factorValue );
+    FactorValue findOrCreate( FactorValue factorValue );
 
 }

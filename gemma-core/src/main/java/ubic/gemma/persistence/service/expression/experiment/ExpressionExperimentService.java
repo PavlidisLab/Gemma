@@ -21,9 +21,11 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -36,6 +38,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 import ubic.gemma.persistence.util.monitor.Monitored;
 
 import java.util.Collection;
@@ -46,7 +49,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface ExpressionExperimentService {
+public interface ExpressionExperimentService extends BaseVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -58,7 +61,7 @@ public interface ExpressionExperimentService {
     FactorValue addFactorValue( ExpressionExperiment ee, FactorValue fv );
 
     /**
-     * Used when we want to add data for a quantitation type. Does not delete any existing vectors.
+     * Used when we want to add data for a quantitation type. Does not remove any existing vectors.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExpressionExperiment addVectors( ExpressionExperiment eeToUpdate, ArrayDesign ad,
@@ -73,20 +76,12 @@ public interface ExpressionExperimentService {
     Integer count();
 
     /**
-     * Count how many ExpressionExperiments are in the database
-     */
-    Integer countAll();
-
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
-
-    /**
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
      * will not be deleted automatically, though this behavior could be changed)
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void delete( ExpressionExperiment expressionExperiment );
+    void remove( ExpressionExperiment expressionExperiment );
 
     /**
      * returns ids of search results
@@ -94,9 +89,6 @@ public interface ExpressionExperimentService {
      * @return collection of ids or an empty collection
      */
     Collection<Long> filter( String searchString );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( String accession );
@@ -353,6 +345,9 @@ public interface ExpressionExperimentService {
     Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
             String accession );
 
+//    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+//    Collection<ExpressionExperimentValueObject> loadAllValueObjects();
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
@@ -371,9 +366,6 @@ public interface ExpressionExperimentService {
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
 
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
@@ -402,8 +394,6 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_USER_OWNED_DATA" })
     Collection<ExpressionExperiment> loadUserOwnedExpressionExperiments();
-
-    ExpressionExperimentValueObject loadValueObject( Long eeId );
 
     /**
      * @param maintainOrder If true, order of valueObjects returned will correspond to order of ids passed in.
@@ -434,20 +424,36 @@ public interface ExpressionExperimentService {
             Collection<RawExpressionDataVector> vectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+    void thaw( ExpressionExperiment expressionExperiment );
 
     /**
      * Partially thaw the expression experiment given - do not thaw the raw data.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
+    void thawLite( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
+    void thawLiter( ExpressionExperiment expressionExperiment );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperiment expressionExperiment );
 
     boolean isTroubled( ExpressionExperiment expressionExperiment );
 
+    /**
+     * Will add the vocab characteristic to the expression experiment and persist the changes.
+     *
+     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param ee the experiment to add the characteristics to.
+     */
+    void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
+
+    /**
+     * Will add all the vocab characteristics to the expression experiment and persist the changes.
+     *
+     * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
+     *           be filled in with IC. A category and value must be provided.
+     * @param ee the experiment to add the characteristics to.
+     */
+    void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
 }

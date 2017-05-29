@@ -75,7 +75,7 @@ public interface ExpressionExperimentSubSetService {
      * it doesn't include removal of sample coexpression matrices, PCA, probe2probe coexpression links, or adjusting of
      * experiment set members.
      * 
-     * @param entity the subset to delete
+     * @param entity the subset to remove
      * @see ExpressionExperimentServiceImpl.handleDelete( ExpressionExperiment )
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })

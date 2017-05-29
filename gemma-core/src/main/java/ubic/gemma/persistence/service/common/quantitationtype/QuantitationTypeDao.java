@@ -21,23 +21,15 @@ package ubic.gemma.persistence.service.common.quantitationtype;
 import java.util.List;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
- * @see ubic.gemma.model.common.quantitationtype.QuantitationType
+ * @see QuantitationType
  */
-public interface QuantitationTypeDao extends BaseDao<QuantitationType> {
+public interface QuantitationTypeDao extends BaseVoEnabledDao<QuantitationType, QuantitationTypeValueObject> {
 
-    /**
-     * 
-     */
-    public QuantitationType find( QuantitationType quantitationType );
-
-    /**
-     * 
-     */
-    public QuantitationType findOrCreate( QuantitationType quantitationType );
-
-    public List<QuantitationType> loadByDescription( String description );
+    List<QuantitationType> loadByDescription( String description );
 
 }

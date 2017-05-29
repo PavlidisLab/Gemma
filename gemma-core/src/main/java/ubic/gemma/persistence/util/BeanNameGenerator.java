@@ -40,7 +40,7 @@ public class BeanNameGenerator implements org.springframework.beans.factory.supp
     }
 
     /**
-     * Automagically produce camel-case names for the beans.
+     * Automatically produce camel-case names for the beans.
      * 
      * @see org.springframework.beans.factory.support.BeanNameGenerator#generateBeanName(org.springframework.beans.factory
      *      .config.BeanDefinition, org.springframework.beans.factory.support.BeanDefinitionRegistry).

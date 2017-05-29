@@ -18,50 +18,37 @@
  */
 package ubic.gemma.model.association.coexpression;
 
-import java.io.Serializable;
-
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
+
+import java.io.Serializable;
 
 /**
  * Represents the coexpression node degree for a gene summarized across experiments, at each level of support.
- * 
+ *
  * @author paul
  */
-public abstract class GeneCoexpressionNodeDegree implements Serializable {
+public abstract class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -1456064687251594963L;
-
-    public static final class Factory {
-        public static GeneCoexpressionNodeDegree newInstance( Gene g ) {
-            return new GeneCoexpressionNodeDegreeImpl( g );
-        }
-    }
-
     // our primary key
     private Long geneId = null;
-
     /**
      * Byte format of a int array. the first value is 0; the other values is the number of links at support=index.
      * Unlike the relativeLinkRanks these are not cumulative.
      */
     private byte[] linkCountsNegative;
-
     /**
      * Byte format of a int array. the first value is 0; the other values is the number of links at support=index.
      * Unlike the relativeLinkRanks these are not cumulative.
      */
     private byte[] linkCountsPositive;
-
     /**
      * Normalized rank values for the node degree of this gene at each threshold of support; that is, "at or above" the
      * threshold. The ranking is among all other genes for the taxon; the normalization factor is the node degree of the
      * most hubby gene (computed separately for each support threshold).
      */
     private byte[] relativeLinkRanksNegative;
-
     /**
      * Normalized rank values for the node degree of this gene at each threshold of support; that is, "at or above" the
      * threshold. The ranking is among all other genes for the taxon; the normalization factor is the node degree of the
@@ -71,53 +58,19 @@ public abstract class GeneCoexpressionNodeDegree implements Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         GeneCoexpressionNodeDegree other = ( GeneCoexpressionNodeDegree ) obj;
         if ( geneId == null ) {
-            if ( other.geneId != null ) return false;
-        } else if ( !geneId.equals( other.geneId ) ) return false;
+            if ( other.geneId != null )
+                return false;
+        } else if ( !geneId.equals( other.geneId ) )
+            return false;
         return true;
-    }
-
-    /**
-     * @return
-     */
-    public Long getGeneId() {
-        return geneId;
-    }
-
-    public Long getId() {
-        return geneId;
-    }
-
-    public byte[] getLinkCountsNegative() {
-        return linkCountsNegative;
-    }
-
-    public byte[] getLinkCountsPositive() {
-        return linkCountsPositive;
-    }
-
-    /**
-     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
-     * support.
-     * 
-     * @return
-     */
-    public byte[] getRelativeLinkRanksNegative() {
-        return relativeLinkRanksNegative;
-    }
-
-    /**
-     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
-     * support.
-     * 
-     * @return
-     */
-    public byte[] getRelativeLinkRanksPositive() {
-        return relativeLinkRanksPositive;
     }
 
     @Override
@@ -128,27 +81,62 @@ public abstract class GeneCoexpressionNodeDegree implements Serializable {
         return result;
     }
 
-    /**
-     * @param geneId
-     */
+    public Long getGeneId() {
+        return geneId;
+    }
+
     public void setGeneId( Long geneId ) {
         this.geneId = geneId;
+    }
+
+    public Long getId() {
+        return geneId;
+    }
+
+    public byte[] getLinkCountsNegative() {
+        return linkCountsNegative;
     }
 
     public void setLinkCountsNegative( byte[] linkCountsNegative ) {
         this.linkCountsNegative = linkCountsNegative;
     }
 
+    public byte[] getLinkCountsPositive() {
+        return linkCountsPositive;
+    }
+
     public void setLinkCountsPositive( byte[] linkCountsPositive ) {
         this.linkCountsPositive = linkCountsPositive;
+    }
+
+    /**
+     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
+     * support.
+     */
+    public byte[] getRelativeLinkRanksNegative() {
+        return relativeLinkRanksNegative;
     }
 
     public void setRelativeLinkRanksNegative( byte[] relativeLinkRanksNegative ) {
         this.relativeLinkRanksNegative = relativeLinkRanksNegative;
     }
 
+    /**
+     * Note that these values are for support thresholds, not support levels - so "at or above" the given threshold
+     * support.
+     */
+    public byte[] getRelativeLinkRanksPositive() {
+        return relativeLinkRanksPositive;
+    }
+
     public void setRelativeLinkRanksPositive( byte[] relativeLinkRanksPositive ) {
         this.relativeLinkRanksPositive = relativeLinkRanksPositive;
+    }
+
+    public static final class Factory {
+        public static GeneCoexpressionNodeDegree newInstance( Gene g ) {
+            return new GeneCoexpressionNodeDegreeImpl( g );
+        }
     }
 
 }

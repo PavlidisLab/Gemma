@@ -70,7 +70,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
             ee.setOwner( c );
 
             expressionExperimentService.update( ee );
-            ee = expressionExperimentService.thaw( ee );
+            expressionExperimentService.thaw( ee );
 
             persisted = true;
         } else {
@@ -152,7 +152,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Map<Taxon, Long> counts = expressionExperimentService.getPerTaxonCount();
         long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) );
         assertNotNull( counts );
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
         counts = expressionExperimentService.getPerTaxonCount();
         assertEquals( oldCount - 1, counts.get( taxonService.findByCommonName( "mouse" ) ).longValue() );
     }

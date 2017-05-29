@@ -19,22 +19,12 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import ubic.gemma.model.expression.biomaterial.Compound;
+import ubic.gemma.model.expression.biomaterial.CompoundImpl;
 import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * @see ubic.gemma.model.expression.biomaterial.Compound
  */
 public interface CompoundDao extends BaseDao<Compound> {
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.biomaterial.Compound find(
-            ubic.gemma.model.expression.biomaterial.Compound compound );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.biomaterial.Compound findOrCreate(
-            ubic.gemma.model.expression.biomaterial.Compound compound );
 
 }

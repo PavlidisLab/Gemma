@@ -26,8 +26,8 @@
 			<column name="PREVIOUS_NCBI_ID" not-null="false" unique="false"
 				sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 		</property>
-		<many-to-one name="cytogenicLocation" class="ubic.gemma.model.genome.CytogeneticLocationImpl" cascade="all"
-			lazy="proxy" fetch="select">
+		<many-to-one name="cytogeneticLocation" class="ubic.gemma.model.genome.CytogeneticLocation" cascade="all"
+                     lazy="proxy" fetch="select">
 			<column name="CYTOGENIC_LOCATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
 		<many-to-one name="physicalLocation" class="ubic.gemma.model.genome.PhysicalLocationImpl" cascade="all"

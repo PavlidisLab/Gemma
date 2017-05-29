@@ -151,7 +151,7 @@ public class SampleCoexpressionMatrixServiceImpl implements SampleCoexpressionMa
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService#delete(ubic.gemma.model.expression.experiment.
+     * ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService#remove(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment)
      */
     @Override

@@ -18,34 +18,14 @@
  */
 package ubic.gemma.model.common.measurement;
 
-/**
- *  
- */ 
-public abstract class Unit implements java.io.Serializable {
+import ubic.gemma.model.common.Identifiable;
 
-    /**
-     * 
-     */
+import java.io.Serializable;
+
+public abstract class Unit implements Identifiable, Serializable {
+
     private static final long serialVersionUID = 6348133346610787608L;
-
-    /**
-     * Constructs new instances of {@link Unit}.
-     */
-    public static final class Factory {
-
-        /**
-         * Constructs a new instance of {@link Unit}, taking all possible properties (except the identifier(s))as
-         * arguments.
-         */
-        public static Unit newInstance( String unitNameCV ) {
-            final Unit entity = new UnitImpl();
-            entity.setUnitNameCV( unitNameCV );
-            return entity;
-        }
-    }
-
     private String unitNameCV;
-
     private Long id;
 
     @Override
@@ -63,20 +43,6 @@ public abstract class Unit implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * 
-     */
-    public String getUnitNameCV() {
-        return this.unitNameCV;
-    }
-
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -85,12 +51,36 @@ public abstract class Unit implements java.io.Serializable {
         return hashCode;
     }
 
+    public Long getId() {
+        return this.id;
+    }
+
     public void setId( Long id ) {
         this.id = id;
     }
 
+    public String getUnitNameCV() {
+        return this.unitNameCV;
+    }
+
     public void setUnitNameCV( String unitNameCV ) {
         this.unitNameCV = unitNameCV;
+    }
+
+    /**
+     * Constructs new instances of {@link Unit}.
+     */
+    public static final class Factory {
+
+        /**
+         * Constructs a new instance of {@link Unit}, taking all possible properties (except the identifier(s))as
+         * arguments.
+         */
+        public static Unit newInstance( String unitNameCV ) {
+            final Unit entity = new UnitImpl();
+            entity.setUnitNameCV( unitNameCV );
+            return entity;
+        }
     }
 
 }

@@ -22,7 +22,11 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.VoEnabledDao;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -31,20 +35,16 @@ import ubic.gemma.persistence.service.AbstractDao;
  * @see DatabaseEntry
  */
 @Repository
-public class DatabaseEntryDaoImpl extends AbstractDao<DatabaseEntry> implements DatabaseEntryDao {
+public class DatabaseEntryDaoImpl extends VoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
+        implements DatabaseEntryDao {
 
     /* ********************************
      * Constructors
      * ********************************/
 
-    public DatabaseEntryDaoImpl() {
-        super( DatabaseEntry.class );
-    }
-
     @Autowired
     public DatabaseEntryDaoImpl( SessionFactory sessionFactory ) {
-        this();
-        super.setSessionFactory( sessionFactory );
+        super( DatabaseEntry.class, sessionFactory );
     }
 
     /* ********************************
@@ -52,31 +52,22 @@ public class DatabaseEntryDaoImpl extends AbstractDao<DatabaseEntry> implements 
      * ********************************/
 
     @Override
-    public Integer countAll() {
-        try {
-            final String query = "select count(*) from DatabaseEntry";
-            try {
-                org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
-
-                return ( Integer ) queryObject.iterate().next();
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw super.convertHibernateAccessException( ex );
-            }
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'DatabaseEntryDao.countAll()' --> " + th, th );
-        }
-    }
-
-    @Override
     public DatabaseEntry findByAccession( String accession ) {
-        return ( DatabaseEntry ) this.getSession()
-                .createQuery( "from DatabaseEntry d where d.accession=:accession" )
+        return ( DatabaseEntry ) this.getSession().createQuery( "from DatabaseEntry d where d.accession=:accession" )
                 .setParameter( "accession", accession ).uniqueResult();
     }
 
     @Override
-    public DatabaseEntry find( DatabaseEntry databaseEntry ) {
-        return ( DatabaseEntry ) this.getSession().get( DatabaseEntry.class, databaseEntry.getId() );
+    public DatabaseEntryValueObject loadValueObject( DatabaseEntry entity ) {
+        return new DatabaseEntryValueObject( entity );
     }
 
+    @Override
+    public Collection<DatabaseEntryValueObject> loadValueObjects( Collection<DatabaseEntry> entities ) {
+        Collection<DatabaseEntryValueObject> vos = new LinkedHashSet<>();
+        for ( DatabaseEntry e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

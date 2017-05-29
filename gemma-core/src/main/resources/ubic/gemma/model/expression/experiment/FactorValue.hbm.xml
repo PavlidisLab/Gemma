@@ -17,7 +17,7 @@
       <property name="isBaseline" type="java.lang.Boolean">
          <column name="IS_BASELINE" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
-      <many-to-one name="experimentalFactor" class="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" cascade="none"  lazy="false" fetch="select">
+      <many-to-one name="experimentalFactor" class="ubic.gemma.model.expression.experiment.ExperimentalFactor" cascade="none"  lazy="false" fetch="select">
          <column name="EXPERIMENTAL_FACTOR_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="measurement" class="ubic.gemma.model.common.measurement.MeasurementImpl"  cascade="all" lazy="false" fetch="select">

@@ -19,36 +19,18 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.expression.biomaterial.Compound;
+import ubic.gemma.model.expression.biomaterial.CompoundImpl;
+import ubic.gemma.persistence.service.BaseService;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface CompoundService {
+public interface CompoundService extends BaseService<Compound>{
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.biomaterial.Compound find(
-            ubic.gemma.model.expression.biomaterial.Compound compound );
+    Compound find( Compound compound );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.expression.biomaterial.Compound findOrCreate(
-            ubic.gemma.model.expression.biomaterial.Compound compound );
-
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public void remove( ubic.gemma.model.expression.biomaterial.Compound compound );
-
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public void update( ubic.gemma.model.expression.biomaterial.Compound compound );
+    @Secured({ "GROUP_USER" })
+    Compound findOrCreate( Compound compound );
 
 }

@@ -14,14 +14,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -33,27 +27,21 @@ import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+import java.io.Serializable;
+import java.util.*;
+
 /**
  * @author Paul
- * @version $Id$
  */
-public class BioAssayDimensionValueObject implements Serializable {
+public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAssayDimension> implements Serializable {
 
     private static final long serialVersionUID = -8686807689616396835L;
-
     private BioAssayDimension bioAssayDimension = null;
-
-    private List<BioAssayValueObject> bioAssays = new ArrayList<BioAssayValueObject>();
-
+    private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
     private String description;
-
-    private Long id;
-
-    private boolean isReordered = false;
-
-    private boolean isSubset = false;
-
     private String name;
+    private boolean isReordered = false;
+    private boolean isSubset = false;
 
     /**
      * If this is a subset, or a padded, BioAssayDimensionValueObject, the sourceBioAssayDimension is the original.
@@ -63,39 +51,66 @@ public class BioAssayDimensionValueObject implements Serializable {
     /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
      */
-    public BioAssayDimensionValueObject() {
+    private BioAssayDimensionValueObject( Long id ) {
+        super( id );
     }
 
     /**
      * @param entity to be converted
      */
     public BioAssayDimensionValueObject( BioAssayDimension entity ) {
+        super( entity.getId() );
         this.bioAssayDimension = entity;
         this.name = entity.getName();
-        this.id = entity.getId();
         this.description = entity.getDescription();
-        this.bioAssays = new ArrayList<BioAssayValueObject>();
         for ( BioAssay bv : entity.getBioAssays() ) {
             bioAssays.add( new BioAssayValueObject( bv ) );
         }
+    }
+
+    @Override
+    public String toString() {
+        return "BioAssayDimensionValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + "isReordered=" + isReordered
+                + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" ) + "]";
     }
 
     public List<BioAssayValueObject> getBioAssays() {
         return bioAssays;
     }
 
+    public void clearBioAssays(){
+        this.bioAssays.clear();
+    }
+
+    public void addBioAssays(List<BioAssayValueObject> bvos){
+        this.bioAssays.addAll( bvos );
+    }
+
+    public void setBioAssayDimension( BioAssayDimension bioAssayDimension ) {
+        this.bioAssayDimension = bioAssayDimension;
+    }
+
+    public void setSubset( boolean subset ) {
+        isSubset = subset;
+    }
+
     public String getDescription() {
         return description;
     }
 
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     /**
      * @return the represented BioAssayDimension. If this represents the dimension for an ExpressionExperimentSubSet,
-     *         then the return will be a "fake" entity that has minimal information stored. This is a kludge to avoid
-     *         having to make the DataMatrix code use valueobjects.
+     * then the return will be a "fake" entity that has minimal information stored. This is a kludge to avoid
+     * having to make the DataMatrix code use ValueObjects.
      */
     public BioAssayDimension getEntity() {
         if ( this.bioAssayDimension == null ) {
-            if ( !isSubset ) throw new IllegalStateException( "Entity was not set, not allowed unless isSubset=true" );
+            if ( !isSubset )
+                throw new IllegalStateException( "Entity was not set, not allowed unless isSubset=true" );
 
             /*
              * Begin hack.
@@ -106,36 +121,40 @@ public class BioAssayDimensionValueObject implements Serializable {
         return this.bioAssayDimension;
     }
 
-    public Long getId() {
-        return id;
-    }
-
     public boolean getIsSubset() {
         return isSubset;
+    }
+
+    public void setIsSubset( boolean isSubset ) {
+        this.isSubset = isSubset;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName( String name ) {
+        this.name = name;
+    }
+
     /**
      * Represents the original source. If this is reordered or a subset, the return value will <em>not</em> be.
-     * 
-     * @return
      */
     public BioAssayDimensionValueObject getSourceBioAssayDimension() {
         return sourceBioAssayDimension;
+    }
+
+    public void setSourceBioAssayDimension( BioAssayDimensionValueObject source ) {
+        this.sourceBioAssayDimension = source;
     }
 
     public boolean isReordered() {
         return isReordered;
     }
 
-    /**
-     * @param newOrdering
-     */
     public void reorder( List<BioAssayValueObject> newOrdering ) {
-        if ( isReordered ) throw new IllegalStateException( "You cannot reorder twice" );
+        if ( isReordered )
+            throw new IllegalStateException( "You cannot reorder twice" );
 
         assert bioAssays != null;
 
@@ -145,12 +164,6 @@ public class BioAssayDimensionValueObject implements Serializable {
             if ( this.sourceBioAssayDimension == null && !this.isReordered && !this.isSubset ) {
                 this.sourceBioAssayDimension = this.deepCopy();
             }
-
-            // assert newOrdering.size() == bioAssays.size() : "Expected " + bioAssays.size() + " but new ordering had "
-            // + newOrdering.size() + " elements";
-            // if ( !newOrdering.containsAll( bioAssays ) ) {
-            // System.err.println( "Oh no!" );
-            // }
 
             if ( newOrdering.size() > bioAssays.size() ) {
                 /*
@@ -166,43 +179,11 @@ public class BioAssayDimensionValueObject implements Serializable {
         }
     }
 
-    public void setBioAssays( List<BioAssayValueObject> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsSubset( boolean isSubset ) {
-        this.isSubset = isSubset;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public void setSourceBioAssayDimension( BioAssayDimensionValueObject source ) {
-        this.sourceBioAssayDimension = source;
-    }
-
-    @Override
-    public String toString() {
-        return "BioAssayDimensionValueObject [" + ( id != null ? "id=" + id + ", " : "" ) + "isReordered="
-                + isReordered + ", " + ( bioAssays != null ? "bioAssays=" + StringUtils.join( bioAssays, "," ) : "" )
-                + "]";
-    }
-
     private BioAssayDimensionValueObject deepCopy() {
-        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject();
-        result.bioAssays.addAll( this.getBioAssays() );
+        BioAssayDimensionValueObject result = new BioAssayDimensionValueObject( this.id );
+        result.bioAssays.addAll( this.bioAssays );
         result.bioAssayDimension = this.bioAssayDimension;
         result.sourceBioAssayDimension = this.sourceBioAssayDimension;
-        result.id = this.id;
         result.isSubset = this.isSubset;
         result.isReordered = this.isReordered;
         result.name = this.name;
@@ -210,16 +191,13 @@ public class BioAssayDimensionValueObject implements Serializable {
         return result;
     }
 
-    /**
-     * @return
-     */
     private BioAssayDimension makeDummyBioAssayDimension() {
         assert this.id == null;
 
-        BioAssayDimension fakebd = BioAssayDimension.Factory.newInstance( "Placeholder representing: " + name,
-                description, new ArrayList<BioAssay>() );
+        BioAssayDimension fakeBd = BioAssayDimension.Factory
+                .newInstance( "Placeholder representing: " + name, description, new ArrayList<BioAssay>() );
 
-        Map<Long, ExperimentalFactor> fakeefs = new HashMap<Long, ExperimentalFactor>();
+        Map<Long, ExperimentalFactor> fakeEfs = new HashMap<>();
         for ( BioAssayValueObject bav : this.bioAssays ) {
             BioAssay ba = BioAssay.Factory.newInstance();
             ba.setId( bav.getId() );
@@ -227,28 +205,28 @@ public class BioAssayDimensionValueObject implements Serializable {
             ba.setDescription( "Fake placeholder" );
 
             BioMaterial sampleUsed = BioMaterial.Factory.newInstance();
-            BioMaterialValueObject bmvo = bav.getSample();
-            assert bmvo != null;
-            sampleUsed.setId( bmvo.getId() );
-            sampleUsed.setName( bmvo.getName() );
+            BioMaterialValueObject bmVo = bav.getSample();
+            assert bmVo != null;
+            sampleUsed.setId( bmVo.getId() );
+            sampleUsed.setName( bmVo.getName() );
             sampleUsed.setDescription( "Fake placeholder" );
-            for ( FactorValueValueObject fvvo : bmvo.getFactorValueObjects() ) {
+            for ( FactorValueValueObject fvVo : bmVo.getFactorValueObjects() ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
-                assert fvvo.getId() != null;
-                fv.setId( fvvo.getId() );
-                assert fvvo.getValue() != null;
-                fv.setValue( fvvo.getValue() );
-                Long efid = fvvo.getFactorId();
+                assert fvVo.getId() != null;
+                fv.setId( fvVo.getId() );
+                assert fvVo.getValue() != null;
+                fv.setValue( fvVo.getValue() );
+                Long efId = fvVo.getFactorId();
 
-                ExperimentalFactor ef = null;
-                if ( fakeefs.containsKey( efid ) ) {
-                    ef = fakeefs.get( efid );
+                ExperimentalFactor ef;
+                if ( fakeEfs.containsKey( efId ) ) {
+                    ef = fakeEfs.get( efId );
                 } else {
                     ef = ExperimentalFactor.Factory.newInstance();
-                    ef.setId( efid );
-                    ef.setName( fvvo.getCategory() );
-                    ef.setType( fvvo.isMeasurement() ? FactorType.CONTINUOUS : FactorType.CATEGORICAL );
-                    fakeefs.put( efid, ef );
+                    ef.setId( efId );
+                    ef.setName( fvVo.getCategory() );
+                    ef.setType( fvVo.isMeasurement() ? FactorType.CONTINUOUS : FactorType.CATEGORICAL );
+                    fakeEfs.put( efId, ef );
                 }
                 ef.getFactorValues().add( fv );
                 fv.setExperimentalFactor( ef );
@@ -257,17 +235,17 @@ public class BioAssayDimensionValueObject implements Serializable {
             ba.setSampleUsed( sampleUsed );
 
             ArrayDesign ad = ArrayDesign.Factory.newInstance();
-            ArrayDesignValueObject advo = bav.getArrayDesign();
-            assert advo != null;
-            ad.setId( advo.getId() );
-            ad.setShortName( advo.getShortName() );
+            ArrayDesignValueObject adVo = bav.getArrayDesign();
+            assert adVo != null;
+            ad.setId( adVo.getId() );
+            ad.setShortName( adVo.getShortName() );
             ad.setDescription( "Fake placeholder" );
             ba.setArrayDesignUsed( ad );
 
-            fakebd.getBioAssays().add( ba );
+            fakeBd.getBioAssays().add( ba );
         }
 
-        return fakebd;
+        return fakeBd;
     }
 
 }

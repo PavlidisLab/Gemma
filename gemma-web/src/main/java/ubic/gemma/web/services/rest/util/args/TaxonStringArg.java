@@ -16,17 +16,6 @@ public class TaxonStringArg extends TaxonArg<String> {
     }
 
     /**
-     * Tries to retrieve a TaxonValueObject object based on its properties.
-     *
-     * @see MutableArg#getPersistentObject(Object)
-     */
-    @Override
-    public TaxonValueObject getValueObject( TaxonService service ) {
-        Taxon t = this.getPersistentObject( service );
-        return t == null ? null : service.loadValueObject( t.getId() );
-    }
-
-    /**
      * Tries to retrieve a Taxon object based on its properties. The search order is common name, scientific name, abbreviation.
      *
      * @param service the TaxonService that handles the search.

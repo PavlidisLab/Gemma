@@ -23,7 +23,6 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.core.loader.genome.BlatResultParser;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
@@ -31,6 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.io.File;
 import java.io.IOException;
@@ -72,34 +72,6 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     @Override
     public String getShortDesc() {
         return "Run BLAT on the sequences for a platform; the results are persisted in the DB.";
-    }
-
-    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
-        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
-            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
-            return;
-        }
-
-        if ( isSubsumedOrMerged( design ) ) {
-            log.warn( design + " is subsumed or merged into another design, it will not be run." );
-            // not really an error, but nice to get notification.
-            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
-            return;
-        }
-
-        log.info( "============== Start processing: " + design + " ==================" );
-        try {
-            // thaw is already done.
-            arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
-            successObjects.add( design.getName() );
-            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
-        } catch ( Exception e ) {
-            errorObjects.add( design + ": " + e.getMessage() );
-            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
-            log.error( e, e );
-        }
     }
 
     @SuppressWarnings("static-access")
@@ -198,7 +170,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                 @Override
                 void consume( ArrayDesign x ) {
 
-                    x = arrayDesignService.thaw( x );
+                    arrayDesignService.thaw( x );
 
                     processArrayDesign( skipIfLastRunLaterThan, x );
 
@@ -265,7 +237,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
     }
 
     private void audit( ArrayDesign arrayDesign, String note ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         AuditEventType eventType = ArrayDesignSequenceAnalysisEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
@@ -289,6 +261,34 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
         parser.setTaxon( arrayDesignTaxon );
         parser.parse( f );
         return parser.getResults();
+    }
+
+    private void processArrayDesign( Date skipIfLastRunLaterThan, ArrayDesign design ) {
+        if ( !needToRun( skipIfLastRunLaterThan, design, ArrayDesignSequenceAnalysisEvent.class ) ) {
+            log.warn( design + " was last run more recently than " + skipIfLastRunLaterThan );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it was last run after " + skipIfLastRunLaterThan );
+            return;
+        }
+
+        if ( isSubsumedOrMerged( design ) ) {
+            log.warn( design + " is subsumed or merged into another design, it will not be run." );
+            // not really an error, but nice to get notification.
+            errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
+            return;
+        }
+
+        log.info( "============== Start processing: " + design + " ==================" );
+        try {
+            // thaw is already done.
+            arrayDesignSequenceAlignmentService.processArrayDesign( design, this.sensitive );
+            successObjects.add( design.getName() );
+            audit( design, "Part of a batch job; BLAT score threshold was " + this.blatScoreThreshold );
+        } catch ( Exception e ) {
+            errorObjects.add( design + ": " + e.getMessage() );
+            log.error( "**** Exception while processing " + design + ": " + e.getMessage() + " ****" );
+            log.error( e, e );
+        }
     }
 
 }

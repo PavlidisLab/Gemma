@@ -18,35 +18,38 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.reset;
-import static org.easymock.EasyMock.verify;
+import org.junit.After;
+import org.junit.Before;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.Person;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentServiceImpl;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import junit.framework.TestCase;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentDaoImpl;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentServiceImpl;
-import ubic.gemma.model.common.auditAndSecurity.Person;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
+import static org.easymock.EasyMock.*;
 
 /**
  * @author daq2101
  * @author paul
  */
-public class ExpressionExperimentServiceImplTest extends TestCase {
+public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     private Collection<ExpressionExperiment> c;
     private Collection<ExpressionExperiment> cJustTwelve;
     private ExpressionExperiment ee = null;
     private Person nobody = null;
     private Person admin = null;
-    private ExpressionExperimentServiceImpl svc = null;
 
-    private ExpressionExperimentDaoImpl eeDao;
+    @Autowired
+    private ExpressionExperimentService svc;
+
+    private ExpressionExperimentDao eeDao;
 
     public void testExpressionExperimentFindAll() {
         reset( eeDao );
@@ -66,14 +69,10 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
         verify( eeDao );
     }
 
-    @Override
+    @Before
     protected void setUp() throws Exception {
-        super.setUp();
-
-        svc = new ExpressionExperimentServiceImpl();
 
         eeDao = createMock( ExpressionExperimentDaoImpl.class );
-        svc.setExpressionExperimentDao( eeDao );
 
         nobody = Person.Factory.newInstance();
         admin = Person.Factory.newInstance();
@@ -114,9 +113,8 @@ public class ExpressionExperimentServiceImplTest extends TestCase {
 
     }
 
-    @Override
+    @After
     protected void tearDown() throws Exception {
-        super.tearDown();
         ee = null;
     }
 }

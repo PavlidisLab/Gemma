@@ -18,145 +18,54 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
+
+import java.util.Collection;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.analysis.expression.ExpressionExperimentSetService</code>,
  * provides access to all services and entities referenced by this service.
- * 
+ *
  * @see ExpressionExperimentSetService
  */
-public abstract class ExpressionExperimentSetServiceBase implements ExpressionExperimentSetService {
+public abstract class ExpressionExperimentSetServiceBase
+        extends VoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject>
+        implements ExpressionExperimentSetService {
 
-    @Autowired
-    private ExpressionExperimentSetDao expressionExperimentSetDao;
-
-    /**
-     * @see ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
-     */
-    @Override
-    @Transactional
-    public ExpressionExperimentSet create( final ExpressionExperimentSet expressionExperimentSet ) {
-        return this.handleCreate( expressionExperimentSet );
+    public ExpressionExperimentSetServiceBase( ExpressionExperimentSetDao mainDao ) {
+        super( mainDao );
     }
 
     /**
-     * @see ExpressionExperimentSetService#delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
-     */
-    @Override
-    @Transactional
-    public void delete( final ExpressionExperimentSet expressionExperimentSet ) {
-        if ( expressionExperimentSet == null ) {
-            throw new IllegalArgumentException( "Cannot delete null set" );
-        }
-        Long id = expressionExperimentSet.getId();
-        if ( id == null || id < 0 ) {
-            throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
-        }
-        // if ( getAnalyses( expressionExperimentSet ).size() > 0 ) {
-        // throw new IllegalArgumentException( "Sorry, can't delete this set, it is associated with active analyses." );
-        // }
-
-        this.handleDelete( expressionExperimentSet );
-
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#findByName(java.lang.String)
+     * @see ExpressionExperimentSetService#findByName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSet> findByName( final java.lang.String name ) {
+    public Collection<ExpressionExperimentSet> findByName( final String name ) {
         return this.handleFindByName( name );
-
-    }
-
-
-    /**
-     * @see ExpressionExperimentSetService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ubic.gemma.model.analysis.expression.ExpressionExperimentSet load( final java.lang.Long id ) {
-        return this.handleLoad( id );
-
     }
 
     /**
-     * @see ExpressionExperimentSetService#loadAll()
+     * @see ExpressionExperimentSetService#loadUserSets(User)
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSet> loadAll() {
-        return this.handleLoadAll();
-
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSet> loadUserSets( final ubic.gemma.model.common.auditAndSecurity.User user ) {
+    public Collection<ExpressionExperimentSet> loadUserSets( final User user ) {
         return this.handleLoadUserSets( user );
-
     }
 
     /**
-     * Sets the reference to <code>expressionExperimentSet</code>'s DAO.
+     * Performs the core logic for {@link #findByName(String)}
      */
-
-    public void setExpressionExperimentSetDao( ExpressionExperimentSetDao expressionExperimentSetDao ) {
-        this.expressionExperimentSetDao = expressionExperimentSetDao;
-    }
+    protected abstract Collection<ExpressionExperimentSet> handleFindByName( String name );
 
     /**
-     * Gets the reference to <code>expressionExperimentSet</code>'s DAO.
-     */
-    protected ExpressionExperimentSetDao getExpressionExperimentSetDao() {
-        return this.expressionExperimentSetDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
-     */
-    protected abstract ExpressionExperimentSet handleCreate( ExpressionExperimentSet expressionExperimentSet );
-
-    /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
-     */
-    protected abstract void handleDelete( ExpressionExperimentSet expressionExperimentSet );
-
-    /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
-     */
-    protected abstract Collection<ExpressionExperimentSet> handleFindByName( java.lang.String name );
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ExpressionExperimentSet handleLoad( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract Collection<ExpressionExperimentSet> handleLoadAll();
-
-    /**
-     * Performs the core logic for {@link #loadUserSets(ubic.gemma.model.common.auditAndSecurity.User)}
+     * Performs the core logic for {@link #loadUserSets(User)}
      */
     protected abstract Collection<ExpressionExperimentSet> handleLoadUserSets( User user );
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)}
-     */
-    protected abstract void handleUpdate( ExpressionExperimentSet expressionExperimentSet );
-
 }

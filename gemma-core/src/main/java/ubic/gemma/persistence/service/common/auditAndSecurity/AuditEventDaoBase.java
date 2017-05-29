@@ -18,11 +18,15 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.service.VoEnabledDao;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,30 +38,20 @@ import java.util.Map;
  *
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
  */
-public abstract class AuditEventDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport
+public abstract class AuditEventDaoBase extends VoEnabledDao<AuditEvent, AuditEventValueObject>
         implements AuditEventDao {
 
-    @Override
-    public java.util.Collection<? extends AuditEvent> create(
-            final java.util.Collection<? extends AuditEvent> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditEvent.create - 'entities' can not be null" );
-        }
+    /* ********************************
+     * Constructors
+     * ********************************/
 
-        for ( AuditEvent auditEvent : entities ) {
-            create( auditEvent );
-        }
-        return entities;
+    protected AuditEventDaoBase( SessionFactory sessionFactory ) {
+        super( AuditEvent.class, sessionFactory );
     }
 
-    @Override
-    public AuditEvent create( final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        if ( auditEvent == null ) {
-            throw new IllegalArgumentException( "AuditEvent.create - 'auditEvent' can not be null" );
-        }
-        this.getHibernateTemplate().save( auditEvent );
-        return auditEvent;
-    }
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public List<AuditEvent> getEvents( Auditable auditable ) {
@@ -75,121 +69,31 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return this.handleGetLastEvent( auditables, type );
     }
 
-    /**
-     * @see AuditEventDao#getNewSinceDate(java.util.Date)
-     */
     @Override
-    public java.util.Collection<Auditable> getNewSinceDate( final java.util.Date date ) {
+    public Collection<Auditable> getNewSinceDate( Date date ) {
         try {
             return this.handleGetNewSinceDate( date );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'AuditEventDao.getNewSinceDate(java.util.Date date)' --> "
-                            + th, th );
+                    "Error performing 'AuditEventDao.getNewSinceDate(Date date)' --> " + th, th );
         }
     }
 
-    /**
-     * @see AuditEventDao#getUpdatedSinceDate(java.util.Date)
-     */
     @Override
-    public java.util.Collection<Auditable> getUpdatedSinceDate( final java.util.Date date ) {
+    public Collection<Auditable> getUpdatedSinceDate( final Date date ) {
         try {
             return this.handleGetUpdatedSinceDate( date );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'AuditEventDao.getUpdatedSinceDate(java.util.Date date)' --> "
-                            + th, th );
+                    "Error performing 'AuditEventDao.getUpdatedSinceDate(Date date)' --> " + th, th );
         }
     }
 
-    @Override
-    public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
-    }
+    /* ********************************
+     * Protected abstract methods FIXME protected abstract methods?!
+     * ********************************/
 
-    @Override
-    public AuditEvent load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "AuditEvent.load - 'id' can not be null" );
-        }
-        return this.getHibernateTemplate().get( ubic.gemma.model.common.auditAndSecurity.AuditEventImpl.class, id );
-    }
-
-    @Override
-    public java.util.Collection<? extends AuditEvent> loadAll() {
-        return this.getHibernateTemplate().loadAll( ubic.gemma.model.common.auditAndSecurity.AuditEventImpl.class );
-    }
-
-    /**
-     * @see AuditEventDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "AuditEvent.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.auditAndSecurity.AuditEvent entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see AuditEventDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection<? extends AuditEvent> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditEvent.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    @Override
-    public void remove( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        if ( auditEvent == null ) {
-            throw new IllegalArgumentException( "AuditEvent.remove - 'auditEvent' can not be null" );
-        }
-        this.getHibernateTemplate().delete( auditEvent );
-    }
-
-    /**
-     * @see AuditEventDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)
-     */
-    @Override
-    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        try {
-            this.handleThaw( auditEvent );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'AuditEventDao.thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see AuditEventDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection<? extends AuditEvent> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditEvent.update - 'entities' can not be null" );
-        }
-        for ( AuditEvent auditEvent : entities ) {
-            update( auditEvent );
-        }
-    }
-
-    @Override
-    public void update( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent ) {
-        if ( auditEvent == null ) {
-            throw new IllegalArgumentException( "AuditEvent.update - 'auditEvent' can not be null" );
-        }
-        this.getHibernateTemplate().update( auditEvent );
-    }
-
-    protected abstract List<AuditEvent> handleGetEvents( Auditable auditable );
+    protected abstract List handleGetEvents( Auditable auditable );
 
     protected abstract AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
@@ -197,16 +101,14 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
             Class<? extends AuditEventType> type );
 
     /**
-     * Performs the core logic for {@link #getNewSinceDate(java.util.Date)}
+     * Performs the core logic for {@link #getNewSinceDate(Date)}
      */
-    protected abstract java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date )
-            throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #getUpdatedSinceDate(java.util.Date)}
+     * Performs the core logic for {@link #getUpdatedSinceDate(Date)}
      */
-    protected abstract java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date )
-            throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)}

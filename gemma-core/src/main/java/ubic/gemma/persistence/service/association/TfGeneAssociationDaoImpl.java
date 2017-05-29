@@ -14,142 +14,59 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.Collection;
 
 /**
- * TODO Document Me
- * 
  * @author paul
- * @version $Id$
  */
 @Repository
-public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfGeneAssociationDao {
+public class TfGeneAssociationDaoImpl extends AbstractDao<TfGeneAssociation> implements TfGeneAssociationDao {
 
     @Autowired
     public TfGeneAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( TfGeneAssociation.class, sessionFactory );
     }
 
     @Override
-    public Collection<? extends TfGeneAssociation> create( final Collection<? extends TfGeneAssociation> entities ) {
-
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "TfGeneAssociation - 'entities' can not be null" );
-        }
-
-        for ( java.util.Iterator<? extends TfGeneAssociation> entityIterator = entities.iterator(); entityIterator
-                .hasNext(); ) {
-            create( entityIterator.next() );
-        }
-
-        return entities;
+    public Collection<TfGeneAssociation> findByTargetGene( Gene gene ) {
+        //noinspection unchecked
+        return this.getSession().createQuery(
+                "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.secondGene = :g" )
+                .setParameter( "g", gene ).list();
     }
 
     @Override
-    public TfGeneAssociation create( TfGeneAssociation entity ) {
-        if ( entity == null ) {
-            throw new IllegalArgumentException( "TfGeneAssociation - 'entity' can not be null" );
-        }
-        this.getHibernateTemplate().save( entity );
-        return entity;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see TfGeneAssociationDao#findByTargetGene(ubic.gemma.model.genome.Gene) Example
-     * that exercises this for pazar: /Gemma/searchCoexpression.html?g=546099,570546&s=3&t=2&q&an=All mouse
-     */
-    @Override
-    public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.secondGene = :g",
-                        "g", gene );
-    }
-
-    @Override
-    public Collection<? extends TfGeneAssociation> findByTf( Gene tf ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.firstGene = :g",
-                        "g", tf );
-    }
-
-    @Override
-    public Collection<? extends TfGeneAssociation> load( Collection<Long> ids ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "from PazarAssociationImpl  p inner join fetch p.secondGene inner join fetch p.firstGene where p.id in (:ids)",
-                        "ids", ids );
-    }
-
-    @Override
-    public TfGeneAssociation load( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "TfGeneAssociation.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.association.PazarAssociationImpl.class,
-                id );
-        return ( ubic.gemma.model.association.PazarAssociation ) entity;
-    }
-
-    @Override
-    public Collection<? extends TfGeneAssociation> loadAll() {
-        final java.util.Collection<? extends TfGeneAssociation> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.association.TfGeneAssociation.class );
-
-        return results;
-    }
-
-    @Override
-    public void remove( Collection<? extends TfGeneAssociation> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "TfGeneAssociation.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-
-    }
-
-    @Override
-    public void remove( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Gene2GOAssociation.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.association.TfGeneAssociation entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-
-    }
-
-    @Override
-    public void remove( TfGeneAssociation entity ) {
-        if ( entity == null ) {
-            throw new IllegalArgumentException( " TfGeneAssociation.remove - 'entity' can not be null" );
-        }
-        this.getHibernateTemplate().delete( entity );
-
+    public Collection<TfGeneAssociation> findByTf( Gene tf ) {
+        //noinspection unchecked
+        return this.getSession().createQuery(
+                "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.firstGene = :g" )
+                .setParameter( "g", tf ).list();
     }
 
     @Override
     public void removeAll() {
-        this.getHibernateTemplate().deleteAll( loadAll() );
+        for ( TfGeneAssociation tf : this.loadAll() ) {
+            this.remove( tf );
+        }
     }
 
     @Override
-    public void update( Collection<? extends TfGeneAssociation> entities ) {
+    public Collection<TfGeneAssociation> load( Collection<Long> ids ) {
+        //noinspection unchecked
+        return this.getSession().createQuery(
+                "from PazarAssociationImpl  p inner join fetch p.secondGene inner join fetch p.firstGene where p.id in (:ids)" )
+                .setParameterList( "ids", ids ).list();
+    }
+
+    @Override
+    public void update( Collection<TfGeneAssociation> entities ) {
         throw new UnsupportedOperationException( "Immutable, update not supported" );
     }
 

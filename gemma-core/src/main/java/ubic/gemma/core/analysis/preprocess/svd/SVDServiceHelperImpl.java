@@ -631,12 +631,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     /**
      * FIXME make this a transactional method.
-     * 
-     * @param ee
-     * @param svd
-     * @param v
-     * @param b
-     * @return
+     *
      */
     private PrincipalComponentAnalysis updatePca( ExpressionExperiment ee, ExpressionDataSVD svd,
             DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension b ) {
@@ -644,7 +639,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
                 svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
 
-        ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
+        expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
         return pca;
     }

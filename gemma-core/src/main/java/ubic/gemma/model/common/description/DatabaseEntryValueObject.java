@@ -14,12 +14,14 @@
  */
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.IdentifiableValueObject;
+
 import java.io.Serializable;
 
 /**
  * ValueObject for database entry
  */
-public class DatabaseEntryValueObject implements Serializable {
+public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEntry> implements Serializable {
 
     private static final long serialVersionUID = -527323410580090L;
     private String accession;
@@ -29,14 +31,14 @@ public class DatabaseEntryValueObject implements Serializable {
      * Constructors
      * ********************************/
 
-    public DatabaseEntryValueObject() {
-    }
-
     public DatabaseEntryValueObject( DatabaseEntry de ) {
-        if ( de == null )
-            throw new IllegalArgumentException( "Database entry is null" );
+        super( de.getId() );
         this.accession = de.getAccession();
         this.externalDatabase = ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() );
+    }
+
+    public DatabaseEntryValueObject( long id ) {
+        super( id );
     }
 
     /* ********************************

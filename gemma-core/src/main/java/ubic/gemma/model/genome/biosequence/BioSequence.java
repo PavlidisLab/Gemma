@@ -18,6 +18,9 @@
  */
 package ubic.gemma.model.genome.biosequence;
 
+import ubic.gemma.model.association.BioSequence2GeneProduct;
+import ubic.gemma.model.common.description.DatabaseEntry;
+
 import java.util.Collection;
 
 /**
@@ -31,6 +34,117 @@ import java.util.Collection;
  * </p>
  */
 public abstract class BioSequence extends ubic.gemma.model.common.Describable {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -5548459682099905305L;
+    private Long length;
+    private String sequence;
+    private Boolean isApproximateLength;
+    private Boolean isCircular;
+    private ubic.gemma.model.genome.biosequence.PolymerType polymerType;
+    private ubic.gemma.model.genome.biosequence.SequenceType type;
+    private Double fractionRepeats;
+    private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
+    private ubic.gemma.model.genome.Taxon taxon;
+    private Collection<BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<>();
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public BioSequence() {
+    }
+
+    public Collection<BioSequence2GeneProduct> getBioSequence2GeneProduct() {
+        return this.bioSequence2GeneProduct;
+    }
+
+    public void setBioSequence2GeneProduct( Collection<BioSequence2GeneProduct> bioSequence2GeneProduct ) {
+        this.bioSequence2GeneProduct = bioSequence2GeneProduct;
+    }
+
+    /**
+     * <p>
+     * The fraction of the sequences determined to be made up of repeats (e.g., via repeat masker)
+     * </p>
+     */
+    public Double getFractionRepeats() {
+        return this.fractionRepeats;
+    }
+
+    public void setFractionRepeats( Double fractionRepeats ) {
+        this.fractionRepeats = fractionRepeats;
+    }
+
+    public Boolean getIsApproximateLength() {
+        return this.isApproximateLength;
+    }
+
+    public void setIsApproximateLength( Boolean isApproximateLength ) {
+        this.isApproximateLength = isApproximateLength;
+    }
+
+    public Boolean getIsCircular() {
+        return this.isCircular;
+    }
+
+    public void setIsCircular( Boolean isCircular ) {
+        this.isCircular = isCircular;
+    }
+
+    public Long getLength() {
+        return this.length;
+    }
+
+    public void setLength( Long length ) {
+        this.length = length;
+    }
+
+    public ubic.gemma.model.genome.biosequence.PolymerType getPolymerType() {
+        return this.polymerType;
+    }
+
+    public void setPolymerType( ubic.gemma.model.genome.biosequence.PolymerType polymerType ) {
+        this.polymerType = polymerType;
+    }
+
+    public String getSequence() {
+        return this.sequence;
+    }
+
+    /**
+     * The actual nucleotic sequence as in ATGC
+     */
+    public void setSequence( String sequence ) {
+        this.sequence = sequence;
+    }
+
+    public DatabaseEntry getSequenceDatabaseEntry() {
+        return this.sequenceDatabaseEntry;
+    }
+
+    public void setSequenceDatabaseEntry( DatabaseEntry sequenceDatabaseEntry ) {
+        this.sequenceDatabaseEntry = sequenceDatabaseEntry;
+    }
+
+    public ubic.gemma.model.genome.Taxon getTaxon() {
+        return this.taxon;
+    }
+
+    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
+        this.taxon = taxon;
+    }
+
+    public ubic.gemma.model.genome.biosequence.SequenceType getType() {
+        return this.type;
+    }
+
+    public void setType( ubic.gemma.model.genome.biosequence.SequenceType type ) {
+        this.type = type;
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.genome.biosequence.BioSequence}.
@@ -47,161 +161,12 @@ public abstract class BioSequence extends ubic.gemma.model.common.Describable {
          * Constructs a new instance of {@link ubic.gemma.model.genome.biosequence.BioSequence}, taking all required
          * and/or read-only properties as arguments.
          */
-        public static ubic.gemma.model.genome.biosequence.BioSequence newInstance( ubic.gemma.model.genome.Taxon taxon ) {
+        public static ubic.gemma.model.genome.biosequence.BioSequence newInstance(
+                ubic.gemma.model.genome.Taxon taxon ) {
             final ubic.gemma.model.genome.biosequence.BioSequence entity = new ubic.gemma.model.genome.biosequence.BioSequenceImpl();
             entity.setTaxon( taxon );
             return entity;
         }
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -5548459682099905305L;
-    private Long length;
-
-    private String sequence;
-
-    private Boolean isApproximateLength;
-
-    private Boolean isCircular;
-
-    private ubic.gemma.model.genome.biosequence.PolymerType polymerType;
-
-    private ubic.gemma.model.genome.biosequence.SequenceType type;
-
-    private Double fractionRepeats;
-
-    private ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry;
-
-    private ubic.gemma.model.genome.Taxon taxon;
-
-    private Collection<ubic.gemma.model.association.BioSequence2GeneProduct> bioSequence2GeneProduct = new java.util.HashSet<ubic.gemma.model.association.BioSequence2GeneProduct>();
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public BioSequence() {
-    }
-
-    /**
-     * 
-     */
-    public Collection<ubic.gemma.model.association.BioSequence2GeneProduct> getBioSequence2GeneProduct() {
-        return this.bioSequence2GeneProduct;
-    }
-
-    /**
-     * <p>
-     * The fraction of the sequences determined to be made up of repeats (e.g., via repeatmasker)
-     * </p>
-     */
-    public Double getFractionRepeats() {
-        return this.fractionRepeats;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getIsApproximateLength() {
-        return this.isApproximateLength;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getIsCircular() {
-        return this.isCircular;
-    }
-
-    /**
-     * 
-     */
-    public Long getLength() {
-        return this.length;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.PolymerType getPolymerType() {
-        return this.polymerType;
-    }
-
-    /**
-     * 
-     */
-    public String getSequence() {
-        return this.sequence;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.DatabaseEntry getSequenceDatabaseEntry() {
-        return this.sequenceDatabaseEntry;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon() {
-        return this.taxon;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.SequenceType getType() {
-        return this.type;
-    }
-
-    public void setBioSequence2GeneProduct(
-            Collection<ubic.gemma.model.association.BioSequence2GeneProduct> bioSequence2GeneProduct ) {
-        this.bioSequence2GeneProduct = bioSequence2GeneProduct;
-    }
-
-    public void setFractionRepeats( Double fractionRepeats ) {
-        this.fractionRepeats = fractionRepeats;
-    }
-
-    public void setIsApproximateLength( Boolean isApproximateLength ) {
-        this.isApproximateLength = isApproximateLength;
-    }
-
-    public void setIsCircular( Boolean isCircular ) {
-        this.isCircular = isCircular;
-    }
-
-    public void setLength( Long length ) {
-        this.length = length;
-    }
-
-    public void setPolymerType( ubic.gemma.model.genome.biosequence.PolymerType polymerType ) {
-        this.polymerType = polymerType;
-    }
-
-    /**
-     * The actual nucleotisequence as in ATGC
-     * 
-     * @param sequence
-     */
-    public void setSequence( String sequence ) {
-        this.sequence = sequence;
-    }
-
-    public void setSequenceDatabaseEntry( ubic.gemma.model.common.description.DatabaseEntry sequenceDatabaseEntry ) {
-        this.sequenceDatabaseEntry = sequenceDatabaseEntry;
-    }
-
-    public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
-        this.taxon = taxon;
-    }
-
-    public void setType( ubic.gemma.model.genome.biosequence.SequenceType type ) {
-        this.type = type;
     }
 
 }

@@ -21,9 +21,7 @@ package ubic.gemma.persistence.service.association.phenotype;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
-import ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 
 @Repository
@@ -31,8 +29,7 @@ public class LiteratureEvidenceDaoImpl extends AbstractDao<LiteratureEvidence> i
 
     @Autowired
     public LiteratureEvidenceDaoImpl( SessionFactory sessionFactory ) {
-        super( LiteratureEvidenceImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( LiteratureEvidence.class, sessionFactory );
     }
 
 }

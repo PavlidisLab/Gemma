@@ -72,7 +72,7 @@ alter table ACLOBJECTIDENTITY
 
 alter table ACLOBJECTIDENTITY add unique key acloid (OBJECT_CLASS,OBJECT_ID);
   
--- delete cruft from aclentry? These SecuredChild classes should not have their own ACEs.
+-- remove cruft from aclentry? These SecuredChild classes should not have their own ACEs.
 
 
 -- items which have aces, but shouldn't and they don't have a parent. These are probably for entities that no longer exist, but have to check.
@@ -220,7 +220,7 @@ select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTI
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl"  and o.PARENT_OBJECT_FK is not null;
 
 
--- delete ones where the parent object is okay - don't need aces for these securedchildren.
+-- remove ones where the parent object is okay - don't need aces for these securedchildren.
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.bioAssay.BioAssay"  and o.PARENT_OBJECT_FK is not null;
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"  and o.PARENT_OBJECT_FK is not null;
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" and o.PARENT_OBJECT_FK is not null;

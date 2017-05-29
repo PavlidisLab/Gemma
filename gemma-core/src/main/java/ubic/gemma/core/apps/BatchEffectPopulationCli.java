@@ -94,7 +94,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
                 try {
                     ExpressionExperiment ee = ( ExpressionExperiment ) bas;
-                    ee = this.eeService.thawLite( ee );
+                    this.eeService.thawLite( ee );
                     boolean success = ser.fillBatchInformation( ee, force );
                     if ( success ) {
                         this.successObjects.add( bas.toString() );

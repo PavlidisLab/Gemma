@@ -75,7 +75,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     @Test
     public void testMissingValue() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE2221" );
-        if ( old != null ) eeService.delete( old );
+        if ( old != null ) eeService.remove( old );
         // FIXME: Getthis test passingin release process (mvn release:perform fails) could not get release process to
         // pass with these tests (failed on final release couldn't reproduce)
 
@@ -161,7 +161,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     @Test
     final public void testMissingValueGSE523() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE523" );
-        if ( old != null ) eeService.delete( old );
+        if ( old != null ) eeService.remove( old );
         // FIXME: Getthis test passingin release process (mvn release:perform fails) could not get release process to
         // pass with these tests (failed on final release couldn't reproduce)
 
@@ -193,7 +193,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     public void testMissingValueGSE11017() throws Exception {
 
         ExpressionExperiment old = eeService.findByShortName( "GSE11017" );
-        if ( old != null ) eeService.delete( old );
+        if ( old != null ) eeService.remove( old );
 
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSE11017.soft.gz" ) );
@@ -252,7 +252,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     @Test
     public void testMissingValueGSE56() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE56" );
-        if ( old != null ) eeService.delete( old );
+        if ( old != null ) eeService.remove( old );
         // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
         // to pass with these tests (failed on final release couldn't reproduce)
 
@@ -285,7 +285,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     @Test
     public void testMissingValueGSE5091() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE5091" );
-        if ( old != null ) eeService.delete( old );
+        if ( old != null ) eeService.remove( old );
         // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
         // to pass with these tests (failed on final release couldn't reproduce)
 

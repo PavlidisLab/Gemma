@@ -307,7 +307,7 @@ public class CoexpressionSearchController {
         Long eeSetId = null;
         if ( searchOptions.getEeIds() != null && !searchOptions.getEeIds().isEmpty() ) {
             // security filter.
-            return EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
+            return EntityUtils.getIds( expressionExperimentService.load( searchOptions.getEeIds() ) );
         }
 
         if ( searchOptions.getEeSetId() != null ) {

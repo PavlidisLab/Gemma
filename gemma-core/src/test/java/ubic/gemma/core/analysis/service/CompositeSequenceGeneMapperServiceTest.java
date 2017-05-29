@@ -103,7 +103,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         if ( ad != null ) {
             for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( ad ) ) {
-                eeService.delete( ee );
+                eeService.remove( ee );
             }
 
             arrayDesignService.remove( ad );
@@ -132,7 +132,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
                 true, false, false );
         ad = ads.iterator().next();
 
-        ad = arrayDesignService.thaw( ad );
+        arrayDesignService.thaw( ad );
 
         loadData();
 

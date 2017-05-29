@@ -22,8 +22,6 @@
 //
 package ubic.gemma.persistence.service.genome;
 
-import java.util.Collection;
-
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
@@ -40,13 +38,15 @@ public class PhysicalLocationDaoImpl extends PhysicalLocationDaoBase {
 
     @Autowired
     public PhysicalLocationDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
     @Override
     public void thaw( final PhysicalLocation physicalLocation ) {
-        if ( physicalLocation == null ) return;
-        if ( physicalLocation.getId() == null ) return;
+        if ( physicalLocation == null )
+            return;
+        if ( physicalLocation.getId() == null )
+            return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -63,9 +63,7 @@ public class PhysicalLocationDaoImpl extends PhysicalLocationDaoBase {
     }
 
     @Override
-    public Collection<? extends PhysicalLocation> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate()
-                .findByNamedParam( "from PhysicalLocationImpl where id in (:ids)", "ids", ids );
+    public PhysicalLocation find( PhysicalLocation entity ) {
+        return load( entity.getId() );
     }
-
 }

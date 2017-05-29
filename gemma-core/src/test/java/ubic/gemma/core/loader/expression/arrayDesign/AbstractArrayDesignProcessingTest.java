@@ -86,7 +86,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
             }
         }
 
-        ad = arrayDesignService.thaw( ad );
+        arrayDesignService.thaw( ad );
 
     }
 

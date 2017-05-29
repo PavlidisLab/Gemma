@@ -19,16 +19,16 @@
 package ubic.gemma.model.genome.sequenceAnalysis;
 
 /**
- * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
+ * @see BlatAssociation
  */
-public class BlatAssociationImpl extends ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation {
+public class BlatAssociationImpl extends BlatAssociation {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 779478289218363396L;
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation#toString()
+     * @see BlatAssociation#toString()
      */
     @Override
     public String toString() {
@@ -37,12 +37,13 @@ public class BlatAssociationImpl extends ubic.gemma.model.genome.sequenceAnalysi
         buf.append( this.getClass().getSimpleName() );
 
         if ( this.getId() != null ) {
-            buf.append( " Id=" + this.getId() );
+            buf.append( " Id=" ).append( this.getId() );
         } else {
-            buf.append( " Score=" + this.getScore() + " Specific=" + this.getSpecificity() + " Between " );
+            buf.append( " Score=" ).append( this.getScore() ).append( " Specific=" ).append( this.getSpecificity() )
+                    .append( " Between " );
         }
 
-        buf.append( this.getBioSequence() + " ---> " + this.getGeneProduct() );
+        buf.append( this.getBioSequence() ).append( " ---> " ).append( this.getGeneProduct() );
 
         return buf.toString();
     }

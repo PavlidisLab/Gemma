@@ -20,13 +20,10 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -34,6 +31,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,19 +44,38 @@ import java.util.HashSet;
 @Service
 public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetServiceBase {
 
-    private static Logger log = LoggerFactory.getLogger( ExpressionExperimentSetServiceImpl.class );
-
-    @Autowired
+    private final ExpressionExperimentSetDao expressionExperimentSetDao;
     private SecurityService securityService;
-
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
     private TaxonService taxonService;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
 
     @Autowired
-    private ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper;
+    public ExpressionExperimentSetServiceImpl( ExpressionExperimentSetDao expressionExperimentSetDao ) {
+        super( expressionExperimentSetDao );
+        this.expressionExperimentSetDao = expressionExperimentSetDao;
+    }
+
+    @Autowired
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
+
+    @Autowired
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    @Autowired
+    public void setTaxonService( TaxonService taxonService ) {
+        this.taxonService = taxonService;
+    }
+
+    @Autowired
+    public void setExpressionExperimentValueObjectHelper(
+            ExpressionExperimentSetValueObjectHelper expressionExperimentValueObjectHelper ) {
+        this.expressionExperimentValueObjectHelper = expressionExperimentValueObjectHelper;
+    }
 
     @Override
     @Transactional
@@ -77,7 +95,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         newSet.setDescription( eesvo.getDescription() );
 
         Collection<? extends BioAssaySet> datasetsAnalyzed = expressionExperimentService
-                .loadMultiple( eesvo.getExpressionExperimentIds() );
+                .load( eesvo.getExpressionExperimentIds() );
 
         newSet.getExperiments().addAll( datasetsAnalyzed );
 
@@ -96,8 +114,11 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
 
                 if ( taxon == null ) {
                     taxon = eeTaxon;
-                } else if ( !eeTaxon.equals( taxon ) ) {
-                    throw new UnsupportedOperationException( "EESets with mixed taxa are not supported" );
+                } else {
+                    assert eeTaxon != null;
+                    if ( !eeTaxon.equals( taxon ) ) {
+                        throw new UnsupportedOperationException( "EESets with mixed taxa are not supported" );
+                    }
                 }
             }
 
@@ -129,7 +150,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Transactional
     public void deleteDatabaseEntity( ExpressionExperimentSetValueObject eesvo ) {
         try {
-            delete( load( eesvo.getId() ) );
+            remove( load( eesvo.getId() ) );
         } catch ( Exception e ) {
             throw new RuntimeException( e );
         }
@@ -138,14 +159,14 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
-        return this.getExpressionExperimentSetDao().find( bioAssaySet );
+        return this.expressionExperimentSetDao.find( bioAssaySet );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> findIds( BioAssaySet bioAssaySet ) {
         Collection<Long> ids = new ArrayList<>();
-        Collection<ExpressionExperimentSet> eesets = this.getExpressionExperimentSetDao().find( bioAssaySet );
+        Collection<ExpressionExperimentSet> eesets = this.expressionExperimentSetDao.find( bioAssaySet );
         for ( ExpressionExperimentSet eeset : eesets ) {
             ids.add( eeset.getId() );
         }
@@ -156,13 +177,13 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
-        return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
+        return this.expressionExperimentSetDao.getExperimentsInSet( id );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
-        return this.getExpressionExperimentSetDao().getExperimentValueObjectsInSet( id );
+        return this.expressionExperimentSetDao.getExperimentValueObjectsInSet( id );
     }
 
     /**
@@ -203,74 +224,68 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
-        return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
+        return this.expressionExperimentSetDao.load( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
-        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
+        return this.expressionExperimentSetDao.loadAllExperimentSetsWithTaxon();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSetValueObject> loadAllExperimentSetValueObjects( boolean loadEEIds ) {
-        return this.getExpressionExperimentSetDao().loadAllValueObjects( loadEEIds );
+        return this.expressionExperimentSetDao.loadAllValueObjects( loadEEIds );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
-        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
+        return this.expressionExperimentSetDao.loadAllExperimentSetsWithTaxon();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadMySets() {
-        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
+        return this.expressionExperimentSetDao.loadAllExperimentSetsWithTaxon();
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSetValueObject> loadMySetValueObjects( boolean loadEEIds ) {
-        return this.getExpressionExperimentSetDao().loadAllValueObjects( loadEEIds );
+        return this.expressionExperimentSetDao.loadAllValueObjects( loadEEIds );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSet> loadMySharedSets() {
-        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
+        return this.expressionExperimentSetDao.loadAllExperimentSetsWithTaxon();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperimentSetValueObject loadValueObject( Long id ) {
-        return this.getExpressionExperimentSetDao().loadValueObject( id, false );
+    public ExpressionExperimentSetValueObject loadValueObjectById( Long id ) {
+        return this.expressionExperimentSetDao.loadValueObject( id, false );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds ) {
-        return this.getExpressionExperimentSetDao().loadValueObject( id, loadEEIds );
+    public ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds ) {
+        return this.expressionExperimentSetDao.loadValueObject( id, loadEEIds );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds ) {
-        return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds, false );
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds ) {
+        return this.expressionExperimentSetDao.loadValueObjects( eeSetIds, false );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds,
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds,
             boolean loadEEIds ) {
-        return this.getExpressionExperimentSetDao().loadValueObjects( eeSetIds, loadEEIds );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
-        this.getExpressionExperimentSetDao().thaw( expressionExperimentSet );
+        return this.expressionExperimentSetDao.loadValueObjects( eeSetIds, loadEEIds );
     }
 
     /**
@@ -293,10 +308,11 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
 
         // make sure potentially new experiment members are of the right taxon
         Taxon groupTaxon = expressionExperimentSet.getTaxon();
-        Taxon eeTaxon = null;
+        Taxon eeTaxon;
         for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
             eeTaxon = getTaxonForSet( ee );
 
+            assert eeTaxon != null;
             if ( !eeTaxon.equals( groupTaxon ) ) {
                 throw new IllegalArgumentException(
                         "Failed to add experiments of wrong taxa (" + ee + ") to eeset. " + "EESet taxon is "
@@ -304,8 +320,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             }
         }
 
-        this.handleUpdate( expressionExperimentSet );
-
+        this.expressionExperimentSetDao.update( expressionExperimentSet );
     }
 
     /**
@@ -341,11 +356,11 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
                     break;
                 } else {
                     /*
-                     * Really we should delete it.
+                     * Really we should remove it.
                      */
                 }
 
-                // This means the old set is to be retired. TODO: delete older old sets so we don't have
+                // This means the old set is to be retired. TODO: remove older old sets so we don't have
                 if ( !oldSet.getName().contains( "(old" ) ) {
                     log.info( "Flagging old EEset '" + oldSet.getName() + "'as 'old'" );
                     oldSet.setName( oldSet.getName() + " (old)" );
@@ -380,13 +395,11 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
      *
      * @param groupId set to update
      * @param eeIds   new set member ids
-     * @return error message or null if no errors
      */
     @Override
     @Transactional
-    public String updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds ) {
+    public void updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds ) {
 
-        String msg = null;
         if ( eeIds.isEmpty() ) {
             throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
 
@@ -399,7 +412,7 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         }
 
         // check that new member ids are valid
-        Collection<ExpressionExperiment> newExperiments = expressionExperimentService.loadMultiple( eeIds );
+        Collection<ExpressionExperiment> newExperiments = expressionExperimentService.load( eeIds );
 
         if ( newExperiments.isEmpty() ) {
             throw new IllegalArgumentException(
@@ -430,8 +443,6 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         eeSet.getExperiments().addAll( basColl );
 
         this.update( eeSet );
-
-        return msg;
     }
 
     @Override
@@ -450,47 +461,13 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             eeSet.setName( eeSetVO.getName() );
         this.update( eeSet );
 
-        return this.loadValueObject( eeSet.getId(), loadEEIds );
+        return this.loadValueObjectById( eeSet.getId(), loadEEIds );
 
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#create(ExpressionExperimentSet)
-     */
-    @Override
-    protected ExpressionExperimentSet handleCreate( ExpressionExperimentSet expressionExperimentSet ) {
-        return this.getExpressionExperimentSetDao().create( expressionExperimentSet );
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#delete(ExpressionExperimentSet)
-     */
-    @Override
-    protected void handleDelete( ExpressionExperimentSet expressionExperimentSet ) {
-        this.getExpressionExperimentSetDao().remove( expressionExperimentSet );
     }
 
     @Override
     protected Collection<ExpressionExperimentSet> handleFindByName( String name ) {
-        return this.getExpressionExperimentSetDao().findByName( name );
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#load(java.lang.Long)
-     */
-    @Override
-    protected ExpressionExperimentSet handleLoad( java.lang.Long id ) {
-        return this.getExpressionExperimentSetDao().load( id );
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#loadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() {
-        return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().loadAll();
-
+        return this.expressionExperimentSetDao.findByName( name );
     }
 
     /**
@@ -502,19 +479,6 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
         // handleLoadUserSets(User user)
         throw new java.lang.UnsupportedOperationException(
                 "ExpressionExperimentSetService.handleLoadUserSets(User user) Not implemented!" );
-    }
-
-    /**
-     * @see ExpressionExperimentSetService#update(ExpressionExperimentSet)
-     */
-    @Override
-    protected void handleUpdate( ExpressionExperimentSet expressionExperimentSet ) {
-
-        if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
-            throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
-        }
-
-        this.getExpressionExperimentSetDao().update( expressionExperimentSet );
     }
 
     private String getMasterSetName( Taxon taxon ) {
@@ -534,7 +498,6 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             eeTaxon = eeTaxon.getParentTaxon();
         }
 
-        assert eeTaxon != null;
         return eeTaxon;
     }
 }

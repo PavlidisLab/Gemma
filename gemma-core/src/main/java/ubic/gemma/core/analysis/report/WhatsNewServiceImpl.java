@@ -315,7 +315,7 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
         int count = 0;
         for ( ExpressionExperiment ee : ees ) {
-            ee = expressionExperimentService.thaw( ee );
+            ee = expressionExperimentService.load( ee.getId() );
             count += ee.getBioAssays().size();
         }
         return count;

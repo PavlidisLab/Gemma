@@ -18,45 +18,30 @@
  */
 package ubic.gemma.persistence.service.common.protocol;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface ProtocolService {
+public interface ProtocolService extends BaseService<Protocol> {
 
-    /**
-     * 
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public Protocol find( Protocol protocol );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    Protocol find( Protocol protocol );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public Protocol findOrCreate( Protocol protocol );
+    Protocol findOrCreate( Protocol protocol );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void remove( Protocol protocol );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Protocol protocol );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( Protocol protocol );
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Protocol protocol );
 
-    /**
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<Protocol> loadAll();
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<Protocol> loadAll();
 
 }

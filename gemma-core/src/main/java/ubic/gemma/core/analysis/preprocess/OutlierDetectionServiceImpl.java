@@ -291,7 +291,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         /*
          * Get the experimental design
          */
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         /*
          * Get the data matrix

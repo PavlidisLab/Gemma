@@ -26,24 +26,12 @@ import ubic.gemma.persistence.service.BaseDao;
  */
 public interface ExternalDatabaseDao extends BaseDao<ExternalDatabase> {
 
-    /**
-     * 
-     */
-    public ExternalDatabase find( ExternalDatabase externalDatabase );
+    ExternalDatabase find( ExternalDatabase externalDatabase );
 
-    /**
-     * 
-     */
-    public java.util.Collection<ExternalDatabase> findByLocalDbInstallName( java.lang.String localInstallDBName );
+    java.util.Collection<ExternalDatabase> findByLocalDbInstallName( java.lang.String localInstallDBName );
 
-    /**
-     * 
-     */
-    public ExternalDatabase findByName( java.lang.String name );
+    ExternalDatabase findByName( java.lang.String name );
 
-    /**
-     * 
-     */
-    public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
+    ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
 
 }

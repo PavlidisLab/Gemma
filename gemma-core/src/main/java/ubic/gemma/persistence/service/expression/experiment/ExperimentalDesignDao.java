@@ -26,19 +26,9 @@ import ubic.gemma.persistence.service.BaseDao;
  * @see ubic.gemma.model.expression.experiment.ExperimentalDesign
  */
 public interface ExperimentalDesignDao extends BaseDao<ExperimentalDesign> {
-    /**
-     * 
-     */
-    public ExperimentalDesign find( ExperimentalDesign experimentalDesign );
 
-    /**
-     * 
-     */
-    public ExperimentalDesign findOrCreate( ExperimentalDesign experimentalDesign );
+    ExperimentalDesign findByName( String name );
 
-    /**
-     * 
-     */
-    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
+    ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 
 }

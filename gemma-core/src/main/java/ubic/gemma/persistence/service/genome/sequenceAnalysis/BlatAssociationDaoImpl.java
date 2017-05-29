@@ -18,9 +18,6 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
@@ -30,12 +27,15 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.util.BusinessKey;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
@@ -45,34 +45,18 @@ public class BlatAssociationDaoImpl extends BlatAssociationDaoBase {
 
     @Autowired
     public BlatAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BlatAssociationDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence
-     * )
-     */
     @Override
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
-
         BusinessKey.checkValidKey( bioSequence );
-
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
-
+        Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
-
+        //noinspection unchecked
         return queryObject.list();
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatAssociationDaoBase#find(ubic.gemma.model.genome.Gene)
-     */
     @Override
     public Collection<BlatAssociation> find( Gene gene ) {
 
@@ -85,18 +69,17 @@ public class BlatAssociationDaoImpl extends BlatAssociationDaoBase {
         for ( GeneProduct geneProduct : gene.getProducts() ) {
 
             BusinessKey.checkValidKey( geneProduct );
-
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
+            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+                    .createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
-
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
                 innerQuery.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
             }
-
             if ( StringUtils.isNotBlank( geneProduct.getName() ) ) {
                 innerQuery.add( Restrictions.eq( "name", geneProduct.getName() ) );
             }
 
+            //noinspection unchecked
             result.addAll( queryObject.list() );
         }
 
@@ -106,8 +89,10 @@ public class BlatAssociationDaoImpl extends BlatAssociationDaoBase {
 
     @Override
     protected void handleThaw( final BlatAssociation blatAssociation ) {
-        if ( blatAssociation == null ) return;
-        if ( blatAssociation.getId() == null ) return;
+        if ( blatAssociation == null )
+            return;
+        if ( blatAssociation.getId() == null )
+            return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -120,18 +105,19 @@ public class BlatAssociationDaoImpl extends BlatAssociationDaoBase {
 
     @Override
     protected void handleThaw( final Collection<BlatAssociation> blatAssociations ) {
-        if ( blatAssociations == null ) return;
+        if ( blatAssociations == null )
+            return;
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Object object : blatAssociations ) {
                     BlatAssociation blatAssociation = ( BlatAssociation ) object;
-                    if ( ( blatAssociation ).getId() == null ) continue;
+                    if ( ( blatAssociation ).getId() == null )
+                        continue;
                     thawBlatAssociation( session, blatAssociation );
                     session.evict( blatAssociation );
                 }
-
                 return null;
             }
 
@@ -147,9 +133,12 @@ public class BlatAssociationDaoImpl extends BlatAssociationDaoBase {
     }
 
     @Override
-    public Collection<? extends BlatAssociation> find( Collection<GeneProduct> gps ) {
-        if ( gps.isEmpty() ) return new HashSet<BlatAssociation>();
-        return this.getHibernateTemplate().findByNamedParam(
-                "select b from BlatAssociationImpl b join b.geneProduct gp where gp in (:gps)", "gps", gps );
+    public Collection<BlatAssociation> find( Collection<GeneProduct> gps ) {
+        //noinspection unchecked
+        return gps.isEmpty() ?
+                Collections.emptySet() :
+                this.getSession()
+                        .createQuery( "select b from BlatAssociationImpl b join b.geneProduct gp where gp in (:gps)" )
+                        .setParameter( "gps", gps ).list();
     }
 }

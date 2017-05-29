@@ -18,8 +18,6 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,32 +25,24 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
 @Repository
-public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> implements ExperimentalFactorDao {
-
-    private static final Log log = LogFactory.getLog( ExperimentalFactorDaoImpl.class.getName() );
+public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, ExperimentalFactorValueObject>
+        implements ExperimentalFactorDao {
 
     @Autowired
     public ExperimentalFactorDaoImpl( SessionFactory sessionFactory ) {
-        super( ExperimentalFactorImpl.class );
-        super.setSessionFactory( sessionFactory );
-    }
-
-    @Override
-    public ExperimentalFactor load( Long id ) {
-        return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
-                "select ef from ExperimentalFactorImpl ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
-                .setParameter( "id", id ).uniqueResult();
+        super( ExperimentalFactor.class, sessionFactory );
     }
 
     @Override
@@ -91,6 +81,10 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
     }
 
     @Override
+    public void thaw( ExperimentalFactor entity ) {
+    }
+
+    @Override
     public void remove( ExperimentalFactor experimentalFactor ) {
         Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
         ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
@@ -116,7 +110,7 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
                 }
             }
 
-            // if there are factorvalues to remove
+            // if there are factor values to remove
             if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
                 bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
                 // this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
@@ -124,9 +118,24 @@ public class ExperimentalFactorDaoImpl extends AbstractDao<ExperimentalFactor> i
         }
 
         // ed.getExperimentalFactors().remove( experimentalFactor );
-        // delete the experimental factor this cascades to values.
+        // remove the experimental factor this cascades to values.
 
         // this.getExperimentalDesignDao().update( ed );
         this.getHibernateTemplate().delete( experimentalFactor );
     }
+
+    @Override
+    public Collection<ExperimentalFactorValueObject> loadValueObjects( Collection<ExperimentalFactor> entities ) {
+        Collection<ExperimentalFactorValueObject> vos = new LinkedHashSet<>();
+        for ( ExperimentalFactor fv : entities ) {
+            vos.add( new ExperimentalFactorValueObject( fv ) );
+        }
+        return vos;
+    }
+
+    @Override
+    public ExperimentalFactorValueObject loadValueObject( ExperimentalFactor e ) {
+        return new ExperimentalFactorValueObject( e );
+    }
+
 }

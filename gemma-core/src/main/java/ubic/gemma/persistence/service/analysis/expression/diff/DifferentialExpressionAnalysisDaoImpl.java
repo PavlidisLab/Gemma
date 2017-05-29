@@ -45,7 +45,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
     @Autowired
     public DifferentialExpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
     @Override
@@ -366,17 +366,17 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
                             + " WHERE d.RESULT_SET_FK = :rsid AND d.ID = c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK";
             SQLQuery q = session.createSQLQuery( nativeDeleteContrastsQuery );
             q.setParameter( "rsid", rs.getId() );
-            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table delete.
+            contrastsDone += q.executeUpdate(); // cannot use the limit clause for this multi-table remove.
 
             // will happen by cascade.
-            // // delete HIT_LISTS
+            // // remove HIT_LISTS
             // String nativeDeleteHLQuery = "DELETE h from HIT_LIST_SIZE h"
             // + " where h.RESULT_SET_FK = :rsid  ";
             // q = session.createSQLQuery( nativeDeleteHLQuery );
             // q.setParameter( "rsid", rs.getId() );
             // resultsDone += q.executeUpdate();
             //
-            // // delete P_VALUE_DISTRIBUTION
+            // // remove P_VALUE_DISTRIBUTION
             // String nativeDeletePVDQuery = "DELETE p from ANALYSIS_RESULT_SET ars, PVALUE_DISTRIBUTION p"
             // + " where ars.ID=:rsid AND ars.PVALUE_DISTRIBUTION_FK = p.ID";
             // q = session.createSQLQuery( nativeDeletePVDQuery );

@@ -23,7 +23,6 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 /**
  * @see ubic.gemma.model.genome.Gene
  * @author pavlidis
- * @version $Id$
  */
 public class GeneImpl extends ubic.gemma.model.genome.Gene {
     /**
@@ -63,16 +62,15 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
 
                 if ( bothHaveName ) {
                     return this.getOfficialName().equals( that.getOfficialName() );
-                } else if ( bothHavePhysicalLocation ) {
+                } else
                     /*
                      * The gene must be thawed, which isn't certain, but if the gene is persistent, we _probably_
                      * wouldn't get this far. See bug 1840, which involves code that _shouldn't_ get this far but it
                      * does.
                      */
-                    return this.getPhysicalLocation().equals( that.getPhysicalLocation() );
-                } else {
-                    return false; // can't decide, assume unequal.
-                }
+                    return bothHavePhysicalLocation && this.getPhysicalLocation().equals( that.getPhysicalLocation() );
+                    // can't decide, assume unequal.
+
             }
             return false; //
 
@@ -90,23 +88,20 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append( this.getClass().getSimpleName().replace( "Impl", "" ) );
-        buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
-        buf.append( this.getOfficialSymbol() + " " );
-        buf.append( this.getOfficialName() == null ? "" : this.getOfficialName() + " " );
 
         // This causes too many lazy load problems.
         // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
         // + this.getPhysicalLocation() + "] " : "" );
 
-        buf.append( this.getNcbiGeneId() == null ? "" : " (NCBI " + this.getNcbiGeneId() + ")" );
-        return buf.toString();
+        return this.getClass().getSimpleName().replace( "Impl", "" ) + ( this.getId() == null ?
+                " " :
+                " Id:" + this.getId() + " " ) + this.getOfficialSymbol() + " " + ( this.getOfficialName() == null ?
+                "" :
+                this.getOfficialName() + " " ) + ( this.getNcbiGeneId() == null ?
+                "" :
+                " (NCBI " + this.getNcbiGeneId() + ")" );
     }
 
-    /**
-     * @return
-     */
     private int computeHashCode() {
         int hashCode = 29;
 

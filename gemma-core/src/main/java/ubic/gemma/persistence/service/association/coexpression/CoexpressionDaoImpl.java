@@ -80,7 +80,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
      */
 
     /**
-     * When links drop to support zero, should we delete them? Or leave them under the assumption they might get put
+     * When links drop to support zero, should we remove them? Or leave them under the assumption they might get put
      * back again. Keeping them will help reduce fragmentation. Changing this setting without wiping the database could
      * be problematic...
      */
@@ -515,7 +515,7 @@ public class CoexpressionDaoImpl extends HibernateDaoSupport implements Coexpres
                         + " gene-level links now have support dropped to zero but they were left in place" );
             }
 
-            // delete the ExperimentCoexpressionLinks
+            // remove the ExperimentCoexpressionLinks
             int numDeleted = sess.createQuery(
                     "delete from " + CoexpressionQueryUtils.getExperimentLinkClassName( t ) + " where experiment=:ee" )
                     .setParameter( "ee", experiment ).executeUpdate();

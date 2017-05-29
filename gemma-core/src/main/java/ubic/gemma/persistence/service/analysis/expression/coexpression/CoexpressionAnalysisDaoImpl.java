@@ -48,14 +48,9 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
      * Constructors
      * ********************************/
 
-    public CoexpressionAnalysisDaoImpl() {
-        super( CoexpressionAnalysis.class );
-    }
-
     @Autowired
     public CoexpressionAnalysisDaoImpl( SessionFactory sessionFactory ) {
-        super( CoexpressionAnalysis.class );
-        super.setSessionFactory( sessionFactory );
+        super( CoexpressionAnalysis.class, sessionFactory );
     }
 
     /* ********************************
@@ -85,8 +80,8 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
         String q = "select ccd from CoexpressionAnalysisImpl pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return this.getSessionFactory().getCurrentSession().createQuery( q )
-                .setParameter( "ee", ee ).uniqueResult() != null;
+        return this.getSessionFactory().getCurrentSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
+                != null;
     }
 
     @Override
@@ -96,6 +91,10 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
                 "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }
+
+    /* ********************************
+     * Protected methods
+     * ********************************/
 
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
@@ -137,5 +136,5 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
-
+    
 }

@@ -14,83 +14,41 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.AbstractService;
+
+import java.util.Collection;
 
 /**
  * @author paul
- * @version $Id$
  */
 @Service
-public class TfGeneAssociationServiceImpl implements TfGeneAssociationService {
+public class TfGeneAssociationServiceImpl extends AbstractService<TfGeneAssociation>
+        implements TfGeneAssociationService {
+
+    private final TfGeneAssociationDao tfGeneAssociationDao;
 
     @Autowired
-    private TfGeneAssociationDao tfGeneAssociationDao;
-
-    @Override
-    @Transactional
-    public Collection<? extends TfGeneAssociation> create( Collection<? extends TfGeneAssociation> entities ) {
-        return tfGeneAssociationDao.create( entities );
-    }
-
-    @Override
-    @Transactional
-    public TfGeneAssociation create( TfGeneAssociation entity ) {
-        return tfGeneAssociationDao.create( entity );
+    public TfGeneAssociationServiceImpl( TfGeneAssociationDao tfGeneAssociationDao ) {
+        super(tfGeneAssociationDao);
+        this.tfGeneAssociationDao = tfGeneAssociationDao;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene ) {
+    public Collection<TfGeneAssociation> findByTargetGene( Gene gene ) {
         return tfGeneAssociationDao.findByTargetGene( gene );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<? extends TfGeneAssociation> findByTf( Gene tf ) {
+    public Collection<TfGeneAssociation> findByTf( Gene tf ) {
         return tfGeneAssociationDao.findByTf( tf );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<? extends TfGeneAssociation> load( Collection<Long> ids ) {
-        return tfGeneAssociationDao.load( ids );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public TfGeneAssociation load( Long id ) {
-        return tfGeneAssociationDao.load( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<? extends TfGeneAssociation> loadAll() {
-        return tfGeneAssociationDao.loadAll();
-    }
-
-    @Override
-    @Transactional
-    public void remove( Collection<? extends TfGeneAssociation> entities ) {
-        tfGeneAssociationDao.remove( entities );
-    }
-
-    @Override
-    @Transactional
-    public void remove( Long id ) {
-        tfGeneAssociationDao.remove( id );
-    }
-
-    @Override
-    @Transactional
-    public void remove( TfGeneAssociation entity ) {
-        tfGeneAssociationDao.remove( entity );
     }
 
     @Override

@@ -39,7 +39,7 @@ public interface UserGroupDao extends BaseDao<UserGroup> {
     /**
      * 
      */
-    public UserGroup findByUserGroupName( java.lang.String name );
+    public UserGroup findByName( java.lang.String name );
 
     public Collection<UserGroup> findGroupsForUser( User user );
 

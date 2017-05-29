@@ -179,13 +179,11 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param ee
      * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
-     * @return
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         if ( ee.getAccession() == null ) {
             // in fact, currently it has to be from GEO.
@@ -224,7 +222,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private boolean needToRun( ExpressionExperiment ee ) {
 
-        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee.getId() );
+        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee );
 
         assert eevo != null;
 

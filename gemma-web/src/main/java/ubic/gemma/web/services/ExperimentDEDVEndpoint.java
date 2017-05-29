@@ -110,7 +110,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
 
         // Build the matrix
         ExpressionExperiment ee = expressionExperimentService.load( Long.parseLong( eeid ) );
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService.getProcessedExpressionDataMatrix( ee );
 

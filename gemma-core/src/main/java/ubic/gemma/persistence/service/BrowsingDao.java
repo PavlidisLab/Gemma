@@ -23,15 +23,13 @@ import java.util.List;
 
 /**
  * Support for paging through the data.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public interface BrowsingDao<T> extends BaseDao<T> {
 
-    public List<T> browse( Integer start, Integer limit );
+    List<T> browse( Integer start, Integer limit );
 
-    public List<T> browse( Integer start, Integer limit, String orderField, boolean descending );
+    List<T> browse( Integer start, Integer limit, String orderField, boolean descending );
 
-    public Integer count();
 }

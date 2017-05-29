@@ -152,12 +152,11 @@ public interface OntologyService extends InitializingBean {
     void saveBioMaterialStatement( Characteristic vc, BioMaterial bm );
 
     /**
-     * Will persist the give vocab characteristic to the expression experiment.
+     * Will add the give vocab characteristic to the expression experiment.
+     * Does NOT handle persisting of the experiment afterwards.
      *
-     * @param vc . If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
      */
-    void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
-
-    void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee );
+    void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
 }

@@ -83,7 +83,7 @@ public class JobInfoServiceImpl implements JobInfoService {
      */
     @Override
     @Transactional
-    public void remove( Collection<? extends JobInfo> entities ) {
+    public void remove( Collection<JobInfo> entities ) {
         jobInfoDao.remove( entities );
     }
 

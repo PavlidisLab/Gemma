@@ -234,7 +234,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
 
             loadTaxon();
-            arrayDesign = arrayDesignService.thawLite( arrayDesign );
+            arrayDesignService.thawLite( arrayDesign );
 
             Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<>();
 
@@ -545,7 +545,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         /*
          * If we're not using the database, always run it.

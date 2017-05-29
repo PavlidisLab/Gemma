@@ -39,10 +39,6 @@ public class ExpressionExperimentEditValueObject extends ExpressionExperimentDet
         super( eevo );
     }
 
-    public ExpressionExperimentEditValueObject() {
-        super();
-    }
-
     public Collection<QuantitationTypeValueObject> getQuantitationTypes() {
         return this.quantitationTypes;
     }

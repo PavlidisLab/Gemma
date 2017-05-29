@@ -92,7 +92,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         int result = 0;
         if ( diffAnalysis == null || diffAnalysis.isEmpty() ) {
-            log.debug( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            log.debug( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
             return result;
         }
 
@@ -137,7 +137,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         File oldf = new File( f, histFileName );
         if ( oldf.exists() && oldf.canWrite() ) {
             if ( !oldf.delete() ) {
-                log.warn( "Could not delete: " + oldf );
+                log.warn( "Could not remove: " + oldf );
             }
         }
 
@@ -145,8 +145,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         // oldf = new File( f, histFileName );
         // if ( oldf.exists() && oldf.canWrite() ) {
-        // if ( !oldf.delete() ) {
-        // log.warn( "Could not delete: " + oldf );
+        // if ( !oldf.remove() ) {
+        // log.warn( "Could not remove: " + oldf );
         // }
         // }
         //
@@ -154,8 +154,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         // + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
         // oldf = new File( f, histFileName );
         // if ( oldf.exists() && oldf.canWrite() ) {
-        // if ( !oldf.delete() ) {
-        // log.warn( "Could not delete: " + oldf );
+        // if ( !oldf.remove() ) {
+        // log.warn( "Could not remove: " + oldf );
         // }
         // }
     }
@@ -239,7 +239,11 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         analysis = differentialExpressionAnalysisService.load( analysis.getId() );
 
         // we do this here because now we have IDs for everything.
-        expressionDataFileService.getDiffExpressionAnalysisArchiveFile( expressionExperiment, analysis, resultSets );
+        try {
+            expressionDataFileService.writeDiffExArchiveFile( expressionExperiment, analysis, config );
+        } catch ( IOException e ) {
+            log.error( "Unable to save the data to a file: " + e.getMessage() );
+        }
 
         // final transaction: audit.
         try {
@@ -323,7 +327,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
                 .findByInvestigation( expressionExperiment );
         int numDeleted = 0;
         if ( diffAnalyses == null || diffAnalyses.isEmpty() ) {
-            log.info( "No differential expression analyses to delete for " + expressionExperiment.getShortName() );
+            log.info( "No differential expression analyses to remove for " + expressionExperiment.getShortName() );
             return numDeleted;
         }
 
@@ -475,7 +479,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             for ( ExpressionAnalysisResultSet oldrs : toUpdateResultSets ) {
 
                 assert oldrs.getId() != null;
-                oldrs = this.differentialExpressionResultService.thaw( oldrs );
+                this.differentialExpressionResultService.thaw( oldrs );
 
                 for ( ExpressionAnalysisResultSet temprs : a.getResultSets() ) {
                     /*

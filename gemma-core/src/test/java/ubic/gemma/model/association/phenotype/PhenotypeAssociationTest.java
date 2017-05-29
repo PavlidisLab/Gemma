@@ -116,7 +116,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         Collection<PhenotypeAssociation> toRemove = new HashSet<>();
         for ( Gene g : this.geneService.loadAll() ) {
 
-            g = geneService.thaw( g );
+            geneService.thaw( g );
             toRemove.addAll( g.getPhenotypeAssociations() );
             g.getPhenotypeAssociations().clear();
 
@@ -198,7 +198,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testFindEvidenceByGeneId() {
-        Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
+        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidences = this.phenotypeAssociationManagerService
                 .findEvidenceByGeneId( this.gene.getId() );
         assertNotNull( evidences );
         assertEquals( 1, evidences.size() );
@@ -235,7 +235,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Test
     public void testLoadUpdateDeleteEvidence() {
         // 1- findEvidenceByGeneNCBI
-        Collection<EvidenceValueObject> evidences = this.phenotypeAssociationManagerService
+        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidences = this.phenotypeAssociationManagerService
                 .findEvidenceByGeneNCBI( this.geneNCBI );
         assertNotNull( evidences );
         assertEquals( 1, evidences.size() );
@@ -307,7 +307,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Test
     public void testFindEvidenceByFilters() {
-        Collection<EvidenceValueObject> evidenceVO = this.phenotypeAssociationManagerService
+        Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidenceVO = this.phenotypeAssociationManagerService
                 .findEvidenceByFilters( this.humanTaxon.getId(), 10, null );
         assertTrue( evidenceVO != null && evidenceVO.size() != 0 );
 
@@ -333,7 +333,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     private void createLiteratureEvidence( int geneNCBIid, String uri ) {
-        this.litEvidence = new LiteratureEvidenceValueObject();
+        this.litEvidence = new LiteratureEvidenceValueObject(-1L);
         this.litEvidence.setDescription( "Test Description" );
         this.litEvidence.setEvidenceCode( "TAS" );
         this.litEvidence.setGeneNCBI( geneNCBIid );
@@ -349,7 +349,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<>();
 
-        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( uri );
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L, uri );
 
         phenotypes.add( characteristicValueObject );
 

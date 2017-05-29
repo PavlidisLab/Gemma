@@ -95,7 +95,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     public ExpressionExperiment switchExperimentToArrayDesign( ExpressionExperiment expExp, ArrayDesign arrayDesign ) {
         assert arrayDesign != null;
 
-        // delete any processed data vectors, they might have been accidentally generated.
+        // remove any processed data vectors, they might have been accidentally generated.
         processedExpressionDataVectorService.removeProcessedDataVectors( expExp );
 
         // get relation between sequence and designelements.
@@ -113,7 +113,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
             }
         }
 
-        expExp = expressionExperimentService.thaw( expExp );
+        expressionExperimentService.thaw( expExp );
 
         log.info( elsWithNoSeq.size() + " elements on the new platform have no associated sequence." );
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
@@ -123,7 +123,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
-            oldAd = arrayDesignService.thaw( oldAd );
+            arrayDesignService.thaw( oldAd );
 
             if ( oldAd.getCompositeSequences().size() == 0 && !oldAd.getTechnologyType().equals( TechnologyType.NONE ) ) {
                 /*
@@ -230,10 +230,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         return expExp;
     }
 
-    /**
-     * @param expExp
-     * @param arrayDesign
-     */
+
     public ExpressionExperiment switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
         ArrayDesign arrayDesign = locateMergedDesign( expExp );
         if ( arrayDesign == null )
@@ -241,10 +238,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         return this.switchExperimentToArrayDesign( expExp, arrayDesign );
     }
 
-    /**
-     * @param expExp
-     * @return
-     */
+
     private ArrayDesign locateMergedDesign( ExpressionExperiment expExp ) {
         // get the array designs for this EE
         ArrayDesign arrayDesign = null;
@@ -253,7 +247,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         // find the AD they have been merged into, make sure it is exists and they are all merged into the same AD.
         for ( ArrayDesign design : oldArrayDesigns ) {
             ArrayDesign mergedInto = design.getMergedInto();
-            mergedInto = arrayDesignService.thaw( mergedInto );
+            arrayDesignService.thaw( mergedInto );
 
             if ( mergedInto == null ) {
                 throw new IllegalArgumentException( design + " used by " + expExp

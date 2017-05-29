@@ -142,10 +142,10 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     public void tearDown() {
         try {
             if ( ee != null && ee.getId() != null ) {
-                expressionExperimentService.delete( ee );
+                expressionExperimentService.remove( ee );
             }
             if ( newee != null && newee.getId() != null ) {
-                expressionExperimentService.delete( newee );
+                expressionExperimentService.remove( newee );
             }
         } catch ( Exception e ) {
             log.error( e );
@@ -198,7 +198,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     }
 
     /**
-     * This is a self-contained test. That is, it does not depend on the setup in {@link onSetUpInTransaction}. It tests
+     * This is a self-contained test. That is, it does not depend on the setup in onSetUpInTransaction}. It tests
      * creating an {@link ExpressionDataDoubleMatrix} using real values from the Gene Expression Omnibus (GEO). That is,
      * we have obtained information from GSE994. The probe sets used are 218120_s_at and 121_at, and the samples used
      * are GSM15697 and GSM15744. Specifically, we the Gemma objects that correspond to the GEO objects are:
@@ -325,7 +325,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
             newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
-        newee = expressionExperimentService.thaw( newee );
+        expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
@@ -360,7 +360,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         assertTrue( tba.getIsOutlier() );
 
-        newee = expressionExperimentService.thaw( newee );
+        expressionExperimentService.thaw( newee );
         Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );
@@ -375,7 +375,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         assertTrue( Double.isNaN( data.getColumn( tba )[10] ) );
 
         sampleRemoveService.unmarkAsMissing( ol );
-        newee = expressionExperimentService.thaw( expressionExperimentService.load( newee.getId() ) );
+        expressionExperimentService.thaw( expressionExperimentService.load( newee.getId() ) );
         vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );

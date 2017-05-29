@@ -146,7 +146,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 return buildBadResponse( document, msg );
             }
 
-            Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
+            Collection<Gene> rawGeneCol = geneService.load( geneIDLong );
+            geneService.thaw( rawGeneCol );
             if ( rawGeneCol.isEmpty() ) {
                 String msg = "None of the gene id's can be found.";
                 return buildBadResponse( document, msg );

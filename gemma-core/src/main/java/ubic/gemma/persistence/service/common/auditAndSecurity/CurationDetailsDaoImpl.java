@@ -39,7 +39,6 @@ import java.util.Date;
 public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> implements CurationDetailsDao {
 
     private static final String ILLEGAL_EVENT_TYPE_ERR_MSG = "Can not set trouble with event of given type.";
-    private static final String NULL_ID_ERR_MSG = "Can not load Curation Details with null ID.";
 
     /* ********************************
      * Constructors
@@ -47,30 +46,12 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
 
     @Autowired
     public CurationDetailsDaoImpl( SessionFactory sessionFactory ) {
-        super( CurationDetailsDaoImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( CurationDetails.class, sessionFactory );
     }
 
     /* ********************************
      * Public methods
      * ********************************/
-
-    /**
-     * CurationDetails are not lazy loaded, so this should not be necessary unless you are trying to only
-     * retrieve the CurationDetails object and not the Curatable object it is attached to.
-     *
-     * @param id the id of the CurationDetails to be loaded.
-     * @return CurationDetails with given id, null if such object does not exist.
-     * @throws IllegalArgumentException if the given id is null.
-     */
-    @Override
-    public CurationDetails load( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( NULL_ID_ERR_MSG );
-        }
-        final Object entity = this.getHibernateTemplate().get( CurationDetails.class, id );
-        return ( CurationDetails ) entity;
-    }
 
     /**
      * Creates new CurationDetails object and persists it.
@@ -104,7 +85,7 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
         CurationDetailsEvent eventType = ( CurationDetailsEvent ) auditEvent.getEventType();
 
         eventType.setCurationDetails( curatable, auditEvent );
-        
+
         this.getSessionFactory().getCurrentSession().merge( curatable.getCurationDetails() );
 
     }
@@ -128,4 +109,7 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
                 != CurationDetailsEvent.class; // ...but not the CurationDetailsEvent itself.
     }
 
+    @Override
+    public void thaw( CurationDetails entity ) {
+    }
 }

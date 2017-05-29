@@ -216,7 +216,7 @@ public class GeoBrowserServiceImpl implements GeoBrowserService {
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( gpl );
 
             if ( arrayDesign != null ) {
-                arrayDesign = arrayDesignService.thawLite( arrayDesign );
+                arrayDesignService.thawLite( arrayDesign );
                 String trouble = "";
                 if ( arrayDesign.getCurationDetails().getTroubled() ) {
                     AuditEvent lastTroubleEvent = arrayDesign.getCurationDetails().getLastTroubledEvent();

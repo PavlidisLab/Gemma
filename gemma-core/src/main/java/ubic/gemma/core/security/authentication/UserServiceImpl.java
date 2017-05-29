@@ -135,11 +135,11 @@ public class UserServiceImpl implements UserService {
         if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME )
                 || groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
                 || groupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
-            throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
+            throw new IllegalArgumentException( "Cannot remove that group, it is required for system operation." );
         }
 
         if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) && !SecurityUtil.isUserAdmin() ) {
-            throw new AccessDeniedException( "Only administrator or owner of a group can delete it" );
+            throw new AccessDeniedException( "Only administrator or owner of a group can remove it" );
         }
 
         String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
@@ -169,7 +169,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserGroup findGroupByName( String name ) {
-        return this.userGroupDao.findByUserGroupName( name );
+        return this.userGroupDao.findByName( name );
     }
 
     @Override
@@ -184,7 +184,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean groupExists( String name ) {
-        return this.userGroupDao.findByUserGroupName( name ) != null;
+        return this.userGroupDao.findByName( name ) != null;
     }
 
     @Override
@@ -243,7 +243,7 @@ public class UserServiceImpl implements UserService {
         this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
 
         /*
-         * TODO: if the group is empty, should we delete it? Not if it is GROUP_USER or ADMIN, but perhaps otherwise.
+         * TODO: if the group is empty, should we remove it? Not if it is GROUP_USER or ADMIN, but perhaps otherwise.
          */
     }
 

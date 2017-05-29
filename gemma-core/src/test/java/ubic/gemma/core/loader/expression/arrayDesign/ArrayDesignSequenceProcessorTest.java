@@ -145,7 +145,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                 false, false, true, true );
 
         result = ads.iterator().next();
-        result = arrayDesignService.thaw( result );
+        arrayDesignService.thaw( result );
         // have to specify taxon as this has two taxons in it
         try (InputStream f = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/arrayDesign/identifierTest.txt" );) {
@@ -173,7 +173,7 @@ public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
                 false, false );
         result = ads.iterator().next();
 
-        result = arrayDesignService.thaw( result );
+        arrayDesignService.thaw( result );
         try {
             Collection<BioSequence> res = app.processArrayDesign( result,
                     new String[] { "testblastdb", "testblastdbPartTwo" },

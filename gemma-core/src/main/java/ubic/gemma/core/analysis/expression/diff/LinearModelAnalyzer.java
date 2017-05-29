@@ -86,11 +86,14 @@ import ubic.gemma.model.genome.Gene;
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
  * Interactions can be included if a DifferentialExpressionAnalysisConfig is passed as an argument to 'run'. Currently
  * we only support interactions if there are two factors in the model (no more).
+ * <p>
  * One factor can be constant (the same value for all samples); such a factor will be analyzed by looking at the
  * intercept in the fitted model. This is only appropriate for 'non-reference' designs on ratiometric arrays.
  * This also supports subsetting the data based on a factor. For example, a data set with "tissue" as a factor could be
  * analyzed per-tissue rather than with tissue as a covariate.
- *
+ * <p>
+ * This only handles the analysis, not the persistence or output of the results.
+ * 
  * @author paul
  */
 @Component
@@ -452,7 +455,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subsets.get( subsetFactorValue ),
                         eesubSet, factors );
 
-                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config );
+                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config, subsetFactorValue );
 
                 if ( subsetFactors.isEmpty() ) {
                     log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
@@ -540,7 +543,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             return null;
         }
 
-        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config );
+        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config, subsetFactorValue );
 
         DifferentialExpressionAnalysis analysis = doAnalysis( subset, subsetConfig, subsetMatrix, samplesInSubset,
                 config.getFactorsToInclude(), subsetFactorValue );
@@ -726,6 +729,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 .buildDesignMatrix( factors, samplesUsed, baselineConditions );
 
         setupFactors( designMatrix, baselineConditions );
+        config.setBaseLineFactorValues( baselineConditions );
 
         boolean oneSampleTTest = interceptFactor != null && factors.size() == 1;
         if ( !oneSampleTTest ) {
@@ -963,16 +967,17 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      *
      * @param factors the factors that will be included
+     * @param subsetFactorValue
      * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
      *         involve the given factors.
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, FactorValue subsetFactorValue ) {
 
         DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
         //
         // /*
-        // * Drop factors that are constant in the subset.
+        // * Drop factors that are constant in the subset.  FIXME why aren't we doing this?
         // */
         // Map<ExperimentalFactor, Collection<FactorValue>> ef2FvsUsedInSubset = new HashMap<ExperimentalFactor,
         // Collection<FactorValue>> ();
@@ -1008,6 +1013,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         newConfig.setSubsetFactor( null );
+        newConfig.setSubsetFactorValue( subsetFactorValue );
         newConfig.setFactorsToInclude( factors );
         newConfig.setQvalueThreshold( config.getQvalueThreshold() );
 
@@ -1158,7 +1164,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists,
             FactorValue subsetFactorValue ) {
 
-        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( bioAssaySet );
+        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( bioAssaySet, config );
+
         /*
          * Complete analysis config
          */

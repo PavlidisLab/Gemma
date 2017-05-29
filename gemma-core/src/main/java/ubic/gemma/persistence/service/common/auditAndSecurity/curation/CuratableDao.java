@@ -1,23 +1,19 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity.curation;
 
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 
 /**
  * Created by tesarst on 13/03/17.
+ * DAO wrapper for all curatable DAOs.
  */
-public interface CuratableDao<T> extends BaseDao<T> {
+public interface CuratableDao<C extends Curatable, VO extends AbstractCuratableValueObject<C>>
+        extends BaseVoEnabledDao<C, VO> {
 
-    Collection<T> findByName( String name );
+    Collection<C> findByName( String name );
 
-    T findOrCreate( T entity );
-
-    T findByShortName( String name );
-
-    Integer countAll();
-
-    Collection<T> load( Collection<Long> ids );
-
-    Collection<T> loadAll();
+    C findByShortName( String name );
 }

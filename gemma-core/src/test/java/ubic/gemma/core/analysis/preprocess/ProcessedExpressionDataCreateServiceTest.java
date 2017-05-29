@@ -90,13 +90,13 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         int numQts = ee.getQuantitationTypes().size();
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
             assertTrue( d.getQuantitationType().getIsMaskedPreferred() );
@@ -113,7 +113,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         // repeat, make sure deleted old QTs.
         ee = eeService.load( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         assertEquals( numQts, ee.getQuantitationTypes().size() );
     }
 
@@ -134,13 +134,13 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         Collection<ProcessedExpressionDataVector> preferredVectors = this.processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ee = eeService.load( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         processedExpressionDataVectorService.thaw( preferredVectors );
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( preferredVectors );
@@ -233,7 +233,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
         ExpressionExperiment old = eeService.findByShortName( "GSE404" );
         if ( old != null ) {
-            eeService.delete( old );
+            eeService.remove( old );
         }
 
         try {
@@ -246,7 +246,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
             this.ee = ( ExpressionExperiment ) e.getData();
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         ExperimentalFactor factor = ExperimentalFactor.Factory.newInstance();
@@ -325,7 +325,8 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
             // thawingto avoid lazy error because we are outside of transaction in this test. All references in code run
             // inside a transaction
-            BioAssayDimension bioAssayDimension = bioAssayDimensionService.thawLite( vector.getBioAssayDimension() );
+            BioAssayDimension bioAssayDimension = vector.getBioAssayDimension();
+            bioAssayDimensionService.thawLite( bioAssayDimension );
 
             Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
 

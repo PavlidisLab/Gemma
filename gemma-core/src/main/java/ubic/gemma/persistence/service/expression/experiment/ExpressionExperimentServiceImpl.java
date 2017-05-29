@@ -19,8 +19,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,15 +55,15 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.analysis.expression.ExpressionExperimentSetDao;
+import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
-import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisDao;
+import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.persistence.service.common.description.DatabaseEntryService;
 import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionDao;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.bioAssayData.RawExpressionDataVectorDao;
 
 import java.util.*;
@@ -75,70 +73,137 @@ import java.util.*;
  * @author keshav
  * @see ExpressionExperimentService
  */
-@SuppressWarnings("SpringAutowiredFieldsWarningInspection")
 @Service
 @Transactional
-public class ExpressionExperimentServiceImpl implements ExpressionExperimentService {
+public class ExpressionExperimentServiceImpl extends VoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+        implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
-    private static final Log log = LogFactory.getLog( ExpressionExperimentServiceImpl.class.getName() );
 
-    @Autowired
+    private final ExpressionExperimentDao expressionExperimentDao;
     private AuditEventDao auditEventDao;
-
-    @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
-
-    @Autowired
     private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
-
-    @Autowired
     private DatabaseEntryService databaseEntryService;
-
-    @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
-
-    @Autowired
-    private ExpressionExperimentSetDao expressionExperimentSetDao;
-
-    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
     private ExpressionExperimentSubSetService expressionExperimentSubSetService;
-
-    @Autowired
-    private ExperimentalFactorDao experimentalFactorDao;
-
-    @Autowired
-    private FactorValueDao factorValueDao;
-
-    @Autowired
+    private ExperimentalFactorService experimentalFactorService;
+    private FactorValueService factorValueService;
     private RawExpressionDataVectorDao rawExpressionDataVectorDao;
-
-    @Autowired
     private OntologyService ontologyService;
-
-    @Autowired
-    private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
-
-    @Autowired
-    private ProcessedExpressionDataVectorDao processedVectorDao;
-
-    @Autowired
+    private PrincipalComponentAnalysisService principalComponentAnalysisService;
+    private ProcessedExpressionDataVectorService processedVectorService;
     private QuantitationTypeService quantitationTypeDao;
-
-    @Autowired
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
-
-    @Autowired
     private SearchService searchService;
-
-    @Autowired
     private SecurityService securityService;
-
-    @Autowired
     private SVDService svdService;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     @Autowired
-    private RawExpressionDataVectorDao vectorDao;
+    public ExpressionExperimentServiceImpl( ExpressionExperimentDao expressionExperimentDao ) {
+        super( expressionExperimentDao );
+        this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    /* ********************************
+     * Setters for autowiring
+     * ********************************/
+
+    @Autowired
+    public void setAuditEventDao( AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
+
+    @Autowired
+    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
+        this.bioAssayDimensionDao = bioAssayDimensionDao;
+    }
+
+    @Autowired
+    public void setDifferentialExpressionAnalysisDao(
+            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
+    }
+
+    @Autowired
+    public void setDatabaseEntryService( DatabaseEntryService databaseEntryService ) {
+        this.databaseEntryService = databaseEntryService;
+    }
+
+    @Autowired
+    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+    }
+
+    @Autowired
+    public void setExpressionExperimentSubSetService(
+            ExpressionExperimentSubSetService expressionExperimentSubSetService ) {
+        this.expressionExperimentSubSetService = expressionExperimentSubSetService;
+    }
+
+    @Autowired
+    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
+        this.experimentalFactorService = experimentalFactorService;
+    }
+
+    @Autowired
+    public void setFactorValueService( FactorValueService factorValueService ) {
+        this.factorValueService = factorValueService;
+    }
+
+    @Autowired
+    public void setRawExpressionDataVectorDao( RawExpressionDataVectorDao rawExpressionDataVectorDao ) {
+        this.rawExpressionDataVectorDao = rawExpressionDataVectorDao;
+    }
+
+    @Autowired
+    public void setOntologyService( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
+    }
+
+    @Autowired
+    public void setPrincipalComponentAnalysisService(
+            PrincipalComponentAnalysisService principalComponentAnalysisService ) {
+        this.principalComponentAnalysisService = principalComponentAnalysisService;
+    }
+
+    @Autowired
+    public void setProcessedVectorService( ProcessedExpressionDataVectorService processedVectorService ) {
+        this.processedVectorService = processedVectorService;
+    }
+
+    @Autowired
+    public void setQuantitationTypeDao( QuantitationTypeService quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
+    }
+
+    @Autowired
+    public void setSampleCoexpressionAnalysisDao( SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao ) {
+        this.sampleCoexpressionAnalysisDao = sampleCoexpressionAnalysisDao;
+    }
+
+    @Autowired
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
+
+    @Autowired
+    public void setSecurityService( SecurityService securityService ) {
+        this.securityService = securityService;
+    }
+
+    @Autowired
+    public void setSvdService( SVDService svdService ) {
+        this.svdService = svdService;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     @Transactional
@@ -227,41 +292,61 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     }
 
     /**
-     * @see ExpressionExperimentService#countAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Integer countAll() {
-        return this.expressionExperimentDao.countAll();
-    }
-
-    /**
-     * @see ExpressionExperimentService#create(ExpressionExperiment)
+     * @see ExpressionExperimentService#remove(ExpressionExperiment)
      */
     @Override
     @Transactional
-    public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.create( expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentService#delete(ExpressionExperiment)
-     */
-    @Override
-    @Transactional
-    public void delete( final ExpressionExperiment expressionExperiment ) {
-        if ( expressionExperiment == null || expressionExperiment.getId() == null ) {
-            throw new IllegalArgumentException( "Experiment is null or had null id" );
-        }
-
-        final ExpressionExperiment ee = this.load( expressionExperiment.getId() );
-        if ( securityService.isEditable( ee ) ) {
-            this.handleDelete( ee );
-        } else {
+    public void remove( final ExpressionExperiment ee ) {
+        if ( !securityService.isEditable( ee ) ) {
             throw new SecurityException(
-                    "Error performing 'ExpressionExperimentService.delete(ExpressionExperiment expressionExperiment)' --> "
+                    "Error performing 'ExpressionExperimentService.remove(ExpressionExperiment expressionExperiment)' --> "
                             + " You do not have permission to edit this experiment." );
         }
+
+        // Remove subsets
+        Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
+        for ( ExpressionExperimentSubSet subset : subsets ) {
+            expressionExperimentSubSetService.delete( subset );
+        }
+
+        // Remove differential expression analyses
+        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.differentialExpressionAnalysisDao
+                .findByInvestigation( ee );
+        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
+            Long toDelete = de.getId();
+            this.differentialExpressionAnalysisDao.remove( toDelete );
+        }
+
+        // remove any sample coexpression matrices
+        this.sampleCoexpressionAnalysisDao.removeForExperiment( ee );
+
+        // Remove PCA
+        Collection<PrincipalComponentAnalysis> pcas = this.principalComponentAnalysisService.findByExperiment( ee );
+        for ( PrincipalComponentAnalysis pca : pcas ) {
+            this.principalComponentAnalysisService.remove( pca );
+        }
+
+        /*
+         * FIXME: remove probecoexpression analysis; gene coexexpression will linger.
+         */
+
+        /*
+         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
+         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
+         * analyses!
+         */
+        Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
+        for ( ExpressionExperimentSet eeset : sets ) {
+            if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
+                this.expressionExperimentSetService.remove( eeset );
+            } else {
+                log.info( "Removing " + ee + " from " + eeset );
+                eeset.getExperiments().remove( ee );
+                this.expressionExperimentSetService.update( eeset );
+            }
+        }
+
+        this.expressionExperimentDao.remove( ee );
     }
 
     /**
@@ -287,15 +372,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
 
         return ids;
-    }
-
-    /**
-     * @see ExpressionExperimentService#find(ExpressionExperiment)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment find( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.find( expressionExperiment );
     }
 
     @Override
@@ -460,27 +536,18 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.findByUpdatedLimit( limit );
     }
 
-    /**
-     * @see ExpressionExperimentService#findOrCreate(ExpressionExperiment)
-     */
     @Override
     @Transactional
     public ExpressionExperiment findOrCreate( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.findOrCreate( expressionExperiment );
     }
 
-    /**
-     * @see ExpressionExperimentService#getAnnotationCounts(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getAnnotationCounts( ids );
     }
 
-    /**
-     * Get the terms associated this expression experiment.
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<AnnotationValueObject> getAnnotations( Long eeId ) {
@@ -517,14 +584,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getArrayDesignsUsed( expressionExperiment );
     }
 
-    @Transactional(readOnly = true)
-    private AuditEventDao getAuditEventDao() {
-        return auditEventDao;
-    }
-
-    /**
-     * @return String msg describing confound if it is present, null otherwise
-     */
     @Override
     @Transactional(readOnly = true)
     public String getBatchConfound( ExpressionExperiment ee ) {
@@ -592,16 +651,14 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment ) {
         Collection<BioAssayDimension> bioAssayDimensions = this.expressionExperimentDao
                 .getBioAssayDimensions( expressionExperiment );
-        Collection<BioAssayDimension> thawedbioAssayDimensions = new HashSet<>();
+        Collection<BioAssayDimension> thawedBioAssayDimensions = new HashSet<>();
         for ( BioAssayDimension bioAssayDimension : bioAssayDimensions ) {
-            thawedbioAssayDimensions.add( this.bioAssayDimensionDao.thaw( bioAssayDimension ) );
+            this.bioAssayDimensionDao.thaw( bioAssayDimension );
+            thawedBioAssayDimensions.add( bioAssayDimension );
         }
-        return thawedbioAssayDimensions;
+        return thawedBioAssayDimensions;
     }
 
-    /**
-     * @see ExpressionExperimentService#getBioMaterialCount(ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Integer getBioMaterialCount( final ExpressionExperiment expressionExperiment ) {
@@ -614,9 +671,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getDesignElementDataVectorCountById( id );
     }
 
-    /**
-     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection, QuantitationType)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
@@ -624,9 +678,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getDesignElementDataVectors( designElements, quantitationType );
     }
 
-    /**
-     * @see ExpressionExperimentService#getDesignElementDataVectors(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
@@ -634,18 +685,10 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getDesignElementDataVectors( quantitationTypes );
     }
 
-    private DifferentialExpressionAnalysisDao getDifferentialExpressionAnalysisDao() {
-        return differentialExpressionAnalysisDao;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getExperimentsWithOutliers() {
         return this.expressionExperimentDao.getExperimentsWithOutliers();
-    }
-
-    private ExpressionExperimentSetDao getExpressionExperimentSetDao() {
-        return expressionExperimentSetDao;
     }
 
     @Override
@@ -660,78 +703,57 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getLastArrayDesignUpdate( ee );
     }
 
-    /**
-     * @see ExpressionExperimentService#getLastLinkAnalysis(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastLinkAnalysis( final Collection<Long> ids ) {
-        return getLastEvent( this.loadMultiple( ids ), LinkAnalysisEvent.Factory.newInstance() );
+        return getLastEvent( this.load( ids ), LinkAnalysisEvent.Factory.newInstance() );
     }
 
-    /**
-     * @see ExpressionExperimentService#getLastMissingValueAnalysis(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastMissingValueAnalysis( final Collection<Long> ids ) {
-        return getLastEvent( this.loadMultiple( ids ), MissingValueAnalysisEvent.Factory.newInstance() );
+        return getLastEvent( this.load( ids ), MissingValueAnalysisEvent.Factory.newInstance() );
     }
 
-    /**
-     * @see ExpressionExperimentService#getLastProcessedDataUpdate(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, AuditEvent> getLastProcessedDataUpdate( final Collection<Long> ids ) {
-        return getLastEvent( this.loadMultiple( ids ), ProcessedVectorComputationEvent.Factory.newInstance() );
+        return getLastEvent( this.load( ids ), ProcessedVectorComputationEvent.Factory.newInstance() );
     }
 
     /**
      * @return a map of the expression experiment ids to the last audit event for the given audit event type the map
      * can contain nulls if the specified auditEventType isn't found for a given expression experiment id
      */
-    private Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
+    private final Map<Long, AuditEvent> getLastEvent( Collection<ExpressionExperiment> ees, AuditEventType type ) {
 
         Map<Long, AuditEvent> lastEventMap = new HashMap<>();
         AuditEvent last;
         for ( ExpressionExperiment experiment : ees ) {
-            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
+            last = this.auditEventDao.getLastEvent( experiment, type.getClass() );
             lastEventMap.put( experiment.getId(), last );
         }
         return lastEventMap;
     }
 
-    /**
-     * @see ExpressionExperimentService#getPerTaxonCount()
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Taxon, Long> getPerTaxonCount() {
         return this.expressionExperimentDao.getPerTaxonCount();
     }
 
-    /**
-     * @see ExpressionExperimentService#getPopulatedFactorCounts(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCounts( ids );
     }
 
-    /**
-     * @see ExpressionExperimentService#getPopulatedFactorCountsExcludeBatch(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         return this.expressionExperimentDao.getPopulatedFactorCountsExcludeBatch( ids );
     }
 
-    /**
-     * @see ExpressionExperimentService#getPreferredQuantitationType(ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getPreferredQuantitationType( final ExpressionExperiment ee ) {
@@ -747,37 +769,24 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return preferredQuantitationTypes;
     }
 
-    private PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
-        return principalComponentAnalysisDao;
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee ) {
         return this.expressionExperimentDao.getProcessedDataVectors( ee );
     }
 
-    /**
-     * @see ExpressionExperimentService#getQuantitationTypeCountById(Long)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
         return this.expressionExperimentDao.getQuantitationTypeCountById( Id );
     }
 
-    /**
-     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment ) {
         return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment );
     }
 
-    /**
-     * @see ExpressionExperimentService#getQuantitationTypes(ExpressionExperiment, ArrayDesign)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<QuantitationType> getQuantitationTypes( final ExpressionExperiment expressionExperiment,
@@ -785,13 +794,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getQuantitationTypes( expressionExperiment, arrayDesign );
     }
 
-    private SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
-        return sampleCoexpressionAnalysisDao;
-    }
-
-    /**
-     * @see ExpressionExperimentService#getSampleRemovalEvents(Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
@@ -806,9 +808,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getSamplingOfVectors( quantitationType, limit );
     }
 
-    /**
-     * @see ExpressionExperimentService#getSubSets(ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentSubSet> getSubSets( final ExpressionExperiment expressionExperiment ) {
@@ -827,36 +826,12 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.getTaxa( bioAssaySets );
     }
 
-    /**
-     * @see ExpressionExperimentService#load(Long)
-     */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment load( final Long id ) {
-        return this.expressionExperimentDao.load( id );
-    }
-
-    /**
-     * @see ExpressionExperimentService#loadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadAll() {
-        return this.expressionExperimentDao.loadAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
-            String accession ) {
-        return this.expressionExperimentDao.listFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
-        return this.expressionExperimentDao.loadAllValueObjects();
+    public Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy,
+            boolean asc, String accession ) {
+        return this.expressionExperimentDao
+                .listFilter( offset, limit, orderBy, asc, this.databaseEntryService.load( accession ) );
     }
 
     @Override
@@ -890,13 +865,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return this.expressionExperimentDao.loadLackingTags();
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExpressionExperiment> loadMultiple( final Collection<Long> ids ) {
-        return this.expressionExperimentDao.load( ids );
-    }
-
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> loadMyExpressionExperiments() {
@@ -915,15 +883,6 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return loadAll();
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperimentValueObject loadValueObject( Long eeId ) {
-        return this.expressionExperimentDao.loadValueObject( eeId );
-    }
-
-    /**
-     * @see ExpressionExperimentService#loadValueObjects(Collection, boolean)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperimentValueObject> loadValueObjects( final Collection<Long> ids,
@@ -976,8 +935,8 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         for ( RawExpressionDataVector oldvec : eeToUpdate.getRawExpressionDataVectors() ) {
             qtsToRemove.add( oldvec.getQuantitationType() );
         }
-        vectorDao.remove( eeToUpdate.getRawExpressionDataVectors() );
-        processedVectorDao.remove( eeToUpdate.getProcessedExpressionDataVectors() );
+        rawExpressionDataVectorDao.remove( eeToUpdate.getRawExpressionDataVectors() );
+        processedVectorService.remove( eeToUpdate.getProcessedExpressionDataVectors() );
         eeToUpdate.getProcessedExpressionDataVectors().clear();
         eeToUpdate.getRawExpressionDataVectors().clear();
 
@@ -989,106 +948,15 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         return addVectors( eeToUpdate, ad, newVectors );
     }
 
-    /**
-     * Needed for tests.
-     */
-    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
-        this.expressionExperimentDao = expressionExperimentDao;
-    }
-
-    /**
-     * @see ExpressionExperimentService#thaw(ExpressionExperiment)
-     */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thaw( expressionExperiment );
+    public void thawLite( final ExpressionExperiment expressionExperiment ) {
+        this.expressionExperimentDao.thawBioAssays( expressionExperiment );
     }
 
-    /**
-     * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
-     */
     @Override
-    @Transactional(readOnly = true)
-    public ExpressionExperiment thawLite( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssays( expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentService#thawLite(ExpressionExperiment)
-     */
-    @Override
-    public ExpressionExperiment thawLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentService#update(ExpressionExperiment)
-     */
-    @Override
-    @Transactional
-    public void update( final ExpressionExperiment expressionExperiment ) {
-        this.expressionExperimentDao.update( expressionExperiment );
-    }
-
-    protected void handleDelete( ExpressionExperiment ee ) {
-
-        if ( ee == null ) {
-            throw new IllegalArgumentException( "Experiment cannot be null" );
-        }
-
-        // Remove subsets
-        Collection<ExpressionExperimentSubSet> subsets = getSubSets( ee );
-        for ( ExpressionExperimentSubSet subset : subsets ) {
-            expressionExperimentSubSetService.delete( subset );
-        }
-
-        // Remove differential expression analyses
-        Collection<DifferentialExpressionAnalysis> diffAnalyses = this.getDifferentialExpressionAnalysisDao()
-                .findByInvestigation( ee );
-        for ( DifferentialExpressionAnalysis de : diffAnalyses ) {
-            Long toDelete = de.getId();
-            this.getDifferentialExpressionAnalysisDao().remove( toDelete );
-        }
-
-        // remove any sample coexpression matrices
-        this.getSampleCoexpressionAnalysisDao().removeForExperiment( ee );
-
-        // Remove PCA
-        Collection<PrincipalComponentAnalysis> pcas = this.getPrincipalComponentAnalysisDao().findByExperiment( ee );
-        for ( PrincipalComponentAnalysis pca : pcas ) {
-            this.getPrincipalComponentAnalysisDao().remove( pca );
-        }
-
-        /*
-         * FIXME: delete probecoexpression analysis; gene coexexpression will linger.
-         */
-
-        /*
-         * Delete any expression experiment sets that only have this one ee in it. If possible remove this experiment
-         * from other sets, and update them. IMPORTANT, this section assumes that we already checked for gene2gene
-         * analyses!
-         */
-        Collection<ExpressionExperimentSet> sets = this.getExpressionExperimentSetDao().find( ee );
-        for ( ExpressionExperimentSet eeset : sets ) {
-            if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
-                this.getExpressionExperimentSetDao().remove( eeset );
-            } else {
-                log.info( "Removing " + ee + " from " + eeset );
-                eeset.getExperiments().remove( ee );
-                this.getExpressionExperimentSetDao().update( eeset );
-            }
-        }
-
-        this.expressionExperimentDao.remove( ee );
-    }
-
-    private String getLabelFromUri( String uri ) {
-        OntologyResource resource = ontologyService.getResource( uri );
-        if ( resource != null )
-            return resource.getLabel();
-
-        return null;
+    public void thawLiter( final ExpressionExperiment expressionExperiment ) {
+        this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
     }
 
     @Override
@@ -1097,7 +965,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
         factor.setExperimentalDesign( experiment.getExperimentalDesign() );
         factor.setSecurityOwner( experiment );
-        factor = experimentalFactorDao.create( factor ); // to make sure we get acls.
+        factor = experimentalFactorService.create( factor ); // to make sure we get acls.
         experiment.getExperimentalDesign().getExperimentalFactors().add( factor );
         expressionExperimentDao.update( experiment );
         return factor;
@@ -1110,7 +978,7 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         ExpressionExperiment experiment = expressionExperimentDao.load( ee.getId() );
         fv.setSecurityOwner( experiment );
         Collection<ExperimentalFactor> efs = experiment.getExperimentalDesign().getExperimentalFactors();
-        fv = this.factorValueDao.create( fv );
+        fv = this.factorValueService.create( fv );
         for ( ExperimentalFactor ef : efs ) {
             if ( fv.getExperimentalFactor().equals( ef ) ) {
                 ef.getFactorValues().add( fv );
@@ -1139,4 +1007,44 @@ public class ExpressionExperimentServiceImpl implements ExpressionExperimentServ
         }
         return false;
     }
+
+    /**
+     * Will add the vocab characteristic to the expression experiment and persist the changes.
+     *
+     * @param vc If the evidence code is null, it will be filled in with IC. A category and value must be provided.
+     * @param ee the experiment to add the characteristics to.
+     */
+    @Override
+    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
+        thawLite( load( ee.getId() ) ); // Necessary to make sure we have the persistent version of the given ee.
+        ontologyService.addExpressionExperimentStatement( vc, ee );
+        update( ee );
+    }
+
+    /**
+     * Will add all the vocab characteristics to the expression experiment and persist the changes.
+     *
+     * @param vc Collection of the characteristics to be added to the experiment. If the evidence code is null, it will
+     *           be filled in with IC. A category and value must be provided.
+     * @param ee the experiment to add the characteristics to.
+     */
+    @Override
+    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
+        for ( Characteristic characteristic : vc ) {
+            saveExpressionExperimentStatement( characteristic, ee );
+        }
+    }
+
+    /* ********************************
+     * private final methods
+     * ********************************/
+
+    private final String getLabelFromUri( String uri ) {
+        OntologyResource resource = ontologyService.getResource( uri );
+        if ( resource != null )
+            return resource.getLabel();
+
+        return null;
+    }
+
 }

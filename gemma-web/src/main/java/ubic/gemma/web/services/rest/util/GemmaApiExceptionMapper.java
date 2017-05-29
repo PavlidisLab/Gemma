@@ -19,13 +19,13 @@ public class GemmaApiExceptionMapper implements ExceptionMapper<Throwable> {
         LogFactory.getLog( this.getClass().getName() )
                 .error( "Exception caught during API call: " + throwable.getMessage() );
 
-        if ( GemmaApiException.class.isInstance( throwable ) ) {
+        if ( throwable instanceof GemmaApiException ) {
             GemmaApiException exception = ( GemmaApiException ) throwable;
             return Response.status( exception.getCode() ).entity( exception.getErrorObject() ).build();
         } else {
-            System.out.println( "Not a gemma api exception: " + throwable.getClass() );
             Response.Status code = Response.Status.INTERNAL_SERVER_ERROR;
-            //FIXME remove before production - possibly we do not want to tell end-users the cause of the problem?
+            //FIXME remove before production - possibly we do not want to tell client the cause of the problem?
+            //FIXME maybe only to authorised clients
             WellComposedErrorBody errorBody = new WellComposedErrorBody( code, throwable.getMessage() );
             return Response.status( code ).entity( new ResponseErrorObject( errorBody ) ).build();
         }

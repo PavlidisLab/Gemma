@@ -197,15 +197,12 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
     }
 
-    /**
-     * @param ee
-     * @param ad
-     */
+
     private boolean processExperiment( ExpressionExperiment ee, ArrayDesign ad ) {
 
         Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         if ( !force && !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
 

@@ -1,5 +1,9 @@
 package ubic.gemma.web.services.rest.util.args;
 
+import ubic.gemma.model.IdentifiableValueObject;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+
 /**
  * Created by tesarst on 16/05/17.
  * Class created to allow some API methods to allow various parameter types. E.g a taxon can be represented by Long (ID)
@@ -10,7 +14,7 @@ package ubic.gemma.web.services.rest.util.args;
  * @param <S>  the service for the object type.
  * @param <VO> the value object type.
  */
-public abstract class MutableArg<A, O, S, VO> {
+public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnabledService<O, VO>, VO extends IdentifiableValueObject<O>> {
     /**
      * Should only be used by the implementations of this class, which is why there is no setter for it,
      * as the whole reason behind this class is to delegate the functionality from the web service controllers.
@@ -20,10 +24,10 @@ public abstract class MutableArg<A, O, S, VO> {
     String nullCause = "No cause specified.";
 
     /**
-     * @return the reason that the object that was returned using either {@link #getPersistentObject(Object)} or
-     * {@link #getValueObject(Object)} was null.
+     * @return the reason that the object that was returned using either {@link #getPersistentObject(BaseVoEnabledService)} or
+     * {@link #getValueObject(BaseVoEnabledService)} was null.
      */
-    public String getNullCause() {
+    public final String getNullCause() {
         return nullCause;
     }
 
@@ -33,7 +37,9 @@ public abstract class MutableArg<A, O, S, VO> {
      * @param service the service to use for the value object retrieval.
      * @return the value object whose identifier matches the value of this mutable argument.
      */
-    public abstract VO getValueObject( S service );
+    public final VO getValueObject( S service ) {
+        return this.value == null ? null : service.loadValueObject( this.getPersistentObject( service ) );
+    }
 
     /**
      * Calls appropriate backend logic to retrieve the persistent object that this mutable argument represents.

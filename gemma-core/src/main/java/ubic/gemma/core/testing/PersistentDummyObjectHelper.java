@@ -257,7 +257,7 @@ public class PersistentDummyObjectHelper {
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = getBioAssays( bioMaterials, ad );
             bioAssays.addAll( bas );
-            ad = this.adService.thaw( ad );
+            this.adService.thaw( ad );
             vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bas, ad ) );
 
         }

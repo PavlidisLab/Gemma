@@ -17,13 +17,13 @@ package ubic.gemma.persistence.service.genome;
 import net.sf.ehcache.CacheManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -32,14 +32,13 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.persistence.util.*;
-import ubic.gemma.core.util.*;
 
 import java.util.*;
 
 /**
  * @author pavlidis
- * @see ubic.gemma.model.genome.Gene
  */
 @Repository
 public class GeneDaoImpl extends GeneDaoBase {
@@ -49,14 +48,13 @@ public class GeneDaoImpl extends GeneDaoBase {
     private static final int MAX_WINDOW = 1000000;
     private static final int WINDOW_INCREMENT = 500;
     private static final String G2CS_CACHE_NAME = "Gene2CsCache";
-    private static final Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
+
+    private final CacheManager cacheManager;
 
     @Autowired
-    private CacheManager cacheManager;
-
-    @Autowired
-    public GeneDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+    public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
+        super( sessionFactory );
+        this.cacheManager = cacheManager;
     }
 
     @Override
@@ -79,7 +77,7 @@ public class GeneDaoImpl extends GeneDaoBase {
         } else if ( results.size() > 1 ) {
 
             /*
-             * As a side-effect, we delete relics. This is a bit ugly, but takes care of the problem! It was put in
+             * As a side-effect, we remove relics. This is a bit ugly, but takes care of the problem! It was put in
              * place to help in the cleanup of duplicated genes. But this can happen fairly routinely when NCBI
              * information changes in messy ways.
              * 
@@ -389,22 +387,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    public void remove( java.util.Collection<? extends Gene> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Gene.remove - 'entities' can not be null" );
-        }
-        // remove associations
-        List<?> assocs = this.getHibernateTemplate().findByNamedParam(
-                "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g.id in (:g)",
-                "g", EntityUtils.getIds( entities ) );
-        if ( !assocs.isEmpty() )
-            this.getHibernateTemplate().deleteAll( assocs );
-
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    @Override
-    public void remove( ubic.gemma.model.genome.Gene gene ) {
+    public void remove( Gene gene ) {
         if ( gene == null ) {
             throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
         }
@@ -422,38 +405,19 @@ public class GeneDaoImpl extends GeneDaoBase {
      * Only thaw the Aliases, very light version
      */
     @Override
-    public Gene thawAliases( final Gene gene ) {
-        if ( gene.getId() == null )
-            return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam( "select distinct g from GeneImpl g "
-                + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid", gene.getId() );
-
-        return ( Gene ) res.iterator().next();
+    public void thawAliases( final Gene gene ) {
+        Hibernate.initialize( gene.getAliases() );
+        Hibernate.initialize( gene.getAccessions() );
     }
 
     @Override
-    public Gene thawLite( final Gene gene ) {
-        return this.thaw( gene );
+    public void thawLite( final Gene gene ) {
+        this.thaw( gene );
     }
 
     @Override
-    public Gene thawLiter( final Gene gene ) {
-        if ( gene.getId() == null )
-            return gene;
-
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select distinct g from GeneImpl g " + " left join fetch g.taxon" + " where g.id=:gid", "gid",
-                gene.getId() );
-
-        return ( Gene ) res.iterator().next();
-    }
-
-    @Override
-    protected Integer handleCountAll() {
-        final String query = "select count(*) from GeneImpl";
-        List<?> r = getHibernateTemplate().find( query );
-        return ( Integer ) r.iterator().next();
+    public void thawLiter( final Gene gene ) {
+        Hibernate.initialize( gene.getTaxon() );
     }
 
     @Override
@@ -635,43 +599,44 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Gene handleThaw( final Gene gene ) {
-        if ( gene.getId() == null )
-            return gene;
+    protected void handleThaw( final Gene gene ) {
 
-        List<?> res = this.getHibernateTemplate().findByNamedParam(
-                "select distinct g from GeneImpl g " + " left join fetch g.aliases left join fetch g.accessions acc"
-                        + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                        + " left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-                        + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                        + " left join fetch g.taxon t left join fetch t.externalDatabase "
-                        + " left join fetch g.multifunctionality left join fetch g.phenotypeAssociations "
-                        + " where g.id=:gid", "gid", gene.getId() );
+        thawAliases( gene );
+        for ( DatabaseEntry de : gene.getAccessions() ) {
+            Hibernate.initialize( de.getExternalDatabase() );
+        }
+        Hibernate.initialize( gene.getProducts() );
+        for ( GeneProduct gp : gene.getProducts() ) {
+            Hibernate.initialize( gp.getAccessions() );
+            for ( DatabaseEntry de : gp.getAccessions() ) {
+                Hibernate.initialize( de.getExternalDatabase() );
+            }
+            Hibernate.initialize( gp.getPhysicalLocation() );
+            Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+            Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+        }
+        Hibernate.initialize( gene.getTaxon() );
+        Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+        Hibernate.initialize( gene.getMultifunctionality() );
+        Hibernate.initialize( gene.getPhenotypeAssociations() );
 
-        return ( Gene ) res.iterator().next();
     }
 
     @Override
-    protected Collection<Gene> handleThawLite( final Collection<Gene> genes ) {
-        if ( genes.isEmpty() )
-            return new HashSet<>();
-
-        Collection<Gene> result = new HashSet<>();
+    protected void handleThawLite( final Collection<Gene> genes ) {
         Collection<Gene> batch = new HashSet<>();
 
         for ( Gene g : genes ) {
             batch.add( g );
             if ( batch.size() == BATCH_SIZE ) {
-                result.addAll( loadThawed( EntityUtils.getIds( batch ) ) );
+                thaw( batch );
                 batch.clear();
             }
         }
 
         if ( !batch.isEmpty() ) {
-            result.addAll( loadThawed( EntityUtils.getIds( batch ) ) );
+            thaw( batch );
         }
-
-        return result;
     }
 
     @Override
@@ -738,4 +703,23 @@ public class GeneDaoImpl extends GeneDaoBase {
         return getHibernateTemplate().findByNamedParam( query, params, vals );
     }
 
+    private void thaw( Collection<Gene> genes ) {
+        for ( Gene g : genes ) {
+            this.thaw( g );
+        }
+    }
+
+    @Override
+    public GeneValueObject loadValueObject( Gene entity ) {
+        return new GeneValueObject( entity );
+    }
+
+    @Override
+    public Collection<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
+        Collection<GeneValueObject> vos = new LinkedHashSet<>();
+        for ( Gene e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

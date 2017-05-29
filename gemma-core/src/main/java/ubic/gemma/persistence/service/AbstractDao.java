@@ -21,32 +21,34 @@ package ubic.gemma.persistence.service;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
  *
  * @author Anton, Nicolas
  */
-public abstract class AbstractDao<T> extends HibernateDaoSupport implements BaseDao<T> {
+public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
-    private Class<T> elementClass;
+    protected Class<T> elementClass;
 
     /* ********************************
      * Constructors
      * ********************************/
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected AbstractDao( Class elementClass ) {
-        assert elementClass.isAssignableFrom( elementClass );
+    protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
         this.elementClass = elementClass;
     }
 
@@ -55,14 +57,13 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * ********************************/
 
     @Override
-    public Collection<? extends T> create( Collection<? extends T> entities ) {
+    public Collection<T> create( Collection<T> entities ) {
         int i = 0;
         for ( T t : entities ) {
             this.create( t );
             if ( ++i % 100 == 0 )
                 this.getSession().flush();
         }
-
         return entities;
     }
 
@@ -77,7 +78,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     @Override
     public Collection<T> load( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from   " + elementClass.getSimpleName() + " where id in (:ids)" )
+        return this.getSession().createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
     }
 
@@ -85,7 +86,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     public T load( Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
-        return ( T ) this.getSession().get( elementClass, id );
+        return id == null ? null : ( T ) this.getSession().get( elementClass, id );
     }
 
     @Override
@@ -95,7 +96,12 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     }
 
     @Override
-    public void remove( Collection<? extends T> entities ) {
+    public Integer countAll() {
+        return this.loadAll().size();
+    }
+
+    @Override
+    public void remove( Collection<T> entities ) {
         for ( T e : entities ) {
             this.remove( e );
         }
@@ -112,7 +118,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     }
 
     @Override
-    public void update( Collection<? extends T> entities ) {
+    public void update( Collection<T> entities ) {
         for ( T entity : entities ) {
             this.update( entity );
         }
@@ -121,6 +127,19 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     @Override
     public void update( T entity ) {
         this.getSession().update( entity );
+    }
+
+    @Override
+    public T findOrCreate( T entity ) {
+        T found = find( entity );
+        return found == null ? create( entity ) : found;
+    }
+
+    public T find( T entity ) {
+        return this.load( entity.getId() );
+    }
+
+    public void thaw( T entity ) {
     }
 
     /* ********************************
@@ -132,14 +151,57 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      *
      * @param propertyName  the name of property to be matched.
      * @param propertyValue the value to look for.
-     * @return a Taxon whose property first like-matched the given value.
+     * @return an entity whose property first like-matched the given value.
      */
     protected T findOneByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
         criteria.setMaxResults( 1 );
         //noinspection unchecked
         return ( T ) criteria.uniqueResult();
+    }
+
+    /**
+     * Does a like-match case insensitive search on given property and its value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return a list of entities whose properties like-matched the given value.
+     */
+    protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
+        //noinspection unchecked
+        return criteria.list();
+    }
+
+    /**
+     * Lists all entities whose given property matches the given value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return a list of entities whose properties matched the given value.
+     */
+    protected T findOneByProperty( String propertyName, Object propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
+        criteria.setMaxResults( 1 );
+        //noinspection unchecked
+        return ( T ) criteria.uniqueResult();
+    }
+
+    /**
+     * Does a search on given property and its value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return an entity whose property first matched the given value.
+     */
+    protected List<T> findByProperty( String propertyName, Object propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
+        //noinspection unchecked
+        return criteria.list();
     }
 
 }

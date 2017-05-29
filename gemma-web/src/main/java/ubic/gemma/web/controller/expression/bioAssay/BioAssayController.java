@@ -78,7 +78,7 @@ public class BioAssayController {
             throw new IllegalArgumentException( "Could not load experiment with ID=" + eeId );
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
 
         // this used to be in a separate method.

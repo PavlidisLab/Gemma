@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.common.protocol;
 
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.persistence.service.BaseDao;
 
@@ -29,14 +28,8 @@ import ubic.gemma.persistence.service.BaseDao;
 @Repository
 public interface ProtocolDao extends BaseDao<Protocol> {
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.protocol.Protocol find( ubic.gemma.model.common.protocol.Protocol protocol );
+    Protocol find( Protocol protocol );
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.protocol.Protocol findOrCreate( ubic.gemma.model.common.protocol.Protocol protocol );
+    Protocol findOrCreate( Protocol protocol );
 
 }

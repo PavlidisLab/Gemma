@@ -64,9 +64,6 @@
 					<column name="SHORT_NAME" not-null="false" unique="true"
 						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 				</property>
-				<property name="numberOfSamples" type="java.lang.Integer">
-					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER" />
-				</property>
 				<property name="numberOfDataVectors" type="java.lang.Integer">
 					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER" />
 				</property>

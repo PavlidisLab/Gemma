@@ -8,65 +8,41 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import java.util.Collection;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
+import java.util.Collection;
+
 /**
- * TODO Document Me
- * 
  * @author paul
- * @version $Id$
- * @param <T>
  */
 public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<RawExpressionDataVector> {
     /**
-     * @param eeId
-     * @param vectors
      * @return the experiment.
      */
-    public ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors );
+    ExpressionExperiment addVectors( Long eeId, Collection<RawExpressionDataVector> vectors );
 
-    /**
-     * @param bioAssayDimension
-     * @return
-     */
-    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
+    Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
 
-    /**
-     * 
-     */
-    public java.util.Collection<RawExpressionDataVector> find( java.util.Collection<QuantitationType> quantitationTypes );
+    Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes );
 
-    /**
-     * 
-     */
-    public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector );
+    RawExpressionDataVector find( RawExpressionDataVector designElementDataVector );
 
-    /**
-     * 
-     */
-    public java.util.Collection<RawExpressionDataVector> find(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    Collection<RawExpressionDataVector> find( QuantitationType quantitationType );
 
-    /**
-     * 
-     */
-    public java.util.Collection<RawExpressionDataVector> find(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
 
     /**
      * <p>
      * remove Design Element Data Vectors and Probe2ProbeCoexpression entries for a specified CompositeSequence.
      * </p>
      */
-    public void removeDataForCompositeSequence(
-            ubic.gemma.model.expression.designElement.CompositeSequence compositeSequence );
+    void removeDataForCompositeSequence( CompositeSequence compositeSequence );
 
     /**
      * <p>
@@ -74,6 +50,5 @@ public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<R
      * QuantitationType (which always comes from a specific ExpressionExperiment)
      * </p>
      */
-    public void removeDataForQuantitationType(
-            ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
+    void removeDataForQuantitationType( QuantitationType quantitationType );
 }

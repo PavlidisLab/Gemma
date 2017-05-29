@@ -19,23 +19,26 @@
 
 package ubic.gemma.model.analysis;
 
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * An abstract class representing a related set of generic analysis results, part of an analysis.
  */
-public abstract class AnalysisResultSet implements java.io.Serializable {
+public abstract class AnalysisResultSet implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -6749501453616281312L;
 
-    private Long id;
+    private Long id = null;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public AnalysisResultSet() {
@@ -54,23 +57,8 @@ public abstract class AnalysisResultSet implements java.io.Serializable {
             return false;
         }
         final AnalysisResultSet that = ( AnalysisResultSet ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * 
-     */
-    public abstract Collection<?> getResults();
 
     /**
      * Returns a hash code based on this entity's identifiers.
@@ -83,8 +71,14 @@ public abstract class AnalysisResultSet implements java.io.Serializable {
         return hashCode;
     }
 
+    public Long getId() {
+        return this.id;
+    }
+
     public void setId( Long id ) {
         this.id = id;
     }
+
+    public abstract Collection<?> getResults();
 
 }

@@ -18,154 +18,93 @@
  */
 package ubic.gemma.core.annotation.reference;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.security.access.annotation.Secured;
-
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface BibliographicReferenceService {
+public interface BibliographicReferenceService extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
     /**
      * Adds a document (in PDF format) for the reference.
      */
     @Secured({ "GROUP_USER" })
-    public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
+    void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
 
-    public List<BibliographicReference> browse( Integer start, Integer limit );
+    List<BibliographicReference> browse( Integer start, Integer limit );
 
-    public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
-
-    public Integer count();
-
-    /**
-     * 
-     */
-    @Secured({ "GROUP_USER" })
-    public BibliographicReference create( BibliographicReference bibliographicReference );
+    List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
 
     /**
      * check to see if the object already exists
      */
-    public BibliographicReference find( BibliographicReference bibliographicReference );
+    BibliographicReference find( BibliographicReference bibliographicReference );
 
-    /**
-     * @param accession
-     * @return
-     */
-    public BibliographicReference findByExternalId( DatabaseEntry accession );
+    BibliographicReference findByExternalId( DatabaseEntry accession );
 
     /**
      * Get a reference by the unqualified external id.
      */
-    public BibliographicReference findByExternalId( java.lang.String id );
+    BibliographicReference findByExternalId( java.lang.String id );
 
     /**
      * Retrieve a reference by identifier, qualified by the database name (such as 'pubmed').
      */
-    public BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
+    BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
+    BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
     /**
      * <p>
      * Get a reference by the unqualified external id. Searches for pubmed by default
      * </p>
      */
-    public BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
+    BibliographicReferenceValueObject findVOByExternalId( java.lang.String id );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
+    java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
     /**
      * Get the ExpressionExperiments, if any, that are linked to the given reference.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
-            BibliographicReference bibliographicReference );
+    java.util.Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );
 
-    /**
-     * @param records
-     */
-    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
 
     /**
      * @return all the IDs of bibliographic references in the system.
      */
-    public Collection<Long> listAll();
+    Collection<Long> listAll();
 
-    /**
-     * 
-     */
-    public BibliographicReference load( java.lang.Long id );
-
-    /**
-     * 
-     */
-    public Collection<BibliographicReference> loadMultiple( Collection<Long> ids );
-
-    /**
-     * adds related experiments and phenotype associations
-     * 
-     * @param ids
-     * @return
-     */
-    public Collection<BibliographicReferenceValueObject> loadMultipleValueObjects( Collection<Long> ids );
-
-    /**
-     * @param pubMedId
-     * @return the updated reference. If the reference does not exist in the system in the first place, return null.
-     */
     @Secured({ "GROUP_ADMIN" })
-    public BibliographicReference refresh( String pubMedId );
+    BibliographicReference refresh( String pubMedId );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_ADMIN" })
-    public void remove( BibliographicReference BibliographicReference );
+    void remove( BibliographicReference BibliographicReference );
 
-    /**
-     * Allows limiting searches to phenotypes and/or experiments.
-     * 
-     * @param settings
-     * @return
-     */
-    public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
+    List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings );
 
-    /**
-     * @param query
-     * @return
-     */
-    public List<BibliographicReferenceValueObject> search( String query );
+    List<BibliographicReferenceValueObject> search( String query );
 
-    public BibliographicReference thaw( BibliographicReference bibliographicReference );
-
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
-    /**
-     * 
-     */
     @Secured({ "GROUP_ADMIN" })
-    public void update( BibliographicReference bibliographicReference );
+    void update( BibliographicReference bibliographicReference );
 
 }

@@ -19,11 +19,6 @@ public class TaxonIdArg extends TaxonArg<Long> {
     }
 
     @Override
-    public TaxonValueObject getValueObject( TaxonService service ) {
-        return service.loadValueObject( this.value );
-    }
-
-    @Override
     public Taxon getPersistentObject( TaxonService service ) {
         return service.load( this.value );
     }

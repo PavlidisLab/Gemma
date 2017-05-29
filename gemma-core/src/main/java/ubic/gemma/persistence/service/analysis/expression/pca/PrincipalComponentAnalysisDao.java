@@ -14,32 +14,21 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.pca;
 
-import java.util.Collection;
-import java.util.List;
-
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface PrincipalComponentAnalysisDao extends BaseDao<PrincipalComponentAnalysis> {
 
-    /**
-     * @param ee
-     * @return
-     */
     Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee );
 
-    /**
-     * @param ee
-     * @param component
-     * @param count
-     * @return
-     */
     List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
 }

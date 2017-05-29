@@ -18,13 +18,11 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.persistence.util.BusinessKey;
 
 /**
  * @author pavlidis
- * @version $Id$
  * @see ubic.gemma.model.common.auditAndSecurity.Person
  */
 @Repository
@@ -32,52 +30,13 @@ public class PersonDaoImpl extends PersonDaoBase {
 
     @Autowired
     public PersonDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PersonDao#find(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
     @Override
     public Person find( Person person ) {
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Person.class );
-
+        Criteria queryObject = super.getSession().createCriteria( Person.class );
         BusinessKey.addRestrictions( queryObject, person );
-
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + ubic.gemma.model.common.auditAndSecurity.Person.class.getName()
-                                + "' was found when executing query - " + person );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( Person ) result;
-
+        return ( Person ) queryObject.uniqueResult();
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * PersonDao#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
-     */
-    @Override
-    public Person findOrCreate( Person person ) {
-        if ( person == null || ( person.getLastName() == null && person.getEmail() == null && person.getName() == null ) ) {
-            throw new IllegalArgumentException( "Person did not have sufficient information for business key." );
-        }
-        Person newPerson = find( person );
-        if ( newPerson != null ) {
-            return newPerson;
-        }
-        return create( person );
-    }
-
 }

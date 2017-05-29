@@ -93,7 +93,7 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
                 String msg = "No expression experiment with id, " + eeId + ", can be found.";
                 return buildBadResponse( document, msg );
             }
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             Collection<Characteristic> characterCol = ee.getCharacteristics();
 
             for ( Characteristic character : characterCol ) {

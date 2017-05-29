@@ -34,33 +34,19 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
     private static final long serialVersionUID = -1219449523930648392L;
 
     private String description;
-
     private String secondaryAccession;
-
     private String secondaryExternalDatabase;
-
     private String secondaryExternalUri;
-
     private CitationValueObject primaryCitation;
-
     private Collection<ArrayDesignValueObject> arrayDesigns;
-
     private String parentTaxon;
-
     private Boolean hasMultiplePreferredQuantitationTypes = false;
-
     private Boolean hasMultipleTechnologyTypes = false;
-
     private String QChtml;
-
     private boolean hasBatchInformation;
-
     private String batchConfound;
-
     private String batchEffect;
-
     private String lastArrayDesignUpdateDate;
-
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
     /*
@@ -69,8 +55,8 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     private boolean reprocessedFromRawData;
 
-    public ExpressionExperimentDetailsValueObject() {
-        super();
+    public ExpressionExperimentDetailsValueObject(Long id) {
+        super(id);
     }
 
     public ExpressionExperimentDetailsValueObject( ExpressionExperimentValueObject otherBean ) {

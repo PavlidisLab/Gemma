@@ -31,11 +31,11 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -125,7 +125,8 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         Collection<Long> geneIDLong = new HashSet<Long>();
         for ( String id : geneInput )
             geneIDLong.add( Long.parseLong( id ) );
-        Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
+        Collection<Gene> rawGeneCol = geneService.load( geneIDLong );
+        geneService.thaw( rawGeneCol );
         if ( rawGeneCol.isEmpty() ) {
             String msg = "None of the gene id's can be found.";
             return buildBadResponse( document, msg );
@@ -246,7 +247,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
             ids.add( dataset.getId() );
         }
-        return expressionExperimentService.loadMultiple( ids );
+        return expressionExperimentService.load( ids );
     }
 
     private Collection<Gene> retainGenesInCorrectTaxon( Collection<Gene> rawGeneCol, Taxon taxon ) {

@@ -31,11 +31,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.security.audit.AuditableUtil;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -43,10 +43,8 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -55,12 +53,13 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.security.audit.AuditableUtil;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -288,7 +287,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             }
 
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            vos = filterAD( arrayDesignService.loadValueObjects( EntityUtils.getIds( results ) ), settings );
+            vos = filterAD( arrayDesignService.loadValueObjectsByIds( EntityUtils.getIds( results ) ), settings );
 
             if ( !SecurityUtil.isUserAdmin() ) {
                 auditableUtil.removeTroubledArrayDesigns( ( Collection<ArrayDesignValueObject> ) vos );
@@ -297,15 +296,17 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
             Collection<CompositeSequenceValueObject> css = new ArrayList<>();
             for ( SearchResult sr : results ) {
                 CompositeSequenceValueObject csvo = compositeSequenceService
-                        .convertToValueObject( ( CompositeSequence ) sr.getResultObject() );
+                        .loadValueObject( ( CompositeSequence ) sr.getResultObject() );
                 css.add( csvo );
             }
             vos = css;
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            vos = bibliographicReferenceService.loadMultipleValueObjects( EntityUtils.getIds( results ) );
+            vos = bibliographicReferenceService
+                    .loadValueObjects( bibliographicReferenceService.load( EntityUtils.getIds( results ) ) );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-            Collection<Gene> genes = geneService.loadMultiple( EntityUtils.getIds( results ) );
-            vos = GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
+            Collection<Gene> genes = geneService.load( EntityUtils.getIds( results ) );
+            geneService.thawLite( genes );
+            vos = geneService.loadValueObjects( genes );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();
             for ( SearchResult sr : results ) {
@@ -325,7 +326,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             vos = geneSetService.getValueObjects( EntityUtils.getIds( results ) );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-            vos = experimentSetService.loadValueObjects( EntityUtils.getIds( results ) );
+            vos = experimentSetService.loadValueObjects( experimentSetService.load( EntityUtils.getIds( results ) ) );
         } else if ( FactorValue.class.isAssignableFrom( entityClass ) ) {
             Collection<FactorValueValueObject> fvo = new ArrayList<>();
             for ( SearchResult sr : results ) {

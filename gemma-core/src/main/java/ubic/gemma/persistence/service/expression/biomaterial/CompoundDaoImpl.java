@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,75 +18,30 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.biomaterial.Compound;
+import ubic.gemma.persistence.service.AbstractDao;
 
 /**
- * @author pavlidis
- * @version $Id$
+ * <p>
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
+ * <code>ubic.gemma.model.expression.biomaterial.Compound</code>.
+ * </p>
+ *
  * @see ubic.gemma.model.expression.biomaterial.Compound
  */
 @Repository
-public class CompoundDaoImpl extends CompoundDaoBase {
-
-    private static Log log = LogFactory.getLog( CompoundDaoImpl.class.getName() );
+public class CompoundDaoImpl extends AbstractDao<Compound> implements CompoundDao {
 
     @Autowired
     public CompoundDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( Compound.class, sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CompoundDaoBase#find(ubic.gemma.model.expression.biomaterial.Compound)
-     */
     @Override
     public Compound find( Compound compound ) {
-
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Compound.class );
-        queryObject.add( Restrictions.eq( "name", compound.getName() ) );
-
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + Compound.class.getName() + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( Compound ) result;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * CompoundDaoBase#findOrCreate(ubic.gemma.model.expression.biomaterial.
-     * Compound)
-     */
-    @Override
-    public Compound findOrCreate( Compound compound ) {
-        if ( compound == null || compound.getName() == null ) {
-            throw new IllegalArgumentException(
-                    "Compound must not be null and must have a name to use as comparison key" );
-        }
-        Compound newCompound = this.find( compound );
-        if ( newCompound != null ) {
-            return newCompound;
-        }
-        log.debug( "Creating new compound: " + compound.getName() );
-        return create( compound );
+        return this.findOneByProperty( "name", compound.getName() );
     }
 }

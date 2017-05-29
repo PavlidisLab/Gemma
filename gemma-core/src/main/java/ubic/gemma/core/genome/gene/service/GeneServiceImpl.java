@@ -19,18 +19,16 @@
 
 package ubic.gemma.core.genome.gene.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.persistence.service.genome.RelativeLocationData;
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.loader.genome.gene.ncbi.homology.HomologeneService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.search.GeneSetSearch;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -39,14 +37,18 @@ import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.*;
+import ubic.gemma.model.genome.Chromosome;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.*;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.genome.GeneDao;
+import ubic.gemma.persistence.service.genome.RelativeLocationData;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.search.GeneSetSearch;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -57,78 +59,72 @@ import java.util.Map.Entry;
  * @see GeneService
  */
 @Service
-public class GeneServiceImpl implements GeneService {
+public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> implements GeneService {
 
-    private static final Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
-
-    @Autowired
     private AnnotationAssociationService annotationAssociationService;
-
-    @Autowired
     private CoexpressionService coexpressionService;
-
-    @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
-
-    @Autowired
     private GeneDao geneDao;
-
-    @Autowired
     private GeneOntologyService geneOntologyService;
-
-    @Autowired
     private GeneSetSearch geneSetSearch;
-
-    @Autowired
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
-
-    @Autowired
     private HomologeneService homologeneService;
-
-    @Autowired
     private SearchService searchService;
 
-    /**
-     * @see GeneService#countAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Integer countAll() {
-        return this.getGeneDao().countAll();
+    @Autowired
+    public GeneServiceImpl( GeneDao geneDao ) {
+        super( geneDao );
     }
 
-    /**
-     * @see GeneService#create(Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional
-    public Collection<Gene> create( final Collection<Gene> genes ) {
-        return ( Collection<Gene> ) this.getGeneDao().create( genes );
+    @Autowired
+    public void setAnnotationAssociationService( AnnotationAssociationService annotationAssociationService ) {
+        this.annotationAssociationService = annotationAssociationService;
     }
 
-    /**
-     * @see GeneService#create(Gene)
-     */
-    @Override
-    @Transactional
-    public Gene create( final Gene gene ) {
-        return this.getGeneDao().create( gene );
+    @Autowired
+    public void setCoexpressionService( CoexpressionService coexpressionService ) {
+        this.coexpressionService = coexpressionService;
     }
 
-    /**
-     * @see GeneService#find(Gene)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Gene find( final Gene gene ) {
-        return this.getGeneDao().find( gene );
+    @Autowired
+    public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
+        this.gene2GOAssociationService = gene2GOAssociationService;
+    }
+
+    @Autowired
+    public void setGeneDao( GeneDao geneDao ) {
+        this.geneDao = geneDao;
+    }
+
+    @Autowired
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
+    }
+
+    @Autowired
+    public void setGeneSetSearch( GeneSetSearch geneSetSearch ) {
+        this.geneSetSearch = geneSetSearch;
+    }
+
+    @Autowired
+    public void setGeneSetValueObjectHelper( GeneSetValueObjectHelper geneSetValueObjectHelper ) {
+        this.geneSetValueObjectHelper = geneSetValueObjectHelper;
+    }
+
+    @Autowired
+    public void setHomologeneService( HomologeneService homologeneService ) {
+        this.homologeneService = homologeneService;
+    }
+
+    @Autowired
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
-        return this.getGeneDao().find( physicalLocation );
+        return this.geneDao.find( physicalLocation );
     }
 
     /**
@@ -137,7 +133,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Gene findByAccession( final String accession, final ExternalDatabase source ) {
-        return this.getGeneDao().findByAccession( accession, source );
+        return this.geneDao.findByAccession( accession, source );
     }
 
     /**
@@ -146,13 +142,13 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByAlias( final String search ) {
-        return this.getGeneDao().findByAlias( search );
+        return this.geneDao.findByAlias( search );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<? extends Gene> findByEnsemblId( String exactString ) {
-        return this.getGeneDao().findByEnsemblId( exactString );
+        return this.geneDao.findByEnsemblId( exactString );
     }
 
     /**
@@ -160,7 +156,7 @@ public class GeneServiceImpl implements GeneService {
      */
     @Override
     public Gene findByNCBIId( Integer accession ) {
-        return this.getGeneDao().findByNcbiId( accession );
+        return this.geneDao.findByNcbiId( accession );
     }
 
     @Override
@@ -173,7 +169,7 @@ public class GeneServiceImpl implements GeneService {
     @Transactional(readOnly = true)
     public Map<Integer, GeneValueObject> findByNcbiIds( Collection<Integer> ncbiIds ) {
         Map<Integer, GeneValueObject> result = new HashMap<>();
-        Map<Integer, Gene> genes = this.getGeneDao().findByNcbiIds( ncbiIds );
+        Map<Integer, Gene> genes = this.geneDao.findByNcbiIds( ncbiIds );
         for ( Entry<Integer, Gene> entry : genes.entrySet() ) {
             result.put( entry.getKey(), new GeneValueObject( entry.getValue() ) );
         }
@@ -185,13 +181,13 @@ public class GeneServiceImpl implements GeneService {
      */
     @Override
     public Collection<Gene> findByOfficialName( final String officialName ) {
-        return this.getGeneDao().findByOfficialName( officialName );
+        return this.geneDao.findByOfficialName( officialName );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
-        return this.getGeneDao().findByOfficialNameInexact( officialName );
+        return this.geneDao.findByOfficialNameInexact( officialName );
     }
 
     /**
@@ -200,7 +196,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
-        return this.getGeneDao().findByOfficalSymbol( officialSymbol );
+        return this.geneDao.findByOfficialSymbol( officialSymbol );
     }
 
     /**
@@ -209,7 +205,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Gene findByOfficialSymbol( final String symbol, final Taxon taxon ) {
-        return this.getGeneDao().findByOfficialSymbol( symbol, taxon );
+        return this.geneDao.findByOfficialSymbol( symbol, taxon );
     }
 
     /**
@@ -218,14 +214,14 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
-        return this.getGeneDao().findByOfficialSymbolInexact( officialSymbol );
+        return this.geneDao.findByOfficialSymbolInexact( officialSymbol );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<String, GeneValueObject> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
         Map<String, GeneValueObject> result = new HashMap<>();
-        Map<String, Gene> genes = this.getGeneDao().findByOfficialSymbols( query, taxonId );
+        Map<String, Gene> genes = this.geneDao.findByOfficialSymbols( query, taxonId );
         for ( String q : genes.keySet() ) {
             result.put( q, new GeneValueObject( genes.get( q ) ) );
         }
@@ -237,7 +233,7 @@ public class GeneServiceImpl implements GeneService {
     public Collection<AnnotationValueObject> findGOTerms( Long geneId ) {
         if ( geneId == null )
             throw new IllegalArgumentException( "Null id for gene" );
-        Collection<AnnotationValueObject> ontos = new HashSet<>();
+        Collection<AnnotationValueObject> ontologies = new HashSet<>();
         Gene g = load( geneId );
 
         if ( g == null ) {
@@ -251,25 +247,25 @@ public class GeneServiceImpl implements GeneService {
             if ( assoc.getOntologyEntry() == null )
                 continue;
 
-            AnnotationValueObject annot = new AnnotationValueObject();
+            AnnotationValueObject annotationValueObject = new AnnotationValueObject();
 
-            annot.setId( assoc.getOntologyEntry().getId() );
-            annot.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
-            annot.setTermUri( assoc.getOntologyEntry().getValue() );
-            annot.setEvidenceCode( assoc.getEvidenceCode().getValue() );
-            annot.setDescription( assoc.getOntologyEntry().getDescription() );
-            annot.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
-            annot.setClassName( assoc.getOntologyEntry().getCategory() );
+            annotationValueObject.setId( assoc.getOntologyEntry().getId() );
+            annotationValueObject.setTermName( geneOntologyService.getTermName( assoc.getOntologyEntry().getValue() ) );
+            annotationValueObject.setTermUri( assoc.getOntologyEntry().getValue() );
+            annotationValueObject.setEvidenceCode( assoc.getEvidenceCode().getValue() );
+            annotationValueObject.setDescription( assoc.getOntologyEntry().getDescription() );
+            annotationValueObject.setClassUri( assoc.getOntologyEntry().getCategoryUri() );
+            annotationValueObject.setClassName( assoc.getOntologyEntry().getCategory() );
 
-            ontos.add( annot );
+            ontologies.add( annotationValueObject );
         }
-        return annotationAssociationService.removeRootTerms( ontos );
+        return annotationAssociationService.removeRootTerms( ontologies );
     }
 
     @Override
     @Transactional(readOnly = true)
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
-        return this.getGeneDao().findNearest( physicalLocation, useStrand );
+        return this.geneDao.findNearest( physicalLocation, useStrand );
     }
 
     /**
@@ -278,7 +274,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public long getCompositeSequenceCountById( final Long id ) {
-        return this.getGeneDao().getCompositeSequenceCountById( id );
+        return this.geneDao.getCompositeSequenceCountById( id );
     }
 
     /**
@@ -287,7 +283,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign ) {
-        return this.getGeneDao().getCompositeSequences( gene, arrayDesign );
+        return this.geneDao.getCompositeSequences( gene, arrayDesign );
     }
 
     /**
@@ -296,7 +292,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
-        return this.getGeneDao().getCompositeSequencesById( id );
+        return this.geneDao.getCompositeSequencesById( id );
     }
 
     /**
@@ -305,7 +301,7 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
-        return this.getGeneDao().getGenesByTaxon( taxon );
+        return this.geneDao.getGenesByTaxon( taxon );
     }
 
     @Override
@@ -403,50 +399,31 @@ public class GeneServiceImpl implements GeneService {
     }
 
     /**
-     * @see GeneService#load(Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Gene load( final Long id ) {
-        return this.getGeneDao().load( id );
-    }
-
-    /**
-     * @see GeneService#loadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Gene> loadAll() {
-        return ( Collection<Gene> ) this.getGeneDao().loadAll();
-    }
-
-    /**
      * @see GeneService#loadAll(Taxon)
      */
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadAll( final Taxon taxon ) {
-        return this.getGeneDao().loadKnownGenes( taxon );
+        return this.geneDao.loadKnownGenes( taxon );
     }
 
     @Override
     @Transactional(readOnly = true)
     public GeneValueObject loadFullyPopulatedValueObject( Long id ) {
-        Gene gene = this.getGeneDao().load( id );
+        Gene gene = this.geneDao.load( id );
         if ( gene == null ) {
             return null;
         }
-        gene = this.getGeneDao().thaw( gene );
+        this.geneDao.thaw( gene );
 
         GeneValueObject gvo = GeneValueObject.convert2ValueObject( gene );
 
-        Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<>();
-        for ( GeneAlias ga : aliasObjs ) {
-            aliasStrs.add( ga.getAlias() );
+        Collection<GeneAlias> aliasObjects = gene.getAliases();
+        Collection<String> aliasStrings = new ArrayList<>();
+        for ( GeneAlias ga : aliasObjects ) {
+            aliasStrings.add( ga.getAlias() );
         }
-        gvo.setAliases( aliasStrs );
+        gvo.setAliases( aliasStrings );
 
         if ( gene.getMultifunctionality() != null ) {
             gvo.setMultifunctionalityRank( gene.getMultifunctionality().getRank() );
@@ -458,25 +435,28 @@ public class GeneServiceImpl implements GeneService {
         Integer platformCount = this.geneDao.getPlatformCountById( id );
         gvo.setPlatformCount( platformCount );
 
-        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
-        gsvos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( genesets, false ) );
+        Collection<GeneSet> geneSets = this.geneSetSearch.findByGene( gene );
+        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
+        gsVos.addAll( geneSetValueObjectHelper.convertToLightValueObjects( geneSets, false ) );
 
-        gvo.setGeneSets( gsvos );
+        gvo.setGeneSets( gsVos );
 
-        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
-        geneHomologues = this.thawLite( geneHomologues );
-        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
+        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        Collection<GeneValueObject> homologues = new LinkedHashSet<>();
+        this.thawLite( geneHomologues );
+        for ( Gene g : geneHomologues ) {
+            homologues.add( loadValueObject( g ) );
+        }
 
         gvo.setHomologues( homologues );
 
-        Collection<PhenotypeAssociation> phenoAssocs = gene.getPhenotypeAssociations();
-        Collection<CharacteristicValueObject> cvos = new HashSet<>();
-        for ( PhenotypeAssociation pa : phenoAssocs ) {
-            cvos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
+        Collection<PhenotypeAssociation> pas = gene.getPhenotypeAssociations();
+        Collection<CharacteristicValueObject> cVos = new HashSet<>();
+        for ( PhenotypeAssociation pa : pas ) {
+            cVos.addAll( CharacteristicValueObject.characteristic2CharacteristicVO( pa.getPhenotypes() ) );
         }
 
-        gvo.setPhenotypes( cvos );
+        gvo.setPhenotypes( cVos );
 
         if ( gvo.getNcbiId() != null ) {
             SearchSettingsImpl s = new SearchSettingsImpl();
@@ -509,28 +489,32 @@ public class GeneServiceImpl implements GeneService {
     @Transactional(readOnly = true)
     public GeneValueObject loadGenePhenotypes( Long geneId ) {
         Gene gene = load( geneId );
-        gene = thaw( gene );
+        thaw( gene );
         GeneValueObject initialResult = GeneValueObject.convert2ValueObject( gene );
         GeneValueObject details = new GeneValueObject( initialResult );
 
-        Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<>();
-        for ( GeneAlias ga : aliasObjs ) {
-            aliasStrs.add( ga.getAlias() );
+        Collection<GeneAlias> aliasObjects = gene.getAliases();
+        Collection<String> aliasStrings = new ArrayList<>();
+        for ( GeneAlias ga : aliasObjects ) {
+            aliasStrings.add( ga.getAlias() );
         }
-        details.setAliases( aliasStrs );
+        details.setAliases( aliasStrings );
 
         Long compositeSequenceCount = getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount.intValue() );
 
-        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<>();
-        gsvos.addAll( geneSetValueObjectHelper.convertToValueObjects( genesets, false ) );
-        details.setGeneSets( gsvos );
+        Collection<GeneSet> geneSets = geneSetSearch.findByGene( gene );
+        Collection<GeneSetValueObject> gsVos = new ArrayList<>();
+
+        gsVos.addAll( geneSetValueObjectHelper.convertToValueObjects( geneSets, false ) );
+        details.setGeneSets( gsVos );
 
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
-        geneHomologues = this.thawLite( geneHomologues );
-        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
+        Collection<GeneValueObject> homologues = new LinkedHashSet<>();
+        this.thawLite( geneHomologues );
+        for ( Gene g : geneHomologues ) {
+            homologues.add( loadValueObject( g ) );
+        }
         details.setHomologues( homologues );
 
         return details;
@@ -542,82 +526,43 @@ public class GeneServiceImpl implements GeneService {
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadMicroRNAs( final Taxon taxon ) {
-        return this.getGeneDao().getMicroRnaByTaxon( taxon );
-    }
-
-    /**
-     * @see GeneService#loadMultiple(Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Gene> loadMultiple( final Collection<Long> ids ) {
-        return ( Collection<Gene> ) this.getGeneDao().load( ids );
+        return this.geneDao.getMicroRnaByTaxon( taxon );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
-        return this.getGeneDao().loadThawed( ids );
+        return this.geneDao.loadThawed( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {// maybe this isn't needed, just use value objects
-        // method
-        return this.getGeneDao().loadThawedLiter( ids );
+    public Collection<Gene> loadThawedLiter( Collection<Long> ids ) {
+        return this.geneDao.loadThawedLiter( ids );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public GeneValueObject loadValueObject( Long id ) {
-        Gene g = this.getGeneDao().load( id );
-        if ( g == null)
+    public GeneValueObject loadValueObjectById( Long id ) {
+        Gene g = this.geneDao.load( id );
+        if ( g == null )
             return null;
-        g = this.getGeneDao().thaw( g );
+        this.geneDao.thaw( g );
         return GeneValueObject.convert2ValueObject( g );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
-        Collection<Gene> g = this.getGeneDao().loadThawed( ids );
-        return GeneValueObject.convert2ValueObjects( g );
+    public Collection<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        Collection<Gene> g = this.geneDao.loadThawed( ids );
+        return this.loadValueObjects( g );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<GeneValueObject> loadValueObjectsLiter( Collection<Long> ids ) {
-        Collection<Gene> g = this.getGeneDao().loadThawedLiter( ids );
-        return GeneValueObject.convert2ValueObjects( g );
-    }
-
-    /**
-     * @see GeneService#remove(Collection)
-     */
-    @Override
-    @Transactional
-    public void remove( final Collection<Gene> genes ) {
-        this.getGeneDao().remove( genes );
-    }
-
-    /**
-     * @see GeneService#remove(Gene)
-     */
-    @Override
-    @Transactional
-    public void remove( Gene gene ) {
-        this.getGeneDao().remove( gene );
-    }
-
-    /**
-     * @see GeneService#thaw(Gene)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Gene thaw( final Gene gene ) {
-        return this.getGeneDao().thaw( gene );
-
+    public Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids ) {
+        Collection<Gene> g = this.geneDao.loadThawedLiter( ids );
+        return this.loadValueObjects( g );
     }
 
     /**
@@ -625,8 +570,15 @@ public class GeneServiceImpl implements GeneService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Gene thawAliases( Gene gene ) {
-        return this.getGeneDao().thawAliases( gene );
+    public void thawAliases( Gene gene ) {
+        this.geneDao.thawAliases( gene );
+    }
+
+    @Override
+    public void thaw( Collection<Gene> genes ) {
+        for ( Gene g : genes ) {
+            thaw( g );
+        }
     }
 
     /**
@@ -634,50 +586,27 @@ public class GeneServiceImpl implements GeneService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Collection<Gene> thawLite( final Collection<Gene> genes ) {
-        return this.getGeneDao().thawLite( genes );
+    public void thawLite( final Collection<Gene> genes ) {
+        this.geneDao.thawLite( genes );
+    }
+
+    @Override
+    public void thawLiter( Collection<Gene> genes ) {
+        for ( Gene g : genes ) {
+            thawLiter( g );
+        }
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Gene thawLite( Gene gene ) {
-        return this.getGeneDao().thawLite( gene );
+    public void thawLite( Gene gene ) {
+        this.geneDao.thawLite( gene );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Gene thawLiter( Gene gene ) {
-        return this.getGeneDao().thawLiter( gene );
-    }
-
-    @Override
-    @Transactional
-    public void update( Collection<Gene> genes ) {
-        this.getGeneDao().update( genes );
-    }
-
-    /**
-     * @see GeneService#update(Gene)
-     */
-    @Override
-    @Transactional
-    public void update( final Gene gene ) {
-        this.getGeneDao().update( gene );
-
-    }
-
-    /**
-     * Gets the reference to <code>gene</code>'s DAO.
-     */
-    protected GeneDao getGeneDao() {
-        return this.geneDao;
-    }
-
-    /**
-     * Sets the reference to <code>gene</code>'s DAO.
-     */
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
+    public void thawLiter( Gene gene ) {
+        this.geneDao.thawLiter( gene );
     }
 
 }

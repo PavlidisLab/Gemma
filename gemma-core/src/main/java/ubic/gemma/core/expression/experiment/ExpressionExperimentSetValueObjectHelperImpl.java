@@ -37,26 +37,25 @@
 
 package ubic.gemma.core.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * This class will handle population of ExpressionExperimentSetValueObjects. Services need to be accessed in order to
  * fill size, experiment ids, and publik/private fields.
- * 
+ *
  * @author tvrossum
  * @version $Id$
  */
@@ -91,8 +90,8 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
         }
 
         entity.setDescription( setVO.getDescription() );
-        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( setVO
-                .getExpressionExperimentIds() );
+        Collection<ExpressionExperiment> experiments = expressionExperimentService
+                .load( setVO.getExpressionExperimentIds() );
 
         if ( experiments.isEmpty() ) {
             throw new IllegalArgumentException(
@@ -109,8 +108,8 @@ public class ExpressionExperimentSetValueObjectHelperImpl implements ExpressionE
             entity.setTaxon( tax );
         } else {
             Log.debug( "Trying to convert DatabaseBackedExpressionExperimentSetValueObject with id =" + setVO.getId()
-                    + " to ExpressionExperimentSet entity. Unmatched ValueObject.getTaxonId() was :"
-                    + setVO.getTaxonId() );
+                    + " to ExpressionExperimentSet entity. Unmatched ValueObject.getTaxonId() was :" + setVO
+                    .getTaxonId() );
         }
 
         return entity;

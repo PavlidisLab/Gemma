@@ -20,6 +20,7 @@
 package ubic.gemma.model.analysis;
 
 import ubic.gemma.model.common.AbstractAuditable;
+import ubic.gemma.model.common.protocol.Protocol;
 
 /**
  * An analysis of one or more Investigations. The manner in which the analysis was done is described in the Protocol and
@@ -33,8 +34,7 @@ public abstract class Analysis extends AbstractAuditable {
      *
      */
     private static final long serialVersionUID = -7666181528240555473L;
-    private ubic.gemma.model.common.protocol.Protocol protocol;
-    private ubic.gemma.model.common.description.ExternalDatabase source;
+    private Protocol protocol;
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -45,24 +45,12 @@ public abstract class Analysis extends AbstractAuditable {
     /**
      *
      */
-    public ubic.gemma.model.common.protocol.Protocol getProtocol() {
+    public Protocol getProtocol() {
         return this.protocol;
     }
 
-    public void setProtocol( ubic.gemma.model.common.protocol.Protocol protocol ) {
+    public void setProtocol( Protocol protocol ) {
         this.protocol = protocol;
-    }
-
-    /**
-     * (Optional) Where the relationship came from. For example, Gene Ontology terms associated with genes can come from
-     * multiple sources The external source of the analysis.
-     */
-    public ubic.gemma.model.common.description.ExternalDatabase getSource() {
-        return this.source;
-    }
-
-    public void setSource( ubic.gemma.model.common.description.ExternalDatabase source ) {
-        this.source = source;
     }
 
 }

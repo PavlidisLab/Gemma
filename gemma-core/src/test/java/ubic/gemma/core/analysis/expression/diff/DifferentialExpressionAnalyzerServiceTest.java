@@ -105,7 +105,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         processedDataVectorService.createProcessedDataVectors( ee );
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
@@ -168,7 +168,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         expressionDataFileService.deleteAllFiles( ee );
 
-        // / delete the analysis
+        // / remove the analysis
         int numDeleted = differentialExpressionAnalyzerService.deleteAnalyses( ee );
         assertTrue( numDeleted > 0 );
 
@@ -226,7 +226,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @After
     public void tearDown() {
         if ( ee != null ) {
-            expressionExperimentService.delete( ee );
+            expressionExperimentService.remove( ee );
         }
     }
 
@@ -246,14 +246,14 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         }
         processedDataVectorService.createProcessedDataVectors( ee );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
             experimentalFactorService.delete( experimentalFactor );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" )) {

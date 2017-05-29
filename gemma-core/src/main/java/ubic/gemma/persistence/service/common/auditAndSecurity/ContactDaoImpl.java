@@ -18,51 +18,41 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author pavlidis
- * @version $Id$
- * @see ubic.gemma.model.common.auditAndSecurity.Contact
+ * @see Contact
  */
 @Repository
 public class ContactDaoImpl extends ContactDaoBase {
 
     @Autowired
     public ContactDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ContactDaoBase#find(ubic.gemma.model.common.auditAndSecurity.Contact)
-     */
     @Override
     public Contact find( Contact contact ) {
-
         BusinessKey.checkKey( contact );
         Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
-
         BusinessKey.addRestrictions( queryObject, contact );
-
-        java.util.List<?> results = queryObject.list();
+        List results = queryObject.list();
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '"
-                                + ubic.gemma.model.common.auditAndSecurity.Contact.class.getName()
+                throw new InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + Contact.class.getName()
                                 + "' was found when executing query; query was " + contact + ", query object was "
                                 + queryObject );
 
@@ -74,29 +64,15 @@ public class ContactDaoImpl extends ContactDaoBase {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ContactDaoBase#findOrCreate(ubic.gemma.model.common.auditAndSecurity
-     * .Contact)
+    /**
+     * This returns investigations of type Contact. If there are other types of investigations they will have to be
+     * added to the results.
      */
     @Override
-    public Contact findOrCreate( Contact contact ) {
-
-        Contact existingContact = find( contact );
-        if ( existingContact != null ) {
-            return existingContact;
-        }
-        return create( contact );
-    }
-
-    @Override
     public Collection<Investigation> getInvestigations( Contact contact ) {
-        /*
-         * If there are other types of investigations they will have to be added to the results.
-         */
-        return this.getHibernateTemplate().findByNamedParam(
-                "select e from ExpressionExperiment e join e.investigators i where i=:c ", "c", contact );
+        //noinspection unchecked
+        return this.getSession()
+                .createQuery( "select e from ExpressionExperiment e join e.investigators i where i=:c " )
+                .setParameter( "c", contact ).list();
     }
 }

@@ -28,8 +28,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
@@ -129,7 +129,7 @@ public class ExpressionExperimentSetController extends BaseController {
             groupIsDBBacked = true;
             try {
                 ExpressionExperimentSetValueObject set = expressionExperimentSetService
-                        .loadValueObject( eesvo.getId() );
+                        .loadValueObject( expressionExperimentSetService.load( eesvo.getId() ) );
                 userCanEditGroup = ( set.getUserCanWrite() && set.isModifiable() );
 
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
@@ -152,7 +152,7 @@ public class ExpressionExperimentSetController extends BaseController {
             ExpressionExperimentSet newEESet = this.create( ees );
             eeSetIds.add( newEESet.getId() );
         }
-        return this.expressionExperimentSetService.loadValueObjects( eeSetIds );
+        return this.expressionExperimentSetService.loadValueObjectsByIds( eeSetIds );
     }
 
     public Collection<Long> getExperimentIdsInSet( Long id ) {
@@ -161,7 +161,7 @@ public class ExpressionExperimentSetController extends BaseController {
             return new ArrayList<>();
         }
 
-        ExpressionExperimentSetValueObject vo = expressionExperimentSetService.loadValueObject( id );
+        ExpressionExperimentSetValueObject vo = expressionExperimentSetService.loadValueObjectById( id );
         if ( vo == null ) {
             throw new IllegalArgumentException( "No such set with id=" + id );
         }
@@ -208,7 +208,7 @@ public class ExpressionExperimentSetController extends BaseController {
         Collection<Long> ids = new ArrayList<>( 1 );
         ids.add( id );
 
-        Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService.loadValueObjects( ids );
+        Collection<ExpressionExperimentSetValueObject> sets = expressionExperimentSetService.loadValueObjectsByIds( ids );
 
         // security.
         if ( sets == null || sets.isEmpty() ) {
@@ -286,7 +286,7 @@ public class ExpressionExperimentSetController extends BaseController {
             throw new AccessDeniedException(
                     "No experiment set exists with name=" + name + " or you do not have permission to access it." );
         }
-        return expressionExperimentSetService.loadValueObject( sets.iterator().next().getId() );
+        return expressionExperimentSetService.loadValueObjectById( sets.iterator().next().getId() );
 
     }
 
@@ -385,7 +385,8 @@ public class ExpressionExperimentSetController extends BaseController {
      */
     public String updateMembers( Long groupId, Collection<Long> eeIds ) {
 
-        return expressionExperimentSetService.updateDatabaseEntityMembers( groupId, eeIds );
+        expressionExperimentSetService.updateDatabaseEntityMembers( groupId, eeIds );
+        return null; //FIXME the called method never set the string property.
 
     }
 
@@ -468,7 +469,7 @@ public class ExpressionExperimentSetController extends BaseController {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
             }
-            set = expressionExperimentSetService.loadValueObject( id );
+            set = expressionExperimentSetService.loadValueObjectById( id );
 
             if ( set == null ) {
                 throw new IllegalArgumentException( "Unable to access experiment set with id=" + id );
@@ -482,7 +483,6 @@ public class ExpressionExperimentSetController extends BaseController {
     /**
      * Delete a EEset from the system.
      *
-     * @return true if it was deleted.
      * @throws IllegalArgumentException it has analyses associated with it
      */
     private void remove( ExpressionExperimentSetValueObject obj ) {

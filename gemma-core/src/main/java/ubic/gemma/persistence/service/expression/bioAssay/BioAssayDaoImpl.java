@@ -49,31 +49,14 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
      * Constructors
      * ********************************/
 
-    public BioAssayDaoImpl() {
-        super( BioAssay.class );
-    }
-
     @Autowired
     public BioAssayDaoImpl( SessionFactory sessionFactory ) {
-        super( BioAssay.class );
-        setSessionFactory( sessionFactory );
+        super( BioAssay.class, sessionFactory );
     }
 
     /* ********************************
      * Public methods
      * ********************************/
-
-    /**
-     * @see BioAssayDao#countAll()
-     */
-    @Override
-    public Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'BioAssayDao.countAll()' --> " + th, th );
-        }
-    }
 
     @Override
     public BioAssay find( BioAssay bioAssay ) {
@@ -99,9 +82,6 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
         }
     }
 
-    /**
-     * @see BioAssayDao#findBioAssayDimensions(BioAssay)
-     */
     @Override
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
         //noinspection unchecked
@@ -148,13 +128,24 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
         return ( Collection<BioAssay> ) thawedBioassays;
     }
 
-    /**
-     * @see BioAssayDao#thaw(BioAssay)
-     */
     @Override
     public void thaw( final BioAssay bioAssay ) {
         try {
-            this.handleThaw( bioAssay );
+            this.getSession().doWork( new Work() {
+                @Override
+                public void execute( Connection connection ) throws SQLException {
+                    getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
+                    Hibernate.initialize( bioAssay.getArrayDesignUsed() );
+                    Hibernate.initialize( bioAssay.getDerivedDataFiles() );
+                    BioMaterial bm = bioAssay.getSampleUsed();
+                    getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
+                    Hibernate.initialize( bm );
+                    Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                    Hibernate.initialize( bm.getFactorValues() );
+                    getSession().evict( bm );
+                    getSession().evict( bioAssay );
+                }
+            } );
         } catch ( Throwable th ) {
             throw new RuntimeException( "Error performing 'BioAssayDao.thaw(BioAssay bioAssay)' --> " + th, th );
         }
@@ -163,44 +154,6 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     @Override
     public Collection<BioAssay> loadValueObjects( Collection<Long> ids ) {
         return null;
-    }
-
-    /* ********************************
-     * Protected methods
-     * ********************************/
-
-    protected Integer handleCountAll() throws Exception {
-        final String query = "select count(*) from BioAssay";
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
-            queryObject.setCacheable( true );
-            return ( ( Long ) queryObject.iterate().next() ).intValue();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-    }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
-
-    private void handleThaw( final BioAssay bioAssay ) throws Exception {
-
-        this.getSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) throws SQLException {
-                getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );
-                Hibernate.initialize( bioAssay.getArrayDesignUsed() );
-                Hibernate.initialize( bioAssay.getDerivedDataFiles() );
-                BioMaterial bm = bioAssay.getSampleUsed();
-                getSession().buildLockRequest( LockOptions.NONE ).lock( bm );
-                Hibernate.initialize( bm );
-                Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                Hibernate.initialize( bm.getFactorValues() );
-                getSession().evict( bm );
-                getSession().evict( bioAssay );
-            }
-        } );
     }
 
 }

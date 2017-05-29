@@ -18,14 +18,8 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.lang3.ArrayUtils;
-
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -36,11 +30,12 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import cern.colt.list.DoubleArrayList;
+
+import java.util.*;
 
 /**
  * Simple wrapper for a double[] that is derived from a DesignElementDataVector.
- * 
+ *
  * @author paul
  * @version $Id$
  */
@@ -49,55 +44,54 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     private static final long serialVersionUID = -5116242513725297615L;
 
     private double[] data = null;
-
     private boolean masked = false;
     private boolean reorganized = false;
     private boolean sliced = false;
-
     private Double pvalue;
     private Double rank;
-
     private Double rankByMax;
-
     private Double rankByMean;
     /**
      * Will only be non-null if the id is null, when we have a 'slice' of the data
      */
     private Long sourceVectorId = null;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     /**
      * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
-     * bioassaydimension.
-     * 
-     * @param bioassayset, possibly a subset, which we are going to slice.
-     * @param vec
-     * @param bad all we nee is the id, the name and the list of bioassays from this.S
+     * bioassay dimension.
+     *
+     * @param bioassaySet, possibly a subset, which we are going to slice.
+     * @param bad          all we nee is the id, the name and the list of bioassays from this.S
      */
-    public DoubleVectorValueObject( BioAssaySet bioassayset, DoubleVectorValueObject vec,
+    public DoubleVectorValueObject( BioAssaySet bioassaySet, DoubleVectorValueObject vec,
             BioAssayDimensionValueObject bad ) {
+        super( -1L ); // because this is a 'slice', not a persistent one.
+        this.sourceVectorId = vec.getId(); // so we can track this!
+        this.sliced = true;
+
         this.masked = vec.masked;
         this.rankByMax = vec.rankByMax;
         this.rankByMean = vec.rankByMean;
         this.setGenes( vec.getGenes() );
         this.setDesignElement( vec.getDesignElement() );
 
-        if ( !bioassayset.getId().equals( vec.getExpressionExperiment().getId() ) ) {
-            this.expressionExperiment = new ExpressionExperimentValueObject( bioassayset );
+        if ( !bioassaySet.getId().equals( vec.getExpressionExperiment().getId() ) ) {
+            this.expressionExperiment = ExpressionExperimentValueObject.createValueObject( bioassaySet );
         } else {
             this.expressionExperiment = vec.getExpressionExperiment();
         }
 
-        this.setId( null ); // because this is a 'slice', not a persistent one.
         this.setQuantitationType( vec.getQuantitationType() );
 
         this.setBioAssayDimension( bad );
 
-        this.sourceVectorId = vec.getId(); // so we can track this!
-        this.sliced = true;
-
         this.data = new double[bad.getBioAssays().size()];
 
-        Collection<Double> values = new ArrayList<Double>();
+        Collection<Double> values = new ArrayList<>();
         int i = 0;
         for ( BioAssayValueObject ba : vec.getBioAssays() ) {
             if ( this.getBioAssays().contains( ba ) ) {
@@ -109,24 +103,19 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         this.data = ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) );
     }
 
-    /**
-     * @param dedv
-     */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
-        this( dedv, null, badvo );
+    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badVo ) {
+        this( dedv, null, badVo );
     }
 
     /**
      * Create a vector where we expect to have to create one or more gaps to match other vectors, defined by dimToMatch.
-     * 
-     * @param dedv
-     * @param genes
+     *
      * @param dimToMatch ensure that the vector missing values to match the locations of any bioassays in dimToMatch
-     *        that aren't in the dedv's bioAssayDimension.
+     *                   that aren't in the dedv's bioAssayDimension.
      */
-    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject vectorsBadvo,
+    public DoubleVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject vectorsBadVo,
             Collection<Long> genes, BioAssayDimension dimToMatch ) {
-        this( dedv, genes, vectorsBadvo );
+        this( dedv, genes, vectorsBadVo );
 
         if ( dimToMatch.getBioAssays().size() != this.data.length ) {
             addGaps( dimToMatch );
@@ -134,17 +123,13 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
 
     }
 
-    /**
-     * @param dedv
-     * @param genes
-     */
     public DoubleVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
-            BioAssayDimensionValueObject badvo ) {
-        super( dedv, genes, badvo );
+            BioAssayDimensionValueObject badVo ) {
+        super( dedv, genes, badVo );
         QuantitationType qt = dedv.getQuantitationType();
         if ( !qt.getRepresentation().equals( PrimitiveType.DOUBLE ) ) {
-            throw new IllegalArgumentException( "Can only store double vectors, got " + qt + " "
-                    + qt.getRepresentation() );
+            throw new IllegalArgumentException(
+                    "Can only store double vectors, got " + qt + " " + qt.getRepresentation() );
         }
         if ( qt.getIsMaskedPreferred() ) {
             this.masked = true;
@@ -156,13 +141,17 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         }
 
         int i = 0;
-        for ( BioAssayValueObject bvao : this.getBioAssays() ) {
-            if ( bvao.isOutlier() ) {
+        for ( BioAssayValueObject bVo : this.getBioAssays() ) {
+            if ( bVo.isOutlier() ) {
                 data[i] = Double.NaN;
             }
             i++;
         }
     }
+
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     @Override
     public boolean equals( Object obj ) {
@@ -170,16 +159,34 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             return super.equals( obj );
         }
 
-        if ( this == obj ) return true;
-        if ( !super.equals( obj ) ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( !super.equals( obj ) )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
 
         DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
         if ( sourceVectorId == null ) {
-            if ( other.sourceVectorId != null ) return false;
-        } else if ( !sourceVectorId.equals( other.sourceVectorId ) ) return false;
+            if ( other.sourceVectorId != null )
+                return false;
+        } else if ( !sourceVectorId.equals( other.sourceVectorId ) )
+            return false;
         return true;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        if ( super.getId() != null )
+            return super.hashCode();
+
+        return prime * ( ( sourceVectorId == null ) ? 0 : sourceVectorId.hashCode() );
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     public double[] getData() {
         return data;
@@ -189,59 +196,47 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return pvalue;
     }
 
-    public Double getRank() {
-        return rank;
-    }
-
-    /**
-     * If this returns non-null, it means the vector is a slice of another vector identified by the return value.
-     * 
-     * @return
-     */
-    public Long getSourceVectorId() {
-        return sourceVectorId;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        if ( super.getId() != null ) return super.hashCode();
-
-        int result = prime * ( ( sourceVectorId == null ) ? 0 : sourceVectorId.hashCode() );
-        return result;
-    }
-
-    public boolean isMasked() {
-        return masked;
-    }
-
-    /**
-     * @return true if the data has been rearranged relative to the bioassaydimension (as a matter of practice the
-     *         bioassaydimension should be nulled if it is not valid; this boolean is an additional check)
-     */
-    public boolean isReorganized() {
-        return reorganized;
-    }
-
-    public boolean isSliced() {
-        return sliced;
-    }
-
-    public void setMasked( boolean masked ) {
-        this.masked = masked;
-    }
-
     public void setPvalue( Double pvalue ) {
         this.pvalue = pvalue;
+    }
+
+    public Double getRank() {
+        return rank;
     }
 
     public void setRank( Double rank ) {
         this.rank = rank;
     }
 
+    /**
+     * If this returns non-null, it means the vector is a slice of another vector identified by the return value.
+     */
+    public Long getSourceVectorId() {
+        return sourceVectorId;
+    }
+
+    public boolean isMasked() {
+        return masked;
+    }
+
+    public void setMasked( boolean masked ) {
+        this.masked = masked;
+    }
+
+    /**
+     * @return true if the data has been rearranged relative to the bioassay dimension (as a matter of practice the
+     * bioassay dimension should be set to null if it is not valid; this boolean is an additional check)
+     */
+    public boolean isReorganized() {
+        return reorganized;
+    }
+
     public void setReorganized( boolean reorganized ) {
-      //  assert this.getBioAssayDimension().isReordered(); // have to do that at some point.
         this.reorganized = reorganized;
+    }
+
+    public boolean isSliced() {
+        return sliced;
     }
 
     /**
@@ -257,9 +252,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
          * DoubleArrayList constructor does not make a copy, so we have to make one.
          */
         double[] copy = new double[this.data.length];
-        for ( int i = 0; i < data.length; i++ ) {
-            copy[i] = data[i];
-        }
+        System.arraycopy( data, 0, copy, 0, data.length );
 
         DescriptiveWithMissing.standardize( new DoubleArrayList( copy ) );
         return copy;
@@ -267,15 +260,14 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
     }
 
     /**
-     * @param ee
-     * @param cs required
+     * @param cs                      required
      * @param updatedQuantitationType required because this might be changed.
-     * @return
      */
     public DesignElementDataVector toDesignElementDataVector( ExpressionExperiment ee, CompositeSequence cs,
             QuantitationType updatedQuantitationType ) {
         DesignElementDataVector result;
-        if ( updatedQuantitationType == null ) throw new IllegalArgumentException();
+        if ( updatedQuantitationType == null )
+            throw new IllegalArgumentException();
         if ( this.masked ) {
             result = ProcessedExpressionDataVector.Factory.newInstance();
             ( ( ProcessedExpressionDataVector ) result ).setRankByMax( rankByMax );
@@ -295,9 +287,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         return result;
     }
 
-    /**
-     * @param dimToMatch
-     */
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private void addGaps( BioAssayDimension dimToMatch ) {
 
         BioAssayDimensionValueObject sourceBioAssayDimension = new BioAssayDimensionValueObject( dimToMatch );
@@ -308,7 +301,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         expandedDim.setDescription( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
         expandedDim.setName( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
 
-        Map<BioMaterialValueObject, BioAssayValueObject> bmap = new HashMap<BioMaterialValueObject, BioAssayValueObject>();
+        Map<BioMaterialValueObject, BioAssayValueObject> bmap = new HashMap<>();
         ArrayDesignValueObject arrayDesign = null;
         for ( BioAssayValueObject b : this.getBioAssays() ) {
 
@@ -316,7 +309,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
             arrayDesign = b.getArrayDesign();
         }
 
-        List<BioAssayValueObject> expandedBioAssays = new ArrayList<BioAssayValueObject>();
+        List<BioAssayValueObject> expandedBioAssays = new ArrayList<>();
         int i = 0;
         int indexInUngappedData = 0;
         for ( BioAssayValueObject b : dimToMatchBioAssays ) {
@@ -328,10 +321,10 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
                  * This is one where we have to put in a gap.
                  */
                 expandedData[i] = Double.NaN;
-                BioAssayValueObject placeholder = new BioAssayValueObject();
+                BioAssayValueObject placeholder = new BioAssayValueObject( -1L );
                 placeholder.setName( "Missing bioassay for biomaterial=" + bm + " that was not run on " + arrayDesign );
-                placeholder
-                        .setDescription( "This is to represent a biomaterial that was not run on the platform for the rest of the bioassaydimension." );
+                placeholder.setDescription(
+                        "This is to represent a biomaterial that was not run on the platform for the rest of the bioassay dimension." );
                 placeholder.setArrayDesign( arrayDesign );
                 placeholder.setSample( bm );
                 expandedBioAssays.add( placeholder );
@@ -346,13 +339,13 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         assert dimToMatchBioAssays.size() == expandedBioAssays.size();
 
         this.data = expandedData;
-        this.setBioAssayDimension( new BioAssayDimensionValueObject() );
+        this.setBioAssayDimension( new BioAssayDimensionValueObject( null ) );
         this.getBioAssayDimension().setSourceBioAssayDimension( sourceBioAssayDimension );
         this.getBioAssayDimension().setIsSubset( true ); // not exactly, but have to make clear it's not real.
-        this.getBioAssayDimension().setBioAssays( expandedBioAssays );
-        this.getBioAssayDimension().setId( null );
-        this.getBioAssayDimension().setName(
-                "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
+        this.getBioAssayDimension().clearBioAssays();
+        this.getBioAssayDimension().addBioAssays( expandedBioAssays );
+        this.getBioAssayDimension()
+                .setName( "Expanded bioassay dimension based on " + this.getBioAssayDimension().getName() );
         assert this.getBioAssays() != null;
     }
 }

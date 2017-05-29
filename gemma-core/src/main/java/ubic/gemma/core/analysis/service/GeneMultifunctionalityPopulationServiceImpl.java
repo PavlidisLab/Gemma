@@ -273,12 +273,9 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         return gomap;
     }
 
-    /**
-     * @param genes
-     * @param mfs
-     */
+
     private void saveBatch( Collection<Gene> genes, Map<Gene, Multifunctionality> mfs ) {
-        genes = geneService.thawLite( genes );
+        geneService.thawLite( genes );
         for ( Gene g : genes ) {
             if ( !mfs.containsKey( g ) ) {
                 g.setMultifunctionality( null );

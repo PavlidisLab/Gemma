@@ -220,7 +220,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         for ( ArrayDesign ad : allADs ) {
 
-            ad = arrayDesignService.thawLite( ad );
+            arrayDesignService.thawLite( ad );
             if ( ad.getCurationDetails().getTroubled() ) {
                 log.warn( "Troubled: " + ad + " (skipping)" );
                 continue;

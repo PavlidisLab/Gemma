@@ -89,7 +89,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -103,7 +103,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         designImporter.importDesign( ee, this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/gse26927short/2684_GSE26927_expdesign.data.txt" ) );
@@ -112,13 +112,13 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
     @After
     public void teardown() throws Exception {
-        // if ( ee != null ) expressionExperimentService.delete( ee );
+        // if ( ee != null ) expressionExperimentService.remove( ee );
     }
 
     @Test
     public void test() throws Exception {
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 3, factors.size() );

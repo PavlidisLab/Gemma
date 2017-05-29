@@ -19,16 +19,15 @@
 package ubic.gemma.persistence.service.genome.taxon;
 
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.genome.Taxon
  */
-public interface TaxonDao extends BaseDao<Taxon> {
-
-    Taxon find( Taxon taxon );
+public interface TaxonDao extends BaseVoEnabledDao<Taxon, TaxonValueObject> {
 
     /**
      * <p>
@@ -51,13 +50,6 @@ public interface TaxonDao extends BaseDao<Taxon> {
      * Find the child<code>taxa</code> for this parent.
      */
     Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
-
-    Taxon findOrCreate( Taxon taxon );
-
-    /**
-     * Thaw the taxon
-     */
-    void thaw( Taxon taxon );
 
     Collection<Taxon> findTaxonUsedInEvidence();
 

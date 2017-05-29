@@ -92,7 +92,7 @@ UPDATE ACLOBJECTIDENTITY SET OBJECT_CLASS = 'ubic.gemma.model.expression.experim
 
 -- TODO: BACKUP AUDIT_EVENT TABLE BEFORE THIS STEP
 -- -- Validation flag is discontinued and was never used consistently. The information these events contain is discarted
--- -- delete all validation events
+-- -- remove all validation events
 START TRANSACTION;
 
 DELETE AUDIT_EVENT FROM AUDIT_EVENT INNER JOIN AUDIT_EVENT_TYPE ON AUDIT_EVENT.EVENT_TYPE_FK = AUDIT_EVENT_TYPE.ID WHERE class IN ('ValidatedAnnotationsImpl','ValidatedExperimentalDesignImpl','ValidatedFlagEventImpl','ValidatedQualityControlImpl');

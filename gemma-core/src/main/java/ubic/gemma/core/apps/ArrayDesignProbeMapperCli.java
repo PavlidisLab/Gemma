@@ -278,7 +278,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return true;
         }
 
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
 
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
@@ -453,7 +453,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     private void audit( ArrayDesign arrayDesign, String note, ArrayDesignGeneMappingEvent eventType ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
@@ -629,7 +629,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         log.info( "============== Start processing: " + design + " ==================" );
         try {
-            design = arrayDesignService.thaw( design );
+            arrayDesignService.thaw( design );
 
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
             successObjects.add( design.getName() );
@@ -645,7 +645,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
         CompositeSequenceService compositeSequenceService = this.getBean( CompositeSequenceService.class );
 
         for ( String probeName : this.probeNames ) {
@@ -656,7 +656,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 continue;
             }
 
-            probe = compositeSequenceService.thaw( probe );
+            compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
                     .processCompositeSequence( this.config, taxon, null, probe );

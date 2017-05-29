@@ -34,7 +34,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.genome.gene.service.GeneServiceImpl;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.genome.GeneDao;
@@ -45,12 +47,14 @@ import ubic.gemma.model.genome.Taxon;
  * @author daq2101
  * @version $Id$
  */
-public class GeneServiceImplTest {
+public class GeneServiceImplTest extends BaseSpringContextTest{
 
     private static final String STRAND = "+";
     Collection<Gene> allThree = new HashSet<Gene>();
     Collection<Gene> justRab = new HashSet<Gene>();
     Collection<Gene> justRabble = new HashSet<Gene>();
+
+    @Autowired
     GeneServiceImpl svc;
     private Gene g = null;
     private Gene g2 = null;
@@ -62,8 +66,6 @@ public class GeneServiceImplTest {
     public void setUp() throws Exception {
 
         geneDaoMock = createMock( GeneDao.class );
-        svc = new GeneServiceImpl();
-        svc.setGeneDao( geneDaoMock );
         t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
         t.setScientificName( "moose" );
@@ -221,7 +223,7 @@ public class GeneServiceImplTest {
     @Test
     public void testFindByOfficialSymbol() {
         reset( geneDaoMock );
-        geneDaoMock.findByOfficalSymbol( "rabble" );
+        geneDaoMock.findByOfficialSymbol( "rabble" );
         expectLastCall().andReturn( justRab );
         replay( geneDaoMock );
         svc.findByOfficialSymbol( "rabble" );

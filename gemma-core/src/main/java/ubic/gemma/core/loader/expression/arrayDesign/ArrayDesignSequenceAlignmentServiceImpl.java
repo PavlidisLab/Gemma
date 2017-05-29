@@ -32,14 +32,14 @@ import ubic.gemma.core.apps.ShellDelegatingBlat;
 import ubic.gemma.core.externalDb.GoldenPathQuery;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.util.SequenceBinUtils;
 
 import java.io.IOException;
@@ -60,15 +60,21 @@ import java.util.Map;
 
 public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSequenceAlignmentService {
 
-    private static Log log = LogFactory.getLog( ArrayDesignSequenceAlignmentServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ArrayDesignSequenceAlignmentServiceImpl.class.getName() );
+
+    private final ArrayDesignReportService arrayDesignReportService;
+    private final ArrayDesignService arrayDesignService;
+    private final BioSequenceService bioSequenceService;
+    private final Persister persisterHelper;
+
     @Autowired
-    private ArrayDesignReportService arrayDesignReportService;
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-    @Autowired
-    private BioSequenceService bioSequenceService;
-    @Autowired
-    private Persister persisterHelper;
+    public ArrayDesignSequenceAlignmentServiceImpl( ArrayDesignReportService arrayDesignReportService,
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService, Persister persisterHelper ) {
+        this.arrayDesignReportService = arrayDesignReportService;
+        this.arrayDesignService = arrayDesignService;
+        this.bioSequenceService = bioSequenceService;
+        this.persisterHelper = persisterHelper;
+    }
 
     /**
      * @return all sequences, across all taxa that might be represented on the array design
@@ -83,7 +89,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
+        Collection<BioSequence> sequencesToBlat = new HashSet<>();
         int numWithNoBioSequence = 0;
         int numWithNoSequenceData = 0;
         boolean warned = false;
@@ -157,17 +163,17 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         log.info( "Looking for old results to remove..." );
 
-        ad = arrayDesignService.thaw( ad );
+        arrayDesignService.thaw( ad );
 
         arrayDesignService.deleteAlignmentData( ad );
         // Blat file processing can only be run on one taxon at a time
         taxon = validateTaxaForBlatFile( ad, taxon );
 
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
-        sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
+        bioSequenceService.thaw( sequencesToBlat );
 
         // if the blat results were loaded from a file, we have to replace the
-        // querysequences with the actual ones
+        // query sequences with the actual ones
         // attached to the array design. We have to do this by name because the
         // sequence name is what the files contain.
         // Note that if there is ambiguity there will be problems!
@@ -220,7 +226,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         Collection<BlatResult> results = persistBlatResults( rawBlatResults );
 
-        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+        arrayDesignReportService.generateArrayDesignReport( ad );
 
         return results;
     }
@@ -235,7 +241,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             }
             throw new IllegalArgumentException(
                     ( taxaOnArray == null ? "?" : taxaOnArray.size() ) + " taxon found for " + arrayDesign
-                            + " specifiy which taxon to run" );
+                            + " specify which taxon to run" );
 
         }
         return taxon;
@@ -268,7 +274,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             boolean sensitive, Taxon taxon, Blat blat ) {
 
         Map<BioSequence, Collection<BlatResult>> results = new HashMap<>();
-        sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
+        bioSequenceService.thaw( sequencesToBlat );
         try {
 
             Collection<BioSequence> needBlat = getGoldenPathAlignments( sequencesToBlat, taxon, results );
@@ -413,10 +419,10 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
                 nameMap.put( bs.getName(), bs );
             }
 
-            int noresults = 0;
+            int noResults = 0;
             int count = 0;
 
-            // We only delete the results here, after we have at least one set of blat results.
+            // We only remove the results here, after we have at least one set of blat results.
             if ( first ) {
                 log.info( "Looking for old results to remove..." );
                 arrayDesignService.deleteAlignmentData( ad );
@@ -429,7 +435,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
                 }
                 Collection<BlatResult> brs = results.get( nameMap.get( sequence.getName() ) );
                 if ( brs == null ) {
-                    ++noresults;
+                    ++noResults;
                     continue;
                 }
                 for ( BlatResult result : brs ) {
@@ -445,11 +451,11 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             }
 
-            log.info( noresults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
+            log.info( noResults + "/" + sequencesToBlat.size() + " sequences had no blat results" );
             first = false;
         }
 
-        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
+        arrayDesignReportService.generateArrayDesignReport( ad );
 
         return allResults;
 

@@ -281,7 +281,7 @@ public class ExpressionDataFileUploadController {
             Long arrayDesignId = arrayDesignIds.iterator().next();
 
             ArrayDesign design = arrayDesignService.load( arrayDesignId );
-            design = arrayDesignService.thaw( design );
+            arrayDesignService.thaw( design );
 
             // check that the probes can be matched up...
             int numRowsMatchingArrayDesign = 0;

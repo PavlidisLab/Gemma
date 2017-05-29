@@ -93,7 +93,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         expressionExperimentService.update( ee );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         // make sure we added an update event on the ee
         assertEquals( 2, auditEventService.getEvents( ee ).size() );
@@ -102,7 +102,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertEquals( 1, auditEventService.getEvents( ee.getExperimentalDesign() ).size() );
 
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
 
         checkDeletedTrails( trailIds, eventIds );
 
@@ -113,7 +113,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
 
         // should have create only
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
@@ -167,7 +167,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
 
         assertEquals( 16, ee.getBioAssays().size() );
 

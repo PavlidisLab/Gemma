@@ -30,7 +30,7 @@ import java.util.HashSet;
  *
  * @author paul et al
  */
-public class ArrayDesignValueObject extends AbstractCuratableValueObject
+public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign>
         implements java.io.Serializable, Comparable<ArrayDesignValueObject> {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -38,56 +38,34 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
     private static final long serialVersionUID = -8259245319391937522L;
 
     private String color;
-
     private String dateCached;
-
     private String description;
-
     private Integer designElementCount;
-
     private Integer expressionExperimentCount;
-
     private Boolean hasBlatAssociations;
-
     private Boolean hasGeneAssociations;
-
     private Boolean hasSequenceAssociations;
-
     private Boolean isMerged;
-
     private Boolean isMergee;
-
     private Boolean isSubsumed;
-
     private Boolean isSubsumer;
-
     private java.util.Date lastGeneMapping;
-
     private java.util.Date lastRepeatMask;
-
     private java.util.Date lastSequenceAnalysis;
-
     private java.util.Date lastSequenceUpdate;
-
     private String name;
-
     private String numGenes;
-
     private String numProbeAlignments;
-
     private String numProbeSequences;
-
     private String numProbesToGenes;
-
     private String shortName;
-
     private String taxon;
-
     private String technologyType;
 
     private boolean hasAnnotationFile;
 
-    public ArrayDesignValueObject() {
+    public ArrayDesignValueObject( Long id ) {
+        super( id );
     }
 
     /**
@@ -112,11 +90,10 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
-
+        super( ad.getId() );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
         this.description = ad.getDescription();
-        this.id = ad.getId();
 
     }
 
@@ -317,9 +294,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.isSubsumer = isSubsumer;
     }
 
-    /**
-     *
-     */
     public java.util.Date getLastGeneMapping() {
         return this.lastGeneMapping;
     }
@@ -413,9 +387,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.numProbesToGenes = numProbesToGenes;
     }
 
-    /**
-     *
-     */
     public String getShortName() {
         return this.shortName;
     }
@@ -424,9 +395,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.shortName = shortName;
     }
 
-    /**
-     *
-     */
     public String getTaxon() {
         return this.taxon;
     }
@@ -435,9 +403,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.taxon = taxon;
     }
 
-    /**
-     *
-     */
     public String getTechnologyType() {
         return this.technologyType;
     }

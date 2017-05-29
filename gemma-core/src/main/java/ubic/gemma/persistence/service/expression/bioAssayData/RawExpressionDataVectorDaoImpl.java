@@ -9,8 +9,6 @@
 
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
@@ -21,7 +19,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVectorImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.util.BusinessKey;
@@ -37,11 +34,9 @@ import java.util.List;
 public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoImpl<RawExpressionDataVector>
         implements RawExpressionDataVectorDao {
 
-    private static final Log log = LogFactory.getLog( RawExpressionDataVectorDaoImpl.class.getName() );
-
     @Autowired
     public RawExpressionDataVectorDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( RawExpressionDataVector.class, sessionFactory );
     }
 
     @Override
@@ -55,13 +50,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         return ee;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * DesignElementDataVectorDao#find(ubic.gemma.model.expression.arrayDesign
-     * .ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)
-     */
     @Override
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         final String queryString =
@@ -69,11 +57,9 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
                         + " inner join fetch dev.designElement de inner join fetch dev.quantitationType inner join de.arrayDesign ad where ad.id = :adid "
                         + "and dev.quantitationType = :quantitationType ";
 
-        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
-        queryObject.setParameter( "quantitationType", quantitationType );
-        queryObject.setParameter( "adid", arrayDesign.getId() );
-
-        return queryObject.list();
+        //noinspection unchecked
+        return this.getSession().createQuery( queryString ).setParameter( "quantitationType", quantitationType )
+                .setParameter( "adid", arrayDesign.getId() ).list();
 
     }
 
@@ -81,12 +67,15 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
         Collection<? extends DesignElementDataVector> results = new HashSet<>();
 
-        results.addAll( this.getHibernateTemplate()
-                .findByNamedParam( "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad",
-                        "bad", bioAssayDimension ) );
-        results.addAll( this.getHibernateTemplate()
-                .findByNamedParam( "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad",
-                        "bad", bioAssayDimension ) );
+        //noinspection unchecked
+        results.addAll( this.getSession()
+                .createQuery( "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad" )
+                .setParameter( "bad", bioAssayDimension ).list() );
+
+        //noinspection unchecked
+        results.addAll( this.getSession()
+                .createQuery( "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad" )
+                .setParameter( "bad", bioAssayDimension ).list() );
         return results;
 
     }
@@ -95,35 +84,16 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameterList( "quantitationTypes", quantitationTypes );
-            return queryObject.list();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        //noinspection unchecked
+        return this.getSession().createQuery( queryString ).setParameterList( "quantitationTypes", quantitationTypes )
+                .list();
     }
 
     @Override
     public Collection<RawExpressionDataVector> find( QuantitationType quantitationType ) {
-        final String queryString = "select dev from RawExpressionDataVectorImpl dev   where  "
-                + "  dev.quantitationType = :quantitationType ";
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
-            queryObject.setParameter( "quantitationType", quantitationType );
-            return queryObject.list();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return this.findByProperty( "quantitationType", quantitationType );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * DesignElementDataVectorDao#find(ubic.gemma.model.expression.bioAssayData
-     * .DesignElementDataVector)
-     */
     @Override
     public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
 
@@ -158,39 +128,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     }
 
-    /**
-     * @see DesignElementDataVectorDao#load(java.lang.Long)
-     */
-
-    @Override
-    public RawExpressionDataVector load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "RawExpressionDataVector.load - 'id' can not be null" );
-        }
-        return this.getHibernateTemplate().get( RawExpressionDataVectorImpl.class, id );
-
-    }
-
-    /**
-     * @see DesignElementDataVectorDao#loadAll()
-     */
-    @Override
-    public java.util.Collection<? extends RawExpressionDataVector> loadAll() {
-        return this.getHibernateTemplate().loadAll( RawExpressionDataVectorImpl.class );
-    }
-
-    @Override
-    public void remove( RawExpressionDataVector designElementDataVector ) {
-        this.getHibernateTemplate().delete( designElementDataVector );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * DesignElementDataVectorDaoBase#handleRemoveDataForCompositeSequence(
-     * ubic.gemma.model.expression.designElement.CompositeSequence)
-     */
     @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
         // rarely used.
@@ -218,18 +155,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         final String dedvRemovalQuery = "delete from RawExpressionDataVectorImpl as dedv where dedv.quantitationType = ?";
         int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, quantitationType );
         log.info( "Deleted " + deleted + " data vector elements" );
-    }
-
-    @Override
-    protected Integer handleCountAll() {
-        final String query = "select count(*) from RawExpressionDataVectorImpl";
-        try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( query );
-
-            return ( Integer ) queryObject.iterate().next();
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
     }
 
 }

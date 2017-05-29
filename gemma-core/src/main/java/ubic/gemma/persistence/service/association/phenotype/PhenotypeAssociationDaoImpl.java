@@ -60,33 +60,18 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     private static final Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super( PhenotypeAssociation.class );
-        super.setSessionFactory( sessionFactory );
+        super( PhenotypeAssociation.class, sessionFactory );
     }
 
-    private void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
-        if ( SecurityUtil.isUserAnonymous() ) {
-            return;
-        }
-
-        String userName = SecurityUtil.getCurrentUsername();
-
-        // if user is member of any groups.
-        if ( sqlQuery.contains( ":groups" ) ) {
-            //noinspection unchecked
-            Collection<String> groups = this.getSessionFactory().getCurrentSession().createQuery(
-                    "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
-                    .setParameter( "user", userName ).list();
-            queryObject.setParameterList( "groups", groups );
-        }
-
-        if ( sqlQuery.contains( ":userName" ) ) {
-            queryObject.setParameter( "userName", userName );
-        }
-
-    }
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     /**
      * counts the evidence that from neurocarta that came from a specific MetaAnalysis
@@ -117,7 +102,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
 
-            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject();
+            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject(-1L);
             characteristicValueObject.setCategoryUri( ( String ) results.get( 0 ) );
             characteristicValueObject.setCategory( ( String ) results.get( 1 ) );
             mgedCategory.add( characteristicValueObject );
@@ -327,7 +312,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Collection<PhenotypeAssociation> evidenceWithSource;
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
-            String ids = "";
+            StringBuilder ids = new StringBuilder();
 
             for ( Long id : externalDatabaseIds ) {
 
@@ -337,11 +322,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 } else {
                     // an External Database excluded
                     excludeExternalDatabase = true;
-                    ids = ids + id + ",";
+                    ids.append( id ).append( "," );
                 }
             }
 
-            ids = StringUtils.removeEnd( ids, "," );
+            ids = new StringBuilder( StringUtils.removeEnd( ids.toString(), "," ) );
 
             if ( !excludeManualCuration ) {
                 // get all manual curated evidence (the ones with no external source)
@@ -577,23 +562,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     @Override
-    public Collection<PhenotypeAssociation> load( Collection<Long> ids ) {
-        if ( ids.isEmpty() )
-            return new HashSet<>();
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from PhenotypeAssociation fetch all properties where id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
-    }
-
-    @Override
-    public PhenotypeAssociation load( Long id ) {
-        return ( PhenotypeAssociation ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" ).setParameter( "id", id )
-                .uniqueResult();
-    }
-
-    @Override
     public Collection<String> loadAllDescription() {
         //noinspection unchecked
         return this.getHibernateTemplate().find( "select distinct p.description from PhenotypeAssociation as p " );
@@ -794,10 +762,23 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 phenotypeAssociationPublicationId );
     }
 
+    @Override
+    public void thaw( PhenotypeAssociation entity ) {
+    }
+
+    @Override
+    public PhenotypeAssociation find( PhenotypeAssociation entity ) {
+        return load( entity.getId() );
+    }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private String addExternalDatabaseQuery( Collection<Long> externalDatabaseIds ) {
 
         String externalDatabaseSqlQuery = "";
-        String listIds = "";
+        StringBuilder listIds = new StringBuilder();
         Boolean excludeManualCuration = false;
         Boolean excludeExternalDatabase = false;
 
@@ -808,12 +789,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 if ( id.equals( 1L ) ) {
                     excludeManualCuration = true;
                 } else {
-                    listIds = listIds + id + ",";
+                    listIds.append( id ).append( "," );
                     excludeExternalDatabase = true;
                 }
             }
 
-            listIds = StringUtils.removeEnd( listIds, "," );
+            listIds = new StringBuilder( StringUtils.removeEnd( listIds.toString(), "," ) );
             // SLIGHTLY UNSAFE USE PARAMETER
             if ( excludeManualCuration && excludeExternalDatabase ) {
                 externalDatabaseSqlQuery = "and"
@@ -928,8 +909,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( genesWithPhenotypes.get( geneId ) != null ) {
                 genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
             } else {
-                GeneEvidenceValueObject g = new GeneEvidenceValueObject();
-                g.setId( geneId );
+                GeneEvidenceValueObject g = new GeneEvidenceValueObject( geneId );
                 g.setNcbiId( nbciGeneId );
                 g.setOfficialName( officialName );
                 g.setOfficialSymbol( officialSymbol );
@@ -947,4 +927,27 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return genesWithPhenotypes.values();
     }
+
+    private void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return;
+        }
+
+        String userName = SecurityUtil.getCurrentUsername();
+
+        // if user is member of any groups.
+        if ( sqlQuery.contains( ":groups" ) ) {
+            //noinspection unchecked
+            Collection<String> groups = this.getSessionFactory().getCurrentSession().createQuery(
+                    "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
+                    .setParameter( "user", userName ).list();
+            queryObject.setParameterList( "groups", groups );
+        }
+
+        if ( sqlQuery.contains( ":userName" ) ) {
+            queryObject.setParameter( "userName", userName );
+        }
+
+    }
+
 }

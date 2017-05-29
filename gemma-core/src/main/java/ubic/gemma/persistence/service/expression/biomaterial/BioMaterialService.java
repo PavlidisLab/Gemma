@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
 import java.util.Date;
@@ -31,21 +32,13 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface BioMaterialService {
+public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
 
     /**
      * Copies a bioMaterial.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     BioMaterial copy( BioMaterial bioMaterial );
-
-    /**
-     * Total number of biomaterials in the system.
-     */
-    Integer countAll();
-
-    @Secured({ "GROUP_USER" })
-    BioMaterial create( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
@@ -66,7 +59,7 @@ public interface BioMaterialService {
     Collection<BioMaterial> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> loadMultiple( Collection<Long> ids );
+    Collection<BioMaterial> load( Collection<Long> ids );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( BioMaterial bioMaterial );
@@ -75,7 +68,7 @@ public interface BioMaterialService {
     void thaw( BioMaterial bioMaterial );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials );
+    void thaw( Collection<BioMaterial> bioMaterials );
 
     /**
      * Updates the given biomaterial to the database.
@@ -98,6 +91,6 @@ public interface BioMaterialService {
     @Secured({ "GROUP_ADMIN" })
     void associateBatchFactor( Map<BioMaterial, Date> dates, Map<Date, FactorValue> d2fv );
 
-    String getBioMaterialIdList( Collection<BioMaterial> bioMaterials);
+    String getBioMaterialIdList( Collection<BioMaterial> bioMaterials );
 
 }

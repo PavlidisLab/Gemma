@@ -34,7 +34,7 @@
          <key foreign-key="EXPERIMENTAL_FACTOR_EXPERIMENTAL_DESIGN_FKC">
             <column name="EXPERIMENTAL_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactor"/>
       </set>
       <set name="types"  lazy="false" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />

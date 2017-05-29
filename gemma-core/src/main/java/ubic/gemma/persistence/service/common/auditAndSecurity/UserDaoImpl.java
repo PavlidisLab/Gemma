@@ -18,15 +18,14 @@ import gemma.gsec.AuthorityConstants;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.*;
@@ -38,11 +37,11 @@ import java.util.*;
  * @see ubic.gemma.model.common.auditAndSecurity.User
  */
 @Repository
-public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
+public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     @Autowired
     public UserDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( User.class, sessionFactory );
     }
 
     @Override
@@ -54,26 +53,6 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     public void changePassword( User user, String password ) {
         user.setPassword( password );
         this.getSessionFactory().getCurrentSession().update( user );
-    }
-
-    @Override
-    public Collection<? extends User> create( final Collection<? extends User> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "User.create - 'entities' can not be null" );
-        }
-        for ( User user : entities ) {
-            create( user );
-        }
-        return entities;
-    }
-
-    @Override
-    public User create( final User user ) {
-        if ( user == null ) {
-            throw new IllegalArgumentException( "User.create - 'user' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().save( user );
-        return user;
     }
 
     @Override
@@ -106,27 +85,6 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     }
 
     @Override
-    public Collection<? extends User> load( Collection<Long> ids ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from User where id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
-    }
-
-    @Override
-    public User load( final Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "User.load - 'id' can not be null" );
-        }
-        return ( User ) this.getSessionFactory().getCurrentSession().get( User.class, id );
-    }
-
-    @Override
-    public Collection<? extends User> loadAll() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( User.class ).list();
-    }
-
-    @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery(
@@ -144,41 +102,11 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
     }
 
     @Override
-    public void remove( Collection<? extends User> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "User.remove - 'entities' can not be null" );
-        }
-        for ( User u : entities ) {
-            this.remove( u );
-        }
+    public void thaw( User entity ) {
     }
 
     @Override
-    public void remove( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "User.remove - 'id' can not be null" );
-        }
-        User entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    @Override
-    public void remove( User user ) {
-        if ( user == null ) {
-            throw new IllegalArgumentException( "User.remove - 'user' can not be null" );
-        }
-
-        if ( user.getName() != null && user.getName().equals( AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME ) ) {
-            throw new IllegalArgumentException(
-                    "Cannot delete user " + AuthorityConstants.REQUIRED_ADMINISTRATOR_USER_NAME );
-        }
-        this.getSessionFactory().getCurrentSession().delete( user );
-    }
-
-    @Override
-    public void update( final Collection<? extends User> entities ) {
+    public void update( final Collection<User> entities ) {
         throw new UnsupportedOperationException( "Cannot update users in bulk" );
     }
 
@@ -213,15 +141,14 @@ public class UserDaoImpl extends HibernateDaoSupport implements UserDao {
 
     private User handleFindByEmail( final String email ) {
         //noinspection unchecked
-        List<User> list = this.getSessionFactory().getCurrentSession().createQuery(
-                "from User c where c.email = :email" )
-                .setParameter( "email", email ).list();
-        Set<User> results = new HashSet<>(list);
+        List<User> list = this.getSessionFactory().getCurrentSession()
+                .createQuery( "from User c where c.email = :email" ).setParameter( "email", email ).list();
+        Set<User> results = new HashSet<>( list );
         User result = null;
         if ( results.size() > 1 ) {
             throw new InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'Contact" + "' was found when executing query --> '" + "from User c where c.email = :email"
-                            + "'" );
+                    "More than one instance of 'Contact" + "' was found when executing query --> '"
+                            + "from User c where c.email = :email" + "'" );
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }

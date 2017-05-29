@@ -18,111 +18,37 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.Collection;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.expression.bioAssayData.DesignElementDataVector</code>.
+ * <code>DesignElementDataVector</code>.
  * </p>
- * 
- * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
+ *
+ * @see DesignElementDataVector
  */
-public abstract class DesignElementDataVectorDaoBase<T extends DesignElementDataVector> extends
-        org.springframework.orm.hibernate3.support.HibernateDaoSupport implements DesignElementDataVectorDao<T> {
+public abstract class DesignElementDataVectorDaoBase<T extends DesignElementDataVector> extends AbstractDao<T>
+        implements DesignElementDataVectorDao<T> {
 
-    /**
-     * @see DesignElementDataVectorDao#countAll()
-     */
-    @Override
-    public java.lang.Integer countAll() {
-        return this.handleCountAll();
+    DesignElementDataVectorDaoBase( Class<T> elementClass, SessionFactory sessionFactory ) {
+        super( elementClass, sessionFactory );
     }
 
     /**
-     * @see DesignElementDataVectorDao#create(int, java.util.Collection)
+     * @see DesignElementDataVectorDao#thaw(Collection)
      */
     @Override
-    public java.util.Collection<T> create( final java.util.Collection<T> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<T> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-        return entities;
-    }
-
-    /**
-     * @see DesignElementDataVectorDao#create(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    @Override
-    public T create( T designElementDataVector ) {
-        if ( designElementDataVector == null ) {
-            throw new IllegalArgumentException(
-                    "DesignElementDataVector.create - 'designElementDataVector' can not be null" );
-        }
-        this.getHibernateTemplate().save( designElementDataVector );
-        return designElementDataVector;
-    }
-
-    /**
-     * @see DesignElementDataVectorDao#remove(java.lang.Long)
-     */
-
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector.remove - 'id' can not be null" );
-        }
-        T entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#remove(java.util.Collection)
-     */
-
-    @Override
-    public void remove( java.util.Collection<T> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see DesignElementDataVectorDao#remove(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    @Override
-    public void remove( T designElementDataVector ) {
-        if ( designElementDataVector == null ) {
-            throw new IllegalArgumentException(
-                    "DesignElementDataVector.remove - 'designElementDataVector' can not be null" );
-        }
-        this.getHibernateTemplate().delete( designElementDataVector );
-    }
-
-    /**
-     * @see DesignElementDataVectorDao#thaw(java.util.Collection)
-     */
-    @Override
-    public void thaw( final java.util.Collection<? extends DesignElementDataVector> designElementDataVectors ) {
+    public void thaw( final Collection<? extends DesignElementDataVector> designElementDataVectors ) {
         this.handleThaw( designElementDataVectors );
     }
 
     /**
-     * @see DesignElementDataVectorDao#thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
+     * @see DesignElementDataVectorDao#thaw(DesignElementDataVector)
      */
     @Override
     public void thaw( final T designElementDataVector ) {
@@ -130,52 +56,12 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
     }
 
     /**
-     * @see ubic.gemma.model.expression.bioAssayData.DataVectorDao#update(java.util.Collection)
+     * Performs the core logic for {@link #thaw(Collection)}
      */
-
-    @Override
-    public void update( final java.util.Collection<T> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector.update - 'entities' can not be null" );
-        }
-
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<T> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
+    protected abstract void handleThaw( Collection<? extends DesignElementDataVector> designElementDataVectors );
 
     /**
-     * @see DesignElementDataVectorDao#update(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)
-     */
-    @Override
-    public void update( T designElementDataVector ) {
-        if ( designElementDataVector == null ) {
-            throw new IllegalArgumentException(
-                    "DesignElementDataVector.update - 'designElementDataVector' can not be null" );
-        }
-        this.getHibernateTemplate().update( designElementDataVector );
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll();
-
-    /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract void handleThaw( java.util.Collection<? extends DesignElementDataVector> designElementDataVectors );
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.bioAssayData.DesignElementDataVector)}
+     * Performs the core logic for {@link #thaw(DesignElementDataVector)}
      */
     protected abstract void handleThaw( T designElementDataVector );
 

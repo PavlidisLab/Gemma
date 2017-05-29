@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.expression.bioAssay;
 
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -27,13 +28,12 @@ import java.util.HashSet;
 /**
  * @author Paul
  */
-public class BioAssayValueObject implements Serializable {
+public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> implements Serializable {
 
     private static final long serialVersionUID = 9164284536309673585L;
     private DatabaseEntryValueObject accession = null;
     private ArrayDesignValueObject arrayDesign;
     private String description = "";
-    private Long id = null;
     private String name = "";
     // if it was removed as an outlier
     private Boolean outlier = false;
@@ -47,25 +47,21 @@ public class BioAssayValueObject implements Serializable {
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
-    public BioAssayValueObject() {
-
+    public BioAssayValueObject( Long id ) {
+        super( id );
     }
 
     /**
-     * This method is a bit dangerous because we get lazy-load errors.
-     *
-     * @deprecated
+     * FIXME This method is a bit dangerous because we can get lazy-load errors.
      */
-    @Deprecated
     public BioAssayValueObject( BioAssay bioAssay ) {
-        this.id = bioAssay.getId();
+        super( bioAssay.getId() );
         this.name = bioAssay.getName();
         this.description = bioAssay.getDescription();
 
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
-        this.arrayDesign = new ArrayDesignValueObject();
-        arrayDesign.setId( ad.getId() );
+        this.arrayDesign = new ArrayDesignValueObject(ad.getId());
         arrayDesign.setShortName( ad.getShortName() );
         arrayDesign.setName( ad.getName() );
 
@@ -143,14 +139,6 @@ public class BioAssayValueObject implements Serializable {
 
     public void setDescription( String description ) {
         this.description = description;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public String getName() {

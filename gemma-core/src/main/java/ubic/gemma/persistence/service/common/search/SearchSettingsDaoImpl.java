@@ -23,23 +23,12 @@ import ubic.gemma.persistence.service.AbstractDao;
 
 /**
  * @author Paul
- * @version $Id$
  */
 @Repository
 public class SearchSettingsDaoImpl extends AbstractDao<SearchSettings> implements SearchSettingsDao {
 
     @Autowired
     public SearchSettingsDaoImpl( SessionFactory sessionFactory ) {
-        super( SearchSettingsDaoImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( SearchSettings.class, sessionFactory );
     }
-    
-    @Override
-    public SearchSettings create( SearchSettings searchSettings ) {
-        this.getHibernateTemplate().save( searchSettings );
-        
-        return searchSettings;
-
-    }
-
 }

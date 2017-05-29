@@ -28,14 +28,15 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
 import java.util.Map;
 
-public interface ArrayDesignService {
+public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, ArrayDesignValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
-    void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newprobes );
+    void addProbes( ArrayDesign arrayDesign, Collection<CompositeSequence> newProbes );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have any bioSequence associations.
@@ -56,15 +57,7 @@ public interface ArrayDesignService {
     Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
     /**
-     * @return global count of compositeSequences in the system.
-     */
-    Integer countAll();
-
-    @Secured({ "GROUP_USER" })
-    ArrayDesign create( ArrayDesign arrayDesign );
-
-    /**
-     * delete sequence alignment results associated with the bioSequences for this array design. This can indirectly
+     * remove sequence alignment results associated with the bioSequences for this array design. This can indirectly
      * affect other platforms that use the same sequences.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -178,38 +171,14 @@ public interface ArrayDesignService {
 
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
-    ArrayDesign load( long id );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ArrayDesign> loadAll();
-
-    /**
-     * loads all Array designs as value objects.
-     */
-    Collection<ArrayDesignValueObject> loadAllValueObjects();
-
-    /**
-     * Given a collection of ID (longs) will return a collection of ArrayDesigns
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ArrayDesign> loadMultiple( Collection<Long> ids );
-
-    /**
-     * loads the Value Objects for the Array Designs specified by the input ids.
-     */
-    ArrayDesignValueObject loadValueObject( Long id );
-
-    /**
-     * loads the Value Objects for the Array Designs specified by the input ids.
-     */
-    Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
-
     /**
      * Loads the Value Objects for array designs used by expression experiment with the given ID
+     *
      * @param eeId the id of an expression experiment
      */
     Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
+
+    Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     /**
      * Function to return a count of all compositeSequences with bioSequence associations
@@ -291,25 +260,19 @@ public interface ArrayDesignService {
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual
      * oligonucleotide is not given. Instead the submitter provides Genbank accessions, which are misleading. This
      * method can be used to clear those until the "right" sequences can be identified and filled in. Note that this
-     * does not delete the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
+     * does not remove the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    ArrayDesign thawLite( ArrayDesign arrayDesign );
+    void thawLite( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
-
-    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void update( ArrayDesign arrayDesign );
+    void thawLite( Collection<ArrayDesign> arrayDesigns );
 
     /**
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to

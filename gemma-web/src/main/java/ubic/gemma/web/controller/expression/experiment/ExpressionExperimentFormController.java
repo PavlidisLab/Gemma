@@ -99,10 +99,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
+
      * @return ModelAndView
      * @throws Exception
      */
@@ -117,9 +114,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new IllegalArgumentException( "Could not load experiment" );
         }
 
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
 
-        /**
+        /*
          * Much more complicated
          */
         boolean changedQT = updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
@@ -251,12 +248,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new IllegalArgumentException( "Could not load experiment with id=" + id );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
-        qts.addAll( QuantitationTypeValueObject
-                .convert2ValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
+        qts.addAll( quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ));
 
-        obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( id ) );
+        obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( ee ) );
 
         obj.setQuantitationTypes( qts );
         obj.setBioAssays( BioAssayValueObject.convert2ValueObjects( ee.getBioAssays() ) );
@@ -292,9 +288,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return referenceData;
     }
 
-    /**
-     * @param arrayDesign
-     */
+
     private void audit( ExpressionExperiment ee, AuditEventType eventType, String note ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
@@ -387,7 +381,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         if ( anyChanges ) {
             /*
-             * FIXME Decide if we need to delete the biomaterial -> factor value associations, it could be completely
+             * FIXME Decide if we need to remove the biomaterial -> factor value associations, it could be completely
              * fouled up.
              */
             log.info( "There were changes to the BioMaterial -> BioAssay map" );

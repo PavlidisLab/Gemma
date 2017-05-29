@@ -16,6 +16,7 @@ public class EvidenceSourceValueObject extends DatabaseEntryValueObject {
     }
 
     public EvidenceSourceValueObject( String accession, ExternalDatabaseValueObject externalDatabase ) {
+        super(-1L); // does not represent persistent database entry
         setAccession( accession );
         setExternalDatabase( externalDatabase );
     }

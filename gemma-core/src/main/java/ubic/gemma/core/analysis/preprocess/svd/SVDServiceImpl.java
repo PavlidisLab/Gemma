@@ -19,6 +19,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import org.springframework.stereotype.Service;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -27,7 +28,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * Perform SVD on expression data and store the results.
  */
-@Component
+@Service
 public class SVDServiceImpl implements SVDService {
 
     @Autowired
@@ -38,17 +39,13 @@ public class SVDServiceImpl implements SVDService {
 
     /**
      * Get the SVD information for experiment with id given.
-     * 
-     * @param id
+     *
      * @return value or null if there isn't one.
      */
     @Override
     public SVDValueObject getSvd( Long eeId ) {
-
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
-
         return svdServiceHelper.retrieveSvd( ee );
-
     }
 
     @Override
@@ -70,10 +67,6 @@ public class SVDServiceImpl implements SVDService {
 
     }
 
-    /**
-     * @param ee
-     * @return
-     */
     @Override
     public boolean hasPca( Long eeId ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeId );

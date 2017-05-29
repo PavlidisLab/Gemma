@@ -29,19 +29,15 @@ import java.util.Collection;
  */
 public interface BioAssayDao extends BaseDao<BioAssay> {
 
-    java.lang.Integer countAll();
-
     BioAssay find( BioAssay bioAssay );
 
-    java.util.Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
+    Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     Collection<BioAssay> findByAccession( String accession );
 
     BioAssay findOrCreate( BioAssay bioAssay );
 
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
-
-    void thaw( BioAssay bioAssay );
 
     Collection<BioAssay> loadValueObjects( Collection<Long> ids );
 

@@ -76,31 +76,49 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapperService {
 
     private static final int QUEUE_SIZE = 20000;
-    private static Log log = LogFactory.getLog( ArrayDesignProbeMapperServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ArrayDesignProbeMapperServiceImpl.class.getName() );
+
+    private final AnnotationAssociationService annotationAssociationService;
+    private final ArrayDesignAnnotationService arrayDesignAnnotationService;
+    private final ArrayDesignReportService arrayDesignReportService;
+    private final ArrayDesignService arrayDesignService;
+    private final BioSequenceService bioSequenceService;
+    private final BlatResultService blatResultService;
+    private final CompositeSequenceService compositeSequenceService;
+    private final ExpressionDataFileService expressionDataFileService;
+    private final GeneProductService geneProductService;
+    private final GeneService geneService;
+    private final Persister persisterHelper;
+    private final ProbeMapper probeMapper;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     @Autowired
-    private AnnotationAssociationService annotationAssociationService;
-    @Autowired
-    private ArrayDesignAnnotationService arrayDesignAnnotationService;
-    @Autowired
-    private ArrayDesignReportService arrayDesignReportService;
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-    @Autowired
-    private BioSequenceService bioSequenceService;
-    @Autowired
-    private BlatResultService blatResultService;
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
-    @Autowired
-    private ExpressionDataFileService expressionDataFileService;
-    @Autowired
-    private GeneProductService geneProductService;
-    @Autowired
-    private GeneService geneService;
-    @Autowired
-    private Persister persisterHelper;
-    @Autowired
-    private ProbeMapper probeMapper;
+    public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
+            ArrayDesignAnnotationService arrayDesignAnnotationService,
+            ArrayDesignReportService arrayDesignReportService, ArrayDesignService arrayDesignService,
+            ProbeMapper probeMapper, BioSequenceService bioSequenceService, BlatResultService blatResultService,
+            CompositeSequenceService compositeSequenceService, ExpressionDataFileService expressionDataFileService,
+            GeneProductService geneProductService, GeneService geneService, Persister persisterHelper ) {
+        this.annotationAssociationService = annotationAssociationService;
+        this.arrayDesignAnnotationService = arrayDesignAnnotationService;
+        this.arrayDesignReportService = arrayDesignReportService;
+        this.arrayDesignService = arrayDesignService;
+        this.probeMapper = probeMapper;
+        this.bioSequenceService = bioSequenceService;
+        this.blatResultService = blatResultService;
+        this.compositeSequenceService = compositeSequenceService;
+        this.expressionDataFileService = expressionDataFileService;
+        this.geneProductService = geneProductService;
+        this.geneService = geneService;
+        this.persisterHelper = persisterHelper;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
@@ -189,12 +207,12 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
 
         try {
             this.deleteOldFiles( arrayDesign );
         } catch ( IOException e ) {
-            log.error( "Failed to delete all old files associated with " + arrayDesign
+            log.error( "Failed to remove all old files associated with " + arrayDesign
                     + ", be sure to clean them up manually or regenerate them" );
         }
 
@@ -213,8 +231,8 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                     "Do not use this service to process platforms that do not use an probe-based technology." );
         }
 
-        try (BufferedReader b = new BufferedReader( new FileReader( source ) );) {
-            String line = null;
+        try (BufferedReader b = new BufferedReader( new FileReader( source ) )) {
+            String line;
             int numSkipped = 0;
 
             log.info( "Removing any old associations" );
@@ -260,7 +278,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 Collection<Gene> geneListProbe = new HashSet<>();
 
                 // indicate multiple genes
-                Gene geneDetails = null;
+                Gene geneDetails;
 
                 StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
                 while ( st.hasMoreTokens() ) {
@@ -290,7 +308,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
                 if ( bs != null ) {
                     if ( StringUtils.isNotBlank( seqName ) ) {
-                        bs = bioSequenceService.thaw( bs );
+                        bioSequenceService.thaw( bs );
                         if ( !bs.getName().equals( seqName ) ) {
                             log.warn( "Sequence name '" + seqName + "' given for " + probeId
                                     + " does not match existing entry " + bs.getName() + ", skipping" );
@@ -328,7 +346,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 assert bs != null;
                 assert bs.getId() != null;
                 for ( Gene gene : geneListProbe ) {
-                    gene = geneService.thaw( gene );
+                    geneService.thaw( gene );
                     if ( gene.getProducts().size() == 0 ) {
                         log.warn( "There are no gene products for " + gene
                                 + ", it cannot be mapped to probes. Skipping" );
@@ -347,7 +365,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
             }
 
-            arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+            arrayDesignReportService.generateArrayDesignReport( arrayDesign);
 
             this.deleteOldFiles( arrayDesign );
 
@@ -385,12 +403,14 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         if ( blatResults == null || blatResults.isEmpty() )
             return null;
 
-        Map<String, Collection<BlatAssociation>> results = probeMapper.processBlatResults( db, blatResults, config );
-
-        return results;
+        return probeMapper.processBlatResults( db, blatResults, config );
     }
 
-    void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
+    /* ********************************
+     * Private methods
+     * ********************************/
+
+    private void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
             boolean persist ) {
         int loadedAssociationCount = 0;
         while ( !( generatorDone.get() && queue.isEmpty() ) ) {
@@ -450,7 +470,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         loaderDone.set( true );
     }
 
-    private final GeneProduct checkForAlias( GeneProduct geneProduct ) {
+    private GeneProduct checkForAlias( GeneProduct geneProduct ) {
         Collection<GeneProduct> candidates = geneProductService
                 .findByName( geneProduct.getName(), geneProduct.getGene().getTaxon() );
 
@@ -530,11 +550,11 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
      * Wrapper
      */
     private class BACS {
-        BlatAssociation ba;
+        final BlatAssociation ba;
 
-        CompositeSequence cs;
+        final CompositeSequence cs;
 
-        public BACS( CompositeSequence compositeSequence, BlatAssociation association ) {
+        BACS( CompositeSequence compositeSequence, BlatAssociation association ) {
             this.cs = compositeSequence;
             this.ba = association;
         }

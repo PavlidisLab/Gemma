@@ -23,12 +23,12 @@ alter table ACLOBJECTIDENTITY drop column OLD_OBJECT_CLASS ;
 
 select distinct * from  ACLOBJECTIDENTITY o, INVESTIGATION subset, ACLOBJECTIDENTITY op  
  where o.OBJECT_ID=subset.ID  and subset.SOURCE_EXPERIMENT_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" 
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
  and o.PARENT_OBJECT_FK IS NULL limit 1 \G
  
 update ACLOBJECTIDENTITY o, INVESTIGATION subset, ACLOBJECTIDENTITY op set o.PARENT_OBJECT_FK=op.ID
  where o.OBJECT_ID=subset.ID  and subset.SOURCE_EXPERIMENT_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
  and o.PARENT_OBJECT_FK IS NULL;
  
  -- fill in parent for analyses

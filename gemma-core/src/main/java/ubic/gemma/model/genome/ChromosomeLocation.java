@@ -18,10 +18,14 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
+
 /**
- * 
+ *
  */
-public abstract class ChromosomeLocation implements java.io.Serializable {
+public abstract class ChromosomeLocation implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -29,11 +33,11 @@ public abstract class ChromosomeLocation implements java.io.Serializable {
     private static final long serialVersionUID = -4932607147290671454L;
 
     private Long id;
-    private ubic.gemma.model.genome.Chromosome chromosome;
+    private Chromosome chromosome;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ChromosomeLocation() {
@@ -61,20 +65,6 @@ public abstract class ChromosomeLocation implements java.io.Serializable {
     }
 
     /**
-     * 
-     */
-    public ubic.gemma.model.genome.Chromosome getChromosome() {
-        return this.chromosome;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
      * Returns a hash code based on this entity's identifiers.
      */
     @Override
@@ -85,8 +75,16 @@ public abstract class ChromosomeLocation implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setChromosome( ubic.gemma.model.genome.Chromosome chromosome ) {
+    public Chromosome getChromosome() {
+        return this.chromosome;
+    }
+
+    public void setChromosome( Chromosome chromosome ) {
         this.chromosome = chromosome;
+    }
+
+    public Long getId() {
+        return this.id;
     }
 
     public void setId( Long id ) {

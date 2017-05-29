@@ -33,7 +33,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
  * 
  * @author jsantos
  * @author paul
- * @version $Id$
  */
 public class GeneMappingSummary implements Serializable {
 
@@ -48,8 +47,8 @@ public class GeneMappingSummary implements Serializable {
     /*
      * These maps are maintained for javascript clients, which cannot marshal maps unless the keys are strings.
      */
-    private Map<String, GeneProductValueObject> geneProductIdMap;
-    private Map<String, GeneValueObject> geneProductIdGeneMap;
+    private final Map<String, GeneProductValueObject> geneProductIdMap;
+    private final Map<String, GeneValueObject> geneProductIdGeneMap;
 
     private double identity = 0.0;
     private double score = 0.0;
@@ -58,9 +57,9 @@ public class GeneMappingSummary implements Serializable {
     private String blatResultId;
 
     public GeneMappingSummary() {
-        geneProductMap = new HashMap<GeneProductValueObject, GeneValueObject>();
-        geneProductIdMap = new HashMap<String, GeneProductValueObject>();
-        geneProductIdGeneMap = new HashMap<String, GeneValueObject>();
+        geneProductMap = new HashMap<>();
+        geneProductIdMap = new HashMap<>();
+        geneProductIdGeneMap = new HashMap<>();
     }
 
     /**
@@ -105,10 +104,6 @@ public class GeneMappingSummary implements Serializable {
         return this.geneProductMap.get( geneProduct );
     }
 
-    /**
-     * @param geneProduct
-     * @param gene
-     */
     public void addGene( GeneProductValueObject geneProduct, GeneValueObject gene ) {
         geneProductIdMap.put( geneProduct.getId().toString(), geneProduct );
         geneProductMap.put( geneProduct, gene );

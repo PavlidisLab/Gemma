@@ -201,7 +201,8 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         ArrayDesignService ads = getBean( ArrayDesignService.class );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            ArrayDesign ad = ads.thawLite( ( ( ArrayDesign ) object ) );
+                            ArrayDesign ad = (ArrayDesign ) object  ;
+                            ads.thawLite( ad );
 
                             successObjects.add( ad.getName() + " ("
                                     + ad.getExternalReferences().iterator().next().getAccession() + ")" );
@@ -327,7 +328,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         if ( !existing.isEmpty() ) {
             log.info( "Deleting existing version of " + accession );
             for ( ExpressionExperiment expressionExperiment : existing ) {
-                eeService.delete( expressionExperiment );
+                eeService.remove( expressionExperiment );
             }
         }
     }

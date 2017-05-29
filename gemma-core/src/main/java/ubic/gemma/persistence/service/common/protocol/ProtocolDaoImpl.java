@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,28 +18,25 @@
  */
 package ubic.gemma.persistence.service.common.protocol;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.persistence.service.AbstractDao;
 
 /**
- * @author pavlidis
- * @version $Id$
- * @see ubic.gemma.model.common.protocol.Protocol
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Protocol</code>.
+ *
+ * @see Protocol
  */
 @Repository
-public class ProtocolDaoImpl extends ProtocolDaoBase {
-
-    private static Log log = LogFactory.getLog( ProtocolDaoImpl.class.getName() );
+public class ProtocolDaoImpl extends AbstractDao<Protocol> implements ProtocolDao {
 
     @Autowired
     public ProtocolDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( Protocol.class, sessionFactory );
     }
 
     @Override
@@ -50,34 +47,7 @@ public class ProtocolDaoImpl extends ProtocolDaoBase {
         if ( protocol.getDescription() != null )
             queryObject.add( Restrictions.eq( "description", protocol.getDescription() ) );
 
-        java.util.List<Protocol> results = queryObject.list();
-        Protocol result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + ubic.gemma.model.common.protocol.Protocol.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return result;
-
-    }
-
-    @Override
-    public Protocol findOrCreate( Protocol protocol ) {
-        if ( protocol == null || protocol.getName() == null ) {
-            throw new IllegalArgumentException( "Protocol was null or had no name : " + protocol );
-        }
-        Protocol newProtocol = find( protocol );
-        if ( newProtocol != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing protocol: " + newProtocol );
-            return newProtocol;
-        }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new protocol: " + protocol );
-        return create( protocol );
+        return ( Protocol ) queryObject.uniqueResult();
     }
 
 }

@@ -154,7 +154,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         // first time.
         LinkAnalysis la = linkAnalysisService.process( ee, filterConfig, linkAnalysisConfig );
 
-        // test delete is clean; to check this properly requires checking the db.
+        // test remove is clean; to check this properly requires checking the db.
         linkAnalysisPersisterService.deleteAnalyses( ee );
 
         checkUnsupportedLinksHaveNoSupport();

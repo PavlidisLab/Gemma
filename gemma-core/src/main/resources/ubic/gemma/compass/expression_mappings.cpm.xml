@@ -42,7 +42,7 @@
       <id name="id" />
       <component name="experimentalFactors" ref-alias="experimentalFactor" />
    </class>
-   <class name="expression.experiment.ExperimentalFactorImpl" alias="experimentalFactor" root="false">
+   <class name="expression.experiment.ExperimentalFactor" alias="experimentalFactor" root="false">
       <id name="id" />
       <property name="name">
          <meta-data>name</meta-data>

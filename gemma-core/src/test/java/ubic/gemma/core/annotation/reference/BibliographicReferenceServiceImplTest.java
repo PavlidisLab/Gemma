@@ -23,6 +23,9 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -32,44 +35,31 @@ import junit.framework.TestCase;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
-public class BibliographicReferenceServiceImplTest extends TestCase {
+public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest {
 
-    private BibliographicReferenceServiceImpl svc = null;
-    private BibliographicReferenceDao brdao = null;
-    private ExternalDatabaseDao eddao = null;
+    @Autowired
+    private BibliographicReferenceServiceImpl svc;
+
+    @Autowired
+    private BibliographicReferenceDao brdao;
+
     private DatabaseEntry de = null;
     private ExternalDatabase extDB = null;
 
     /*
      * @see TestCase#setUp()
      */
-    @Override
     protected void setUp() throws Exception {
-        super.setUp();
-
-        svc = new BibliographicReferenceServiceImpl();
 
         brdao = createMock( BibliographicReferenceDao.class );
-        eddao = createMock( ExternalDatabaseDao.class );
 
-        svc.setBibliographicReferenceDao( brdao );
-        svc.setExternalDatabaseDao( eddao );
         extDB = ExternalDatabase.Factory.newInstance();
         extDB.setName( "PUBMED" );
 
         de = DatabaseEntry.Factory.newInstance();
         de.setAccession( "12345" );
         de.setExternalDatabase( extDB );
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
     }
 
     public final void testFindByExternalId() {

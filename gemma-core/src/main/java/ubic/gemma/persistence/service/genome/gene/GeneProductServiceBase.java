@@ -18,99 +18,41 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
+
+import java.util.Collection;
 
 /**
  * <p>
  * Spring Service base class for <code>GeneProductService</code>, provides access to all services and entities
  * referenced by this service.
  * </p>
- * 
+ *
  * @see GeneProductService
  */
-public abstract class GeneProductServiceBase implements GeneProductService {
+public abstract class GeneProductServiceBase extends VoEnabledService<GeneProduct, GeneProductValueObject> implements GeneProductService {
+
+    final AnnotationAssociationDao annotationAssociationDao;
+    final BioSequenceDao bioSequenceDao;
+    final BlatAssociationDao blatAssociationDao;
+    final GeneProductDao geneProductDao;
 
     @Autowired
-    private AnnotationAssociationDao annotationAssociationDao;
-
-    @Autowired
-    private BioSequenceDao bioSequenceDao;
-
-    @Autowired
-    private BlatAssociationDao blatAssociationDao;
-
-    @Autowired
-    private GeneProductDao geneProductDao;
-
-    /**
-     * @see GeneProductService#countAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.lang.Integer countAll() {
-        return this.handleCountAll();
-
-    }
-
-    /**
-     * @see GeneProductService#create(GeneProduct)
-     */
-    @Override
-    @Transactional
-    public GeneProduct create( final GeneProduct geneProduct ) {
-        return this.handleCreate( geneProduct );
-
-    }
-
-    /**
-     * @see GeneProductService#delete(GeneProduct)
-     */
-    @Override
-    @Transactional
-    public void delete( final GeneProduct geneProduct ) {
-        this.handleDelete( geneProduct );
-
-    }
-
-    /**
-     * @see GeneProductService#find(GeneProduct)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public GeneProduct find( final GeneProduct gProduct ) {
-        return this.handleFind( gProduct );
-
-    }
-
-    /**
-     * @see GeneProductService#findOrCreate(GeneProduct)
-     */
-    @Override
-    @Transactional
-    public GeneProduct findOrCreate( final GeneProduct geneProduct ) {
-        return this.handleFindOrCreate( geneProduct );
-
-    }
-
-    public AnnotationAssociationDao getAnnotationAssociationDao() {
-        return annotationAssociationDao;
-    }
-
-    public BioSequenceDao getBioSequenceDao() {
-        return bioSequenceDao;
-    }
-
-    public BlatAssociationDao getBlatAssociationDao() {
-        return blatAssociationDao;
+    public GeneProductServiceBase( AnnotationAssociationDao annotationAssociationDao, BioSequenceDao bioSequenceDao,
+            BlatAssociationDao blatAssociationDao, GeneProductDao geneProductDao ) {
+        super( geneProductDao );
+        this.annotationAssociationDao = annotationAssociationDao;
+        this.bioSequenceDao = bioSequenceDao;
+        this.blatAssociationDao = blatAssociationDao;
+        this.geneProductDao = geneProductDao;
     }
 
     /**
@@ -134,68 +76,6 @@ public abstract class GeneProductServiceBase implements GeneProductService {
     }
 
     /**
-     * @see GeneProductService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public GeneProduct load( final java.lang.Long id ) {
-        return this.handleLoad( id );
-
-    }
-
-    /**
-     * @see GeneProductService#loadMultiple(Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<GeneProduct> loadMultiple( final Collection<Long> ids ) {
-        return this.handleLoadMultiple( ids );
-
-    }
-
-    /**
-     * @see GeneProductService#update(GeneProduct)
-     */
-    @Override
-    @Transactional
-    public void update( final GeneProduct geneProduct ) {
-        this.handleUpdate( geneProduct );
-
-    }
-
-    /**
-     * Gets the reference to <code>geneProduct</code>'s DAO.
-     */
-    protected GeneProductDao getGeneProductDao() {
-        return this.geneProductDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll();
-
-    /**
-     * Performs the core logic for {@link #create(GeneProduct)}
-     */
-    protected abstract GeneProduct handleCreate( GeneProduct geneProduct );
-
-    /**
-     * Performs the core logic for {@link #delete(GeneProduct)}
-     */
-    protected abstract void handleDelete( GeneProduct geneProduct );
-
-    /**
-     * Performs the core logic for {@link #find(GeneProduct)}
-     */
-    protected abstract GeneProduct handleFind( GeneProduct gProduct );
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(GeneProduct)}
-     */
-    protected abstract GeneProduct handleFindOrCreate( GeneProduct geneProduct );
-
-    /**
      * Performs the core logic for {@link #getGenesByName(java.lang.String)}
      */
     protected abstract Collection<Gene> handleGetGenesByName( java.lang.String search );
@@ -204,20 +84,5 @@ public abstract class GeneProductServiceBase implements GeneProductService {
      * Performs the core logic for {@link #getGenesByNcbiId(java.lang.String)}
      */
     protected abstract Collection<Gene> handleGetGenesByNcbiId( java.lang.String search );
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract GeneProduct handleLoad( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #loadMultiple(Collection)}
-     */
-    protected abstract Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #update(GeneProduct)}
-     */
-    protected abstract void handleUpdate( GeneProduct geneProduct );
 
 }

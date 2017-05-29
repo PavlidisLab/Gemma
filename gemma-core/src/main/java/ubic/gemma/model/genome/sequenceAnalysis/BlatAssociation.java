@@ -18,15 +18,23 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-/**
- * 
- */
-public abstract class BlatAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 
-    /**
-     * 
-     */
+/**
+ *
+ */
+public abstract class BlatAssociation extends BioSequence2GeneProduct {
+
     private static final long serialVersionUID = -4620329339018727407L;
+    private BlatResult blatResult;
+
+    public BlatResult getBlatResult() {
+        return this.blatResult;
+    }
+
+    public void setBlatResult( BlatResult blatResult ) {
+        this.blatResult = blatResult;
+    }
 
     /**
      * Constructs new instances of {@link BlatAssociation}.
@@ -39,19 +47,6 @@ public abstract class BlatAssociation extends ubic.gemma.model.association.BioSe
             return new BlatAssociationImpl();
         }
 
-    }
-
-    private BlatResult blatResult;
-
-    /**
-     * 
-     */
-    public BlatResult getBlatResult() {
-        return this.blatResult;
-    }
-
-    public void setBlatResult( BlatResult blatResult ) {
-        this.blatResult = blatResult;
     }
 
 }

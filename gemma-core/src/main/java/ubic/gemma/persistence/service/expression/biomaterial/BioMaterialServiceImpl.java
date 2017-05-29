@@ -15,8 +15,7 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -28,6 +27,9 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
 
 import java.util.Collection;
 import java.util.Date;
@@ -42,7 +44,11 @@ import java.util.Map;
 @Service
 public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
-    private static final Logger log = LoggerFactory.getLogger( BioMaterialServiceImpl.class );
+    @Autowired
+    public BioMaterialServiceImpl( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao ) {
+        super( bioMaterialDao, factorValueDao, bioAssayDao, experimentalFactorDao );
+    }
 
     @Override
     public void associateBatchFactor( final Map<BioMaterial, Date> dates, final Map<Date, FactorValue> d2fv ) {
@@ -76,31 +82,19 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
     @Override
     @Transactional(readOnly = true)
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
-        return this.getBioMaterialDao().findByExperiment( experiment );
+        return this.bioMaterialDao.findByExperiment( experiment );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
-        return this.getBioMaterialDao().findByFactorValue( fv );
+        return this.bioMaterialDao.findByFactorValue( fv );
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpressionExperiment getExpressionExperiment( Long id ) {
-        return this.getBioMaterialDao().getExpressionExperiment( id );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( BioMaterial bioMaterial ) {
-        this.getBioMaterialDao().thaw( bioMaterial );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
-        return this.getBioMaterialDao().thaw( bioMaterials );
+        return this.bioMaterialDao.getExpressionExperiment( id );
     }
 
     @Override
@@ -119,17 +113,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
 
     @Override
     protected BioMaterial handleCopy( BioMaterial bioMaterial ) {
-        return this.getBioMaterialDao().copy( bioMaterial );
-    }
-
-    @Override
-    protected Integer handleCountAll() {
-        return this.getBioMaterialDao().countAll();
-    }
-
-    @Override
-    protected BioMaterial handleCreate( BioMaterial bioMaterial ) {
-        return this.getBioMaterialDao().create( bioMaterial );
+        return this.bioMaterialDao.copy( bioMaterial );
     }
 
     /**
@@ -137,44 +121,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
      */
     @Override
     protected BioMaterial handleFindOrCreate( BioMaterial bioMaterial ) {
-        return this.getBioMaterialDao().findOrCreate( bioMaterial );
-    }
-
-    @Override
-    protected BioMaterial handleLoad( Long id ) {
-        return this.getBioMaterialDao().load( id );
-    }
-
-    /**
-     * @see BioMaterialService#loadAll()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<BioMaterial> handleLoadAll() {
-        return ( Collection<BioMaterial> ) this.getBioMaterialDao().loadAll();
-    }
-
-    @Override
-    protected Collection<BioMaterial> handleLoadMultiple( Collection<Long> ids ) {
-        return this.getBioMaterialDao().load( ids );
-    }
-
-    /**
-     * @see BioMaterialService#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    protected void handleRemove( BioMaterial bioMaterial ) {
-        this.getBioMaterialDao().remove( bioMaterial );
-
-    }
-
-    protected void handleSaveBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bioMaterial ) {
-        this.getBioMaterialDao().create( bioMaterial );
-    }
-
-    @Override
-    protected void handleUpdate( BioMaterial bioMaterial ) {
-        this.getBioMaterialDao().update( bioMaterial );
+        return this.bioMaterialDao.findOrCreate( bioMaterial );
     }
 
     private BioMaterial update( BioMaterialValueObject bmvo ) {
@@ -270,7 +217,7 @@ public class BioMaterialServiceImpl extends BioMaterialServiceBase {
         return bm;
     }
 
-    public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials) {
+    public String getBioMaterialIdList( Collection<BioMaterial> bioMaterials ) {
         StringBuilder buf = new StringBuilder();
         for ( BioMaterial bm : bioMaterials ) {
             buf.append( bm.getId() );

@@ -64,7 +64,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
         ExpressionExperiment ee = ( ExpressionExperiment ) results.iterator().next();
         results = geoService.fetchAndLoad( "GPL13112", true, false, false, false );
         ArrayDesign arrayDesign = ( ArrayDesign ) results.iterator().next();
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thaw( arrayDesign );
 
         ee = experimentPlatformSwitchService.switchExperimentToArrayDesign( ee, arrayDesign );
         assertNotNull( ee );
@@ -79,7 +79,7 @@ public class ExpressionExperimentPlatformSwitchTest extends AbstractGeoServiceTe
     public void tearDown() {
         ExpressionExperiment e1 = experimentService.findByShortName( "GSE36025" );
         if ( e1 != null ) {
-            experimentService.delete( e1 );
+            experimentService.remove( e1 );
         }
     }
 }

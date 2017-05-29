@@ -102,7 +102,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             if ( experiment.getPrimaryPublication() == null ) {
                 log.warn( experiment + " has no existing primary publication" );
             }
-            experiment = ees.thawLite( experiment );
+            ees.thawLite( experiment );
 
             // get from GEO or get from a file
             BibliographicReference ref = fetcher.retrieveByHTTP( pubmedIds.get( experiment.getShortName() ) );

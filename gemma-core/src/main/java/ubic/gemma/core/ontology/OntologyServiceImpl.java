@@ -24,29 +24,28 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.compass.core.util.concurrent.ConcurrentHashSet;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.model.OntologyTermSimple;
 import ubic.basecode.ontology.providers.*;
 import ubic.basecode.ontology.search.OntologySearch;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.core.ontology.providers.GemmaOntologyService;
 import ubic.gemma.core.ontology.providers.GeneOntologyService;
 import ubic.gemma.core.search.SearchResult;
 import ubic.gemma.core.search.SearchService;
+import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -62,15 +61,15 @@ import java.util.*;
  *
  * @author pavlidis
  */
-@Component
+@Service
 public class OntologyServiceImpl implements OntologyService {
     /**
      * Throttle how many ontology terms we retrieve. We search the ontologies in a favored order, so we can stop when we
      * find "enough stuff".
      */
     private static final int MAX_TERMS_TO_FETCH = 200;
-    private static Collection<OntologyTerm> categoryTerms = null;
     private static final Log log = LogFactory.getLog( OntologyServiceImpl.class.getName() );
+    private static Collection<OntologyTerm> categoryTerms = null;
     private final CellLineOntologyService cellLineOntologyService = new CellLineOntologyService();
     private final CellTypeOntologyService cellTypeOntologyService = new CellTypeOntologyService();
     private final ChebiOntologyService chebiOntologyService = new ChebiOntologyService();
@@ -88,16 +87,38 @@ public class OntologyServiceImpl implements OntologyService {
     private final SequenceOntologyService sequenceOntologyService = new SequenceOntologyService();
     private final UberonOntologyService uberonOntologyService = new UberonOntologyService();
 
-    @Autowired
     private BioMaterialService bioMaterialService;
-    @Autowired
     private CharacteristicService characteristicService;
-    @Autowired
-    private ExpressionExperimentService eeService;
-    @Autowired
     private SearchService searchService;
-    @Autowired
     private GeneOntologyService geneOntologyService;
+
+    /* ********************************
+     * Setters for autowiring
+     * ********************************/
+
+    @Autowired
+    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
+        this.bioMaterialService = bioMaterialService;
+    }
+
+    @Autowired
+    public void setCharacteristicService( CharacteristicService characteristicService ) {
+        this.characteristicService = characteristicService;
+    }
+
+    @Autowired
+    public void setSearchService( SearchService searchService ) {
+        this.searchService = searchService;
+    }
+
+    @Autowired
+    public void setGeneOntologyService( GeneOntologyService geneOntologyService ) {
+        this.geneOntologyService = geneOntologyService;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public void afterPropertiesSet() {
@@ -492,7 +513,7 @@ public class OntologyServiceImpl implements OntologyService {
         if ( vc == null )
             throw new IllegalArgumentException( "No characteristic with id=" + characterId + " was foundF" );
         bm.getCharacteristics().remove( vc );
-        characteristicService.delete( characterId );
+        characteristicService.remove( characterId );
     }
 
     @Override
@@ -520,7 +541,7 @@ public class OntologyServiceImpl implements OntologyService {
     }
 
     @Override
-    public void saveExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
+    public void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee ) {
         if ( vc == null ) {
             throw new IllegalArgumentException( "Null characteristic" );
         }
@@ -550,16 +571,6 @@ public class OntologyServiceImpl implements OntologyService {
                         + vc );
 
         ee.getCharacteristics().add( vc );
-        eeService.update( ee );
-
-    }
-
-    @Override
-    public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
-        for ( Characteristic characteristic : vc ) {
-            // load necessary to make sure we are dealing with the persistent version.
-            saveExpressionExperimentStatement( characteristic, eeService.thawLite( eeService.load( ee.getId() ) ) );
-        }
     }
 
     void sort( List<CharacteristicValueObject> characteristics ) {
@@ -667,7 +678,7 @@ public class OntologyServiceImpl implements OntologyService {
                 // if the ontology term wasnt already found in the database
                 if ( characteristicFromDatabaseWithValueUri.get( ontologyTerm.getUri() ) == null ) {
 
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject(
+                    CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
                             ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
 
                     characteristicsFromOntology.add( phenotype );

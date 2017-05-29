@@ -18,31 +18,19 @@
  */
 package ubic.gemma.persistence.util;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.criterion.Conjunction;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Restrictions;
-
+import org.hibernate.criterion.*;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.description.*;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
@@ -60,13 +48,15 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Methods to test business-key-related issues on objects. The 'checkValidKey' methods can be used to check whether an
  * object has the required business key values filled in. An exception is thrown if they don't.
- * <p>
  * This class contains some important code that determines our rules for how entities are detected as being the same as
  * another (in queries from the database; this is on top of basic 'equals', but should be compatible).
- * 
+ *
  * @author pavlidis
  * @version $Id$
  */
@@ -74,10 +64,6 @@ public class BusinessKey {
 
     private static Log log = LogFactory.getLog( BusinessKey.class.getName() );
 
-    /**
-     * @param queryObject
-     * @param arrayDesign
-     */
     public static void addRestrictions( Criteria queryObject, ArrayDesign arrayDesign ) {
 
         /*
@@ -111,18 +97,14 @@ public class BusinessKey {
             addNameRestriction( queryObject, arrayDesign );
         }
 
-        if ( arrayDesign.getDesignProvider() != null
-                && StringUtils.isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
-            queryObject.createCriteria( "designProvider" ).add(
-                    Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
+        if ( arrayDesign.getDesignProvider() != null && StringUtils
+                .isNotBlank( arrayDesign.getDesignProvider().getName() ) ) {
+            queryObject.createCriteria( "designProvider" )
+                    .add( Restrictions.eq( "name", arrayDesign.getDesignProvider().getName() ) );
         }
 
     }
 
-    /**
-     * @param queryObject
-     * @param bioAssay
-     */
     public static void addRestrictions( Criteria queryObject, BioAssay bioAssay ) {
         if ( bioAssay.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", bioAssay.getId() ) );
@@ -132,10 +114,6 @@ public class BusinessKey {
         queryObject.add( Restrictions.eq( "name", bioAssay.getName() ) );
     }
 
-    /**
-     * @param queryObject
-     * @param bioMaterial
-     */
     public static void addRestrictions( Criteria queryObject, BioMaterial bioMaterial ) {
 
         if ( bioMaterial.getName() != null ) {
@@ -144,8 +122,8 @@ public class BusinessKey {
 
         if ( bioMaterial.getExternalAccession() != null ) {
             // this is not completely foolproof.
-            queryObject.createCriteria( "externalAccession" ).add(
-                    Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
+            queryObject.createCriteria( "externalAccession" )
+                    .add( Restrictions.eq( "accession", bioMaterial.getExternalAccession().getAccession() ) );
         } else if ( StringUtils.isNotBlank( bioMaterial.getDescription() ) ) {
             // The description is generally only filled in by Gemma, and contains the experiment short name.
             queryObject.add( Restrictions.eq( "description", bioMaterial.getDescription() ) );
@@ -166,9 +144,6 @@ public class BusinessKey {
      * </ul>
      * This means that we can't use those criteria up front. Instead we match by name and taxon. If those match, the
      * caller has to sort through possible multiple results to find the correct one.
-     * 
-     * @param innerQuery
-     * @param bioSequence
      */
     public static void addRestrictions( Criteria queryObject, BioSequence bioSequence ) {
 
@@ -185,10 +160,6 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param queryObject
-     * @param characteristic
-     */
     public static void addRestrictions( Criteria queryObject, Characteristic characteristic ) {
         if ( characteristic instanceof VocabCharacteristic ) {
             addRestrictions( queryObject, ( VocabCharacteristic ) characteristic );
@@ -202,10 +173,6 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param queryObject
-     * @param chromosome
-     */
     public static void addRestrictions( Criteria queryObject, Chromosome chromosome ) {
         queryObject.add( Restrictions.eq( "name", chromosome.getName() ) );
         attachCriteria( queryObject, chromosome.getTaxon(), "taxon" );
@@ -217,10 +184,6 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param queryObject
-     * @param contact
-     */
     public static void addRestrictions( Criteria queryObject, Contact contact ) {
 
         if ( contact instanceof User ) {
@@ -238,10 +201,6 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param queryObject
-     * @param experimentalFactor
-     */
     public static void addRestrictions( Criteria queryObject, ExperimentalFactor experimentalFactor ) {
 
         if ( experimentalFactor.getId() != null ) {
@@ -258,10 +217,6 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param innerQuery
-     * @param gene
-     */
     public static void addRestrictions( Criteria queryObject, Gene gene, boolean stricter ) {
         if ( gene.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene.getId() ) );
@@ -315,19 +270,11 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param queryObject
-     * @param gene2GOAssociation
-     */
     public static void addRestrictions( Criteria queryObject, Gene2GOAssociation gene2GOAssociation ) {
         attachCriteria( queryObject, gene2GOAssociation.getGene(), "gene" );
         attachCriteria( queryObject, gene2GOAssociation.getOntologyEntry(), "ontologyEntry" );
     }
 
-    /**
-     * @param queryObject
-     * @param contact
-     */
     public static void addRestrictions( Criteria queryObject, Person contact ) {
 
         if ( contact instanceof User ) {
@@ -344,14 +291,10 @@ public class BusinessKey {
             queryObject.add( Restrictions.eq( "name", contact.getName() ) );
 
         if ( StringUtils.isNotBlank( contact.getName() ) )
-            queryObject.add( Restrictions.eq( "lastName", contact.getFullName() ) );
+            queryObject.add( Restrictions.eq( "lastName", contact.getLastName() ) );
 
     }
 
-    /**
-     * @param queryObject
-     * @param quantitationType
-     */
     public static void addRestrictions( Criteria queryObject, QuantitationType quantitationType ) {
         queryObject.add( Restrictions.eq( "name", quantitationType.getName() ) );
 
@@ -371,7 +314,8 @@ public class BusinessKey {
             queryObject.add( Restrictions.eq( "scale", quantitationType.getScale() ) );
 
         if ( quantitationType.getIsBackgroundSubtracted() != null )
-            queryObject.add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
+            queryObject
+                    .add( Restrictions.eq( "isBackgroundSubtracted", quantitationType.getIsBackgroundSubtracted() ) );
 
         if ( quantitationType.getIsPreferred() != null )
             queryObject.add( Restrictions.eq( "isPreferred", quantitationType.getIsPreferred() ) );
@@ -381,19 +325,11 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param queryObject
-     * @param taxon
-     */
     public static void addRestrictions( Criteria queryObject, Taxon taxon ) {
         checkValidKey( taxon );
         attachCriteria( queryObject, taxon );
     }
 
-    /**
-     * @param queryObject
-     * @param characteristic
-     */
     public static void addRestrictions( Criteria queryObject, VocabCharacteristic characteristic ) {
 
         if ( characteristic.getCategoryUri() != null ) {
@@ -410,10 +346,6 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param queryObject
-     * @param databaseEntry
-     */
     public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
         queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) )
                 .createCriteria( "externalDatabase" )
@@ -422,9 +354,8 @@ public class BusinessKey {
 
     /**
      * Restricts the query to the provided BioSequence.
-     * 
-     * @param queryObject
-     * @param bioSequence The object used to create the criteria
+     *
+     * @param bioSequence  The object used to create the criteria
      * @param propertyName Often this will be 'bioSequence'
      */
     public static void attachCriteria( Criteria queryObject, BioSequence bioSequence, String propertyName ) {
@@ -434,10 +365,9 @@ public class BusinessKey {
 
     /**
      * Restricts the query to the provided OntologyEntry.
-     * 
-     * @param queryObject
+     *
      * @param ontologyEntry The object used to create the criteria
-     * @param propertyName Often this will be 'ontologyEntry'
+     * @param propertyName  Often this will be 'ontologyEntry'
      */
     public static void attachCriteria( Criteria queryObject, Characteristic ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
@@ -446,10 +376,9 @@ public class BusinessKey {
 
     /**
      * Restricts query to the given DatabaseEntry association
-     * 
-     * @param queryObject
+     *
      * @param databaseEntry to match
-     * @param propertyName often "accession"
+     * @param propertyName  often "accession"
      */
     public static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
@@ -458,21 +387,12 @@ public class BusinessKey {
 
     /**
      * Restricts the query to the provided Gene.
-     * 
-     * @param queryObject
-     * @param gene
-     * @param propertyName
      */
     public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, gene, true );
     }
 
-    /**
-     * @param queryObject
-     * @param physicalLocation
-     * @param attributeName
-     */
     public static void attachCriteria( Criteria queryObject, PhysicalLocation physicalLocation, String attributeName ) {
         Criteria nestedCriteria = queryObject.createCriteria( attributeName );
 
@@ -481,12 +401,12 @@ public class BusinessKey {
         }
 
         if ( physicalLocation.getChromosome().getId() != null ) {
-            nestedCriteria.createCriteria( "chromosome" ).add(
-                    Restrictions.eq( "id", physicalLocation.getChromosome().getId() ) );
+            nestedCriteria.createCriteria( "chromosome" )
+                    .add( Restrictions.eq( "id", physicalLocation.getChromosome().getId() ) );
         } else {
             // FIXME should add taxon to this.
-            nestedCriteria.createCriteria( "chromosome" ).add(
-                    Restrictions.eq( "name", physicalLocation.getChromosome().getName() ) );
+            nestedCriteria.createCriteria( "chromosome" )
+                    .add( Restrictions.eq( "name", physicalLocation.getChromosome().getName() ) );
         }
 
         if ( physicalLocation.getNucleotide() != null )
@@ -499,9 +419,7 @@ public class BusinessKey {
 
     /**
      * Restricts query to the given Taxon.
-     * 
-     * @param queryObject
-     * @param taxon
+     *
      * @param propertyName often "taxon"
      */
     public static void attachCriteria( Criteria queryObject, Taxon taxon, String propertyName ) {
@@ -509,56 +427,42 @@ public class BusinessKey {
         attachCriteria( innerQuery, taxon );
     }
 
-    /**
-     * @param queryObject
-     * @param databaseEntry
-     * @param attributeName
-     */
-    public static void attachCriteria( DetachedCriteria queryObject, DatabaseEntry databaseEntry, String attributeName ) {
+    public static void attachCriteria( DetachedCriteria queryObject, DatabaseEntry databaseEntry,
+            String attributeName ) {
         DetachedCriteria externalRef = queryObject.createCriteria( attributeName );
         addRestrictions( externalRef, databaseEntry );
     }
 
-    /**
-     * @param bibliographicReference
-     */
     public static void checkKey( BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null || bibliographicReference.getPubAccession() == null
                 || bibliographicReference.getPubAccession().getAccession() == null ) {
-            throw new IllegalArgumentException( "BibliographicReference was null or had no accession : "
-                    + bibliographicReference );
+            throw new IllegalArgumentException(
+                    "BibliographicReference was null or had no accession : " + bibliographicReference );
         }
     }
 
-    /**
-     * @param ontologyEntry
-     */
     public static void checkKey( Characteristic ontologyEntry ) {
 
         if ( ontologyEntry instanceof VocabCharacteristic ) {
             if ( ( ( VocabCharacteristic ) ontologyEntry ).getValueUri() == null )
                 throw new IllegalArgumentException();
         } else {
-            if ( ontologyEntry.getValue() == null ) throw new IllegalArgumentException();
+            if ( ontologyEntry.getValue() == null )
+                throw new IllegalArgumentException();
         }
 
     }
 
-    /**
-     * @param contact
-     */
     public static void checkKey( Contact contact ) {
-        if ( contact == null
-                || ( StringUtils.isBlank( contact.getName() ) && StringUtils.isBlank( contact.getEmail() ) ) ) {
+        if ( contact == null || ( StringUtils.isBlank( contact.getName() ) && StringUtils
+                .isBlank( contact.getEmail() ) ) ) {
             throw new IllegalArgumentException( "Contact must have at least some information filled in!" );
         }
     }
 
-    /**
-     * @param accession
-     */
     public static void checkKey( DatabaseEntry accession ) {
-        if ( accession.getId() != null ) return;
+        if ( accession.getId() != null )
+            return;
         if ( StringUtils.isBlank( accession.getAccession() ) ) {
             throw new IllegalArgumentException( accession + " did not have an accession" );
         }
@@ -568,24 +472,19 @@ public class BusinessKey {
     public static void checkKey( DesignElementDataVector designElementDataVector ) {
         if ( designElementDataVector == null || designElementDataVector.getDesignElement() == null
                 || designElementDataVector.getExpressionExperiment() == null ) {
-            throw new IllegalArgumentException( "DesignElementDataVector did not have complete business key "
-                    + designElementDataVector );
+            throw new IllegalArgumentException(
+                    "DesignElementDataVector did not have complete business key " + designElementDataVector );
         }
     }
 
-    /**
-     * @param externalDatabase
-     */
     public static void checkKey( ExternalDatabase externalDatabase ) {
-        if ( externalDatabase.getId() != null ) return;
+        if ( externalDatabase.getId() != null )
+            return;
         if ( StringUtils.isBlank( externalDatabase.getName() ) ) {
             throw new IllegalArgumentException( externalDatabase + " did not have a name" );
         }
     }
 
-    /**
-     * @param factorValue
-     */
     public static void checkKey( FactorValue factorValue ) {
         if ( factorValue.getValue() == null && factorValue.getMeasurement() == null
                 && factorValue.getCharacteristics().size() == 0 ) {
@@ -594,23 +493,16 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param gene
-     */
     public static void checkKey( Gene gene ) {
-        if ( gene == null ) throw new IllegalArgumentException( "Gene cannot be null" );
-        if ( ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getPhysicalLocation() == null && ( gene
-                .getProducts() == null || gene.getProducts().isEmpty() ) ) && gene.getNcbiGeneId() == null ) {
-            throw new IllegalArgumentException(
-                    "No valid key for "
-                            + gene
-                            + ": Gene must have official symbol and name with taxon + physical location or gene products, or ncbiId" );
+        if ( gene == null )
+            throw new IllegalArgumentException( "Gene cannot be null" );
+        if ( ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getPhysicalLocation() == null
+                && ( gene.getProducts() == null || gene.getProducts().isEmpty() ) ) && gene.getNcbiGeneId() == null ) {
+            throw new IllegalArgumentException( "No valid key for " + gene
+                    + ": Gene must have official symbol and name with taxon + physical location or gene products, or ncbiId" );
         }
     }
 
-    /**
-     * @param user
-     */
     public static void checkKey( User user ) {
         if ( user == null || StringUtils.isBlank( user.getUserName() ) ) {
             throw new IllegalArgumentException( "User was null or had no userName defined" );
@@ -618,28 +510,18 @@ public class BusinessKey {
     }
 
     public static void checkValidKey( ArrayDesign arrayDesign ) {
-        if ( arrayDesign == null
-                || ( StringUtils.isBlank( arrayDesign.getName() ) && StringUtils.isBlank( arrayDesign.getShortName() ) && arrayDesign
-                        .getExternalReferences().size() == 0 ) ) {
+        if ( arrayDesign == null || ( StringUtils.isBlank( arrayDesign.getName() ) && StringUtils
+                .isBlank( arrayDesign.getShortName() ) && arrayDesign.getExternalReferences().size() == 0 ) ) {
             throw new IllegalArgumentException( arrayDesign + " did not have a valid key" );
         }
     }
 
-    /**
-     * @param bioSequence
-     */
     public static void checkValidKey( BioSequence bioSequence ) {
         if ( bioSequence == null || bioSequence.getTaxon() == null || StringUtils.isBlank( bioSequence.getName() ) ) {
             throw new IllegalArgumentException( bioSequence + " did not have a valid key" );
         }
-        // these are no longer used.s
-        // ) && StringUtils.isBlank( bioSequence.getSequence() ) && bioSequence
-        // .getSequenceDatabaseEntry() == null )
     }
 
-    /**
-     * @param chromosome
-     */
     public static void checkValidKey( Chromosome chromosome ) {
         if ( StringUtils.isBlank( chromosome.getName() ) ) {
             throw new IllegalArgumentException( "Chromosome did not have a valid key" );
@@ -647,9 +529,6 @@ public class BusinessKey {
         checkValidKey( chromosome.getTaxon() );
     }
 
-    /**
-     * @param databaseEntry
-     */
     public static void checkValidKey( DatabaseEntry databaseEntry ) {
         if ( databaseEntry == null || databaseEntry.getAccession() == null
                 || databaseEntry.getExternalDatabase() == null ) {
@@ -657,40 +536,28 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param experimentalFactor
-     */
     public static void checkValidKey( ExperimentalFactor experimentalFactor ) {
         if ( StringUtils.isBlank( experimentalFactor.getName() ) && experimentalFactor.getCategory() == null ) {
             throw new IllegalArgumentException( "Experimental factor must have name or category" );
         }
     }
 
-    /**
-     * @param gene
-     */
     public static void checkValidKey( Gene gene ) {
-        if ( gene == null
-                || ( gene.getNcbiGeneId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() )
-                        || gene.getTaxon() == null || StringUtils.isBlank( gene.getOfficialName() ) ) ) ) {
+        if ( gene == null || ( gene.getNcbiGeneId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() )
+                || gene.getTaxon() == null || StringUtils.isBlank( gene.getOfficialName() ) ) ) ) {
             throw new IllegalArgumentException(
                     "Gene does not have valid key (needs NCBI numeric id or Official Symbol + Official Name + Taxon" );
         }
     }
 
-    /**
-     * @param gene2GOAssociation
-     */
     public static void checkValidKey( Gene2GOAssociation gene2GOAssociation ) {
         checkValidKey( gene2GOAssociation.getGene() );
         checkValidKey( gene2GOAssociation.getOntologyEntry() );
     }
 
-    /**
-     * @param geneProduct
-     */
     public static void checkValidKey( GeneProduct geneProduct ) {
-        if ( geneProduct.getId() != null ) return;
+        if ( geneProduct.getId() != null )
+            return;
 
         boolean ok = true;
 
@@ -707,25 +574,19 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param taxon
-     */
     public static void checkValidKey( Taxon taxon ) {
-        if ( taxon == null
-                || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) && StringUtils
-                        .isBlank( taxon.getScientificName() ) ) ) {
+        if ( taxon == null || ( taxon.getNcbiId() == null && StringUtils.isBlank( taxon.getCommonName() ) && StringUtils
+                .isBlank( taxon.getScientificName() ) ) ) {
             throw new IllegalArgumentException( "Taxon " + taxon + " did not have a valid key" );
         }
     }
 
-    /**
-     * @param localFile
-     */
     public static void checkValidKey( ubic.gemma.model.common.description.LocalFile localFile ) {
         if ( localFile == null || ( localFile.getLocalURL() == null && localFile.getRemoteURL() == null ) ) {
             if ( localFile != null )
-                log.error( "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL="
-                        + localFile.getRemoteURL() + " size=" + localFile.getSize() );
+                log.error(
+                        "Localfile without valid key: localURL=" + localFile.getLocalURL() + " remoteUrL=" + localFile
+                                .getRemoteURL() + " size=" + localFile.getSize() );
             throw new IllegalArgumentException( "localFile was null or had no valid business keys" );
         }
     }
@@ -736,10 +597,6 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param queryObject
-     * @param factorValue
-     */
     public static void createQueryObject( Criteria queryObject, FactorValue factorValue ) {
 
         ExperimentalFactor ef = factorValue.getExperimentalFactor();
@@ -806,10 +663,6 @@ public class BusinessKey {
         queryObject.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
     }
 
-    /**
-     * @param queryObject
-     * @param gene
-     */
     public static void createQueryObject( Criteria queryObject, Gene gene ) {
         if ( gene.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene.getId() ) );
@@ -819,10 +672,6 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param queryObject
-     * @param geneProduct
-     */
     public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
         if ( geneProduct.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", geneProduct.getId() ) );
@@ -851,22 +700,12 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param session
-     * @param arrayDesign
-     * @return
-     */
     public static Criteria createQueryObject( Session session, ArrayDesign arrayDesign ) {
         Criteria queryObject = session.createCriteria( ArrayDesign.class );
         addRestrictions( queryObject, arrayDesign );
         return queryObject;
     }
 
-    /**
-     * @param session
-     * @param bioAssay
-     * @return
-     */
     public static Criteria createQueryObject( Session session, BioAssay bioAssay ) {
         Criteria queryObject = session.createCriteria( BioAssay.class );
         checkKey( bioAssay );
@@ -874,22 +713,12 @@ public class BusinessKey {
         return queryObject;
     }
 
-    /**
-     * @param session
-     * @param bioSequence
-     * @return
-     */
     public static Criteria createQueryObject( Session session, BioSequence bioSequence ) {
         Criteria queryObject = session.createCriteria( BioSequence.class );
         addRestrictions( queryObject, bioSequence );
         return queryObject;
     }
 
-    /**
-     * @param session
-     * @param ontologyEntry
-     * @return
-     */
     public static Criteria createQueryObject( Session session, Characteristic ontologyEntry ) {
         Criteria queryObject = session.createCriteria( Characteristic.class );
         checkKey( ontologyEntry );
@@ -897,11 +726,6 @@ public class BusinessKey {
         return queryObject;
     }
 
-    /**
-     * @param session
-     * @param unit
-     * @return
-     */
     public static Criteria createQueryObject( Session session, Unit unit ) {
         Criteria queryObject = session.createCriteria( Unit.class );
 
@@ -914,18 +738,11 @@ public class BusinessKey {
         return queryObject;
     }
 
-    /**
-     * @param queryObject
-     * @param describable
-     */
     private static void addNameRestriction( Criteria queryObject, Describable describable ) {
-        if ( describable.getName() != null ) queryObject.add( Restrictions.eq( "name", describable.getName() ) );
+        if ( describable.getName() != null )
+            queryObject.add( Restrictions.eq( "name", describable.getName() ) );
     }
 
-    /**
-     * @param queryobject
-     * @param assemblyDatabase
-     */
     private static void addRestrictions( Criteria queryobject, ExternalDatabase assemblyDatabase ) {
         if ( assemblyDatabase.getId() != null ) {
             queryobject.add( Restrictions.eq( "id", assemblyDatabase.getId() ) );
@@ -946,22 +763,14 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param queryObject
-     * @param assemblyDatabase
-     * @param propertyName
-     */
     private static void attachCriteria( Criteria queryObject, ExternalDatabase assemblyDatabase, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, assemblyDatabase );
     }
 
-    /**
-     * @param queryObject
-     * @param taxon
-     */
     private static void attachCriteria( Criteria queryObject, Taxon taxon ) {
-        if ( taxon == null ) throw new IllegalArgumentException( "Taxon was null" );
+        if ( taxon == null )
+            throw new IllegalArgumentException( "Taxon was null" );
         if ( taxon.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
         } else if ( taxon.getNcbiId() != null ) {
@@ -980,11 +789,6 @@ public class BusinessKey {
         }
     }
 
-    /**
-     * @param queryObject
-     * @param ontologyEntry
-     * @param propertyName
-     */
     private static void attachCriteria( Criteria queryObject, VocabCharacteristic ontologyEntry, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
         addRestrictions( innerQuery, ontologyEntry );
@@ -997,20 +801,17 @@ public class BusinessKey {
 
     }
 
-    /**
-     * @param ontologyEntry
-     */
     private static void checkValidKey( VocabCharacteristic ontologyEntry ) {
         // TODO Auto-generated method stub
     }
 
     /**
      * The search can be on the first gene and second gene. This query assumes that the order is known
-     * 
-     * @param queryObject
+     *
      * @param gene2GeneProteinAssociation association to query
      */
-    public static void createQueryObject( Criteria queryObject, Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
+    public static void createQueryObject( Criteria queryObject,
+            Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene2GeneProteinAssociation.getId() ) );
         } else if ( gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId() != null
@@ -1022,8 +823,6 @@ public class BusinessKey {
 
     /**
      * Check that gene 1 and gene 2 are set
-     * 
-     * @param gene2GeneProteinAssociation
      */
     public static void checkKey( Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation == null || gene2GeneProteinAssociation.getFirstGene() == null
@@ -1057,8 +856,8 @@ public class BusinessKey {
 
         queryObject.add( Restrictions.sizeEq( "bioAssays", entity.getBioAssays().size() ) );
 
-        queryObject.createCriteria( "bioAssays" ).add(
-                Restrictions.in( "id", EntityUtils.getIds( entity.getBioAssays() ) ) );
+        queryObject.createCriteria( "bioAssays" )
+                .add( Restrictions.in( "id", EntityUtils.getIds( entity.getBioAssays() ) ) );
 
     }
 }

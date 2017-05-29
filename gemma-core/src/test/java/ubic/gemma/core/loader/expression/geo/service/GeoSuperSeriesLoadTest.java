@@ -82,7 +82,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         // this is somewhat overkill...
         for ( ExpressionExperiment ee4 : ees.loadAll() ) {
             try {
-                ees.delete( ee4 );
+                ees.remove( ee4 );
             } catch ( Exception e ) {
                 log.warn( "Removing all expression experiments thew an Exception" );
             }
@@ -90,7 +90,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
         for ( ArrayDesign a : adService.loadAll() ) {
             try {
-                a = adService.thawLite( a );
+                adService.thawLite( a );
                 for ( ArrayDesign b : a.getSubsumedArrayDesigns() ) {
                     adService.remove( b );
                 }
@@ -106,7 +106,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
     private void removeOldData( ExpressionExperiment ee2 ) {
 
         Collection<ArrayDesign> arrayDesignsUsed = ees.getArrayDesignsUsed( ee2 );
-        ees.delete( ee2 );
+        ees.remove( ee2 );
 
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             for ( ExpressionExperiment ee3 : adService.getExpressionExperiments( ad ) ) {
@@ -139,7 +139,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         ee = results.iterator().next();
 
         ee = ees.findByShortName( "GSE14618" );
-        ee = ees.thawLite( ee );
+        ees.thawLite( ee );
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
 
         assertEquals( 1, qts.size() );
@@ -160,7 +160,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         ee = ees.load( ee.getId() );
 
         ee = ees.findByShortName( "GSE14618" );
-        ee = ees.thaw( ee );
+        ees.thaw( ee );
 
         assertEquals( 40, ee.getProcessedExpressionDataVectors().size() );
         // System.err.println( ee.getProcessedExpressionDataVectors().size() );

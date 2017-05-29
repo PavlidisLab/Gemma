@@ -96,7 +96,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         ExpressionExperiment ee = eeService.findByShortName( "GSE29006" );
         if ( ee != null ) {
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
 
         assertTrue( eeService.findByShortName( "GSE29006" ) == null );
@@ -105,10 +105,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            throw new IllegalStateException( "Need to delete this data set before test is run" );
+            throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         try (InputStream is = this.getClass().getResourceAsStream(
                 "/data/loader/expression/flatfileload/GSE29006_design.txt" );) {
@@ -132,7 +132,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             // we have to find the right generic platform to use.
             targetArrayDesign = this
                     .getTestPersistentArrayDesign( probeNames, taxonService.findByCommonName( "human" ) );
-            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+            arrayDesignService.thaw( targetArrayDesign );
 
             // the experiment has 8 samples but the data has 4 columns so allow missing samples
             // GSM718707 GSM718708 GSM718709 GSM718710
@@ -141,10 +141,10 @@ public class DiffExTest extends AbstractGeoServiceTest {
         }
 
         // make sure to do a thaw() to get the addCountData() updates
-        ExpressionExperiment updatedee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         // verify rows and columns
-        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( updatedee );
+        Collection<DoubleVectorValueObject> processedDataArrays = dataVectorService.getProcessedDataArrays( ee );
         assertEquals( 199, processedDataArrays.size() );
         for ( DoubleVectorValueObject v : processedDataArrays ) {
             assertEquals( 4, v.getBioAssays().size() );
@@ -152,7 +152,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         // check that the samples are there
         boolean found = false;
-        for ( BioAssay ba : updatedee.getBioAssays() ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( targetArrayDesign, ba.getArrayDesignUsed() );
 
             assertEquals( 36, ba.getSequenceReadLength().intValue() );
@@ -166,9 +166,9 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         // DE analysis
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( updatedee.getExperimentalDesign().getExperimentalFactors() );
+        config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
         config.setQvalueThreshold( null );
-        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( updatedee, config );
+        Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );
 
@@ -195,7 +195,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
     public void testGSE35930() throws Exception {
 
         ExpressionExperiment ee;
-        // eeService.delete( eeService.findByShortName( "GSE35930" ) );
+        // eeService.remove( eeService.findByShortName( "GSE35930" ) );
         try {
             geoService
                     .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE35930" ) ) );
@@ -211,13 +211,13 @@ public class DiffExTest extends AbstractGeoServiceTest {
             }
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );
-            ee = eeService.thawLite( ee );
+            eeService.thawLite( ee );
 
             try (InputStream is = this.getClass().getResourceAsStream(
                     "/data/loader/expression/geo/GSE35930/design.txt" );) {
@@ -225,7 +225,7 @@ public class DiffExTest extends AbstractGeoServiceTest {
             }
 
             ee = eeService.load( ee.getId() );
-            ee = eeService.thawLite( ee );
+            eeService.thawLite( ee );
         }
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();

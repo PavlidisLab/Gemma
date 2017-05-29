@@ -191,7 +191,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
         if ( gene != null ) geneService.remove( gene );
-        if ( ee != null ) eeService.delete( ee );
+        if ( ee != null ) eeService.remove( ee );
 
     }
 

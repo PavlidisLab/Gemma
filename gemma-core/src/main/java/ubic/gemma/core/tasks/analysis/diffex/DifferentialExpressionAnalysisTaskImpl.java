@@ -100,10 +100,6 @@ public class DifferentialExpressionAnalysisTaskImpl extends
         return result;
     }
 
-    /**
-     * @param command
-     * @return
-     */
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
         ExpressionExperiment ee = taskCommand.getExpressionExperiment();
 
@@ -112,12 +108,12 @@ public class DifferentialExpressionAnalysisTaskImpl extends
                 throw new UnsupportedOperationException( "Updatestats functionality has been removed" ); 
             }
             log.info( "Redoing analysis" );
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(), true );
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( ee );

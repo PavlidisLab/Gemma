@@ -51,8 +51,13 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     /**
      * default constructor to satisfy java bean contract
      */
-    public SessionBoundExpressionExperimentSetValueObject() {
-        super();
+    public SessionBoundExpressionExperimentSetValueObject(Long id) {
+        super(id);
+    }
+
+    @Override
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     @Override

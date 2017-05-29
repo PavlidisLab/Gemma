@@ -19,19 +19,15 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import gemma.gsec.AuthorityConstants;
-
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.model.common.auditAndSecurity.UserGroupImpl;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
@@ -39,84 +35,51 @@ import ubic.gemma.model.common.auditAndSecurity.UserGroupImpl;
 @Repository
 public class UserGroupDaoImpl extends UserGroupDaoBase {
 
-    protected final Log log = LogFactory.getLog( getClass() );
-
-    /**
-     * @param sessionFactory
-     */
     @Autowired
     public UserGroupDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * UserGroupDao#addAuthority(ubic.gemma.model.common.auditAndSecurity.UserGroup
-     * , java.lang.String)
-     */
     @Override
     public void addAuthority( UserGroup group, String authority ) {
-
         for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority ) ) {
                 log.warn( "Group already has authority " + authority );
                 return;
             }
         }
-
-        GroupAuthority ga = ubic.gemma.model.common.auditAndSecurity.GroupAuthority.Factory.newInstance();
+        GroupAuthority ga = GroupAuthority.Factory.newInstance();
         ga.setAuthority( authority );
-
         group.getAuthorities().add( ga );
-
-        this.getHibernateTemplate().update( group );
-
+        super.update( group );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * UserGroupDao#addToGroup(ubic.gemma.model.common.auditAndSecurity.UserGroup
-     * , ubic.gemma.model.common.auditAndSecurity.User)
-     */
     @Override
     public void addToGroup( UserGroup group, User user ) {
         group.getGroupMembers().add( user );
-        this.getHibernateTemplate().update( group );
+        super.update( group );
     }
 
-    /**
-     * @see UserGroupDao#create(int transform,
-     *      ubic.gemma.model.common.auditAndSecurity.UserGroup)
-     */
     @Override
     public UserGroup create( final UserGroup userGroup ) {
         if ( userGroup == null ) {
             throw new IllegalArgumentException( "UserGroup.create - 'userGroup' can not be null" );
         }
-        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME )
-                || userGroup.getName().equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                || userGroup.getName().equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME ) || userGroup.getName()
+                .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || userGroup.getName()
+                .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot create group with that name: " + userGroup.getName() );
         }
         this.getHibernateTemplate().save( userGroup );
         return userGroup;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * UserGroupDao#findGroupsForUser(ubic.gemma.model.common.auditAndSecurity
-     * .User)
-     */
     @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user", "user", user );
+        //noinspection unchecked
+        return this.getSession()
+                .createQuery( "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user" )
+                .setParameter( "user", user ).list();
     }
 
     @Override
@@ -129,18 +92,14 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
             throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
         }
         // this check is done higher up as well...
-        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME )
-                || userGroup.getName().equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                || userGroup.getName().equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
-            throw new IllegalArgumentException( "Cannot delete group: " + userGroup );
+        if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME ) || userGroup.getName()
+                .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || userGroup.getName()
+                .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "Cannot remove group: " + userGroup );
         }
-
         this.getSessionFactory().getCurrentSession().delete( userGroup );
     }
 
-    /**
-     * @see UserGroupDao#remove(ubic.gemma.model.common.auditAndSecurity.UserGroup)
-     */
     @Override
     public void remove( UserGroup userGroup ) {
         if ( userGroup == null ) {
@@ -149,16 +108,8 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
         this.remove( userGroup.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * UserGroupDao#removeAuthority(ubic.gemma.model.common.auditAndSecurity
-     * .UserGroup, java.lang.String)
-     */
     @Override
     public void removeAuthority( UserGroup group, String authority ) {
-
         for ( Iterator<gemma.gsec.model.GroupAuthority> iterator = group.getAuthorities().iterator(); iterator
                 .hasNext(); ) {
             gemma.gsec.model.GroupAuthority ga = iterator.next();
@@ -166,29 +117,18 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
                 iterator.remove();
             }
         }
-
         this.getHibernateTemplate().update( group );
     }
 
-    /**
-     * @see UserGroupDao#update(ubic.gemma.model.common.auditAndSecurity.UserGroup)
-     */
     @Override
     public void update( UserGroup userGroup ) {
-        if ( userGroup == null ) {
-            throw new IllegalArgumentException( "UserGroup.update - 'userGroup' can not be null" );
-        }
-
-        UserGroup groupToUpdate = this.getHibernateTemplate().load( UserGroupImpl.class, userGroup.getId() );
-
+        UserGroup groupToUpdate = this.load( userGroup.getId() );
         String name = groupToUpdate.getName();
-        if ( !name.equals( userGroup.getName() )
-                && ( name.equals( AuthorityConstants.USER_GROUP_NAME )
-                        || name.equals( AuthorityConstants.ADMIN_GROUP_NAME ) || name
-                            .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
+        if ( !name.equals( userGroup.getName() ) && ( name.equals( AuthorityConstants.USER_GROUP_NAME ) || name
+                .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || name
+                .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) ) {
             throw new IllegalArgumentException( "Cannot change name of group: " + groupToUpdate.getName() );
         }
-
-        this.getHibernateTemplate().update( userGroup );
+        super.update( userGroup );
     }
 }

@@ -18,28 +18,31 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
+import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.Collection;
 
 /**
- * @see ubic.gemma.model.common.auditAndSecurity.JobInfo
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>JobInfo</code>.
+ *
+ * @see JobInfo
  */
 @Repository
-public class JobInfoDaoImpl extends JobInfoDaoBase {
+public class JobInfoDaoImpl extends AbstractDao<JobInfo> implements JobInfoDao {
 
     @Autowired
     public JobInfoDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( JobInfo.class, sessionFactory );
     }
 
     @Override
     public Collection<JobInfo> getUsersJob( String userName ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select j from JobInfoImpl j inner join j.user on u.userName = :un", "un", "userName" );
+        //noinspection unchecked
+        return this.getSession().createQuery( "select j from JobInfoImpl j inner join j.user u on u.userName = :un" )
+                .setParameter( "un", userName ).list();
     }
-
 }

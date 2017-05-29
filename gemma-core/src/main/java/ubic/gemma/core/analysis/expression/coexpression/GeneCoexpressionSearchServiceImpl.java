@@ -18,32 +18,24 @@
  */
 package ubic.gemma.core.analysis.expression.coexpression;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
-import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionService;
+import ubic.gemma.persistence.service.association.coexpression.CoexpressionValueObject;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.*;
 
 /**
  * @author paul
@@ -57,28 +49,25 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
      * If the query involves this many genes, we switch to looking only among the genes. The limit here is entirely
      * driven by performance considerations: too many genes and we get too many results.
      */
-    private static final int THRESHOLD_TRIGGER_QUERYGENESONLY = 50;
+    private static final int THRESHOLD_TRIGGER_QUERY_GENES_ONLY = 50;
 
-    private static Log log = LogFactory.getLog( GeneCoexpressionSearchServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( GeneCoexpressionSearchServiceImpl.class.getName() );
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private CoexpressionService coexpressionService;
-
-    @Autowired
-    private CoexpressionAnalysisService coexpressionAnalysisService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final CoexpressionService coexpressionService;
+    private final CoexpressionAnalysisService coexpressionAnalysisService;
+    private final GeneService geneService;
 
     @Autowired
-    private GeneService geneService;
+    public GeneCoexpressionSearchServiceImpl( ExpressionExperimentService expressionExperimentService,
+            CoexpressionService coexpressionService, CoexpressionAnalysisService coexpressionAnalysisService,
+            GeneService geneService ) {
+        this.expressionExperimentService = expressionExperimentService;
+        this.coexpressionService = coexpressionService;
+        this.coexpressionAnalysisService = coexpressionAnalysisService;
+        this.geneService = geneService;
+    }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionService#
-     * coexpressionSearch(java.util.Collection, java.util.Collection, int, int, boolean, boolean)
-     */
     @Override
     public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Long> genes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
@@ -86,12 +75,6 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         return doCoexpressionSearch( inputEeIds, genes, stringency, maxResults, queryGenesOnly, false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService#coexpressionSearchQuick(java.util.
-     * Collection, java.util.Collection, int, int, boolean)
-     */
     @Override
     public CoexpressionMetaValueObject coexpressionSearchQuick( Collection<Long> eeIds, Collection<Long> queryGenes,
             int stringency, int maxResults, boolean queryGenesOnly ) {
@@ -100,27 +83,20 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
     /**
      * Convert Gene2GeneCoexpressionValueObjects to CoexpressionValueObjectExts
-     * 
-     * @param queryGene
-     * @param coexp
-     * @param stringency
-     * @param queryGenesOnly
+     *
      * @param queryGeneIds all those included in the query
-     * @return results
      */
     private List<CoexpressionValueObjectExt> addExtCoexpressionValueObjects( GeneValueObject queryGene,
-            Collection<CoexpressionValueObject> coexp, int stringency, boolean queryGenesOnly,
-            Collection<Long> queryGeneIds ) {
+            Collection<CoexpressionValueObject> coexp, boolean queryGenesOnly, Collection<Long> queryGeneIds ) {
 
         List<CoexpressionValueObjectExt> results = new ArrayList<>();
-        Collection<Long> coxpGenes = new HashSet<>();
+        Collection<Long> coexpGenes = new HashSet<>();
         for ( CoexpressionValueObject cvo : coexp ) {
-            coxpGenes.add( cvo.getCoexGeneId() );
+            coexpGenes.add( cvo.getCoexGeneId() );
         }
 
         // database hit. loadValueObjects is too slow.
-        Map<Long, GeneValueObject> coexpedGenes = EntityUtils
-                .getIdMap( geneService.loadValueObjectsLiter( coxpGenes ) );
+        Map<Long, GeneValueObject> coexpedGenes = EntityUtils.getIdMap( geneService.loadValueObjectsByIds( coexpGenes ) );
 
         for ( CoexpressionValueObject cvo : coexp ) {
 
@@ -130,20 +106,20 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             if ( queryGenesOnly ) {
                 if ( !queryGeneIds.contains( cvo.getCoexGeneId() ) ) {
 
-                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
-                            + cvo.getCoexGeneId() + " is not a query" );
+                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly " + cvo
+                            .getCoexGeneId() + " is not a query" );
                     continue;
                 }
 
                 if ( !queryGeneIds.contains( cvo.getQueryGeneId() ) ) {
-                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly "
-                            + cvo.getQueryGeneId() + " is not a query" );
+                    log.warn( "coexpression for non-query genes obtained unexpectedly when doing queryGenesOnly " + cvo
+                            .getQueryGeneId() + " is not a query" );
                     continue;
                 }
             }
 
-            CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
-            ecvo.setQueryGene( queryGene );
+            CoexpressionValueObjectExt ecVo = new CoexpressionValueObjectExt();
+            ecVo.setQueryGene( queryGene );
             GeneValueObject foundGene = coexpedGenes.get( cvo.getCoexGeneId() );
 
             if ( !queryGeneIds.contains( foundGene.getId() ) ) {
@@ -153,36 +129,34 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
             }
 
-            ecvo.setFoundGene( foundGene );
+            ecVo.setFoundGene( foundGene );
 
             if ( cvo.isPositiveCorrelation() ) {
-                ecvo.setPosSupp( cvo.getNumDatasetsSupporting() );
+                ecVo.setPosSupp( cvo.getNumDatasetsSupporting() );
             } else {
-                ecvo.setNegSupp( cvo.getNumDatasetsSupporting() );
+                ecVo.setNegSupp( cvo.getNumDatasetsSupporting() );
             }
 
             // when 'quick', these will not necessarily be set.
-            ecvo.setNumTestedIn( cvo.getNumDatasetsTestedIn() );
-            ecvo.setSupportingExperiments( cvo.getSupportingDatasets() );
+            ecVo.setNumTestedIn( cvo.getNumDatasetsTestedIn() );
+            ecVo.setSupportingExperiments( cvo.getSupportingDatasets() );
 
-            ecvo.setSortKey();
-            results.add( ecvo );
+            ecVo.setSortKey();
+            results.add( ecVo );
 
-            assert ecvo.getPosSupp() > 0 || ecvo.getNegSupp() > 0;
-            assert ecvo.getFoundGene() != null;
-            assert ecvo.getQueryGene() != null;
+            assert ecVo.getPosSupp() > 0 || ecVo.getNegSupp() > 0;
+            assert ecVo.getFoundGene() != null;
+            assert ecVo.getQueryGene() != null;
         }
 
         return results;
     }
 
     /**
-     * @param inputEeIds
-     * @param genes 1 or more.
-     * @param stringency; this may be modified to control the number of results, unless "queryGenesOnly" is true.
-     * @param maxResults per gene, not including the query genes themselves. Ignored if this is 'querygenesonly'
+     * @param genes          1 or more.
+     * @param stringency;    this may be modified to control the number of results, unless "queryGenesOnly" is true.
+     * @param maxResults     per gene, not including the query genes themselves. Ignored if this is 'queryGenesOnly'
      * @param queryGenesOnly will be ignored if number of genes is 1.
-     * @param quick
      * @return CoexpressionMetaValueObject, in which the results are already populated and sorted.
      */
     private CoexpressionMetaValueObject doCoexpressionSearch( Collection<Long> inputEeIds, Collection<Long> genes,
@@ -196,7 +170,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         boolean actuallyUseQueryGeneOnly = queryGenesOnly && genes.size() > 1;
 
         Taxon taxon = this.geneService.load( genes.iterator().next() ).getTaxon();
-        List<ExpressionExperimentValueObject> eevos = getFilteredEEvos( inputEeIds, taxon );
+        List<ExpressionExperimentValueObject> eevos = getFilteredEEVos( inputEeIds, taxon );
 
         CoexpressionMetaValueObject result = initValueObject( genes, eevos );
 
@@ -208,23 +182,24 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         Collection<Long> eeIds = EntityUtils.getIds( eevos );
 
-        Map<Long, List<CoexpressionValueObject>> allCoexpressions = new HashMap<>();
+        Map<Long, List<CoexpressionValueObject>> allCoexpressions;
 
         // Note: auto-choose stringency on client size not always giving something reasonable. Also: not clear we want
         // to do this auto-adjust for 'query genes only'.
 
-        if ( genes.size() > THRESHOLD_TRIGGER_QUERYGENESONLY ) {
+        if ( genes.size() > THRESHOLD_TRIGGER_QUERY_GENES_ONLY ) {
             if ( !actuallyUseQueryGeneOnly ) {
                 log.info( "Switching to 'query genes only'" );
             }
             actuallyUseQueryGeneOnly = true;
         }
 
-        if ( stringency < 1 ) stringency = 1;
+        if ( stringency < 1 )
+            stringency = 1;
 
         if ( !queryGenesOnly ) {
-            stringency = Math.max( stringency,
-                    chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
+            stringency = Math
+                    .max( stringency, chooseStringency( actuallyUseQueryGeneOnly, eeIds.size(), genes.size() ) );
             log.info( "Stringency set to " + stringency + " based on number of experiments (" + eeIds.size()
                     + ") and genes (" + genes.size() + ") queried" );
         } else {
@@ -242,18 +217,18 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
                     // should be impossible - could assert.
                     throw new IllegalArgumentException( "cannot do inter-gene coexpression search with only one gene" );
                 }
-                allCoexpressions = coexpressionService.findInterCoexpressionRelationships( taxon, genes, eeIds,
-                        stringency, quick );
+                allCoexpressions = coexpressionService
+                        .findInterCoexpressionRelationships( taxon, genes, eeIds, stringency, quick );
             } else {
-                allCoexpressions = coexpressionService.findCoexpressionRelationships( taxon, genes, eeIds, stringency,
-                        maxResults, quick );
+                allCoexpressions = coexpressionService
+                        .findCoexpressionRelationships( taxon, genes, eeIds, stringency, maxResults, quick );
             }
             int minimum_stringency_for_requery = 2;
 
             if ( allCoexpressions.isEmpty() && stringency > minimum_stringency_for_requery ) {
                 stringency -= stepSize; // step size completely made up.
                 stringency = Math.max( minimum_stringency_for_requery, stringency ); // keep stringency at least 2.
-                log.info( "No results, requerying with stringeny=" + stringency );
+                log.info( "No results, re-querying with stringency=" + stringency );
             } else {
                 // no results.
                 break;
@@ -267,7 +242,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
         Set<Long> queryGeneIds = allCoexpressions.keySet();
         assert genes.containsAll( queryGeneIds );
-        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( geneService.loadValueObjects( queryGeneIds ) );
+        Map<Long, GeneValueObject> idMap = EntityUtils.getIdMap( geneService.loadValueObjectsByIds( queryGeneIds ) );
 
         int k = 0;
         for ( Long queryGene : queryGeneIds ) {
@@ -275,13 +250,7 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             Collection<CoexpressionValueObject> coexpressions = allCoexpressions.get( queryGene );
 
             List<CoexpressionValueObjectExt> results = addExtCoexpressionValueObjects( idMap.get( queryGene ),
-                    coexpressions, stringency, actuallyUseQueryGeneOnly, genes );
-
-            // test for bug 4036
-            // for ( CoexpressionValueObjectExt cvo : results ) {
-            // assert cvo.getNumTestedIn() <= eevos.size() : "Expected max testedin of " + eevos.size() + " but got "
-            // + cvo.getNumTestedIn() + " for query gene " + queryGene;
-            // }
+                    coexpressions, actuallyUseQueryGeneOnly, genes );
 
             result.getResults().addAll( results );
 
@@ -305,9 +274,6 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
         }
 
         populateNodeDegrees( result );
-        // if ( searchOptions.isUseMyDatasets() ) {
-        // addMyDataFlag( result, myEE );
-        // }
 
         return result;
     }
@@ -315,47 +281,46 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
     /**
      * Populate node degree. Note that this ignores the datasets that were used in the query - the statistics are for
      * 'all' data sets.
-     * 
-     * @param result
      */
-    public void populateNodeDegrees( CoexpressionMetaValueObject result ) {
+    private void populateNodeDegrees( CoexpressionMetaValueObject result ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
         Collection<Long> allUsedGenes = new HashSet<>();
-        for ( CoexpressionValueObjectExt coex : result.getResults() ) {
-            allUsedGenes.add( coex.getQueryGene().getId() );
-            allUsedGenes.add( coex.getFoundGene().getId() );
+        for ( CoexpressionValueObjectExt coexp : result.getResults() ) {
+            allUsedGenes.add( coexp.getQueryGene().getId() );
+            allUsedGenes.add( coexp.getFoundGene().getId() );
         }
 
         Map<Long, GeneCoexpressionNodeDegreeValueObject> nodeDegrees = coexpressionService
                 .getNodeDegrees( allUsedGenes );
 
-        for ( CoexpressionValueObjectExt coex : result.getResults() ) {
+        for ( CoexpressionValueObjectExt coexp : result.getResults() ) {
 
             // if node degree info is out of date.
-            if ( !nodeDegrees.containsKey( coex.getQueryGene().getId() )
-                    || !nodeDegrees.containsKey( coex.getFoundGene().getId() ) ) {
+            if ( !nodeDegrees.containsKey( coexp.getQueryGene().getId() ) || !nodeDegrees
+                    .containsKey( coexp.getFoundGene().getId() ) ) {
                 continue;
             }
 
-            GeneCoexpressionNodeDegreeValueObject queryGeneNodeDegree = nodeDegrees.get( coex.getQueryGene().getId() );
-            GeneCoexpressionNodeDegreeValueObject foundGeneNodeDegree = nodeDegrees.get( coex.getFoundGene().getId() );
+            GeneCoexpressionNodeDegreeValueObject queryGeneNodeDegree = nodeDegrees.get( coexp.getQueryGene().getId() );
+            GeneCoexpressionNodeDegreeValueObject foundGeneNodeDegree = nodeDegrees.get( coexp.getFoundGene().getId() );
 
-            boolean pos = coex.getNegSupp() == 0;
+            boolean pos = coexp.getNegSupp() == 0;
 
-            coex.setQueryGeneNodeDegree( queryGeneNodeDegree.getLinksWithMinimumSupport( coex.getSupport(), pos ) );
-            coex.setFoundGeneNodeDegree( foundGeneNodeDegree.getLinksWithMinimumSupport( coex.getSupport(), pos ) );
+            coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getLinksWithMinimumSupport( coexp.getSupport(), pos ) );
+            coexp.setFoundGeneNodeDegree( foundGeneNodeDegree.getLinksWithMinimumSupport( coexp.getSupport(), pos ) );
 
-            coex.setQueryGeneNodeDegreeRank( queryGeneNodeDegree.getRankAtMinimumSupport( coex.getSupport(), pos ) );
-            coex.setFoundGeneNodeDegreeRank( foundGeneNodeDegree.getRankAtMinimumSupport( coex.getSupport(), pos ) );
+            coexp.setQueryGeneNodeDegreeRank( queryGeneNodeDegree.getRankAtMinimumSupport( coexp.getSupport(), pos ) );
+            coexp.setFoundGeneNodeDegreeRank( foundGeneNodeDegree.getRankAtMinimumSupport( coexp.getSupport(), pos ) );
 
         }
 
         assert result.getSummaries() != null;
         for ( Long g : nodeDegrees.keySet() ) {
-            if ( !result.getSummaries().containsKey( g ) ) continue;
+            if ( !result.getSummaries().containsKey( g ) )
+                continue;
             result.getSummaries().get( g ).setCoexpNodeDegree( nodeDegrees.get( g ) );
         }
 
@@ -366,11 +331,10 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
 
     /**
      * Security-filter the experiments, remove troubled ones, and retain only those that have an analysis.
-     * 
+     *
      * @param eeIds can be null, in which case all available (to user) IDs are gotten
-     * @return
      */
-    private List<ExpressionExperimentValueObject> getFilteredEEvos( Collection<Long> eeIds, Taxon taxon ) {
+    private List<ExpressionExperimentValueObject> getFilteredEEVos( Collection<Long> eeIds, Taxon taxon ) {
         List<ExpressionExperimentValueObject> securityFilteredEevos;
         if ( eeIds == null || eeIds.isEmpty() ) {
             // all valid experiments for taxon.
@@ -404,10 +368,6 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
      * Use some rough heuristics (based on manual testing) to choose an initial stringency for queries. This value could
      * get adjusted upwards during postprocessing to limit the result set sizes. But this should be set as high as
      * possible to speed up the first stages.
-     * 
-     * @param queryGenesOnly
-     * @param numExperimentsQueried
-     * @return
      */
     private Integer chooseStringency( boolean queryGenesOnly, int numExperimentsQueried, int numGenesQueried ) {
 
@@ -439,20 +399,16 @@ public class GeneCoexpressionSearchServiceImpl implements GeneCoexpressionSearch
             return numExperimentsQueried;
         }
 
-        if ( queryGenesOnly ) baseline--;
+        if ( queryGenesOnly )
+            baseline--;
 
         return ( int ) ( Math.ceil( baseline + expSlope * numExperimentsQueried ) );
     }
 
-    /**
-     * @param genes
-     * @param eevos
-     * @return
-     */
     private CoexpressionMetaValueObject initValueObject( Collection<Long> genes,
             List<ExpressionExperimentValueObject> eevos ) {
         CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
-        result.setQueryGenes( new ArrayList<GeneValueObject>( geneService.loadValueObjectsLiter( genes ) ) );
+        result.setQueryGenes( new ArrayList<>( geneService.loadValueObjectsByIdsLiter( genes ) ) );
         result.setResults( new ArrayList<CoexpressionValueObjectExt>() );
         result.setSummaries( new HashMap<Long, CoexpressionSummaryValueObject>() );
         result.setNumDatasetsQueried( eevos.size() );

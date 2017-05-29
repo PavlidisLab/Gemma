@@ -88,11 +88,6 @@ public class ExternalDatabaseUtils {
         return getGenbank();
     }
 
-    /**
-     * @param accession
-     * @param seekPersistentDb
-     * @return
-     */
     public DatabaseEntry getGenbankAccession( String accession, boolean seekPersistentDb ) {
         DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
 
@@ -103,7 +98,7 @@ public class ExternalDatabaseUtils {
     }
 
     /**
-     * @param dao the dao to set
+     * @param externalDatabaseDao the dao to set
      */
     public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
         this.externalDatabaseDao = externalDatabaseDao;

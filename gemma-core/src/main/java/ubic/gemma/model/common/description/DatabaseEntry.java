@@ -18,12 +18,16 @@
  */
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
+
 /**
  * <p>
  * A reference to a record in a database.
  * </p>
  */
-public class DatabaseEntry implements java.io.Serializable {
+public class DatabaseEntry implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -33,7 +37,7 @@ public class DatabaseEntry implements java.io.Serializable {
     private String accessionVersion;
     private String Uri;
     private Long id;
-    private ubic.gemma.model.common.description.ExternalDatabase externalDatabase;
+    private ExternalDatabase externalDatabase;
 
     /* ********************************
      * Constructors
@@ -99,7 +103,7 @@ public class DatabaseEntry implements java.io.Serializable {
     }
 
     /**
-     * @see ubic.gemma.model.common.description.DatabaseEntry#toString()
+     * @see DatabaseEntry#toString()
      */
     @Override
     public String toString() {
@@ -131,11 +135,11 @@ public class DatabaseEntry implements java.io.Serializable {
         this.accessionVersion = accessionVersion;
     }
 
-    public ubic.gemma.model.common.description.ExternalDatabase getExternalDatabase() {
+    public ExternalDatabase getExternalDatabase() {
         return this.externalDatabase;
     }
 
-    public void setExternalDatabase( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+    public void setExternalDatabase( ExternalDatabase externalDatabase ) {
         this.externalDatabase = externalDatabase;
     }
 
@@ -160,24 +164,23 @@ public class DatabaseEntry implements java.io.Serializable {
      * ********************************/
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.DatabaseEntry}.
+     * Constructs new instances of {@link DatabaseEntry}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.DatabaseEntry}.
+         * Constructs a new instance of {@link DatabaseEntry}.
          */
-        public static ubic.gemma.model.common.description.DatabaseEntry newInstance() {
-            return new ubic.gemma.model.common.description.DatabaseEntry();
+        public static DatabaseEntry newInstance() {
+            return new DatabaseEntry();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.DatabaseEntry}, taking all possible
+         * Constructs a new instance of {@link DatabaseEntry}, taking all possible
          * properties (except the identifier(s))as arguments.
          */
-        public static ubic.gemma.model.common.description.DatabaseEntry newInstance( String accession,
-                String accessionVersion, String Uri,
-                ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-            final ubic.gemma.model.common.description.DatabaseEntry entity = new ubic.gemma.model.common.description.DatabaseEntry();
+        public static DatabaseEntry newInstance( String accession, String accessionVersion, String Uri,
+                ExternalDatabase externalDatabase ) {
+            final DatabaseEntry entity = new DatabaseEntry();
             entity.setAccession( accession );
             entity.setAccessionVersion( accessionVersion );
             entity.setUri( Uri );
@@ -186,12 +189,11 @@ public class DatabaseEntry implements java.io.Serializable {
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.DatabaseEntry}, taking all required
+         * Constructs a new instance of {@link DatabaseEntry}, taking all required
          * and/or read-only properties as arguments.
          */
-        public static ubic.gemma.model.common.description.DatabaseEntry newInstance(
-                ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-            final ubic.gemma.model.common.description.DatabaseEntry entity = new ubic.gemma.model.common.description.DatabaseEntry();
+        public static DatabaseEntry newInstance( ExternalDatabase externalDatabase ) {
+            final DatabaseEntry entity = new DatabaseEntry();
             entity.setExternalDatabase( externalDatabase );
             return entity;
         }

@@ -101,7 +101,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
             eeIDLong.add( Long.parseLong( id ) );
 
         // Need to get and thaw the experiments.
-        Collection<ExpressionExperiment> eeInput = expressionExperimentService.loadMultiple( eeIDLong );
+        Collection<ExpressionExperiment> eeInput = expressionExperimentService.load( eeIDLong );
 
         if ( eeInput == null || eeInput.isEmpty() )
             return buildBadResponse( document, "Expression experiment(s) cannot be found or incorrect input" );
@@ -111,7 +111,7 @@ public class DEDVRankEndpoint extends AbstractGemmaEndpoint {
         Collection<Long> geneIDLong = new HashSet<Long>();
         for ( String id : geneIdInput )
             geneIDLong.add( Long.parseLong( id ) );
-        Collection<Gene> geneInput = geneService.loadMultiple( geneIDLong );
+        Collection<Gene> geneInput = geneService.load( geneIDLong );
         if ( geneInput == null || geneInput.isEmpty() )
             return buildBadResponse( document, "Gene(s) cannot be found or incorrect input" );
 

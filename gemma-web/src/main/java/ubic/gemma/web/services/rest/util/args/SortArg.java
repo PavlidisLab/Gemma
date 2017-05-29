@@ -9,7 +9,7 @@ import ubic.gemma.web.services.rest.util.GemmaApiException;
 public class SortArg extends PrimitiveArg {
     private static final String ERROR_MSG =
             "Value '%s' can not be interpreted as a sort argument. Correct syntax is: [+,-][field]. E.g: '-id' means 'order by ID descending. "
-                    + "Make sure you encode the '+' as '%%2B'.";
+                    + "Make sure you URL encode the arguments, for example '+' has to be encoded to '%%2B'.";
 
     private String field;
     private boolean asc;
@@ -24,7 +24,8 @@ public class SortArg extends PrimitiveArg {
     }
 
     /**
-     * Constructor used to inform that the received string was not well-formed.
+     * Constructor used to create an instance that instead of returning the sort values, informs that the received
+     * string was not well-formed.
      *
      * @param errorMessage the malformed original string argument.
      */

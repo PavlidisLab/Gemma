@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.designElement;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
@@ -27,54 +28,50 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 public abstract class CompositeSequence extends ubic.gemma.model.common.Describable {
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.designElement.CompositeSequence}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.designElement.CompositeSequence}.
-         */
-        public static ubic.gemma.model.expression.designElement.CompositeSequence newInstance() {
-            return new ubic.gemma.model.expression.designElement.CompositeSequenceImpl();
-        }
-
-    }
-
-    /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -3859507822452159349L;
-    private ubic.gemma.model.genome.biosequence.BioSequence biologicalCharacteristic;
-
+    private BioSequence biologicalCharacteristic;
     private ArrayDesign arrayDesign;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public CompositeSequence() {
     }
 
-    /**
-     * 
-     */
     public ArrayDesign getArrayDesign() {
         return this.arrayDesign;
-    }
-
-    /**
-     * The sequence for this composite sequence.
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence getBiologicalCharacteristic() {
-        return this.biologicalCharacteristic;
     }
 
     public void setArrayDesign( ArrayDesign arrayDesign ) {
         this.arrayDesign = arrayDesign;
     }
 
-    public void setBiologicalCharacteristic( ubic.gemma.model.genome.biosequence.BioSequence biologicalCharacteristic ) {
+    /**
+     * The sequence for this composite sequence.
+     */
+    public BioSequence getBiologicalCharacteristic() {
+        return this.biologicalCharacteristic;
+    }
+
+    public void setBiologicalCharacteristic( BioSequence biologicalCharacteristic ) {
         this.biologicalCharacteristic = biologicalCharacteristic;
+    }
+
+    /**
+     * Constructs new instances of {@link CompositeSequence}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link CompositeSequence}.
+         */
+        public static CompositeSequence newInstance() {
+            return new CompositeSequenceImpl();
+        }
+
     }
 
 }

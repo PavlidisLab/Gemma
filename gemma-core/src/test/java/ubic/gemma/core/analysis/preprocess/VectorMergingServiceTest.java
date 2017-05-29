@@ -82,13 +82,13 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
             if ( ee != null ) {
                 mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
-                eeService.delete( ee );
+                eeService.remove( ee );
 
                 if ( mergedAA != null ) {
                     mergedAA.setMergees( new HashSet<ArrayDesign>() );
                     arrayDesignService.update( mergedAA );
 
-                    mergedAA = arrayDesignService.thawLite( mergedAA );
+                    arrayDesignService.thawLite( mergedAA );
 
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
                         arrayDesign.setMergedInto( null );
@@ -129,7 +129,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, true, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
 
@@ -142,9 +142,9 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         Collection<ArrayDesign> taas = new HashSet<ArrayDesign>();
         Set<BioSequence> oldbs = new HashSet<BioSequence>();
         for ( ArrayDesign arrayDesign : aas ) {
-            ArrayDesign ta = arrayDesignService.thaw( arrayDesign );
-            taas.add( ta );
-            for ( CompositeSequence cs : ta.getCompositeSequences() ) {
+            arrayDesignService.thaw( arrayDesign );
+            taas.add( arrayDesign );
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                 log.info( cs + " " + cs.getBiologicalCharacteristic() );
                 oldbs.add( cs.getBiologicalCharacteristic() );
             }
@@ -179,11 +179,11 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         // just to make this explicit. The new array design has to contain all the old sequences.
         assertEquals( oldbs.size(), seenBs.size() );
 
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
         // check we actually got switched over.
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( mergedAA, ba.getArrayDesignUsed() );

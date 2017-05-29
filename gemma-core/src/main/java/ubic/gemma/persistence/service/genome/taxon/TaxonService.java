@@ -21,15 +21,15 @@ package ubic.gemma.persistence.service.genome.taxon;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.BaseService;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
 
 /**
  * @author kelsey
  */
-public interface TaxonService {
-
-    Taxon find( Taxon taxon );
+public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObject> {
 
     Taxon findByAbbreviation( String abbreviation );
 
@@ -42,26 +42,10 @@ public interface TaxonService {
     @Secured({ "GROUP_USER" })
     Taxon findOrCreate( Taxon taxon );
 
-    Taxon load( Long id );
-
-    TaxonValueObject loadValueObject( Long id );
-
-    Collection<Taxon> loadAll();
-
-    @Secured({ "GROUP_USER" })
-    void remove( Taxon taxon );
-
-    @Secured({ "GROUP_USER" })
-    void update( Taxon taxon );
-
-    void thaw( Taxon taxon );
-
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used
      */
     Collection<Taxon> loadAllTaxaWithGenes();
-
-    Collection<TaxonValueObject> loadAllValueObjects();
 
     /**
      * @return Taxon that are species. (only returns usable taxa)

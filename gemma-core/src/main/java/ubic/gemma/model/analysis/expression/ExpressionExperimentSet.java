@@ -32,7 +32,7 @@ import java.util.HashSet;
  *
  * @author Paul
  */
-public abstract class ExpressionExperimentSet extends AbstractAuditable implements Securable {
+public class ExpressionExperimentSet extends AbstractAuditable implements Securable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -47,9 +47,6 @@ public abstract class ExpressionExperimentSet extends AbstractAuditable implemen
     public ExpressionExperimentSet() {
     }
 
-    /**
-     *
-     */
     public Collection<BioAssaySet> getExperiments() {
         return this.experiments;
     }
@@ -58,9 +55,6 @@ public abstract class ExpressionExperimentSet extends AbstractAuditable implemen
         this.experiments = experiments;
     }
 
-    /**
-     *
-     */
     public ubic.gemma.model.genome.Taxon getTaxon() {
         return this.taxon;
     }
@@ -77,7 +71,7 @@ public abstract class ExpressionExperimentSet extends AbstractAuditable implemen
          * Constructs a new instance of {@link ExpressionExperimentSet}.
          */
         public static ExpressionExperimentSet newInstance() {
-            return new ExpressionExperimentSetImpl();
+            return new ExpressionExperimentSet();
         }
 
     }

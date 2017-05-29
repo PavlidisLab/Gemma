@@ -19,15 +19,23 @@
 
 package ubic.gemma.persistence.service.expression.experiment;
 
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import org.springframework.stereotype.Repository;
 import ubic.gemma.model.expression.experiment.GeeqImpl;
+import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.BaseDao;
 
 /**
- * TODO Document Me
  * 
  * @author paul
- * @version $Id$
  */
-public interface GeeqDao extends BaseDao<GeeqImpl> {
+@Repository
+public class GeeqDao extends AbstractDao<GeeqImpl> implements BaseDao<GeeqImpl> {
 
+    @Autowired
+    public GeeqDao( SessionFactory sessionFactory ) {
+        super( GeeqImpl.class, sessionFactory );
+    }
 }

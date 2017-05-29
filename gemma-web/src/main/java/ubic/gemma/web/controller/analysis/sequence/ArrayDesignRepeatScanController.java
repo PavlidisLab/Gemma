@@ -42,14 +42,12 @@ public class ArrayDesignRepeatScanController {
 
     /**
      * AJAX entry point.
-     * 
-     * @return
-     * @throws Exception
+     *
      */
     public String run( Long id ) throws Exception {
         ArrayDesign ad = arrayDesignService.load( id );
 
-        ad = arrayDesignService.thawLite( ad );
+        arrayDesignService.thawLite( ad );
         ArrayDesignRepeatScanTaskCommand cmd = new ArrayDesignRepeatScanTaskCommand( ad );
 
         return taskRunningService.submitRemoteTask( cmd );

@@ -94,7 +94,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
     @Override
     public void createDesignFromFile( Long eeid, String filePath ) {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not access experiment with id=" + eeid );
@@ -250,7 +250,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             }
 
             fv.getCharacteristics().remove( c );
-            characteristicService.delete( c );
+            characteristicService.remove( c );
             factorValueService.update( fv );
         }
     }
@@ -279,7 +279,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( e == null || e.getId() == null )
             return null;
         ExpressionExperiment ee = expressionExperimentService.load( e.getId() );
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<BioMaterialValueObject> result = new HashSet<>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             BioMaterial sample = assay.getSampleUsed();
@@ -323,9 +323,10 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );
         }
         // ugly fix for bug 3746
-        ExperimentalDesign ed = expressionExperimentService.thawLite(
-                experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.load( designId ) ) )
-                .getExperimentalDesign();
+        ExpressionExperiment ee = experimentalDesignService.getExpressionExperiment( this.experimentalDesignService.load( designId ) );
+        expressionExperimentService.thawLite(ee);
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+
 
         for ( ExperimentalFactor factor : ed.getExperimentalFactors() ) {
             result.add( new ExperimentalFactorValueObject( factor ) );
@@ -430,7 +431,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
 
         request.setAttribute( "id", designId );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         // strip white spaces
         String desc = ee.getDescription();
@@ -463,7 +464,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
         if ( ee == null )
             throw new IllegalStateException( "No Experiment for biomaterial: " + bm );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
 
@@ -483,7 +484,7 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
                 for ( FactorValue fv : ef.getFactorValues() ) {
                     if ( !usedFactorValues.contains( fv ) ) {
                         /*
-                         * delete it.
+                         * remove it.
                          */
                         toDelete.add( fv );
 

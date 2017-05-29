@@ -2,6 +2,7 @@ package ubic.gemma.model.common.auditAndSecurity.curation;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.openjena.atlas.logging.Log;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 import java.util.Date;
@@ -11,34 +12,36 @@ import java.util.Date;
  * Abstract curatable value object that provides variables and methods for data stored in CurationDetails objects on
  * curatable objects.
  */
-public abstract class AbstractCuratableValueObject {
+public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C> {
 
     private static final String TROUBLE_DETAILS_NONE = "Trouble details not found.";
 
-    protected Long id;
-
     protected Date lastUpdated;
-
     protected Boolean troubled = false;
-
     protected AuditEventValueObject lastTroubledEvent;
-
     protected Boolean needsAttention = false;
-
     protected AuditEventValueObject lastNeedsAttentionEvent;
-
     protected String curationNote;
-
     protected AuditEventValueObject lastNoteUpdateEvent;
 
-    public AbstractCuratableValueObject() {
+    protected AbstractCuratableValueObject( Long id ) {
+        super( id );
     }
 
-    public AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled,
+    protected AbstractCuratableValueObject( C curatable ) {
+        this( curatable.getId(), curatable.getCurationDetails().getLastUpdated(), curatable.getCurationDetails().getTroubled(),
+                new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ),
+                curatable.getCurationDetails().getNeedsAttention(),
+                new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ),
+                curatable.getCurationDetails().getCurationNote(),
+                new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) );
+    }
+
+    protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled,
             AuditEventValueObject lastTroubledEvent, Boolean needsAttention,
             AuditEventValueObject lastNeedsAttentionEvent, String curationNote,
             AuditEventValueObject lastNoteUpdateEvent ) {
-        this.id = id;
+        this( id );
         this.lastUpdated = lastUpdated;
         this.troubled = troubled;
         this.lastTroubledEvent = lastTroubledEvent;
@@ -46,14 +49,6 @@ public abstract class AbstractCuratableValueObject {
         this.lastNeedsAttentionEvent = lastNeedsAttentionEvent;
         this.curationNote = curationNote;
         this.lastNoteUpdateEvent = lastNoteUpdateEvent;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public Date getLastUpdated() {

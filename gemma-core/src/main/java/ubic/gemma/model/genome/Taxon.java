@@ -18,9 +18,10 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-public class Taxon implements java.io.Serializable {
+public class Taxon implements Identifiable, java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -102,20 +103,19 @@ public class Taxon implements java.io.Serializable {
         StringBuilder buf = new StringBuilder();
         buf.append( "Taxon:" );
         if ( this.getId() != null ) {
-            buf.append( " Id = " + this.getId() );
+            buf.append( " Id = " ).append( this.getId() );
         }
-
         if ( this.getScientificName() != null ) {
-            buf.append( " " + this.getScientificName() );
+            buf.append( " " ).append( this.getScientificName() );
         }
         if ( this.getCommonName() != null ) {
-            buf.append( " (" + this.getCommonName() + ")" );
+            buf.append( " (" ).append( this.getCommonName() ).append( ")" );
         }
         if ( this.getNcbiId() != null ) {
-            buf.append( " NCBI id=" + this.getNcbiId() );
+            buf.append( " NCBI id=" ).append( this.getNcbiId() );
         }
         if ( this.getAbbreviation() != null ) {
-            buf.append( " Abbreviation =" + this.getAbbreviation() );
+            buf.append( " Abbreviation =" ).append( this.getAbbreviation() );
         }
         return buf.toString();
     }

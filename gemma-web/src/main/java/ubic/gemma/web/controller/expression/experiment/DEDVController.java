@@ -169,7 +169,7 @@ public class DEDVController {
             Collection<Long> eeIds, Collection<Long> geneIds ) {
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return null;
 
@@ -207,7 +207,7 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return new VisualizationValueObject[0];
 
@@ -267,10 +267,10 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<? extends BioAssaySet> ees = expressionExperimentService.loadMultiple( eeIds );
+        Collection<? extends BioAssaySet> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return null;
-        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+        Collection<Gene> genes = geneService.load( geneIds );
         if ( genes == null || genes.isEmpty() )
             return null;
 
@@ -463,7 +463,7 @@ public class DEDVController {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return null;
 
@@ -529,11 +529,11 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( eeIds );
         if ( ees == null || ees.isEmpty() )
             return null;
 
-        Collection<CompositeSequence> probes = this.compositeSequenceService.loadMultiple( probeIds );
+        Collection<CompositeSequence> probes = this.compositeSequenceService.load( probeIds );
         if ( probes == null || probes.isEmpty() )
             return null;
 
@@ -625,7 +625,7 @@ public class DEDVController {
             /*
              * Organize the vectors in the same way expected by the ee+gene type of request.
              */
-            ExpressionExperimentValueObject ee = expressionExperimentService.loadValueObject( eeId );
+            ExpressionExperimentValueObject ee = expressionExperimentService.loadValueObject( expressionExperimentService.load( eeId ) );
 
             result = new HashMap<>();
             Map<Long, Collection<DoubleVectorValueObject>> gmap = new HashMap<>();
@@ -725,7 +725,7 @@ public class DEDVController {
                 if ( genes.containsKey( geneId ) ) {
                     gene = genes.get( geneId );
                 } else {
-                    gene = geneService.loadValueObject( geneId );
+                    gene = geneService.loadValueObjectById( geneId );
                     genes.put( geneId, gene );
                 }
                 String geneName = gene.getOfficialSymbol();
@@ -838,7 +838,7 @@ public class DEDVController {
     }
 
     private List<GeneValueObject> getGeneValueObjectList( List<Long> genes ) {
-        Collection<GeneValueObject> geneValueObjects = geneService.loadValueObjects( genes );
+        Collection<GeneValueObject> geneValueObjects = geneService.loadValueObjectsByIds( genes );
         Map<Long, GeneValueObject> m = EntityUtils.getIdMap( geneValueObjects );
         List<GeneValueObject> geneValueObjectList = new ArrayList<>();
         for ( Long id : genes ) {
@@ -857,7 +857,7 @@ public class DEDVController {
                 continue;
             usedGeneIds.addAll( vec.getGenes() );
         }
-        return EntityUtils.getIdMap( geneService.loadValueObjects( usedGeneIds ) );
+        return EntityUtils.getIdMap( geneService.loadValueObjectsByIds( usedGeneIds ) );
     }
 
     /**

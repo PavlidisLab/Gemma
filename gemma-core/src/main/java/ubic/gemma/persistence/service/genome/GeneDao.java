@@ -24,7 +24,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 import java.util.Map;
@@ -32,11 +33,7 @@ import java.util.Map;
 /**
  * @see Gene
  */
-public interface GeneDao extends BaseDao<Gene> {
-
-    Integer countAll();
-
-    Gene find( Gene gene );
+public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
@@ -63,7 +60,7 @@ public interface GeneDao extends BaseDao<Gene> {
      * Finder based on the official name.
      * </p>
      */
-    Collection<Gene> findByOfficalSymbol( String officialSymbol );
+    Collection<Gene> findByOfficialSymbol( String officialSymbol );
 
     Collection<Gene> findByOfficialName( String officialName );
 
@@ -129,20 +126,18 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     Collection<Gene> loadKnownGenes( Taxon taxon );
 
-    Collection<Gene> loadThawed( Collection<Long> ids );
-
-    Collection<Gene> loadThawedLiter( Collection<Long> ids );
-    
-    Gene thaw( Gene gene );
-
     /**
      * Only thaw the Aliases, very light version
      */
-    Gene thawAliases( Gene gene );
+    void thawAliases( Gene gene );
 
-    Collection<Gene> thawLite( Collection<Gene> genes );
+    void thawLite( Collection<Gene> genes );
 
-    Gene thawLite( Gene gene );
+    void thawLite( Gene gene );
 
-    Gene thawLiter( Gene gene );
+    void thawLiter( Gene gene );
+
+    Collection<Gene> loadThawed( Collection<Long> ids );
+
+    Collection<Gene> loadThawedLiter( Collection<Long> ids );
 }

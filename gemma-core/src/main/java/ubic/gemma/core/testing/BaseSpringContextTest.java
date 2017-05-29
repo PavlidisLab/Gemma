@@ -209,7 +209,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * Convenience method for deleting all rows from the specified tables. Use with caution outside of a transaction!
      * 
-     * @param names the names of the tables from which to delete
+     * @param names the names of the tables from which to remove
      * @return the total number of rows deleted from all specified tables
      */
     protected int deleteFromTables( String... names ) {

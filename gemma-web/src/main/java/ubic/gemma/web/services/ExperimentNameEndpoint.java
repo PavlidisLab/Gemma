@@ -75,7 +75,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
             eeLongs.add( Long.parseLong( ee ) );
         log.debug( "XML input read: expression experiment id, " + eeInput );
 
-        Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadMultiple( eeLongs );
+        Collection<ExpressionExperiment> eeCol = expressionExperimentService.load( eeLongs );
 
         if ( eeCol == null || eeCol.isEmpty() ) {
             String msg = "No input Expression Experiments can be found.";

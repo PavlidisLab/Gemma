@@ -19,19 +19,19 @@
 package ubic.gemma.model.association;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
-
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 
-/**
- * 
- */
+
 public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationImpl {
 
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = -8503436886033033975L;
+    private final GOEvidenceCode evidenceCode = null;
+
+    public GOEvidenceCode getEvidenceCode() {
+        return this.evidenceCode;
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.Gene2GOAssociation}.
@@ -56,15 +56,6 @@ public abstract class Gene2GOAssociation extends Gene2OntologyEntryAssociationIm
             return entity;
         }
 
-    }
-
-    private final GOEvidenceCode evidenceCode = null;
-
-    /**
-     * 
-     */
-    public GOEvidenceCode getEvidenceCode() {
-        return this.evidenceCode;
     }
 
 }

@@ -161,9 +161,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( ds2 );
         assertNotNull( ds3 );
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        experimentService.thawLite( ds1 );
+        experimentService.thawLite( ds2 );
+        experimentService.thawLite( ds3 );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds1 );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds2 );
@@ -193,9 +193,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         experimentService.update( ds2 );
         experimentService.update( ds3 );
 
-        ds1 = experimentService.thawLite( experimentService.load( ds1.getId() ) );
-        ds2 = experimentService.thawLite( experimentService.load( ds2.getId() ) );
-        ds3 = experimentService.thawLite( experimentService.load( ds3.getId() ) ); // pain! fails sometimes.
+        ds1 = experimentService.load( ds1.getId() ); experimentService.thawLite( ds1 );
+        ds2 = experimentService.load( ds2.getId() ); experimentService.thawLite( ds2 );
+        ds3 = experimentService.load( ds3.getId() ); experimentService.thawLite( ds3 );
 
         designImporter.importDesign( ds1,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
@@ -206,9 +206,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         designImporter.importDesign( ds3,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2111.design.txt" ) );
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        experimentService.thawLite( ds1 );
+        experimentService.thawLite( ds2 );
+        experimentService.thawLite( ds3 );
 
         /*
          * Run differential analyses.
@@ -531,7 +531,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         ArrayDesign gpl97 = arrayDesignService.findByShortName( "GPL97" );
         if ( gpl96 != null ) {
             for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl96 ) ) {
-                experimentService.delete( ee );
+                experimentService.remove( ee );
             }
 
             arrayDesignService.remove( gpl96 );
@@ -539,7 +539,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         if ( gpl97 != null ) {
             for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl97 ) ) {
-                experimentService.delete( ee );
+                experimentService.remove( ee );
             }
             arrayDesignService.remove( gpl97 );
         }
@@ -558,7 +558,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private void deleteSet( String shortName ) {
         ExpressionExperiment set = experimentService.findByShortName( shortName );
         if ( set != null )
-            experimentService.delete( set );
+            experimentService.remove( set );
 
     }
 

@@ -185,7 +185,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Long, Date> results = new HashMap<>();
 
         // do this ahead to avoid round trips - this also filters...
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( ids );
 
         if ( ees.size() == 0 ) {
             return results;
@@ -429,7 +429,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         /*
          * Because this method returns the results, we have to screen.
          */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.load( ids );
 
         Collection<Long> filteredIds = new HashSet<>();
         for ( ExpressionExperiment ee : securityScreened ) {

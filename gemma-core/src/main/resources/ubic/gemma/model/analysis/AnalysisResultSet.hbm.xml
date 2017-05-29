@@ -17,7 +17,7 @@
             <key foreign-key="EXPERIMENTAL_FACTOR_FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_C">
                <column name="FACTOR_ASSOCIATED_ANALYSIS_RESULT_SETS_FK" sql-type="BIGINT"/>
             </key>
-            <many-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" >
+            <many-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactor" >
                <column name="EXPERIMENTAL_FACTORS_FK" sql-type="BIGINT"/>
             </many-to-many>
          </set>

@@ -18,15 +18,18 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.hibernate.SessionFactory;
+import ubic.gemma.model.association.Gene2GeneProteinAssociation;
+import ubic.gemma.persistence.service.AbstractDao;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>ubic.gemma.model.association.Gene2GeneProteinAssocation</code>.
- * 
- * @see ubic.gemma.model.association.Gene2GeneProteinAssocation
+ * <code>ubic.gemma.model.association.Gene2GeneProteinAssociation</code>.
  */
-public abstract class Gene2GeneProteinAssociationDaoBase extends HibernateDaoSupport implements
-        Gene2GeneProteinAssociationDao {
+public abstract class Gene2GeneProteinAssociationDaoBase extends AbstractDao<Gene2GeneProteinAssociation>
+        implements Gene2GeneProteinAssociationDao {
 
+    public Gene2GeneProteinAssociationDaoBase( SessionFactory sessionFactory ) {
+        super( Gene2GeneProteinAssociation.class, sessionFactory );
+    }
 }

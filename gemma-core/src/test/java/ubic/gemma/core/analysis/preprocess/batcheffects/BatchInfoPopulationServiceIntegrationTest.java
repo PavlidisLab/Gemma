@@ -65,7 +65,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         }
 
         assertNotNull( newee );
-        newee = eeService.thawLite( newee );
+        eeService.thawLite( newee );
 
         assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
 
@@ -89,11 +89,11 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         }
 
         assertNotNull( newee );
-        newee = eeService.thawLite( newee );
+        eeService.thawLite( newee );
 
         assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
 
-        newee = eeService.thawLite( newee );
+        eeService.thawLite( newee );
 
         for ( ExperimentalFactor ef : newee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {

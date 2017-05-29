@@ -24,13 +24,62 @@ import java.util.HashSet;
 /**
  * Represents an analysis that combines the results of other analyses of differential expression.
  */
-public abstract class GeneDifferentialExpressionMetaAnalysis extends
-        ubic.gemma.model.analysis.expression.ExpressionAnalysis implements gemma.gsec.model.Securable {
+public abstract class GeneDifferentialExpressionMetaAnalysis
+        extends ubic.gemma.model.analysis.expression.ExpressionAnalysis implements gemma.gsec.model.Securable {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -2588180973962410595L;
+    private Integer numGenesAnalyzed;
+    private Double qvalueThresholdForStorage;
+    private Collection<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();
+    private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
+
+    /**
+     * How many genes were included in the meta-analysis. This does not mean that all genes were analyzed in all the
+     * experiments.
+     */
+    public Integer getNumGenesAnalyzed() {
+        return this.numGenesAnalyzed;
+    }
+
+    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
+        this.numGenesAnalyzed = numGenesAnalyzed;
+    }
+
+    /**
+     * The threshold, if any, used to determine which of the metaAnalysis results are persisted to the system.
+     */
+    public Double getQvalueThresholdForStorage() {
+        return this.qvalueThresholdForStorage;
+    }
+
+    public void setQvalueThresholdForStorage( Double qvalueThresholdForStorage ) {
+        this.qvalueThresholdForStorage = qvalueThresholdForStorage;
+    }
+
+    /**
+     *
+     */
+    public Collection<GeneDifferentialExpressionMetaAnalysisResult> getResults() {
+        return this.results;
+    }
+
+    public void setResults( Collection<GeneDifferentialExpressionMetaAnalysisResult> results ) {
+        this.results = results;
+    }
+
+    /**
+     *
+     */
+    public Collection<ExpressionAnalysisResultSet> getResultSetsIncluded() {
+        return this.resultSetsIncluded;
+    }
+
+    public void setResultSetsIncluded( Collection<ExpressionAnalysisResultSet> resultSetsIncluded ) {
+        this.resultSetsIncluded = resultSetsIncluded;
+    }
 
     /**
      * Constructs new instances of {@link GeneDifferentialExpressionMetaAnalysis}.
@@ -43,59 +92,6 @@ public abstract class GeneDifferentialExpressionMetaAnalysis extends
             return new GeneDifferentialExpressionMetaAnalysisImpl();
         }
 
-    }
-
-    private Integer numGenesAnalyzed;
-
-    private Double qvalueThresholdForStorage;
-
-    private Collection<ExpressionAnalysisResultSet> resultSetsIncluded = new HashSet<>();
-
-    private Collection<GeneDifferentialExpressionMetaAnalysisResult> results = new HashSet<>();
-
-    /**
-     * How many genes were included in the meta-analysis. This does not mean that all genes were analyzed in all the
-     * experiments.
-     */
-    public Integer getNumGenesAnalyzed() {
-        return this.numGenesAnalyzed;
-    }
-
-    /**
-     * The threshold, if any, used to determine which of the metaAnalysis results are persisted to the system.
-     */
-    public Double getQvalueThresholdForStorage() {
-        return this.qvalueThresholdForStorage;
-    }
-
-    /**
-     * 
-     */
-    public Collection<GeneDifferentialExpressionMetaAnalysisResult> getResults() {
-        return this.results;
-    }
-
-    /**
-     * 
-     */
-    public Collection<ExpressionAnalysisResultSet> getResultSetsIncluded() {
-        return this.resultSetsIncluded;
-    }
-
-    public void setNumGenesAnalyzed( Integer numGenesAnalyzed ) {
-        this.numGenesAnalyzed = numGenesAnalyzed;
-    }
-
-    public void setQvalueThresholdForStorage( Double qvalueThresholdForStorage ) {
-        this.qvalueThresholdForStorage = qvalueThresholdForStorage;
-    }
-
-    public void setResults( Collection<GeneDifferentialExpressionMetaAnalysisResult> results ) {
-        this.results = results;
-    }
-
-    public void setResultSetsIncluded( Collection<ExpressionAnalysisResultSet> resultSetsIncluded ) {
-        this.resultSetsIncluded = resultSetsIncluded;
     }
 
 }

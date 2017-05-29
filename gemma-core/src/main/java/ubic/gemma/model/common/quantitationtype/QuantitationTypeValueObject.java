@@ -18,134 +18,91 @@
  */
 package ubic.gemma.model.common.quantitationtype;
 
+import ubic.gemma.model.IdentifiableValueObject;
+
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
- * @version $Id$
  * @author thea
  */
-public class QuantitationTypeValueObject implements Serializable {
+public class QuantitationTypeValueObject extends IdentifiableValueObject<QuantitationType> implements Serializable {
 
     private static final long serialVersionUID = 7537853492100102404L;
-
-    public static Collection<QuantitationTypeValueObject> convert2ValueObjects( Collection<QuantitationType> qts ) {
-        List<QuantitationTypeValueObject> results = new ArrayList<QuantitationTypeValueObject>();
-
-        for ( QuantitationType qt : qts ) {
-            if ( qt != null ) {
-                results.add( new QuantitationTypeValueObject( qt ) );
-            }
-        }
-
-        Collections.sort( results, new Comparator<QuantitationTypeValueObject>() {
-            @Override
-            public int compare( QuantitationTypeValueObject o1, QuantitationTypeValueObject o2 ) {
-                return -o1.getName().compareTo( o2.getName() );
-            }
-        } );
-        return results;
-    }
-
     private String description;
-
     private String generalType;
-
-    private Long id;
-
     private boolean isBackground;
-
     private boolean isBackgroundSubtracted;
-
     private boolean isBatchCorrected;
-
     private boolean isMaskedPreferred;
-
     private boolean isNormalized;
-
     private boolean isPreferred;
-
     private boolean isRatio;
-
     private boolean isRecomputedFromRawData = false;
-
     private String name;
-
     private String representation;
-
     private String scale;
-
     private String type;
 
     /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author thea
-     */
-    public QuantitationTypeValueObject() {
-    }
-
-    /**
      * Constructor to build value object from QuantitationType
-     * 
-     * @param gs
      */
     public QuantitationTypeValueObject( QuantitationType qt ) {
-        this.id = qt.getId();
-        this.setName( qt.getName() );
-        this.setDescription( qt.getDescription() );
-        this.setGeneralType( qt.getGeneralType().toString() );
-        this.setIsBackground( qt.getIsBackground() != null && qt.getIsBackground() );
-        this.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() != null && qt.getIsBackgroundSubtracted() );
-        this.setIsBatchCorrected( qt.getIsBatchCorrected() != null && qt.getIsBatchCorrected() );
-        this.setIsMaskedPreferred( qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() );
-        this.setIsNormalized( qt.getIsNormalized() != null && qt.getIsNormalized() );
-        this.setIsPreferred( qt.getIsPreferred() != null && qt.getIsPreferred() );
-        this.setIsRatio( qt.getIsRatio() != null && qt.getIsRatio() );
-        this.setRepresentation( qt.getRepresentation().toString() );
-        this.setScale( qt.getScale().toString() );
-        this.setType( qt.getType().toString() );
-        this.setIsRecomputedFromRawData( qt.getIsRecomputedFromRawData() != null && qt.getIsRecomputedFromRawData() );
+        super( qt.getId() );
+        this.name = qt.getName();
+        this.description = qt.getDescription();
+        this.generalType = qt.getGeneralType().toString();
+        this.isBackground = qt.getIsBackground() != null && qt.getIsBackground();
+        this.isBackgroundSubtracted = qt.getIsBackgroundSubtracted() != null && qt.getIsBackgroundSubtracted() ;
+        this.isBatchCorrected =  qt.getIsBatchCorrected() != null && qt.getIsBatchCorrected() ;
+        this.isMaskedPreferred = qt.getIsMaskedPreferred() != null && qt.getIsMaskedPreferred() ;
+        this.isNormalized = qt.getIsNormalized() != null && qt.getIsNormalized() ;
+        this.isPreferred = qt.getIsPreferred() != null && qt.getIsPreferred() ;
+        this.isRatio = qt.getIsRatio() != null && qt.getIsRatio() ;
+        this.representation = qt.getRepresentation().toString() ;
+        this.scale = qt.getScale().toString() ;
+        this.type = qt.getType().toString() ;
+        this.isRecomputedFromRawData = qt.getIsRecomputedFromRawData() != null && qt.getIsRecomputedFromRawData() ;
     }
 
     public String getDescription() {
         return description;
     }
 
-    /**
-     * 
-     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
     public String getGeneralType() {
         return this.generalType;
     }
 
-    public Long getId() {
-        return id;
+    public void setGeneralType( String generalType ) {
+        this.generalType = generalType;
     }
 
-    /**
-     * 
-     */
     public boolean getIsBackground() {
         return this.isBackground;
     }
 
-    /**
-     * 
-     */
+    public void setIsBackground( boolean isBackground ) {
+        this.isBackground = isBackground;
+    }
+
     public boolean getIsBackgroundSubtracted() {
         return this.isBackgroundSubtracted;
     }
 
-    /**
-     * 
-     */
+    public void setIsBackgroundSubtracted( boolean isBackgroundSubtracted ) {
+        this.isBackgroundSubtracted = isBackgroundSubtracted;
+    }
+
     public boolean getIsBatchCorrected() {
         return this.isBatchCorrected;
+    }
+
+    public void setIsBatchCorrected( boolean isBatchCorrected ) {
+        this.isBatchCorrected = isBatchCorrected;
     }
 
     /**
@@ -157,18 +114,24 @@ public class QuantitationTypeValueObject implements Serializable {
         return this.isMaskedPreferred;
     }
 
-    /**
-     * 
-     */
+    public void setIsMaskedPreferred( boolean isMaskedPreferred ) {
+        this.isMaskedPreferred = isMaskedPreferred;
+    }
+
     public boolean getIsNormalized() {
         return this.isNormalized;
     }
 
-    /**
-     * 
-     */
+    public void setIsNormalized( boolean isNormalized ) {
+        this.isNormalized = isNormalized;
+    }
+
     public boolean getIsPreferred() {
         return this.isPreferred;
+    }
+
+    public void setIsPreferred( boolean isPreferred ) {
+        this.isPreferred = isPreferred;
     }
 
     /**
@@ -181,23 +144,40 @@ public class QuantitationTypeValueObject implements Serializable {
         return this.isRatio;
     }
 
+    public void setIsRatio( boolean isRatio ) {
+        this.isRatio = isRatio;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName( String name ) {
+        this.name = name;
     }
 
     public String getRepresentation() {
         return this.representation;
     }
 
+    public void setRepresentation( String representation ) {
+        this.representation = representation;
+    }
+
     public String getScale() {
         return this.scale;
     }
 
-    /**
-     * 
-     */
+    public void setScale( String scale ) {
+        this.scale = scale;
+    }
+
     public String getType() {
         return this.type;
+    }
+
+    public void setType( String type ) {
+        this.type = type;
     }
 
     /**
@@ -207,67 +187,11 @@ public class QuantitationTypeValueObject implements Serializable {
         return isRecomputedFromRawData;
     }
 
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setGeneralType( String generalType ) {
-        this.generalType = generalType;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsBackground( boolean isBackground ) {
-        this.isBackground = isBackground;
-    }
-
-    public void setIsBackgroundSubtracted( boolean isBackgroundSubtracted ) {
-        this.isBackgroundSubtracted = isBackgroundSubtracted;
-    }
-
-    public void setIsBatchCorrected( boolean isBatchCorrected ) {
-        this.isBatchCorrected = isBatchCorrected;
-    }
-
-    public void setIsMaskedPreferred( boolean isMaskedPreferred ) {
-        this.isMaskedPreferred = isMaskedPreferred;
-    }
-
-    public void setIsNormalized( boolean isNormalized ) {
-        this.isNormalized = isNormalized;
-    }
-
-    public void setIsPreferred( boolean isPreferred ) {
-        this.isPreferred = isPreferred;
-    }
-
-    public void setIsRatio( boolean isRatio ) {
-        this.isRatio = isRatio;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
     /**
      * @param isRecomputedFromRawData the isRecomputedFromRawData to set
      */
     public void setIsRecomputedFromRawData( boolean isRecomputedFromRawData ) {
         this.isRecomputedFromRawData = isRecomputedFromRawData;
-    }
-
-    public void setRepresentation( String representation ) {
-        this.representation = representation;
-    }
-
-    public void setScale( String scale ) {
-        this.scale = scale;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
     }
 
 }

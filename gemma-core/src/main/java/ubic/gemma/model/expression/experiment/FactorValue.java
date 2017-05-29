@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 
@@ -28,7 +29,7 @@ import java.util.Collection;
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
-public abstract class FactorValue implements Serializable, gemma.gsec.model.SecuredChild {
+public abstract class FactorValue implements Identifiable, Serializable, gemma.gsec.model.SecuredChild {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -147,11 +148,11 @@ public abstract class FactorValue implements Serializable, gemma.gsec.model.Secu
 
     public String getDescriptiveString() {
         if ( this.characteristics != null && this.characteristics.size() > 0 ) {
-            String fvString = "";
+            StringBuilder fvString = new StringBuilder();
             for ( Characteristic c : this.characteristics ) {
-                fvString += c.getValue() + " ";
+                fvString.append( c.getValue() ).append( " " );
             }
-            return fvString;
+            return fvString.toString();
         } else if ( this.measurement != null ) {
             return this.measurement.getValue();
         } else if ( this.value != null && !this.value.isEmpty() ) {

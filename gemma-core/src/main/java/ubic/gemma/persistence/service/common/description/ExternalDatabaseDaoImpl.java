@@ -14,73 +14,26 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 /**
  * @author pavlidis
- * @version $Id$
- * @see ubic.gemma.model.common.description.ExternalDatabase
+ * @see ExternalDatabase
  */
 @Repository
 public class ExternalDatabaseDaoImpl extends ExternalDatabaseDaoBase {
 
-    private static Log log = LogFactory.getLog( ExternalDatabaseDaoImpl.class.getName() );
-
     @Autowired
     public ExternalDatabaseDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ExternalDatabaseDao#find(ubic.gemma.model.common.description.ExternalDatabase
-     * )
-     */
     @Override
     public ExternalDatabase find( ExternalDatabase externalDatabase ) {
-
-        if ( externalDatabase == null || externalDatabase.getName() == null ) {
-            throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
-        }
-
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExternalDatabase.class );
-        queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
-        queryObject.setFlushMode( FlushMode.COMMIT );
-        java.util.List<?> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '"
-                                + ubic.gemma.model.common.description.ExternalDatabase.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( ExternalDatabase ) result;
-
+        return this.findOneByProperty( "name", externalDatabase.getName() );
     }
 
-    @Override
-    public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase ) {
-
-        ExternalDatabase existingExternalDatabase = find( externalDatabase );
-        if ( existingExternalDatabase != null ) {
-            return existingExternalDatabase;
-        }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new externalDatabase: " + externalDatabase.getName() );
-        return create( externalDatabase );
-    }
 }

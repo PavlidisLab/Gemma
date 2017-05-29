@@ -68,7 +68,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
     @Test
     public void test() throws Exception {
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 2, factors.size() );
@@ -102,7 +102,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
     @After
     public void teardown() throws Exception {
-        if ( ee != null ) expressionExperimentService.delete( ee );
+        if ( ee != null ) expressionExperimentService.remove( ee );
     }
 
     @Before
@@ -119,7 +119,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -133,7 +133,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         designImporter.importDesign(
                 ee,

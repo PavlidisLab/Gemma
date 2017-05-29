@@ -86,7 +86,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         if ( ees.isEmpty() ) return;
         try {
             for ( ExpressionExperiment ee : ees ) {
-                expressionExperimentService.delete( ee );
+                expressionExperimentService.remove( ee );
             }
         } catch ( Exception e ) {
 
@@ -166,7 +166,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
 
-        newee = this.expressionExperimentService.thawLite( newee );
+        this.expressionExperimentService.thawLite( newee );
 
         processedDataVectorService.createProcessedDataVectors( newee );
         Collection<ExpressionExperiment> e = new HashSet<ExpressionExperiment>();
@@ -182,7 +182,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         Collection<Gene> genes = new HashSet<Gene>();
         for ( ArrayDesign ad : ads ) {
             Taxon taxon = this.getTaxon( "mouse" );
-            ad = this.arrayDesignService.thaw( ad );
+            this.arrayDesignService.thaw( ad );
 
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 Gene g = this.getTestPeristentGene();

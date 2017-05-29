@@ -18,74 +18,26 @@
  */
 package ubic.gemma.model.genome;
 
-/**
- * 
- */
-public abstract class PhysicalLocation extends ubic.gemma.model.genome.ChromosomeLocation {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.PhysicalLocation}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.PhysicalLocation}.
-         */
-        public static ubic.gemma.model.genome.PhysicalLocation newInstance() {
-            return new ubic.gemma.model.genome.PhysicalLocationImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.PhysicalLocation}, taking all required and/or
-         * read-only properties as arguments.
-         */
-        public static ubic.gemma.model.genome.PhysicalLocation newInstance(
-                ubic.gemma.model.genome.Chromosome chromosome ) {
-            final ubic.gemma.model.genome.PhysicalLocation entity = new ubic.gemma.model.genome.PhysicalLocationImpl();
-            entity.setChromosome( chromosome );
-            return entity;
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.PhysicalLocation}, taking all possible properties
-         * (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.genome.PhysicalLocation newInstance(
-                ubic.gemma.model.genome.Chromosome chromosome, Long nucleotide, Integer nucleotideLength,
-                String strand, Integer bin ) {
-            final ubic.gemma.model.genome.PhysicalLocation entity = new ubic.gemma.model.genome.PhysicalLocationImpl();
-            entity.setChromosome( chromosome );
-            entity.setNucleotide( nucleotide );
-            entity.setNucleotideLength( nucleotideLength );
-            entity.setStrand( strand );
-            entity.setBin( bin );
-            return entity;
-        }
-    }
+public abstract class PhysicalLocation extends ChromosomeLocation {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5426735852697486498L;
     private Long nucleotide;
-
-    private Integer nucleotideLength = Integer.valueOf( new Integer( 1 ) );
-
+    private Integer nucleotideLength = 1;
     private String strand;
-
     private Integer bin;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public PhysicalLocation() {
     }
 
-    /**
-     * 
-     */
-    public abstract int computeOverlap( ubic.gemma.model.genome.PhysicalLocation other );
+    public abstract int computeOverlap( PhysicalLocation other );
 
     /**
      * <p>
@@ -96,25 +48,32 @@ public abstract class PhysicalLocation extends ubic.gemma.model.genome.Chromosom
         return this.bin;
     }
 
-    /**
-     * 
-     */
+    public void setBin( Integer bin ) {
+        this.bin = bin;
+    }
+
     public Long getNucleotide() {
         return this.nucleotide;
     }
 
-    /**
-     * 
-     */
+    public void setNucleotide( Long nucleotide ) {
+        this.nucleotide = nucleotide;
+    }
+
     public Integer getNucleotideLength() {
         return this.nucleotideLength;
     }
 
-    /**
-     * 
-     */
+    public void setNucleotideLength( Integer nucleotideLength ) {
+        this.nucleotideLength = nucleotideLength;
+    }
+
     public String getStrand() {
         return this.strand;
+    }
+
+    public void setStrand( String strand ) {
+        this.strand = strand;
     }
 
     /**
@@ -127,20 +86,43 @@ public abstract class PhysicalLocation extends ubic.gemma.model.genome.Chromosom
      */
     public abstract boolean nearlyEquals( Object object );
 
-    public void setBin( Integer bin ) {
-        this.bin = bin;
-    }
+    /**
+     * Constructs new instances of {@link PhysicalLocation}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link PhysicalLocation}.
+         */
+        public static PhysicalLocation newInstance() {
+            return new PhysicalLocationImpl();
+        }
 
-    public void setNucleotide( Long nucleotide ) {
-        this.nucleotide = nucleotide;
-    }
+        /**
+         * Constructs a new instance of {@link PhysicalLocation}, taking all required and/or
+         * read-only properties as arguments.
+         */
+        public static PhysicalLocation newInstance(
+                Chromosome chromosome ) {
+            final PhysicalLocation entity = new PhysicalLocationImpl();
+            entity.setChromosome( chromosome );
+            return entity;
+        }
 
-    public void setNucleotideLength( Integer nucleotideLength ) {
-        this.nucleotideLength = nucleotideLength;
-    }
-
-    public void setStrand( String strand ) {
-        this.strand = strand;
+        /**
+         * Constructs a new instance of {@link PhysicalLocation}, taking all possible properties
+         * (except the identifier(s))as arguments.
+         */
+        public static PhysicalLocation newInstance(
+                Chromosome chromosome, Long nucleotide, Integer nucleotideLength, String strand,
+                Integer bin ) {
+            final PhysicalLocation entity = new PhysicalLocationImpl();
+            entity.setChromosome( chromosome );
+            entity.setNucleotide( nucleotide );
+            entity.setNucleotideLength( nucleotideLength );
+            entity.setStrand( strand );
+            entity.setBin( bin );
+            return entity;
+        }
     }
 
 }

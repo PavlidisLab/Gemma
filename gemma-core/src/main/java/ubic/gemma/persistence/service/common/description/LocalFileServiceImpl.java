@@ -82,7 +82,7 @@ public class LocalFileServiceImpl extends LocalFileServiceBase {
         }
 
         if ( file.exists() || !success ) {
-            throw new IOException( "Cannot delete file" );
+            throw new IOException( "Cannot remove file" );
         }
         this.getLocalFileDao().remove( localFile );
     }

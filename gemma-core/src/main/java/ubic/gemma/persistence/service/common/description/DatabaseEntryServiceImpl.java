@@ -22,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
 
 /**
  * Spring Service base class for <code>DatabaseEntryService</code>, provides access to all services and entities
@@ -30,7 +32,8 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  * @see DatabaseEntryService
  */
 @Service
-public class DatabaseEntryServiceImpl implements DatabaseEntryService {
+public class DatabaseEntryServiceImpl extends VoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
+        implements DatabaseEntryService {
 
     private DatabaseEntryDao databaseEntryDao;
 
@@ -38,47 +41,15 @@ public class DatabaseEntryServiceImpl implements DatabaseEntryService {
      * Constructors
      * ********************************/
 
-    public DatabaseEntryServiceImpl() {
-    }
-
     @Autowired
     public DatabaseEntryServiceImpl( DatabaseEntryDao databaseEntryDao ) {
+        super( databaseEntryDao );
         this.databaseEntryDao = databaseEntryDao;
     }
 
     /* ********************************
      * Public methods
      * ********************************/
-
-    @Override
-    @Transactional(readOnly = true)
-    public Integer countAll() {
-        return this.databaseEntryDao.countAll();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public DatabaseEntry find( final DatabaseEntry databaseEntry ) {
-        return this.databaseEntryDao.find( databaseEntry );
-    }
-
-    @Override
-    @Transactional
-    public void remove( final DatabaseEntry databaseEntry ) {
-        this.databaseEntryDao.remove( databaseEntry );
-    }
-
-    @Override
-    @Transactional
-    public void update( final DatabaseEntry databaseEntry ) {
-        this.databaseEntryDao.update( databaseEntry );
-    }
-
-    @Override
-    @Transactional
-    public DatabaseEntry load( Long id ) {
-        return this.databaseEntryDao.load( id );
-    }
 
     @Override
     @Transactional

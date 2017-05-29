@@ -65,7 +65,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     public void tearDown() {
         if ( ee != null ) {
             ee = eeService.load( ee.getId() );
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
     }
 
@@ -123,7 +123,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
             // ugly, but try to
             // clean up .
-            eeService.delete( a );
+            eeService.remove( a );
         }
 
     }

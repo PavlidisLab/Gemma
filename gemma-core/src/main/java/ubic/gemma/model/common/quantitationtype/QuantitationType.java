@@ -21,85 +21,66 @@ package ubic.gemma.model.common.quantitationtype;
 import ubic.gemma.model.common.Describable;
 
 /**
- * 
+ *
  */
 public abstract class QuantitationType extends Describable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
-         */
-        public static QuantitationType newInstance() {
-            return new QuantitationTypeImpl();
-        }
-
-    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -9139594736279728431L;
     private GeneralType generalType;
-
     private Boolean isBackground;
-
     private Boolean isBackgroundSubtracted;
-
-    private Boolean isBatchCorrected = false;;
-
+    private Boolean isBatchCorrected = false;
     private Boolean isMaskedPreferred;
 
     private Boolean isNormalized;
-
     private Boolean isPreferred;
-
     private Boolean isRatio;
-
     private Boolean isRecomputedFromRawData = false;
-
     private PrimitiveType representation;
-
     private ScaleType scale;
-
     private StandardQuantitationType type;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public QuantitationType() {
     }
 
-    /**
-     * 
-     */
     public GeneralType getGeneralType() {
         return this.generalType;
     }
 
-    /**
-     * 
-     */
+    public void setGeneralType( GeneralType generalType ) {
+        this.generalType = generalType;
+    }
+
     public Boolean getIsBackground() {
         return this.isBackground;
     }
 
-    /**
-     * 
-     */
+    public void setIsBackground( Boolean isBackground ) {
+        this.isBackground = isBackground;
+    }
+
     public Boolean getIsBackgroundSubtracted() {
         return this.isBackgroundSubtracted;
     }
 
-    /**
-     * 
-     */
+    public void setIsBackgroundSubtracted( Boolean isBackgroundSubtracted ) {
+        this.isBackgroundSubtracted = isBackgroundSubtracted;
+    }
+
     public Boolean getIsBatchCorrected() {
         return this.isBatchCorrected;
+    }
+
+    public void setIsBatchCorrected( Boolean isBatchCorrected ) {
+        this.isBatchCorrected = isBatchCorrected;
     }
 
     /**
@@ -111,18 +92,24 @@ public abstract class QuantitationType extends Describable {
         return this.isMaskedPreferred;
     }
 
-    /**
-     * 
-     */
+    public void setIsMaskedPreferred( Boolean isMaskedPreferred ) {
+        this.isMaskedPreferred = isMaskedPreferred;
+    }
+
     public Boolean getIsNormalized() {
         return this.isNormalized;
     }
 
-    /**
-     * 
-     */
+    public void setIsNormalized( Boolean isNormalized ) {
+        this.isNormalized = isNormalized;
+    }
+
     public Boolean getIsPreferred() {
         return this.isPreferred;
+    }
+
+    public void setIsPreferred( Boolean isPreferred ) {
+        this.isPreferred = isPreferred;
     }
 
     /**
@@ -135,64 +122,15 @@ public abstract class QuantitationType extends Describable {
         return this.isRatio;
     }
 
+    public void setIsRatio( Boolean isRatio ) {
+        this.isRatio = isRatio;
+    }
+
     /**
      * @return the isRecomputedFromRawData
      */
     public Boolean getIsRecomputedFromRawData() {
         return isRecomputedFromRawData;
-    }
-
-    /**
-     * 
-     */
-    public PrimitiveType getRepresentation() {
-        return this.representation;
-    }
-
-    /**
-     * 
-     */
-    public ScaleType getScale() {
-        return this.scale;
-    }
-
-    /**
-     * 
-     */
-    public StandardQuantitationType getType() {
-        return this.type;
-    }
-
-    public void setGeneralType( GeneralType generalType ) {
-        this.generalType = generalType;
-    }
-
-    public void setIsBackground( Boolean isBackground ) {
-        this.isBackground = isBackground;
-    }
-
-    public void setIsBackgroundSubtracted( Boolean isBackgroundSubtracted ) {
-        this.isBackgroundSubtracted = isBackgroundSubtracted;
-    }
-
-    public void setIsBatchCorrected( Boolean isBatchCorrected ) {
-        this.isBatchCorrected = isBatchCorrected;
-    }
-
-    public void setIsMaskedPreferred( Boolean isMaskedPreferred ) {
-        this.isMaskedPreferred = isMaskedPreferred;
-    }
-
-    public void setIsNormalized( Boolean isNormalized ) {
-        this.isNormalized = isNormalized;
-    }
-
-    public void setIsPreferred( Boolean isPreferred ) {
-        this.isPreferred = isPreferred;
-    }
-
-    public void setIsRatio( Boolean isRatio ) {
-        this.isRatio = isRatio;
     }
 
     /**
@@ -202,16 +140,41 @@ public abstract class QuantitationType extends Describable {
         this.isRecomputedFromRawData = isRecomputedFromRawData;
     }
 
+    public PrimitiveType getRepresentation() {
+        return this.representation;
+    }
+
     public void setRepresentation( PrimitiveType representation ) {
         this.representation = representation;
+    }
+
+    public ScaleType getScale() {
+        return this.scale;
     }
 
     public void setScale( ScaleType scale ) {
         this.scale = scale;
     }
 
+    public StandardQuantitationType getType() {
+        return this.type;
+    }
+
     public void setType( StandardQuantitationType type ) {
         this.type = type;
+    }
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.common.quantitationtype.QuantitationType}.
+         */
+        public static QuantitationType newInstance() {
+            return new QuantitationTypeImpl();
+        }
+
     }
 
 }

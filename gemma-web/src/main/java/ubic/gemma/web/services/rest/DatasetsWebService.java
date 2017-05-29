@@ -15,9 +15,9 @@
 package ubic.gemma.web.services.rest;
 
 import com.sun.jersey.api.NotFoundException;
+import org.hibernate.QueryException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -25,11 +25,14 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.services.rest.util.Responder;
 import ubic.gemma.web.services.rest.util.ResponseDataObject;
 import ubic.gemma.web.services.rest.util.WebService;
 import ubic.gemma.web.services.rest.util.WellComposedErrorBody;
-import ubic.gemma.web.services.rest.util.args.*;
+import ubic.gemma.web.services.rest.util.args.DatasetArg;
+import ubic.gemma.web.services.rest.util.args.IntArg;
+import ubic.gemma.web.services.rest.util.args.SortArg;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
@@ -47,8 +50,11 @@ import java.util.*;
 @Path("/datasets")
 public class DatasetsWebService extends WebService {
 
-    private ExpressionExperimentService expressionExperimentService;
+    private static final String ERROR_MSG_DATASET_NOT_FOUND = "Dataset with the given identifier does not exist";
+    private static final String ERROR_MSG_PROP_NOT_FOUND = "Datasets do not contain the given sort property.";
+    private static final String ERROR_MSG_PROP_NOT_FOUND_DETAIL = "Property of name '%s' not recognized.";
 
+    private ExpressionExperimentService expressionExperimentService;
     private BioAssayDao bioAssayDao;
 
     /* ********************************
@@ -80,7 +86,7 @@ public class DatasetsWebService extends WebService {
      * @param accession optional parameter, filtering the results by accession - either provide the accession gsm id, or the gemma ID of
      *                  appropriate database entry.
      * @param offset    optional parameter (defaults to 0) skips the specified amount of the datasets when retrieving them from the database.
-     * @param limit     optional parameter (defaults to 100) limits the result to specified amount of datasets. Use 0 for no limit.
+     * @param limit     optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      * @param sort      optional parameter (defaults to +id) sets the ordering property and direction. Format is [+,-][property name].
      *                  E.g. -accession will convert to descending ordering by the Accession property. Note that this will not necessarily
      *                  sort the objects in the response, but rather tells the SQL query how to order the table before cropping it as
@@ -92,15 +98,26 @@ public class DatasetsWebService extends WebService {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject all( // Params:
             @QueryParam("accession") String accession, // Optional, default null
-            @QueryParam("offset") @DefaultValue("0") IntArg offset,
-            @QueryParam("limit") @DefaultValue("100") IntArg limit,
-            @QueryParam("sort") @DefaultValue("+id") SortArg sort, @Context final HttpServletResponse sr
-            // The servlet response, needed for response code setting.
+            @QueryParam("offset") @DefaultValue("0") IntArg offset, // Optional, default 0
+            @QueryParam("limit") @DefaultValue("20") IntArg limit, // Optional, default 20
+            @QueryParam("sort") @DefaultValue("+id") SortArg sort, // Optional, default +id
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
-        return Responder.autoCode( expressionExperimentService
-                .loadAllFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ), sr );
+        try {
+            //FIXME currently not filtering out troubled
+            return Responder.autoCode( expressionExperimentService
+                            .loadAllFilter( offset.getValue(), limit.getValue(), sort.getField(), sort.isAsc(), accession ),
+                    sr );
+        } catch ( QueryException e ) {
+            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.BAD_REQUEST,
+                    ERROR_MSG_PROP_NOT_FOUND );
+            WellComposedErrorBody.addExceptionFields( error,
+                    new IllegalArgumentException( String.format( ERROR_MSG_PROP_NOT_FOUND_DETAIL, sort.getField() ) ) );
+            return Responder.code( error.getStatus(), error, sr );
+        }
     }
 
     /**
@@ -112,15 +129,18 @@ public class DatasetsWebService extends WebService {
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
     @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public ResponseDataObject dataset( // Params:
             @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
             @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
     ) {
         //FIXME currently not filtering out troubled
         Object response = datasetArg.getValueObject( expressionExperimentService );
-        if(response == null){
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND, "Dataset with the given identifier does not exist" );
-            WellComposedErrorBody.addExceptionFields( error, new IllegalArgumentException( datasetArg.getNullCause() ) );
+        if ( response == null ) {
+            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    ERROR_MSG_DATASET_NOT_FOUND );
+            WellComposedErrorBody
+                    .addExceptionFields( error, new IllegalArgumentException( datasetArg.getNullCause() ) );
             response = error;
         }
         return Responder.autoCode( response, sr );

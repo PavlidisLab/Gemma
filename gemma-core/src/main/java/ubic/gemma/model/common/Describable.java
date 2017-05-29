@@ -18,10 +18,9 @@
  */
 package ubic.gemma.model.common;
 
-/**
- * 
- */
-public abstract class Describable implements java.io.Serializable {
+import java.io.Serializable;
+
+public abstract class Describable implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -30,12 +29,11 @@ public abstract class Describable implements java.io.Serializable {
 
     private String name;
     private String description;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public Describable() {
@@ -54,32 +52,7 @@ public abstract class Describable implements java.io.Serializable {
             return false;
         }
         final Describable that = ( Describable ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * A human-readable description of the object
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * The name of an object is a possibly ambiguous human-readable identifier that need not be an external database
-     * reference.
-     */
-    public String getName() {
-        return this.name;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
     /**
@@ -93,25 +66,46 @@ public abstract class Describable implements java.io.Serializable {
         return hashCode;
     }
 
+    /**
+     * @see ubic.gemma.model.common.Describable#toString()
+     */
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() ) + (
+                this.getName() == null ? "" : " Name=" + this.getName() );
+    }
+
+    /**
+     * A human-readable description of the object
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
     public void setDescription( String description ) {
         this.description = description;
+    }
+
+    public Long getId() {
+        return this.id;
     }
 
     public void setId( Long id ) {
         this.id = id;
     }
 
+    /**
+     * The name of an object is a possibly ambiguous human-readable identifier that need not be an external database
+     * reference.
+     */
+    public String getName() {
+        return this.name;
+    }
+
     public void setName( String name ) {
         this.name = name;
     }
 
-    /**
-     * @see ubic.gemma.model.common.Describable#toString()
-     */
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() + ( this.getId() == null ? "" : " Id=" + this.getId() )
-                + ( this.getName() == null ? "" : " Name=" + this.getName() );
-    }
+
 
 }

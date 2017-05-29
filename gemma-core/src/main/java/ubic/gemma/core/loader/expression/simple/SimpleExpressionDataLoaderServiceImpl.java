@@ -301,13 +301,13 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             ArrayDesign existing = null;
             if ( arrayDesignService != null ) {
                 // not sure why we need a thaw here, if it's not persistent...must check first anyway to avoid errors.
-                if ( design.getId() != null ) design = arrayDesignService.thawLite( design );
+                if ( design.getId() != null ) arrayDesignService.thawLite( design );
                 existing = arrayDesignService.find( design );
             }
             if ( existing != null ) {
                 log.info( "Array Design exists" );
                 if ( arrayDesignService != null ) {
-                    existing = arrayDesignService.thaw( existing );
+                    arrayDesignService.thaw( existing );
                 }
                 existingDesigns.add( existing );
             } else {

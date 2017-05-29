@@ -128,7 +128,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
             Collection<GeneProductValueObject> existingProducts = geneService.getProducts( gene.getId() );
             if ( existingProducts.isEmpty() ) {
                 log.warn( "Gene " + gene + " exists, but has no products; adding one" );
-                gene = geneService.thaw( gene );
+                geneService.thaw( gene );
                 GeneProduct newgp = createGeneProduct( gene );
                 newgp = geneProductService.create( newgp );
                 gene.getProducts().add( newgp );

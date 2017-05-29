@@ -20,28 +20,26 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.*;
+import ubic.gemma.persistence.service.AbstractDao;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
 
 /**
  * @author pavlidis
  * @see AuditTrailDao
  */
 @Repository
-public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrailDao {
+public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditTrailDao {
 
     @Autowired
     public AuditTrailDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( AuditTrail.class, sessionFactory );
     }
 
     @Override
@@ -94,89 +92,6 @@ public class AuditTrailDaoImpl extends HibernateDaoSupport implements AuditTrail
         auditable.setAuditTrail( trail );
 
         return auditEvent;
-    }
-
-    @Override
-    public Collection<? extends AuditTrail> create( Collection<? extends AuditTrail> entities ) {
-        throw new NotYetImplementedException( "This method has not yet been implemented" );
-    }
-
-    @Override
-    public AuditTrail create( final AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.create - 'auditTrail' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().save( auditTrail );
-        return auditTrail;
-    }
-
-    @Override
-    public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from  AuditTrailImpl where id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
-    }
-
-    @Override
-    public AuditTrail load( final Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "AuditTrail.load - 'id' can not be null" );
-        }
-        final Object entity = this.getSessionFactory().getCurrentSession().get( AuditTrailImpl.class, id );
-        return ( AuditTrail ) entity;
-    }
-
-    @Override
-    public Collection<? extends AuditTrail> loadAll() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( AuditTrailImpl.class ).list();
-    }
-
-    @Override
-    public void remove( AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'auditTrail' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().delete( auditTrail );
-    }
-
-    @Override
-    public void remove( Collection<? extends AuditTrail> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'entities' can not be null" );
-        }
-        for ( AuditTrail a : entities ) {
-            this.remove( a );
-        }
-    }
-
-    @Override
-    public void remove( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "AuditTrail.remove - 'id' can not be null" );
-        }
-        AuditTrail entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    @Override
-    public void update( AuditTrail auditTrail ) {
-        if ( auditTrail == null ) {
-            throw new IllegalArgumentException( "AuditTrail.update - 'auditTrail' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().update( auditTrail );
-    }
-
-    @Override
-    public void update( final Collection<? extends AuditTrail> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "AuditTrail.update - 'entities' can not be null" );
-        }
-        for ( AuditTrail auditTrail : entities ) {
-            update( auditTrail );
-        }
     }
 
     private String getPrincipalName() {

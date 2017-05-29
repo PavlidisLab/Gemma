@@ -52,7 +52,7 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
             ids.add( ba.getId() );
         }
 
-        svc.delete( ee );
+        svc.remove( ee );
 
         assertNull( svc.load( ee.getId() ) );
 

@@ -25,9 +25,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.genome.Taxon;
@@ -104,13 +104,13 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
 
-        // delete by id because otherwise get HibernateException: re-associated object has dirty collection reference
-        expressionExperimentService.delete( ee1 );
-        expressionExperimentService.delete( ee2 );
-        expressionExperimentService.delete( eeMouse );
+        // remove by id because otherwise get HibernateException: re-associated object has dirty collection reference
+        expressionExperimentService.remove( ee1 );
+        expressionExperimentService.remove( ee2 );
+        expressionExperimentService.remove( eeMouse );
 
         // getting "access is denied" error here, even with this.runAsAdmin()
-        // expressionExperimentSetService.delete( eeSet );
+        // expressionExperimentSetService.remove( eeSet );
     }
 
     @Test
@@ -130,7 +130,7 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
         expressionExperimentSetService.update( eeSet );
         ExpressionExperimentSet updatedSet = expressionExperimentSetService.load( eeSetId );
         // need VO otherwise was getting lazy loading issues
-        ExpressionExperimentSetValueObject setVO = expressionExperimentSetService.loadValueObject( updatedSet.getId() );
+        ExpressionExperimentSetValueObject setVO = expressionExperimentSetService.loadValueObject( updatedSet );
 
         assertEquals( newName, setVO.getName() );
         assertEquals( newDesc, setVO.getDescription() );

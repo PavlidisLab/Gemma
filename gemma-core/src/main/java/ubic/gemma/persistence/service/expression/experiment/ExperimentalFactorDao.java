@@ -19,21 +19,16 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
  * @see ubic.gemma.model.expression.experiment.ExperimentalFactor
  */
-public interface ExperimentalFactorDao extends BaseDao<ExperimentalFactor> {
+public interface ExperimentalFactorDao extends BaseVoEnabledDao<ExperimentalFactor, ExperimentalFactorValueObject> {
 
-    /**
-     * 
-     */
-    public ExperimentalFactor find( ExperimentalFactor experimentalFactor );
+    ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 
-    /**
-     * 
-     */
-    public ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
+    ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
 }

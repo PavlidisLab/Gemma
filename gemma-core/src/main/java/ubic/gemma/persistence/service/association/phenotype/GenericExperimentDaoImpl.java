@@ -24,37 +24,35 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.association.phenotype.GenericExperiment;
-import ubic.gemma.model.association.phenotype.GenericExperimentImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 
 /**
- * TODO Document Me
- * 
  * @author ?
- * @version $Id$
  */
 @Repository
 public class GenericExperimentDaoImpl extends AbstractDao<GenericExperiment> implements GenericExperimentDao {
 
     @Autowired
     public GenericExperimentDaoImpl( SessionFactory sessionFactory ) {
-        super( GenericExperimentImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( GenericExperiment.class, sessionFactory );
     }
 
-    /** Find all Investigations for a specific pubmed */
+    /**
+     * Find all Investigations for a specific pubmed
+     */
     @Override
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
 
-        Criteria genericExperiment = super.getSessionFactory().getCurrentSession().createCriteria( GenericExperiment.class );
+        Criteria genericExperiment = super.getSessionFactory().getCurrentSession()
+                .createCriteria( GenericExperiment.class );
         genericExperiment.setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .createCriteria( "primaryPublication" ).createCriteria( "pubAccession" )
                 .add( Restrictions.like( "accession", pubmed ) );
 
+        //noinspection unchecked
         return genericExperiment.list();
     }
 

@@ -20,12 +20,14 @@ import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.model.genome.TaxonValueObject;
+import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -33,7 +35,7 @@ import java.util.List;
  * @see Taxon
  */
 @Repository
-public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
+public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implements TaxonDao {
 
     /* ********************************
      * Constructors
@@ -41,8 +43,7 @@ public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
 
     @Autowired
     public TaxonDaoImpl( SessionFactory sessionFactory ) {
-        super( Taxon.class );
-        super.setSessionFactory( sessionFactory );
+        super( Taxon.class, sessionFactory );
     }
 
     /* ********************************
@@ -54,8 +55,7 @@ public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
 
         BusinessKey.checkValidKey( taxon );
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Taxon.class )
-                .setReadOnly( true );
+        Criteria queryObject = this.getSession().createCriteria( Taxon.class ).setReadOnly( true );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );
@@ -75,9 +75,6 @@ public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
 
     }
 
-    /**
-     * @see TaxonDao#findOrCreate(Taxon)
-     */
     @Override
     public Taxon findOrCreate( Taxon taxon ) {
         Taxon existingTaxon = find( taxon );
@@ -92,28 +89,19 @@ public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
         }
 
         log.warn( "Creating new taxon: " + taxon );
-        return super.create( ( Taxon ) taxon );
+        return super.create( taxon );
     }
 
-    /**
-     * @see TaxonDao#findByAbbreviation(String)
-     */
     @Override
     public Taxon findByAbbreviation( final String abbreviation ) {
         return this.findOneByStringProperty( "abbreviation", abbreviation );
     }
 
-    /**
-     * @see TaxonDao#findByCommonName(String)
-     */
     @Override
     public Taxon findByCommonName( final String commonName ) {
         return this.findOneByStringProperty( "commonName", commonName );
     }
 
-    /**
-     * @see TaxonDao#findByScientificName(String)
-     */
     @Override
     public Taxon findByScientificName( final String scientificName ) {
         return this.findOneByStringProperty( "scientificName", scientificName );
@@ -121,25 +109,19 @@ public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
 
     @Override
     public Collection<Taxon> findTaxonUsedInEvidence() {
-        String query = "select distinct taxon from GeneImpl as g join g.phenotypeAssociations as evidence join g.taxon as taxon";
         //noinspection unchecked
-        return ( Collection<Taxon> ) this.getHibernateTemplate().find( query );
+        return this.getSession().createQuery(
+                "select distinct taxon from GeneImpl as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
+                .list();
     }
 
-    /**
-     * @see TaxonDao#findChildTaxaByParent(Taxon)
-     */
     @Override
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
-        String queryString = "from Taxon as taxon where taxon.parentTaxon = :parentTaxon";
         //noinspection unchecked
-        return ( Collection<Taxon> ) this.getHibernateTemplate()
-                .findByNamedParam( queryString, "parentTaxon", parentTaxon );
+        return this.getSession().createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
+                .setParameter( "parentTaxon", parentTaxon ).list();
     }
 
-    /**
-     * @see TaxonDao#thaw(Taxon)
-     */
     @Override
     public void thaw( final Taxon taxon ) {
         this.getSession().doWork( new Work() {
@@ -153,4 +135,17 @@ public class TaxonDaoImpl extends AbstractDao<Taxon> implements TaxonDao {
         } );
     }
 
+    @Override
+    public TaxonValueObject loadValueObject( Taxon entity ) {
+        return new TaxonValueObject( entity );
+    }
+
+    @Override
+    public Collection<TaxonValueObject> loadValueObjects( Collection<Taxon> entities ) {
+        Collection<TaxonValueObject> vos = new LinkedHashSet<>();
+        for ( Taxon e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

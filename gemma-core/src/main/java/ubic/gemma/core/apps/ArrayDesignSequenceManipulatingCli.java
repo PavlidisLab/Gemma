@@ -25,12 +25,12 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
 
 import java.io.IOException;
 import java.util.*;
@@ -177,7 +177,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractCLICont
     }
 
     protected ArrayDesign unlazifyArrayDesign( ArrayDesign arrayDesign ) {
-        return arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thaw( arrayDesign );
+        return arrayDesign;
     }
 
     private void arraysFromCliList() {

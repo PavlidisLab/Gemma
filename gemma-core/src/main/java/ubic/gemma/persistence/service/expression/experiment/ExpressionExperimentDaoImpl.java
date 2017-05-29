@@ -25,7 +25,6 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -57,15 +56,15 @@ import java.util.*;
  * @see ubic.gemma.model.expression.experiment.ExpressionExperiment
  */
 @Repository
-public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<ExpressionExperiment>
+public class ExpressionExperimentDaoImpl
+        extends AbstractCuratableDao<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentDao {
 
     private static final int BATCH_SIZE = 1000;
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
-        this.entityName = ExpressionExperiment.class.getName();
+        super( ExpressionExperiment.class, sessionFactory );
     }
 
     /* ********************************
@@ -77,7 +76,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         if ( entity.getShortName() == null && entity.getName() == null && entity.getAccession() == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment must have name or external accession." );
         }
-
         return super.findOrCreate( entity );
     }
 
@@ -107,7 +105,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             toDelete.setRawExpressionDataVectors( null );
 
             /*
-             * We don't delete the investigators, just breaking the association.
+             * We don't remove the investigators, just breaking the association.
              */
             toDelete.getInvestigators().clear();
 
@@ -215,7 +213,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
             log.info( "Last bits ..." );
 
-            // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
+            // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
             for ( BioMaterial bm : bioMaterialsToDelete ) {
                 session.delete( bm );
             }
@@ -246,6 +244,11 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     }
 
     @Override
+    public ExpressionExperiment find( ExpressionExperiment entity ) {
+        return null;
+    }
+
+    @Override
     public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
         String queryString = "from Investigation i inner join Contact c on c in elements(i.investigators) or c = i.owner where c = :investigator";
         Query query = this.getSessionFactory().getCurrentSession().createQuery( queryString )
@@ -256,18 +259,18 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     }
 
     @Override
-    public ExpressionExperiment thaw( final ExpressionExperiment expressionExperiment ) {
-        return this.thaw( expressionExperiment, true );
+    public void thaw( final ExpressionExperiment expressionExperiment ) {
+        this.thaw( expressionExperiment, true );
     }
 
     @Override
-    public ExpressionExperiment thawBioAssays( final ExpressionExperiment expressionExperiment ) {
-        return this.thaw( expressionExperiment, false );
+    public void thawBioAssays( final ExpressionExperiment expressionExperiment ) {
+        this.thaw( expressionExperiment, false );
     }
 
     @Override
-    public ExpressionExperiment thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
-        return this.thawLiter( expressionExperiment, false );
+    public void thawBioAssaysLiter( final ExpressionExperiment expressionExperiment ) {
+        this.thawLiter( expressionExperiment, false );
     }
 
     /**
@@ -365,33 +368,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     }
 
     @Override
-    public ExpressionExperiment find( ExpressionExperiment entity ) {
-
-        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
-
-        if ( entity.getAccession() != null ) {
-            criteria.add( Restrictions.eq( "accession", entity.getAccession() ) );
-        } else if ( entity.getShortName() != null ) {
-            criteria.add( Restrictions.eq( "shortName", entity.getShortName() ) );
-        } else {
-            criteria.add( Restrictions.eq( "name", entity.getName() ) );
-        }
-
-        List results = criteria.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new InvalidDataAccessResourceUsageException(
-                        MULTIPLE_FOUND_ERR_MSG + " for ExpressionExperiment name: " + entity.getName() );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( ExpressionExperiment ) result;
-    }
-
-    @Override
     public Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession ) {
         Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperiment.class );
 
@@ -449,8 +425,6 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
 
     @Override
     public List<ExpressionExperiment> findByUpdatedLimit( Integer limit ) {
-        if ( limit == null )
-            throw new IllegalArgumentException( ARG_NULL_ERR_MSG + ": limit" );
         if ( limit == 0 )
             return new ArrayList<>();
         Session s = this.getSessionFactory().getCurrentSession();
@@ -510,6 +484,16 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         //noinspection unchecked
         return this.getSessionFactory().getCurrentSession().createQuery( queryString )
                 .setParameter( "ee", expressionExperiment ).list();
+    }
+
+    @Override
+    public ExpressionExperimentValueObject loadValueObject( ExpressionExperiment entity ) {
+        return this.loadValueObject( entity.getId() );
+    }
+
+    @Override
+    public Collection<ExpressionExperimentValueObject> loadValueObjects( Collection<ExpressionExperiment> entities ) {
+        return this.loadValueObjects( EntityUtils.getIds( entities ), false );
     }
 
     @Override
@@ -1458,40 +1442,20 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
         }
     }
 
-    private ExpressionExperiment thaw( ExpressionExperiment ee, boolean vectorsAlso ) {
-        if ( ee == null ) {
-            return null;
-        }
+    private void thaw( ExpressionExperiment ee, boolean vectorsAlso ) {
+        Hibernate.initialize( ee.getMeanVarianceRelation() );
+        Hibernate.initialize( ee.getQuantitationTypes() );
+        Hibernate.initialize( ee.getCharacteristics() );
+        Hibernate.initialize( ee.getRawDataFile() );
+        Hibernate.initialize( ee.getPrimaryPublication() );
+        Hibernate.initialize( ee.getBioAssays() );
+        Hibernate.initialize( ee.getAuditTrail() );
 
-        if ( ee.getId() == null )
-            throw new IllegalArgumentException( "id cannot be null, cannot be thawed: " + ee );
+        if ( ee.getAuditTrail() != null )
+            Hibernate.initialize( ee.getAuditTrail().getEvents() );
+        Hibernate.initialize( ee.getCurationDetails() );
 
-        /*
-         * Trying to do everything fails miserably, so we still need a hybrid approach. But returning the thawed object,
-         * as opposed to thawing the one passed in, solves problems.
-         */
-        String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase where e.id=:eeid";
-
-        List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeid", ee.getId() ).list();
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
-        }
-        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
-        Hibernate.initialize( result.getMeanVarianceRelation() );
-        Hibernate.initialize( result.getQuantitationTypes() );
-        Hibernate.initialize( result.getCharacteristics() );
-        Hibernate.initialize( result.getRawDataFile() );
-        Hibernate.initialize( result.getPrimaryPublication() );
-        Hibernate.initialize( result.getBioAssays() );
-        Hibernate.initialize( result.getAuditTrail() );
-        if ( result.getAuditTrail() != null )
-            Hibernate.initialize( result.getAuditTrail().getEvents() );
-        Hibernate.initialize( result.getCurationDetails() );
-
-        for ( BioAssay ba : result.getBioAssays() ) {
+        for ( BioAssay ba : ee.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );
             Hibernate.initialize( ba.getDerivedDataFiles() );
@@ -1503,7 +1467,7 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             }
         }
 
-        ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
+        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
         if ( experimentalDesign != null ) {
             Hibernate.initialize( experimentalDesign );
             Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
@@ -1522,19 +1486,16 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
             }
         }
 
-        thawReferences( result );
-        thawMeanVariance( result );
+        thawReferences( ee );
+        thawMeanVariance( ee );
 
         if ( vectorsAlso ) {
             /*
              * Optional because this could be slow.
              */
-            Hibernate.initialize( result.getRawExpressionDataVectors() );
-            Hibernate.initialize( result.getProcessedExpressionDataVectors() );
-
+            Hibernate.initialize( ee.getRawExpressionDataVectors() );
+            Hibernate.initialize( ee.getProcessedExpressionDataVectors() );
         }
-
-        return result;
     }
 
     /**
@@ -1544,47 +1505,23 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
      * @param vectorsAlso whether to include raw and processed data vectors. Can cause the query to be very slow.
      * @return thawed expression experiment.
      */
-    private ExpressionExperiment thawLiter( ExpressionExperiment ee, boolean vectorsAlso ) {
-        if ( ee == null ) {
-            return null;
-        }
+    private void thawLiter( ExpressionExperiment ee, boolean vectorsAlso ) {
+        Hibernate.initialize( ee.getPrimaryPublication() );
+        Hibernate.initialize( ee.getCurationDetails() );
 
-        if ( ee.getId() == null )
-            throw new IllegalArgumentException( "id cannot be null, cannot be thawed: " + ee );
-
-        /*
-         * Trying to do everything fails miserably, so we still need a hybrid approach. But returning the thawed object,
-         * as opposed to thawing the one passed in, solves problems.
-         */
-        String thawQuery = "select distinct e from ExpressionExperiment e "
-                + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeid";
-
-        List res = this.getSessionFactory().getCurrentSession().createQuery( thawQuery )
-                .setParameter( "eeid", ee.getId() ).list();
-
-        if ( res.size() == 0 ) {
-            throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
-        }
-        ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
-        Hibernate.initialize( result.getPrimaryPublication() );
-        Hibernate.initialize( result.getCurationDetails() );
-
-        ExperimentalDesign experimentalDesign = result.getExperimentalDesign();
+        ExperimentalDesign experimentalDesign = ee.getExperimentalDesign();
         if ( experimentalDesign != null ) {
             Hibernate.initialize( experimentalDesign );
             Hibernate.initialize( experimentalDesign.getExperimentalFactors() );
         }
 
-        thawReferences( result );
-        thawMeanVariance( result );
+        thawReferences( ee );
+        thawMeanVariance( ee );
 
         if ( vectorsAlso ) {
-            Hibernate.initialize( result.getRawExpressionDataVectors() );
-            Hibernate.initialize( result.getProcessedExpressionDataVectors() );
-
+            Hibernate.initialize( ee.getRawExpressionDataVectors() );
+            Hibernate.initialize( ee.getProcessedExpressionDataVectors() );
         }
-
-        return result;
     }
 
     private void fillQuantitationTypeInfo( Map<Long, Collection<QuantitationType>> qtMap,
@@ -1685,83 +1622,82 @@ public class ExpressionExperimentDaoImpl extends AbstractCuratableDao<Expression
     private Map<Long, ExpressionExperimentValueObject> getExpressionExperimentValueObjectMap( List list,
             Map<Long, Collection<QuantitationType>> qtMap, Integer initialSize ) {
 
-        Map<Long, ExpressionExperimentValueObject> vo;
+        Map<Long, ExpressionExperimentValueObject> voMap;
 
         if ( initialSize == null ) {
-            vo = new LinkedHashMap<>();
+            voMap = new LinkedHashMap<>();
         } else {
-            vo = new LinkedHashMap<>( initialSize );
+            voMap = new LinkedHashMap<>( initialSize );
         }
 
         for ( Object object : list ) {
 
-            Object[] res = ( Object[] ) object;
-            Long eeId = ( Long ) res[0];
+            Object[] row = ( Object[] ) object;
+            Long eeId = ( Long ) row[0];
             assert eeId != null;
 
-            ExpressionExperimentValueObject v;
-            if ( vo.containsKey( eeId ) ) {
-                v = vo.get( eeId );
+            ExpressionExperimentValueObject vo;
+            if ( voMap.containsKey( eeId ) ) {
+                vo = voMap.get( eeId );
             } else {
-                v = new ExpressionExperimentValueObject();
-                vo.put( eeId, v );
+                vo = new ExpressionExperimentValueObject( eeId );
+                voMap.put( eeId, vo );
             }
 
             //EE
-            v.setId( eeId );
-            v.setName( ( String ) res[1] );
-            v.setSource( ( String ) res[2] );
-            v.setShortName( ( String ) res[3] );
-            v.setClazz( ( String ) res[4] );
-            if ( res[5] != null )
-                v.setProcessedExpressionVectorCount( ( Integer ) res[5] );
+            vo.setName( ( String ) row[1] );
+            vo.setSource( ( String ) row[2] );
+            vo.setShortName( ( String ) row[3] );
+            vo.setClazz( ( String ) row[4] );
+            if ( row[5] != null )
+                vo.setProcessedExpressionVectorCount( ( Integer ) row[5] );
 
             //acc
-            v.setAccession( ( String ) res[6] );
+            vo.setAccession( ( String ) row[6] );
 
             //ED
-            v.setExternalDatabase( ( String ) res[7] );
-            v.setExternalUri( ( String ) res[8] );
+            vo.setExternalDatabase( ( String ) row[7] );
+            vo.setExternalUri( ( String ) row[8] );
 
             //AD
             //AD.status was not being used before changes in this revision
-            Object technology = res[10];
+            Object technology = row[10];
             if ( technology != null ) {
-                v.setTechnologyType( technology.toString() );
+                vo.setTechnologyType( technology.toString() );
             }
-            if ( qtMap != null && !qtMap.isEmpty() && v.getTechnologyType() != null ) {
-                fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
+            if ( qtMap != null && !qtMap.isEmpty() && vo.getTechnologyType() != null ) {
+                fillQuantitationTypeInfo( qtMap, vo, eeId, vo.getTechnologyType() );
             }
 
             //taxon
-            v.setTaxon( ( String ) res[11] );
-            v.setTaxonId( ( Long ) res[12] );
+            vo.setTaxon( ( String ) row[11] );
+            vo.setTaxonId( ( Long ) row[12] );
 
             //curationDetails
-            v.setLastUpdated( ( Date ) res[13] );
-            v.setTroubled( ( ( Boolean ) res[14] ) );
-            v.setNeedsAttention( ( Boolean ) res[15] );
-            v.setCurationNote( ( String ) res[16] );
+            vo.setLastUpdated( ( Date ) row[13] );
+            vo.setTroubled( ( ( Boolean ) row[14] ) );
+            vo.setNeedsAttention( ( Boolean ) row[15] );
+            vo.setCurationNote( ( String ) row[16] );
 
             //counts
-            v.setBioAssayCount( ( ( Long ) res[17] ).intValue() );
-            v.setArrayDesignCount( ( ( Long ) res[18] ).intValue() );
-            v.setBioMaterialCount( ( ( Long ) res[19] ).intValue() );
+            vo.setBioAssayCount( ( ( Long ) row[17] ).intValue() );
+            vo.setArrayDesignCount( ( ( Long ) row[18] ).intValue() );
+            vo.setBioMaterialCount( ( ( Long ) row[19] ).intValue() );
 
             //other
-            v.setExperimentalDesign( ( Long ) res[20] );
-            v.setParentTaxonId( ( Long ) res[21] );
+            vo.setExperimentalDesign( ( Long ) row[20] );
+            vo.setParentTaxonId( ( Long ) row[21] );
 
             //This was causing null results when being retrieved through the original query
-            this.addCurationEvents( v );
+            this.addCurationEvents( vo );
 
-            vo.put( eeId, v );
+            voMap.put( eeId, vo );
         }
 
-        if ( !vo.isEmpty() )
-            populateAnalysisInformation( vo );
+        if ( !voMap.isEmpty() )
+            populateAnalysisInformation( voMap );
 
-        return vo;
+        return voMap;
 
     }
 

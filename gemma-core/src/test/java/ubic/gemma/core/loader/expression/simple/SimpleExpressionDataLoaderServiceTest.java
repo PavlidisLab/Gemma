@@ -59,7 +59,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     @After
     public void after() {
         if ( ee != null ) {
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
     }
 
@@ -92,7 +92,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
             ee = service.create( metaData, data );
         }
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         assertNotNull( ee );
         assertEquals( 30, ee.getRawExpressionDataVectors().size() );
@@ -133,7 +133,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
             ee = service.create( metaData, data );
         }
 
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         assertNotNull( ee );
         assertEquals( 200, ee.getRawExpressionDataVectors().size() );

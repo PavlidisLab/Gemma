@@ -19,30 +19,30 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
 
 /**
  * @author paul
  */
-public interface ExpressionExperimentSetService {
+public interface ExpressionExperimentSetService
+        extends BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
     String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
-
-    @Secured({ "GROUP_USER" })
-    ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
 
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    void delete( ExpressionExperimentSet expressionExperimentSet );
+    void remove( ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * Security is handled within method, when the set is loaded
@@ -87,9 +87,6 @@ public interface ExpressionExperimentSetService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperimentSet load( java.lang.Long id );
 
-    /**
-     *
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> loadAll();
 
@@ -145,14 +142,6 @@ public interface ExpressionExperimentSetService {
     java.util.Collection<ExpressionExperimentSet> loadUserSets( ubic.gemma.model.common.auditAndSecurity.User user );
 
     /**
-     * Get a value object for the id param. The experimentIds are not filled in.
-     *
-     * @return null if id doesn't match an experiment set
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentSetValueObject loadValueObject( Long id );
-
-    /**
      * Get a value object for the id param.
      *
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
@@ -161,33 +150,8 @@ public interface ExpressionExperimentSetService {
      * @return null if id doesn't match an experiment set
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
-    ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds );
+    ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
 
-    /**
-     * Get value objects for the given ids. ExpressioNExperimentIDs are not filled in.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds );
-
-    /**
-     * Get value objects for the given ids.
-     *
-     * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
-     *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
-     *                  EESets this might want to be avoided.
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-    Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> eeSetIds, boolean loadEEIds );
-
-    /**
-     * Security handled at DAO level.
-     */
-    void thaw( ExpressionExperimentSet expressionExperimentSet );
-
-    /**
-     *
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperimentSet expressionExperimentSet );
 
@@ -203,7 +167,7 @@ public interface ExpressionExperimentSetService {
      * Updates the database record for the param experiment set value object (permission permitting) with the members
      * specified of the set, not the name or description etc.
      */
-    String updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds );
+    void updateDatabaseEntityMembers( Long groupId, Collection<Long> eeIds );
 
     /**
      * Updates the database record for the param experiment set value object (permission permitting) with the value
@@ -216,4 +180,12 @@ public interface ExpressionExperimentSetService {
     ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
             boolean loadEEIds );
 
+    @Transactional(readOnly = true)
+    ExpressionExperimentSetValueObject loadValueObjectById( Long id );
+
+    @Transactional(readOnly = true)
+    Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds, boolean loadEEIds );
+
+    @Transactional(readOnly = true)
+    Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
 }

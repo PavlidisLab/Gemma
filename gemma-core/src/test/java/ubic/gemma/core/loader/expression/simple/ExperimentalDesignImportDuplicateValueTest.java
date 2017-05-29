@@ -90,7 +90,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
             ee = s.create( metaData, data );
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
     }
 
     /**

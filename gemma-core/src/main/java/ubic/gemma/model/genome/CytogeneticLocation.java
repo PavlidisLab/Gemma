@@ -18,34 +18,9 @@
  */
 package ubic.gemma.model.genome;
 
-/**
- * 
- */
-public abstract class CytogeneticLocation extends ubic.gemma.model.genome.ChromosomeLocation {
+import org.apache.commons.lang3.builder.CompareToBuilder;
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.CytogeneticLocation}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.CytogeneticLocation}.
-         */
-        public static ubic.gemma.model.genome.CytogeneticLocation newInstance() {
-            return new ubic.gemma.model.genome.CytogeneticLocationImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.CytogeneticLocation}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.genome.CytogeneticLocation newInstance(
-                ubic.gemma.model.genome.Chromosome chromosome, String band ) {
-            final ubic.gemma.model.genome.CytogeneticLocation entity = new ubic.gemma.model.genome.CytogeneticLocationImpl();
-            entity.setChromosome( chromosome );
-            entity.setBand( band );
-            return entity;
-        }
-    }
+public class CytogeneticLocation extends ChromosomeLocation {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -55,21 +30,48 @@ public abstract class CytogeneticLocation extends ubic.gemma.model.genome.Chromo
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public CytogeneticLocation() {
     }
 
-    /**
-     * 
-     */
+    @Override
+    public int compareTo( Object object ) {
+        CytogeneticLocation other = ( CytogeneticLocation ) object;
+        return new CompareToBuilder().append( this.getChromosome().getName(), other.getChromosome().getName() )
+                .append( this.getBand(), other.getBand() ).toComparison();
+    }
+
     public String getBand() {
         return this.band;
     }
 
     public void setBand( String band ) {
         this.band = band;
+    }
+
+    /**
+     * Constructs new instances of {@link CytogeneticLocation}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link CytogeneticLocation}.
+         */
+        public static CytogeneticLocation newInstance() {
+            return new CytogeneticLocation();
+        }
+
+        /**
+         * Constructs a new instance of {@link CytogeneticLocation}, taking all possible
+         * properties (except the identifier(s))as arguments.
+         */
+        public static CytogeneticLocation newInstance( Chromosome chromosome, String band ) {
+            final CytogeneticLocation entity = new CytogeneticLocation();
+            entity.setChromosome( chromosome );
+            entity.setBand( band );
+            return entity;
+        }
     }
 
 }

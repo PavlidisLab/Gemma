@@ -52,7 +52,7 @@ public class DeleteExperimentsCli extends ExpressionExperimentManipulatingCLI {
         super.processCommandLine( args );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
-            this.eeService.delete( ( ExpressionExperiment ) bas );
+            this.eeService.remove( ( ExpressionExperiment ) bas );
         }
 
         return null;

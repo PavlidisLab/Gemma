@@ -41,31 +41,20 @@ public class SecurityInfoValueObject {
      * Current focus. Can be null
      */
     private String currentGroup = null;
-
     private Boolean currentGroupCanRead = false;
-
     private Boolean currentGroupCanWrite = false;
-
     private Boolean currentUserCanwrite = false;
-
     private Boolean currentUserOwns = false;
 
     private String entityClazz;
-
     private String entityDescription;
-
     private Long entityId;
-
     private String entityName;
-
     private String entityShortName;
-
     private Collection<String> groupsThatCanRead = new HashSet<String>();
-
     private Collection<String> groupsThatCanWrite = new HashSet<String>();
 
     private boolean isPubliclyReadable;
-
     private boolean isShared;
 
     /**

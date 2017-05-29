@@ -591,7 +591,7 @@ Ext
                                                + Gemma.LinkRoots.expressionExperimentPage + record.get( "entityId" )
                                                + '">' + value + '</a>';
                                          }
-                                         if ( record.get( 'entityClazz' ) === "ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" ) {
+                                         if ( record.get( 'entityClazz' ) === "ubic.gemma.model.analysis.expression.ExpressionExperimentSet" ) {
                                             return '<a target="_blank" href="'
                                                + Gemma.LinkRoots.expressionExperimentSetPage + record.get( "entityId" )
                                                + '">' + value + '</a>';

@@ -44,18 +44,18 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     /**
+     * Default value for whether empirical Bayes moderation of test statistics should be used.
+     */
+    public static final boolean DEFAULT_EBAYES = false;
+
+    /**
      * The default value used for retention of the results. If null, everything will be stored.
      */
     public static final Double DEFAULT_QVALUE_THRESHOLD = null;
 
-    /**
-     * Default value for whether empirical Bayes moderation of test statistics should be used.
-     */
-    private static final boolean DEFAULT_EBAYES = false;
-
     private static final long serialVersionUID = 622877438067070041L;
 
-    private AnalysisType analysisType;
+    private AnalysisType analysisType = null;
 
     private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<>();
 
@@ -71,6 +71,11 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
 
     private ExperimentalFactor subsetFactor;
+
+    /**
+     * If this is non-null, this was a subset analysis, for this factor value.
+     */
+    private FactorValue subsetFactorValue = null;
 
     public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
         interactionsToInclude.add( factors );
@@ -128,6 +133,10 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
      */
     public ExperimentalFactor getSubsetFactor() {
         return subsetFactor;
+    }
+
+    public FactorValue getSubsetFactorValue() {
+        return subsetFactorValue;
     }
 
     public void setAnalysisType( AnalysisType analysisType ) {
@@ -195,7 +204,14 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
-     * @return representation of this analysis (not completely filled in - only the basic parameters)
+     * @param subsetFactorValue
+     */
+    public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
+        this.subsetFactorValue = subsetFactorValue;
+    }
+
+    /**
+     * @return representation of this analysis with populated protocol holding information from this.
      */
     public DifferentialExpressionAnalysis toAnalysis() {
         DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
@@ -215,29 +231,35 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     public String toString() {
 
         StringBuilder buf = new StringBuilder();
-        buf.append( "Factors:\n" );
-        for ( ExperimentalFactor factor : this.factorsToInclude ) {
-            buf.append( factor + "\n" );
+
+        buf.append( "# AnalysisType: " + this.analysisType + "\n" );
+
+        buf.append( "# Factors: " + StringUtils.join( this.factorsToInclude, " " ) );
+
+        buf.append( "\n" );
+
+        if ( this.subsetFactor != null ) {
+            buf.append( "# SubsetFactor: " + this.subsetFactor + "\n" );
+        } else if ( this.subsetFactorValue != null ) {
+            buf.append( "# Subset analysis for " + this.subsetFactorValue );
         }
-
         if ( !interactionsToInclude.isEmpty() ) {
-            buf.append( "Interactions:\n" );
-
-            for ( Collection<ExperimentalFactor> factors : this.interactionsToInclude ) {
-                buf.append( StringUtils.join( factors, ":" ) + "\n" );
-            }
+            buf.append( "# Interactions:  " + StringUtils.join( interactionsToInclude, ":" ) + "\n" );
         }
 
         if ( !baseLineFactorValues.isEmpty() ) {
-            buf.append( "Baselines:\n" );
-
+            buf.append( "# Baselines:\n" );
             for ( ExperimentalFactor ef : baseLineFactorValues.keySet() ) {
-                buf.append( ef + "-->" + baseLineFactorValues.get( ef ) + "\n" );
+                buf.append( "# " + ef.getName() + ": Baseline = " + baseLineFactorValues.get( ef ) + "\n" );
             }
         }
 
+        if ( this.qvalueThreshold != null ) {
+            buf.append( "# Qvaluethreshold: " + this.qvalueThreshold );
+        }
+
         if ( this.ebayes ) {
-            buf.append( "Empirical Bayes moderated statistics used\n" );
+            buf.append( "# Empirical Bayes moderated statistics used\n" );
         }
 
         return buf.toString();

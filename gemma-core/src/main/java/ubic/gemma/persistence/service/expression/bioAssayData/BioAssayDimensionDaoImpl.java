@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,48 +18,39 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.Criteria;
-import org.hibernate.FlushMode;
-import org.hibernate.Hibernate;
-import org.hibernate.LockOptions;
-import org.hibernate.SessionFactory;
+import org.hibernate.*;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.persistence.service.VoEnabledDao;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 /**
- * @author pavlidis
- * @version $Id$
+ * <p>
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
+ * <code>ubic.gemma.model.expression.bioAssayData.BioAssayDimension</code>.
+ * </p>
+ *
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
 @Repository
-public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
-
-    private static Log log = LogFactory.getLog( BioAssayDimensionDaoImpl.class.getName() );
+public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject>
+        implements BioAssayDimensionDao {
 
     @Autowired
     public BioAssayDimensionDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( BioAssayDimension.class, sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BioAssayDimensionDaoBase#find(ubic.gemma.model.expression.bioAssayData
-     * .BioAssayDimension)
-     */
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
@@ -77,7 +68,7 @@ public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
 
         queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
-        Collection<String> names = new HashSet<String>();
+        Collection<String> names = new HashSet<>();
         assert bioAssayDimension.getBioAssays().size() > 0;
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             names.add( bioAssay.getName() );
@@ -86,7 +77,8 @@ public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
 
         BioAssayDimension candidate = ( BioAssayDimension ) queryObject.uniqueResult();
 
-        if ( candidate == null ) return null;
+        if ( candidate == null )
+            return null;
 
         // Now check that the bioassays and order are exactly the same.
         Collection<BioAssay> desiredBioAssays = bioAssayDimension.getBioAssays();
@@ -100,19 +92,14 @@ public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
         while ( dit.hasNext() ) {
             BioAssay d = dit.next();
             BioAssay c = cit.next();
-            if ( !c.equals( d ) ) return null;
+            if ( !c.equals( d ) )
+                return null;
         }
 
         return candidate;
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDaoBase#findOrCreate(ubic.gemma.model.expression.
-     * bioAssayData.BioAssayDimension)
-     */
     @Override
     public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension ) {
         if ( bioAssayDimension == null || bioAssayDimension.getBioAssays() == null )
@@ -121,26 +108,13 @@ public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
         if ( existingBioAssayDimension != null ) {
             return existingBioAssayDimension;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new " + bioAssayDimension );
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating new " + bioAssayDimension );
         return create( bioAssayDimension );
     }
 
     @Override
-    public Collection<? extends BioAssayDimension> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from BioAssayDimensionImpl where id in (:ids)", "ids",
-                ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#thaw(ubic.gemma.model.expression.bioAssayData.
-     * BioAssayDimension)
-     */
-    @Override
-    public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null ) return null;
-        if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
+    public void thaw( final BioAssayDimension bioAssayDimension ) {
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -164,14 +138,10 @@ public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
                 return null;
             }
         } );
-        return bioAssayDimension;
     }
 
     @Override
-    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
-        if ( bioAssayDimension == null ) return null;
-        if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
-
+    public void thawLite( final BioAssayDimension bioAssayDimension ) {
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
@@ -182,7 +152,19 @@ public class BioAssayDimensionDaoImpl extends BioAssayDimensionDaoBase {
                 return null;
             }
         } );
-        return bioAssayDimension;
     }
 
+    @Override
+    public BioAssayDimensionValueObject loadValueObject( BioAssayDimension entity ) {
+        return new BioAssayDimensionValueObject( entity );
+    }
+
+    @Override
+    public Collection<BioAssayDimensionValueObject> loadValueObjects( Collection<BioAssayDimension> entities ) {
+        Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<>();
+        for ( BioAssayDimension e : entities ) {
+            vos.add( loadValueObject( e ) );
+        }
+        return vos;
+    }
 }
