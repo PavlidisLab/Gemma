@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
+import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -44,17 +45,6 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
     private static final String CDF_FILE_OPT = "cdfFile";
-
-    private static final Set<String> exonPlatformGeoIds = new HashSet<>();
-
-    /*
-     * Lame attempt to detect some more exon arrays.
-     */
-    {
-        assert exonPlatformGeoIds != null;
-        exonPlatformGeoIds.add( "GPL6246" );
-        exonPlatformGeoIds.add( "GPL6244" );
-    }
 
     /**
      * @param args
@@ -144,7 +134,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "Loading data from " + aptFile );
                 if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
-                        && ( exonPlatformGeoIds.contains( ad.getShortName() ) || ad.getName().toLowerCase().contains( "exon" ) ) ) {
+                        && ( GeoPlatform.isAffymetrixExonArray( ad.getShortName() ) || ad.getName().toLowerCase().contains( "exon" ) ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
                         && ad.getName().toLowerCase().contains( "affy" ) ) {

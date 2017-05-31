@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,12 +18,15 @@
  */
 package ubic.gemma.core.loader.expression.geo.model;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -34,27 +37,39 @@ import ubic.gemma.core.loader.expression.geo.util.GeoConstants;
 
 /**
  * Bean describing a microarray platform in GEO
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoPlatform extends GeoData {
 
     private static final String DISTRIBUTION_VIRTUAL = "virtual";
 
+    /*
+     * detect more exon arrays.
+     */
+    private static final Set<String> exonPlatformGeoIds = new HashSet<>();
+
     private static Log log = LogFactory.getLog( GeoPlatform.class.getName() );
 
     private static final long serialVersionUID = 1L;
 
-    private Collection<String> catalogNumbers = new HashSet<String>();
+    /**
+     * 
+     * @param geoPlatformId
+     */
+    public static boolean isAffymetrixExonArray( String geoPlatformId ) {
+        return exonPlatformGeoIds.contains( geoPlatformId );
+    }
+
+    private Collection<String> catalogNumbers = new HashSet<>();
 
     private String coating = "";
 
-    private Collection<String> contributer = new HashSet<String>();
+    private Collection<String> contributer = new HashSet<>();
 
     private String description = "";
 
-    private Collection<String> designElements = new HashSet<String>();
+    private Collection<String> designElements = new HashSet<>();
 
     private String distribution = "";
 
@@ -64,24 +79,24 @@ public class GeoPlatform extends GeoData {
 
     private String manufacturer = "";
 
-    private Collection<String> organisms = new HashSet<String>();
+    private Collection<String> organisms = new HashSet<>();
 
-    private List<List<String>> platformData = new ArrayList<List<String>>();
+    private List<List<String>> platformData = new ArrayList<>();
 
     /**
      * Store information on the platform here. Map of designElements to other information. This has to be lists so the
      * values "line up".
      */
-    private Map<String, List<String>> platformInformation = new HashMap<String, List<String>>();
+    private Map<String, List<String>> platformInformation = new HashMap<>();
 
     /**
      * Map of original probe names provided by GEO to the names in Gemma (if this platform is already there). This is
      * needed because probe names are sometimes changed after import. This map must be popoulated prior to import of the
      * data.
      */
-    private Map<String, String> probeNamesInGemma = new HashMap<String, String>();
+    private Map<String, String> probeNamesInGemma = new HashMap<>();
 
-    private Collection<Integer> pubMedIds = new HashSet<Integer>();
+    private Collection<Integer> pubMedIds = new HashSet<>();
 
     private String sample = "DNA";
 
@@ -96,11 +111,27 @@ public class GeoPlatform extends GeoData {
      */
     private boolean useDataFromGEO = true;
 
-    private Collection<String> webLinks = new HashSet<String>();
+    private Collection<String> webLinks = new HashSet<>();
+
+    {
+        assert exonPlatformGeoIds != null;
+        try (BufferedReader in = new BufferedReader(
+                new InputStreamReader( GeoPlatform.class.getResourceAsStream( "/ubic/gemma/core/affy.exonarrays.txt" ) ) )) {
+            while ( in.ready() ) {
+                String geoid = in.readLine().trim();
+                if ( geoid.startsWith( "#" ) ) {
+                    continue;
+                }
+                exonPlatformGeoIds.add( geoid );
+            }
+        } catch ( Exception e ) {
+            log.warn( "List of exon array IDs could not be loaded: " + e.getMessage() );
+        }
+    }
 
     /**
      * Add a value to a column. A special case is when the column is of the probe ids (design element name).
-     * 
+     *
      * @param columnName
      * @param value
      */
@@ -167,7 +198,7 @@ public class GeoPlatform extends GeoData {
      * @return List of Lists of Strings
      */
     public List<List<String>> getColumnData( Collection<String> columnNames ) {
-        List<List<String>> results = new ArrayList<List<String>>();
+        List<List<String>> results = new ArrayList<>();
         for ( String columnName : columnNames ) {
             List<String> columnData = this.getColumnData( columnName );
             if ( columnData == null ) continue;
@@ -226,7 +257,7 @@ public class GeoPlatform extends GeoData {
 
     /**
      * Get the name of the column that has the 'ids' for the design elements on this platform. Usually this is "ID".
-     * 
+     *
      * @param platform
      * @return
      */
@@ -433,7 +464,7 @@ public class GeoPlatform extends GeoData {
     /**
      * Normally only set this if "false". Default is true, but will be overridden for certain typs of platforms such as
      * MPSS (rna-seq), SAGE or Exon arrays.
-     * 
+     *
      * @param b
      */
     public void setUseDataFromGEO( boolean b ) {
@@ -470,8 +501,8 @@ public class GeoPlatform extends GeoData {
             throw new IllegalStateException( "Can't figure out suitability of data until platform title is filled in." );
         }
 
-        if ( technology.equals( PlatformType.inSituOligonucleotide ) && ( getTitle().toLowerCase().contains( "exon" ) ) ) {
-            // This is not expected to be very robust, but there's not much else to go on, apparently.
+        if ( technology.equals( PlatformType.inSituOligonucleotide )
+                && ( exonPlatformGeoIds.contains( getGeoAccession() ) || getTitle().toLowerCase().contains( "exon" ) ) ) {
             return false;
         }
 
