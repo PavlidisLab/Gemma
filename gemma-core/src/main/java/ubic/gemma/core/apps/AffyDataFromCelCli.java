@@ -20,6 +20,8 @@
 package ubic.gemma.core.apps;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -42,6 +44,17 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
 
     private static final String APT_FILE_OPT = "aptFile";
     private static final String CDF_FILE_OPT = "cdfFile";
+
+    private static final Set<String> exonPlatformGeoIds = new HashSet<>();
+
+    /*
+     * Lame attempt to detect some more exon arrays.
+     */
+    {
+        assert exonPlatformGeoIds != null;
+        exonPlatformGeoIds.add( "GPL6246" );
+        exonPlatformGeoIds.add( "GPL6244" );
+    }
 
     /**
      * @param args
@@ -131,7 +144,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "Loading data from " + aptFile );
                 if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
-                        && ad.getName().toLowerCase().contains( "exon" ) ) {
+                        && ( exonPlatformGeoIds.contains( ad.getShortName() ) || ad.getName().toLowerCase().contains( "exon" ) ) ) {
                     serv.addAffyExonArrayData( thawedEe, aptFile );
                 } else if ( ad.getTechnologyType().equals( TechnologyType.ONECOLOR )
                         && ad.getName().toLowerCase().contains( "affy" ) ) {
