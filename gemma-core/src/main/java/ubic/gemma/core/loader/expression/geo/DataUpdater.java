@@ -1,13 +1,13 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2012 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import cern.colt.list.DoubleArrayList;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -47,7 +48,6 @@ import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
@@ -59,36 +59,35 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.persistence.util.Settings;
-import cern.colt.list.DoubleArrayList;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
  * get from GEO. For loading experiments from flat files, see SimpleExpressionDataLoaderService
- * 
+ *
  * @author paul
- * @version $Id$
  */
 @Component
 public class DataUpdater {
 
     /**
-     * 
+     *
      */
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.cdfs.properties";
 
     /**
-     * 
+     *
      */
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
@@ -119,6 +118,43 @@ public class DataUpdater {
     private PreprocessorService preprocessorService;
 
     /**
+     * For 3' arrays.
+     *
+     * @param ee
+     * @param pathToAptOutputFile
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws FileNotFoundException,
+            IOException {
+
+        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
+        if ( ads.size() > 1 ) {
+            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
+        }
+
+        ArrayDesign ad = ads.iterator().next();
+
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
+
+        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
+
+        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, ad );
+
+        if ( vectors.isEmpty() ) {
+            throw new IllegalStateException( "No vectors were returned for " + ee );
+        }
+
+        experimentService.replaceVectors( ee, ad, vectors );
+
+        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
+
+        postprocess( ee );
+
+    }
+
+    /**
      * @param ee
      * @return
      */
@@ -132,7 +168,7 @@ public class DataUpdater {
 
     /**
      * Replaces any existing "preferred" dat.
-     * 
+     *
      * @param ee
      * @param ad
      */
@@ -179,7 +215,7 @@ public class DataUpdater {
     /**
      * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have them and we ran
      * apt-probeset-summarize ourselves.
-     * 
+     *
      * @param ee
      * @param pathToAptOutputFile
      * @throws IOException
@@ -225,45 +261,8 @@ public class DataUpdater {
     }
 
     /**
-     * For 3' arrays.
-     * 
-     * @param ee
-     * @param pathToAptOutputFile
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws FileNotFoundException,
-            IOException {
-
-        Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
-        if ( ads.size() > 1 ) {
-            throw new IllegalArgumentException( "Can't handle experiments with more than one platform" );
-        }
-
-        ArrayDesign ad = ads.iterator().next();
-
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
-
-        AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
-
-        Collection<RawExpressionDataVector> vectors = apt.processData( ee, pathToAptOutputFile, ad );
-
-        if ( vectors.isEmpty() ) {
-            throw new IllegalStateException( "No vectors were returned for " + ee );
-        }
-
-        experimentService.replaceVectors( ee, ad, vectors );
-
-        audit( ee, "Data vector input from APT output file " + pathToAptOutputFile + " on " + ad, true );
-
-        postprocess( ee );
-
-    }
-
-    /**
      * Replaces data.
-     * 
+     *
      * @param ee
      * @param targetArrayDesign
      * @param countMatrix Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
@@ -325,7 +324,7 @@ public class DataUpdater {
      * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
      * the data quantitationtype is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
-     * 
+     *
      * @param ee
      * @param targetPlatform
      * @param data
@@ -411,7 +410,7 @@ public class DataUpdater {
      * <p>
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
-     * 
+     *
      * @param ee the experiment to be modified
      * @param targetPlatform the platform for the new data
      * @param data the data to be used
@@ -484,7 +483,7 @@ public class DataUpdater {
 
     /**
      * This replaces the existing raw data with the CEL file data.
-     * 
+     *
      * @param ee
      * @param cdfFile
      * @return
@@ -499,7 +498,7 @@ public class DataUpdater {
 
     /**
      * This replaces the existing raw data with the CEL file data.
-     * 
+     *
      * @param ee
      * @param cdfFile
      * @param ad
@@ -590,8 +589,8 @@ public class DataUpdater {
             if ( allowMissingSamples ) {
 
                 Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
-                List<BioAssay> usedBioAssays = new ArrayList<BioAssay>();
-                List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
+                List<BioAssay> usedBioAssays = new ArrayList<>();
+                List<BioMaterial> newColNames = new ArrayList<>();
                 for ( String colName : countMatrix.getColNames() ) {
                     BioMaterial bm = bmMap.get( colName );
                     if ( bm == null ) {
@@ -603,7 +602,7 @@ public class DataUpdater {
 
                 assert usedBioAssays.size() == countMatrix.columns();
 
-                Collection<BioAssay> toRemove = new HashSet<BioAssay>();
+                Collection<BioAssay> toRemove = new HashSet<>();
                 for ( BioAssay ba : ee.getBioAssays() ) {
                     if ( !usedBioAssays.contains( ba ) ) {
                         toRemove.add( ba );
@@ -744,7 +743,7 @@ public class DataUpdater {
             ExpressionDataDoubleMatrix data, QuantitationType qt ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
 
-        Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
+        Collection<RawExpressionDataVector> vectors = new HashSet<>();
 
         BioAssayDimension bioAssayDimension = data.getBestBioAssayDimension();
 
@@ -828,8 +827,8 @@ public class DataUpdater {
         List<String> colNames = rawMatrix.getColNames();
         Map<String, BioMaterial> bmMap = makeBioMaterialNameMap( ee );
 
-        List<BioAssay> usedBioAssays = new ArrayList<BioAssay>();
-        List<BioMaterial> newColNames = new ArrayList<BioMaterial>();
+        List<BioAssay> usedBioAssays = new ArrayList<>();
+        List<BioMaterial> newColNames = new ArrayList<>();
         for ( String colName : colNames ) {
             BioMaterial bm = bmMap.get( colName );
             if ( bm == null ) {
@@ -859,7 +858,7 @@ public class DataUpdater {
         int failedMatch = 0;
         int timesWarned = 0;
         List<CompositeSequence> newRowNames = new ArrayList<>();
-        List<String> usableRowNames = new ArrayList<String>();
+        List<String> usableRowNames = new ArrayList<>();
         assert !rawMatrix.getRowNames().isEmpty();
         for ( String rowName : rawMatrix.getRowNames() ) {
             CompositeSequence cs = pnmap.get( rowName );
@@ -920,7 +919,7 @@ public class DataUpdater {
 
     /**
      * determine the target array design. We use filtered versions of these platforms from GEO.
-     * 
+     *
      * @param primaryTaxon
      * @return
      */
@@ -928,7 +927,7 @@ public class DataUpdater {
 
         /*
          * Unfortunately there is no way to get around hard-coding this, in some way; there are specific platforms we
-         * need to use.
+         * need to use. See also GeoPlatform.useDataFromGeo
          */
         String targetPlatformAcc = "";
         if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
@@ -937,7 +936,7 @@ public class DataUpdater {
             targetPlatformAcc = "GPL5175"; // [HuEx-1_0-st] Affymetrix Human Exon 1.0 ST Array [transcript (gene)
                                            // version]
         } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
-            targetPlatformAcc = "GPL6543"; // FIXME is this correct? Isn't it supposed to be GPL10112 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL6194
+            targetPlatformAcc = "GPL6247";
         } else {
             throw new IllegalArgumentException( "Exon arrays only supported for mouse, human and rat" );
         }
