@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,11 +29,14 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Represents a sample (GSM) in GEO. The channels correspond to BioMaterials; the sample itself corresponds to a
  * BioAssay in Gemma. Some fields are only relevant for SAGE.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class GeoSample extends GeoData implements Comparable<GeoData> {
+
+    public enum LibraryStrategy {
+        OTHER, RNASEQ
+    }
 
     private static Log log = LogFactory.getLog( GeoSample.class.getName() );
 
@@ -41,10 +44,6 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     // SAGE item
     private String anchor;
-
-    public enum LibraryStrategy {
-        OTHER, RNASEQ
-    }
 
     private List<GeoChannel> channels;
     private String dataProcessing = "";
@@ -58,7 +57,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     private String scanProtocol = "";
 
-    private Collection<String> seriesAppearsIn = new HashSet<String>();
+    private Collection<String> seriesAppearsIn = new HashSet<>();
 
     private String supplementaryFile = "";
 
@@ -78,12 +77,12 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     private boolean warnedAboutGenePix = false;
 
     public GeoSample() {
-        channels = new ArrayList<GeoChannel>();
+        channels = new ArrayList<>();
         this.addChannel();
         contact = new GeoContact();
-        platforms = new HashSet<GeoPlatform>();
-        replicates = new HashSet<GeoReplication>();
-        variables = new HashSet<GeoVariable>();
+        platforms = new HashSet<>();
+        replicates = new HashSet<>();
+        variables = new HashSet<>();
     }
 
     public void addChannel() {
@@ -92,6 +91,10 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
         this.channels.add( newCh );
     }
 
+    /**
+     * 
+     * @param platform
+     */
     public void addPlatform( GeoPlatform platform ) {
         if ( log.isDebugEnabled() ) log.debug( this + " is on " + platform );
 
@@ -101,6 +104,11 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
         // special case that indicates might be MPSS.
         if ( "virtual".equals( platform.getDistribution() ) ) {
+            this.setMightNotHaveDataInFile( true );
+        }
+
+        // Another special case - exon arrays, even gene-level ones, might not have the data.
+        if ( GeoPlatform.isAffymetrixExonArray( platform.getGeoAccession() ) ) {
             this.setMightNotHaveDataInFile( true );
         }
 
@@ -163,7 +171,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Comparable#compareTo(T)
      */
     @Override
@@ -235,7 +243,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
     /**
      * Given a column number (count starts from zero) get the name of the corresponding quantitation type for this
      * sample.
-     * 
+     *
      * @param n
      * @return column name.
      */
@@ -315,7 +323,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     /**
      * Returns the sample type (ie. DNA, RNA, etc.)
-     * 
+     *
      * @return String
      */
     public String getType() {
@@ -446,7 +454,7 @@ public class GeoSample extends GeoData implements Comparable<GeoData> {
 
     /**
      * Sets the sample type (ie. DNA, RNA, etc.)
-     * 
+     *
      * @param type
      */
     public void setType( String type ) {

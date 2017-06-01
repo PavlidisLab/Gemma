@@ -479,8 +479,8 @@ public class GeoPlatform extends GeoData {
     }
 
     /**
-     * @return true if the data uses a platform that, generally, we can use the data from. Will be false for MPSS, SAGE
-     *         and Exon array data.
+     * @return true if the data uses a platform that, generally, we can use the data from, if available. Will be false
+     *         for MPSS, SAGE and transcript- or exon- level exon array data.
      */
     public boolean useDataFromGeo() {
 
@@ -503,7 +503,10 @@ public class GeoPlatform extends GeoData {
 
         if ( technology.equals( PlatformType.inSituOligonucleotide )
                 && ( isAffymetrixExonArray( getGeoAccession() ) || getTitle().toLowerCase().contains( "exon" ) ) ) {
-            // these are the three gene-level representations of affy exon platforms. We can use these data, even if we replace it, eventually. See also DataUpdater.prepareTargetPlatformForExonArrays
+            // these are the three gene-level representations of affy exon platforms. We can use these data, even if we replace it, eventually. However, the data aren't always there.
+            // See also DataUpdater.prepareTargetPlatformForExonArrays
+
+            // Sometimes the data are there, sometimes it isn't.
             if ( getGeoAccession().equals( "GPL6096" ) || getGeoAccession().equals( "GPL6244" ) || getGeoAccession().equals( "GPL6247" ) ) {
                 return true;
             }

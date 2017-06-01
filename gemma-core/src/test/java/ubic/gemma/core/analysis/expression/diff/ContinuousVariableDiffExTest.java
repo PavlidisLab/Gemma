@@ -116,6 +116,11 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     @Before
     public void setup() throws Exception {
 
+        /*
+         * this is an exon array data set that has the data present. It's an annoying choice for a test in that it
+         * exposes issues with our attempts to ignore the data from exon arrays until we get it from the raw CEL files.
+         */
+
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
                 .resourceToPath( "/data/analysis/expression/gse13949short" ) ) );
 
@@ -124,12 +129,11 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
-
         }
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> toremove = new HashSet<>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );

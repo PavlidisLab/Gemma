@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -63,17 +63,15 @@ import ubic.gemma.core.loader.expression.geo.model.GeoVariable;
 import ubic.gemma.core.loader.util.parser.Parser;
 
 /**
- * Class for parsing GSE and GDS files from NCBI GEO. See {@link http
- * ://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
- * 
+ * Class for parsing GSE and GDS files from NCBI GEO. See {@link http://www.ncbi.nlm.nih.gov/projects/geo/info/soft2.html} for format information.
+ *
  * @author keshav
  * @author pavlidis
- * @version $Id$
  */
 public class GeoFamilyParser implements Parser<Object> {
 
     /**
-     * 
+     *
      */
     private static final char FIELD_DELIM = '\t';
 
@@ -85,14 +83,14 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * For each platform, the map of column names to column numbers in the data.
      */
-    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<GeoPlatform, Map<String, Integer>>();
+    private Map<GeoPlatform, Map<String, Integer>> quantitationTypeKey = new HashMap<>();
 
     /**
      * This is used to put the data in the right place later. We know the actual column is where it is NOW, for this
      * sample, but in our data structure we put it where we EXPECT it to be (where it was the first time we saw it).
      * This is our attempt to fix problems with columns moving around from sample to sample.
      */
-    private Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<GeoPlatform, Map<Integer, Integer>>();
+    private Map<GeoPlatform, Map<Integer, Integer>> quantitationTypeTargetColumn = new HashMap<>();
 
     boolean alreadyWarnedAboutClobbering = false;
     boolean alreadyWarnedAboutInconsistentColumnOrder = false;
@@ -146,33 +144,33 @@ public class GeoFamilyParser implements Parser<Object> {
     /*
      * Elements seen for the 'current sample'.
      */
-    private Collection<String> processedDesignElements = new HashSet<String>();
+    private Collection<String> processedDesignElements = new HashSet<>();
 
     /**
-     * 
+     *
      */
-    private Collection<Integer> wantedQuantitationTypes = new HashSet<Integer>();
+    private Collection<Integer> wantedQuantitationTypes = new HashSet<>();
 
     /**
-     * 
+     *
      */
     private boolean aggressiveQuantitationTypeRemoval;
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.loader.loaderutils.Parser#getResults()
      */
     @Override
     public Collection<Object> getResults() {
-        Collection<Object> r = new HashSet<Object>();
+        Collection<Object> r = new HashSet<>();
         r.add( this.results );
         return r;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.loader.loaderutils.Parser#parse(java.io.File)
      */
     @Override
@@ -184,7 +182,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.loader.loaderutils.Parser#parse(java.io.InputStream)
      */
     @Override
@@ -203,7 +201,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
             final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-            FutureTask<Exception> future = new FutureTask<Exception>( new Callable<Exception>() {
+            FutureTask<Exception> future = new FutureTask<>( new Callable<Exception>() {
                 @Override
                 public Exception call() {
                     try {
@@ -257,7 +255,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see ubic.gemma.core.loader.loaderutils.Parser#parse(java.lang.String)
      */
     @Override
@@ -314,7 +312,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * where the data for some design elements is omitted. This can happen if there is some variability between the
      * samples in terms of what design elements they have. Important: This has to be called IMMEDIATELY after the data
      * for the sample is read in, so the values get added in the right place.
-     * 
+     *
      * @param currentSample
      */
     private void addMissingData( GeoSample currentSample ) {
@@ -371,7 +369,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * Add a new sample to the results.
-     * 
+     *
      * @param sampleAccession
      */
     private void addNewSample( String sampleAccession ) {
@@ -438,6 +436,40 @@ public class GeoFamilyParser implements Parser<Object> {
                 addMissingData( currentSample );
             }
             validate();
+        }
+    }
+
+    /**
+     * Due to bug 2326, when a sample has no data at all.
+     *
+     * @param sampleMap
+     */
+    private void checkForAndFixMissingColumnNames() {
+        Map<String, GeoSample> sampleMap = this.results.getSampleMap();
+        List<String> representativeColumnNames = null;
+        GeoSample representativeSample = null;
+        for ( GeoSample sam : sampleMap.values() ) {
+            if ( !sam.getColumnNames().isEmpty() ) {
+                representativeColumnNames = sam.getColumnNames();
+                representativeSample = sam;
+                break;
+            }
+        }
+
+        if ( representativeColumnNames == null || representativeSample == null ) {
+            return;
+        }
+
+        for ( GeoSample sam : sampleMap.values() ) {
+            if ( sam.getColumnNames().isEmpty() ) {
+                int i = 0;
+                for ( String colName : representativeColumnNames ) {
+                    sam.addColumnName( colName );
+                    sam.getColumnDescriptions().add( representativeSample.getColumnDescriptions().get( i ) );
+                    i++;
+                }
+
+            }
         }
     }
 
@@ -575,48 +607,6 @@ public class GeoFamilyParser implements Parser<Object> {
     }
 
     /**
-     * Check for problems and fix them.
-     */
-    private void tidyUp() {
-
-        checkForAndFixMissingColumnNames();
-    }
-
-    /**
-     * Due to bug 2326, when a sample has no data at all.
-     * 
-     * @param sampleMap
-     */
-    private void checkForAndFixMissingColumnNames() {
-        Map<String, GeoSample> sampleMap = this.results.getSampleMap();
-        List<String> representativeColumnNames = null;
-        GeoSample representativeSample = null;
-        for ( GeoSample sam : sampleMap.values() ) {
-            if ( !sam.getColumnNames().isEmpty() ) {
-                representativeColumnNames = sam.getColumnNames();
-                representativeSample = sam;
-                break;
-            }
-        }
-
-        if ( representativeColumnNames == null || representativeSample == null ) {
-            return;
-        }
-
-        for ( GeoSample sam : sampleMap.values() ) {
-            if ( sam.getColumnNames().isEmpty() ) {
-                int i = 0;
-                for ( String colName : representativeColumnNames ) {
-                    sam.addColumnName( colName );
-                    sam.getColumnDescriptions().add( representativeSample.getColumnDescriptions().get( i ) );
-                    i++;
-                }
-
-            }
-        }
-    }
-
-    /**
      * @param line
      * @return
      */
@@ -634,11 +624,11 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Turns a line in the format #key = value into a column name and description. This is used to handle lines such as
      * (in a platform section of a GSE file):
-     * 
+     *
      * <pre>
      * #SEQ_LEN = Sequence length
      * </pre>
-     * 
+     *
      * @param line
      * @param dataToAddTo GeoData object, must not be null.
      */
@@ -657,13 +647,13 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * Extract a key and value pair from a line in the format #key = value.
-     * 
+     *
      * @param line.
      * @return Map containing the String key and String value. Return null if it is misformatted.
      */
     private Map<String, String> extractKeyValue( String line ) {
         if ( !line.startsWith( "#" ) ) throw new IllegalArgumentException( "Wrong type of line" );
-        Map<String, String> result = new HashMap<String, String>();
+        Map<String, String> result = new HashMap<>();
         String fixed = line.substring( line.indexOf( '#' ) + 1 );
 
         String[] tokens = fixed.split( "=", 2 );
@@ -681,7 +671,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * Extract a value from a line in the format xxxx=value.
-     * 
+     *
      * @param line
      * @return String following the first occurrence of '=', or null if there is no '=' in the String.
      */
@@ -697,7 +687,7 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line to extract an integer <em>n</em> from the a variable description line like "!Series_variable_[n] =
      * age"
-     * 
+     *
      * @param line
      * @return int
      * @throws Exception if the line doesn't fit the format.
@@ -731,8 +721,8 @@ public class GeoFamilyParser implements Parser<Object> {
         }
 
         GeoValues values = geoSeries.getValues();
-        Map<GeoPlatform, Integer> currentIndex = new HashMap<GeoPlatform, Integer>();
-        Collection<String> seenColumnNames = new HashSet<String>();
+        Map<GeoPlatform, Integer> currentIndex = new HashMap<>();
+        Collection<String> seenColumnNames = new HashSet<>();
 
         /*
          * In some data sets, the quantitation types are not in the same columns in different samples. ARRRGH!
@@ -905,9 +895,9 @@ public class GeoFamilyParser implements Parser<Object> {
      * In GSE files, in a 'platform' section, these become column descriptions for the platform descriptors.
      * <p>
      * For samples in GSE files, they become values for the data in the sample. For example
-     * 
+     *
      * <pre>
-     * #ID_REF = probe id 
+     * #ID_REF = probe id
      * #VALUE = RMA value
      * </pre>
      * <p>
@@ -916,13 +906,13 @@ public class GeoFamilyParser implements Parser<Object> {
      * <p>
      * In GDS files, if we are in a 'dataset' section, these become "titles" for the samples if they aren't already
      * provided. Here is an example.
-     * 
+     *
      * <pre>
      * #GSM549 = Value for GSM549: lexA vs. wt, before UV treatment, MG1655; src: 0' wt, before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;0' lexA, before UV 25 ug total RNA, 2 ug pdN6
      * #GSM542 = Value for GSM542: lexA 20' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 20 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * #GSM543 = Value for GSM543: lexA 60' after NOuv vs. 0', MG1655; src: 0', before UV treatment, 25 ug total RNA, 2 ug pdN6&lt;-&gt;lexA 60 min after NOuv, 25 ug total RNA, 2 ug pdN6
      * </pre>
-     * 
+     *
      * @param line
      */
     private void parseColumnIdentifier( String line ) {
@@ -968,7 +958,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * Parse a line in a 'dataset' section of a GDS file. This is metadata about the experiment.
-     * 
+     *
      * @param line
      * @param value
      */
@@ -1159,7 +1149,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * If a line does not have the same number of fields as the column headings, it is skipped.
-     * 
+     *
      * @param line
      */
     private void parsePlatformLine( String line ) {
@@ -1207,7 +1197,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * Parse a line in a 'platform' section of a GSE file. This deals with meta-data about the platform.
-     * 
+     *
      * @param line
      * @param value
      */
@@ -1305,7 +1295,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * <li>Starting with "#". These indicate descriptions of columns in a data table.
      * <li>Starting with anything else, primarily (only?) data tables (expression data or platform probe annotations).
      * </ul>
-     * 
+     *
      * @param line
      */
     private void parseRegularLine( String line ) {
@@ -1358,7 +1348,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * all refer to the same quantitation types in the same order, for a given platform. That is, the nth column for
      * this sample 'means' the same thing as the nth column for another sample in this series (on the same platform). If
      * that isn't true, this will be BROKEN. However, we do try to sort it out if we can.
-     * 
+     *
      * @param line
      * @see initializeQuantitationTypes
      */
@@ -1443,7 +1433,7 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line from a sample section of a GSE file. These contain details about the samples and the 'raw' data for
      * the sample.
-     * 
+     *
      * @param line
      * @param value
      */
@@ -1612,7 +1602,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
     /**
      * Parse a line from the "series" section of a GSE file. This contains annotations about the series.
-     * 
+     *
      * @param line
      * @param value
      */
@@ -1770,7 +1760,7 @@ public class GeoFamilyParser implements Parser<Object> {
     /**
      * Parse a line from a "subset" section of a GDS file. This section contains information about experimental subsets
      * within a dataset. These usually correspond to different factor values such as "drug-treated" vs. "placebo".
-     * 
+     *
      * @param line
      * @param value
      */
@@ -2080,6 +2070,14 @@ public class GeoFamilyParser implements Parser<Object> {
 
         else if ( object instanceof GeoSample ) ( ( GeoSample ) object ).setSupplementaryFile( value );
 
+    }
+
+    /**
+     * Check for problems and fix them.
+     */
+    private void tidyUp() {
+
+        checkForAndFixMissingColumnNames();
     }
 
     private void validate() {
