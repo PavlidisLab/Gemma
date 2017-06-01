@@ -502,7 +502,11 @@ public class GeoPlatform extends GeoData {
         }
 
         if ( technology.equals( PlatformType.inSituOligonucleotide )
-                && ( exonPlatformGeoIds.contains( getGeoAccession() ) || getTitle().toLowerCase().contains( "exon" ) ) ) {
+                && ( isAffymetrixExonArray( getGeoAccession() ) || getTitle().toLowerCase().contains( "exon" ) ) ) {
+            // these are the three gene-level representations of exon platforms. We can use these data, even if we replace it, eventually.
+            if ( getGeoAccession().equals( "GPL6096" ) || getGeoAccession().equals( "GPL6244" ) || getGeoAccession().equals( "GPL10112" ) ) {
+                return true;
+            }
             return false;
         }
 

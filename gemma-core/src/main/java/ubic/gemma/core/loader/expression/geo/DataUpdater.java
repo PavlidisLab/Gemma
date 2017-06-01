@@ -937,7 +937,7 @@ public class DataUpdater {
             targetPlatformAcc = "GPL5175"; // [HuEx-1_0-st] Affymetrix Human Exon 1.0 ST Array [transcript (gene)
                                            // version]
         } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
-            targetPlatformAcc = "GPL6543";
+            targetPlatformAcc = "GPL6543"; // FIXME is this correct? Isn't it supposed to be GPL10112 https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GPL6194
         } else {
             throw new IllegalArgumentException( "Exon arrays only supported for mouse, human and rat" );
         }
