@@ -71,7 +71,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * Use moderated statistics.
      */
-    private boolean ebayes = false;
+    private boolean ebayes = DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES;
+
     private boolean persist = true;
 
     public static void main( String[] args ) {
@@ -141,7 +142,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
                         + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions)" )
+                        + " GENERICLM (generic LM, no interactions); default: auto-detect" )
                 .create( "type" );
 
         super.addOption( analysisType );
@@ -164,7 +165,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
                         + String.format( "%.2f", DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD ) );
 
-        super.addOption( "ebayes", false, "Use emperical-Bayes moderated statistics" );
+        super.addOption( "ebayes", false,
+                "Use emperical-Bayes moderated statistics. Default: " + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
 
     }
 
@@ -211,6 +213,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     private void processExperiment( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> results;
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
         try {
 
             ee = this.eeService.thawLite( ee );
@@ -254,7 +258,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
                 }
 
-                DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
                 config.setAnalysisType( this.type );
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
@@ -308,10 +311,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 } else {
 
                     assert !factorsToUse.isEmpty();
-                    DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
                     config.setFactorsToInclude( factorsToUse );
                     config.setQvalueThreshold( this.qvalueThreshold );
                     config.setPersist( this.persist );
+                    config.setModerateStatistics( this.ebayes );
 
                     if ( factorsToUse.size() == 2 ) {
                         // include intearactions by default
@@ -331,7 +335,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( !this.persist ) {
                 log.info( "Writing results to disk" );
                 for ( DifferentialExpressionAnalysis r : results ) {
-                    expressionDataFileService.writeDiffExArchiveFile( ee, r );
+                    expressionDataFileService.writeDiffExArchiveFile( ee, r, config );
                 }
             }
 

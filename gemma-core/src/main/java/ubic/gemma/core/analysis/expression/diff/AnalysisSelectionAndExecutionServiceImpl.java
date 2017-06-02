@@ -214,6 +214,7 @@ public class AnalysisSelectionAndExecutionServiceImpl implements AnalysisSelecti
                 config.getInteractionsToInclude().clear();
                 // config.setAnalysisType( type ); // don't need this side-effect.
             }
+            config.setAnalysisType( type );
             return type;
         }
 

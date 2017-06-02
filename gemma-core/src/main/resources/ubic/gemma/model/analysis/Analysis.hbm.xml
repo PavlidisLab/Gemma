@@ -26,10 +26,7 @@
 		<many-to-one name="protocol" class="ubic.gemma.model.common.protocol.ProtocolImpl" lazy="proxy" fetch="select">
 			<column name="PROTOCOL_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
-		<many-to-one name="source" class="ubic.gemma.model.common.description.ExternalDatabaseImpl" lazy="proxy"
-			fetch="select">
-			<column name="SOURCE_FK" not-null="false" sql-type="BIGINT" />
-		</many-to-one>
+		 
 		<subclass name="ubic.gemma.model.analysis.expression.ExpressionAnalysis" discriminator-value="ExpressionAnalysis"
 			dynamic-insert="false" dynamic-update="false" abstract="true">
 			<subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl"

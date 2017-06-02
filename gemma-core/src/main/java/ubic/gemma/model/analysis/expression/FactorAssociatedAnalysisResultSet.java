@@ -34,7 +34,7 @@ public abstract class FactorAssociatedAnalysisResultSet extends AnalysisResultSe
      */
     private static final long serialVersionUID = 821072688513147160L;
 
-    private Collection<ExperimentalFactor> experimentalFactors = new HashSet<ExperimentalFactor>();
+    private Collection<ExperimentalFactor> experimentalFactors = new HashSet<>();
 
     /**
      * No-arg constructor added to satisfy javabean contract

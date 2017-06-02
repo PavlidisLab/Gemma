@@ -32,11 +32,6 @@ public abstract class DifferentialExpressionAnalysis extends SingleExperimentAna
     private static final long serialVersionUID = -7855180617739271699L;
     private FactorValue subsetFactorValue;
     private Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<>();
-    
-    /*
-     * TODO save other configuration information
-     */
-    private Boolean moderatedStatistics;
 
     /**
      * Groups of results produced by this ExpressionAnalysis. For example, in a two-way ANOVA, the model has 2 or 3

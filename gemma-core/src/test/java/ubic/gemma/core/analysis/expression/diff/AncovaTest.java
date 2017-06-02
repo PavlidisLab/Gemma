@@ -250,12 +250,12 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
             experimentalFactorC.getFactorValues().add( factorValueC );
         }
 
-        List<FactorValue> facV = new ArrayList<FactorValue>( experimentalFactorC.getFactorValues() );
+        List<FactorValue> facV = new ArrayList<>( experimentalFactorC.getFactorValues() );
         for ( int i = 0; i < 8; i++ ) {
             super.biomaterials.get( i ).getFactorValues().add( facV.get( i % 3 ) );
         }
 
-        List<ExperimentalFactor> factors = new ArrayList<ExperimentalFactor>();
+        List<ExperimentalFactor> factors = new ArrayList<>();
 
         factors.add( experimentalFactorA_Area );
         factors.add( experimentalFactorC );

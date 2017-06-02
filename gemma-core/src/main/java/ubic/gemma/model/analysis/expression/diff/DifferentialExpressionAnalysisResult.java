@@ -25,7 +25,9 @@ import java.util.HashSet;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
- * Result of an analysis of differences in expression levels -- a single test (e.g., for one gene or one probe).
+ * Result of an analysis of differences in expression levels -- a single test (e.g., for one gene or one probe), for one
+ * factor. These statistics are based on ANOVA-style analysis, with a collection of ContrastResults storing the
+ * associated contrasts.
  */
 public abstract class DifferentialExpressionAnalysisResult implements Serializable {
 
@@ -66,6 +68,10 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
 
     private CompositeSequence probe;
 
+    /*
+     * TODO we should probably store information on F statistics and DOF.
+     */
+
     /**
      * No-arg constructor added to satisfy javabean contract
      * 
@@ -90,16 +96,15 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
     }
 
     /**
-     * Contrasts for this result. These might only be stored if the Result itself is significant at some given threshold
-     * (e.g., nominal p-value of 0.05)
+     * Contrasts for this result. Depending on configuration, this might only be stored if the Result itself is
+     * significant at some given threshold (e.g., nominal p-value of 0.05) (but default is to store everything)
      */
     public Collection<ContrastResult> getContrasts() {
         return this.contrasts;
     }
 
     /**
-     * A false discovery estimate (qvalue), Bonferroni-corrected pvalue or other corrected pvalue. The details of how
-     * this was computed would be found in the protocol.
+     * A false discovery estimate (qvalue)
      */
     public Double getCorrectedPvalue() {
         return this.correctedPvalue;
@@ -174,10 +179,18 @@ public abstract class DifferentialExpressionAnalysisResult implements Serializab
         this.id = id;
     }
 
+    /**
+     * 
+     * @param probe
+     */
     public void setProbe( CompositeSequence probe ) {
         this.probe = probe;
     }
 
+    /**
+     * 
+     * @param pvalue
+     */
     public void setPvalue( Double pvalue ) {
         this.pvalue = pvalue;
     }

@@ -31,7 +31,7 @@ public abstract class AnalysisResultSet implements java.io.Serializable {
      */
     private static final long serialVersionUID = -6749501453616281312L;
 
-    private Long id;
+    private Long id = null;
 
     /**
      * No-arg constructor added to satisfy javabean contract
