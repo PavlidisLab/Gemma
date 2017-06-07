@@ -14,17 +14,7 @@
  */
 package ubic.gemma.core.loader.expression.geo;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
+import cern.colt.list.DoubleArrayList;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang3.ArrayUtils;
@@ -33,8 +23,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import cern.colt.list.DoubleArrayList;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
@@ -44,7 +32,6 @@ import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.AffyPowerToolsProbesetSummarize;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -53,11 +40,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -70,7 +53,12 @@ import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Update the data associated with an experiment. Primary designed for filling in data that we can't or don't want to
@@ -81,17 +69,11 @@ import ubic.gemma.persistence.util.Settings;
 @Component
 public class DataUpdater {
 
-    /**
-     *
-     */
     private static final String AFFY_CDFS_PROPERTIES_FILE_NAME = "ubic/gemma/affy.cdfs.properties";
 
-    /**
-     *
-     */
     private static final String AFFY_POWER_TOOLS_CDF_PATH = "affy.power.tools.cdf.path";
 
-    private static Log log = LogFactory.getLog( DataUpdater.class );
+    private static final Log log = LogFactory.getLog( DataUpdater.class );
 
     @Autowired
     private AnalysisUtilService analysisUtilService;
@@ -119,14 +101,8 @@ public class DataUpdater {
 
     /**
      * For 3' arrays.
-     *
-     * @param ee
-     * @param pathToAptOutputFile
-     * @throws FileNotFoundException
-     * @throws IOException
      */
-    public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws FileNotFoundException,
-            IOException {
+    public void addAffyData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
@@ -135,8 +111,8 @@ public class DataUpdater {
 
         ArrayDesign ad = ads.iterator().next();
 
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
+        arrayDesignService.thaw( ad );
+        experimentService.thawLite( ee );
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
@@ -154,10 +130,6 @@ public class DataUpdater {
 
     }
 
-    /**
-     * @param ee
-     * @return
-     */
     public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
@@ -168,9 +140,6 @@ public class DataUpdater {
 
     /**
      * Replaces any existing "preferred" dat.
-     *
-     * @param ee
-     * @param ad
      */
     public ExpressionExperiment addAffyExonArrayData( ExpressionExperiment ee, ArrayDesign ad ) {
 
@@ -180,8 +149,8 @@ public class DataUpdater {
         if ( files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
+        arrayDesignService.thaw( ad );
+        experimentService.thawLite( ee );
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
@@ -215,14 +184,8 @@ public class DataUpdater {
     /**
      * Use when we want to avoid downloading the CEL files etc. For example if GEO doesn't have them and we ran
      * apt-probeset-summarize ourselves.
-     *
-     * @param ee
-     * @param pathToAptOutputFile
-     * @throws IOException
-     * @throws FileNotFoundException
      */
-    public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile )
-            throws FileNotFoundException, IOException {
+    public void addAffyExonArrayData( ExpressionExperiment ee, String pathToAptOutputFile ) throws IOException {
 
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
         if ( ads.size() > 1 ) {
@@ -231,8 +194,8 @@ public class DataUpdater {
 
         ArrayDesign ad = ads.iterator().next();
 
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
+        arrayDesignService.thaw( ad );
+        experimentService.thawLite( ee );
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
@@ -263,13 +226,9 @@ public class DataUpdater {
     /**
      * Replaces data.
      *
-     * @param ee
-     * @param targetArrayDesign
-     * @param countMatrix Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
-     *        data. If this is provided, all the other data will be removed.
-     * @param rpkmMatrix Representing per-gene normalized data, optional.
-     * @param readLength
-     * @param isPairedReads
+     * @param countMatrix         Representing 'raw' counts (added after rpkm, if provided), which is treated as the 'preferred'
+     *                            data. If this is provided, all the other data will be removed.
+     * @param rpkmMatrix          Representing per-gene normalized data, optional.
      * @param allowMissingSamples if true, samples that are missing data will be deleted from the experiment.
      */
     public void addCountData( ExpressionExperiment ee, ArrayDesign targetArrayDesign,
@@ -279,9 +238,9 @@ public class DataUpdater {
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
 
-        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+        arrayDesignService.thaw( targetArrayDesign );
 
-        ee = experimentService.thawLite( ee );
+        experimentService.thawLite( ee );
 
         ee = dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
@@ -322,12 +281,8 @@ public class DataUpdater {
 
     /**
      * Add an additional data (with associated quantitation type) to the selected experiment. Will do postprocessing if
-     * the data quantitationtype is 'preferred', but if there is already a preferred quantitation type, an error will be
+     * the data quantitationType is 'preferred', but if there is already a preferred quantitation type, an error will be
      * thrown.
-     *
-     * @param ee
-     * @param targetPlatform
-     * @param data
      */
     public ExpressionExperiment addData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -395,11 +350,6 @@ public class DataUpdater {
         return ee;
     }
 
-    /**
-     * @param ee
-     * @param qt
-     * @return
-     */
     public int deleteData( ExpressionExperiment ee, QuantitationType qt ) {
         return this.experimentService.removeData( ee, qt );
     }
@@ -407,13 +357,12 @@ public class DataUpdater {
     /**
      * Replace the data associated with the experiment (or add it if there is none). These data become the 'preferred'
      * quantitation type. Note that this replaces the "raw" data.
-     * <p>
      * Similar to AffyPowerToolsProbesetSummarize.convertDesignElementDataVectors and code in
      * SimpleExpressionDataLoaderService.
      *
-     * @param ee the experiment to be modified
+     * @param ee             the experiment to be modified
      * @param targetPlatform the platform for the new data
-     * @param data the data to be used
+     * @param data           the data to be used
      */
     public ExpressionExperiment replaceData( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data ) {
@@ -459,11 +408,9 @@ public class DataUpdater {
         // audit if we switched platforms.
         if ( !targetPlatform.equals( originalArrayDesign ) ) {
             AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-            auditTrailService.addUpdateEvent(
-                    ee,
-                    eventType,
-                    "Switched in course of updating vectors using data input (from "
-                            + originalArrayDesign.getShortName() + " to " + targetPlatform.getShortName() + ")" );
+            auditTrailService.addUpdateEvent( ee, eventType,
+                    "Switched in course of updating vectors using data input (from " + originalArrayDesign
+                            .getShortName() + " to " + targetPlatform.getShortName() + ")" );
         }
 
         audit( ee, "Data vector replacement for " + targetPlatform, true );
@@ -483,10 +430,6 @@ public class DataUpdater {
 
     /**
      * This replaces the existing raw data with the CEL file data.
-     *
-     * @param ee
-     * @param cdfFile
-     * @return
      */
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName ) {
         Collection<ArrayDesign> ads = experimentService.getArrayDesignsUsed( ee );
@@ -498,11 +441,6 @@ public class DataUpdater {
 
     /**
      * This replaces the existing raw data with the CEL file data.
-     *
-     * @param ee
-     * @param cdfFile
-     * @param ad
-     * @return
      */
     public ExpressionExperiment reprocessAffyThreePrimeArrayData( ExpressionExperiment ee, String cdfFileName,
             ArrayDesign ad ) {
@@ -517,8 +455,8 @@ public class DataUpdater {
         if ( files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
-        ad = arrayDesignService.thaw( ad );
-        ee = experimentService.thawLite( ee );
+        arrayDesignService.thaw( ad );
+        experimentService.thawLite( ee );
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
@@ -536,12 +474,6 @@ public class DataUpdater {
         return ee;
     }
 
-    /**
-     * @param ee
-     * @param countEEMatrix
-     * @param readLength
-     * @param isPairedReads
-     */
     private void addTotalCountInformation( ExpressionExperiment ee, ExpressionDataDoubleMatrix countEEMatrix,
             Integer readLength, Boolean isPairedReads ) {
         for ( BioAssay ba : ee.getBioAssays() ) {
@@ -561,12 +493,10 @@ public class DataUpdater {
     }
 
     /**
-     * @param ee
-     * @param note
      * @param replace if true, use a DataReplacedEvent; otherwise DataAddedEvent.
      */
     private void audit( ExpressionExperiment ee, String note, boolean replace ) {
-        AuditEventType eventType = null;
+        AuditEventType eventType;
 
         if ( replace ) {
             eventType = DataReplacedEvent.Factory.newInstance();
@@ -577,12 +507,6 @@ public class DataUpdater {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
-    /**
-     * @param ee
-     * @param countMatrix
-     * @param allowMissingSamples
-     * @return
-     */
     private ExpressionExperiment dealWithMissingSamples( ExpressionExperiment ee,
             DoubleMatrix<String, String> countMatrix, boolean allowMissingSamples ) {
         if ( ee.getBioAssays().size() > countMatrix.columns() ) {
@@ -614,7 +538,7 @@ public class DataUpdater {
                     ee.getBioAssays().removeAll( toRemove );
                     experimentService.update( ee );
                     ee = experimentService.load( ee.getId() );
-                    ee = experimentService.thawLite( ee );
+                    experimentService.thawLite( ee );
 
                     if ( ee.getBioAssays().size() != countMatrix.columns() ) {
                         throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
@@ -628,20 +552,18 @@ public class DataUpdater {
                 }
 
             } else {
-                throw new IllegalArgumentException( "Too little data provided: The experiment has "
-                        + ee.getBioAssays().size() + " samples but the data has " + countMatrix.columns() + " columns." );
+                throw new IllegalArgumentException(
+                        "Too little data provided: The experiment has " + ee.getBioAssays().size()
+                                + " samples but the data has " + countMatrix.columns() + " columns." );
             }
         } else if ( ee.getBioAssays().size() < countMatrix.columns() ) {
-            throw new IllegalArgumentException( "Extra data provided: The experiment has " + ee.getBioAssays().size()
-                    + " samples but the data has " + countMatrix.columns() + " columns." );
+            throw new IllegalArgumentException(
+                    "Extra data provided: The experiment has " + ee.getBioAssays().size() + " samples but the data has "
+                            + countMatrix.columns() + " columns." );
         }
         return ee;
     }
 
-    /**
-     * @param ad
-     * @return
-     */
     private File findCdf( ArrayDesign ad ) {
         String affyCdfs = Settings.getString( AFFY_POWER_TOOLS_CDF_PATH );
 
@@ -650,18 +572,16 @@ public class DataUpdater {
         String shortName = ad.getShortName();
         String cdfName = cdfNames.get( shortName );
         if ( cdfName == null ) {
-            throw new IllegalArgumentException( "No CDF could be located for " + ad
-                    + ", please provide correct affy.power.tools.cdf.path "
-                    + "and a valid affy.cdfs.properties file in your classpath, " + "or specify via the -cdf option" );
+            throw new IllegalArgumentException(
+                    "No CDF could be located for " + ad + ", please provide correct affy.power.tools.cdf.path "
+                            + "and a valid affy.cdfs.properties file in your classpath, "
+                            + "or specify via the -cdf option" );
         }
 
         File f = new File( affyCdfs + File.separatorChar + cdfName );
         return f;
     }
 
-    /**
-     * @return
-     */
     private Map<String, String> loadCdfNames() {
         try {
             PropertiesConfiguration pc = ConfigUtils.loadClasspathConfig( AFFY_CDFS_PROPERTIES_FILE_NAME );
@@ -679,7 +599,6 @@ public class DataUpdater {
     }
 
     /**
-     * @param ee
      * @return map of strings to biomaterials, where the keys are likely column names used in the input files.
      */
     private Map<String, BioMaterial> makeBioMaterialNameMap( ExpressionExperiment ee ) {
@@ -717,9 +636,6 @@ public class DataUpdater {
         return bmMap;
     }
 
-    /**
-     * @return
-     */
     private QuantitationType makeCountQt() {
         QuantitationType countqt = makeQt( true );
         countqt.setName( "Counts" );
@@ -732,13 +648,6 @@ public class DataUpdater {
         return countqt;
     }
 
-    /**
-     * @param ee
-     * @param targetPlatform
-     * @param data
-     * @param qt
-     * @return
-     */
     private Collection<RawExpressionDataVector> makeNewVectors( ExpressionExperiment ee, ArrayDesign targetPlatform,
             ExpressionDataDoubleMatrix data, QuantitationType qt ) {
         ByteArrayConverter bArrayConverter = new ByteArrayConverter();
@@ -767,8 +676,9 @@ public class DataUpdater {
             }
 
             if ( !cs.getArrayDesign().equals( targetPlatform ) ) {
-                throw new IllegalArgumentException( "Input data must use the target platform (was: "
-                        + cs.getArrayDesign() + ", expected: " + targetPlatform );
+                throw new IllegalArgumentException(
+                        "Input data must use the target platform (was: " + cs.getArrayDesign() + ", expected: "
+                                + targetPlatform );
             }
 
             vector.setDesignElement( cs );
@@ -781,10 +691,6 @@ public class DataUpdater {
         return vectors;
     }
 
-    /**
-     * @param preferred
-     * @return
-     */
     private QuantitationType makeQt( boolean preferred ) {
         QuantitationType qt = QuantitationType.Factory.newInstance();
         qt.setGeneralType( GeneralType.QUANTITATIVE );
@@ -801,9 +707,6 @@ public class DataUpdater {
         return qt;
     }
 
-    /**
-     * @return
-     */
     private QuantitationType makeRPKMQt() {
         QuantitationType rpkmqt = makeQt( false );
         rpkmqt.setIsRatio( false );
@@ -815,12 +718,6 @@ public class DataUpdater {
         return rpkmqt;
     }
 
-    /**
-     * @param ee
-     * @param rawMatrix
-     * @param finalMatrix
-     * @param allowMissingSamples set to true if you know some samples in the experiment lack data in the input.
-     */
     private void matchBioMaterialsToColNames( ExpressionExperiment ee, DoubleMatrix<String, String> rawMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> finalMatrix ) {
         // match column names to the samples. can have any order so be careful.
@@ -832,8 +729,9 @@ public class DataUpdater {
         for ( String colName : colNames ) {
             BioMaterial bm = bmMap.get( colName );
             if ( bm == null ) {
-                throw new IllegalStateException( "Could not match a column name to a biomaterial: " + colName
-                        + "; Available keys were:\n" + StringUtils.join( bmMap.keySet(), "\n" ) );
+                throw new IllegalStateException(
+                        "Could not match a column name to a biomaterial: " + colName + "; Available keys were:\n"
+                                + StringUtils.join( bmMap.keySet(), "\n" ) );
             }
             newColNames.add( bm );
             usedBioAssays.addAll( bm.getBioAssaysUsedIn() );
@@ -843,8 +741,6 @@ public class DataUpdater {
     }
 
     /**
-     * @param targetArrayDesign
-     * @param rawMatrix
      * @return matrix with row names fixed up. ColumnNames still need to be done.
      */
     private DoubleMatrix<CompositeSequence, BioMaterial> matchElementsToRowNames( ArrayDesign targetArrayDesign,
@@ -902,10 +798,6 @@ public class DataUpdater {
         return finalMatrix; // not actually final.
     }
 
-    /**
-     * @param ee
-     * @return
-     */
     private ExpressionExperiment postprocess( ExpressionExperiment ee ) {
         // several transactions
         try {
@@ -919,9 +811,6 @@ public class DataUpdater {
 
     /**
      * determine the target array design. We use filtered versions of these platforms from GEO.
-     *
-     * @param primaryTaxon
-     * @return
      */
     private ArrayDesign prepareTargetPlatformForExonArrays( Taxon primaryTaxon ) {
 
@@ -929,22 +818,25 @@ public class DataUpdater {
          * Unfortunately there is no way to get around hard-coding this, in some way; there are specific platforms we
          * need to use. See also GeoPlatform.useDataFromGeo
          */
-        String targetPlatformAcc = "";
-        if ( primaryTaxon.getCommonName().equals( "mouse" ) ) {
-            targetPlatformAcc = "GPL6096";
-        } else if ( primaryTaxon.getCommonName().equals( "human" ) ) {
-            targetPlatformAcc = "GPL5175"; // [HuEx-1_0-st] Affymetrix Human Exon 1.0 ST Array [transcript (gene)
-                                           // version]
-        } else if ( primaryTaxon.getCommonName().equals( "rat" ) ) {
-            targetPlatformAcc = "GPL6247";
-        } else {
-            throw new IllegalArgumentException( "Exon arrays only supported for mouse, human and rat" );
+        String targetPlatformAcc;
+        switch ( primaryTaxon.getCommonName() ) {
+            case "mouse":
+                targetPlatformAcc = "GPL6096";
+                break;
+            case "human":
+                targetPlatformAcc = "GPL5175"; // [HuEx-1_0-st] Affymetrix Human Exon 1.0 ST Array [transcript (gene) version]
+                break;
+            case "rat":
+                targetPlatformAcc = "GPL6247";
+                break;
+            default:
+                throw new IllegalArgumentException( "Exon arrays only supported for mouse, human and rat" );
         }
 
         ArrayDesign targetPlatform = arrayDesignService.findByShortName( targetPlatformAcc );
 
         if ( targetPlatform != null ) {
-            targetPlatform = arrayDesignService.thaw( targetPlatform );
+            arrayDesignService.thaw( targetPlatform );
 
             if ( targetPlatform.getCompositeSequences().isEmpty() ) {
                 /*
@@ -953,11 +845,13 @@ public class DataUpdater {
                 geoService.addElements( targetPlatform );
             }
         } else {
-            log.warn( "The target platform " + targetPlatformAcc + " could not be found in the system. Loading it ..." );
+            log.warn(
+                    "The target platform " + targetPlatformAcc + " could not be found in the system. Loading it ..." );
 
             Collection<?> r = geoService.fetchAndLoad( targetPlatformAcc, true, false, false, false );
 
-            if ( r.isEmpty() ) throw new IllegalStateException( "Loading target platform failed." );
+            if ( r.isEmpty() )
+                throw new IllegalStateException( "Loading target platform failed." );
 
             targetPlatform = ( ArrayDesign ) r.iterator().next();
 
