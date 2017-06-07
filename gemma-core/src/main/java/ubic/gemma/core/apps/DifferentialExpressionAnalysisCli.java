@@ -23,20 +23,18 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.expression.experiment.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,8 +48,6 @@ import java.util.List;
  */
 public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
-    private final List<Long> factorIds = new ArrayList<>();
-    private final List<String> factorNames = new ArrayList<>();
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
     /**
      * Whether batch factors should be included (if they exist)
@@ -60,6 +56,9 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean delete = false;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private ExpressionDataFileService expressionDataFileService;
+
+    private final List<Long> factorIds = new ArrayList<>();
+    private final List<String> factorNames = new ArrayList<>();
     private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
     private Long subsetFactorId;
     private String subsetFactorName;
@@ -143,7 +142,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Type of analysis to perform. If omitted, the system will try to guess based on the experimental design. "
                         + "Choices are : TWO_WAY_ANOVA_WITH_INTERACTION, "
                         + "TWO_WAY_ANOVA_NO_INTERACTION , OWA (one-way ANOVA), TTEST, OSTTEST (one-sample t-test),"
-                        + " GENERICLM (generic LM, no interactions); default: auto-detect" ).create( "type" );
+                        + " GENERICLM (generic LM, no interactions); default: auto-detect" )
+                .create( "type" );
 
         super.addOption( analysisType );
 
@@ -165,8 +165,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
                         + String.format( "%.2f", DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD ) );
 
-        super.addOption( "ebayes", false, "Use emperical-Bayes moderated statistics. Default: "
-                + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
+        super.addOption( "ebayes", false,
+                "Use emperical-Bayes moderated statistics. Default: " + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
 
     }
 
@@ -217,7 +217,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         try {
 
-            this.eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             if ( delete ) {
                 log.info( "Deleting any analyses for experiment=" + ee );
@@ -489,6 +489,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * Determine which factors to use if given from the command line. Only applicable if analysis is on a single data
      * set.
+     *
      */
     private Collection<ExperimentalFactor> guessFactors( ExpressionExperiment ee ) {
         Collection<ExperimentalFactor> factors = new HashSet<>();
@@ -548,6 +549,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
     /**
      * Run the analysis using configuration based on an old analysis.
+     * 
      */
     private Collection<DifferentialExpressionAnalysis> tryToRedoBasedOnOldAnalysis( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> oldAnalyses = differentialExpressionAnalysisService
@@ -560,7 +562,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         log.info( "Will attempt to redo " + oldAnalyses.size() + " analyses for " + ee );
         Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
         for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
-            results.addAll( this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe, this.persist ) );
+            results.addAll(
+                    this.differentialExpressionAnalyzerService.redoAnalysis( ee, copyMe, this.persist ) );
         }
         return results;
 

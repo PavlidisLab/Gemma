@@ -18,47 +18,67 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
-import ubic.gemma.model.common.Identifiable;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
+
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * Result of an analysis of differences in expression levels -- a single test (e.g., for one gene or one probe), for one
  * factor. These statistics are based on ANOVA-style analysis, with a collection of ContrastResults storing the
  * associated contrasts.
  */
-public abstract class DifferentialExpressionAnalysisResult implements Identifiable, Serializable {
+public abstract class DifferentialExpressionAnalysisResult implements Serializable {
+
+    /**
+     * Constructs new instances of {@link DifferentialExpressionAnalysisResult}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link DifferentialExpressionAnalysisResult}.
+         */
+        public static DifferentialExpressionAnalysisResult newInstance() {
+            return new DifferentialExpressionAnalysisResultImpl();
+        }
+
+    }
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 4986999013709498648L;
+
     private Double pvalue;
+
     /**
      * Typically actually a qvalue.
      */
     private Double correctedPvalue;
-    private Double rank;
-    private Integer correctedPValueBin;
-    private Long id;
-    private Collection<ContrastResult> contrasts = new HashSet<>();
-    private ExpressionAnalysisResultSet resultSet;
-    private CompositeSequence probe;
 
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     *
-     * @author Paul
-     */
-    public DifferentialExpressionAnalysisResult() {
-    }
+    private Double rank;
+
+    private Integer correctedPValueBin;
+
+    private Long id;
+
+    private Collection<ContrastResult> contrasts = new HashSet<>();
+
+    private ExpressionAnalysisResultSet resultSet;
+
+    private CompositeSequence probe;
 
     /*
      * TODO we should probably store information on F statistics and DOF.
      */
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     * 
+     * @author Paul
+     */
+    public DifferentialExpressionAnalysisResult() {
+    }
 
     @Override
     public boolean equals( Object object ) {
@@ -83,10 +103,6 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
         return this.contrasts;
     }
 
-    public void setContrasts( Collection<ContrastResult> contrasts ) {
-        this.contrasts = contrasts;
-    }
-
     /**
      * A false discovery estimate (qvalue)
      */
@@ -94,35 +110,27 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
         return this.correctedPvalue;
     }
 
-    public void setCorrectedPvalue( Double correctedPvalue ) {
-        this.correctedPvalue = correctedPvalue;
-    }
-
     /**
+     * 
      * Gives an indexable parameter for the corrected qvalue, to speed searches.
+     * 
      */
     public Integer getCorrectedPValueBin() {
         return this.correctedPValueBin;
     }
 
-    public void setCorrectedPValueBin( Integer correctedPValueBin ) {
-        this.correctedPValueBin = correctedPValueBin;
-    }
-
+    /**
+     * 
+     */
     public Long getId() {
         return this.id;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
+    /**
+     * 
+     */
     public CompositeSequence getProbe() {
         return this.probe;
-    }
-
-    public void setProbe( CompositeSequence probe ) {
-        this.probe = probe;
     }
 
     /**
@@ -130,10 +138,6 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
      */
     public Double getPvalue() {
         return this.pvalue;
-    }
-
-    public void setPvalue( Double pvalue ) {
-        this.pvalue = pvalue;
     }
 
     /**
@@ -144,16 +148,11 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
         return this.rank;
     }
 
-    public void setRank( Double rank ) {
-        this.rank = rank;
-    }
-
+    /**
+     * 
+     */
     public ExpressionAnalysisResultSet getResultSet() {
         return this.resultSet;
-    }
-
-    public void setResultSet( ExpressionAnalysisResultSet resultSet ) {
-        this.resultSet = resultSet;
     }
 
     @Override
@@ -164,17 +163,44 @@ public abstract class DifferentialExpressionAnalysisResult implements Identifiab
         return hashCode;
     }
 
-    /**
-     * Constructs new instances of {@link DifferentialExpressionAnalysisResult}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link DifferentialExpressionAnalysisResult}.
-         */
-        public static DifferentialExpressionAnalysisResult newInstance() {
-            return new DifferentialExpressionAnalysisResultImpl();
-        }
+    public void setContrasts( Collection<ContrastResult> contrasts ) {
+        this.contrasts = contrasts;
+    }
 
+    public void setCorrectedPvalue( Double correctedPvalue ) {
+        this.correctedPvalue = correctedPvalue;
+    }
+
+    public void setCorrectedPValueBin( Integer correctedPValueBin ) {
+        this.correctedPValueBin = correctedPValueBin;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    /**
+     * 
+     * @param probe
+     */
+    public void setProbe( CompositeSequence probe ) {
+        this.probe = probe;
+    }
+
+    /**
+     * 
+     * @param pvalue
+     */
+    public void setPvalue( Double pvalue ) {
+        this.pvalue = pvalue;
+    }
+
+    public void setRank( Double rank ) {
+        this.rank = rank;
+    }
+
+    public void setResultSet( ExpressionAnalysisResultSet resultSet ) {
+        this.resultSet = resultSet;
     }
 
 }
