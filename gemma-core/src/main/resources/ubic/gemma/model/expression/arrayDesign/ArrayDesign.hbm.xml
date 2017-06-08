@@ -47,7 +47,7 @@
          <key foreign-key="COMPOSITE_SEQUENCE_ARRAY_DESIGN_FKC">
             <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.designElement.CompositeSequence"/>
       </set>
       <many-to-one name="mergedInto" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="MERGED_INTO_FK" not-null="false" sql-type="BIGINT"/>

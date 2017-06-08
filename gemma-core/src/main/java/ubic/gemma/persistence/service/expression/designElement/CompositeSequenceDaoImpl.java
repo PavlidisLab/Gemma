@@ -99,7 +99,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         if ( compositeSequence.getName() == null )
             return null;
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( CompositeSequence.class );
+        Criteria queryObject = this.getSession().createCriteria( CompositeSequence.class );
 
         queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
 
@@ -127,7 +127,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         final String queryString =
-                "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, GeneImpl gene  "
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.geneProduct=gp  and ba.bioSequence=bs and gene = :gene";
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
@@ -135,7 +135,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         final String queryString =
-                "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, GeneImpl gene  "
+                "select distinct cs from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, GeneProductImpl gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs and ba.bioSequence=bs and ba.geneProduct=gp  and gene = :gene and cs.arrayDesign=:arrayDesign ";
         return this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "gene", "arrayDesign" },
                 new Object[] { gene, arrayDesign } );
@@ -143,7 +143,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
     @Override
     public Collection<CompositeSequence> findByName( String name ) {
-        final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";
+        final String queryString = "select distinct cs from CompositeSequence" + " cs where cs.name = :id";
         return this.getHibernateTemplate().findByNamedParam( queryString, "id", name );
     }
 
@@ -168,9 +168,9 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     protected Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence ) {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString =
-                "select distinct cs from CompositeSequenceImpl" + " cs where cs.biologicalCharacteristic = :id";
+                "select distinct cs from CompositeSequence" + " cs where cs.biologicalCharacteristic = :id";
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setParameter( "id", bioSequence );
             compositeSequences = queryObject.list();
 
@@ -183,10 +183,10 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     @Override
     protected Collection<CompositeSequence> handleFindByBioSequenceName( String name ) {
         Collection<CompositeSequence> compositeSequences = null;
-        final String queryString = "select distinct cs from CompositeSequenceImpl"
+        final String queryString = "select distinct cs from CompositeSequence"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setParameter( "name", name );
             compositeSequences = queryObject.list();
 
@@ -216,7 +216,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         }
 
         List<Object> csGene = new ArrayList<Object>();
-        Session session = this.getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
         queryObject.addScalar( "cs", new LongType() );
         queryObject.addScalar( "gene", new LongType() );
@@ -270,9 +270,9 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         // fetch the genes
         Collection<Long> batch = new HashSet<Long>();
         Collection<Gene> genes = new HashSet<Gene>();
-        String geneQuery = "from GeneImpl g where g.id in ( :gs )";
+        String geneQuery = "from Gene g where g.id in ( :gs )";
 
-        org.hibernate.Query geneQueryObject = super.getSessionFactory().getCurrentSession().createQuery( geneQuery )
+        org.hibernate.Query geneQueryObject = this.getSession().createQuery( geneQuery )
                 .setFetchSize( 1000 );
 
         for ( Long gene : genesToFetch ) {
@@ -327,8 +327,8 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
     protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) {
         // gets all kinds of associations, not just blat.
         final String queryString =
-                "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
-                        + "GeneProductImpl gp, GeneImpl gene  "
+                "select distinct gene from CompositeSequence cs, BioSequenceImpl bs, BioSequence2GeneProduct ba, "
+                        + "GeneProductImpl gp, Gene gene  "
                         + "where gp.gene=gene and cs.biologicalCharacteristic=bs "
                         + "and ba.bioSequence=bs and ba.geneProduct=gp and cs = :cs";
 
@@ -371,7 +371,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             // get all probes. Uses a light-weight version of this query that omits as much as possible.
             final String queryString = nativeBaseSummaryShorterQueryString + " where ad.id = " + arrayDesign.getId();
             try {
-                org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+                org.hibernate.SQLQuery queryObject = this.getSession()
                         .createSQLQuery( queryString );
                 queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                         .addScalar( "ssrid" ).addScalar( "gId" ).addScalar( "gSymbol" );
@@ -383,7 +383,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
         }
         // just a chunk but get the full set of results.
-        final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar = :ar";
+        final String queryString = "select cs from CompositeSequence as cs inner join cs.arrayDesign as ar where ar = :ar";
         this.getHibernateTemplate().setMaxResults( numResults );
         List<?> cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
         this.getHibernateTemplate().setMaxResults( 0 );
@@ -431,7 +431,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
 
         // This uses the 'full' query, assuming that this list isn't too big.
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+        org.hibernate.SQLQuery queryObject = this.getSession()
                 .createSQLQuery( nativeQueryString );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
@@ -461,7 +461,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             limit = Math.min( numResults, MAX_CS_RECORDS );
         }
 
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession()
+        org.hibernate.SQLQuery queryObject = this.getSession()
                 .createSQLQuery( nativeQueryString );
         queryObject.setParameter( "id", id );
         queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
@@ -482,8 +482,8 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
             return new HashSet<CompositeSequence>();
         }
 
-        final String queryString = "select cs from CompositeSequenceImpl cs where cs.id in (:ids)";
-        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+        final String queryString = "select cs from CompositeSequence cs where cs.id in (:ids)";
+        org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
         int batchSize = 2000;
         Collection<Long> batch = new HashSet<Long>();
         Collection<CompositeSequence> results = new HashSet<CompositeSequence>();
@@ -608,7 +608,7 @@ public class CompositeSequenceDaoImpl extends CompositeSequenceDaoBase {
         }
 
         final String queryString =
-                "select cs,bas from CompositeSequenceImpl cs, BioSequence2GeneProduct bas inner join cs.biologicalCharacteristic bs "
+                "select cs,bas from CompositeSequence cs, BioSequence2GeneProduct bas inner join cs.biologicalCharacteristic bs "
                         + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
                         + "where bas.bioSequence=bs and cs in (:cs)";
         List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "cs", batch );

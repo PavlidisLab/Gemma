@@ -80,14 +80,14 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
              * This assumes that nobody else in this session has modified this audit trail.
              */
             if ( trail.getId() != null )
-                trail = ( AuditTrail ) this.getSessionFactory().getCurrentSession()
+                trail = ( AuditTrail ) this.getSession()
                         .get( AuditTrailImpl.class, trail.getId() );
 
         }
 
         trail.addEvent( auditEvent );
 
-        this.getSessionFactory().getCurrentSession().saveOrUpdate( trail );
+        this.getSession().saveOrUpdate( trail );
 
         auditable.setAuditTrail( trail );
 
@@ -121,12 +121,12 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
 
         String queryString = "from User where userName=:userName";
 
-        java.util.List<?> results = this.getSessionFactory().getCurrentSession().createQuery( queryString )
+        java.util.List<?> results = this.getSession().createQuery( queryString )
                 .setParameter( "userName", name ).list();
 
         assert results.size() == 1;
         Object result = results.iterator().next();
-        this.getSessionFactory().getCurrentSession().setReadOnly( result, true );
+        this.getSession().setReadOnly( result, true );
         return ( User ) result;
     }
 

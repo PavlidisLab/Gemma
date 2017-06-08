@@ -237,6 +237,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
 
         // get a clean copy of the analysis object from the DB.
         analysis = differentialExpressionAnalysisService.load( analysis.getId() );
+        // load all properties
+        differentialExpressionAnalysisService.thawFully( analysis );
 
         // we do this here because now we have IDs for everything.
         try {

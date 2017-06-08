@@ -24,11 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.FactorValueImpl;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,7 +46,7 @@ public class CharacteristicServiceImpl extends CharacteristicServiceBase {
      * Classes examined when getting the "parents" of characteristics.
      */
     private static final Class<?>[] CLASSES_WITH_CHARACTERISTICS = new Class[] { ExpressionExperiment.class,
-            BioMaterialImpl.class, FactorValueImpl.class, ExperimentalFactor.class, Gene2GOAssociationImpl.class,
+            BioMaterial.class, FactorValue.class, ExperimentalFactor.class, Gene2GOAssociationImpl.class,
             PhenotypeAssociation.class, TreatmentImpl.class };
     private final CharacteristicDao characteristicDao;
 

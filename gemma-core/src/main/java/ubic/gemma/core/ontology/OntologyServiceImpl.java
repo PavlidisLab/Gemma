@@ -573,7 +573,8 @@ public class OntologyServiceImpl implements OntologyService {
         ee.getCharacteristics().add( vc );
     }
 
-    void sort( List<CharacteristicValueObject> characteristics ) {
+    @Override
+    public void sort( List<CharacteristicValueObject> characteristics ) {
         Collections.sort( characteristics, new CharacteristicComparator() );
     }
 

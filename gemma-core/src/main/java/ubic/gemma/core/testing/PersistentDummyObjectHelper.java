@@ -270,8 +270,7 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
     }
@@ -330,8 +329,7 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
     }

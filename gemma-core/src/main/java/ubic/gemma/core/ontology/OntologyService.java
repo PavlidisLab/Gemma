@@ -27,6 +27,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Paul
@@ -159,4 +160,5 @@ public interface OntologyService extends InitializingBean {
      */
     void addExpressionExperimentStatement( Characteristic vc, ExpressionExperiment ee );
 
+    void sort( List<CharacteristicValueObject> characteristics );
 }

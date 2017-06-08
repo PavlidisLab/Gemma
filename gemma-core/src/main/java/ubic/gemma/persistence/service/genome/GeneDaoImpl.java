@@ -33,7 +33,10 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.util.*;
+import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.CacheUtils;
+import ubic.gemma.persistence.util.SequenceBinUtils;
+import ubic.gemma.persistence.util.Settings;
 
 import java.util.*;
 
@@ -60,7 +63,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     public Gene find( Gene gene ) {
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
+        Criteria queryObject = this.getSession().createCriteria( Gene.class );
 
         BusinessKey.checkKey( gene );
 
@@ -150,15 +153,15 @@ public class GeneDaoImpl extends GeneDaoBase {
 
     @Override
     public Collection<? extends Gene> findByEnsemblId( String id ) {
-        final String query = "from GeneImpl g where g.ensemblId = :id";
+        final String query = "from Gene g where g.ensemblId = :id";
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( query, "id", id );
     }
 
     @Override
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
-        final String query = "from GeneImpl g where g.officialName like :officialName order by g.officialName";
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( query );
+        final String query = "from Gene g where g.officialName like :officialName order by g.officialName";
+        org.hibernate.Query queryObject = this.getSession().createQuery( query );
         queryObject.setParameter( "officialName", officialName );
         queryObject.setMaxResults( MAX_RESULTS );
         //noinspection unchecked
@@ -167,8 +170,8 @@ public class GeneDaoImpl extends GeneDaoBase {
 
     @Override
     public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
-        final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( query );
+        final String query = "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
+        org.hibernate.Query queryObject = this.getSession().createQuery( query );
         queryObject.setParameter( "officialSymbol", officialSymbol );
         queryObject.setMaxResults( MAX_RESULTS );
         //noinspection unchecked
@@ -178,7 +181,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     public Map<String, Gene> findByOfficialSymbols( Collection<String> query, Long taxonId ) {
         Map<String, Gene> result = new HashMap<>();
-        final String queryString = "select g from GeneImpl as g join fetch g.taxon t where g.officialSymbol in (:symbols) and t.id = :taxonId";
+        final String queryString = "select g from Gene as g join fetch g.taxon t where g.officialSymbol in (:symbols) and t.id = :taxonId";
 
         for ( Collection<String> batch : new BatchIterator<>( query, BATCH_SIZE ) ) {
             //noinspection unchecked
@@ -195,7 +198,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     public Map<Integer, Gene> findByNcbiIds( Collection<Integer> ncbiIds ) {
         Map<Integer, Gene> result = new HashMap<>();
-        final String queryString = "from GeneImpl g where g.ncbiGeneId in (:ncbi)";
+        final String queryString = "from Gene g where g.ncbiGeneId in (:ncbi)";
 
         for ( Collection<Integer> batch : new BatchIterator<>( ncbiIds, BATCH_SIZE ) ) {
             //noinspection unchecked
@@ -344,8 +347,8 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     public int getPlatformCountById( Long id ) {
         final String queryString =
-                "select count(distinct cs.arrayDesign) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List<?> r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         return ( ( Long ) r.iterator().next() ).intValue();
@@ -406,6 +409,7 @@ public class GeneDaoImpl extends GeneDaoBase {
      */
     @Override
     public void thawAliases( final Gene gene ) {
+        this.getSession().refresh( gene );
         Hibernate.initialize( gene.getAliases() );
         Hibernate.initialize( gene.getAccessions() );
     }
@@ -423,7 +427,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     protected Gene handleFindByAccession( String accession, ExternalDatabase source ) {
         Collection<Gene> genes = new HashSet<>();
-        final String accessionQuery = "select g from GeneImpl g inner join g.accessions a where a.accession = :accession";
+        final String accessionQuery = "select g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
 
         if ( source == null ) {
@@ -464,14 +468,14 @@ public class GeneDaoImpl extends GeneDaoBase {
      */
     @Override
     protected Collection<Gene> handleFindByAlias( String search ) {
-        final String queryString = "select distinct g from GeneImpl as g inner join g.aliases als where als.alias = :search";
+        final String queryString = "select distinct g from Gene as g inner join g.aliases als where als.alias = :search";
         //noinspection unchecked
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 
     @Override
     protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) {
-        final String queryString = "select distinct g from GeneImpl as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon";
+        final String queryString = "select distinct g from Gene as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon";
         List<?> results = getHibernateTemplate()
                 .findByNamedParam( queryString, new String[] { "symbol", "taxon" }, new Object[] { symbol, taxon } );
         if ( results.size() == 0 ) {
@@ -490,8 +494,8 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     protected long handleGetCompositeSequenceCountById( long id ) {
         final String queryString =
-                "select count(distinct cs) from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         List<?> r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         return ( Long ) r.iterator().next();
@@ -501,13 +505,13 @@ public class GeneDaoImpl extends GeneDaoBase {
     protected Collection<CompositeSequence> handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compSeq;
         final String queryString =
-                "select distinct cs from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct"
-                        + " as bs2gp, CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
+                        + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence "
                         + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setParameter( "arrayDesign", arrayDesign );
             queryObject.setParameter( "gene", gene );
             //noinspection unchecked
@@ -527,8 +531,8 @@ public class GeneDaoImpl extends GeneDaoBase {
     @Override
     protected Collection<CompositeSequence> handleGetCompositeSequencesById( long id ) {
         final String queryString =
-                "select distinct cs from GeneImpl as gene  inner join gene.products as gp, BioSequence2GeneProduct "
-                        + " as bs2gp , CompositeSequenceImpl as cs where gp=bs2gp.geneProduct "
+                "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
+                        + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
         //noinspection unchecked
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
@@ -541,7 +545,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
 
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon ";
+        final String queryString = "select gene from Gene as gene where gene.taxon = :taxon ";
         //noinspection unchecked
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
@@ -553,7 +557,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
 
-        final String queryString = "select gene from GeneImpl as gene where gene.taxon = :taxon"
+        final String queryString = "select gene from Gene as gene where gene.taxon = :taxon"
                 + " and (gene.description like '%micro RNA or sno RNA' OR gene.description = 'miRNA')";
         //noinspection unchecked
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -566,7 +570,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
 
-        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon";
+        final String queryString = "select gene from Gene as gene fetch all properties where gene.taxon = :taxon";
 
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -582,7 +586,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             log.info( "Loading " + ids.size() + " genes ..." );
         }
 
-        final String queryString = "from GeneImpl where id in (:ids)";
+        final String queryString = "from Gene where id in (:ids)";
         Collection<Gene> genes = new HashSet<>();
 
         BatchIterator<Long> it = BatchIterator.batches( ids, batchSize );
@@ -600,7 +604,7 @@ public class GeneDaoImpl extends GeneDaoBase {
 
     @Override
     protected void handleThaw( final Gene gene ) {
-
+        this.getSession().refresh( gene );
         thawAliases( gene );
         for ( DatabaseEntry de : gene.getAccessions() ) {
             Hibernate.initialize( de.getExternalDatabase() );
@@ -612,11 +616,15 @@ public class GeneDaoImpl extends GeneDaoBase {
                 Hibernate.initialize( de.getExternalDatabase() );
             }
             Hibernate.initialize( gp.getPhysicalLocation() );
-            Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
-            Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+            if ( gp.getPhysicalLocation() != null ) {
+                Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+                if ( gp.getPhysicalLocation().getChromosome() != null )
+                    Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+            }
         }
         Hibernate.initialize( gene.getTaxon() );
-        Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
+        if ( gene.getTaxon() != null )
+            Hibernate.initialize( gene.getTaxon().getExternalDatabase() );
         Hibernate.initialize( gene.getMultifunctionality() );
         Hibernate.initialize( gene.getPhenotypeAssociations() );
 
@@ -660,7 +668,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam(
-                "select g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
+                "select g from Gene g left join fetch g.aliases left join fetch g.accessions acc "
                         + "join fetch g.taxon t left join fetch g.products gp left join fetch g.multifunctionality "
                         + "where g.id in (:gids)", "gids", ids );
     }
@@ -668,7 +676,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     private Collection<Gene> doLoadThawedLiter( Collection<Long> ids ) {
         //noinspection unchecked
         return this.getHibernateTemplate()
-                .findByNamedParam( "select g from GeneImpl g join fetch g.taxon t " + "where g.id in (:gids)", "gids",
+                .findByNamedParam( "select g from Gene g join fetch g.taxon t " + "where g.id in (:gids)", "gids",
                         ids );
     }
 
@@ -679,7 +687,7 @@ public class GeneDaoImpl extends GeneDaoBase {
             final String strand ) {
 
         // the 'fetch'es are so we don't get lazy loads (typical applications of this method)
-        String query = "select distinct g from GeneImpl as g "
+        String query = "select distinct g from Gene as g "
                 + "inner join fetch g.products prod  inner join fetch prod.physicalLocation pl inner join fetch pl.chromosome "
                 + "where ((pl.nucleotide >= :start AND (pl.nucleotide + pl.nucleotideLength) <= :end) "
                 + "OR (pl.nucleotide <= :start AND (pl.nucleotide + pl.nucleotideLength) >= :end) OR "

@@ -69,12 +69,7 @@ public class ExpressionExperimentPrePersistServiceImpl implements ExpressionExpe
         return prepare( ee, new ArrayDesignsForExperimentCache() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.ExpressionExperimentPrePersistService#prepare(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment)
-     */
+
     @Override
     public ArrayDesignsForExperimentCache prepare( ExpressionExperiment ee, ArrayDesignsForExperimentCache cache ) {
 

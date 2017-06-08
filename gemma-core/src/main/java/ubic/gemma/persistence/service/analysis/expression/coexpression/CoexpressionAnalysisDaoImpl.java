@@ -71,7 +71,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
         String q = "select ccd from CoexpressionAnalysisImpl pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return ( CoexpCorrelationDistribution ) this.getSessionFactory().getCurrentSession().createQuery( q )
+        return ( CoexpCorrelationDistribution ) this.getSession().createQuery( q )
                 .setParameter( "ee", expressionExperiment ).uniqueResult();
 
     }
@@ -80,14 +80,14 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
         String q = "select ccd from CoexpressionAnalysisImpl pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
-        return this.getSessionFactory().getCurrentSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
+        return this.getSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
                 != null;
     }
 
     @Override
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
+        return this.getSession().createQuery(
                 "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }

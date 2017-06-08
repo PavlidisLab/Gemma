@@ -359,7 +359,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "fetch all properties where trail = :trail and et.class in (:classes) "
                 + "order by event.date,event.id desc ";
 
-        org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+        org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
         queryObject.setCacheable( true );
         queryObject.setReadOnly( true );
         queryObject.setParameter( "trail", auditTrail );

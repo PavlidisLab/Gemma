@@ -59,14 +59,14 @@ public abstract class GeneDaoBase extends VoEnabledDao<Gene, GeneValueObject> im
 
     @Override
     public Gene findByNcbiId( Integer ncbiId ) {
-        return ( Gene ) this.getSession().createQuery( "from GeneImpl g where g.ncbiGeneId = :n" )
+        return ( Gene ) this.getSession().createQuery( "from Gene g where g.ncbiGeneId = :n" )
                 .setParameter( "n", ncbiId ).uniqueResult();
     }
 
     @Override
     public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
         return this
-                .findByOfficialSymbol( "from GeneImpl g where g.officialSymbol=:officialSymbol order by g.officialName",
+                .findByOfficialSymbol( "from Gene g where g.officialSymbol=:officialSymbol order by g.officialName",
                         officialSymbol );
     }
 
@@ -77,10 +77,7 @@ public abstract class GeneDaoBase extends VoEnabledDao<Gene, GeneValueObject> im
 
     @Override
     public Collection<Gene> findByOfficialName( final String officialName ) {
-        //noinspection unchecked
-        return this.getSession()
-                .createQuery( "from GeneImpl g where g.officialName=:officialName order by g.officialName" )
-                .setParameter( "officialName", officialName ).list();
+        return this.findByProperty( "officialName", officialName );
     }
 
     /**
@@ -95,14 +92,14 @@ public abstract class GeneDaoBase extends VoEnabledDao<Gene, GeneValueObject> im
     @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         return this.findByOfficialSymbol(
-                "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol",
+                "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol",
                 officialSymbol );
     }
 
     @Override
     public Collection<Gene> findByPhysicalLocation( final PhysicalLocation location ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from GeneImpl as gene where gene.physicalLocation = :location" )
+        return this.getSession().createQuery( "from Gene as gene where gene.physicalLocation = :location" )
                 .setParameter( "location", location ).list();
     }
 

@@ -31,8 +31,8 @@
       <operations public="false" package="false" protected="true" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="4" language="java" name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" project="gemma-core"
-    file="/gemma-core/src/main/java/ubic/gemma/model/expression/biomaterial/BioMaterialImpl.java" binary="false"
+  <class id="4" language="java" name="ubic.gemma.model.expression.biomaterial.BioMaterial" project="gemma-core"
+    file="/gemma-core/src/main/java/ubic/gemma/model/expression/biomaterial/BioMaterial.java" binary="false"
     corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="882" y="445"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 

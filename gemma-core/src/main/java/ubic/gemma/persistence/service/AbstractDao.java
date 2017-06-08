@@ -41,7 +41,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
-    protected Class<T> elementClass;
+    private Class<T> elementClass;
 
     /* ********************************
      * Constructors

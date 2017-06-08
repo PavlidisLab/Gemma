@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" table="BIO_MATERIAL" dynamic-insert="false" dynamic-update="false">
+   <class name="ubic.gemma.model.expression.biomaterial.BioMaterial" table="BIO_MATERIAL" dynamic-insert="false" dynamic-update="false">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -27,7 +27,7 @@
          <key foreign-key="FACTOR_VALUE_BIO_MATERIALS_FKC">
             <column name="BIO_MATERIALS_FK" sql-type="BIGINT"/>
          </key>
-         <many-to-many class="ubic.gemma.model.expression.experiment.FactorValueImpl" >
+         <many-to-many class="ubic.gemma.model.expression.experiment.FactorValue" >
             <column name="FACTOR_VALUES_FK" sql-type="BIGINT"/>
          </many-to-many>
       </set>
@@ -50,7 +50,7 @@
          <key foreign-key="CHARACTERISTIC_BIO_MATERIAL_FKC">
             <column name="BIO_MATERIAL_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
       <many-to-one name="externalAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="join">
          <column name="EXTERNAL_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>

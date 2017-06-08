@@ -54,7 +54,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
+        Criteria queryObject = this.getSession().createCriteria( BioAssayDimension.class );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 

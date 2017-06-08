@@ -22,11 +22,10 @@ import junit.framework.TestCase;
 
 /**
  * Tests of 'equals' implementation
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
-public class GeneImplTest extends TestCase {
+public class GeneTest extends TestCase {
 
     Taxon aTax;
     Taxon bTax;

@@ -45,7 +45,7 @@ public class ContactDaoImpl extends ContactDaoBase {
     @Override
     public Contact find( Contact contact ) {
         BusinessKey.checkKey( contact );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
+        Criteria queryObject = this.getSession().createCriteria( Contact.class );
         BusinessKey.addRestrictions( queryObject, contact );
         List results = queryObject.list();
         Object result = null;

@@ -54,7 +54,7 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     @Override
     public FactorValue find( FactorValue factorValue ) {
         try {
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
+            Criteria queryObject = this.getSession().createCriteria( FactorValue.class );
 
             BusinessKey.checkKey( factorValue );
 
@@ -82,7 +82,7 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     @Override
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from FactorValueImpl where value like :q" )
+        return this.getSession().createQuery( "from FactorValue where value like :q" )
                 .setParameter( "q", valuePrefix + "%" ).list();
     }
 
@@ -104,14 +104,14 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
 
         //noinspection unchecked
         Collection<BioMaterial> bms = this.getSession()
-                .createQuery( "select distinct bm from BioMaterialImpl as bm join bm.factorValues fv where fv = :fv" )
+                .createQuery( "select distinct bm from BioMaterial as bm join bm.factorValues fv where fv = :fv" )
                 .setParameter( "fv", factorValue ).list();
 
         log.info( "Disassociating " + factorValue + " from " + bms.size() + " biomaterials" );
         for ( BioMaterial bioMaterial : bms ) {
             log.info( "Processing " + bioMaterial ); // temporary, debugging.
             if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
-                this.getSessionFactory().getCurrentSession().update( bioMaterial );
+                this.getSession().update( bioMaterial );
             } else {
                 log.warn( "Unexpectedly the factor value was not actually associated with " + bioMaterial );
             }

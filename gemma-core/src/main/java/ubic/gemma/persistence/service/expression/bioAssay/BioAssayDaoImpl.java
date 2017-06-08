@@ -62,7 +62,7 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     public BioAssay find( BioAssay bioAssay ) {
         try {
             Criteria queryObject = BusinessKey
-                    .createQueryObject( super.getSessionFactory().getCurrentSession(), bioAssay );
+                    .createQueryObject( this.getSession(), bioAssay );
 
             List<?> results = queryObject.list();
             Object result = null;

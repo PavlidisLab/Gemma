@@ -44,7 +44,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * @return entity with given name, or null if such entity does not exist.
      */
     public Collection<C> findByName( String name ) {
-        return this.findByParam( "name", name );
+        return this.findByProperty( "name", name );
     }
 
     /**
@@ -54,7 +54,7 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
      * @return entity with given short name, or null if such entity does not exist.
      */
     public C findByShortName( String name ) {
-        return this.findByParam( "shortName", name ).iterator().next();
+        return this.findOneByProperty( "shortName", name );
     }
 
     /* ********************************
@@ -93,20 +93,6 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
         if ( details.getLastTroubledEvent() != null ) {
             vo.setLastTroubledEvent( new AuditEventValueObject( details.getLastTroubledEvent() ) );
         }
-    }
-
-
-    /* ********************************
-     * Private methods
-     * ********************************/
-
-    private Collection<C> findByParam( String paramName, String paramValue ) {
-        Query query = this.getSessionFactory().getCurrentSession().createQuery(
-                "from " + elementClass.getSimpleName() + " a where a." + paramName + "=:" + paramName + "" )
-                .setParameter( paramName, paramValue );
-
-        //noinspection unchecked
-        return query.list();
     }
 
 }

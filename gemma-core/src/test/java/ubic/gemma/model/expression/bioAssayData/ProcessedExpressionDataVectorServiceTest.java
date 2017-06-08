@@ -19,78 +19,67 @@
 
 package ubic.gemma.model.expression.bioAssayData;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.TableMaintenenceUtil;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoServiceTest {
 
+    Collection<ExpressionExperiment> ees;
     @Autowired
     private ProcessedExpressionDataVectorService processedDataVectorService;
-
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
     @Autowired
-    private TableMaintenenceUtil tableMaintenenceUtil;
-
+    private TableMaintenanceUtil tableMaintenanceUtil;
     @Autowired
     private GeoService geoService;
-
     @Autowired
     private ArrayDesignService arrayDesignService;
-
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
-    Collection<ExpressionExperiment> ees;
-
     @After
     public void after() {
-        if ( ees.isEmpty() ) return;
-        try {
-            for ( ExpressionExperiment ee : ees ) {
-                expressionExperimentService.remove( ee );
-            }
-        } catch ( Exception e ) {
+        if ( ees == null || ees.isEmpty() )
+            return;
 
+        for ( ExpressionExperiment ee : ees ) {
+            expressionExperimentService.remove( ee );
         }
+
     }
 
     @Before
@@ -122,8 +111,8 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         assertEquals( 40, v.size() );
 
         Collection<Gene> genes = getGeneAssociatedWithEe( ee );
-        tableMaintenenceUtil.disableEmail();
-        tableMaintenenceUtil.updateGene2CsEntries();
+        tableMaintenanceUtil.disableEmail();
+        tableMaintenanceUtil.updateGene2CsEntries();
 
         v = processedDataVectorService.getProcessedDataArrays( ees, EntityUtils.getIds( genes ) );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
@@ -132,29 +121,26 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
     }
 
-    /**
-     * @return
-     */
     private Collection<ExpressionExperiment> getDataset() throws Exception {
         // Dataset uses spotted arrays, 11 samples.
 
-        ExpressionExperiment newee;
+        ExpressionExperiment ee;
         try {
             geoService.setGeoDomainObjectGenerator(
                     new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse432Short" ) ) );
-            @SuppressWarnings("unchecked")
+            //noinspection unchecked
             Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService
                     .fetchAndLoad( "GSE432", false, true, false, false );
-            newee = results.iterator().next();
+            ee = results.iterator().next();
 
             TwoChannelMissingValues tcmv = this.getBean( TwoChannelMissingValues.class );
-            tcmv.computeMissingValues( newee, 1.5, null );
+            tcmv.computeMissingValues( ee, 1.5, null );
             // No masked preferred computation.
         } catch ( AlreadyExistsInSystemException e ) {
             if ( e.getData() instanceof List ) {
-                newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+                ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
             } else {
-                newee = ( ExpressionExperiment ) e.getData();
+                ee = ( ExpressionExperiment ) e.getData();
             }
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
@@ -163,20 +149,15 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
             throw e;
         }
 
-        newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
-        expressionExperimentService.update( newee );
-
-        this.expressionExperimentService.thawLite( newee );
-
-        processedDataVectorService.createProcessedDataVectors( newee );
-        Collection<ExpressionExperiment> e = new HashSet<ExpressionExperiment>();
-        e.add( newee );
+        ee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
+        expressionExperimentService.update( ee );
+        expressionExperimentService.thawLite( ee );
+        processedDataVectorService.createProcessedDataVectors( ee );
+        Collection<ExpressionExperiment> e = new HashSet<>();
+        e.add( ee );
         return e;
     }
 
-    /**
-     * @return
-     */
     private Collection<Gene> getGeneAssociatedWithEe( ExpressionExperiment ee ) {
         Collection<ArrayDesign> ads = this.expressionExperimentService.getArrayDesignsUsed( ee );
         Collection<Gene> genes = new HashSet<Gene>();

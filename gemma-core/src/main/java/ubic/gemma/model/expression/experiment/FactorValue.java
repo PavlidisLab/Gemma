@@ -18,18 +18,21 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.model.Securable;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 
+import javax.persistence.Transient;
 import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * The value for a ExperimentalFactor, representing a specific instance of the factor, such as "10 ug/kg" or "mutant"
  */
-public abstract class FactorValue implements Identifiable, Serializable, gemma.gsec.model.SecuredChild {
+public class FactorValue implements Identifiable, Serializable, gemma.gsec.model.SecuredChild {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -56,31 +59,79 @@ public abstract class FactorValue implements Identifiable, Serializable, gemma.g
     }
 
     /* ********************************
-     * Public methods
+     * Object override methods
      * ********************************/
 
     @Override
     public boolean equals( Object object ) {
-        if ( this == object ) {
+        if ( object == null )
+            return false;
+        if ( this == object )
             return true;
-        }
-        if ( !( object instanceof FactorValue ) ) {
+        if ( !( object instanceof FactorValue ) )
             return false;
-        }
-        final FactorValue that = ( FactorValue ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
+        FactorValue that = ( FactorValue ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+
+        if ( that.getId() == null && this.getId() != null )
             return false;
-        }
-        return true;
+
+        /*
+         * at this point, we know we have two FactorValues, at least one of which is transient, so we have to look at
+         * the fields; pain in butt
+         */
+
+        return checkGuts( that );
+
     }
 
     @Override
     public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+        if ( this.getId() != null )
+            return this.getId().hashCode();
 
-        return hashCode;
+        HashCodeBuilder builder = new HashCodeBuilder( 17, 7 ).append( this.getId() )
+                .append( this.getExperimentalFactor() ).append( this.getMeasurement() );
+        if ( this.getCharacteristics() != null ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                if ( c instanceof VocabCharacteristic )
+                    builder.append( ( ( VocabCharacteristic ) c ).hashCode() );
+                else
+                    builder.append( c.hashCode() );
+            }
+        }
+        return builder.toHashCode();
     }
+
+    /**
+     * @see ubic.gemma.model.expression.experiment.FactorValue#toString()
+     */
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        // this can be null in tests or with half-setup transient objects
+        buf.append( "FactorValue " + this.getId() + ": " );
+
+        if ( this.getExperimentalFactor() != null )
+            buf.append( this.getExperimentalFactor().getName() + ":" );
+        if ( this.getCharacteristics().size() > 0 ) {
+            for ( Characteristic c : this.getCharacteristics() ) {
+                buf.append( c.getValue() );
+                if ( this.getCharacteristics().size() > 1 )
+                    buf.append( " | " );
+            }
+        } else if ( this.getMeasurement() != null ) {
+            buf.append( this.getMeasurement().getValue() );
+        } else if ( StringUtils.isNotBlank( this.getValue() ) ) {
+            buf.append( this.getValue() );
+        }
+        return buf.toString();
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public Long getId() {
@@ -92,7 +143,7 @@ public abstract class FactorValue implements Identifiable, Serializable, gemma.g
     }
 
     @Override
-    public Securable getSecurityOwner() {
+    public ExpressionExperiment getSecurityOwner() {
         return securityOwner;
     }
 
@@ -146,6 +197,7 @@ public abstract class FactorValue implements Identifiable, Serializable, gemma.g
         this.value = value;
     }
 
+    @Transient
     public String getDescriptiveString() {
         if ( this.characteristics != null && this.characteristics.size() > 0 ) {
             StringBuilder fvString = new StringBuilder();
@@ -163,6 +215,58 @@ public abstract class FactorValue implements Identifiable, Serializable, gemma.g
     }
 
     /* ********************************
+     * Private methods
+     * ********************************/
+
+    private boolean checkGuts( FactorValue that ) {
+
+        if ( this.getExperimentalFactor() != null ) {
+            if ( that.getExperimentalFactor() == null )
+                return false;
+            if ( !this.getExperimentalFactor().equals( that.getExperimentalFactor() ) ) {
+                return false;
+            }
+        }
+
+        if ( this.getCharacteristics().size() > 0 ) {
+            if ( that.getCharacteristics().size() != this.getCharacteristics().size() )
+                return false;
+
+            for ( Characteristic c : this.getCharacteristics() ) {
+                boolean match = false;
+                for ( Characteristic c2 : that.getCharacteristics() ) {
+                    if ( c.equals( c2 ) ) {
+                        if ( match ) {
+                            return false;
+                        }
+                        match = true;
+                    }
+                }
+                if ( !match )
+                    return false;
+            }
+
+        }
+
+        if ( this.getMeasurement() != null ) {
+            if ( that.getMeasurement() == null )
+                return false;
+            if ( !this.getMeasurement().equals( that.getMeasurement() ) )
+                return false;
+        }
+
+        if ( this.getValue() != null ) {
+            if ( that.getValue() == null )
+                return false;
+            if ( !this.getValue().equals( that.getValue() ) )
+                return false;
+        }
+
+        // everything is empty...
+        return true;
+    }
+
+    /* ********************************
      * Static classes
      * ********************************/
 
@@ -174,7 +278,7 @@ public abstract class FactorValue implements Identifiable, Serializable, gemma.g
          * Constructs a new instance of {@link FactorValue}.
          */
         public static FactorValue newInstance() {
-            return new FactorValueImpl();
+            return new FactorValue();
         }
 
         /**
@@ -182,7 +286,7 @@ public abstract class FactorValue implements Identifiable, Serializable, gemma.g
          * arguments.
          */
         public static FactorValue newInstance( ExperimentalFactor experimentalFactor ) {
-            final FactorValue entity = new FactorValueImpl();
+            final FactorValue entity = new FactorValue();
             entity.setExperimentalFactor( experimentalFactor );
             return entity;
         }

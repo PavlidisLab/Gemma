@@ -55,8 +55,8 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * Generates textual views of the database so other people can use the data.
  * <p>
- * Development of this was started due to the collaboration with NIF. See {@link http
- * ://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1747}
+ * Development of this was started due to the collaboration with NIF. See <a href=" http
+ * ://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1747">bug 1747</a>
  * <p>
  * It is essential that these views be created by a principal with Anonymous status, so as not to create views of
  * private data (that could be done, but would be separate).
@@ -304,7 +304,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 for ( DifferentialExpressionAnalysis analysis : results ) {
 
-                    analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
+                    this.differentialExpressionAnalysisService.thawFully( analysis );
 
                     for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 

@@ -49,7 +49,7 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
 
         BusinessKey.checkValidKey( experimentalFactor );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
+        Criteria queryObject = this.getSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );
 
         java.util.List<?> results = queryObject.list();
@@ -87,7 +87,7 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
     @Override
     public void remove( ExperimentalFactor experimentalFactor ) {
         Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
-        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
+        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSession()
                 .load( ExperimentalDesignImpl.class, experimentalDesignId );
 
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
@@ -106,14 +106,14 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
             for ( FactorValue factorValue : bm.getFactorValues() ) {
                 if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
                     factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
+                    this.getSession().evict( factorValue.getExperimentalFactor() );
                 }
             }
 
             // if there are factor values to remove
             if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
                 bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                // this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
+                // this.getSession().update( bm ); // needed? see bug 4341
             }
         }
 

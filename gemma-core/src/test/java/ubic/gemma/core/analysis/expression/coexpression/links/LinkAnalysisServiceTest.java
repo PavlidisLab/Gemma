@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.TableMaintenenceUtil;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.persistence.util.EntityUtils;
 
@@ -87,7 +87,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
-    private TableMaintenenceUtil tableMaintenenceUtil;
+    private TableMaintenanceUtil tableMaintenanceUtil;
 
     public void checkUnsupportedLinksHaveNoSupport() {
         JdbcTemplate jt = new JdbcTemplate( dataSource );
@@ -142,8 +142,8 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
         ee = this.getTestPersistentCompleteExpressionExperimentWithSequences();
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        tableMaintenenceUtil.disableEmail();
-        tableMaintenenceUtil.updateGene2CsEntries();
+        tableMaintenanceUtil.disableEmail();
+        tableMaintenanceUtil.updateGene2CsEntries();
         linkAnalysisConfig.setCdfCut( 0.1 );
         linkAnalysisConfig.setSingularThreshold( SingularThreshold.cdfcut );
         linkAnalysisConfig.setProbeDegreeThreshold( 25 );
@@ -186,11 +186,13 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         // now add another experiment that has overlapping links (same data...
         Map<CompositeSequence, byte[]> dataMap = new HashMap<>();
+        eeService.thaw( ee );
         for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
             dataMap.put( v.getDesignElement(), v.getData() );
         }
 
         ExpressionExperiment ee2 = this.getTestPersistentCompleteExpressionExperimentWithSequences( ee );
+        //eeService.thaw( ee2 );
         for ( RawExpressionDataVector v : ee2.getRawExpressionDataVectors() ) {
             assert dataMap.get( v.getDesignElement() ) != null;
             v.setData( dataMap.get( v.getDesignElement() ) );

@@ -40,32 +40,19 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1734685902449428500L;
-
     private GOEvidenceCode evidenceCode;
     private Boolean isNegativeEvidence = Boolean.FALSE;
-
     private String score;
-
     private Double strength;
-
     private Gene gene;
-
     private Collection<Characteristic> phenotypes = new HashSet<>();
-
     private Characteristic associationType;
-
     private DatabaseEntry evidenceSource;
-
     private QuantitationType scoreType;
-
     private Collection<PhenotypeAssociationPublication> phenotypeAssociationPublications = new HashSet<>();
-
     private PhenotypeMappingType mappingType;
-
     private String originalPhenotype;
-
     private String relationship; // information for a gene-disease relationship
-
     private Date lastUpdated;
 
     /**
@@ -109,9 +96,6 @@ public abstract class PhenotypeAssociation extends AbstractAuditable implements 
         this.evidenceSource = evidenceSource;
     }
 
-    /**
-     *
-     */
     public ubic.gemma.model.genome.Gene getGene() {
         return this.gene;
     }

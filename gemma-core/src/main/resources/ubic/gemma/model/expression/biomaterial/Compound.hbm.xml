@@ -26,7 +26,7 @@
       <many-to-one name="externalLIMS" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="proxy" fetch="select">
          <column name="EXTERNAL_L_I_M_S_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="compoundIndices" class="ubic.gemma.model.common.description.CharacteristicImpl"  cascade="all" lazy="false" fetch="select">
+      <many-to-one name="compoundIndices" class="ubic.gemma.model.common.description.Characteristic"  cascade="all" lazy="false" fetch="select">
          <column name="COMPOUND_INDICES_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
    </class>

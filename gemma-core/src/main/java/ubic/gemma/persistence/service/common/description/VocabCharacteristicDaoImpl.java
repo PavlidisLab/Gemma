@@ -97,7 +97,7 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
         int batchSize = 1000; // to avoid HQL parser barfing
         Collection<String> batch = new HashSet<>();
         Collection<Characteristic> results = new HashSet<>();
-        final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
+        final String queryString = "from VocabCharacteristic where valueUri in (:uris)";
 
         for ( String uri : uris ) {
             batch.add( uri );
@@ -113,12 +113,12 @@ public class VocabCharacteristicDaoImpl extends AbstractDao<VocabCharacteristic>
     }
 
     private Collection<Characteristic> handleFindByUri( String searchString ) {
-        final String queryString = "select char from VocabCharacteristicImpl as char where  char.valueUri = :search";
+        final String queryString = "select char from VocabCharacteristic as char where  char.valueUri = :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", searchString );
     }
 
     private Collection<Characteristic> handleFindByValue( String search ) {
-        final String queryString = "select distinct char from CharacteristicImpl as char where char.value like :search";
+        final String queryString = "select distinct char from Characteristic as char where char.value like :search";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 

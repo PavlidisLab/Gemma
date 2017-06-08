@@ -110,7 +110,7 @@
 			<meta-data>accession</meta-data>
 		</property>
 	</class>
-	<class name="common.description.CharacteristicImpl" alias="compoundIndices" root="false">
+	<class name="common.description.Characteristic" alias="compoundIndices" root="false">
 		<id name="id" />
 		<property name="value">
 			<meta-data>value</meta-data>

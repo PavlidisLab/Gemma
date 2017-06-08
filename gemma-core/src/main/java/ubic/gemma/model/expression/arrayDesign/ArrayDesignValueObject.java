@@ -18,12 +18,15 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.ScrollableResults;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Value object for quickly displaying varied information about Array Designs.
@@ -90,11 +93,61 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
-        super( ad.getId() );
+        this( ad, null );
+    }
+
+    public ArrayDesignValueObject( ArrayDesign ad, Map<Long, Integer> eeCounts ) {
+        super( ad );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
-        this.description = ad.getDescription();
 
+        if ( ad.getTechnologyType() != null ) {
+            this.technologyType = ad.getTechnologyType().toString();
+            this.color = ad.getTechnologyType().getValue();
+        }
+
+        this.description = ad.getDescription();
+        this.isMergee = ad.getMergedInto() != null;
+        this.taxon = ad.getPrimaryTaxon().getCommonName();
+
+        this.expressionExperimentCount = ( eeCounts == null || !eeCounts.containsKey( this.getId() ) ) ?
+                0 :
+                eeCounts.get( this.getId() );
+    }
+
+    /**
+     * Creates a new array design from a given scrollable list.
+     * ! Does not populate curation events ! - call {@link ArrayDesignDaoImpl#addCurationEvents} with the created instance.
+     *
+     * @param list     the list has to have its values correctly populated.
+     *                 See {@link ArrayDesignDaoImpl#getEEValueObjectQueryString()}
+     * @param eeCounts map containing the counts of EEs in ADs. If it also contains the count for
+     *                 the AD that this VO will represent, the appropriate value in this VO will be populated.
+     */
+    public ArrayDesignValueObject( ScrollableResults list, Map<Long, Integer> eeCounts ) {
+        super( list.getLong( 0 ) );
+        this.name = list.getString( 1 );
+        this.shortName = list.getString( 2 );
+
+        TechnologyType color = ( TechnologyType ) list.get( 3 );
+        if ( color != null ) {
+            this.technologyType = color.toString();
+            this.color = color.getValue();
+        }
+
+        this.description = list.getString( 4 );
+        this.isMergee = list.get( 5 ) != null;
+
+        this.lastUpdated = list.getDate( 6 );
+        this.troubled = list.getBoolean( 7 );
+        this.needsAttention = list.getBoolean( 8 );
+        this.curationNote = list.getString( 9 );
+
+        this.taxon = list.getString( 10 );
+
+        this.expressionExperimentCount = ( eeCounts == null || !eeCounts.containsKey( this.getId() ) ) ?
+                0 :
+                eeCounts.get( this.getId() );
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,

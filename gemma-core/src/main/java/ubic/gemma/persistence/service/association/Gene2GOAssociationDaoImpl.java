@@ -58,7 +58,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     @Override
     public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
         BusinessKey.checkValidKey( gene2GOAssociation );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Gene2GOAssociation.class );
+        Criteria queryObject = this.getSession().createCriteria( Gene2GOAssociation.class );
         BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
         return ( Gene2GOAssociation ) queryObject.uniqueResult();
     }

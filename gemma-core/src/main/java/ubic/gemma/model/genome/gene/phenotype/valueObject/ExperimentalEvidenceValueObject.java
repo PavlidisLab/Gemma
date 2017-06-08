@@ -20,7 +20,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristicImpl;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 
 import java.util.Collection;
 import java.util.TreeSet;
@@ -45,8 +45,8 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
 
         if ( collectionCharacteristics != null ) {
             for ( Characteristic c : collectionCharacteristics ) {
-                if ( c instanceof VocabCharacteristicImpl ) {
-                    VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
+                if ( c instanceof VocabCharacteristic ) {
+                    VocabCharacteristic voCha = ( VocabCharacteristic ) c;
 
                     String valueUri = null;
 

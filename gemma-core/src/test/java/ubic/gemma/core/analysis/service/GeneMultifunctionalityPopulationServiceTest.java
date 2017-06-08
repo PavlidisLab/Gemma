@@ -19,33 +19,32 @@
 
 package ubic.gemma.core.analysis.service;
 
-import static org.junit.Assert.*;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.zip.GZIPInputStream;
-
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.ontology.providers.GeneOntologyService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.Multifunctionality;
-import ubic.gemma.core.ontology.providers.GeneOntologyService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.zip.GZIPInputStream;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringContextTest {
 
@@ -78,9 +77,6 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
 
     }
 
-    /**
-     * @throws java.lang.Exception
-     */
     @Before
     public void setUp() throws Exception {
 
@@ -89,12 +85,13 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         }
         gene2GoService.removeAll();
 
-        goService.loadTermsInNameSpace( new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/ontology/molecular-function.test.owl.gz" ) ) );
+        goService.loadTermsInNameSpace( new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl.gz" ) ) );
 
-        testTaxon = taxonService.findOrCreate( Taxon.Factory.newInstance(
-                "foobly" + RandomStringUtils.randomAlphabetic( 2 ), "doobly" + RandomStringUtils.randomAlphabetic( 2 ),
-                "bar" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 5000 ), true, true ) );
+        testTaxon = taxonService.findOrCreate( Taxon.Factory
+                .newInstance( "foobly" + RandomStringUtils.randomAlphabetic( 2 ),
+                        "doobly" + RandomStringUtils.randomAlphabetic( 2 ),
+                        "bar" + RandomStringUtils.randomAlphabetic( 2 ), RandomUtils.nextInt( 5000 ), true, true ) );
 
         /*
          * Create genes
@@ -105,7 +102,8 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
             genes.add( gene );
 
             // Some genes get no terms.
-            if ( i >= 100 ) continue;
+            if ( i >= 100 )
+                continue;
 
             /*
              * Add up to 5 GO terms. Parents mean more will be added.
@@ -134,14 +132,12 @@ public class GeneMultifunctionalityPopulationServiceTest extends BaseSpringConte
         boolean found = false;
         for ( Gene gene : genes ) {
             Multifunctionality mf = gene.getMultifunctionality();
-            if ( mf == null ) continue;
+            if ( mf == null )
+                continue;
             if ( mf.getNumGoTerms() == 5 ) {
                 // assertEquals( 0.245833, mf.getRank(), 0.001 );
                 found = true;
             }
-
-            // log.info( mf.getNumGoTerms() + " " + String.format( "%.4f", mf.getRank() ) );
-
         }
 
         assertTrue( found );

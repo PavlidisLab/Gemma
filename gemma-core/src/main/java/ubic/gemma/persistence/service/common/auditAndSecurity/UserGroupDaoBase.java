@@ -18,9 +18,10 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.hibernate.SessionFactory;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
-import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.Collection;
 
 /**
  * <p>
@@ -30,15 +31,56 @@ import ubic.gemma.persistence.service.AbstractDao;
  *
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
  */
-public abstract class UserGroupDaoBase extends AbstractDao<UserGroup> implements UserGroupDao {
+public abstract class UserGroupDaoBase extends HibernateDaoSupport implements UserGroupDao {
 
-    protected UserGroupDaoBase( SessionFactory sessionFactory ) {
-        super( UserGroup.class, sessionFactory );
+    @Override
+    public Collection<UserGroup> create( final Collection<UserGroup> entities ) {
+        for ( UserGroup e : entities ) {
+            this.create( e );
+        }
+        return entities;
     }
 
     @Override
     public UserGroup findByName( final String name ) {
-        return this.findOneByProperty( "name", name );
+        return ( UserGroup ) this.getSession().createQuery( "from UserGroup as userGroup where userGroup.name = :name" )
+                .setParameter( "name", name ).uniqueResult();
     }
 
+    @Override
+    public Collection<UserGroup> load( Collection<Long> ids ) {
+        //noinspection unchecked
+        return this.getSession().createQuery( "from UserGroup where id in (:ids)" ).setParameterList( "ids", ids )
+                .list();
+    }
+
+    @Override
+    public UserGroup load( final Long id ) {
+        return ( UserGroup ) this.getSession().get( UserGroup.class, id );
+    }
+
+    @Override
+    public Collection<UserGroup> loadAll() {
+        //noinspection unchecked
+        return this.getSession().createCriteria( UserGroup.class ).list();
+    }
+
+    @Override
+    public void remove( Collection<UserGroup> entities ) {
+        for ( UserGroup e : entities ) {
+            this.getSession().delete( e );
+        }
+    }
+
+    @Override
+    public void update( final Collection<UserGroup> entities ) {
+        for ( UserGroup entity : entities ) {
+            update( entity );
+        }
+    }
+
+    @Override
+    public void update( UserGroup entity ) {
+        this.getSession().update( entity );
+    }
 }

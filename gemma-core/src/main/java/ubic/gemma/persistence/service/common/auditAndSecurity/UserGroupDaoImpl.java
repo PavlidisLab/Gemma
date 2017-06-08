@@ -37,14 +37,13 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
 
     @Autowired
     public UserGroupDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super.setSessionFactory( sessionFactory );
     }
 
     @Override
     public void addAuthority( UserGroup group, String authority ) {
         for ( gemma.gsec.model.GroupAuthority ga : group.getAuthorities() ) {
             if ( ga.getAuthority().equals( authority ) ) {
-                log.warn( "Group already has authority " + authority );
                 return;
             }
         }
@@ -78,33 +77,24 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     public Collection<UserGroup> findGroupsForUser( User user ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user" )
+                .createQuery( "select ug from UserGroup ug inner join ug.groupMembers memb where memb = :user" )
                 .setParameter( "user", user ).list();
     }
 
     @Override
     public void remove( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "UserGroup.remove - 'id' can not be null" );
-        }
         UserGroup userGroup = this.load( id );
-        if ( userGroup == null ) {
-            throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
-        }
         // this check is done higher up as well...
         if ( userGroup.getName().equals( AuthorityConstants.USER_GROUP_NAME ) || userGroup.getName()
                 .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || userGroup.getName()
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot remove group: " + userGroup );
         }
-        this.getSessionFactory().getCurrentSession().delete( userGroup );
+        this.getSession().delete( userGroup );
     }
 
     @Override
     public void remove( UserGroup userGroup ) {
-        if ( userGroup == null ) {
-            throw new IllegalArgumentException( "UserGroup.remove - 'userGroup' can not be null" );
-        }
         this.remove( userGroup.getId() );
     }
 
@@ -131,4 +121,25 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
         }
         super.update( userGroup );
     }
+
+    @Override
+    public UserGroup find( UserGroup entity ) {
+        return null;
+    }
+
+    @Override
+    public UserGroup findOrCreate( UserGroup entity ) {
+        UserGroup found = this.find( entity );
+        return found != null ? found : this.create( entity );
+    }
+
+    @Override
+    public Integer countAll() {
+        return this.loadAll().size();
+    }
+
+    @Override
+    public void thaw( UserGroup entity ) {
+    }
+
 }

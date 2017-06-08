@@ -56,11 +56,11 @@
 				</key>
 				<one-to-many class="ubic.gemma.model.genome.PhysicalLocationImpl" />
 			</set>
-			<many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl" cascade="none" lazy="proxy" fetch="select">
+			<many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="proxy" fetch="select">
 				<column name="GENE_FK" not-null="false" sql-type="BIGINT" />
 			</many-to-one>
 		</subclass>
-		<subclass name="ubic.gemma.model.genome.GeneImpl" discriminator-value="GeneImpl" dynamic-insert="false"
+		<subclass name="ubic.gemma.model.genome.Gene" discriminator-value="Gene" dynamic-insert="false"
 			dynamic-update="false" abstract="false">
 			<property name="officialSymbol" type="java.lang.String">
 				<column name="OFFICIAL_SYMBOL" not-null="false" unique="false"
@@ -88,7 +88,7 @@
 				<key foreign-key="GENE_ALIAS_GENE_FKC">
 					<column name="GENE_FK" sql-type="BIGINT" />
 				</key>
-				<one-to-many class="ubic.gemma.model.genome.gene.GeneAliasImpl" />
+				<one-to-many class="ubic.gemma.model.genome.gene.GeneAlias" />
 			</set>
 			<many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon" lazy="false" fetch="select">
 				<column name="TAXON_FK" not-null="false" sql-type="BIGINT" />

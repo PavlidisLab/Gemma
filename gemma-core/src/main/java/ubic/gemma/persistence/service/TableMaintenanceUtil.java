@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * @author paul
  */
-public interface TableMaintenenceUtil {
+public interface TableMaintenanceUtil {
 
     /**
      * If necessary, update the GENE2CS table.

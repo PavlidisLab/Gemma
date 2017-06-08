@@ -51,7 +51,7 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
     /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
      */
-    private BioAssayDimensionValueObject( Long id ) {
+    public BioAssayDimensionValueObject( Long id ) {
         super( id );
     }
 

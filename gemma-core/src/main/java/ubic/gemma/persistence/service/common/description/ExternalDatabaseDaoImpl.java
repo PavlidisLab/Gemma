@@ -14,7 +14,10 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import org.hibernate.Criteria;
+import org.hibernate.FlushMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -33,7 +36,6 @@ public class ExternalDatabaseDaoImpl extends ExternalDatabaseDaoBase {
 
     @Override
     public ExternalDatabase find( ExternalDatabase externalDatabase ) {
-        return this.findOneByProperty( "name", externalDatabase.getName() );
+         return this.findOneByProperty( "name", externalDatabase.getName() );
     }
-
 }

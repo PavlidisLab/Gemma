@@ -98,7 +98,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( AnnotationAssociation.class );
+        Criteria queryObject = this.getSession().createCriteria( AnnotationAssociation.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
 
@@ -122,7 +122,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
             BusinessKey.checkValidKey( geneProduct );
 
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( AnnotationAssociation.class );
+            Criteria queryObject = this.getSession().createCriteria( AnnotationAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
 
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {

@@ -140,7 +140,7 @@ public class PrincipalComponentAnalysisServiceImpl extends AbstractService<Princ
 
     @Override
     public Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee ) {
-        return null;
+        return this.principalComponentAnalysisDao.findByExperiment( ee );
     }
 
     @Override

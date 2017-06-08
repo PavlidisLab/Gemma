@@ -179,7 +179,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
     @Override
     protected Collection<Gene> handleGetGenesByAccession( String search ) {
         final String queryString =
-                "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
+                "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
                         + " inner join bs2gp.bioSequence bs "
                         + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct "
                         + " and de.accession = :search ";
@@ -190,10 +190,10 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
     protected Collection<Gene> handleGetGenesByName( String search ) {
         Collection<Gene> genes = null;
         final String queryString =
-                "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
+                "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
                         + " and bs2gp.bioSequence.name like :search ";
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -205,12 +205,17 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
     @Override
     protected void handleThaw( final BioSequence bioSequence ) {
+        this.getSession().refresh( bioSequence );
         Hibernate.initialize( bioSequence.getTaxon() );
-        Hibernate.initialize( bioSequence.getTaxon().getExternalDatabase() );
-        Hibernate.initialize( bioSequence.getTaxon().getParentTaxon() );
-        Hibernate.initialize( bioSequence.getTaxon().getParentTaxon().getExternalDatabase() );
+        if ( bioSequence.getTaxon() != null ) {
+            Hibernate.initialize( bioSequence.getTaxon().getExternalDatabase() );
+            Hibernate.initialize( bioSequence.getTaxon().getParentTaxon() );
+            if ( bioSequence.getTaxon().getParentTaxon() != null )
+                Hibernate.initialize( bioSequence.getTaxon().getParentTaxon().getExternalDatabase() );
+        }
         Hibernate.initialize( bioSequence.getSequenceDatabaseEntry() );
-        Hibernate.initialize( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() );
+        if ( bioSequence.getSequenceDatabaseEntry() != null )
+            Hibernate.initialize( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() );
         Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
         for ( BioSequence2GeneProduct gp : bioSequence.getBioSequence2GeneProduct() ) {
             Hibernate.initialize( gp.getGeneProduct() );
@@ -261,7 +266,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
      * @param results
      */
     private void findByGenesBatch( Collection<Gene> genes, Map<Gene, Collection<BioSequence>> results ) {
-        final String queryString = "select distinct gene,bs from GeneImpl gene inner join fetch gene.products ggp,"
+        final String queryString = "select distinct gene,bs from Gene gene inner join fetch gene.products ggp,"
                 + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
                 + " where ggp=bsgp and gene in (:genes)";
 

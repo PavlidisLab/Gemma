@@ -22,10 +22,7 @@ import ubic.gemma.model.common.Identifiable;
 
 import java.io.Serializable;
 
-/**
- *
- */
-public abstract class GeneAlias implements Identifiable, Serializable {
+public class GeneAlias implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -96,7 +93,7 @@ public abstract class GeneAlias implements Identifiable, Serializable {
          * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}.
          */
         public static ubic.gemma.model.genome.gene.GeneAlias newInstance() {
-            return new ubic.gemma.model.genome.gene.GeneAliasImpl();
+            return new ubic.gemma.model.genome.gene.GeneAlias();
         }
 
         /**
@@ -104,7 +101,7 @@ public abstract class GeneAlias implements Identifiable, Serializable {
          * (except the identifier(s))as arguments.
          */
         public static ubic.gemma.model.genome.gene.GeneAlias newInstance( String alias ) {
-            final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAliasImpl();
+            final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAlias();
             entity.setAlias( alias );
             return entity;
         }

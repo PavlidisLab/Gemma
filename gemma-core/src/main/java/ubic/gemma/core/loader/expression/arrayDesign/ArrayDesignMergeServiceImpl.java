@@ -49,7 +49,6 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      */
     private static final String PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR = "___";
 
-
     private static final String PROBE_NAME_DISAMBIGUATION_REGEX = PROBE_NAME_DISAMBIGUATION_SUFFIX_SEPARATOR + "(\\d)+";
 
     private final ArrayDesignService arrayDesignService;

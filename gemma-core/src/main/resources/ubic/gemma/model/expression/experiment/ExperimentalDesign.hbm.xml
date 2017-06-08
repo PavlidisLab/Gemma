@@ -41,7 +41,7 @@
          <key foreign-key="CHARACTERISTIC_EXPERIMENTAL_DESIGN_FKC">
             <column name="EXPERIMENTAL_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
    </class>
 </hibernate-mapping>

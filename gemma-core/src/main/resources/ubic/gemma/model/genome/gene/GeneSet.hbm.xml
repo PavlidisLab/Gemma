@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.genome.gene.GeneSetImpl" table="GENE_SET" dynamic-insert="false" dynamic-update="false">
+   <class name="ubic.gemma.model.genome.gene.GeneSet" table="GENE_SET" dynamic-insert="false" dynamic-update="false">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -25,7 +25,7 @@
          <key foreign-key="CHARACTERISTIC_GENE_SET_FKC">
             <column name="GENE_SET_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
       <many-to-one name="sourceAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="false" fetch="select">
          <column name="SOURCE_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>

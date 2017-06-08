@@ -18,31 +18,25 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.persistence.service.BaseDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
  */
 public interface UserGroupDao extends BaseDao<UserGroup> {
 
-    public void addAuthority( UserGroup group, String authority );
+    void addAuthority( UserGroup group, String authority );
 
-    /**
-     * 
-     */
-    public void addToGroup( UserGroup group, User user );
+    void addToGroup( UserGroup group, User user );
 
-    /**
-     * 
-     */
-    public UserGroup findByName( java.lang.String name );
+    UserGroup findByName( java.lang.String name );
 
-    public Collection<UserGroup> findGroupsForUser( User user );
+    Collection<UserGroup> findGroupsForUser( User user );
 
-    public void removeAuthority( UserGroup group, String authority );
+    void removeAuthority( UserGroup group, String authority );
 
 }

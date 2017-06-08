@@ -142,7 +142,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Override
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
-        expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thaw( ee );
 
         try {
             removeInvalidatedData( ee );

@@ -43,7 +43,7 @@ public class UnitDaoImpl extends UnitDaoBase {
     public Unit find( Unit unit ) {
         try {
             BusinessKey.checkValidKey( unit );
-            Criteria queryObject = BusinessKey.createQueryObject( super.getSessionFactory().getCurrentSession(), unit );
+            Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), unit );
             List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {

@@ -542,7 +542,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     @Transactional(readOnly = true)
-    public EvidenceValueObject load( Long id ) {
+    public EvidenceValueObject<? extends PhenotypeAssociation> load( Long id ) {
 
         assert id != null;
 
@@ -946,7 +946,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     .loadAllNeurocartaPhenotypes();
             for ( PhenotypeValueObject pvo : allNeurocartaPhenotypes ) {
 
-                CharacteristicValueObject cha = new CharacteristicValueObject(-1L, pvo.getValue(), pvo.getValueUri() );
+                CharacteristicValueObject cha = new CharacteristicValueObject( -1L, pvo.getValue(), pvo.getValueUri() );
                 // set flag for UI, flag if the phenotype is on the Gene or if in the database
                 cha.setAlreadyPresentOnGene( true );
                 cha.setAlreadyPresentInDatabase( true );
@@ -2015,7 +2015,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 if ( alreadyOnTree != null ) {
                     alreadyOnTree.getChildren().add( tc );
                 } else {
-                    TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject(-1L, onTerm.getLabel(),
+                    TreeCharacteristicValueObject tree = new TreeCharacteristicValueObject( -1L, onTerm.getLabel(),
                             onTerm.getUri() );
 
                     // add children to the parent
@@ -2067,7 +2067,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
             // count the number of distinct gene linked to this ontologyTerm ( or children) in the database
             if ( !geneFoundForOntologyTerm.isEmpty() ) {
-                CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject(-1L,
+                CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L,
                         ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
                 characteristicValueObject.setPublicGeneCount( geneFoundForOntologyTerm.size() );
                 characteristicValueObject.setTaxon( taxon.getCommonName() );

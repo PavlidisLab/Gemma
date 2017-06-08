@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.expression.designElement;
 
+import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -25,7 +26,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * A "Probe set" (Affymetrix) or a "Probe" (other types of arrays). The sequence referred to is a "target sequence"
  * (Affymetrix), oligo (oligo arrays) or cDNA clone/EST (cDNA arrays)
  */
-public abstract class CompositeSequence extends ubic.gemma.model.common.Describable {
+public class CompositeSequence extends ubic.gemma.model.common.Describable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -40,6 +41,37 @@ public abstract class CompositeSequence extends ubic.gemma.model.common.Describa
      * @author Paul
      */
     public CompositeSequence() {
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
+        Describable other = ( Describable ) obj;
+        if ( getId() == null ) {
+            if ( other.getId() != null )
+                return false;
+        } else if ( !getId().equals( other.getId() ) )
+            return false;
+        if ( getName() == null ) {
+            if ( other.getName() != null )
+                return false;
+        } else if ( !getName().equals( other.getName() ) )
+            return false;
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( getId() == null ) ? 0 : getId().hashCode() );
+        result = prime * result + ( ( getName() == null ) ? 0 : getName().hashCode() );
+        return result;
     }
 
     public ArrayDesign getArrayDesign() {
@@ -69,7 +101,7 @@ public abstract class CompositeSequence extends ubic.gemma.model.common.Describa
          * Constructs a new instance of {@link CompositeSequence}.
          */
         public static CompositeSequence newInstance() {
-            return new CompositeSequenceImpl();
+            return new CompositeSequence();
         }
 
     }

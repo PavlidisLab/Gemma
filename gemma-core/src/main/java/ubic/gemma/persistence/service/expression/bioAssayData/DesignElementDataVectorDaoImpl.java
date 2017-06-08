@@ -55,7 +55,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene,
             final String queryString ) {
 
-        Session session = super.getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
@@ -88,7 +88,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene,
             final String queryString ) {
 
-        Session session = super.getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
@@ -122,7 +122,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         if ( designElementDataVectors == null )
             return;
 
-        Session session = this.getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
 
         Hibernate.initialize( designElementDataVectors );
 
@@ -203,7 +203,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             // Hibernate.initialize( ba.getArrayDesignUsed() );
             //
             // BioMaterial bm = ba.getSampleUsed();
-            // EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
+            // EntityUtils.attach( session, bm, BioMaterial.class, bm.getId() );
             // Hibernate.initialize( bm );
             // Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
             // Hibernate.initialize( bioAssaysUsedIn );

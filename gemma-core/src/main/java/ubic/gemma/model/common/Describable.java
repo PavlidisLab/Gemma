@@ -106,6 +106,4 @@ public abstract class Describable implements Identifiable, Serializable {
         this.name = name;
     }
 
-
-
 }

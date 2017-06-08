@@ -27,21 +27,26 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
-import ubic.gemma.model.analysis.expression.diff.*;
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.io.File;
 import java.io.InputStream;
@@ -85,7 +90,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
     @Autowired
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
-    
+
     @Autowired
     private AclTestUtils aclTestUtils;
 
@@ -131,8 +136,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
 
-        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService
-                .thawFully( analyses.iterator().next() );
+        DifferentialExpressionAnalysis analysis = analyses.iterator().next();
+        differentialExpressionAnalysisService.thawFully( analysis );
 
         aclTestUtils.checkHasAcl( analysis );
         aclTestUtils.checkLacksAces( analysis );
@@ -164,7 +169,9 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 99, readIn.rows() );
+        System.out.println(readIn.toString());
         assertEquals( 6, readIn.columns() );
+
 
         expressionDataFileService.deleteAllFiles( ee );
 

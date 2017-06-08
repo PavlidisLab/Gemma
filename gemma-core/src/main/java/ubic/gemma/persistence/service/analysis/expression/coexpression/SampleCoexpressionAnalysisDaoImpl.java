@@ -61,7 +61,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         byte[] coexpressionMatrix = bac.doubleMatrixToBytes( matrix.getRawMatrix() );
         scm.setCoexpressionMatrix( coexpressionMatrix );
         sas.setSampleCoexpressionMatrix( scm );
-        this.getSessionFactory().getCurrentSession().save( sas );
+        this.getSession().save( sas );
 
         return sas;
     }

@@ -130,24 +130,9 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
 
     @Override
     public void removeDataForCompositeSequence( final CompositeSequence compositeSequence ) {
-        // rarely used.
-        String[] probeCoexpTypes = new String[] { "Mouse", "Human", "Rat", "Other" };
-
-        for ( String type : probeCoexpTypes ) {
-
-            final String dedvRemovalQuery = "delete dedv from RawExpressionDataVectorImpl dedv where dedv.designElement = ?";
-
-            final String ppcRemoveFirstQuery = "delete d from " + type
-                    + "ProbeCoExpressionImpl as p inner join p.firstVector d where d.designElement = ?";
-            final String ppcRemoveSecondQuery = "delete d from " + type
-                    + "ProbeCoExpressionImpl as p inner join p.secondVector d where d.designElement = ?";
-
-            int deleted = getHibernateTemplate().bulkUpdate( ppcRemoveFirstQuery, compositeSequence );
-            deleted += getHibernateTemplate().bulkUpdate( ppcRemoveSecondQuery, compositeSequence );
-            getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
-            log.info( "Deleted: " + deleted );
-        }
-
+        final String dedvRemovalQuery = "delete RawExpressionDataVectorImpl dedv where dedv.designElement = ?";
+        int deleted = getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
+        log.info( "Deleted: " + deleted );
     }
 
     @Override

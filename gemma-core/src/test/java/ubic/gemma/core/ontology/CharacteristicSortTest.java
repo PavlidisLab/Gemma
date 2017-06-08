@@ -65,7 +65,7 @@ public class CharacteristicSortTest extends BaseSpringContextTest {
         cl.add( new CharacteristicValueObject( VocabCharacteristic.Factory
                 .newInstance( "af", "aaaf", null, "aaaff", "http://aaaff", "af", null, null ) ) );
 
-        ( ( OntologyServiceImpl ) ontologyService ).sort( cl );
+        ontologyService.sort( cl );
 
         assertEquals( "bbbbb", cl.get( 0 ).getValue() );
 

@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.experiment.FactorValueImpl" table="FACTOR_VALUE" dynamic-insert="false" dynamic-update="false">
+   <class name="ubic.gemma.model.expression.experiment.FactorValue" table="FACTOR_VALUE" dynamic-insert="false" dynamic-update="false">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -28,7 +28,7 @@
          <key foreign-key="CHARACTERISTIC_FACTOR_VALUE_FKC">
             <column name="FACTOR_VALUE_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
    </class>
 </hibernate-mapping>

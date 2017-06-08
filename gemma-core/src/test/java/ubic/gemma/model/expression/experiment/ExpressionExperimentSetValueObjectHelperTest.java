@@ -19,17 +19,16 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.authentication.UserManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
@@ -47,16 +46,13 @@ import static org.junit.Assert.assertNotNull;
 public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringContextTest {
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ExpressionExperimentSetService expressionExperimentSetService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    UserManager userManager;
-
-    @Autowired
-    ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
     private Taxon tax1;
     private ExpressionExperiment ee = null;
@@ -83,12 +79,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
     @After
     public void tearDown() {
-
-        // remove by id because otherwise get HibernateException: reassociated object has dirty collection reference
         expressionExperimentService.remove( ee );
-
-        // getting "access is denied" error here, even with this.runAsAdmin()
-        // expressionExperimentSetService.remove( eeSet );
     }
 
     @Test

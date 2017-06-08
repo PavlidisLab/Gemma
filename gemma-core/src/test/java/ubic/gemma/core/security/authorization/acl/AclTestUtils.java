@@ -41,10 +41,10 @@ public class AclTestUtils {
     @Autowired
     private AclService aclService;
 
-    //@Autowired
+    @Autowired
     private ArrayDesignService arrayDesignService;
 
-    //@Autowired
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     /**

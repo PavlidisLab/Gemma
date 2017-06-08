@@ -339,7 +339,7 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
         assert dimToMatchBioAssays.size() == expandedBioAssays.size();
 
         this.data = expandedData;
-        this.setBioAssayDimension( new BioAssayDimensionValueObject( null ) );
+        this.setBioAssayDimension( new BioAssayDimensionValueObject( -1L ) );
         this.getBioAssayDimension().setSourceBioAssayDimension( sourceBioAssayDimension );
         this.getBioAssayDimension().setIsSubset( true ); // not exactly, but have to make clear it's not real.
         this.getBioAssayDimension().clearBioAssays();

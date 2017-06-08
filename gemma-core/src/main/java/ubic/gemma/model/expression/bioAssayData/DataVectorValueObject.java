@@ -68,7 +68,7 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
         assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
-        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
+        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment(), true );
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,

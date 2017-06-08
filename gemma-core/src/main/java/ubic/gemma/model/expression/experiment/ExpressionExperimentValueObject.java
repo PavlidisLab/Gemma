@@ -51,7 +51,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private String batchFetchEventType;
     private Integer bioAssayCount;
     private Integer bioMaterialCount = null;
-    private String clazz;
     private Integer coexpressionLinkCount = null;
     private Boolean currentUserHasWritePermission = null;
     private Boolean currentUserIsOwner = null;
@@ -103,7 +102,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     }
 
     /**
-     * Constructor using this VO for EESubSets - does not populate most of VO properties.
+     * Constructor using this VO for EESubSets - does not populate most of VO properties, only source experiment and the isSubset property.
      */
     public ExpressionExperimentValueObject( ExpressionExperimentSubSet ee ) {
         super( ee.getId() );
@@ -111,18 +110,31 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.sourceExperiment = ee.getSourceExperiment().getId();
     }
 
+    /**
+     * Populates curation details properties, accession, bio assay count, name, short name, experimental design and source.
+     *
+     * @param ee the experiment to load the values from.
+     */
     public ExpressionExperimentValueObject( ExpressionExperiment ee ) {
-        this( ee.getCurationDetails().getLastUpdated(), ee.getCurationDetails().getTroubled(),
-                new AuditEventValueObject( ee.getCurationDetails().getLastTroubledEvent() ),
-                ee.getCurationDetails().getNeedsAttention(),
-                new AuditEventValueObject( ee.getCurationDetails().getLastNeedsAttentionEvent() ),
-                ee.getCurationDetails().getCurationNote(),
-                new AuditEventValueObject( ee.getCurationDetails().getLastNoteUpdateEvent() ),
-                ee.getAccession().toString(), null, null, ee.getBioAssays().size(), null, ee.getClass().getName(), null,
-                null, null, null, null, null, null, null, null, null, null, null, null,
-                ee.getExperimentalDesign().getId(), null, null, null, null, null, null, null, ee.getId(), null, null,
-                null, null, null, null, null, ee.getName(), null, null, null, null, null, null, null, null,
-                ee.getShortName(), ee.getSource(), null, null, null, null );
+        this( ee, false );
+    }
+
+    /**
+     * Populates curation details properties, accession, bio assay count, name, short name, experimental design and source.
+     *
+     * @param ee   the experiment to load the values from.
+     * @param lite if set to true, does not populate most of values - only curation info, name, source, short name.
+     */
+    public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean lite ) {
+        super( ee );
+        this.shortName = ee.getShortName();
+        this.name = ee.getName();
+        this.source = ee.getSource();
+        if ( !lite ) {
+            this.bioAssayCount = ee.getBioAssays() != null ? ee.getBioAssays().size() : null;
+            this.accession = ee.getAccession() != null ? ee.getAccession().toString() : null;
+            this.experimentalDesign = ee.getExperimentalDesign() != null ? ee.getExperimentalDesign().getId() : null;
+        }
     }
 
     /**
@@ -134,14 +146,13 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this( otherBean.lastUpdated, otherBean.troubled, otherBean.lastTroubledEvent, otherBean.needsAttention,
                 otherBean.lastNeedsAttentionEvent, otherBean.curationNote, otherBean.lastNoteUpdateEvent,
                 otherBean.accession, otherBean.arrayDesignCount, otherBean.batchFetchEventType, otherBean.bioAssayCount,
-                otherBean.bioMaterialCount, otherBean.clazz, otherBean.coexpressionLinkCount,
-                otherBean.currentUserHasWritePermission, otherBean.currentUserIsOwner,
-                otherBean.dateArrayDesignLastUpdated, otherBean.dateBatchFetch, otherBean.dateCached,
-                otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis, otherBean.dateMissingValueAnalysis,
-                otherBean.datePcaAnalysis, otherBean.dateProcessedDataVectorComputation,
-                otherBean.designElementDataVectorCount, otherBean.differentialExpressionAnalyses,
-                otherBean.experimentalDesign, otherBean.externalDatabase, otherBean.externalUri,
-                otherBean.hasBothIntensities, otherBean.hasCoexpressionAnalysis,
+                otherBean.bioMaterialCount, otherBean.coexpressionLinkCount, otherBean.currentUserHasWritePermission,
+                otherBean.currentUserIsOwner, otherBean.dateArrayDesignLastUpdated, otherBean.dateBatchFetch,
+                otherBean.dateCached, otherBean.dateDifferentialAnalysis, otherBean.dateLinkAnalysis,
+                otherBean.dateMissingValueAnalysis, otherBean.datePcaAnalysis,
+                otherBean.dateProcessedDataVectorComputation, otherBean.designElementDataVectorCount,
+                otherBean.differentialExpressionAnalyses, otherBean.experimentalDesign, otherBean.externalDatabase,
+                otherBean.externalUri, otherBean.hasBothIntensities, otherBean.hasCoexpressionAnalysis,
                 otherBean.hasDifferentialExpressionAnalysis, otherBean.hasEitherIntensity,
                 otherBean.hasProbeSpecificForQueryGene, otherBean.id, otherBean.investigators, otherBean.isPublic,
                 otherBean.isShared, otherBean.isSubset, otherBean.linkAnalysisEventType, otherBean.minPvalue,
@@ -155,7 +166,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     private ExpressionExperimentValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
             Boolean needsAttention, AuditEventValueObject needsAttentionEvent, String curationNote,
             AuditEventValueObject noteEvent, String accession, Integer arrayDesignCount, String batchFetchEventType,
-            Integer bioAssayCount, Integer bioMaterialCount, String clazz, Integer coexpressionLinkCount,
+            Integer bioAssayCount, Integer bioMaterialCount, Integer coexpressionLinkCount,
             Boolean currentUserHasWritePermission, Boolean currentUserIsOwner, Date dateArrayDesignLastUpdated,
             Date dateBatchFetch, Date dateCached, Date dateDifferentialAnalysis, Date dateLinkAnalysis,
             Date dateMissingValueAnalysis, Date datePcaAnalysis, Date dateProcessedDataVectorComputation,
@@ -176,7 +187,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
         this.batchFetchEventType = batchFetchEventType;
         this.bioAssayCount = bioAssayCount;
         this.bioMaterialCount = bioMaterialCount;
-        this.clazz = clazz;
         this.coexpressionLinkCount = coexpressionLinkCount;
         this.currentUserHasWritePermission = currentUserHasWritePermission;
         this.currentUserIsOwner = currentUserIsOwner;
@@ -226,9 +236,17 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * Class methods
      * ********************************/
 
+    /**
+     * Creates a value object for either EE or EESubSet.
+     *
+     * @param bioAssaySet either EE or EESubSet instance.
+     * @return value object that represents the subset, or lite version of this VO for EE.
+     * @see this#ExpressionExperimentValueObject(ExpressionExperimentSubSet) for subSet VO description
+     * @see this#ExpressionExperimentValueObject(ExpressionExperiment, boolean) for lite VO description
+     */
     public static ExpressionExperimentValueObject createValueObject( BioAssaySet bioAssaySet ) {
         if ( bioAssaySet instanceof ExpressionExperiment ) {
-            return new ExpressionExperimentValueObject( ( ExpressionExperiment ) bioAssaySet );
+            return new ExpressionExperimentValueObject( ( ExpressionExperiment ) bioAssaySet, true );
         } else {
             return new ExpressionExperimentValueObject( ( ExpressionExperimentSubSet ) bioAssaySet );
         }
@@ -273,7 +291,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        result = prime * ( result + ( ( id == null ) ? 0 : id.hashCode() ) );
         return result;
     }
 
@@ -334,19 +352,6 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
 
     public void setBioMaterialCount( Integer bioMaterialCount ) {
         this.bioMaterialCount = bioMaterialCount;
-    }
-
-    /**
-     * <p>
-     * The type of BioAssaySet this represents.
-     * </p>
-     */
-    public String getClazz() {
-        return this.clazz;
-    }
-
-    public void setClazz( String clazz ) {
-        this.clazz = clazz;
     }
 
     public Integer getCoexpressionLinkCount() {

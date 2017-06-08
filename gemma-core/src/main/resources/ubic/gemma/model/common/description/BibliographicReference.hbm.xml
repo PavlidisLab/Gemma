@@ -70,7 +70,7 @@
          <key foreign-key="CHARACTERISTIC_BIBLIOGRAPHIC_REFERENCE_FKC">
             <column name="BIBLIOGRAPHIC_REFERENCE_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
       <set name="meshTerms" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />

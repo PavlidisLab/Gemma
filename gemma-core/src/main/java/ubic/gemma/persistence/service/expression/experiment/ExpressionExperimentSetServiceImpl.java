@@ -320,6 +320,10 @@ public class ExpressionExperimentSetServiceImpl extends ExpressionExperimentSetS
             }
         }
 
+        if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
+            throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
+        }
+
         this.expressionExperimentSetDao.update( expressionExperimentSet );
     }
 

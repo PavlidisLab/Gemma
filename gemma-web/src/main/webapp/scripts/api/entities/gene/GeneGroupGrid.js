@@ -108,7 +108,7 @@ Gemma.GeneGroupPanel = Ext.extend( Ext.grid.EditorGridPanel, {
                  sortable : true,
                  width : 0.1,
                  renderer : function( value, metadata, record, rowIndex, colIndex, store ) {
-                    var result = Gemma.SecurityManager.getSecurityLink( "ubic.gemma.model.genome.gene.GeneSetImpl",
+                    var result = Gemma.SecurityManager.getSecurityLink( "ubic.gemma.model.genome.gene.GeneSet",
                        record.get( 'id' ), record.get( 'isPublic' ), record.get( 'isShared' ), record
                           .get( 'userCanWrite' ), null, null, null, record.get( 'usedOwned' ) );
                     return result;

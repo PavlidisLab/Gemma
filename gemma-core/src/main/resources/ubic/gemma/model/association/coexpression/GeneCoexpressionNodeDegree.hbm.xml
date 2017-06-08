@@ -4,7 +4,7 @@
           "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-	<class name="ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeImpl" table="COEXPRESSION_NODE_DEGREE"
+	<class name="ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree" table="COEXPRESSION_NODE_DEGREE"
 		dynamic-insert="false" dynamic-update="false">
 		<cache usage="read-write" />
 		<id name="geneId" type="java.lang.Long" unsaved-value="null">

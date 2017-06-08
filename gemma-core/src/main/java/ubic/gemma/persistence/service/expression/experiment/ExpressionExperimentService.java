@@ -73,7 +73,6 @@ public interface ExpressionExperimentService extends BaseVoEnabledService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
 
-    Integer count();
 
     /**
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
@@ -89,6 +88,9 @@ public interface ExpressionExperimentService extends BaseVoEnabledService<Expres
      * @return collection of ids or an empty collection
      */
     Collection<Long> filter( String searchString );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> findByAccession( String accession );
@@ -345,9 +347,6 @@ public interface ExpressionExperimentService extends BaseVoEnabledService<Expres
     Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
             String accession );
 
-//    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
-//    Collection<ExpressionExperimentValueObject> loadAllValueObjects();
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
@@ -366,6 +365,9 @@ public interface ExpressionExperimentService extends BaseVoEnabledService<Expres
 
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<ExpressionExperiment> load( Collection<Long> ids );
 
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the

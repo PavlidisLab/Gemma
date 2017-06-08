@@ -14,32 +14,19 @@
  */
 package ubic.gemma.model.association.phenotype;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
+import gemma.gsec.authentication.UserDetailsImpl;
+import gemma.gsec.authentication.UserManager;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-import gemma.gsec.authentication.UserDetailsImpl;
-import gemma.gsec.authentication.UserManager;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
@@ -47,50 +34,39 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseStatisticsValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeAssPubValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.PhenotypeValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.SimpleTreeValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
-import ubic.gemma.core.ontology.OntologyService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.*;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * This test will likely fail if the full disease ontology is configured to load; instead we want to load a small 'fake'
  * one.
- * 
+ *
  * @author nicolas
  */
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
-    @Autowired
-    private OntologyService os;
-
-    @Autowired
-    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
-
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
-
-    @Autowired
-    private GeneService geneService;
-
-    private static boolean dosLoaded = false;
-
     private static final String TEST_PHENOTYPE_URI = "http://purl.obolibrary.org/obo/DOID_162";
     private static final String TEST_EXTERNAL_DATABASE = "EXTERNAL_DATABASE_TEST_NAME";
-
-    private Gene gene = null;
-
+    private static boolean dosLoaded = false;
     private final Integer geneNCBI = new Integer( RandomStringUtils.randomNumeric( 6 ) );
 
-    private LiteratureEvidenceValueObject litEvidence = null;
+    @Autowired
+    private OntologyService os;
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
+    @Autowired
+    private GeneService geneService;
+    @Autowired
+    private UserManager userManager;
 
+    private Gene gene = null;
+    private LiteratureEvidenceValueObject litEvidence = null;
     private Taxon humanTaxon = null;
 
     @Before
@@ -140,9 +116,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                     RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
-
-    @Autowired
-    private UserManager userManager;
 
     @Test
     public void testFindBibliographicReference() {
@@ -240,7 +213,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNotNull( evidences );
         assertEquals( 1, evidences.size() );
 
-        EvidenceValueObject evidence = evidences.iterator().next();
+        EvidenceValueObject<? extends PhenotypeAssociation> evidence = evidences.iterator().next();
         assertEquals( evidence.getGeneNCBI(), litEvidence.getGeneNCBI() );
 
         // 2- load
@@ -333,7 +306,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     private void createLiteratureEvidence( int geneNCBIid, String uri ) {
-        this.litEvidence = new LiteratureEvidenceValueObject(-1L);
+        this.litEvidence = new LiteratureEvidenceValueObject( -1L );
         this.litEvidence.setDescription( "Test Description" );
         this.litEvidence.setEvidenceCode( "TAS" );
         this.litEvidence.setGeneNCBI( geneNCBIid );

@@ -52,7 +52,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public void changePassword( User user, String password ) {
         user.setPassword( password );
-        this.getSessionFactory().getCurrentSession().update( user );
+        this.getSession().update( user );
     }
 
     @Override
@@ -68,7 +68,7 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
     @Override
     public User findByUserName( final String userName ) {
-        Session session = this.getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
 
         //noinspection unchecked
         List<User> users = session.createCriteria( User.class ).setFlushMode( FlushMode.MANUAL )
@@ -87,8 +87,8 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery(
-                "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user " )
+        return this.getSession().createQuery(
+                "select gr.authorities from UserGroup gr inner join gr.groupMembers m where m = :user " )
                 .setParameter( "user", user ).list();
 
     }
@@ -96,8 +96,8 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
     @Override
     public Collection<UserGroup> loadGroups( User user ) {
         //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user " )
+        return this.getSession()
+                .createQuery( "select gr from UserGroup gr inner join gr.groupMembers m where m = :user " )
                 .setParameter( "user", user ).list();
     }
 
@@ -125,23 +125,23 @@ public class UserDaoImpl extends AbstractDao<User> implements UserDao {
 
         // FIXME for reasons that remain obscure, I cannot get this to work using a regular session.update.
         // May 11th 2015 just spent 2 hours on this with no result or leads - Steven.
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
+        this.getSession().createSQLQuery( "UPDATE CONTACT SET PASSWORD=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getPassword() ).executeUpdate();
 
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET USER_NAME=:a WHERE ID=:id" )
+        this.getSession().createSQLQuery( "UPDATE CONTACT SET USER_NAME=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getUserName() ).executeUpdate();
 
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
+        this.getSession().createSQLQuery( "UPDATE CONTACT SET EMAIL=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getEmail() ).executeUpdate();
 
-        this.getSessionFactory().getCurrentSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
+        this.getSession().createSQLQuery( "UPDATE CONTACT SET ENABLED=:a WHERE ID=:id" )
                 .setParameter( "id", user.getId() ).setParameter( "a", user.getEnabled() ? 1 : 0 ).executeUpdate();
 
     }
 
     private User handleFindByEmail( final String email ) {
         //noinspection unchecked
-        List<User> list = this.getSessionFactory().getCurrentSession()
+        List<User> list = this.getSession()
                 .createQuery( "from User c where c.email = :email" ).setParameter( "email", email ).list();
         Set<User> results = new HashSet<>( list );
         User result = null;

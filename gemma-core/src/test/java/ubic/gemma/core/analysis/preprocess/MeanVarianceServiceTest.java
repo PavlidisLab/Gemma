@@ -186,7 +186,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
         aclTestUtils.checkEEAcls( ee );
-
+        eeService.thaw( ee );
         assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
 
         // convert byte[] to array[]

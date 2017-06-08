@@ -60,7 +60,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
 
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession()
+        Criteria queryObject = this.getSession()
                 .createCriteria( BibliographicReference.class );
 
         /*
@@ -100,7 +100,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
 
         for ( Collection<BibliographicReference> batch : BatchIterator.batches( records, 200 ) ) {
             //noinspection unchecked
-            List<Object[]> os = this.getSession().createQuery( query ).setParameter( "recs", batch ).list();
+            List<Object[]> os = this.getSession().createQuery( query ).setParameterList( "recs", batch ).list();
             for ( Object[] o : os ) {
                 ExpressionExperiment e = ( ExpressionExperiment ) o[0];
                 BibliographicReference b = ( BibliographicReference ) o[1];

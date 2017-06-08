@@ -61,7 +61,9 @@ public class ExpressionExperimentSetDaoImpl
 
     @Override
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
-        return this.findByName( bioAssaySet.getName() );
+        //noinspection unchecked
+        return this.getSession().createQuery( "select ees from ExpressionExperimentSet ees inner join ees.experiments e where e = :ee" )
+                .setParameter( "ee", bioAssaySet ).list();
     }
 
     @Override
@@ -101,7 +103,7 @@ public class ExpressionExperimentSetDaoImpl
 
     @Override
     public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
-        Session session = this.getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
         session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet.getTaxon() );
@@ -165,7 +167,7 @@ public class ExpressionExperimentSetDaoImpl
         StopWatch timer = new StopWatch();
         timer.start();
         //noinspection unchecked
-        List<Object[]> withCoexp = this.getSessionFactory().getCurrentSession().createQuery(
+        List<Object[]> withCoexp = this.getSession().createQuery(
                 "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysisImpl an join e.experiments ea "
                         + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
@@ -181,7 +183,7 @@ public class ExpressionExperimentSetDaoImpl
          * have more than one)
          */
         //noinspection unchecked
-        List<Object[]> withDiffEx = this.getSessionFactory().getCurrentSession().createQuery(
+        List<Object[]> withDiffEx = this.getSession().createQuery(
                 "select e.id, count(distinct an.experimentAnalyzed) "
                         + "from ExpressionExperimentSet e, DifferentialExpressionAnalysis an join e.experiments ea "
                         + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
@@ -218,7 +220,7 @@ public class ExpressionExperimentSetDaoImpl
                 + " from ExpressionExperimentSet as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
                 + idClause + " group by eeset.id ";
 
-        Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+        Query queryObject = this.getSession().createQuery( queryString );
         if ( ids != null )
             queryObject.setParameterList( "ids", ids );
         return queryObject;

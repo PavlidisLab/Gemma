@@ -597,7 +597,7 @@ Ext
                                                + '">' + value + '</a>';
 
                                          }
-                                         if ( record.get( 'entityClazz' ) === "ubic.gemma.model.genome.gene.GeneSetImpl" ) {
+                                         if ( record.get( 'entityClazz' ) === "ubic.gemma.model.genome.gene.GeneSet" ) {
                                             return '<a target="_blank" href="' + Gemma.LinkRoots.geneSetPage
                                                + record.get( "entityId" ) + '">' + value + '</a>';
                                          }

@@ -25,27 +25,22 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.persister.PersisterHelper;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author Paul
- * @version $Id$
  */
 @Service
 public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelperService {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+    @Autowired
+    private Persister arrayDesignPersiter;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeHelperService#persistMerging(ubic.gemma.model.expression
-     * .arrayDesign.ArrayDesign, ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.util.Collection, boolean,
-     * java.util.Collection)
-     */
     @Override
     @Transactional
     public ArrayDesign persistMerging( ArrayDesign result, ArrayDesign arrayDesign,
@@ -78,7 +73,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
             arrayDesign.setMergedInto( result );
             audit( arrayDesign, "Merged into " + result );
 
-            result = arrayDesignService.create( result );
+            result = ( ArrayDesign ) arrayDesignPersiter.persist( result );
         }
 
         return result;

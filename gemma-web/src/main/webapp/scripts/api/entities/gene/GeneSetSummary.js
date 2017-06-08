@@ -45,7 +45,7 @@ Gemma.GeneSetSummary = Ext
                statusString += "<img src='/Gemma/images/icons/shield.png' height='16' width='16' "
                   + "title='Protected; cannot have members changed, usually applies to automatically generated groups.' />&nbsp;";
             }
-            var sl = Gemma.SecurityManager.getSecurityLink( "ubic.gemma.model.genome.gene.GeneSetImpl", g.id,
+            var sl = Gemma.SecurityManager.getSecurityLink( "ubic.gemma.model.genome.gene.GeneSet", g.id,
                g.isPublic, g.isShared, g.userCanWrite, null, null, null, g.userOwned );
 
             statusString += sl;

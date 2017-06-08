@@ -592,7 +592,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
             for ( Gene g : genes ) {
 
-                GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+                GeneSetMember gsm = GeneSet.containsGene( g, gset );
 
                 // Gene not in list create memember and add it.
                 if ( gsm == null ) {
@@ -660,7 +660,7 @@ public class GeneSetServiceImpl implements GeneSetService {
 
         for ( Gene g : genes ) {
 
-            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+            GeneSetMember gsm = GeneSet.containsGene( g, gset );
 
             // Gene not in list create memember and add it.
             if ( gsm == null ) {

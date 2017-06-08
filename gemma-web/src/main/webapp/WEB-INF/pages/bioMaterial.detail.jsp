@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="bioMaterial" scope="request"
-	class="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" />
+	class="ubic.gemma.model.expression.biomaterial.BioMaterial" />
 
 <head>
 <title><fmt:message key="bioMaterial.details" /></title>

@@ -52,7 +52,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     public Collection<GeneSet> findByGene( Gene gene ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select gs from GeneSetImpl gs inner join gs.members m inner join m.gene g where g = :g" )
+                .createQuery( "select gs from GeneSet gs inner join gs.members m inner join m.gene g where g = :g" )
                 .setParameter( "g", gene ).list();
     }
 
@@ -60,7 +60,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     public Collection<GeneSet> findByName( String name ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select gs from GeneSetImpl gs where gs.name like :name order by gs.name" )
+                .createQuery( "select gs from GeneSet gs where gs.name like :name order by gs.name" )
                 .setParameter( "name", name + "%" ).list();
     }
 
@@ -73,7 +73,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         assert taxon != null;
         // slow? would it be faster to just findByName and then restrict taxon?
         List result = this.getSession().createQuery(
-                "select gs from GeneSetImpl gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
+                "select gs from GeneSet gs join gs.members gm join gm.gene g where g.taxon = :taxon and gs.name like :query order by gs.name" )
                 .setParameter( "query", name + "%" ).setParameter( "taxon", taxon ).list();
         if ( timer.getTime() > 500 )
             log.info( "Find geneSets by name took " + timer.getTime() + "ms query=" + name + " taxon=" + taxon );
@@ -87,7 +87,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             return this.loadAll();
         //noinspection unchecked
         return this.getSession().createQuery(
-                "select distinct gs from GeneSetImpl gs join gs.members m join m.gene g where g.taxon = :t" )
+                "select distinct gs from GeneSet gs join gs.members m join m.gene g where g.taxon = :t" )
                 .setParameter( "t", tax ).list();
     }
 
@@ -124,7 +124,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
             res.setGeneIds( new HashSet<Long>() );
             //noinspection unchecked
             res.getGeneIds().addAll( this.getSession().createQuery(
-                    "select genes.id from GeneSetImpl g join g.members m join m.gene genes where g.id = :id" )
+                    "select genes.id from GeneSet g join g.members m join m.gene genes where g.id = :id" )
                     .setParameter( "id", res.getId() ).list() );
         }
 
@@ -141,7 +141,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
         // Left join: includes one that have no members. Caller has to filter them out if they need to.
         //noinspection unchecked
         List<Object[]> list = this.getSession().createQuery(
-                "select g.id, g.description, count(m), g.name from GeneSetImpl g"
+                "select g.id, g.description, count(m), g.name from GeneSet g"
                         + " left join g.members m where g.id in (:ids) group by g.id" ).setParameterList( "ids", ids )
                 .list();
 
@@ -167,7 +167,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     @Override
     public int getGeneCount( Long id ) {
         return ( Integer ) this.getSession()
-                .createQuery( "select count(i) from GeneSetImpl g join g.members i where g.id = :id" )
+                .createQuery( "select count(i) from GeneSet g join g.members i where g.id = :id" )
                 .setParameter( "id", id ).uniqueResult();
     }
 
@@ -175,7 +175,7 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
     public Taxon getTaxon( Long id ) {
         // get one gene, check the taxon.
         Query q = this.getSession()
-                .createQuery( "select g from GeneSetImpl gs join gs.members m join m.gene g where gs.id = :id" )
+                .createQuery( "select g from GeneSet gs join gs.members m join m.gene g where gs.id = :id" )
                 .setParameter( "id", id ).setMaxResults( 1 );
 
         Gene g = ( Gene ) q.uniqueResult();
@@ -184,8 +184,8 @@ public class GeneSetDaoImpl extends AbstractDao<GeneSet> implements GeneSetDao {
 
     private Map<Long, Taxon> getTaxa( Collection<Long> ids ) {
         // fast
-        Query q = this.getSessionFactory().getCurrentSession().createQuery(
-                "select distinct gs.id, t from GeneSetImpl gs join gs.members m"
+        Query q = this.getSession().createQuery(
+                "select distinct gs.id, t from GeneSet gs join gs.members m"
                         + " join m.gene g join g.taxon t where gs.id in (:ids) group by gs.id" )
                 .setParameterList( "ids", ids );
 

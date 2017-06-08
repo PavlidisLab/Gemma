@@ -58,7 +58,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
-            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
+            Criteria queryObject = this.getSession().createCriteria( GeneProduct.class )
                     .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 
             BusinessKey.checkValidKey( geneProduct );
@@ -146,9 +146,9 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes;
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where  gp.name = :search";
+        final String queryString = "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search";
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -162,9 +162,9 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     @Override
     protected Collection<Gene> handleGetGenesByNcbiId( String search ) throws Exception {
         Collection<Gene> genes;
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where gp.ncbiGi = :search";
+        final String queryString = "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search";
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 

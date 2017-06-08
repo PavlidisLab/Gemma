@@ -19,19 +19,15 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.authentication.UserManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -47,22 +43,10 @@ import static org.junit.Assert.*;
 public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ExpressionExperimentSetService expressionExperimentSetService;
-
-    @Autowired
-    UserManager userManager;
-
-    @Autowired
-    ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
-
-    @Autowired
-    BioMaterialService bioMaterialService;
-
-    @Autowired
-    BioAssayService bioAssayService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     private ExpressionExperiment ee1 = null;
     private ExpressionExperiment ee2 = null;
@@ -103,14 +87,9 @@ public class ExpressionExperimentSetServiceTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-
-        // remove by id because otherwise get HibernateException: re-associated object has dirty collection reference
         expressionExperimentService.remove( ee1 );
         expressionExperimentService.remove( ee2 );
         expressionExperimentService.remove( eeMouse );
-
-        // getting "access is denied" error here, even with this.runAsAdmin()
-        // expressionExperimentSetService.remove( eeSet );
     }
 
     @Test

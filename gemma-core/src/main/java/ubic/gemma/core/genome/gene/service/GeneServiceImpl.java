@@ -74,6 +74,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Autowired
     public GeneServiceImpl( GeneDao geneDao ) {
         super( geneDao );
+        this.geneDao = geneDao;
     }
 
     @Autowired
@@ -89,11 +90,6 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     @Autowired
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
         this.gene2GOAssociationService = gene2GOAssociationService;
-    }
-
-    @Autowired
-    public void setGeneDao( GeneDao geneDao ) {
-        this.geneDao = geneDao;
     }
 
     @Autowired
@@ -155,11 +151,13 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
      * @see GeneService#findByNCBIId(Integer)
      */
     @Override
+    @Transactional(readOnly = true)
     public Gene findByNCBIId( Integer accession ) {
         return this.geneDao.findByNcbiId( accession );
     }
 
     @Override
+    @Transactional(readOnly = true)
     public GeneValueObject findByNCBIIdValueObject( Integer accession ) {
         Gene gene = findByNCBIId( accession );
         return new GeneValueObject( gene );
@@ -180,6 +178,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
      * @see GeneService#findByOfficialName(String)
      */
     @Override
+    @Transactional(readOnly = true)
     public Collection<Gene> findByOfficialName( final String officialName ) {
         return this.geneDao.findByOfficialName( officialName );
     }
@@ -575,6 +574,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thaw( Collection<Gene> genes ) {
         for ( Gene g : genes ) {
             thaw( g );
@@ -591,6 +591,7 @@ public class GeneServiceImpl extends VoEnabledService<Gene, GeneValueObject> imp
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thawLiter( Collection<Gene> genes ) {
         for ( Gene g : genes ) {
             thawLiter( g );

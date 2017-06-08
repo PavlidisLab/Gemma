@@ -23,6 +23,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
@@ -55,6 +56,7 @@ public class DatasetsWebService extends WebService {
     private static final String ERROR_MSG_PROP_NOT_FOUND_DETAIL = "Property of name '%s' not recognized.";
 
     private ExpressionExperimentService expressionExperimentService;
+    private ArrayDesignService arrayDesignService;
     private BioAssayDao bioAssayDao;
 
     /* ********************************
@@ -71,8 +73,10 @@ public class DatasetsWebService extends WebService {
      * Constructor for service autowiring
      */
     @Autowired
-    public DatasetsWebService( ExpressionExperimentService expressionExperimentService, BioAssayDao bioAssayDao ) {
+    public DatasetsWebService( ExpressionExperimentService expressionExperimentService,
+            ArrayDesignService arrayDesignService, BioAssayDao bioAssayDao ) {
         this.expressionExperimentService = expressionExperimentService;
+        this.arrayDesignService = arrayDesignService;
         this.bioAssayDao = bioAssayDao;
     }
 
@@ -83,8 +87,7 @@ public class DatasetsWebService extends WebService {
     /**
      * Lists all datasets available in gemma.
      *
-     * @param accession optional parameter, filtering the results by accession - either provide the accession gsm id, or the gemma ID of
-     *                  appropriate database entry.
+     * @param accession optional parameter, filtering the results by accession - provide the accession gsm id.
      * @param offset    optional parameter (defaults to 0) skips the specified amount of the datasets when retrieving them from the database.
      * @param limit     optional parameter (defaults to 20) limits the result to specified amount of datasets. Use 0 for no limit.
      * @param sort      optional parameter (defaults to +id) sets the ordering property and direction. Format is [+,-][property name].
@@ -124,7 +127,7 @@ public class DatasetsWebService extends WebService {
      * Retrieves single dataset based on the given identifier.
      *
      * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
-     *                   is most efficient.
+     *                   is more efficient.
      */
     @GET
     @Path("/{datasetArg: [a-zA-Z0-9\\.]+}")
@@ -136,14 +139,26 @@ public class DatasetsWebService extends WebService {
     ) {
         //FIXME currently not filtering out troubled
         Object response = datasetArg.getValueObject( expressionExperimentService );
-        if ( response == null ) {
-            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
-                    ERROR_MSG_DATASET_NOT_FOUND );
-            WellComposedErrorBody
-                    .addExceptionFields( error, new IllegalArgumentException( datasetArg.getNullCause() ) );
-            response = error;
-        }
-        return Responder.autoCode( response, sr );
+        return this.autoCodeResponse( datasetArg, response, sr );
+    }
+
+    /**
+     * Retrieves the platforms for given experiment
+     *
+     * @param datasetArg can either be the ExpressionExperiment ID or, its short name (e.g. GSE1234). Retrieval by ID
+     *                   is more efficient.
+     */
+    @GET
+    @Path("/{datasetArg: [a-zA-Z0-9\\.]+}/platforms")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public ResponseDataObject datasetPlatforms( // Params:
+            @PathParam("datasetArg") DatasetArg<Object> datasetArg, // Optional, default null
+            @Context final HttpServletResponse sr // The servlet response, needed for response code setting.
+    ) {
+        //FIXME currently not filtering out troubled
+        Object response = datasetArg.getPlatforms( expressionExperimentService, arrayDesignService );
+        return this.autoCodeResponse( datasetArg, response, sr );
     }
 
 
@@ -255,6 +270,21 @@ public class DatasetsWebService extends WebService {
         Collection<Characteristic> chars = experiment.getCharacteristics();
 
         return prepareEEAnnotationsUnstructured( bioAssays, chars );
+    }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
+
+    private ResponseDataObject autoCodeResponse( DatasetArg datasetArg, Object response, HttpServletResponse sr ) {
+        if ( response == null ) {
+            WellComposedErrorBody error = new WellComposedErrorBody( Response.Status.NOT_FOUND,
+                    ERROR_MSG_DATASET_NOT_FOUND );
+            WellComposedErrorBody
+                    .addExceptionFields( error, new IllegalArgumentException( datasetArg.getNullCause() ) );
+            response = error;
+        }
+        return Responder.autoCode( response, sr );
     }
 
     private String[] getTagString( Characteristic characteristic ) {

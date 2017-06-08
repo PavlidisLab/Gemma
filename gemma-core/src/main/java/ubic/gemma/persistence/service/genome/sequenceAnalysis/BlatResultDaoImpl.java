@@ -48,7 +48,7 @@ public class BlatResultDaoImpl extends BlatResultDaoBase {
     public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatResult.class );
+        Criteria queryObject = this.getSession().createCriteria( BlatResult.class );
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
 

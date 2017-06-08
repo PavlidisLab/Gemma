@@ -271,7 +271,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = convert( metaData, matrix );
 
-        experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
+        experiment = ( ExpressionExperiment ) persisterHelper.persist( experiment );
 
         assert experiment.getShortName() != null;
 

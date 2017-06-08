@@ -50,7 +50,7 @@ public class QuantitationTypeDaoImpl extends VoEnabledDao<QuantitationType, Quan
 
     @Override
     public QuantitationType find( QuantitationType quantitationType ) {
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
+        Criteria queryObject = this.getSession().createCriteria( QuantitationType.class );
         BusinessKey.addRestrictions( queryObject, quantitationType );
         return ( QuantitationType ) queryObject.uniqueResult();
     }

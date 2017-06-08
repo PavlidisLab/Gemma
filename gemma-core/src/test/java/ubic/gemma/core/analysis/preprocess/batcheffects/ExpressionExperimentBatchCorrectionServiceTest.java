@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoServiceTest {
 

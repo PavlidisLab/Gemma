@@ -39,6 +39,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
+    @Transactional
     public O findOrCreate( O entity ) {
         return mainDao.findOrCreate( entity );
     }
@@ -56,20 +57,25 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     }
 
     @Override
+    @Transactional
     public Collection<O> load( Collection<Long> ids ) {
         return mainDao.load( ids );
     }
 
     @Override
+    @Transactional
     public O load( Long id ) {
         return mainDao.load( id );
     }
 
     @Override
+    @Transactional
     public Collection<O> loadAll() {
         return mainDao.loadAll();
     }
 
+    @Override
+    @Transactional
     public int countAll() {
         return this.loadAll().size();
     }

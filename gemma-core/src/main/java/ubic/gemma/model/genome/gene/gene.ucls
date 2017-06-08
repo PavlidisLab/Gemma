@@ -47,8 +47,8 @@
       <operations public="false" package="false" protected="true" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="6" language="java" name="ubic.gemma.model.genome.gene.GeneSetImpl" project="gemma"
-    file="/gemma/src/main/java/ubic/gemma/model/genome/gene/GeneSetImpl.java" binary="false" corner="BOTTOM_RIGHT">
+  <class id="6" language="java" name="ubic.gemma.model.genome.gene.GeneSet" project="gemma"
+    file="/gemma/src/main/java/ubic/gemma/model/genome/gene/GeneSet.java" binary="false" corner="BOTTOM_RIGHT">
     <position height="63" width="148" x="868" y="49"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 
       visibility="true">      

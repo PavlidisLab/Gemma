@@ -31,7 +31,7 @@ import java.util.HashSet;
  *
  * @author Paul
  */
-public abstract class UserGroup extends AbstractAuditable implements gemma.gsec.model.UserGroup {
+public class UserGroup extends AbstractAuditable implements gemma.gsec.model.UserGroup {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -46,7 +46,7 @@ public abstract class UserGroup extends AbstractAuditable implements gemma.gsec.
     public UserGroup() {
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "JpaAttributeMemberSignatureInspection" })
     @Override
     public Collection<GroupAuthority> getAuthorities() {
         return this.authorities;
@@ -58,7 +58,7 @@ public abstract class UserGroup extends AbstractAuditable implements gemma.gsec.
         this.authorities = ( Collection<GroupAuthority> ) authorities;
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "JpaAttributeMemberSignatureInspection" })
     @Override
     public Collection<User> getGroupMembers() {
         return this.groupMembers;
@@ -69,7 +69,6 @@ public abstract class UserGroup extends AbstractAuditable implements gemma.gsec.
     public <T extends User> void setGroupMembers( Collection<T> groupMembers ) {
         this.groupMembers = ( Collection<User> ) groupMembers;
     }
-
     /**
      * Constructs new instances of {@link UserGroup}.
      */
@@ -78,7 +77,7 @@ public abstract class UserGroup extends AbstractAuditable implements gemma.gsec.
          * Constructs a new instance of {@link UserGroup}.
          */
         public static UserGroup newInstance() {
-            return new UserGroupImpl();
+            return new UserGroup();
         }
 
     }

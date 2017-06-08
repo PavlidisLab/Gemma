@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneImpl;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -51,7 +50,7 @@ public class GffParserTest extends TestCase {
         Collection<Gene> res = parser.getResults();
 
         for ( Object object : res ) {
-            assertEquals( GeneImpl.class, object.getClass() );
+            assertEquals( Gene.class, object.getClass() );
             Gene gene = ( Gene ) object;
             assertTrue( gene.getName() != null );
             assertFalse( gene.getName().contains( "\"" ) );

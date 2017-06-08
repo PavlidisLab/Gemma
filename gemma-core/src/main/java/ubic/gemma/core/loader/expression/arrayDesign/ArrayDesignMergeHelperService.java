@@ -21,7 +21,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public interface ArrayDesignMergeHelperService {
 
@@ -29,14 +28,11 @@ public interface ArrayDesignMergeHelperService {
      * Finalize the assembly and persistence of the merged array design.
      * 
      * @param result the final merged design
-     * @param arrayDesign
-     * @param otherArrayDesigns
      * @param mergeWithExisting don't make a new array design, merge it into the one given as the first argument
      * @param newProbes Probes that have to be added to make up the merged design. In the case of "mergeWithExisting",
      *        this might even be empty.
      * @return the final persistent merged design
      */
-    public ArrayDesign persistMerging( ArrayDesign result, ArrayDesign arrayDesign,
-            Collection<ArrayDesign> otherArrayDesigns, boolean mergeWithExisting,
-            Collection<CompositeSequence> newProbes );
+    ArrayDesign persistMerging( ArrayDesign result, ArrayDesign arrayDesign, Collection<ArrayDesign> otherArrayDesigns,
+            boolean mergeWithExisting, Collection<CompositeSequence> newProbes );
 }

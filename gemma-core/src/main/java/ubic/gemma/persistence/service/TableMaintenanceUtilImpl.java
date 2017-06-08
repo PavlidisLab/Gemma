@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author paul
  */
 @Service
-public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
+public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
@@ -72,7 +72,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
      * The location where reports are stored.
      */
     private static final String DB_INFO_DIR = "DbReports";
-    private static final Log log = LogFactory.getLog( TableMaintenanceUtilImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired
     private AuditEventService auditEventService;
 

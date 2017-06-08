@@ -69,7 +69,7 @@ public class BlatAssociationDaoImpl extends BlatAssociationDaoBase {
         for ( GeneProduct geneProduct : gene.getProducts() ) {
 
             BusinessKey.checkValidKey( geneProduct );
-            Criteria queryObject = super.getSessionFactory().getCurrentSession()
+            Criteria queryObject = this.getSession()
                     .createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {

@@ -45,7 +45,7 @@
          </many-to-one>
       </subclass> 
       <subclass name="ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationImpl" discriminator-value="AnnotationAssociationImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         <many-to-one name="source" class="ubic.gemma.model.common.description.ExternalDatabaseImpl"  lazy="proxy" fetch="select">
+         <many-to-one name="source" class="ubic.gemma.model.common.description.ExternalDatabase"  lazy="proxy" fetch="select">
             <column name="SOURCE_FK" not-null="false" sql-type="BIGINT"/>
          </many-to-one>
       </subclass>

@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,7 +76,8 @@ import java.util.*;
  */
 @Service
 @Transactional
-public class ExpressionExperimentServiceImpl extends VoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
+public class ExpressionExperimentServiceImpl
+        extends VoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject>
         implements ExpressionExperimentService {
 
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
@@ -286,9 +288,9 @@ public class ExpressionExperimentServiceImpl extends VoEnabledService<Expression
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Integer count() {
-        return this.expressionExperimentDao.countAll();
+    public void remove( Long id ) {
+        // Can not call DAO directly since we have to do some service-layer level house keeping
+        this.remove( this.load( id ) );
     }
 
     /**
@@ -338,15 +340,16 @@ public class ExpressionExperimentServiceImpl extends VoEnabledService<Expression
         Collection<ExpressionExperimentSet> sets = this.expressionExperimentSetService.find( ee );
         for ( ExpressionExperimentSet eeset : sets ) {
             if ( eeset.getExperiments().size() == 1 && eeset.getExperiments().iterator().next().equals( ee ) ) {
-                this.expressionExperimentSetService.remove( eeset );
+                log.info( "Removing from set " + eeset );
+                this.expressionExperimentSetService
+                        .remove( eeset ); // remove the set because in only contains this experiment
             } else {
                 log.info( "Removing " + ee + " from " + eeset );
                 eeset.getExperiments().remove( ee );
-                this.expressionExperimentSetService.update( eeset );
+                this.expressionExperimentSetService.update( eeset ); // update set to not reference this experiment.
             }
         }
-
-        this.expressionExperimentDao.remove( ee );
+        this.expressionExperimentDao.remove( ee.getId() );
     }
 
     /**
@@ -955,6 +958,7 @@ public class ExpressionExperimentServiceImpl extends VoEnabledService<Expression
     }
 
     @Override
+    @Transactional(readOnly = true)
     public void thawLiter( final ExpressionExperiment expressionExperiment ) {
         this.expressionExperimentDao.thawBioAssaysLiter( expressionExperiment );
     }

@@ -242,8 +242,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
-            c = expressionExperimentPrePersistService.prepare( ee, c );
-            ee = persisterHelper.persist( ee, c );
+            ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
             persistedResult.add( ee );
             log.debug( "Persisted " + seriesAccession );
 
@@ -772,6 +771,7 @@ public class GeoServiceImpl extends AbstractGeoService {
                 this.expressionExperimentService.thaw( expressionExperiment );
                 this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
+                this.expressionExperimentService.thaw( expressionExperiment );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );
                 }
@@ -779,7 +779,6 @@ public class GeoServiceImpl extends AbstractGeoService {
             } else if ( entity instanceof ArrayDesign ) {
                 adsToUpdate.add( ( ArrayDesign ) entity );
             }
-
         }
 
         for ( ArrayDesign arrayDesign : adsToUpdate ) {

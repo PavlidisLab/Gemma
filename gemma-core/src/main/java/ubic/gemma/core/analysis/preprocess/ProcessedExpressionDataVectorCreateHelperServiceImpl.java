@@ -81,12 +81,9 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Transactional
     public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
         ee = processedDataService.createProcessedDataVectors( ee );
-        this.eeService.thawLite( ee );
-
+        //this.eeService.thawLite( ee );
         assert ee.getNumberOfDataVectors() != null;
-
         audit( ee, "" );
-
         return ee;
     }
 

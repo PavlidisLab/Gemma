@@ -28,7 +28,7 @@ import ubic.gemma.model.association.Gene2GOAssociationImpl;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.TreatmentImpl;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -54,7 +54,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from CharacteristicImpl where value not like 'GO_%'" )
+        return this.getSession().createQuery( "from Characteristic where value not like 'GO_%'" )
                 .setMaxResults( limit ).setFirstResult( start ).list();
     }
 
@@ -62,7 +62,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSession().createQuery(
-                "from CharacteristicImpl where value not like 'GO_%' order by " + orderField + " " + ( descending ?
+                "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ?
                         "desc" :
                         "" ) ).setMaxResults( limit ).setFirstResult( start ).list();
     }
@@ -72,7 +72,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
 
         //noinspection unchecked
         return getSession()
-                .createQuery( "select distinct char from CharacteristicImpl as char where char.category like :search" )
+                .createQuery( "select distinct char from Characteristic as char where char.category like :search" )
                 .setParameter( "search", query + "%" ).list();
     }
 
@@ -137,7 +137,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     public Collection<String> getUsedCategories() {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select distinct categoryUri from CharacteristicImpl where categoryUri is not null" )
+                .createQuery( "select distinct categoryUri from Characteristic where categoryUri is not null" )
                 .list();
     }
 
@@ -163,7 +163,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
         int batchSize = 1000; // to avoid HQL parser barfing
         Collection<String> batch = new HashSet<>();
         Collection<Characteristic> results = new HashSet<>();
-        final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
+        final String queryString = "from VocabCharacteristic where valueUri in (:uris)";
 
         for ( String uri : uris ) {
             batch.add( uri );
@@ -182,7 +182,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     protected Collection<Characteristic> handleFindByUri( String searchString ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select char from VocabCharacteristicImpl as char where  char.valueUri = :search" )
+                .createQuery( "select char from VocabCharacteristic as char where  char.valueUri = :search" )
                 .setParameter( "search", searchString ).list();
     }
 
@@ -190,7 +190,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     protected Collection<Characteristic> handleFindByValue( String search ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select char from CharacteristicImpl as char where char.value like :search " )
+                .createQuery( "select char from Characteristic as char where char.value like :search " )
                 .setParameter( "search", search.endsWith( "%" ) ? search : search + "%" ).list();
     }
 
@@ -237,10 +237,10 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
 
         String field = getCharacteristicFieldName( parentClass );
         final String queryString =
-                "select parent, char from " + EntityUtils.getImplClass( parentClass ).getSimpleName() + " as parent "
+                "select parent, char from " +  parentClass.getSimpleName() + " as parent "
                         + " join parent." + field + " as char " + "where char  in (:chars)";
 
-        for ( Object o : this.getSession().createQuery( queryString ).setParameter( "chars", characteristics )
+        for ( Object o : this.getSession().createQuery( queryString ).setParameterList( "chars", characteristics )
                 .list() ) {
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );
@@ -257,7 +257,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
             field = "phenotypes";
         } else if ( parentClass.isAssignableFrom( TreatmentImpl.class ) ) {
             field = "action";
-        } else if ( parentClass.isAssignableFrom( BioMaterialImpl.class ) ) {
+        } else if ( parentClass.isAssignableFrom( BioMaterial.class ) ) {
             field = "characteristics";
         }
         return field;

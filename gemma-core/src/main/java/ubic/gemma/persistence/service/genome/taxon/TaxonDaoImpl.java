@@ -111,7 +111,7 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     public Collection<Taxon> findTaxonUsedInEvidence() {
         //noinspection unchecked
         return this.getSession().createQuery(
-                "select distinct taxon from GeneImpl as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
+                "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
                 .list();
     }
 

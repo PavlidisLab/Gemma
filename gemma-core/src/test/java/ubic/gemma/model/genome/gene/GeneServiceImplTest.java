@@ -18,55 +18,51 @@
  */
 package ubic.gemma.model.genome.gene;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.reset;
-import static org.easymock.EasyMock.verify;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneServiceImpl;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.GeneDaoImpl;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.easymock.EasyMock.*;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author daq2101
- * @version $Id$
  */
-public class GeneServiceImplTest extends BaseSpringContextTest{
+public class GeneServiceImplTest extends BaseSpringContextTest {
 
     private static final String STRAND = "+";
-    Collection<Gene> allThree = new HashSet<Gene>();
-    Collection<Gene> justRab = new HashSet<Gene>();
-    Collection<Gene> justRabble = new HashSet<Gene>();
+    private final Collection<Gene> allThree = new HashSet<>();
+    private final Collection<Gene> justRab = new HashSet<>();
+    private final Collection<Gene> justRabble = new HashSet<>();
 
-    @Autowired
-    GeneServiceImpl svc;
+    private GeneService svc;
     private Gene g = null;
     private Gene g2 = null;
     private Gene g3 = null;
-    private GeneDao geneDaoMock;
-    private Taxon t = null;
+    private GeneDaoImpl geneDaoMock;
 
     @Before
     public void setUp() throws Exception {
 
-        geneDaoMock = createMock( GeneDao.class );
-        t = Taxon.Factory.newInstance();
+        geneDaoMock = createMock( GeneDaoImpl.class );
+        svc = new GeneServiceImpl( geneDaoMock );
+
+        Taxon t = Taxon.Factory.newInstance();
         t.setCommonName( "moose" );
         t.setScientificName( "moose" );
         t.setIsSpecies( true );
@@ -92,7 +88,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest{
 
         // For testing need to add physical locations to the gene products of a given gene.
         Chromosome chromosome = Chromosome.Factory.newInstance( "fakeChromosome", t );
-        FieldUtils.writeField( chromosome, "id", 54321l, true );
+        FieldUtils.writeField( chromosome, "id", 54321L, true );
 
         // Gene product 1 (Min=100 max=200)
         PhysicalLocation ploc1 = PhysicalLocation.Factory.newInstance();
@@ -160,7 +156,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest{
         gp5.setName( "wrong chromosome gp5" );
         gp5.setId( ( long ) 4567 );
 
-        Collection<GeneProduct> gps = new ArrayList<GeneProduct>();
+        Collection<GeneProduct> gps = new ArrayList<>();
         gps.add( gp1 );
         gps.add( gp2 );
         gps.add( gp4 );
@@ -244,7 +240,7 @@ public class GeneServiceImplTest extends BaseSpringContextTest{
     public void testGetMaxPhysicalLength() {
         reset( geneDaoMock );
         geneDaoMock.thaw( g3 );
-        expectLastCall().andReturn( g3 );
+        expectLastCall().asStub();
         PhysicalLocation ploc = svc.getMaxPhysicalLength( g3 );
         assertTrue( ploc.getNucleotide() == 90 );
         assertTrue( ploc.getNucleotideLength() == 120 );

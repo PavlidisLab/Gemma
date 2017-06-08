@@ -14,39 +14,39 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests loading, platform switch, vector merge, and complex deletion (in teardown)
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
@@ -55,8 +55,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    private ExpressionExperiment ee = null;
 
     @Autowired
     private ExpressionExperimentPlatformSwitchService eePlatformSwitchService;
@@ -67,13 +65,17 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
-    private ArrayDesign mergedAA = null;
-
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private VectorMergingService vectorMergingService;
+
+    @Autowired
+    private DesignElementDataVectorService designElementDataVectorService;
+
+    private ArrayDesign mergedAA = null;
+    private ExpressionExperiment ee = null;
 
     @After
     public void tearDown() {
@@ -82,22 +84,45 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
             if ( ee != null ) {
                 mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
+
+                eeService.thaw( ee );
+
                 eeService.remove( ee );
+
+                for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                    designElementDataVectorService.removeDataForQuantitationType( qt );
+                }
 
                 if ( mergedAA != null ) {
                     mergedAA.setMergees( new HashSet<ArrayDesign>() );
                     arrayDesignService.update( mergedAA );
-
-                    arrayDesignService.thawLite( mergedAA );
+                    arrayDesignService.thaw( mergedAA );
 
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
                         arrayDesign.setMergedInto( null );
                         arrayDesignService.update( arrayDesign );
                     }
-                    arrayDesignService.remove( mergedAA );
+
+                    for ( CompositeSequence cs : mergedAA.getCompositeSequences() ) {
+                        designElementDataVectorService.removeDataForCompositeSequence( cs );
+                    }
+
                     for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
+                        for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( arrayDesign ) ) {
+                            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                                designElementDataVectorService.removeDataForQuantitationType( qt );
+                            }
+                            processedExpressionDataVectorService.removeProcessedDataVectors( ee );
+                            eeService.remove( ee );
+                        }
+                        arrayDesignService.thaw( arrayDesign );
+                        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                            designElementDataVectorService.removeDataForCompositeSequence( cs );
+                        }
                         arrayDesignService.remove( arrayDesign );
                     }
+
+                    arrayDesignService.remove( mergedAA );
                 }
 
             }
@@ -123,8 +148,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
          * Example of a sequence appearing on more than one platform: N57553
          */
 
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse3443merge" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse3443merge" ) ) );
 
         Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, true, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
@@ -139,8 +164,8 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
          * Check number of sequences across all platforms. This is how many elements we need on the new platform, plus
          * extras for duplicated sequences (e.g. elements that don't have a sequence...)
          */
-        Collection<ArrayDesign> taas = new HashSet<ArrayDesign>();
-        Set<BioSequence> oldbs = new HashSet<BioSequence>();
+        Collection<ArrayDesign> taas = new HashSet<>();
+        Set<BioSequence> oldbs = new HashSet<>();
         for ( ArrayDesign arrayDesign : aas ) {
             arrayDesignService.thaw( arrayDesign );
             taas.add( arrayDesign );
@@ -196,7 +221,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = vectorMergingService.mergeVectors( ee );
-        // ee = eeService.thaw( ee );
 
         // check we got the right processed data
         Collection<ProcessedExpressionDataVector> pvs = processedExpressionDataVectorService
@@ -204,6 +228,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 72, pvs.size() );
 
+        eeService.thaw( ee );
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService
                 .getProcessedDataArrays( ee, 50 );
 

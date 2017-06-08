@@ -46,7 +46,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
         log.debug( "Start find" );
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
+        Criteria queryObject = this.getSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
 
@@ -78,7 +78,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "select distinct b from BioMaterialImpl b join b.factorValues fv where fv = :f" )
+                .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv = :f" )
                 .setParameter( "f", fv ).list();
     }
 

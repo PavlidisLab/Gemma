@@ -14,7 +14,7 @@ import java.util.Date;
  */
 public abstract class AbstractCuratableValueObject<C extends Curatable> extends IdentifiableValueObject<C> {
 
-    private static final String TROUBLE_DETAILS_NONE = "Trouble details not found.";
+    private static final String TROUBLE_DETAILS_NONE = "No trouble details provided.";
 
     protected Date lastUpdated;
     protected Boolean troubled = false;
@@ -29,12 +29,17 @@ public abstract class AbstractCuratableValueObject<C extends Curatable> extends 
     }
 
     protected AbstractCuratableValueObject( C curatable ) {
-        this( curatable.getId(), curatable.getCurationDetails().getLastUpdated(), curatable.getCurationDetails().getTroubled(),
-                new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ),
-                curatable.getCurationDetails().getNeedsAttention(),
-                new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ),
-                curatable.getCurationDetails().getCurationNote(),
-                new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) );
+        this( curatable.getId(), curatable.getCurationDetails().getLastUpdated(),
+                curatable.getCurationDetails().getTroubled(),
+                curatable.getCurationDetails().getLastTroubledEvent() != null ?
+                        new AuditEventValueObject( curatable.getCurationDetails().getLastTroubledEvent() ) :
+                        null, curatable.getCurationDetails().getNeedsAttention(),
+                curatable.getCurationDetails().getLastNeedsAttentionEvent() != null ?
+                        new AuditEventValueObject( curatable.getCurationDetails().getLastNeedsAttentionEvent() ) :
+                        null, curatable.getCurationDetails().getCurationNote(),
+                curatable.getCurationDetails().getLastNoteUpdateEvent() != null ?
+                        new AuditEventValueObject( curatable.getCurationDetails().getLastNoteUpdateEvent() ) :
+                        null );
     }
 
     protected AbstractCuratableValueObject( Long id, Date lastUpdated, Boolean troubled,

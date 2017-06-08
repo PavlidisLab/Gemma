@@ -9,7 +9,7 @@
 	associations) should be included here. author: klc version: $Id: gene_mappings.cpm.xml,v 
 	1.11 2011/11/02 01:47:47 paul Exp $ -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="genome.GeneImpl" alias="gene" root="true"
+	<class name="genome.Gene" alias="gene" root="true"
 		support-unmarshall="false">
 		<id name="id" />
 		<!-- <property name="name"> <meta-data>name</meta-data> </property> <property 

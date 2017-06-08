@@ -13,13 +13,13 @@ insert into ACLSID (ID, class, PRINCIPAL) values(6, "PrincipalSid", "gemmaAgent"
 insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (1, "ubic.gemma.model.common.auditAndSecurity.User", 1, 1, 0);
 
 -- OI for the Admin group (assumes id of this group=1, see init-entities.sql)
-insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (2, "ubic.gemma.model.common.auditAndSecurity.UserGroupImpl", 1, 1, 0);
+insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (2, "ubic.gemma.model.common.auditAndSecurity.UserGroup", 1, 1, 0);
 
 -- OI for the Agent group (assumes id of this group=2, see init-entities.sql)
-insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (3, "ubic.gemma.model.common.auditAndSecurity.UserGroupImpl", 2, 1, 0);
+insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (3, "ubic.gemma.model.common.auditAndSecurity.UserGroup", 2, 1, 0);
 
 -- OI for the User group (assumes id of group=3, see init-entities.sql)
-insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (4, "ubic.gemma.model.common.auditAndSecurity.UserGroupImpl", 3, 1, 0);
+insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (4, "ubic.gemma.model.common.auditAndSecurity.UserGroup", 3, 1, 0);
 
 -- Add object identity (OI) for the agent user. There is no parent object, the owner = the administrator; non-inheriting.
 insert into ACLOBJECTIDENTITY (ID, OBJECT_CLASS, OBJECT_ID, OWNER_SID_FK, ENTRIES_INHERITING) values (5, "ubic.gemma.model.common.auditAndSecurity.User", 2, 1, 0);

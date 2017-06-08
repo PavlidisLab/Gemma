@@ -24,8 +24,7 @@ public abstract class MutableArg<A, O extends Identifiable, S extends BaseVoEnab
     String nullCause = "No cause specified.";
 
     /**
-     * @return the reason that the object that was returned using either {@link #getPersistentObject(BaseVoEnabledService)} or
-     * {@link #getValueObject(BaseVoEnabledService)} was null.
+     * @return the reason that the object represented by the argument was null.
      */
     public final String getNullCause() {
         return nullCause;

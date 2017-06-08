@@ -19,21 +19,19 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class FactorValueServiceTest extends BaseSpringContextTest {
 

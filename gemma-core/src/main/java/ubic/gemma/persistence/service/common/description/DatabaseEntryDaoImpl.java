@@ -53,8 +53,7 @@ public class DatabaseEntryDaoImpl extends VoEnabledDao<DatabaseEntry, DatabaseEn
 
     @Override
     public DatabaseEntry findByAccession( String accession ) {
-        return ( DatabaseEntry ) this.getSession().createQuery( "from DatabaseEntry d where d.accession=:accession" )
-                .setParameter( "accession", accession ).uniqueResult();
+        return this.findOneByProperty( "accession", accession );
     }
 
     @Override

@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Person;
@@ -46,11 +47,10 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     private Person nobody = null;
     private Person admin = null;
 
-    @Autowired
     private ExpressionExperimentService svc;
-
     private ExpressionExperimentDao eeDao;
 
+    @Test
     public void testExpressionExperimentFindAll() {
         reset( eeDao );
         eeDao.loadAll();
@@ -60,6 +60,7 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
         verify( eeDao );
     }
 
+    @Test
     public void testExpressionExperimentFindByInvestigator() {
         reset( eeDao );
         eeDao.findByInvestigator( nobody );
@@ -70,9 +71,10 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     }
 
     @Before
-    protected void setUp() throws Exception {
+    public void setUp() throws Exception {
 
         eeDao = createMock( ExpressionExperimentDaoImpl.class );
+        svc = new ExpressionExperimentServiceImpl( eeDao );
 
         nobody = Person.Factory.newInstance();
         admin = Person.Factory.newInstance();
@@ -114,7 +116,7 @@ public class ExpressionExperimentServiceImplTest extends BaseSpringContextTest {
     }
 
     @After
-    protected void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         ee = null;
     }
 }

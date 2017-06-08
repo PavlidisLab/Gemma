@@ -22,7 +22,6 @@ import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneImpl;
 
 /**
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet
@@ -44,12 +43,13 @@ public class ExpressionAnalysisResultSetImpl extends ExpressionAnalysisResultSet
             buf.append( cs.getName() + "\t" );
             for ( BioSequence2GeneProduct bs2gp : cs.getBiologicalCharacteristic().getBioSequence2GeneProduct() ) {
                 Gene g = bs2gp.getGeneProduct().getGene();
-                if ( g instanceof GeneImpl ) {
+                if ( g instanceof Gene ) {
                     buf.append( bs2gp.getGeneProduct().getGene().getOfficialSymbol() + "," );
                     count++;
                 }
             }
-            if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
+            if ( count != 0 )
+                buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
             buf.append( "\t" );
 
             count = 0;
@@ -57,7 +57,8 @@ public class ExpressionAnalysisResultSetImpl extends ExpressionAnalysisResultSet
                 buf.append( ef.getName() + "," );
                 count++;
             }
-            if ( count != 0 ) buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
+            if ( count != 0 )
+                buf.deleteCharAt( buf.lastIndexOf( "," ) ); // removing trailing ,
 
             buf.append( "\t" );
 

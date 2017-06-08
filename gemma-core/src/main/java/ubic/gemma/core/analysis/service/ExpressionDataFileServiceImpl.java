@@ -170,8 +170,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
             CompositeSequence cs = dear.getProbe();
 
-            // Make a hashmap so we can organize the data by probe with factors as colums
-            // Need to cache the information untill we have it organized in the correct format to write
+            // Make a hashMap so we can organize the data by probe with factors as columns
+            // Need to cache the information until we have it organized in the correct format to write
             Long csid = cs.getId();
             if ( probe2String.containsKey( csid ) ) {
                 probeBuffer = probe2String.get( csid );
@@ -338,7 +338,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             return f;
         }
 
-        analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
+        this.differentialExpressionAnalysisService.thawFully( analysis );
         BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
 
         /*
@@ -364,7 +364,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         }
 
         try {
-            analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
+            this.differentialExpressionAnalysisService.thawFully( analysis );
             writeDiffExArchiveFile( experimentAnalyzed, analysis, null );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -698,6 +698,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     private String convertDiffExpressionAnalysisData( DifferentialExpressionAnalysis analysis,
             Map<Long, String[]> geneAnnotations, DifferentialExpressionAnalysisConfig config ) {
+        differentialExpressionAnalysisService.thawFully( analysis );
         Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
         if ( results == null || results.isEmpty() ) {
             log.warn( "No differential expression results found for " + analysis );
@@ -966,6 +967,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Map<Long, String[]> geneAnnotations, DifferentialExpressionAnalysisConfig config ) {
         StringBuilder buf = new StringBuilder();
 
+        System.out.println("accessing experiment analyzed for rs "+resultSet.getId());
         BioAssaySet bas = resultSet.getAnalysis().getExperimentAnalyzed();
 
         ExpressionExperiment ee = experimentForBioAssaySet( bas );

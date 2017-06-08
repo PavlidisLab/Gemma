@@ -159,7 +159,7 @@ public interface PhenotypeAssociationManagerService {
      *
      * @param id The Evidence database id
      */
-    EvidenceValueObject load( Long id );
+    EvidenceValueObject<? extends PhenotypeAssociation> load( Long id );
 
     /**
      * load all the valueUri and value of phenotype present in Neurocarta

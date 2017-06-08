@@ -12,10 +12,10 @@
 			<generator class="native">
 			</generator>
 		</id>
-		<many-to-one access="field" name="gene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
+		<many-to-one access="field" name="gene" class="ubic.gemma.model.genome.Gene" lazy="proxy" fetch="select">
 			<column name="GENE_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>
-		<many-to-one access="field" name="ontologyEntry" class="ubic.gemma.model.common.description.VocabCharacteristicImpl"
+		<many-to-one access="field" name="ontologyEntry" class="ubic.gemma.model.common.description.VocabCharacteristic"
 			cascade="all" lazy="false" fetch="join">
 			<column name="ONTOLOGY_ENTRY_FK" not-null="true" sql-type="BIGINT" unique="true" />
 		</many-to-one>

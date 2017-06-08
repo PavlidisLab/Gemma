@@ -32,7 +32,7 @@
       <property name="secondaryNcbiId" type="java.lang.Integer">
          <column name="SECONDARY_NCBI_ID" not-null="false" unique="false" sql-type="INTEGER"/>
       </property>
-      <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabaseImpl"  cascade="none" lazy="proxy" fetch="select">
+      <many-to-one name="externalDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"  cascade="none" lazy="proxy" fetch="select">
          <column name="EXTERNAL_DATABASE_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <many-to-one name="parentTaxon" class="ubic.gemma.model.genome.Taxon"  lazy="proxy" fetch="select">

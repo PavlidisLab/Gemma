@@ -188,7 +188,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     @Override
     public GeneDifferentialExpressionMetaAnalysisResult loadResult( Long idResult ) {
 
-        Criteria geneQueryMetaAnalysis = super.getSessionFactory().getCurrentSession()
+        Criteria geneQueryMetaAnalysis = this.getSession()
                 .createCriteria( GeneDifferentialExpressionMetaAnalysisResult.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .add( Restrictions.like( "id", idResult ) );
@@ -202,7 +202,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     @Override
     public GeneDifferentialExpressionMetaAnalysis loadWithResultId( Long idResult ) {
 
-        Criteria geneQueryMetaAnalysis = super.getSessionFactory().getCurrentSession()
+        Criteria geneQueryMetaAnalysis = this.getSession()
                 .createCriteria( GeneDifferentialExpressionMetaAnalysis.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "results" )
                 .add( Restrictions.like( "id", idResult ) );

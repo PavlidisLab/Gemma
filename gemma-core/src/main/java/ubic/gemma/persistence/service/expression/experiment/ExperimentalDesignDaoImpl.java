@@ -43,7 +43,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
 
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class );
+        Criteria queryObject = this.getSession().createCriteria( ExperimentalDesign.class );
 
         queryObject.add( Restrictions.eq( "name", experimentalDesign.getName() ) );
 

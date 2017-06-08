@@ -28,7 +28,7 @@
 			<key foreign-key="CHARACTERISTIC_INVESTIGATION_FKC">
 				<column name="INVESTIGATION_FK" sql-type="BIGINT" />
 			</key>
-			<one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl" />
+			<one-to-many class="ubic.gemma.model.common.description.Characteristic" />
 		</set>
 		<many-to-one name="owner" class="ubic.gemma.model.common.auditAndSecurity.Contact" lazy="proxy" fetch="select">
 			<column name="OWNER_FK" not-null="false" sql-type="BIGINT" />

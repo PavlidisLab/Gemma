@@ -28,7 +28,7 @@ import java.io.Serializable;
  *
  * @author paul
  */
-public abstract class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
+public class GeneCoexpressionNodeDegree implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -1456064687251594963L;
     // our primary key
@@ -55,6 +55,19 @@ public abstract class GeneCoexpressionNodeDegree implements Identifiable, Serial
      * most hubby gene (computed separately for each support threshold).
      */
     private byte[] relativeLinkRanksPositive;
+
+    public GeneCoexpressionNodeDegree() {
+    }
+
+    GeneCoexpressionNodeDegree( Gene g ) {
+        this.setGeneId( g.getId() );
+
+        this.setLinkCountsNegative( new byte[] {} );
+        this.setLinkCountsPositive( new byte[] {} );
+        this.setRelativeLinkRanksNegative( new byte[] {} );
+        this.setRelativeLinkRanksPositive( new byte[] {} );
+
+    }
 
     @Override
     public boolean equals( Object obj ) {
@@ -135,7 +148,7 @@ public abstract class GeneCoexpressionNodeDegree implements Identifiable, Serial
 
     public static final class Factory {
         public static GeneCoexpressionNodeDegree newInstance( Gene g ) {
-            return new GeneCoexpressionNodeDegreeImpl( g );
+            return new GeneCoexpressionNodeDegree( g );
         }
     }
 

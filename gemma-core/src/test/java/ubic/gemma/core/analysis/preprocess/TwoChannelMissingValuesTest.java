@@ -18,29 +18,14 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.zip.GZIPInputStream;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataBooleanMatrix;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
-import ubic.gemma.core.loader.expression.geo.GeoConverter;
-import ubic.gemma.core.loader.expression.geo.GeoConverterImpl;
-import ubic.gemma.core.loader.expression.geo.GeoFamilyParser;
-import ubic.gemma.core.loader.expression.geo.GeoParseResult;
-import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
+import ubic.gemma.core.loader.expression.geo.*;
 import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -48,11 +33,17 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.zip.GZIPInputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
@@ -69,18 +60,16 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         executeSqlScript( "/script/sql/add-fish-taxa.sql", false );
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testMissingValue() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE2221" );
-        if ( old != null ) eeService.remove( old );
+        if ( old != null )
+            eeService.remove( old );
         // FIXME: Getthis test passingin release process (mvn release:perform fails) could not get release process to
         // pass with these tests (failed on final release couldn't reproduce)
 
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
+        InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/shortGenePix/GSE2221_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE2221" );
@@ -91,7 +80,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         assertEquals( 500, calls.size() );
         BioAssayDimension dim = calls.iterator().next().getBioAssayDimension();
@@ -133,8 +122,6 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     /**
      * Debug code.
-     * 
-     * @param calls
      */
     @SuppressWarnings("unused")
     private void print( Collection<RawExpressionDataVector> calls ) {
@@ -161,12 +148,13 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
     @Test
     final public void testMissingValueGSE523() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE523" );
-        if ( old != null ) eeService.remove( old );
+        if ( old != null )
+            eeService.remove( old );
         // FIXME: Getthis test passingin release process (mvn release:perform fails) could not get release process to
         // pass with these tests (failed on final release couldn't reproduce)
 
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE523_family.soft.gz" ) );
+        InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE523_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE523" );
@@ -177,7 +165,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 30, calls.size() );
@@ -186,20 +174,20 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     /**
      * Was giving all missing values.
-     * 
-     * @throws Exception
      */
     @Test
     public void testMissingValueGSE11017() throws Exception {
 
         ExpressionExperiment old = eeService.findByShortName( "GSE11017" );
-        if ( old != null ) eeService.remove( old );
+        if ( old != null )
+            eeService.remove( old );
 
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE11017.soft.gz" ) );
+        InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE11017.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
-        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE11017" );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap()
+                .get( "GSE11017" );
         DatasetCombiner datasetCombiner = new DatasetCombiner();
         GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
         series.setSampleCorrespondence( correspondence );
@@ -208,7 +196,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
 
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
         // print( calls );
@@ -245,19 +233,17 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     /**
      * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
-     * 
-     * @throws Exception
      */
-
     @Test
     public void testMissingValueGSE56() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE56" );
-        if ( old != null ) eeService.remove( old );
+        if ( old != null )
+            eeService.remove( old );
         // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
         // to pass with these tests (failed on final release couldn't reproduce)
 
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
+        InputStream is = new GZIPInputStream(
+                this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE56Short/GSE56_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE56" );
@@ -269,7 +255,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );
@@ -278,19 +264,17 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
     /**
      * GSE56 is corrupt: there is no Channel 1 signal value in the data file.
-     * 
-     * @throws Exception
      */
-
     @Test
     public void testMissingValueGSE5091() throws Exception {
         ExpressionExperiment old = eeService.findByShortName( "GSE5091" );
-        if ( old != null ) eeService.remove( old );
+        if ( old != null )
+            eeService.remove( old );
         // * FIXME: Get this test passing in release process (mvn release:perform fails) could not get release process
         // to pass with these tests (failed on final release couldn't reproduce)
 
-        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
-                "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
+        InputStream is = new GZIPInputStream( this.getClass()
+                .getResourceAsStream( "/data/loader/expression/geo/GSE5091Short/GSE5091_family.soft.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();
         parser.parse( is );
         GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE5091" );
@@ -305,7 +289,7 @@ public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
         assertNotNull( result );
         ExpressionExperiment expExp = ( ExpressionExperiment ) ( ( Collection<?> ) result ).iterator().next();
 
-        expExp = persisterHelper.persist( expExp, persisterHelper.prepare( expExp ) );
+        expExp = ( ExpressionExperiment ) persisterHelper.persist( expExp );
         Collection<RawExpressionDataVector> calls = tcmv.computeMissingValues( expExp, 2.0, new ArrayList<Double>() );
 
         assertEquals( 10, calls.size() );
