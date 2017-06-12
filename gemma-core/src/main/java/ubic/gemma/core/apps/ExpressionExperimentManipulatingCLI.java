@@ -343,7 +343,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     }
 
     /**
-     * Load expression experiments based on a list of short names or IDs in a file.
+     * Load expression experiments based on a list of short names or IDs in a file. Only the first column of the file is
+     * used, comments (#) are allowed.
      */
     private Set<BioAssaySet> readExpressionExperimentListFile( String fileName ) throws IOException {
         Set<BioAssaySet> ees = new HashSet<>();

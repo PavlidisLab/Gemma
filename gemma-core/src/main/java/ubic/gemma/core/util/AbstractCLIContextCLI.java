@@ -18,6 +18,7 @@
  */
 package ubic.gemma.core.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.persistence.service.genome.taxon.TaxonService;
@@ -28,8 +29,10 @@ import ubic.gemma.model.genome.Taxon;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Spring configuration for CLI.
@@ -77,15 +80,24 @@ public abstract class AbstractCLIContextCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    protected static Collection<String> readListFileToStrings( String fileName ) throws IOException {
-        Collection<String> eeNames = new HashSet<>();
+    /**
+     * may be tab-delimited, only first column used, commented (#) lines are ignored.
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    protected static List<String> readListFileToStrings( String fileName ) throws IOException {
+        List<String> eeNames = new ArrayList<>();
         try (BufferedReader in = new BufferedReader( new FileReader( fileName ) )) {
             while ( in.ready() ) {
-                String eeName = in.readLine().trim();
-                if ( eeName.startsWith( "#" ) ) {
+                String line = in.readLine().trim();
+                if ( line.startsWith( "#" ) ) {
                     continue;
                 }
-                eeNames.add( eeName );
+                if ( line.isEmpty() ) continue;
+                String[] split = StringUtils.split( line, "\t" );
+                eeNames.add( split[0] );
             }
             return eeNames;
         }
