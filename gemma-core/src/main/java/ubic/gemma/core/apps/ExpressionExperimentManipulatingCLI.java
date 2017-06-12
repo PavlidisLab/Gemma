@@ -71,11 +71,10 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     protected ExpressionExperimentService eeService;
     protected Set<BioAssaySet> expressionExperiments = new HashSet<>();
     protected boolean force = false;
+    protected GeneService geneService;
+    protected SearchService searchService;
     protected Taxon taxon = null;
     protected TaxonService taxonService;
-    protected SearchService searchService;
-
-    private GeneService geneService;
 
     @Override
     public CommandGroup getCommandGroup() {
@@ -86,7 +85,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         this.addForceOption( null );
     }
 
-    @SuppressWarnings("AccessStaticViaInstance")
     protected void addForceOption( String explanation ) {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         String usedExpl = explanation == null ? defaultExplanation : explanation;
@@ -132,29 +130,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
 
     }
 
-    private Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
+    protected Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
         Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
         for ( Gene gene : genes ) {
             if ( t.equals( gene.getTaxon() ) )
                 return gene;
         }
         return null;
-    }
-
-    private ExpressionExperiment locateExpressionExperiment( String name ) {
-
-        if ( name == null ) {
-            errorObjects.add( "Expression experiment short name must be provided" );
-            return null;
-        }
-
-        ExpressionExperiment experiment = eeService.findByShortName( name );
-
-        if ( experiment == null ) {
-            log.error( "No experiment " + name + " found" );
-            bail( ErrorCode.INVALID_OPTION );
-        }
-        return experiment;
     }
 
     @Override
@@ -341,6 +323,22 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
         }
         return ees;
 
+    }
+
+    private ExpressionExperiment locateExpressionExperiment( String name ) {
+
+        if ( name == null ) {
+            errorObjects.add( "Expression experiment short name must be provided" );
+            return null;
+        }
+
+        ExpressionExperiment experiment = eeService.findByShortName( name );
+
+        if ( experiment == null ) {
+            log.error( "No experiment " + name + " found" );
+            bail( ErrorCode.INVALID_OPTION );
+        }
+        return experiment;
     }
 
     /**
