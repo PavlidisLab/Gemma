@@ -21,8 +21,8 @@ import java.util.*;
  */
 public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Integer> {
 
-    private static final long serialVersionUID = 1L;
     private static final Log log = LogFactory.getLog( ExpressionDataIntegerMatrix.class.getName() );
+    private static final long serialVersionUID = 1L;
 
     private IntegerMatrix<CompositeSequence, Integer> matrix;
 
@@ -39,9 +39,10 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         vectorsToMatrix( vectors );
     }
 
-    /* ********************************
+    /*
+     * ********************************
      * Public methods
-     * ********************************/
+     ********************************/
 
     @Override
     public int columns() {
@@ -122,19 +123,36 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         return res;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
+     */
+    @Override
+    public boolean hasMissingValues() {
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                // only null values count as missing since there's no NAN for Integers.
+                if ( matrix.get( i, j ) == null ) return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public int rows() {
         return matrix.rows();
     }
 
+    /*
+     * ********************************
+     * Protected methods
+     ********************************/
+
     @Override
     public void set( int row, int column, Integer value ) {
         this.matrix.setObj( row, column, value );
     }
-
-    /* ********************************
-     * Protected methods
-     * ********************************/
 
     @Override
     protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
@@ -147,9 +165,10 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         this.matrix = createMatrix( vectors, maxSize );
     }
 
-    /* ********************************
+    /*
+     * ********************************
      * Private methods
-     * ********************************/
+     ********************************/
 
     /**
      * Fill in the data

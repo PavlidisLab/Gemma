@@ -157,6 +157,21 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
+     */
+    @Override
+    public boolean hasMissingValues() {
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                if ( matrix.get( i, j ) == null ) return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public int rows() {
         return matrix.rows();

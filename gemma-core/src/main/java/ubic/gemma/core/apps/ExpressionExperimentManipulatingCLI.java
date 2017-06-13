@@ -88,6 +88,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
     protected void addForceOption( String explanation ) {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         String usedExpl = explanation == null ? defaultExplanation : explanation;
+        @SuppressWarnings("static-access")
         Option forceOption = OptionBuilder.withArgName( "Force processing" ).withLongOpt( "force" )
                 .withDescription( usedExpl ).create( "force" );
         addOption( forceOption );

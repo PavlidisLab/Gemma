@@ -161,8 +161,8 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Create a matrix given a 'raw' matrix that uses the same samples as the experiment. Only simple situations are
      * supported (one platform, not subsetting the dataset).
      *
-     * @param ee     to be associated with this
-     * @param qt     to be associated with this
+     * @param ee to be associated with this
+     * @param qt to be associated with this
      * @param matrix with valid row and column elements, and the data
      */
     public ExpressionDataDoubleMatrix( ExpressionExperiment ee, QuantitationType qt,
@@ -370,7 +370,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
     /**
      * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
-     * vectors used to construct the matrix were not ProcessedExpressionDataVectors.
+     *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
      */
     public Map<CompositeSequence, Double> getRanks() {
         return this.ranks;
@@ -450,7 +450,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * Sets the row of matrix to the input data.
      *
      * @param rowIndex The row index of the data in the matrix to be replaced.
-     * @param data     The input data.
+     * @param data The input data.
      */
     public void setRow( int rowIndex, Double[] data ) {
         if ( rowIndex > this.matrix.rows() ) {
@@ -602,6 +602,21 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         }
         log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
+     */
+    @Override
+    public boolean hasMissingValues() {
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                if ( Double.isNaN( matrix.get( i, j ) ) ) return true;
+            }
+        }
+        return false;
     }
 
 }

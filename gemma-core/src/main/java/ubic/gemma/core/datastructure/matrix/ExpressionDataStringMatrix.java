@@ -40,14 +40,21 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String> {
 
-    private static final long serialVersionUID = 1L;
-
     private static Log log = LogFactory.getLog( ExpressionDataStringMatrix.class.getName() );
+
+    private static final long serialVersionUID = 1L;
 
     private StringMatrix<Integer, Integer> matrix;
 
+    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        init();
+        selectVectors( vectors );
+        vectorsToMatrix( vectors );
+    }
+
     @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
+    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
+            QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
 
@@ -58,15 +65,13 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
     }
 
     @SuppressWarnings("unused")
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
-            QuantitationType quantitationType ) {
+    public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
 
-    public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        init();
-        selectVectors( vectors );
-        vectorsToMatrix( vectors );
+    @Override
+    public int columns() {
+        return matrix.columns();
     }
 
     @Override
@@ -74,6 +79,11 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
         int i = this.rowElementMap.get( designElement );
         int j = this.columnAssayMap.get( bioAssay );
         return this.matrix.get( i, j );
+    }
+
+    @Override
+    public String get( int row, int column ) {
+        return matrix.get( row, column );
     }
 
     /*
@@ -90,7 +100,8 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
+     * ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.
+     * BioAssay)
      */
     @Override
     public String[] getColumn( BioAssay bioAssay ) {
@@ -140,12 +151,18 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
      * (non-Javadoc)
      * 
      * @see
-     * ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
+     * ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.
+     * DesignElement
      * )
      */
     @Override
     public String[] getRow( CompositeSequence designElement ) {
         return this.matrix.getRow( this.getRowIndex( designElement ) );
+    }
+
+    @Override
+    public String[] getRow( Integer index ) {
+        return matrix.getRow( index );
     }
 
     /*
@@ -160,6 +177,32 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
             res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
         }
         return res;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
+     */
+    @Override
+    public boolean hasMissingValues() {
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                // Note that blank strings don't count as missing.
+                if ( matrix.get( i, j ) == null ) return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public int rows() {
+        return matrix.rows();
+    }
+
+    @Override
+    public void set( int row, int column, String value ) {
+        matrix.set( row, column, value );
     }
 
     @Override
@@ -178,7 +221,7 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        StringMatrix<Integer, Integer> mat = new StringMatrix<Integer, Integer>( numRows, maxSize );
+        StringMatrix<Integer, Integer> mat = new StringMatrix<>( numRows, maxSize );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( j );
@@ -225,31 +268,6 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
         log.debug( "Created a " + mat.rows() + " x " + mat.columns() + " matrix" );
         return mat;
-    }
-
-    @Override
-    public int columns() {
-        return matrix.columns();
-    }
-
-    @Override
-    public int rows() {
-        return matrix.rows();
-    }
-
-    @Override
-    public void set( int row, int column, String value ) {
-        matrix.set( row, column, value );
-    }
-
-    @Override
-    public String get( int row, int column ) {
-        return matrix.get( row, column );
-    }
-
-    @Override
-    public String[] getRow( Integer index ) {
-        return matrix.getRow( index );
     }
 
 }

@@ -695,6 +695,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
 
+        if ( config.getModerateStatistics() && dmatrix.hasMissingValues() ) {
+            log.warn( "Ebayes cannot be used when missing values are present, running without" );
+            config.setModerateStatistics( false );
+        }
+
         if ( factors.isEmpty() ) {
             log.error( "Must provide at least one factor" );
             return null;
@@ -1536,8 +1541,13 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
                 timer.start();
                 if ( ebayes ) {
+                    if ( fit.isHasMissing() ) {
+                        // not implemented yet.
+                        throw new UnsupportedOperationException( "Ebayes cannot be run as there are missing values in the data" );
+                    }
                     ModeratedTstat.ebayes( fit );
                     log.info( "Moderate test statistics: " + timer.getTime() + "ms" );
+
                 }
 
                 timer.reset();
