@@ -485,9 +485,9 @@ public abstract class AbstractCLI {
     protected void summarizeProcessing() {
         if ( successObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\n   Processed:\n" );
+            buf.append( "\n---------------------\nSuccessfully processed " + successObjects.size() + "objects:\n" );
             for ( Object object : successObjects ) {
-                buf.append( "\t" ).append( object ).append( "\n" );
+                buf.append( "Success" ).append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
 
@@ -498,9 +498,9 @@ public abstract class AbstractCLI {
 
         if ( errorObjects.size() > 0 ) {
             StringBuilder buf = new StringBuilder();
-            buf.append( "\n---------------------\n   Errors occurred during the processing of:\n" );
+            buf.append( "\n---------------------\nErrors occurred during the processing of " + errorObjects.size() + " objects:\n" );
             for ( Object object : errorObjects ) {
-                buf.append( "\t" ).append( object ).append( "\n" );
+                buf.append("Failed\t").append( object ).append( "\n" );
             }
             buf.append( "---------------------\n" );
             log.error( buf );
