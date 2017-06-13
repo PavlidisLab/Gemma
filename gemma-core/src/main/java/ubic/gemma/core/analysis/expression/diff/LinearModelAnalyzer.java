@@ -695,9 +695,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
 
+        // We may want to change this to fall back to running normally, though the real fix is to just finish the ebayes implementation.
         if ( config.getModerateStatistics() && dmatrix.hasMissingValues() ) {
-            log.warn( "Ebayes cannot be used when missing values are present, running without" );
-            config.setModerateStatistics( false );
+            throw new UnsupportedOperationException( "Ebayes cannot be used when there are values missing in the data" );
         }
 
         if ( factors.isEmpty() ) {
