@@ -42,10 +42,8 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
         configureMocks();
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setQvalueThreshold( null );
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.setSubsetFactor( this.experimentalFactorA_Area );
-        config.setQvalueThreshold( null );
         try {
             analyzer.run( expressionExperiment, config );
             fail( "Should have gotten an exception" );
@@ -61,7 +59,6 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.getFactorsToInclude().add( this.experimentalFactorA_Area );
         config.setSubsetFactor( this.experimentalFactorB );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
 
         assertEquals( 2, expressionAnalyses.size() );

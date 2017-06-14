@@ -145,7 +145,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
         config.getInteractionsToInclude().add( factors );
-        config.setQvalueThreshold( null );
 
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );

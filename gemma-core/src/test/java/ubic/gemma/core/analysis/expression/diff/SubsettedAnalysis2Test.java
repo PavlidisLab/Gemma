@@ -77,7 +77,7 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> toremove = new HashSet<>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );
@@ -136,7 +136,6 @@ public class SubsettedAnalysis2Test extends AbstractGeoServiceTest {
         config.getFactorsToInclude().add( phenotype );
 
         config.setSubsetFactor( strainOrLine );
-        config.setQvalueThreshold( null );
 
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );

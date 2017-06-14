@@ -399,28 +399,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
         BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
 
-        /*
-         * Decide if we need to extend the analysis first.
-         */
-        boolean extend = false;
-        for ( ExpressionAnalysisResultSet rs : analysis.getResultSets() ) {
-            if ( rs.getQvalueThresholdForStorage() != null && rs.getQvalueThresholdForStorage() < 1.0 ) {
-                extend = true;
-                break;
-            }
-        }
-
-        if ( extend ) {
-            log.info( "Extending an existing analysis to incldue all results" );
-
-            ExpressionExperiment ee = experimentForBioAssaySet( experimentAnalyzed );
-
-            Collection<ExpressionAnalysisResultSet> updatedResultSets = analyzerService.extendAnalysis( ee, analysis );
-
-            boolean added = analysis.getResultSets().addAll( updatedResultSets );
-            assert !added : "Should have simply replaced";
-        }
-
         try {
             analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
             writeDiffExArchiveFile( experimentAnalyzed, analysis, null );
@@ -541,9 +519,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
                     log.info( "Result file for interaction is omitted" ); // Why?
                     continue;
                 }
-
-                assert resultSet.getQvalueThresholdForStorage() == null
-                        || resultSet.getQvalueThresholdForStorage() == 1.0;
 
                 String resultSetData = convertDiffExpressionResultSetData( resultSet, geneAnnotations, config );
 
