@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
-import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -49,7 +48,8 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface ExpressionExperimentService extends BaseVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
+public interface ExpressionExperimentService
+        extends BaseVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     ExperimentalFactor addFactor( ExpressionExperiment ee, ExperimentalFactor factor );
@@ -73,6 +73,8 @@ public interface ExpressionExperimentService extends BaseVoEnabledService<Expres
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
 
+    @Secured({ "GROUP_USER" })
+    ExpressionExperiment create( ExpressionExperiment expressionExperiment );
 
     /**
      * Deletes an experiment and all of its associated objects, including coexpression links. Some types of associated
@@ -81,6 +83,9 @@ public interface ExpressionExperimentService extends BaseVoEnabledService<Expres
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ExpressionExperiment expressionExperiment );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Long id );
 
     /**
      * returns ids of search results

@@ -38,14 +38,27 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
         super( id );
     }
 
+    /**
+     * Populates the VO properties with values from the given entity. Checks that physicalLocation is not-null
+     * before accessing its properties.
+     * @param entity the GeneProduct to load the values from.
+     */
     public GeneProductValueObject( GeneProduct entity ) {
         super( entity.getId() );
         this.name = entity.getName();
         this.type = entity.getType().getValue();
         this.ncbiId = entity.getNcbiGi();
-        this.chromosome = entity.getPhysicalLocation().getChromosome().getName();
-        this.strand = entity.getPhysicalLocation().getStrand();
-        this.nucleotideStart = entity.getPhysicalLocation().getNucleotide();
+        if ( entity.getPhysicalLocation() != null ) {
+            if ( entity.getPhysicalLocation().getChromosome() != null ) {
+                this.chromosome = entity.getPhysicalLocation().getChromosome().getName();
+            }
+            this.strand = entity.getPhysicalLocation().getStrand();
+//             TODO check if the numbering here is correct
+//            if ( entity.getPhysicalLocation().getNucleotide() != null ) {
+//                this.nucleotideStart = entity.getPhysicalLocation().getNucleotide();
+//                this.nucleotideEnd = entity.getPhysicalLocation().getNucleotide() + entity.getPhysicalLocation().getNucleotideLength();
+//            }
+        }
     }
 
     public String getChromosome() {

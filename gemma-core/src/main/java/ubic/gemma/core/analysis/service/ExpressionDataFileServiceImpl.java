@@ -967,7 +967,6 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             Map<Long, String[]> geneAnnotations, DifferentialExpressionAnalysisConfig config ) {
         StringBuilder buf = new StringBuilder();
 
-        System.out.println("accessing experiment analyzed for rs "+resultSet.getId());
         BioAssaySet bas = resultSet.getAnalysis().getExperimentAnalyzed();
 
         ExpressionExperiment ee = experimentForBioAssaySet( bas );

@@ -4,7 +4,7 @@
 <%-- Shows the results of a search for pubmed references. --%>
 
 <jsp:useBean id="bibliographicReference" scope="request"
-	class="ubic.gemma.model.common.description.BibliographicReferenceImpl"></jsp:useBean>
+	class="ubic.gemma.model.common.description.BibliographicReference"></jsp:useBean>
 
 <title>Bibliographic Reference</title>
 

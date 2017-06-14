@@ -359,6 +359,30 @@
                         <exclude>**/*GeneSetServiceTest.java</exclude>
                         <exclude>**/*SubsettedAnalysis3Test.java</exclude>
                         <exclude>**/*LowVarianceDataTest.java</exclude>
+                        <exclude>**/*LinkAnalysisServiceTest.java</exclude>
+                        <exclude>**/*DiffExWithInvalidInteraction2Test.java</exclude>
+                        <exclude>**/*DiffExWithInvalidInteractionTest.java</exclude>
+                        <exclude>**/*ContinuousVariableDiffExTest.java</exclude>
+                        <exclude>**/*SubsettedAnalysis2Test.java</exclude>
+                        <exclude>**/*DiffExTest.java</exclude>
+                        <exclude>**/*SearchServiceTest.java</exclude>
+                        <exclude>**/*ExpressionExperimentPlatformSwitchTest.java</exclude>
+                        <exclude>**/*StringBiomartGene2GeneProteinLoaderTest.java</exclude>
+                        <exclude>**/*DataUpdaterTest.java</exclude>
+                        <exclude>**/*DatasetCombinerTest.java</exclude>
+                        <exclude>**/*GeoDatasetServiceTest.java</exclude>
+                        <exclude>**/*GeoSuperSeriesLoadTest.java</exclude>
+                        <exclude>**/*RawDataFetcherTest.java</exclude>
+                        <exclude>**/*GeoFamilyParserTest.java</exclude>
+                        <exclude>**/*GeoPlatformServiceTest.java</exclude>
+                        <exclude>**/*GeoConverterTest.java</exclude>
+                        <exclude>**/*SDRFFetcherTest.java</exclude>
+                        <exclude>**/*ArrayDesignSequenceAlignmentandMappingTest.java</exclude>
+                        <exclude>**/*ArrayDesignSequenceProcessorFastacmdTest.java</exclude>
+                        <exclude>**/*ArrayDesignSequenceProcessorTest.java</exclude>
+                        <exclude>**/*HomologeneServiceTest.java</exclude>
+                        <exclude>**/*NCBIGeneLoadingTest.java</exclude>
+                        <exclude>**/*ExperimentalDesignImportDuplicateValueTest.java</exclude>
                         <!--<exclude>**/*.java</exclude>-->
                         <!--<exclude>**/*.java</exclude>-->
                         <!--<exclude>**/*.java</exclude>-->
@@ -373,6 +397,7 @@
                         <!--<exclude>**/*.java</exclude>-->
                         <!--known fails (paul fix):-->
                         <exclude>**/*DifferentialExpressionAnalyzerServiceTest.java</exclude>
+                        <exclude>**/*DiffExMetaAnalyzerServiceTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

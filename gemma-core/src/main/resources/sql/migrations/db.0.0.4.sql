@@ -77,7 +77,7 @@ alter table ACLOBJECTIDENTITY add unique key acloid (OBJECT_CLASS,OBJECT_ID);
 
 -- items which have aces, but shouldn't and they don't have a parent. These are probably for entities that no longer exist, but have to check.
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join BIO_ASSAY b on  b.ID=o.OBJECT_ID   where o.OBJECT_CLASS="ubic.gemma.model.expression.bioAssay.BioAssay" and o.PARENT_OBJECT_FK is null and b.ID is null;
-select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_DESIGN b on  b.ID=o.OBJECT_ID  where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"  and o.PARENT_OBJECT_FK is null and b.ID is null;
+select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_DESIGN b on  b.ID=o.OBJECT_ID  where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesign"  and o.PARENT_OBJECT_FK is null and b.ID is null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join BIO_MATERIAL b on b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.biomaterial.BioMaterial" and o.PARENT_OBJECT_FK is  null and b.ID is null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_FACTOR b on b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" and o.PARENT_OBJECT_FK is  null and b.ID is null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK left join FACTOR_VALUE b on b.ID=o.OBJECT_ID  where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl"  and o.PARENT_OBJECT_FK is  null and b.ID is null;
@@ -93,7 +93,7 @@ select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTI
 
 set FOREIGN_KEY_CHECKS=0;
 delete e,o from ACLOBJECTIDENTITY o join ACLENTRY e on o.ID=e.OBJECTIDENTITY_FK left join BIO_ASSAY b on  b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.bioAssay.BioAssay"   and o.PARENT_OBJECT_FK is null and b.ID IS NULL;
-delete e,o from ACLOBJECTIDENTITY o join ACLENTRY e on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_DESIGN b on  b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"   and o.PARENT_OBJECT_FK is null and b.ID IS NULL; 
+delete e,o from ACLOBJECTIDENTITY o join ACLENTRY e on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_DESIGN b on  b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesign"   and o.PARENT_OBJECT_FK is null and b.ID IS NULL;
 delete e,o from ACLOBJECTIDENTITY o join ACLENTRY e on o.ID=e.OBJECTIDENTITY_FK left join BIO_MATERIAL b on  b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.biomaterial.BioMaterial"   and o.PARENT_OBJECT_FK is null and b.ID IS NULL;
 delete e,o from ACLOBJECTIDENTITY o join ACLENTRY e on o.ID=e.OBJECTIDENTITY_FK left join EXPERIMENTAL_FACTOR b on  b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl"   and o.PARENT_OBJECT_FK is null and b.ID IS NULL; 
 delete e,o from ACLOBJECTIDENTITY o join ACLENTRY e on o.ID=e.OBJECTIDENTITY_FK left join FACTOR_VALUE b on  b.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl"   and o.PARENT_OBJECT_FK is null and b.ID IS NULL; 
@@ -101,7 +101,7 @@ set FOREIGN_KEY_CHECKS=1;
 
 -- checking the previous to make sure they don't exist in the entity table. These should return 0.
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK inner join BIO_ASSAY ba ON ba.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.bioAssay.BioAssay" and o.PARENT_OBJECT_FK is null;
-select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK inner join EXPERIMENTAL_DESIGN ed on ed.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"  and o.PARENT_OBJECT_FK is null;
+select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK inner join EXPERIMENTAL_DESIGN ed on ed.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesign"  and o.PARENT_OBJECT_FK is null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK inner join BIO_MATERIAL bm on bm.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.biomaterial.BioMaterial" and o.PARENT_OBJECT_FK is  null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK inner join EXPERIMENTAL_FACTOR ef on ef.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" and o.PARENT_OBJECT_FK is  null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK inner join FACTOR_VALUE fv on fv.ID=o.OBJECT_ID where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl"  and o.PARENT_OBJECT_FK is  null;
@@ -210,7 +210,7 @@ update ACLOBJECTIDENTITY SET PARENT_OBJECT_FK=1305 WHERE ID=1032323 and PARENT_O
  
 -- items which have aces, but shouldn't, and they have a parent object in the acl tables.
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.bioAssay.BioAssay" and o.PARENT_OBJECT_FK is not null;
-select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"  and o.PARENT_OBJECT_FK is not null;
+select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesign"  and o.PARENT_OBJECT_FK is not null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.biomaterial.BioMaterial" and o.PARENT_OBJECT_FK is not null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" and o.PARENT_OBJECT_FK is not null;
 select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl"  and o.PARENT_OBJECT_FK is not null;
@@ -222,7 +222,7 @@ select count(*) from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTI
 
 -- remove ones where the parent object is okay - don't need aces for these securedchildren.
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.bioAssay.BioAssay"  and o.PARENT_OBJECT_FK is not null;
-delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"  and o.PARENT_OBJECT_FK is not null;
+delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesign"  and o.PARENT_OBJECT_FK is not null;
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.biomaterial.BioMaterial" and o.PARENT_OBJECT_FK is not null;
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" and o.PARENT_OBJECT_FK is not null;
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl"  and o.PARENT_OBJECT_FK is not null;
@@ -230,7 +230,7 @@ delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY
 delete e from ACLENTRY e inner join ACLOBJECTIDENTITY o on o.ID=e.OBJECTIDENTITY_FK where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl"  and o.PARENT_OBJECT_FK is not null;
 
 update ACLOBJECTIDENTITY set ENTRIES_INHERITING=1 where OBJECT_CLASS="ubic.gemma.model.expression.experiment.FactorValueImpl";
-update ACLOBJECTIDENTITY set ENTRIES_INHERITING=1 where OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl";
+update ACLOBJECTIDENTITY set ENTRIES_INHERITING=1 where OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExperimentalDesign";
 update ACLOBJECTIDENTITY set ENTRIES_INHERITING=1 where OBJECT_CLASS="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl";
 update ACLOBJECTIDENTITY set ENTRIES_INHERITING=1 where OBJECT_CLASS="ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisImpl";
 update ACLOBJECTIDENTITY set ENTRIES_INHERITING=1 where OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis";

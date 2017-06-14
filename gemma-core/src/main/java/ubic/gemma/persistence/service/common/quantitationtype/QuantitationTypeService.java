@@ -18,17 +18,42 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
-import java.util.List;
-
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author kelsey
  */
 public interface QuantitationTypeService extends BaseVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
+
+    @Secured({ "GROUP_USER" })
+    QuantitationType create( QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    QuantitationType findOrCreate( QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    void remove( QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    void update( QuantitationType quantitationType );
+
+    @Secured({ "GROUP_USER" })
+    Collection<QuantitationType> create( Collection<QuantitationType> entities );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Collection<QuantitationType> entities );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Long id );
+
+    @Secured({ "GROUP_USER" })
+    void update( Collection<QuantitationType> entities );
 
     @Secured({ "GROUP_USER" })
     List<QuantitationType> loadByDescription( String description );

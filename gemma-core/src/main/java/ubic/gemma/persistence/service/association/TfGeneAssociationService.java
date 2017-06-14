@@ -14,18 +14,17 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseService;
 
+import java.util.Collection;
+
 /**
  * @author paul
  */
-public interface TfGeneAssociationService extends BaseService<TfGeneAssociation>{
+public interface TfGeneAssociationService extends BaseService<TfGeneAssociation> {
 
     @Secured({ "GROUP_ADMIN" })
     Collection<TfGeneAssociation> create( Collection<TfGeneAssociation> entities );
@@ -49,4 +48,9 @@ public interface TfGeneAssociationService extends BaseService<TfGeneAssociation>
     @Secured({ "GROUP_ADMIN" })
     void removeAll();
 
+    @Secured({ "GROUP_ADMIN" })
+    void update( Collection<TfGeneAssociation> entities );
+
+    @Secured({ "GROUP_ADMIN" })
+    void update( TfGeneAssociation entity );
 }

@@ -18,47 +18,36 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface ExperimentalDesignService {
+public interface ExperimentalDesignService extends BaseService<ExperimentalDesign> {
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExperimentalDesign find( ExperimentalDesign experimentalDesign );
+    ExperimentalDesign find( ExperimentalDesign experimentalDesign );
 
     /**
      * Gets the expression experiment for the specified experimental design object
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
+    ExpressionExperiment getExpressionExperiment( ExperimentalDesign experimentalDesign );
 
-    /**
-     * 
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExperimentalDesign load( Long id );
+    ExperimentalDesign load( Long id );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_ADMIN" })
-    public Collection<ExperimentalDesign> loadAll();
+    Collection<ExperimentalDesign> loadAll();
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( ExperimentalDesign experimentalDesign );
+    void update( ExperimentalDesign experimentalDesign );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Collection<ExperimentalDesign> entities );
 }

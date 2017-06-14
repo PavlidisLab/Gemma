@@ -88,7 +88,7 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
     public void remove( ExperimentalFactor experimentalFactor ) {
         Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
         ExperimentalDesign ed = ( ExperimentalDesign ) this.getSession()
-                .load( ExperimentalDesignImpl.class, experimentalDesignId );
+                .load( ExperimentalDesign.class, experimentalDesignId );
 
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
         List<?> results = getHibernateTemplate().findByNamedParam( queryString, "ed", ed );

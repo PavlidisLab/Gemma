@@ -95,7 +95,7 @@ UPDATE ACLOBJECTIDENTITY SET OBJECT_CLASS = 'ubic.gemma.model.expression.experim
 -- -- remove all validation events
 START TRANSACTION;
 
-DELETE AUDIT_EVENT FROM AUDIT_EVENT INNER JOIN AUDIT_EVENT_TYPE ON AUDIT_EVENT.EVENT_TYPE_FK = AUDIT_EVENT_TYPE.ID WHERE class IN ('ValidatedAnnotationsImpl','ValidatedExperimentalDesignImpl','ValidatedFlagEventImpl','ValidatedQualityControlImpl');
-DELETE FROM AUDIT_EVENT_TYPE WHERE class in ('ValidatedAnnotationsImpl','ValidatedExperimentalDesignImpl','ValidatedFlagEventImpl','ValidatedQualityControlImpl');
+DELETE AUDIT_EVENT FROM AUDIT_EVENT INNER JOIN AUDIT_EVENT_TYPE ON AUDIT_EVENT.EVENT_TYPE_FK = AUDIT_EVENT_TYPE.ID WHERE class IN ('ValidatedAnnotationsImpl','ValidatedExperimentalDesign','ValidatedFlagEventImpl','ValidatedQualityControlImpl');
+DELETE FROM AUDIT_EVENT_TYPE WHERE class in ('ValidatedAnnotationsImpl','ValidatedExperimentalDesign','ValidatedFlagEventImpl','ValidatedQualityControlImpl');
 
 COMMIT;

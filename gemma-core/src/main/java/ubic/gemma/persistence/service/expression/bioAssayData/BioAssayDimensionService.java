@@ -21,18 +21,23 @@ package ubic.gemma.persistence.service.expression.bioAssayData;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 /**
  * @author Paul
  */
-public interface BioAssayDimensionService extends BaseVoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> {
+public interface BioAssayDimensionService
+        extends BaseVoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> {
 
+    @Secured({ "GROUP_USER" })
+    BioAssayDimension create( BioAssayDimension bioAssayDimension );
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
-    
+
+    @Secured({ "GROUP_USER" })
+    void remove( BioAssayDimension bioAssayDimension );
+
     void thawLite( BioAssayDimension bioAssayDimension );
 
 }

@@ -18,52 +18,42 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
- * 
+ *
  * @author pavlidis
  * @version $Id$
  */
@@ -71,14 +61,22 @@ import ubic.gemma.persistence.persister.Persister;
 public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDataLoaderService {
 
     private static Log log = LogFactory.getLog( SimpleExpressionDataLoaderServiceImpl.class.getName() );
+    @Autowired
+    ArrayDesignService arrayDesignService;
+    @Autowired
+    Persister persisterHelper;
+    @Autowired
+    PreprocessorService preprocessorService;
+    @Autowired
+    TaxonService taxonService;
 
     /**
      * This method establishes the way raw input sample names are converted to biomaterial names in the system. SUch
      * names do not need to be unique.
-     * 
-     * @param ee expression experiment the sample belongs to.
+     *
+     * @param ee              expression experiment the sample belongs to.
      * @param inputSampleName The sample name as identified in the input file - the column header; this is basically the
-     *        bio assay name.
+     *                        bio assay name.
      * @return String used to identify the biomaterial in the system.
      */
     public static String makeBioMaterialName( ExpressionExperiment ee, String inputSampleName ) {
@@ -86,28 +84,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return inputSampleName;
     }
 
-    @Autowired
-    ArrayDesignService arrayDesignService;
-
-    @Autowired
-    BioMaterialService bioMaterialService;
-
-    @Autowired
-    Persister persisterHelper;
-
-    @Autowired
-    PreprocessorService preprocessorService;
-
-    @Autowired
-    TaxonService taxonService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService#convert(ubic.gemma.core.loader.expression.simple
-     * .model.SimpleExpressionExperimentMetaData, ubic.basecode.dataStructure.matrix.DoubleMatrix)
-     */
     @Override
     public ExpressionExperiment convert( SimpleExpressionExperimentMetaData metaData,
             DoubleMatrix<String, String> matrix ) {
@@ -123,10 +99,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         experiment.setShortName( metaData.getShortName() );
         experiment.setDescription( metaData.getDescription() );
 
-        experiment
-                .setSource( "Import via matrix flat file."
-                        + ( StringUtils.isBlank( metaData.getSourceUrl() ) ? "" : "Downloaded from "
-                                + metaData.getSourceUrl() ) );
+        experiment.setSource( "Import via matrix flat file." + ( StringUtils.isBlank( metaData.getSourceUrl() ) ?
+                "" :
+                "Downloaded from " + metaData.getSourceUrl() ) );
 
         ExperimentalDesign ed = ExperimentalDesign.Factory.newInstance();
         experiment.setExperimentalDesign( ed );
@@ -167,8 +142,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
         // sanity
         if ( usedDesignElements.size() != matrix.rows() ) {
-            log.warn( "Some rows of matrix were not matched to any of the given platforms (" + matrix.rows()
-                    + " rows, " + usedDesignElements.size() + " found" );
+            log.warn( "Some rows of matrix were not matched to any of the given platforms (" + matrix.rows() + " rows, "
+                    + usedDesignElements.size() + " found" );
         }
 
         experiment.setRawExpressionDataVectors( allVectors );
@@ -177,13 +152,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return experiment;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService#getSubMatrixForArrayDesign(ubic.basecode
-     * .dataStructure.matrix.DoubleMatrix, java.util.Collection, ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
     @Override
     public DoubleMatrix<String, String> getSubMatrixForArrayDesign( DoubleMatrix<String, String> matrix,
             Collection<Object> usedDesignElements, ArrayDesign design ) {
@@ -233,13 +201,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return subMatrix;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService#create(ubic.gemma.core.loader.expression.simple
-     * .model.SimpleExpressionExperimentMetaData, java.io.InputStream)
-     */
     @Override
     public ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data )
             throws IOException {
@@ -249,11 +210,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return create( metaData, matrix );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService#parse(java.io.InputStream)
-     */
     @Override
     public DoubleMatrix<String, String> parse( InputStream data ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
@@ -262,10 +218,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
     /**
      * For use in tests.
-     * 
-     * @param metaData
-     * @param matrix
-     * @return
      */
     protected ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData,
             DoubleMatrix<String, String> matrix ) {
@@ -284,11 +236,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return experiment;
     }
 
-    /**
-     * @param metaData
-     * @param matrix
-     * @return
-     */
     private Collection<ArrayDesign> convertArrayDesigns( SimpleExpressionExperimentMetaData metaData,
             DoubleMatrix<String, String> matrix ) {
         Collection<ArrayDesign> arrayDesigns = metaData.getArrayDesigns();
@@ -301,7 +248,8 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             ArrayDesign existing = null;
             if ( arrayDesignService != null ) {
                 // not sure why we need a thaw here, if it's not persistent...must check first anyway to avoid errors.
-                if ( design.getId() != null ) arrayDesignService.thawLite( design );
+                if ( design.getId() != null )
+                    arrayDesignService.thawLite( design );
                 existing = arrayDesignService.find( design );
             }
             if ( existing != null ) {
@@ -330,10 +278,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     }
 
     /**
-     * @param ee
-     * @param arrayDesign
-     * @param taxon
-     * @param matrix
      * @return BioAssayDimension
      */
     private BioAssayDimension convertBioAssayDimension( ExpressionExperiment ee, ArrayDesign arrayDesign, Taxon taxon,
@@ -365,11 +309,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
     }
 
     /**
-     * @param expressionExperiment
-     * @param bioAssayDimension
-     * @param arrayDesign
-     * @param quantitationType
-     * @param matrix
      * @return Collection<DesignElementDataVector>
      */
     private Collection<RawExpressionDataVector> convertDesignElementDataVectors(
@@ -406,10 +345,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return vectors;
     }
 
-    /**
-     * @param metaData
-     * @return
-     */
     private QuantitationType convertQuantitationType( SimpleExpressionExperimentMetaData metaData ) {
         QuantitationType result = QuantitationType.Factory.newInstance();
 
@@ -419,8 +354,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         result.setIsNormalized( Boolean.TRUE );
         result.setIsBackgroundSubtracted( Boolean.TRUE );
         result.setIsBackground( false );
-        result.setName( StringUtils.isBlank( metaData.getQuantitationTypeName() ) ? "QT for " + metaData.getShortName()
-                : metaData.getQuantitationTypeName() );
+        result.setName( StringUtils.isBlank( metaData.getQuantitationTypeName() ) ?
+                "QT for " + metaData.getShortName() :
+                metaData.getQuantitationTypeName() );
         result.setDescription( metaData.getQuantitationTypeDescription() );
         result.setType( metaData.getType() == null ? StandardQuantitationType.AMOUNT : metaData.getType() );
         result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
@@ -434,12 +370,9 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         return result;
     }
 
-    /**
-     * @param taxonName
-     * @return
-     */
     private Taxon convertTaxon( Taxon taxon ) {
-        if ( taxon == null ) throw new IllegalArgumentException( "Taxon cannot be null" );
+        if ( taxon == null )
+            throw new IllegalArgumentException( "Taxon cannot be null" );
         if ( taxonService == null ) {
             return taxon; // for tests
         }
@@ -447,10 +380,6 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
     }
 
-    /**
-     * @param matrix
-     * @param newDesign
-     */
     private void newArrayDesign( DoubleMatrix<String, String> matrix, ArrayDesign newDesign,
             boolean probeNamesAreImageClones, Taxon taxon ) {
         log.info( "Creating new platform " + newDesign );
@@ -471,9 +400,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
 
     /**
      * This will eventually go - no special IMAGE clone support.
-     * 
-     * @param cs
-     * @param taxon
+     *
      * @deprecated
      */
     @Deprecated

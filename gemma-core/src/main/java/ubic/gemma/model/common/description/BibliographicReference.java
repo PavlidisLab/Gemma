@@ -25,7 +25,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 
-public abstract class BibliographicReference extends AbstractAuditable {
+public class BibliographicReference extends AbstractAuditable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -229,7 +229,7 @@ public abstract class BibliographicReference extends AbstractAuditable {
          * Constructs a new instance of {@link BibliographicReference}.
          */
         public static BibliographicReference newInstance() {
-            return new BibliographicReferenceImpl();
+            return new BibliographicReference();
         }
 
     }

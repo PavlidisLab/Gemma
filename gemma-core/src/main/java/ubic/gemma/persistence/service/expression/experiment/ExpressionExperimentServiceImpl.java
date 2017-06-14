@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import gemma.gsec.SecurityService;
-import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -288,6 +287,7 @@ public class ExpressionExperimentServiceImpl
     }
 
     @Override
+    @Transactional
     public void remove( Long id ) {
         // Can not call DAO directly since we have to do some service-layer level house keeping
         this.remove( this.load( id ) );
@@ -349,7 +349,7 @@ public class ExpressionExperimentServiceImpl
                 this.expressionExperimentSetService.update( eeset ); // update set to not reference this experiment.
             }
         }
-        this.expressionExperimentDao.remove( ee.getId() );
+        this.expressionExperimentDao.remove( ee );
     }
 
     /**

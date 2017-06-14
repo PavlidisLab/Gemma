@@ -24,12 +24,9 @@ import java.util.HashSet;
 /**
  * Represents an analysis that combines the results of other analyses of differential expression.
  */
-public abstract class GeneDifferentialExpressionMetaAnalysis
-        extends ubic.gemma.model.analysis.expression.ExpressionAnalysis implements gemma.gsec.model.Securable {
+public class GeneDifferentialExpressionMetaAnalysis extends ubic.gemma.model.analysis.expression.ExpressionAnalysis
+        implements gemma.gsec.model.Securable {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = -2588180973962410595L;
     private Integer numGenesAnalyzed;
     private Double qvalueThresholdForStorage;
@@ -59,9 +56,6 @@ public abstract class GeneDifferentialExpressionMetaAnalysis
         this.qvalueThresholdForStorage = qvalueThresholdForStorage;
     }
 
-    /**
-     *
-     */
     public Collection<GeneDifferentialExpressionMetaAnalysisResult> getResults() {
         return this.results;
     }
@@ -70,9 +64,6 @@ public abstract class GeneDifferentialExpressionMetaAnalysis
         this.results = results;
     }
 
-    /**
-     *
-     */
     public Collection<ExpressionAnalysisResultSet> getResultSetsIncluded() {
         return this.resultSetsIncluded;
     }
@@ -89,7 +80,7 @@ public abstract class GeneDifferentialExpressionMetaAnalysis
          * Constructs a new instance of {@link GeneDifferentialExpressionMetaAnalysis}.
          */
         public static GeneDifferentialExpressionMetaAnalysis newInstance() {
-            return new GeneDifferentialExpressionMetaAnalysisImpl();
+            return new GeneDifferentialExpressionMetaAnalysis();
         }
 
     }

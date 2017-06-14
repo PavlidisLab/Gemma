@@ -19,52 +19,42 @@
 
 package ubic.gemma.core.search;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
-import ubic.gemma.model.common.auditAndSecurity.UserQuery;
-import ubic.gemma.persistence.service.common.auditAndSecurity.UserQueryService;
-import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.common.search.SearchSettings;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.core.tasks.maintenance.IndexerTask;
 import ubic.gemma.core.tasks.maintenance.IndexerTaskCommand;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.common.auditAndSecurity.UserQuery;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.common.search.SearchSettings;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.common.auditAndSecurity.UserQueryService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author kelsey
- * @version $Id$
  */
 public class SearchServiceTest extends BaseSpringContextTest {
     private static final String GENE_URI = "http://purl.org/commons/record/ncbi_gene/";
-
     private static final String SPINAL_CORD = "http://purl.obolibrary.org/obo/FMA_7647";
-
     private static final String BRAIN_CAVITY = "http://purl.obolibrary.org/obo/FMA_242395";
-
     // private static final String PREFRONTAL_CORTEX_URI = "http://purl.org/obo/owl/FMA#FMA_224850";
+
     @Autowired
     private CharacteristicService characteristicService;
 
@@ -98,9 +88,6 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private String geneNcbiId;
 
-    /**
-     * @exception Exception
-     */
     @Before
     public void setup() throws Exception {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );) {
@@ -190,8 +177,10 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() {
-        if ( gene != null ) geneService.remove( gene );
-        if ( ee != null ) eeService.remove( ee );
+        if ( gene != null )
+            geneService.remove( gene );
+        if ( ee != null )
+            eeService.remove( ee );
 
     }
 
@@ -381,7 +370,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
     public void testURIChildSearch() {
         SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( "http://purl.obolibrary.org/obo/FMA_83153" ); // OrganComponent of Neuraxis; superclass of
-                                                                         // 'spinal cord'.
+        // 'spinal cord'.
         settings.setSearchExperiments( true );
         Map<Class<?>, List<SearchResult>> found = this.searchService.search( settings );
         assertTrue( !found.isEmpty() );

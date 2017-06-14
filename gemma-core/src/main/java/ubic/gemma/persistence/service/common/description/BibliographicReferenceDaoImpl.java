@@ -44,7 +44,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from BibliographicReferenceImpl" ).setMaxResults( limit )
+        return this.getSession().createQuery( "from BibliographicReference" ).setMaxResults( limit )
                 .setFirstResult( start ).list();
     }
 
@@ -52,7 +52,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         //noinspection unchecked
         return this.getSession()
-                .createQuery( "from BibliographicReferenceImpl order by :orderField " + ( descending ? "desc" : "" ) )
+                .createQuery( "from BibliographicReference order by :orderField " + ( descending ? "desc" : "" ) )
                 .setMaxResults( limit ).setFirstResult( start ).setParameter( "orderField", orderField ).list();
     }
 
@@ -116,7 +116,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public Collection<Long> listAll() {
         //noinspection unchecked
-        return this.getSession().createQuery( "select id from BibliographicReferenceImpl" ).list();
+        return this.getSession().createQuery( "select id from BibliographicReference" ).list();
     }
 
     @Override
@@ -146,7 +146,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
             return bibliographicReferences;
         //noinspection unchecked
         return this.getSession().createQuery(
-                "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
+                "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
                         + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id in (:ids) " )
                 .setParameterList( "ids", EntityUtils.getIds( bibliographicReferences ) ).list();
     }

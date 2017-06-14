@@ -14,7 +14,6 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +34,7 @@ public class TfGeneAssociationServiceImpl extends AbstractService<TfGeneAssociat
 
     @Autowired
     public TfGeneAssociationServiceImpl( TfGeneAssociationDao tfGeneAssociationDao ) {
-        super(tfGeneAssociationDao);
+        super( tfGeneAssociationDao );
         this.tfGeneAssociationDao = tfGeneAssociationDao;
     }
 

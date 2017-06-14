@@ -18,7 +18,8 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import org.apache.commons.lang3.time.StopWatch;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -87,11 +88,11 @@ public class ExpressionExperimentDaoImpl
     @Override
     @Deprecated
     public void remove( Long id ) {
-        super.remove( id );
+        throw new NotImplementedException( "Use the EEService.remove(ExpressioNExperiment) instead, this method does not do what you want it to." );
     }
 
     @Override
-    public void remove( final ExpressionExperiment toDelete ) {
+    public void remove( ExpressionExperiment toDelete ) {
 
         if ( toDelete == null )
             throw new IllegalArgumentException();
@@ -104,6 +105,7 @@ public class ExpressionExperimentDaoImpl
             // At this point, the ee is probably still in the session, as the service already has gotten it
             // in this transaction.
             session.flush();
+            session.clear();
 
             session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
@@ -250,8 +252,6 @@ public class ExpressionExperimentDaoImpl
             log.error( e );
         } finally {
             log.info( "Finalising remove method." );
-            session.flush();
-            log.info( "Remove done." );
         }
     }
 

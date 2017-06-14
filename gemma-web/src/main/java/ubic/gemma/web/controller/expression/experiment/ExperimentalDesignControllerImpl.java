@@ -316,8 +316,8 @@ public class ExperimentalDesignControllerImpl extends BaseController implements 
             ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
             designId = ee.getExperimentalDesign().getId();
         } else if ( e.getClassDelegatingFor().equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
-                .equalsIgnoreCase( "ExperimentalDesignImpl" ) || e.getClassDelegatingFor()
-                .endsWith( ".ExperimentalDesignImpl" ) ) {
+                .equalsIgnoreCase( "ExperimentalDesign" ) || e.getClassDelegatingFor()
+                .endsWith( ".ExperimentalDesign" ) ) {
             designId = e.getId();
         } else {
             throw new RuntimeException( "Don't know how to process a " + e.getClassDelegatingFor() );

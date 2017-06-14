@@ -18,60 +18,30 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
  * @see ExperimentalDesignService
  */
 @Service
 public class ExperimentalDesignServiceImpl extends ExperimentalDesignServiceBase {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.expression.experiment.ExperimentalDesignServiceBase#handleFind(ubic.gemma.model.expression.
-     * experiment.ExperimentalDesign)
-     */
-    @Override
-    protected ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign ) {
-        return this.getExperimentalDesignDao().find( experimentalDesign );
-    }
+    ExperimentalDesignDao experimentalDesignDao;
 
-    @Override
-    protected ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign ) {
-        return this.getExperimentalDesignDao().findOrCreate( experimentalDesign );
+    @Autowired
+    public ExperimentalDesignServiceImpl( ExperimentalDesignDao experimentalDesignDao ) {
+        super( experimentalDesignDao );
+        this.experimentalDesignDao = experimentalDesignDao;
     }
 
     @Override
     protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign ) {
-        return this.getExperimentalDesignDao().getExpressionExperiment( experimentalDesign );
-    }
-
-    @Override
-    protected ExperimentalDesign handleLoad( Long id ) {
-        return this.getExperimentalDesignDao().load( id );
-    }
-
-    /**
-     * @see ExperimentalDesignService#getExperimentalDesigns()
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<ExperimentalDesign> handleLoadAll() {
-        return ( Collection<ExperimentalDesign> ) this.getExperimentalDesignDao().loadAll();
-    }
-
-    @Override
-    protected void handleUpdate( ExperimentalDesign experimentalDesign ) {
-        this.getExperimentalDesignDao().update( experimentalDesign );
+        return this.experimentalDesignDao.getExpressionExperiment( experimentalDesign );
     }
 
 }

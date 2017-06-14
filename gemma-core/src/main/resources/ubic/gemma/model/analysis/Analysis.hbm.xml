@@ -29,8 +29,8 @@
 		 
 		<subclass name="ubic.gemma.model.analysis.expression.ExpressionAnalysis" discriminator-value="ExpressionAnalysis"
 			dynamic-insert="false" dynamic-update="false" abstract="true">
-			<subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl"
-				discriminator-value="GeneDifferentialExpressionMetaAnalysisImpl" dynamic-insert="false" dynamic-update="false"
+			<subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis"
+				discriminator-value="GeneDifferentialExpressionMetaAnalysis" dynamic-insert="false" dynamic-update="false"
 				abstract="false">
 				<property name="numGenesAnalyzed" type="java.lang.Integer">
 					<column name="NUM_GENES_ANALYZED" not-null="false" unique="false" sql-type="INTEGER" />

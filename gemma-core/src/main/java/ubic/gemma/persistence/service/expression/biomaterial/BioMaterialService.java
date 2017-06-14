@@ -40,6 +40,9 @@ public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, Bi
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     BioMaterial copy( BioMaterial bioMaterial );
 
+    @Secured({ "GROUP_USER" })
+    BioMaterial create( BioMaterial bioMaterial );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE__READ" })
     Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment );
 

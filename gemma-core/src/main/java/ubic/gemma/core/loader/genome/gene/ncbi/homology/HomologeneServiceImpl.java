@@ -229,7 +229,7 @@ public class HomologeneServiceImpl implements HomologeneService {
                 while ( !interrupted && !ready.get() ) {
 
                     try (InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() )) {
-                        parseHomologGeneFile( is );
+                        parseHomologeneFile( is );
                     } catch ( IOException ioe ) {
                         log.error( "Unable to parse homologene file. Error is " + ioe );
                     }
@@ -248,25 +248,22 @@ public class HomologeneServiceImpl implements HomologeneService {
 
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
-
     /**
      * Given an NCBI Homologene Group ID returns a list of all the NCBI Gene Ids in the given group
      *
      * @return Collection of NCBI Gene Ids, or null if not ready.
      */
-    protected Collection<Long> getNCBIGeneIdsInGroup( long homologeneGrouopId ) {
-
+    @Override
+    public Collection<Long> getNCBIGeneIdsInGroup( long homologeneGroupId ) {
         if ( !this.ready.get() ) {
             return null;
         }
-
-        return this.group2Gene.get( homologeneGrouopId );
+        return this.group2Gene.get( homologeneGroupId );
     }
 
-    protected void parseHomologGeneFile( InputStream is ) throws IOException {
+
+    @Override
+    public void parseHomologeneFile( InputStream is ) throws IOException {
 
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
         String line;

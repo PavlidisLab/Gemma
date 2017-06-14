@@ -30,7 +30,7 @@
          </key>
          <one-to-many class="ubic.gemma.model.expression.experiment.FactorValue"/>
       </set>
-      <many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" cascade="none"  lazy="proxy" fetch="select">
+      <many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesign" cascade="none"  lazy="proxy" fetch="select">
          <column name="EXPERIMENTAL_DESIGN_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="category" class="ubic.gemma.model.common.description.Characteristic"  cascade="all" lazy="false" fetch="select">

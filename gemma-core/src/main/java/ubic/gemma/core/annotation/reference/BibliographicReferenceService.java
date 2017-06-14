@@ -47,6 +47,9 @@ public interface BibliographicReferenceService extends BaseVoEnabledService<Bibl
 
     List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
 
+    @Secured({ "GROUP_USER" })
+    BibliographicReference create( BibliographicReference bibliographicReference );
+
     /**
      * check to see if the object already exists
      */

@@ -41,6 +41,15 @@ public interface ProtocolService extends BaseService<Protocol> {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( Protocol protocol );
 
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Collection<Protocol> entities );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( Long id );
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( Collection<Protocol> entities );
+
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<Protocol> loadAll();
 

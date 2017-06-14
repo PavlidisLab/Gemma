@@ -21,7 +21,6 @@ package ubic.gemma.persistence.service.genome.taxon;
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
@@ -41,6 +40,21 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
 
     @Secured({ "GROUP_USER" })
     Taxon findOrCreate( Taxon taxon );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Taxon taxon );
+
+    @Secured({ "GROUP_USER" })
+    void update( Taxon taxon );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Collection<Taxon> entities );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Long id );
+
+    @Secured({ "GROUP_USER" })
+    void update( Collection<Taxon> entities );
 
     /**
      * @return Taxon that have genes loaded into Gemma and that should be used

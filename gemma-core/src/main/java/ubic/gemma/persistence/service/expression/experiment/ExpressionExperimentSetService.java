@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -37,6 +36,9 @@ public interface ExpressionExperimentSetService
         extends BaseVoEnabledService<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
     String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
+
+    @Secured({ "GROUP_USER" })
+    ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
 
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo );
@@ -180,12 +182,13 @@ public interface ExpressionExperimentSetService
     ExpressionExperimentSetValueObject updateDatabaseEntityNameDesc( ExpressionExperimentSetValueObject eeSetVO,
             boolean loadEEIds );
 
-    @Transactional(readOnly = true)
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id );
 
-    @Transactional(readOnly = true)
-    Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds, boolean loadEEIds );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
+    Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds,
+            boolean loadEEIds );
 
-    @Transactional(readOnly = true)
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
 }

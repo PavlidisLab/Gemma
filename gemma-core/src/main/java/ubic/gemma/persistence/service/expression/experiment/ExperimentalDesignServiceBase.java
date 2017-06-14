@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * Spring Service base class for <code>ubic.gemma.model.expression.experiment.ExperimentalDesignService</code>, provides
@@ -30,18 +32,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * 
  * @see ExperimentalDesignService
  */
-public abstract class ExperimentalDesignServiceBase implements ExperimentalDesignService {
+public abstract class ExperimentalDesignServiceBase extends AbstractService<ExperimentalDesign> implements ExperimentalDesignService {
 
-    @Autowired
-    private ExperimentalDesignDao experimentalDesignDao;
-
-    /**
-     * @see ExperimentalDesignService#find(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ExperimentalDesign find( final ExperimentalDesign experimentalDesign ) {
-        return this.handleFind( experimentalDesign );
+    public ExperimentalDesignServiceBase( ExperimentalDesignDao mainDao ) {
+        super( mainDao );
     }
 
     /**
@@ -54,74 +48,9 @@ public abstract class ExperimentalDesignServiceBase implements ExperimentalDesig
     }
 
     /**
-     * @see ExperimentalDesignService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ExperimentalDesign load( final java.lang.Long id ) {
-        return this.handleLoad( id );
-    }
-
-    /**
-     * @see ExperimentalDesignService#loadAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<ExperimentalDesign> loadAll() {
-        return this.handleLoadAll();
-    }
-
-    /**
-     * Sets the reference to <code>experimentalDesign</code>'s DAO.
-     */
-    public void setExperimentalDesignDao( ExperimentalDesignDao experimentalDesignDao ) {
-        this.experimentalDesignDao = experimentalDesignDao;
-    }
-
-    /**
-     * @see ExperimentalDesignService#update(ubic.gemma.model.expression.experiment.ExperimentalDesign)
-     */
-    @Override
-    @Transactional
-    public void update( final ExperimentalDesign experimentalDesign ) {
-        this.handleUpdate( experimentalDesign );
-    }
-
-    /**
-     * Gets the reference to <code>experimentalDesign</code>'s DAO.
-     */
-    protected ExperimentalDesignDao getExperimentalDesignDao() {
-        return this.experimentalDesignDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
-     */
-    protected abstract ExperimentalDesign handleFind( ExperimentalDesign experimentalDesign );
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.expression.experiment.ExperimentalDesign)}
-     */
-    protected abstract ExperimentalDesign handleFindOrCreate( ExperimentalDesign experimentalDesign );
-
-    /**
      * Performs the core logic for {@link #getExpressionExperiment(ExperimentalDesign)}
      */
     protected abstract ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign experimentalDesign );
 
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ExperimentalDesign handleLoad( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection<ExperimentalDesign> handleLoadAll();
-
-    /**
-     * Performs the core logic for {@link #update(ExperimentalDesign)}
-     */
-    protected abstract void handleUpdate( ExperimentalDesign experimentalDesign );
 
 }

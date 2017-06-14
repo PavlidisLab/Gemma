@@ -77,7 +77,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
     @Override
     public Collection<GeneDifferentialExpressionMetaAnalysis> findByTaxon( Taxon taxon ) {
-        final String queryString = "select goa from GeneDifferentialExpressionMetaAnalysisImpl as goa where goa.taxon = :taxon ";
+        final String queryString = "select goa from GeneDifferentialExpressionMetaAnalysis as goa where goa.taxon = :taxon ";
         //noinspection unchecked
         return this.getSession().createQuery( queryString ).setParameter( "taxon", taxon ).list();
     }
@@ -87,7 +87,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
             long analysisId ) {
         final String queryString =
                 "select ra.experimentAnalyzed.id, ra.experimentAnalyzed.sourceExperiment.id, ra.id, rs.id "
-                        + "from GeneDifferentialExpressionMetaAnalysisImpl a " + "join a.resultSetsIncluded rs "
+                        + "from GeneDifferentialExpressionMetaAnalysis a " + "join a.resultSetsIncluded rs "
                         + "join rs.analysis ra " + "where a.id = :aId ";
 
         //noinspection unchecked
@@ -121,7 +121,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
 
         if ( metaAnalysisIds.size() > 0 ) {
             final String queryString = "select a.id, a.name, a.description, a.numGenesAnalyzed, "
-                    + "count(distinct rs), count(distinct r) " + "from GeneDifferentialExpressionMetaAnalysisImpl a "
+                    + "count(distinct rs), count(distinct r) " + "from GeneDifferentialExpressionMetaAnalysis a "
                     + "left join a.resultSetsIncluded rs " + "left join a.results r " + "where a.id in (:aIds) "
                     + "group by a.id ";
 
@@ -148,7 +148,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     public Collection<GeneDifferentialExpressionMetaAnalysisResultValueObject> findResultsById( long analysisId ) {
         final String query =
                 "select r.gene.officialSymbol, r.gene.officialName, " + "r.metaPvalue, r.metaQvalue, r.upperTail "
-                        + "from GeneDifferentialExpressionMetaAnalysisImpl a " + "left join a.results r "
+                        + "from GeneDifferentialExpressionMetaAnalysis a " + "left join a.results r "
                         + "where a.id = :aId " + "group by r ";
 
         //noinspection unchecked
@@ -211,7 +211,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
     }
 
     private Collection<GeneDifferentialExpressionMetaAnalysis> findByInvestigationId( Long id ) {
-        final String queryString = "select distinct a from GeneDifferentialExpressionMetaAnalysisImpl a"
+        final String queryString = "select distinct a from GeneDifferentialExpressionMetaAnalysis a"
                 + "  inner join a.resultSetsIncluded rs inner join rs.analysis ra where ra.experimentAnalyzed.id = :eeId";
         //noinspection unchecked
         return this.getSession().createQuery( queryString ).setParameter( "eeId", id ).list();
@@ -229,7 +229,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
          */
         //noinspection unchecked
         results.addAll( this.getSession().createQuery(
-                "select distinct a from ExpressionExperimentSubSetImpl subset, GeneDifferentialExpressionMetaAnalysisImpl a"
+                "select distinct a from ExpressionExperimentSubSetImpl subset, GeneDifferentialExpressionMetaAnalysis a"
                         + " join subset.sourceExperiment see "
                         + "   inner join a.resultSetsIncluded rs  join rs.analysis ra inner join ra.experimentAnalyzed eeanalyzed where see.id=:ee and subset=eeanalyzed" )
                 .setParameter( "ee", id ).list() );

@@ -178,22 +178,22 @@
 	<cache name="ubic.gemma.model.common.description.FileFormatImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.annotations" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.annotations" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.meshTerms" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.meshTerms" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.publicationTypes"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.publicationTypes"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.keywords" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.keywords" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.chemicals" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.chemicals" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.description.Characteristic" maxElementsInMemory="200000" eternal="false"
@@ -434,14 +434,14 @@
 	<cache name="ubic.gemma.model.expression.experiment.FactorValue.characteristics" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" maxElementsInMemory="10000" eternal="false"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesign" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<!-- we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.experimentalFactors"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesign.experimentalFactors"
 		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.types" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesign.types" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor" maxElementsInMemory="10000" eternal="false"

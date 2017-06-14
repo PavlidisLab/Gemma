@@ -45,7 +45,7 @@ public abstract class BibliographicReferenceDaoBase
     public BibliographicReference findByExternalId( final String id, final String databaseName ) {
         //noinspection unchecked
         return ( BibliographicReference ) this.getSession().createQuery(
-                "from BibliographicReferenceImpl b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
+                "from BibliographicReference b where b.pubAccession.accession=:id AND b.pubAccession.externalDatabase.name=:databaseName" )
                 .setParameter( "id", id ).setParameter( "databaseName", databaseName ).uniqueResult();
     }
 
@@ -53,7 +53,7 @@ public abstract class BibliographicReferenceDaoBase
     public BibliographicReference findByExternalId( final DatabaseEntry externalId ) {
         //noinspection unchecked
         return ( BibliographicReference ) this.getSession()
-                .createQuery( "from BibliographicReferenceImpl b where b.pubAccession=:externalId" )
+                .createQuery( "from BibliographicReference b where b.pubAccession=:externalId" )
                 .setParameter( "externalId", externalId ).uniqueResult();
     }
 

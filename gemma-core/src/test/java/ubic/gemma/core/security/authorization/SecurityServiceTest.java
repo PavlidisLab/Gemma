@@ -50,7 +50,6 @@ import static org.junit.Assert.*;
  * Tests the SecurityService: making objects public or private and testing the permissions.
  *
  * @author keshav
- * @version $Id$
  */
 public class SecurityServiceTest extends BaseSpringContextTest {
 
@@ -71,11 +70,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     @Autowired
     private AclTestUtils aclTestUtils;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() {
         this.arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
@@ -111,8 +105,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     /**
      * Tests that the same ACE can not be added twice to a securable object.
-     *
-     * @throws Exception
      */
     @Test
     public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
@@ -214,9 +206,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testMakeExpressionExperimentPrivate() throws Exception {
 
@@ -249,8 +238,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     /**
      * Tests changing object level security on the ArrayDesign from public to private WITHOUT the correct permission
      * (You need to be administrator).
-     *
-     * @throws Exception
      */
     @Test
     public void testMakePrivateWithoutPermission() throws Exception {
@@ -270,8 +257,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     /**
      * Tests an unlikely scenario?? but if there is an acl that was duplicated with same principal, permission and
      * object then both acls can be deleted.
-     *
-     * @throws Exception
      */
     @Test
     public void testRemoveMultipleAcesFromPrivateExpressionExperiment() throws Exception {

@@ -86,7 +86,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
                     "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
                             + " join parent." + field + " as char where char.valueUri in  (:uriStrings) ";
             //noinspection unchecked
-            result.addAll( this.getSession().createQuery( queryString ).setParameter( "uriStrings", characteristicUris )
+            result.addAll( this.getSession().createQuery( queryString ).setParameterList( "uriStrings", characteristicUris )
                     .list() );
         }
 

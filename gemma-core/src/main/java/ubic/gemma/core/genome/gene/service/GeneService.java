@@ -20,6 +20,7 @@ package ubic.gemma.core.genome.gene.service;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -38,13 +39,19 @@ import java.util.Map;
  */
 public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject> {
 
+    @Secured({ "GROUP_ADMIN" })
+    Collection<Gene> create( Collection<Gene> genes );
+
+    @Secured({ "GROUP_ADMIN" })
+    Gene create( Gene gene );
+
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
      * region. If strand is non-null, only genes on the same strand are returned.
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    Gene findByAccession( String accession, ubic.gemma.model.common.description.ExternalDatabase source );
+    Gene findByAccession( String accession, ExternalDatabase source );
 
     Collection<Gene> findByAlias( String search );
 
@@ -166,5 +173,11 @@ public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject>
     void thawLite( Gene gene );
 
     void thawLiter( Gene gene );
+
+    @Secured({ "GROUP_ADMIN" })
+    void update( Collection<Gene> genes );
+
+    @Secured({ "GROUP_ADMIN" })
+    void update( Gene gene );
 
 }

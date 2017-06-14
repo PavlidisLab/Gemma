@@ -48,7 +48,7 @@
 			<meta-data>ncbi id</meta-data>
 		</property>
 	</class>
-	<class name="common.description.BibliographicReferenceImpl"
+	<class name="common.description.BibliographicReference"
 		alias="bibliographicReference" root="false" support-unmarshall="false">
 		<id name="id" />
 		<property name="name">

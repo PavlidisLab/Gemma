@@ -97,4 +97,16 @@ public interface CharacteristicService extends BaseVoEnabledService<Characterist
 
     Collection<? extends Characteristic> findByCategory( String queryPrefix );
 
+    @Secured({ "GROUP_USER" })
+    Characteristic create( Characteristic c );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Characteristic c );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Long id );
+
+    @Secured({ "GROUP_USER" })
+    void update( Characteristic c );
+
 }

@@ -56,8 +56,12 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
+    @Secured({ "GROUP_USER" })
+    @Override
+    ArrayDesign create( ArrayDesign arrayDesign );
+
     /**
-     * remove sequence alignment results associated with the bioSequences for this array design. This can indirectly
+     * delete sequence alignment results associated with the bioSequences for this array design. This can indirectly
      * affect other platforms that use the same sequences.
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -70,6 +74,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    @Override
     ArrayDesign find( ArrayDesign arrayDesign );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -91,6 +96,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     Collection<ArrayDesign> findByTaxon( Taxon taxon );
 
     @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
+    @Override
     ArrayDesign findOrCreate( ArrayDesign arrayDesign );
 
     /**
@@ -170,6 +176,21 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     Map<Long, Boolean> isSubsumed( Collection<Long> ids );
 
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
+    @Override
+    ArrayDesign load( Long id );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Override
+    Collection<ArrayDesign> loadAll();
+
+    /**
+     * Given a collection of ID (longs) will return a collection of ArrayDesigns
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Override
+    Collection<ArrayDesign> load( Collection<Long> ids );
 
     /**
      * Loads the Value Objects for array designs used by expression experiment with the given ID
@@ -253,6 +274,7 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     long numGenes( ArrayDesign arrayDesign );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Override
     void remove( ArrayDesign arrayDesign );
 
     /**
@@ -265,6 +287,10 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Override
+    void thaw( ArrayDesign arrayDesign );
+
     /**
      * Perform a less intensive thaw of an array design: not the composite sequences.
      */
@@ -273,6 +299,10 @@ public interface ArrayDesignService extends BaseVoEnabledService<ArrayDesign, Ar
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     void thawLite( Collection<ArrayDesign> arrayDesigns );
+
+    @Override
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void update( ArrayDesign arrayDesign );
 
     /**
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to

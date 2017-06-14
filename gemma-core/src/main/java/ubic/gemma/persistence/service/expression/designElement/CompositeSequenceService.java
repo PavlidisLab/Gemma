@@ -25,7 +25,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
@@ -34,7 +33,14 @@ import java.util.Map;
 /**
  * @author paul
  */
-public interface CompositeSequenceService extends BaseVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
+public interface CompositeSequenceService
+        extends BaseVoEnabledService<CompositeSequence, CompositeSequenceValueObject> {
+
+    @Secured({ "GROUP_USER" })
+    Collection<CompositeSequence> create( Collection<CompositeSequence> compositeSequences );
+
+    @Secured({ "GROUP_USER" })
+    CompositeSequence create( CompositeSequence compositeSequence );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
     CompositeSequence find( CompositeSequence compositeSequence );
@@ -86,5 +92,17 @@ public interface CompositeSequenceService extends BaseVoEnabledService<Composite
      */
     @Deprecated
     Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_ARRAYDESIGN_COLLECTION_READ" })
+    Collection<CompositeSequence> load( Collection<Long> ids );
+
+    @Secured({ "GROUP_USER" })
+    void remove( Collection<CompositeSequence> sequencesToDelete );
+
+    @Secured({ "GROUP_USER" })
+    void remove( CompositeSequence compositeSequence );
+
+    @Secured({ "GROUP_USER" })
+    void update( CompositeSequence compositeSequence );
 
 }

@@ -18,6 +18,8 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 
 /**
@@ -59,5 +61,9 @@ public interface HomologeneService {
      */
 
     Collection<GeneValueObject> getHomologueValueObjects( Long geneId );
+
+    Collection<Long> getNCBIGeneIdsInGroup( long homologeneGroupId );
+
+    void parseHomologeneFile( InputStream is ) throws IOException;
 
 }

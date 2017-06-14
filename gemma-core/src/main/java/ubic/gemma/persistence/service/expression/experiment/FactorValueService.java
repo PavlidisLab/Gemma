@@ -18,18 +18,20 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
  */
 public interface FactorValueService extends BaseVoEnabledService<FactorValue, FactorValueValueObject> {
+
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    void remove( FactorValue factorValue );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<FactorValue> findByValue( String valuePrefix );

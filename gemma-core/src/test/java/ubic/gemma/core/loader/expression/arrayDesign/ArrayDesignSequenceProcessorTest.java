@@ -47,7 +47,6 @@ import ubic.gemma.persistence.util.Settings;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignSequenceProcessorTest extends AbstractGeoServiceTest {
 

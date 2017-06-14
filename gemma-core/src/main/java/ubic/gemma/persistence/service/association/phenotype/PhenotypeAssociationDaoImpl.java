@@ -89,7 +89,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return ( Long ) this.getHibernateTemplate()
                 .find( "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
-                        + "in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                        + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" ).iterator().next();
     }
 
@@ -612,7 +612,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         //noinspection unchecked
         return ( List<DifferentialExpressionEvidence> ) tpl
                 .find( "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
-                        + "in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                        + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" );
     }
 

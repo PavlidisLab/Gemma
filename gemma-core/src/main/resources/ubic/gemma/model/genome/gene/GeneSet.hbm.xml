@@ -34,7 +34,7 @@
          <key foreign-key="BIBLIOGRAPHIC_REFERENCE_GENE_SETS_FKC">
             <column name="GENE_SETS_FK" sql-type="BIGINT"/>
          </key>
-         <many-to-many class="ubic.gemma.model.common.description.BibliographicReferenceImpl" >
+         <many-to-many class="ubic.gemma.model.common.description.BibliographicReference" >
             <column name="LITERATURE_SOURCES_FK" sql-type="BIGINT"/>
          </many-to-many>
       </set>

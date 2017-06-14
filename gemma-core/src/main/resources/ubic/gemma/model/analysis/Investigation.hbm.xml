@@ -33,7 +33,7 @@
 		<many-to-one name="owner" class="ubic.gemma.model.common.auditAndSecurity.Contact" lazy="proxy" fetch="select">
 			<column name="OWNER_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
-		<many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReferenceImpl"
+		<many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReference"
 			lazy="proxy" fetch="select">
 			<column name="PRIMARY_PUBLICATION_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
@@ -41,7 +41,7 @@
 			<key foreign-key="BIBLIOGRAPHIC_REFERENCE_INVESTIGATIONS_FKC">
 				<column name="INVESTIGATIONS_FK" sql-type="BIGINT" />
 			</key>
-			<many-to-many class="ubic.gemma.model.common.description.BibliographicReferenceImpl">
+			<many-to-many class="ubic.gemma.model.common.description.BibliographicReference">
 				<column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT" />
 			</many-to-many>
 		</set>
@@ -82,7 +82,7 @@
 					lazy="proxy" fetch="select">
 					<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
-				<many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"
+				<many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesign"
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>

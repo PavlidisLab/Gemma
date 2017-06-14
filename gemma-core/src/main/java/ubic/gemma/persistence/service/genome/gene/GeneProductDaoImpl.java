@@ -187,14 +187,16 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     }
 
     @Override
-    public void thaw( GeneProduct existing ) {
-
-        Hibernate.initialize( existing.getGene() );
-        Hibernate.initialize( existing.getGene().getTaxon() );
-        Hibernate.initialize( existing.getPhysicalLocation() );
-        Hibernate.initialize( existing.getPhysicalLocation().getChromosome() );
-        Hibernate.initialize( existing.getPhysicalLocation().getChromosome().getTaxon() );
-        Hibernate.initialize( existing.getAccessions() );
+    public void thaw( GeneProduct gp ) {
+        Hibernate.initialize( gp.getGene() );
+        Hibernate.initialize( gp.getGene().getTaxon() );
+        Hibernate.initialize( gp.getPhysicalLocation() );
+        if ( gp.getPhysicalLocation() != null ) {
+            Hibernate.initialize( gp.getPhysicalLocation().getChromosome() );
+            if ( gp.getPhysicalLocation().getChromosome() != null )
+                Hibernate.initialize( gp.getPhysicalLocation().getChromosome().getTaxon() );
+        }
+        Hibernate.initialize( gp.getAccessions() );
 
     }
 

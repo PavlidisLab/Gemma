@@ -88,7 +88,7 @@ public class GeneDifferentialExpressionMetaAnalysisSummaryValueObject implements
 
     @Override
     public Class<? extends Securable> getSecurableClass() {
-        return GeneDifferentialExpressionMetaAnalysisImpl.class;
+        return GeneDifferentialExpressionMetaAnalysis.class;
     }
 
     @Override

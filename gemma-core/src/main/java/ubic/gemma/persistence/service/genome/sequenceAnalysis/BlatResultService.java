@@ -18,10 +18,10 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-import ubic.gemma.persistence.service.BaseService;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 import java.util.Collection;
@@ -32,5 +32,14 @@ import java.util.Collection;
 public interface BlatResultService extends BaseVoEnabledService<BlatResult, BlatResultValueObject> {
 
     Collection<BlatResult> findByBioSequence( BioSequence bioSequence );
+
+    @Secured({ "GROUP_USER" })
+    void remove( BlatResult blatResult );
+
+    @Secured({ "GROUP_USER" })
+    void update( BlatResult blatResult );
+
+    @Secured({ "GROUP_USER" })
+    BlatResult create( BlatResult blatResult );
 
 }

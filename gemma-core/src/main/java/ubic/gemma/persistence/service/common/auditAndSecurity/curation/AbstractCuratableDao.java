@@ -9,6 +9,8 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.curation.CurationDetails;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDao;
+import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsDaoImpl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +27,16 @@ public abstract class AbstractCuratableDao<C extends Curatable, VO extends Abstr
 
     public AbstractCuratableDao( Class<C> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
+    }
+
+    @Override
+    public C create( final C entity ) {
+        super.create( entity );
+        if ( entity.getCurationDetails() == null ) {
+            CurationDetailsDao curationDetailsDao = new CurationDetailsDaoImpl( getSessionFactory() );
+            entity.setCurationDetails( curationDetailsDao.create() );
+        }
+        return entity;
     }
 
     /* ********************************

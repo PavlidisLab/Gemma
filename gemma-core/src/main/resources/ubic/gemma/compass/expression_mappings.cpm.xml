@@ -38,7 +38,7 @@
          <meta-data>bioassay description</meta-data>
       </property>
    </class>
-   <class name="expression.experiment.ExperimentalDesignImpl" alias="experimentalDesign" root="false">
+   <class name="expression.experiment.ExperimentalDesign" alias="experimentalDesign" root="false">
       <id name="id" />
       <component name="experimentalFactors" ref-alias="experimentalFactor" />
    </class>
@@ -52,7 +52,7 @@
          <meta-data>experimentalFactor description</meta-data>
       </property>
    </class>
-   <class name="common.description.BibliographicReferenceImpl" alias="primaryPublication" root="false">
+   <class name="common.description.BibliographicReference" alias="primaryPublication" root="false">
       <id name="id" />
       <property name="authorList">
          <meta-data>author List</meta-data>
@@ -67,7 +67,7 @@
          <meta-data>abstract</meta-data>
       </property>
    </class>
-   <class name="common.description.BibliographicReferenceImpl" alias="otherRelevantPublications" root="false">
+   <class name="common.description.BibliographicReference" alias="otherRelevantPublications" root="false">
       <id name="id" />
       <property name="authorList">
          <meta-data>author List</meta-data>

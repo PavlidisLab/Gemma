@@ -48,7 +48,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
     @Override
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getSession().createQuery( "select a from GeneDifferentialExpressionMetaAnalysisImpl a"
+        return this.getSession().createQuery( "select a from GeneDifferentialExpressionMetaAnalysis a"
                 + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" ).list().isEmpty();
     }
 
@@ -63,7 +63,6 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
         }
 
         Hibernate.initialize( resultSet.getAnalysis() );
-        System.out.println( "thawing experiment analyzed for rs: "+resultSet.getId() );
         Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
     }
 
