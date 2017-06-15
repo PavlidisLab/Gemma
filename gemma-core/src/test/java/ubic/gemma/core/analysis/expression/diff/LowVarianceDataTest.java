@@ -164,7 +164,6 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
         assertEquals( 2, factors.size() );
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
 
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );

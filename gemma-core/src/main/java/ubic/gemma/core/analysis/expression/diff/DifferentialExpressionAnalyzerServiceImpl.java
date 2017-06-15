@@ -169,9 +169,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
          * match. But that requires matching up old and new result sets.
          */
         differentialExpressionAnalysisService.thaw( toUpdate );
-        DifferentialExpressionAnalysisConfig config = copyConfig( toUpdate, null );
-
-        assert config.getQvalueThreshold() == null;
+        DifferentialExpressionAnalysisConfig config = copyConfig( toUpdate );
 
         Collection<DifferentialExpressionAnalysis> results = redoWithoutSave( ee, toUpdate, config );
 
@@ -222,13 +220,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
             analysis.getResultSets().add( prs );
             rs.getResults().addAll( results );
 
-            prs.setQvalueThresholdForStorage( config.getQvalueThreshold() );
             addPvalueDistribution( prs );
 
-        }
-
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-            removeUnwantedResults( config.getQvalueThreshold(), rs.getResults() );
         }
 
         // third transaction - add results.
@@ -271,11 +264,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
     @Override
     public Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, boolean persist ) {
-        return this.redoAnalysis( ee, copyMe, DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD, persist );
-    }
-
-    private Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, Double qValueThreshold, boolean persist ) {
 
         if ( !differentialExpressionAnalysisService.canDelete( copyMe ) ) {
             throw new IllegalArgumentException(
@@ -286,7 +274,7 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         differentialExpressionAnalysisService.thaw( copyMe );
 
         log.info( "Will base analysis on old one: " + copyMe );
-        DifferentialExpressionAnalysisConfig config = copyConfig( copyMe, qValueThreshold );
+        DifferentialExpressionAnalysisConfig config = copyConfig( copyMe );
 
         Collection<DifferentialExpressionAnalysis> results = redoWithoutSave( ee, copyMe, config );
 
@@ -395,10 +383,8 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
      * @param qValueThreshold
      * @return
      */
-    private DifferentialExpressionAnalysisConfig copyConfig( DifferentialExpressionAnalysis copyMe,
-            Double qValueThreshold ) {
+    private DifferentialExpressionAnalysisConfig copyConfig( DifferentialExpressionAnalysis copyMe ) {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setQvalueThreshold( qValueThreshold ); // this might be the same as the original, or not.
 
         if ( copyMe.getSubsetFactorValue() != null ) {
             config.setSubsetFactor( copyMe.getSubsetFactorValue().getExperimentalFactor() );
@@ -558,48 +544,6 @@ public class DifferentialExpressionAnalyzerServiceImpl implements DifferentialEx
         }
 
         return results;
-    }
-
-    private void removeUnwantedResults( Double qvalueThreshold,
-            Collection<DifferentialExpressionAnalysisResult> results ) {
-
-        if ( qvalueThreshold == null ) {
-            log.info( "No qvalue threshold was set, retaining all " + results.size() + " results" );
-            return;
-        }
-        Double workingThreshold = qvalueThreshold;
-
-        int i = trimAboveThreshold( results, workingThreshold );
-
-        /*
-         * We want to have a minimum number so we always have something to look at.
-         */
-        if ( i < MINIMUM_NUMBER_OF_HITS_TO_SAVE && results.size() > MINIMUM_NUMBER_OF_HITS_TO_SAVE ) {
-            List<DifferentialExpressionAnalysisResult> rl = new ArrayList<>( results );
-            Collections.sort( rl, new Comparator<DifferentialExpressionAnalysisResult>() {
-                @Override
-                public int compare( DifferentialExpressionAnalysisResult o1, DifferentialExpressionAnalysisResult o2 ) {
-                    return o1.getPvalue().compareTo( o2.getPvalue() );
-                }
-            } );
-
-            int indexOfLast = Math.min( results.size(), MINIMUM_NUMBER_OF_HITS_TO_SAVE ) - 1;
-            workingThreshold = rl.get( indexOfLast ).getCorrectedPvalue();
-
-            if ( workingThreshold == null || Double.isNaN( workingThreshold ) ) {
-                throw new IllegalStateException( "Threshold was null or NaN" );
-            }
-            i = trimAboveThreshold( results, workingThreshold );
-        }
-
-        log.info( "Retained " + i + " results meeting qvalue of " + workingThreshold );
-
-        /*
-         * If we set a maximum value, it has to be some fraction of the total genes, at which point the results should
-         * be discarded as too non-specific. We can't throw an exception, as there might be other factors in the same
-         * analysis that are okay.
-         */
-
     }
 
     private int trimAboveThreshold( Collection<DifferentialExpressionAnalysisResult> results, Double qvalueThreshold ) {

@@ -141,7 +141,6 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
         config.getFactorsToInclude().add( timepoint );
         config.getFactorsToInclude().add( treatment );
         config.addInteractionToInclude( treatment, timepoint );
-        config.setQvalueThreshold( null );
 
         analyzer = this.getBean( AnalysisSelectionAndExecutionService.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.analyze( ee, config );

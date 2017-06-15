@@ -134,7 +134,6 @@ public class DiffExWithInvalidInteraction2Test extends AbstractGeoServiceTest {
         config.getFactorsToInclude().add( strain );
         config.getFactorsToInclude().add( cell_type );
         config.addInteractionToInclude( cell_type, strain );
-        config.setQvalueThreshold( null );
 
         Collection<DifferentialExpressionAnalysis> result = analyzer.runDifferentialExpressionAnalyses( ee, config );
         assertEquals( 1, result.size() );

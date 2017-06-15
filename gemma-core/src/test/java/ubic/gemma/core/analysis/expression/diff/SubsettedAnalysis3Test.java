@@ -148,7 +148,6 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
         config.getFactorsToInclude().add( organismpart );
 
         config.setSubsetFactor( diseasegroup );
-        config.setQvalueThreshold( null );
 
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertEquals( 6, analyses.size() ); // a subset for each disease: SZ, PD, HD, ALS, ALZ, MS

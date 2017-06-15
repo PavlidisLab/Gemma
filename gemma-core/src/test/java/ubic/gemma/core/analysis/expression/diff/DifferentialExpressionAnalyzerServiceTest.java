@@ -128,7 +128,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
         config.addInteractionToInclude( factors );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
@@ -189,7 +188,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         assertTrue( !analyses.isEmpty() );
@@ -220,7 +218,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factorsToUse );
         config.setSubsetFactor( subsetFactor );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
 
@@ -292,7 +289,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         config.setFactorsToInclude( factors );
         config.setSubsetFactor( subsetFactor );
-        config.setQvalueThreshold( null );
 
         HashSet<Collection<ExperimentalFactor>> ifacts = new HashSet<>();
         ifacts.add( factors );
@@ -340,7 +336,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee, config );
         for ( DifferentialExpressionAnalysis analysis : analyses ) {

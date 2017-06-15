@@ -87,8 +87,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
         assertEquals( 1, factors.size() );
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
-
+ 
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
         assertEquals( 1, result.size() );

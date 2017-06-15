@@ -66,7 +66,6 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
                 experimentalFactorB } );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
 
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();

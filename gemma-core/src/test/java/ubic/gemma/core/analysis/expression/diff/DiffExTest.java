@@ -167,7 +167,6 @@ public class DiffExTest extends AbstractGeoServiceTest {
         // DE analysis
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );
@@ -230,7 +229,6 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( ee.getExperimentalDesign().getExperimentalFactors() );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( ee, config );
         assertNotNull( analyses );
         assertEquals( 1, analyses.size() );

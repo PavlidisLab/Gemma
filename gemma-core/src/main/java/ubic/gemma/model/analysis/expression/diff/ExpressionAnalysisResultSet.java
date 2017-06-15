@@ -52,7 +52,7 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
          * identifier(s))as arguments.
          */
         public static ExpressionAnalysisResultSet newInstance( Collection<ExperimentalFactor> experimentalFactors,
-                Integer numberOfProbesTested, java.lang.Integer numberOfGenesTested, Double qvalueThresholdForStorage,
+                Integer numberOfProbesTested, java.lang.Integer numberOfGenesTested,
                 FactorValue baselineGroup, Collection<DifferentialExpressionAnalysisResult> results,
                 DifferentialExpressionAnalysis analysis, PvalueDistribution pvalueDistribution,
                 Collection<HitListSize> hitListSizes ) {
@@ -60,7 +60,6 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
             entity.setExperimentalFactors( experimentalFactors );
             entity.setNumberOfProbesTested( numberOfProbesTested );
             entity.setNumberOfGenesTested( numberOfGenesTested );
-            entity.setQvalueThresholdForStorage( qvalueThresholdForStorage );
             entity.setBaselineGroup( baselineGroup );
             entity.setResults( results );
             entity.setAnalysis( analysis );
@@ -73,8 +72,6 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
     private Integer numberOfProbesTested;
 
     private Integer numberOfGenesTested;
-
-    private Double qvalueThresholdForStorage;
 
     private FactorValue baselineGroup;
 
@@ -132,16 +129,6 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
     }
 
     /**
-     * <p>
-     * What false discovery rate threshold was used for storing data when the analysis was initially run. If null or
-     * 1.0, implies all results were stored.
-     * </p>
-     */
-    public Double getQvalueThresholdForStorage() {
-        return this.qvalueThresholdForStorage;
-    }
-
-    /**
      * 
      */
     @Override
@@ -171,10 +158,6 @@ public abstract class ExpressionAnalysisResultSet extends FactorAssociatedAnalys
 
     public void setPvalueDistribution( PvalueDistribution pvalueDistribution ) {
         this.pvalueDistribution = pvalueDistribution;
-    }
-
-    public void setQvalueThresholdForStorage( Double qvalueThresholdForStorage ) {
-        this.qvalueThresholdForStorage = qvalueThresholdForStorage;
     }
 
     public void setResults( Collection<DifferentialExpressionAnalysisResult> results ) {

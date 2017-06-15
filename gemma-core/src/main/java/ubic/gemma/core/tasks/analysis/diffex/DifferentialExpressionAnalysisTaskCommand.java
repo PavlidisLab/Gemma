@@ -18,7 +18,6 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
@@ -64,8 +63,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      * Whether to moderate test statistics via empirical Bayes
      */
     private boolean moderateStatistics = false;
-
-    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
 
     private ExperimentalFactor subsetFactor;
 
@@ -118,10 +115,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     public Collection<ExperimentalFactor> getFactors() {
         return factors;
-    }
-
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
     }
 
     /**
@@ -183,10 +176,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
     public void setModerateStatistics( boolean moderateStatistics ) {
         this.moderateStatistics = moderateStatistics;
-    }
-
-    public void setQvalueThreshold( Double qvalueThreshold ) {
-        this.qvalueThreshold = qvalueThreshold;
     }
 
     /**

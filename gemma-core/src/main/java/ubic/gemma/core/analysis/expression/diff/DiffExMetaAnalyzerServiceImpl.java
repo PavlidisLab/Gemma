@@ -100,9 +100,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     @Override
     public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
         for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
-            // this will only be necessary if there are new results added. FIXME perhaps don't save everything. Just
-            // save the ones we need. Remove the unneeded ones. Drawback: could end up redoing this multiple times.
-            r.setQvalueThresholdForStorage( 1.0 );
             differentialExpressionResultService.update( r );
         }
 
@@ -148,7 +145,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * The pvalues stored in a DifferentialExpressionAnalysisResult are two-tailed, so we have to divide by two, and
      * then decide which tail to provide.
      *
-     * @param res       that are all from the same gene, from a single resultset.
+     * @param res that are all from the same gene, from a single resultset.
      * @param upperTail if true, the upper tail probability is given, lower tail otehrwise.
      * @return the pvalue that represents the overall results.
      */
@@ -589,33 +586,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
         }
 
-        /*
-         * 1. Thaw the result sets and do some validation. 2. Get all the probes for all the results sets that will be
-         * used. 3. Build a map of result to the source result set.
-         */
-        log.info( "Preparing to meta-analyze " + resultSets.size() + " resultSets ..." );
-
-        Collection<ExpressionAnalysisResultSet> updatedResultSets = new HashSet<>();
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-
-            if ( rs.getQvalueThresholdForStorage() != null && rs.getQvalueThresholdForStorage() < 1.0 ) {
-
-                /*
-                 * We have to extend the analysis to include all probes, not just 'significant' ones.
-                 */
-                DifferentialExpressionAnalysis analysis = differentialExpressionResultService.getAnalysis( rs );
-                rs = extendAnalysis( rs, analysis );
-                updatedResultSets.add( rs );
-
-            } else {
-                // updatedResultSets.add( differentialExpressionResultService.thaw( rs ) );
-                updatedResultSets.add( rs );
-            }
-
-        }
-
-        assert !updatedResultSets.isEmpty();
-        return updatedResultSets;
+        return resultSets;
     }
 
     /**

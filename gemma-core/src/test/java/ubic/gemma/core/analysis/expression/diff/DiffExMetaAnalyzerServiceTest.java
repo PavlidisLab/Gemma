@@ -261,7 +261,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
-        boolean foundcaprin1 = false, foundacly = false, foundacta2 = false, foundaco2 = false, foundthra = false, foundppm1g = false, foundSep21 = false, foundGuk1 = false, foundKxd1 = false;
+        boolean foundcaprin1 = false, foundacly = false, foundacta2 = false, foundaco2 = false, foundthra = false, foundppm1g = false,
+                foundSep21 = false, foundGuk1 = false, foundKxd1 = false;
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
@@ -388,10 +389,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
             DifferentialExpressionAnalysis thawedAnalysis = this.differentialExpressionAnalysisService
                     .load( gdemairsivo.getAnalysisId() );
             this.differentialExpressionAnalysisService.thawFully( thawedAnalysis );
-            // see bug 3365 for policy on storing results that are part of a meta-analysis.
-            for ( ExpressionAnalysisResultSet rs : thawedAnalysis.getResultSets() ) {
-                assertEquals( 1.0, rs.getQvalueThresholdForStorage(), 0.0001 );
-            }
         }
 
         for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {
@@ -570,7 +567,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config1.setFactorsToInclude( factors );
-        config1.setQvalueThreshold( 0.05 ); // realistic
         return config1;
     }
 

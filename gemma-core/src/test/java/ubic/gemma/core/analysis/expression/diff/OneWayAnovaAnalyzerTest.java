@@ -65,7 +65,6 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
@@ -119,16 +118,15 @@ public class OneWayAnovaAnalyzerTest extends BaseAnalyzerConfigurationTest {
             experimentalFactorC.getFactorValues().add( f );
         }
 
-        List<FactorValue> facV = new ArrayList<FactorValue>( experimentalFactorC.getFactorValues() );
+        List<FactorValue> facV = new ArrayList<>( experimentalFactorC.getFactorValues() );
         for ( int i = 0; i < 8; i++ ) {
             super.biomaterials.get( i ).getFactorValues().add( facV.get( i % 3 ) );
         }
 
-        Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> factors = new HashSet<>();
         factors.add( experimentalFactorC );
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( null );
         Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, config );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();

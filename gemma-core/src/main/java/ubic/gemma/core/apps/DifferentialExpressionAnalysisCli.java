@@ -60,7 +60,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private boolean delete = false;
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
     private ExpressionDataFileService expressionDataFileService;
-    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
     private Long subsetFactorId;
     private String subsetFactorName;
     private boolean tryToCopyOld = false;
@@ -145,10 +144,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( "delete", false,
                 "Instead of running the analysis on the given experiments, delete the old analyses. Use with care!" );
-
-        super.addOption( "qvalue", true,
-                "Set the qvalue threshold for retaining data; set to a values outside the range 0-1 (inclusive) to retain all results. Default: "
-                        + String.format( "%.2f", DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD ) );
 
         super.addOption( "ebayes", false, "Use emperical-Bayes moderated statistics. Default: "
                 + DifferentialExpressionAnalysisConfig.DEFAULT_EBAYES );
@@ -241,7 +236,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 config.setAnalysisType( this.type );
                 config.setFactorsToInclude( factors );
                 config.setSubsetFactor( subsetFactor );
-                config.setQvalueThreshold( this.qvalueThreshold );
                 config.setModerateStatistics( this.ebayes );
                 config.setPersist( this.persist );
 
@@ -293,7 +287,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     assert !factorsToUse.isEmpty();
 
                     config.setFactorsToInclude( factorsToUse );
-                    config.setQvalueThreshold( this.qvalueThreshold );
                     config.setPersist( this.persist );
                     config.setModerateStatistics( this.ebayes );
 
@@ -346,18 +339,6 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 throw new IllegalArgumentException( "Please specify the factor(s) when specifying the analysis type." );
             }
             this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
-        }
-
-        if ( hasOption( "qvalue" ) ) {
-            try {
-                this.qvalueThreshold = Double.parseDouble( getOptionValue( "qvalue" ) );
-            } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException( "qvalue must be a valid double" );
-            }
-
-            if ( this.qvalueThreshold <= 0 || this.qvalueThreshold >= 1.0 ) {
-                this.qvalueThreshold = null;
-            }
         }
 
         if ( hasOption( "subset" ) ) {

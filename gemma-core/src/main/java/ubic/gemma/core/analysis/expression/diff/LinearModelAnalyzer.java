@@ -298,11 +298,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         /*
-         * Always retain all.
-         */
-        config.setQvalueThreshold( null );
-
-        /*
          * Note that this method relies on similar code to doAnalysis, for the setup stages.
          */
 
@@ -1020,7 +1015,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         newConfig.setSubsetFactor( null );
         newConfig.setSubsetFactorValue( subsetFactorValue );
         newConfig.setFactorsToInclude( factors );
-        newConfig.setQvalueThreshold( config.getQvalueThreshold() );
 
         return newConfig;
 
@@ -1385,7 +1379,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             // make List into Set
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory
-                    .newInstance( factorsUsed, numberOfProbesTested, numberOfGenesTested, null, baselineGroup,
+                    .newInstance( factorsUsed, numberOfProbesTested, numberOfGenesTested, baselineGroup,
                             new HashSet<>( results ), expressionAnalysis, null /*
                                                                                 * pvalue
                                                                                 * dists

@@ -48,11 +48,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
      */
     public static final boolean DEFAULT_EBAYES = false;
 
-    /**
-     * The default value used for retention of the results. If null, everything will be stored.
-     */
-    public static final Double DEFAULT_QVALUE_THRESHOLD = null;
-
     private static final long serialVersionUID = 622877438067070041L;
 
     private AnalysisType analysisType = null;
@@ -67,8 +62,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     // save to db or output to console?
     private boolean persist = true;
-
-    private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
 
     private ExperimentalFactor subsetFactor;
 
@@ -119,13 +112,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     public boolean getPersist() {
         return this.persist;
-    }
-
-    /**
-     * @return threshold for retention of results.
-     */
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
     }
 
     /**
@@ -190,13 +176,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
-     * @param qValueThreshold threshold for retention of results. Set to null to retain all.
-     */
-    public void setQvalueThreshold( Double qValueThreshold ) {
-        this.qvalueThreshold = qValueThreshold;
-    }
-
-    /**
      * @param subsetFactor the subsetFactor to set
      */
     public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
@@ -252,10 +231,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
             for ( ExperimentalFactor ef : baseLineFactorValues.keySet() ) {
                 buf.append( "# " + ef.getName() + ": Baseline = " + baseLineFactorValues.get( ef ) + "\n" );
             }
-        }
-
-        if ( this.qvalueThreshold != null ) {
-            buf.append( "# Qvaluethreshold: " + this.qvalueThreshold );
         }
 
         if ( this.ebayes ) {

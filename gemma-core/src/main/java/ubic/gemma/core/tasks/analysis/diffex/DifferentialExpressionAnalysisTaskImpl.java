@@ -84,7 +84,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
 
         Collection<DifferentialExpressionAnalysis> results = doAnalysis();
 
-        Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<DifferentialExpressionAnalysis>();
+        Collection<DifferentialExpressionAnalysis> minimalResults = new HashSet<>();
         for ( DifferentialExpressionAnalysis r : results ) {
 
             /* Don't send the full analysis to the space. Instead, create a minimal result. */
@@ -105,7 +105,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
 
         if ( taskCommand.getToRedo() != null ) {
             if ( taskCommand.isUpdateStatsOnly() ) {
-                throw new UnsupportedOperationException( "Updatestats functionality has been removed" ); 
+                throw new UnsupportedOperationException( "Updatestats functionality has been removed" );
             }
             log.info( "Redoing analysis" );
             expressionExperimentService.thawLite( ee );
@@ -128,7 +128,6 @@ public class DifferentialExpressionAnalysisTaskImpl extends
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         config.setFactorsToInclude( factors );
-        config.setQvalueThreshold( taskCommand.getQvalueThreshold() );
         config.setSubsetFactor( taskCommand.getSubsetFactor() );
         if ( taskCommand.isIncludeInteractions() && factors.size() == 2 ) {
             /*

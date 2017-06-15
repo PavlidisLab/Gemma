@@ -52,7 +52,7 @@ public interface DifferentialExpressionAnalyzerService {
     Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
-     * Redo with the default qvalueThreshold.
+     * Redo
      * 
      * @param experiment
      * @param analysis to base new one on
@@ -62,7 +62,7 @@ public interface DifferentialExpressionAnalyzerService {
             DifferentialExpressionAnalysis copyMe, boolean persist );
 
     /**
-     * @return persistent analyses. The qvalue threshold configured for retention will be applied.
+     * @return persistent analyses.
      */
     Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
