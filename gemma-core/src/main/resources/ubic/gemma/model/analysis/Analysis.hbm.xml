@@ -42,7 +42,7 @@
 					<key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_META_ANALYSES_FKC">
 						<column name="META_ANALYSES_FK" sql-type="BIGINT" />
 					</key>
-					<many-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl">
+					<many-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet">
 						<column name="RESULT_SETS_INCLUDED_FK" sql-type="BIGINT" />
 					</many-to-many>
 				</set>
@@ -90,7 +90,7 @@
 						<key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_ANALYSIS_FKC">
 							<column name="ANALYSIS_FK" sql-type="BIGINT" />
 						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl" />
+						<one-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" />
 					</set>
 				</subclass>
 				<subclass name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl"

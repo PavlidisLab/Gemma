@@ -61,6 +61,12 @@ public class DoubleVectorValueObject extends DataVectorValueObject {
      * ********************************/
 
     /**
+     * Required when using the class as a spring bean.
+     */
+    public DoubleVectorValueObject() {
+    }
+
+    /**
      * Create a vector that is a slice of another one. The bioassays chosen are as given in the supplied
      * bioassay dimension.
      *

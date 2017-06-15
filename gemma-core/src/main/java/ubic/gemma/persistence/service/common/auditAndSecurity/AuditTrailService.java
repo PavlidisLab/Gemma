@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
@@ -29,6 +30,7 @@ import java.util.List;
 /**
  * @author kelsey
  */
+@Service
 public interface AuditTrailService {
 
     /*

@@ -66,6 +66,12 @@ public class EvidenceValueObject<E extends PhenotypeAssociation> extends Identif
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public EvidenceValueObject() {
+    }
+
     public EvidenceValueObject( Long id ) {
         super( id );
     }

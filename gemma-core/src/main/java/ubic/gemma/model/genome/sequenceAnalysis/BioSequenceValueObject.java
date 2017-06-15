@@ -19,6 +19,12 @@ public class BioSequenceValueObject extends IdentifiableValueObject<BioSequence>
     private TaxonValueObject taxon;
     private ubic.gemma.model.genome.biosequence.SequenceType type;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public BioSequenceValueObject() {
+    }
+
     private BioSequenceValueObject( Long id ) {
         super( id );
     }

@@ -48,6 +48,12 @@ public class ExperimentalFactorValueObject extends IdentifiableValueObject<Exper
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ExperimentalFactorValueObject() {
+    }
+
     public ExperimentalFactorValueObject( Long id ) {
         super( id );
     }

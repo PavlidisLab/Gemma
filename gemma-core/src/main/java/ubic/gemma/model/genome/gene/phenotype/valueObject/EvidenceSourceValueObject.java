@@ -10,6 +10,12 @@ public class EvidenceSourceValueObject extends DatabaseEntryValueObject {
     // used by neurocarta to find the url of an evidence source
     private String externalUrl = "";
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public EvidenceSourceValueObject() {
+    }
+
     public EvidenceSourceValueObject( DatabaseEntry de ) {
         super( de );
         this.externalUrl = de.getExternalDatabase().getWebUri() + de.getAccession();

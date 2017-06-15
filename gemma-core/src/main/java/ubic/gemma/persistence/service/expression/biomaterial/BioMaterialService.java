@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.expression.biomaterial;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -32,6 +33,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
+@Service
 public interface BioMaterialService extends BaseVoEnabledService<BioMaterial, BioMaterialValueObject> {
 
     /**

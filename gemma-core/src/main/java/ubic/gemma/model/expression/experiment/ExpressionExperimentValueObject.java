@@ -97,6 +97,12 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ExpressionExperimentValueObject() {
+    }
+
     public ExpressionExperimentValueObject( Long id ) {
         super( id );
     }
@@ -123,7 +129,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
      * Populates curation details properties, accession, bio assay count, name, short name, experimental design and source.
      *
      * @param ee   the experiment to load the values from.
-     * @param lite if set to true, does not populate most of values - only curation info, name, source, short name.
+     * @param lite if set to true, does not populate most of values - only curation info, name, source and short name.
      */
     public ExpressionExperimentValueObject( ExpressionExperiment ee, boolean lite ) {
         super( ee );

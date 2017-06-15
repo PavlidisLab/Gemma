@@ -43,12 +43,18 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
     private String detail;
     private AuditEventType eventType;
 
-    public AuditEventValueObject(Long id) {
-        super(id);
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public AuditEventValueObject() {
+    }
+
+    public AuditEventValueObject( Long id ) {
+        super( id );
     }
 
     public AuditEventValueObject( AuditEvent ae ) {
-        super(ae.getId());
+        super( ae.getId() );
         if ( ae.getPerformer() != null )
             this.setPerformer( ae.getPerformer().getUserName() );
         if ( ae.getAction() != null )
@@ -135,8 +141,8 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
         }
 
         try {
-            buf.append( " on "
-                    + DateFormat.getDateInstance( DateFormat.LONG, Locale.getDefault() ).format( this.getDate() ) );
+            buf.append( " on " + DateFormat.getDateInstance( DateFormat.LONG, Locale.getDefault() )
+                    .format( this.getDate() ) );
         } catch ( Exception ex ) {
             System.err.println( "AuditEventImpl toString problem." );
             System.err.println( ex );

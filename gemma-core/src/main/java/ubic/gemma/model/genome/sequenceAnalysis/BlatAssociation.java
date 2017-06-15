@@ -20,13 +20,28 @@ package ubic.gemma.model.genome.sequenceAnalysis;
 
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 
-/**
- *
- */
-public abstract class BlatAssociation extends BioSequence2GeneProduct {
+public class BlatAssociation extends BioSequence2GeneProduct {
 
     private static final long serialVersionUID = -4620329339018727407L;
     private BlatResult blatResult;
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( this.getClass().getSimpleName() );
+
+        if ( this.getId() != null ) {
+            buf.append( " Id=" ).append( this.getId() );
+        } else {
+            buf.append( " Score=" ).append( this.getScore() ).append( " Specific=" ).append( this.getSpecificity() )
+                    .append( " Between " );
+        }
+
+        buf.append( this.getBioSequence() ).append( " ---> " ).append( this.getGeneProduct() );
+
+        return buf.toString();
+    }
 
     public BlatResult getBlatResult() {
         return this.blatResult;
@@ -44,7 +59,7 @@ public abstract class BlatAssociation extends BioSequence2GeneProduct {
          * Constructs a new instance of {@link BlatAssociation}.
          */
         public static BlatAssociation newInstance() {
-            return new BlatAssociationImpl();
+            return new BlatAssociation();
         }
 
     }

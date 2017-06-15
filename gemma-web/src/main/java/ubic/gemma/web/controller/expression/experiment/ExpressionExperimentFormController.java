@@ -224,11 +224,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         this.quantitationTypeService = quantitationTypeService;
     }
 
-    /**
-     * @param request
-     * @return Object
-     * @throws ServletException
-     */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
         Long id = null;

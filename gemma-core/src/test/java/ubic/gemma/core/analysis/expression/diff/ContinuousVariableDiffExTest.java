@@ -43,10 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * See bug 3466
- * 
  * @author Paul
- * @version $Id$
  */
 public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
@@ -108,7 +105,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     }
 
     @After
-    public void teardown() throws Exception {
+    public void tearDown() throws Exception {
         if ( ee != null ) expressionExperimentService.remove( ee );
     }
 

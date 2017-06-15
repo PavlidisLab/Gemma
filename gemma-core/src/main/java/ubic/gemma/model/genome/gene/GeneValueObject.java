@@ -80,6 +80,12 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public GeneValueObject() {
+    }
+
     public GeneValueObject(Long id) {
         super(id);
     }

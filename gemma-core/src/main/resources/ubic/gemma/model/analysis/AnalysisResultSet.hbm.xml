@@ -21,7 +21,7 @@
                <column name="EXPERIMENTAL_FACTORS_FK" sql-type="BIGINT"/>
             </many-to-many>
          </set>
-         <subclass name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl" discriminator-value="ExpressionAnalysisResultSetImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+         <subclass name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" discriminator-value="ExpressionAnalysisResultSet" dynamic-insert="false" dynamic-update="false" abstract="false">
             <property name="numberOfProbesTested" type="java.lang.Integer">
                <column name="NUMBER_OF_PROBES_TESTED" not-null="false" unique="false" sql-type="INTEGER"/>
             </property>

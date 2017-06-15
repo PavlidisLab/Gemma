@@ -36,8 +36,8 @@ import java.util.*;
 public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAssayDimension> implements Serializable {
 
     private static final long serialVersionUID = -8686807689616396835L;
-    private BioAssayDimension bioAssayDimension = null;
     private final List<BioAssayValueObject> bioAssays = new LinkedList<>();
+    private BioAssayDimension bioAssayDimension = null;
     private String description;
     private String name;
     private boolean isReordered = false;
@@ -47,6 +47,12 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
      * If this is a subset, or a padded, BioAssayDimensionValueObject, the sourceBioAssayDimension is the original.
      */
     private BioAssayDimensionValueObject sourceBioAssayDimension;
+
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public BioAssayDimensionValueObject() {
+    }
 
     /**
      * Do not use this constructor unless this represents a subset of a persistent BioAssayDimension.
@@ -78,11 +84,11 @@ public class BioAssayDimensionValueObject extends IdentifiableValueObject<BioAss
         return bioAssays;
     }
 
-    public void clearBioAssays(){
+    public void clearBioAssays() {
         this.bioAssays.clear();
     }
 
-    public void addBioAssays(List<BioAssayValueObject> bvos){
+    public void addBioAssays( List<BioAssayValueObject> bvos ) {
         this.bioAssays.addAll( bvos );
     }
 

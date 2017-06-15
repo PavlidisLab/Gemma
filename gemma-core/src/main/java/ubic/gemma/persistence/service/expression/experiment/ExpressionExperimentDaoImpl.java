@@ -88,171 +88,167 @@ public class ExpressionExperimentDaoImpl
     @Override
     @Deprecated
     public void remove( Long id ) {
-        throw new NotImplementedException( "Use the EEService.remove(ExpressioNExperiment) instead, this method does not do what you want it to." );
+        throw new NotImplementedException(
+                "Use the EEService.remove(ExpressioNExperiment) instead, this method does not do what you want it to." );
     }
 
     @Override
     public void remove( ExpressionExperiment toDelete ) {
+        toDelete = this.load( toDelete.getId() ); //FIXME If we do not do this we can get NonUniqueObjectException
 
         if ( toDelete == null )
             throw new IllegalArgumentException();
 
         Session session = this.getSession();
 
-        try {
-            // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
+        // Note that links and analyses are deleted separately - see the ExpressionExperimentService.
 
-            // At this point, the ee is probably still in the session, as the service already has gotten it
-            // in this transaction.
-            session.flush();
-            session.clear();
+        // At this point, the ee is probably still in the session, as the service already has gotten it
+        // in this transaction.
+        session.flush();
 
-            session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
+        session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
-            Hibernate.initialize( toDelete.getAuditTrail() );
+        Hibernate.initialize( toDelete.getAuditTrail() );
 
-            Set<BioAssayDimension> dims = new HashSet<>();
-            Set<QuantitationType> qts = new HashSet<>();
-            Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
-            Hibernate.initialize( designElementDataVectors );
-            toDelete.setRawExpressionDataVectors( null );
+        Set<BioAssayDimension> dims = new HashSet<>();
+        Set<QuantitationType> qts = new HashSet<>();
+        Collection<RawExpressionDataVector> designElementDataVectors = toDelete.getRawExpressionDataVectors();
+        Hibernate.initialize( designElementDataVectors );
+        toDelete.setRawExpressionDataVectors( null );
 
             /*
-             * We don't remove the investigators, just breaking the association.
+             * We don't delete the investigators, just breaking the association.
              */
-            toDelete.getInvestigators().clear();
+        toDelete.getInvestigators().clear();
 
-            int count = 0;
-            if ( designElementDataVectors != null ) {
-                log.info( "Removing Design Element Data Vectors ..." );
-                for ( RawExpressionDataVector dv : designElementDataVectors ) {
-                    BioAssayDimension bad = dv.getBioAssayDimension();
-                    dims.add( bad );
-                    QuantitationType qt = dv.getQuantitationType();
-                    qts.add( qt );
-                    dv.setBioAssayDimension( null );
-                    dv.setQuantitationType( null );
-                    session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        session.flush();
-                    }
-                    // put back...
-                    dv.setBioAssayDimension( bad );
-                    dv.setQuantitationType( qt );
-
-                    if ( count % 20000 == 0 ) {
-                        log.info( count + " design Element data vectors deleted" );
-                    }
+        int count = 0;
+        if ( designElementDataVectors != null ) {
+            log.info( "Removing Design Element Data Vectors ..." );
+            for ( RawExpressionDataVector dv : designElementDataVectors ) {
+                BioAssayDimension bad = dv.getBioAssayDimension();
+                dims.add( bad );
+                QuantitationType qt = dv.getQuantitationType();
+                qts.add( qt );
+                dv.setBioAssayDimension( null );
+                dv.setQuantitationType( null );
+                session.delete( dv );
+                if ( ++count % 1000 == 0 ) {
+                    session.flush();
                 }
-                count = 0;
-                // designElementDataVectors.clear();
-            }
+                // put back...
+                dv.setBioAssayDimension( bad );
+                dv.setQuantitationType( qt );
 
-            Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
-
-            Hibernate.initialize( processedVectors );
-            if ( processedVectors != null && processedVectors.size() > 0 ) {
-
-                toDelete.setProcessedExpressionDataVectors( null );
-
-                for ( ProcessedExpressionDataVector dv : processedVectors ) {
-                    BioAssayDimension bad = dv.getBioAssayDimension();
-                    dims.add( bad );
-                    QuantitationType qt = dv.getQuantitationType();
-                    qts.add( qt );
-                    dv.setBioAssayDimension( null );
-                    dv.setQuantitationType( null );
-                    session.delete( dv );
-                    if ( ++count % 1000 == 0 ) {
-                        session.flush();
-                    }
-                    if ( count % 20000 == 0 ) {
-                        log.info( count + " processed design Element data vectors deleted" );
-                    }
-
-                    // put back..
-                    dv.setBioAssayDimension( bad );
-                    dv.setQuantitationType( qt );
+                if ( count % 20000 == 0 ) {
+                    log.info( count + " design Element data vectors deleted" );
                 }
-                // processedVectors.clear();
             }
+            count = 0;
+            // designElementDataVectors.clear();
+        }
 
-            session.flush();
-            session.clear();
-            session.update( toDelete );
+        Collection<ProcessedExpressionDataVector> processedVectors = toDelete.getProcessedExpressionDataVectors();
 
-            log.info( "Removing BioAssay Dimensions ..." );
-            for ( BioAssayDimension dim : dims ) {
-                dim.getBioAssays().clear();
-                session.update( dim );
-                session.delete( dim );
+        Hibernate.initialize( processedVectors );
+        if ( processedVectors != null && processedVectors.size() > 0 ) {
+
+            toDelete.setProcessedExpressionDataVectors( null );
+
+            for ( ProcessedExpressionDataVector dv : processedVectors ) {
+                BioAssayDimension bad = dv.getBioAssayDimension();
+                dims.add( bad );
+                QuantitationType qt = dv.getQuantitationType();
+                qts.add( qt );
+                dv.setBioAssayDimension( null );
+                dv.setQuantitationType( null );
+                session.delete( dv );
+                if ( ++count % 1000 == 0 ) {
+                    session.flush();
+                }
+                if ( count % 20000 == 0 ) {
+                    log.info( count + " processed design Element data vectors deleted" );
+                }
+
+                // put back..
+                dv.setBioAssayDimension( bad );
+                dv.setQuantitationType( qt );
             }
-            dims.clear();
-            session.flush();
+            // processedVectors.clear();
+        }
 
-            log.info( "Removing Bioassays and biomaterials ..." );
+        session.flush();
+        session.clear();
+        session.update( toDelete );
 
-            // keep to put back in the object.
-            Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
+        log.info( "Removing BioAssay Dimensions ..." );
+        for ( BioAssayDimension dim : dims ) {
+            dim.getBioAssays().clear();
+            session.update( dim );
+            session.delete( dim );
+        }
+        dims.clear();
+        session.flush();
 
-            Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
-            Collection<BioAssay> bioAssays = toDelete.getBioAssays();
+        log.info( "Removing Bioassays and biomaterials ..." );
 
-            for ( BioAssay ba : bioAssays ) {
-                // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
-                // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
+        // keep to put back in the object.
+        Map<BioAssay, BioMaterial> copyOfRelations = new HashMap<>();
 
-                BioMaterial biomaterial = ba.getSampleUsed();
+        Collection<BioMaterial> bioMaterialsToDelete = new HashSet<>();
+        Collection<BioAssay> bioAssays = toDelete.getBioAssays();
 
-                if ( biomaterial == null )
-                    continue; // shouldn't...
+        for ( BioAssay ba : bioAssays ) {
+            // relations to files cascade, so we only have to worry about biomaterials, which aren't cascaded from
+            // anywhere. BioAssay -> BioMaterial is many-to-one, but bioassayset (experiment) owns the bioAssay.
 
-                bioMaterialsToDelete.add( biomaterial );
+            BioMaterial biomaterial = ba.getSampleUsed();
 
-                copyOfRelations.put( ba, biomaterial );
+            if ( biomaterial == null )
+                continue; // shouldn't...
 
-                session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
+            bioMaterialsToDelete.add( biomaterial );
 
-                Hibernate.initialize( biomaterial );
+            copyOfRelations.put( ba, biomaterial );
 
-                // this can easily end up with an unattached object.
-                Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
+            //FIXME Causes dirty reference exception
+            //session.buildLockRequest( LockOptions.NONE ).lock( biomaterial );
 
-                biomaterial.getFactorValues().clear();
-                biomaterial.getBioAssaysUsedIn().clear();
+            Hibernate.initialize( biomaterial );
 
-                ba.setSampleUsed( null );
-            }
+            // this can easily end up with an unattached object.
+            Hibernate.initialize( biomaterial.getBioAssaysUsedIn() );
 
-            log.info( "Last bits ..." );
+            biomaterial.getFactorValues().clear();
+            biomaterial.getBioAssaysUsedIn().clear();
 
-            // We remove them here in case they are associated to more than one bioassay-- no cascade is possible.
-            for ( BioMaterial bm : bioMaterialsToDelete ) {
-                session.delete( bm );
-            }
+            ba.setSampleUsed( null );
+        }
 
-            for ( QuantitationType qt : qts ) {
-                session.delete( qt );
-            }
+        log.info( "Last bits ..." );
 
-            session.flush();
-            session.delete( toDelete );
+        // We delete them here in case they are associated to more than one bioassay-- no cascade is possible.
+        for ( BioMaterial bm : bioMaterialsToDelete ) {
+            session.delete( bm );
+        }
+
+        for ( QuantitationType qt : qts ) {
+            session.delete( qt );
+        }
+
+        session.flush();
+        session.delete( toDelete );
 
             /*
              * Put transient instances back. This is possibly useful for clearing ACLS.
              */
-            toDelete.setProcessedExpressionDataVectors( processedVectors );
-            toDelete.setRawExpressionDataVectors( designElementDataVectors );
-            for ( BioAssay ba : toDelete.getBioAssays() ) {
-                ba.setSampleUsed( copyOfRelations.get( ba ) );
-            }
-
-            log.info( "Deleted " + toDelete );
-        } catch ( Exception e ) {
-            log.error( e );
-        } finally {
-            log.info( "Finalising remove method." );
+        toDelete.setProcessedExpressionDataVectors( processedVectors );
+        toDelete.setRawExpressionDataVectors( designElementDataVectors );
+        for ( BioAssay ba : toDelete.getBioAssays() ) {
+            ba.setSampleUsed( copyOfRelations.get( ba ) );
         }
+
+        log.info( "Deleted " + toDelete );
     }
 
     @Override

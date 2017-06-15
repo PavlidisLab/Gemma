@@ -23,7 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.hibernate.*;
 import org.hibernate.collection.PersistentCollection;
-import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +41,6 @@ import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.CommonQueries;
 import ubic.gemma.persistence.util.EntityUtils;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -99,26 +96,22 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     }
 
     @Override
-    public void remove( final ArrayDesign arrayDesign ) {
-        this.getSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) throws SQLException {
-                getSession().buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
-                Hibernate.initialize( arrayDesign.getMergees() );
-                Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
-                arrayDesign.getMergees().clear();
-                arrayDesign.getSubsumedArrayDesigns().clear();
+    public void remove( ArrayDesign arrayDesign ) {
+        arrayDesign = this.load( arrayDesign.getId() );
+        //getSession().buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
+        Hibernate.initialize( arrayDesign.getMergees() );
+        Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
+        arrayDesign.getMergees().clear();
+        arrayDesign.getSubsumedArrayDesigns().clear();
 
-                Iterator<CompositeSequence> iterator = arrayDesign.getCompositeSequences().iterator();
-                while(iterator.hasNext()){
-                    CompositeSequence cs = iterator.next();
-                    iterator.remove();
-                    getSession().delete( cs );
-                }
+        Iterator<CompositeSequence> iterator = arrayDesign.getCompositeSequences().iterator();
+        while ( iterator.hasNext() ) {
+            CompositeSequence cs = iterator.next();
+            iterator.remove();
+            getSession().delete( cs );
+        }
 
-                getSession().delete( arrayDesign );
-            }
-        } );
+        getSession().delete( arrayDesign );
     }
 
     @Override
@@ -191,10 +184,10 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     @Override
     public Map<CompositeSequence, Collection<BlatResult>> loadAlignments( ArrayDesign arrayDesign ) {
-        //noinspection unchecked,JpaQlInspection - blatResult not visible because it is in a sub-class (BlatAssociationImpl)
+        //noinspection unchecked,JpaQlInspection - blatResult not visible because it is in a sub-class (BlatAssociation)
         List<Object[]> m = this.getSession().createQuery( "select cs, br from CompositeSequence cs "
                 + " join cs.biologicalCharacteristic bs join bs.bioSequence2GeneProduct bs2gp"
-                + " join bs2gp.blatResult br " + "  where bs2gp.class='BlatAssociationImpl' and cs.arrayDesign=:ad" )
+                + " join bs2gp.blatResult br " + "  where bs2gp.class='BlatAssociation' and cs.arrayDesign=:ad" )
                 .setParameter( "ad", arrayDesign ).list();
 
         Map<CompositeSequence, Collection<BlatResult>> result = new HashMap<>();
@@ -334,7 +327,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
         this.getSession().flush();
 
         final String annotationAssociationQueryString = "select ba from CompositeSequence cs "
-                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
+                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociation ba "
                 + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
 
         //noinspection unchecked
@@ -514,6 +507,7 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
     /**
      * Loads a single value objects for the given array design.
+     *
      * @param e the array design to be converted to a value object
      * @return a value object with properties of the given array design.
      */

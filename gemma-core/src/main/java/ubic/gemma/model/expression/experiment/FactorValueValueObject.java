@@ -41,6 +41,12 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
     private Boolean isBaseline = false;
     private boolean measurement = false;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public FactorValueValueObject() {
+    }
+
     public FactorValueValueObject( Long id ) {
         super( id );
     }
@@ -68,7 +74,7 @@ public class FactorValueValueObject extends IdentifiableValueObject<FactorValue>
      */
     @Deprecated
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
-        super(value.getId());
+        super( value.getId() );
         init( value, c );
     }
 

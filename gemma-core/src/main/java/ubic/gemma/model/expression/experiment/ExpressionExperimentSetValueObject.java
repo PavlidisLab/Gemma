@@ -51,6 +51,12 @@ public class ExpressionExperimentSetValueObject extends IdentifiableValueObject<
     private boolean userCanWrite = false;
     private boolean userOwned = false;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ExpressionExperimentSetValueObject() {
+    }
+
     public ExpressionExperimentSetValueObject(Long id) {
         super(id);
         this.expressionExperimentIds = new HashSet<>();

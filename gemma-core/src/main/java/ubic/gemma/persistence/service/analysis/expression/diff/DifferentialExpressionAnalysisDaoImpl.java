@@ -51,7 +51,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
     @Override
     public Integer countDownregulated( ExpressionAnalysisResultSet par, double threshold ) {
-        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r "
+        String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r "
                 + "join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat < 0";
 
         String[] paramNames = { "rs", "threshold" };
@@ -74,7 +74,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
     @Override
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
 
-        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
+        String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r where rs = :rs and r.correctedPvalue < :threshold";
 
         String[] paramNames = { "rs", "threshold" };
         Object[] objectValues = { ears, threshold };
@@ -95,7 +95,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
 
     @Override
     public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
-        String query = "select count(distinct r) from ExpressionAnalysisResultSetImpl rs inner join rs.results r"
+        String query = "select count(distinct r) from ExpressionAnalysisResultSet rs inner join rs.results r"
                 + " join r.contrasts c where rs = :rs and r.correctedPvalue < :threshold and c.tstat > 0";
 
         String[] paramNames = { "rs", "threshold" };

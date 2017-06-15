@@ -18,24 +18,21 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.genome.Chromosome
  */
 public interface ChromosomeDao extends BaseDao<Chromosome> {
+
     /**
      * Find a chromosome by name and taxon
-     * 
-     * @param name
-     * @param taxon
-     * @return
      */
-    public Collection<Chromosome> find( String name, Taxon taxon );
+    Collection<Chromosome> find( String name, Taxon taxon );
 
-    public Chromosome findOrCreate( String name, Taxon taxon );
+    Chromosome findOrCreate( String name, Taxon taxon );
 }

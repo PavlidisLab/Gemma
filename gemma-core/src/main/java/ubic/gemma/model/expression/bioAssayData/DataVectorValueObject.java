@@ -53,6 +53,12 @@ public abstract class DataVectorValueObject extends IdentifiableValueObject<Data
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public DataVectorValueObject() {
+    }
+
     public DataVectorValueObject( Long id ) {
         super( id );
     }

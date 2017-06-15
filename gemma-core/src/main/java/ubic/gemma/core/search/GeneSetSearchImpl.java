@@ -291,7 +291,6 @@ public class GeneSetSearchImpl implements GeneSetSearch {
 
     private GeneSet goTermToGeneSet( OntologyResource term, Taxon taxon ) {
         return goTermToGeneSet( term, taxon, null );
-
     }
 
     /**
@@ -325,7 +324,7 @@ public class GeneSetSearchImpl implements GeneSetSearch {
         GeneSet transientGeneSet = GeneSet.Factory.newInstance();
         transientGeneSet.setName( uri2goid( term ) );
 
-        if ( term.getLabel().toUpperCase().startsWith( "GO_" ) ) {
+        if ( term.getLabel() != null && term.getLabel().toUpperCase().startsWith( "GO_" ) ) {
             // hm, this is an individual or a 'resource', not a 'class', but it's a real GO term. How to get the text.
         }
 

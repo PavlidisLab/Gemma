@@ -55,6 +55,12 @@ public class ExpressionExperimentDetailsValueObject extends ExpressionExperiment
 
     private boolean reprocessedFromRawData;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ExpressionExperimentDetailsValueObject() {
+    }
+
     public ExpressionExperimentDetailsValueObject(Long id) {
         super(id);
     }

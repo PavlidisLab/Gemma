@@ -169,7 +169,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
 
         assertEquals( 99, readIn.rows() );
         System.out.println(readIn.toString());
-        assertEquals( 6, readIn.columns() );
+        assertEquals( 9, readIn.columns() );
 
 
         expressionDataFileService.deleteAllFiles( ee );

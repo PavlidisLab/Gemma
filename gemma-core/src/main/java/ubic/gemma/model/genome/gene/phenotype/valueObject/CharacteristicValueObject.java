@@ -33,7 +33,8 @@ import java.util.List;
  *
  * @see Characteristic
  */
-public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic> implements Comparable<CharacteristicValueObject> {
+public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
+        implements Comparable<CharacteristicValueObject> {
 
     private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
     /**
@@ -70,14 +71,20 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
      * Constructors
      * ********************************/
 
-    public CharacteristicValueObject(Long id) {
-        super(id);
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public CharacteristicValueObject() {
+    }
+
+    public CharacteristicValueObject( Long id ) {
+        super( id );
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
-        super(characteristic.getId());
+        super( characteristic.getId() );
         if ( characteristic instanceof VocabCharacteristic ) {
-            this.valueUri = ( ( VocabCharacteristic ) characteristic ).getValueUri();
+            this.valueUri = characteristic.getValueUri();
             parseUrlId();
         }
         this.category = characteristic.getCategory();
@@ -86,7 +93,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     public CharacteristicValueObject( Long id, String valueUri ) {
-        super(id);
+        super( id );
         this.valueUri = valueUri;
         parseUrlId();
         if ( StringUtils.isNotBlank( this.urlId ) ) {
@@ -105,7 +112,7 @@ public class CharacteristicValueObject extends IdentifiableValueObject<Character
     }
 
     public CharacteristicValueObject( Long id, String value, String category, String valueUri, String categoryUri ) {
-        this( id, valueUri, value );
+        this( id, value, valueUri );
         this.category = category;
         this.categoryUri = categoryUri;
     }

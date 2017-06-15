@@ -19,36 +19,34 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
 import java.util.HashSet;
 
 /**
  * A differential expression analysis spaces task
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 @Component
 @Scope("prototype")
-public class DifferentialExpressionAnalysisTaskImpl extends
-        AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand> implements
-        DifferentialExpressionAnalysisTask {
+public class DifferentialExpressionAnalysisTaskImpl
+        extends AbstractTask<TaskResult, DifferentialExpressionAnalysisTaskCommand>
+        implements DifferentialExpressionAnalysisTask {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
+    private static final Log log = LogFactory.getLog( DifferentialExpressionAnalysisTask.class.getName() );
 
     @Autowired
     private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
@@ -59,12 +57,6 @@ public class DifferentialExpressionAnalysisTaskImpl extends
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.grid.javaspaces.task.diff.DifferentialExpressionAnalysisTask#execute(ubic.gemma.grid
-     * .javaspaces.task .diff. SpacesDifferentialExpressionAnalysisCommand)
-     */
     @Override
     public TaskResult execute() {
 
@@ -95,9 +87,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
             minimalResults.add( minimalResult );
         }
 
-        TaskResult result = new TaskResult( taskCommand, minimalResults );
-
-        return result;
+        return new TaskResult( taskCommand, minimalResults );
     }
 
     private Collection<DifferentialExpressionAnalysis> doAnalysis() {
@@ -105,7 +95,7 @@ public class DifferentialExpressionAnalysisTaskImpl extends
 
         if ( taskCommand.getToRedo() != null ) {
             if ( taskCommand.isUpdateStatsOnly() ) {
-                throw new UnsupportedOperationException( "Updatestats functionality has been removed" );
+                throw new UnsupportedOperationException( "Update stats functionality has been removed" );
             }
             log.info( "Redoing analysis" );
             expressionExperimentService.thawLite( ee );
@@ -119,7 +109,8 @@ public class DifferentialExpressionAnalysisTaskImpl extends
                 .getAnalyses( ee );
 
         if ( !diffAnalyses.isEmpty() ) {
-            log.info( "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
+            log.info(
+                    "This experiment has some existing analyses; if they overlap with the new analysis they will be deleted after the run." );
         }
 
         Collection<DifferentialExpressionAnalysis> results;

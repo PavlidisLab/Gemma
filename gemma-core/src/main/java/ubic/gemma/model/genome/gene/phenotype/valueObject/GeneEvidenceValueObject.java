@@ -44,6 +44,12 @@ public class GeneEvidenceValueObject extends GeneValueObject {
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public GeneEvidenceValueObject() {
+    }
+
     public GeneEvidenceValueObject( Long id ) {
         super( id );
     }

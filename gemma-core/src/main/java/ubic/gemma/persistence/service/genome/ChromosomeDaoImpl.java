@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2010 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractDao;
 
 import java.util.Collection;
 
 /**
- * @author pavlidis
+ * <p>
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
+ * <code>ubic.gemma.model.genome.Chromosome</code>.
+ * </p>
+ *
+ * @see ubic.gemma.model.genome.Chromosome
  */
 @Repository
-public class ChromosomeDaoImpl extends ChromosomeDaoBase {
+public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements ChromosomeDao {
 
     @Autowired
     public ChromosomeDaoImpl( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super( Chromosome.class, sessionFactory );
     }
 
     @Override

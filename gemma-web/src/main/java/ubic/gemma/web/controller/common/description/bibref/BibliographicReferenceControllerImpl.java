@@ -50,28 +50,19 @@ import java.util.Map.Entry;
  * pubMed.Detail.view when they click on a specific link in that list.
  *
  * @author keshav
- * @version $Id$
  */
 @Controller
 public class BibliographicReferenceControllerImpl extends BaseController implements BibliographicReferenceController {
 
     private final String messagePrefix = "Reference with PubMed Id";
+    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;
     @Autowired
     private Persister persisterHelper;
-
-    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
-
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
 
-    /*
-     * (non-Javadoc) is this used?
-     * 
-     * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#add(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public ModelAndView add( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" ); // FIXME: allow use of the primary key as well.
@@ -137,13 +128,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return returnVal;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#remove(javax.servlet.http
-     * .HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public ModelAndView delete( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "acc" );
@@ -178,13 +162,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax
-     * .servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public Collection<BibliographicReferenceValueObject> loadAllForExperiments() {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
@@ -201,16 +178,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return bibliographicReferenceService.findVOByExternalId( pubMedID );
     }
 
-    /*
-     * public JsonReaderResponse<BibliographicReferenceValueObject> browseSearchResults( ListBatchCommand batch, String
-     * query){
-     * 
-     * Collection<SearchResult> searchResults = (searchService.search( SearchSettings.bibliographicReferenceSearch(
-     * query ), false)).get( BibliographicReference.class ); Collection<BibliographicReference>
-     * 
-     * }
-     */
-
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> loadMultiple( Collection<Long> ids ) {
 
@@ -222,13 +189,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return returnVal;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#search(ubic.gemma.web.remote
-     * .ListBatchCommand)
-     */
     @Override
     public JsonReaderResponse<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         List<BibliographicReferenceValueObject> vos = bibliographicReferenceService.search( settings );
@@ -238,13 +198,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return returnVal;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#searchBibRefs(javax.servlet
-     * .http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public ModelAndView searchBibRefs( HttpServletRequest request, HttpServletResponse response ) {
         return new ModelAndView( "bibRefList" );
@@ -261,13 +214,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         this.persisterHelper = persisterHelper;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#show(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         String pubMedId = request.getParameter( "accession" );
@@ -302,13 +248,6 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
                 .addObject( "byAccession", Boolean.TRUE ).addObject( "accession", pubMedId );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#showAllForExperiments(javax
-     * .servlet.http.HttpServletRequest, javax.servlet.http.HttpServletResponse)
-     */
     @Override
     public ModelAndView showAllForExperiments( HttpServletRequest request, HttpServletResponse response ) {
         Map<ExpressionExperiment, BibliographicReference> eeToBibRefs = bibliographicReferenceService
@@ -325,18 +264,14 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
             if ( !citationToEEs.containsKey( cvo ) ) {
                 citationToEEs.put( cvo, new ArrayList<ExpressionExperimentValueObject>() );
             }
-            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey() ) );
+            citationToEEs.get( cvo ).add( new ExpressionExperimentValueObject( entry.getKey(), true ) );
 
         }
 
         return new ModelAndView( "bibRefAllExperiments" ).addObject( "citationToEEs", citationToEEs );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceController#update(java.lang.Long)
-     */
+
     @Override
     public BibliographicReferenceValueObject update( String pubMedId ) {
         BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
@@ -346,11 +281,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return new BibliographicReferenceValueObject( this.bibliographicReferenceService.refresh( pubMedId ) );
     }
 
-    /**
-     * @param request
-     * @param bibRef
-     * @return
-     */
+
     private ModelAndView doDelete( HttpServletRequest request, BibliographicReference bibRef ) {
         bibliographicReferenceService.remove( bibRef );
         log.info( "Bibliographic reference with pubMedId: " + bibRef.getPubAccession().getAccession() + " deleted" );
@@ -359,10 +290,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
         return new ModelAndView( "bibRefView", "bibliographicReference", bibRef );
     }
 
-    /**
-     * @param batch
-     * @return
-     */
+
     private List<BibliographicReference> getBatch( ListBatchCommand batch ) {
         List<BibliographicReference> records;
         if ( StringUtils.isNotBlank( batch.getSort() ) ) {

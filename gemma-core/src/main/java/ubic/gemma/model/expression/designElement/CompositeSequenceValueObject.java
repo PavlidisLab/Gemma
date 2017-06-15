@@ -35,6 +35,12 @@ public class CompositeSequenceValueObject extends IdentifiableValueObject<Compos
     private String description;
     private ArrayDesignValueObject arrayDesign;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public CompositeSequenceValueObject() {
+    }
+
     public CompositeSequenceValueObject(Long id) {
         super(id);
     }

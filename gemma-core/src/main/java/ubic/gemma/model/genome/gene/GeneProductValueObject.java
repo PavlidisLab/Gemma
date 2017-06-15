@@ -34,6 +34,12 @@ public class GeneProductValueObject extends IdentifiableValueObject<GeneProduct>
     private Long nucleotideStart;
     private Long nucleotideEnd;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public GeneProductValueObject() {
+    }
+
     public GeneProductValueObject( Long id ) {
         super( id );
     }

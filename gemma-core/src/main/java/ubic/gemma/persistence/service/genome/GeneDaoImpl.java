@@ -1,16 +1,20 @@
 /*
- * The Gemma project
+ * The Gemma project.
  * 
- * Copyright (c) 2011 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  */
 package ubic.gemma.persistence.service.genome;
 
@@ -33,6 +37,7 @@ import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.SequenceBinUtils;
@@ -41,23 +46,58 @@ import ubic.gemma.persistence.util.Settings;
 import java.util.*;
 
 /**
- * @author pavlidis
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type <code>Gene</code>.
+ *
+ * @see Gene
  */
 @Repository
-public class GeneDaoImpl extends GeneDaoBase {
+public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements GeneDao {
 
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RESULTS = 100;
     private static final int MAX_WINDOW = 1000000;
     private static final int WINDOW_INCREMENT = 500;
     private static final String G2CS_CACHE_NAME = "Gene2CsCache";
-
     private final CacheManager cacheManager;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     @Autowired
     public GeneDaoImpl( SessionFactory sessionFactory, CacheManager cacheManager ) {
-        super( sessionFactory );
+        super( Gene.class, sessionFactory );
         this.cacheManager = cacheManager;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    @Override
+    public Gene findByNcbiId( Integer ncbiId ) {
+        return ( Gene ) this.getSession().createQuery( "from Gene g where g.ncbiGeneId = :n" )
+                .setParameter( "n", ncbiId ).uniqueResult();
+    }
+
+    @Override
+    public Collection<Gene> findByOfficialSymbol( String officialSymbol ) {
+        //noinspection unchecked
+        return this.getSession()
+                .createQuery( "from Gene g where g.officialSymbol=:officialSymbol order by g.officialName" )
+                .setParameter( "officialSymbol", officialSymbol ).list();
+    }
+
+    @Override
+    public Collection<Gene> findByOfficialName( final String officialName ) {
+        return this.findByProperty( "officialName", officialName );
+    }
+
+    @Override
+    public Collection<Gene> findByPhysicalLocation( final PhysicalLocation location ) {
+        //noinspection unchecked
+        return this.getSession().createQuery( "from Gene as gene where gene.physicalLocation = :location" )
+                .setParameter( "location", location ).list();
     }
 
     @Override
@@ -83,7 +123,7 @@ public class GeneDaoImpl extends GeneDaoBase {
              * As a side-effect, we remove relics. This is a bit ugly, but takes care of the problem! It was put in
              * place to help in the cleanup of duplicated genes. But this can happen fairly routinely when NCBI
              * information changes in messy ways.
-             * 
+             *
              * FIXME this can fail because 'find' methods are read-only; it will be okay if it is a nested call from a
              * read-write method.
              */
@@ -153,29 +193,24 @@ public class GeneDaoImpl extends GeneDaoBase {
 
     @Override
     public Collection<? extends Gene> findByEnsemblId( String id ) {
-        final String query = "from Gene g where g.ensemblId = :id";
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam( query, "id", id );
+        return this.getSession().createQuery( "from Gene g where g.ensemblId = :id" ).setParameter( "id", id ).list();
     }
 
     @Override
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
-        final String query = "from Gene g where g.officialName like :officialName order by g.officialName";
-        org.hibernate.Query queryObject = this.getSession().createQuery( query );
-        queryObject.setParameter( "officialName", officialName );
-        queryObject.setMaxResults( MAX_RESULTS );
         //noinspection unchecked
-        return queryObject.list();
+        return this.getSession()
+                .createQuery( "from Gene g where g.officialName like :officialName order by g.officialName" )
+                .setParameter( "officialName", officialName ).setMaxResults( MAX_RESULTS ).list();
     }
 
     @Override
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
-        final String query = "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
-        org.hibernate.Query queryObject = this.getSession().createQuery( query );
-        queryObject.setParameter( "officialSymbol", officialSymbol );
-        queryObject.setMaxResults( MAX_RESULTS );
+    public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         //noinspection unchecked
-        return queryObject.list();
+        return this.getSession()
+                .createQuery( "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol" )
+                .setParameter( "officialSymbol", officialSymbol ).setMaxResults( MAX_RESULTS ).list();
     }
 
     @Override
@@ -350,7 +385,7 @@ public class GeneDaoImpl extends GeneDaoBase {
                 "select count(distinct cs.arrayDesign) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
                         + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
                         + " and cs.biologicalCharacteristic=bs2gp.bioSequence " + " and gene.id = :id ";
-        List<?> r = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        List r = getSession().createQuery( queryString ).setParameter( "id", id ).list();
         return ( ( Long ) r.iterator().next() ).intValue();
 
     }
@@ -395,11 +430,11 @@ public class GeneDaoImpl extends GeneDaoBase {
             throw new IllegalArgumentException( "Gene.remove - 'gene' can not be null" );
         }
         // remove associations
-        List<?> assocs = this.getHibernateTemplate().findByNamedParam(
+        List associations = this.getHibernateTemplate().findByNamedParam(
                 "select ba from BioSequence2GeneProduct ba join ba.geneProduct gp join gp.gene g where g=:g ", "g",
                 gene );
-        if ( !assocs.isEmpty() )
-            this.getHibernateTemplate().deleteAll( assocs );
+        if ( !associations.isEmpty() )
+            this.getHibernateTemplate().deleteAll( associations );
 
         this.getHibernateTemplate().delete( gene );
     }
@@ -425,7 +460,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Gene handleFindByAccession( String accession, ExternalDatabase source ) {
+    public Gene findByAccession( String accession, ExternalDatabase source ) {
         Collection<Gene> genes = new HashSet<>();
         final String accessionQuery = "select g from Gene g inner join g.accessions a where a.accession = :accession";
         final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
@@ -467,23 +502,18 @@ public class GeneDaoImpl extends GeneDaoBase {
      * @return Collection
      */
     @Override
-    protected Collection<Gene> handleFindByAlias( String search ) {
-        final String queryString = "select distinct g from Gene as g inner join g.aliases als where als.alias = :search";
+    public Collection<Gene> findByAlias( String search ) {
         //noinspection unchecked
-        return getHibernateTemplate().findByNamedParam( queryString, "search", search );
+        return this.getSession()
+                .createQuery( "select distinct g from Gene as g inner join g.aliases als where als.alias = :search" )
+                .setParameter( "search", search ).list();
     }
 
     @Override
-    protected Gene handleFindByOfficialSymbol( String symbol, Taxon taxon ) {
-        final String queryString = "select distinct g from Gene as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon";
-        List<?> results = getHibernateTemplate()
-                .findByNamedParam( queryString, new String[] { "symbol", "taxon" }, new Object[] { symbol, taxon } );
-        if ( results.size() == 0 ) {
-            return null;
-        } else if ( results.size() > 1 ) {
-            log.warn( "Multiple genes match " + symbol + " in " + taxon + ", return first hit" );
-        }
-        return ( Gene ) results.iterator().next();
+    public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
+        return ( Gene ) this.getSession().createQuery(
+                "select distinct g from Gene as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon" )
+                .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
 
     /**
@@ -492,7 +522,7 @@ public class GeneDaoImpl extends GeneDaoBase {
      * @return Collection
      */
     @Override
-    protected long handleGetCompositeSequenceCountById( long id ) {
+    public long getCompositeSequenceCountById( long id ) {
         final String queryString =
                 "select count(distinct cs) from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
                         + " as bs2gp, CompositeSequence as cs where gp=bs2gp.geneProduct "
@@ -502,7 +532,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Collection<CompositeSequence> handleGetCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
+    public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign ) {
         Collection<CompositeSequence> compSeq;
         final String queryString =
                 "select distinct cs from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct"
@@ -529,7 +559,7 @@ public class GeneDaoImpl extends GeneDaoBase {
      * @return Collection
      */
     @Override
-    protected Collection<CompositeSequence> handleGetCompositeSequencesById( long id ) {
+    public Collection<CompositeSequence> getCompositeSequencesById( long id ) {
         final String queryString =
                 "select distinct cs from Gene as gene  inner join gene.products as gp, BioSequence2GeneProduct "
                         + " as bs2gp , CompositeSequence as cs where gp=bs2gp.geneProduct "
@@ -539,8 +569,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Collection<Gene> handleGetGenesByTaxon( Taxon taxon ) {
-
+    public Collection<Gene> getGenesByTaxon( Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
@@ -551,8 +580,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Collection<Gene> handleGetMicroRnaByTaxon( Taxon taxon ) {
-
+    public Collection<Gene> getMicroRnaByTaxon( Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
@@ -564,8 +592,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Collection<Gene> handleLoadKnownGenes( Taxon taxon ) {
-
+    public Collection<Gene> loadKnownGenes( Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Must provide taxon" );
         }
@@ -577,7 +604,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected Collection<Gene> handleLoadMultiple( Collection<Long> ids ) {
+    public Collection<Gene> load( Collection<Long> ids ) {
         if ( ids.size() == 0 ) {
             return new HashSet<>();
         }
@@ -603,7 +630,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected void handleThaw( final Gene gene ) {
+    public void thaw( final Gene gene ) {
         this.getSession().refresh( gene );
         thawAliases( gene );
         for ( DatabaseEntry de : gene.getAccessions() ) {
@@ -631,7 +658,7 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
-    protected void handleThawLite( final Collection<Gene> genes ) {
+    public void thawLite( final Collection<Gene> genes ) {
         Collection<Gene> batch = new HashSet<>();
 
         for ( Gene g : genes ) {
@@ -648,22 +675,33 @@ public class GeneDaoImpl extends GeneDaoBase {
     }
 
     @Override
+    public GeneValueObject loadValueObject( Gene entity ) {
+        return new GeneValueObject( entity );
+    }
+
+    @Override
+    public Collection<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
+        Collection<GeneValueObject> vos = new LinkedHashSet<>();
+        for ( Gene e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
+
+    /* ********************************
+     * Protected methods
+     * ********************************/
+
+    @Override
     protected void initDao() throws Exception {
         boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
         CacheUtils.createOrLoadCache( cacheManager, G2CS_CACHE_NAME, terracottaEnabled, 500000, false, false, 0, 0,
                 false );
     }
 
-    private void debug( List<Gene> results ) {
-
-        StringBuilder buf = new StringBuilder();
-        buf.append( "\n" );
-        for ( Gene g : results ) {
-            buf.append( g ).append( "\n" );
-        }
-        log.error( buf );
-
-    }
+    /* ********************************
+     * Private methods
+     * ********************************/
 
     private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
         //noinspection unchecked
@@ -717,17 +755,15 @@ public class GeneDaoImpl extends GeneDaoBase {
         }
     }
 
-    @Override
-    public GeneValueObject loadValueObject( Gene entity ) {
-        return new GeneValueObject( entity );
+    private void debug( List<Gene> results ) {
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( "\n" );
+        for ( Gene g : results ) {
+            buf.append( g ).append( "\n" );
+        }
+        log.error( buf );
+
     }
 
-    @Override
-    public Collection<GeneValueObject> loadValueObjects( Collection<Gene> entities ) {
-        Collection<GeneValueObject> vos = new LinkedHashSet<>();
-        for ( Gene e : entities ) {
-            vos.add( this.loadValueObject( e ) );
-        }
-        return vos;
-    }
 }

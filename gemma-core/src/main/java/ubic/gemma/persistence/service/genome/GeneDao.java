@@ -41,9 +41,6 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    /**
-     *
-     */
     Gene findByAccession( String accession, ExternalDatabase source );
 
     /**

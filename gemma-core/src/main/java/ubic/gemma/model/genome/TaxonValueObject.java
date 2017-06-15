@@ -41,7 +41,7 @@ public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
         setNcbiId( taxon.getNcbiId() );
         setIsGenesUsable( taxon.getIsGenesUsable() );
         setIsSpecies( taxon.getIsSpecies() );
-        setParentTaxon( TaxonValueObject.fromEntity( taxon.getParentTaxon() ) );
+        setParentTaxon( taxon.getParentTaxon() != null ? TaxonValueObject.fromEntity( taxon.getParentTaxon() ) : null );
 
         if ( taxon.getExternalDatabase() != null ) {
             setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );

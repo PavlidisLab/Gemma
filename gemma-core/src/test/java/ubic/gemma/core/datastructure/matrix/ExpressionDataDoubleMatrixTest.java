@@ -124,17 +124,12 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
     @After
     public void tearDown() {
-        try {
-            if ( ee != null && ee.getId() != null ) {
-                expressionExperimentService.remove( ee );
-            }
-            if ( newee != null && newee.getId() != null ) {
-                expressionExperimentService.remove( newee );
-            }
-        } catch ( Exception e ) {
-            log.error( e );
+        if ( ee != null && ee.getId() != null ) {
+            expressionExperimentService.remove( ee.getId() );
         }
-
+        if ( newee != null && newee.getId() != null ) {
+            expressionExperimentService.remove( newee.getId() );
+        }
     }
 
     /**
@@ -322,7 +317,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         processedDataVectorService.computeProcessedExpressionData( newee );
 
-        File f1 = expressionDataFileService.writeOrLocateDataFile( newee, true, true );
+        File f1 = expressionDataFileService
+                .writeOrLocateDataFile( expressionExperimentService.load( newee.getId() ), true, true );
         assertNotNull( f1 );
         assertTrue( f1.exists() );
 
@@ -354,7 +350,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         assertTrue( Double.isNaN( data.getColumn( tba )[10] ) );
 
         sampleRemoveService.unmarkAsMissing( ol );
-        expressionExperimentService.thaw( expressionExperimentService.load( newee.getId() ) );
+        newee = expressionExperimentService.load( newee.getId());
+        expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );

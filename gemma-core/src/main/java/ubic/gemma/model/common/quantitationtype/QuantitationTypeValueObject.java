@@ -45,6 +45,12 @@ public class QuantitationTypeValueObject extends IdentifiableValueObject<Quantit
     private String type;
 
     /**
+     * Required when using the class as a spring bean.
+     */
+    public QuantitationTypeValueObject() {
+    }
+
+    /**
      * Constructor to build value object from QuantitationType
      */
     public QuantitationTypeValueObject( QuantitationType qt ) {

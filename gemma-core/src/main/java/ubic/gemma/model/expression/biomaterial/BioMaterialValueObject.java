@@ -65,6 +65,12 @@ public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial>
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public BioMaterialValueObject() {
+    }
+
     public BioMaterialValueObject( Long id ) {
         super( id );
     }

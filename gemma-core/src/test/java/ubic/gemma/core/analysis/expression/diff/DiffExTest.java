@@ -19,22 +19,11 @@
 
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
@@ -46,18 +35,24 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests added to check various cases of differential expression analysis.
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class DiffExTest extends AbstractGeoServiceTest {
 
@@ -110,8 +105,8 @@ public class DiffExTest extends AbstractGeoServiceTest {
 
         eeService.thaw( ee );
 
-        try (InputStream is = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_design.txt" );) {
+        try (InputStream is = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_design.txt" );) {
             assertNotNull( is );
             experimentalDesignImporter.importDesign( ee, is );
         }
@@ -119,8 +114,8 @@ public class DiffExTest extends AbstractGeoServiceTest {
         // Load the data from a text file.
         DoubleMatrixReader reader = new DoubleMatrixReader();
 
-        try (InputStream countData = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );) {
+        try (InputStream countData = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/GSE29006_expression_count.test.txt" );) {
             DoubleMatrix<String, String> countMatrix = reader.read( countData );
 
             Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -196,8 +191,8 @@ public class DiffExTest extends AbstractGeoServiceTest {
         ExpressionExperiment ee;
         // eeService.remove( eeService.findByShortName( "GSE35930" ) );
         try {
-            geoService
-                    .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE35930" ) ) );
+            geoService.setGeoDomainObjectGenerator(
+                    new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "GSE35930" ) ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE35930", false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
 
@@ -218,8 +213,8 @@ public class DiffExTest extends AbstractGeoServiceTest {
             ee = eeService.load( ee.getId() );
             eeService.thawLite( ee );
 
-            try (InputStream is = this.getClass().getResourceAsStream(
-                    "/data/loader/expression/geo/GSE35930/design.txt" );) {
+            try (InputStream is = this.getClass()
+                    .getResourceAsStream( "/data/loader/expression/geo/GSE35930/design.txt" );) {
                 experimentalDesignImporter.importDesign( ee, is, false );
             }
 

@@ -103,7 +103,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl.results"
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.results"
 		maxElementsOnDisk="10000" maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -142,7 +142,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl.hitListSizes"
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.hitListSizes"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="12000" timeToLiveSeconds="12000"
 		overflowToDisk="false">
 		<terracotta>
@@ -171,7 +171,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1820,7 +1820,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1829,7 +1829,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetImpl.results" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet.results" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">

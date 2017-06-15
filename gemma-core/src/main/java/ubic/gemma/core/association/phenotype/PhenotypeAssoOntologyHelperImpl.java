@@ -158,7 +158,7 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         if ( valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
         }
-
+        System.out.println(valueUri);
         OntologyTerm ontologyTerm;
         for ( AbstractOntologyService ontology : this.ontologies ) {
             ontologyTerm = ontology.getTerm( valueUri );

@@ -18,10 +18,20 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.util.BusinessKey;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * <p>
@@ -31,9 +41,77 @@ import ubic.gemma.persistence.service.VoEnabledDao;
  *
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
  */
-public abstract class BlatResultDaoBase extends VoEnabledDao<BlatResult, BlatResultValueObject> implements BlatResultDao {
+@Repository
+public class BlatResultDaoBase extends VoEnabledDao<BlatResult, BlatResultValueObject> implements BlatResultDao {
 
-    public BlatResultDaoBase(SessionFactory sessionFactory) {
+    @Autowired
+    public BlatResultDaoBase( SessionFactory sessionFactory ) {
         super( BlatResult.class, sessionFactory );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
+        BusinessKey.checkValidKey( bioSequence );
+
+        Criteria queryObject = this.getSession().createCriteria( BlatResult.class );
+
+        BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
+
+        List<?> results = queryObject.list();
+
+        if ( results != null ) {
+            for ( Object object : results ) {
+                BlatResult br = ( BlatResult ) object;
+                if ( br.getTargetChromosome() != null ) {
+                    Hibernate.initialize( br.getTargetChromosome() );
+                }
+                Hibernate.initialize( br.getQuerySequence() );
+            }
+        }
+
+        return ( Collection<BlatResult> ) results;
+    }
+
+    @Override
+    public void thaw( BlatResult blatResult ) {
+        this.getSession().refresh( blatResult );
+        Hibernate.initialize( blatResult.getQuerySequence() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon().getParentTaxon() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon().getExternalDatabase() );
+        Hibernate.initialize( blatResult.getQuerySequence().getSequenceDatabaseEntry() );
+        Hibernate.initialize( blatResult.getQuerySequence().getSequenceDatabaseEntry().getExternalDatabase() );
+        Hibernate.initialize( blatResult.getTargetSequence() );
+        Hibernate.initialize( blatResult.getSearchedDatabase() );
+        Hibernate.initialize( blatResult.getTargetChromosome() );
+        Hibernate.initialize( blatResult.getTargetChromosome().getTaxon() );
+        Hibernate.initialize( blatResult.getTargetChromosome().getSequence() );
+    }
+
+    @Override
+    public BlatResult find( BlatResult entity ) {
+        return load( entity.getId() );
+    }
+
+    @Override
+    public void thaw( Collection<BlatResult> blatResults ) {
+        for ( BlatResult br : blatResults ) {
+            thaw( br );
+        }
+    }
+
+    @Override
+    public BlatResultValueObject loadValueObject( BlatResult entity ) {
+        return new BlatResultValueObject( entity );
+    }
+
+    @Override
+    public Collection<BlatResultValueObject> loadValueObjects( Collection<BlatResult> entities ) {
+        Collection<BlatResultValueObject> vos = new LinkedHashSet<>();
+        for ( BlatResult e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
     }
 }

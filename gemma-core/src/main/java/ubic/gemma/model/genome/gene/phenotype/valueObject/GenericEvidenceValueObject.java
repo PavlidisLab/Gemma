@@ -26,6 +26,12 @@ public class GenericEvidenceValueObject extends EvidenceValueObject<GenericEvide
 
     private static final long serialVersionUID = 754768748091915831L;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public GenericEvidenceValueObject() {
+    }
+
     public GenericEvidenceValueObject( Long id ) {
         super( id );
     }

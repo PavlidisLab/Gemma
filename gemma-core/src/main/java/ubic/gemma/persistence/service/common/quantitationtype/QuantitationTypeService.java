@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.quantitationtype;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.persistence.service.BaseVoEnabledService;
@@ -29,6 +30,7 @@ import java.util.List;
 /**
  * @author kelsey
  */
+@Service
 public interface QuantitationTypeService extends BaseVoEnabledService<QuantitationType, QuantitationTypeValueObject> {
 
     @Secured({ "GROUP_USER" })

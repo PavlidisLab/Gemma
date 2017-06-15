@@ -67,6 +67,12 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDe
 
     private boolean hasAnnotationFile;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ArrayDesignValueObject() {
+    }
+
     public ArrayDesignValueObject( Long id ) {
         super( id );
     }

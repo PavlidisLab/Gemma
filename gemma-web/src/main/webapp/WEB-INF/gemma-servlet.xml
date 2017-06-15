@@ -2,9 +2,11 @@
 <!-- @author Gemma @version $Id$ -->
 
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr" xmlns:mvc="http://www.springframework.org/schema/mvc"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	   xmlns:context="http://www.springframework.org/schema/context"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+	   xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:p="http://www.springframework.org/schema/p"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
    http://www.springframework.org/schema/context 
    http://www.springframework.org/schema/context/spring-context-3.0.xsd 
@@ -104,27 +106,16 @@
 
 	<!-- Used for file uploads. Simply defining this makes Spring use it. -->
 	<bean id="multipartResolver" class="ubic.gemma.web.util.upload.CommonsMultipartMonitoredResolver">
-		<property name="maxUploadSize">
-			<value>104857600</value>
-		</property>
+		<property name="maxUploadSize" value="104857600"/>
 	</bean>
 	<!-- # 100 megabytes # 104857600 # 20 megabytes gemma.max.fileupload.size.bytes= -->
 	<!-- View Resolver for JSPs. This means that a jsp named "myform.jsp" can be referred to as "myform" in your controller 
 		bean declarations. -->
 	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
-		<property name="requestContextAttribute">
-			<value>rc</value>
-		</property>
-		<property name="viewClass">
-			<value>org.springframework.web.servlet.view.JstlView
-			</value>
-		</property>
-		<property name="prefix">
-			<value>/WEB-INF/pages/</value>
-		</property>
-		<property name="suffix">
-			<value>.jsp</value>
-		</property>
+		<property name="requestContextAttribute" value="rc"/>
+		<property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+		<property name="prefix" value="/WEB-INF/pages/"/>
+		<property name="suffix" value=".jsp"/>
 	</bean>
 
 	<!-- ==================================================== -->
@@ -146,46 +137,21 @@
 		<aop:scoped-proxy />
 	</bean>
 
-	<bean id="expressionExperimentFormController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
+	<bean id="expressionExperimentFormController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController"
+		  p:successView="redirect:/expressionExperiment/showAllExpressionExperiments.html">
 
-		<property name="commandName">
-			<value>expressionExperiment</value>
-		</property>
-		<property name="commandClass">
-			<value>ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject
-			</value>
-		</property>
-		<property name="formView">
-			<value>expressionExperiment.edit</value>
-		</property>
-		<property name="successView">
-			<value>redirect:/expressionExperiment/showAllExpressionExperiments.html
-			</value>
-		</property>
-		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService" />
-		</property>
-		<property name="bioAssayService">
-			<ref bean="bioAssayService" />
-		</property>
-		<property name="bioMaterialService">
-			<ref bean="bioMaterialService" />
-		</property>
-		<property name="externalDatabaseService">
-			<ref bean="externalDatabaseService" />
-		</property>
-		<property name="preprocessorService">
-			<ref bean="preprocessorService" />
-		</property>
-		<property name="persisterHelper">
-			<ref bean="persisterHelper" />
-		</property>
-		<property name="quantitationTypeService">
-			<ref bean="quantitationTypeService" />
-		</property>
-		<property name="auditTrailService">
-			<ref bean="auditTrailService" />
-		</property>
+		<property name="commandName" value="expressionExperiment"/>
+		<property name="commandClass"
+				  value="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentEditValueObject"/>
+		<property name="formView" value="expressionExperiment.edit"/>
+		<property name="expressionExperimentService" ref="expressionExperimentService"/>
+		<property name="bioAssayService" ref="bioAssayService"/>
+		<property name="bioMaterialService" ref="bioMaterialService"/>
+		<property name="externalDatabaseService" ref="externalDatabaseService"/>
+		<property name="preprocessorService" ref="preprocessorService"/>
+		<property name="persisterHelper" ref="persisterHelper"/>
+		<property name="quantitationTypeService" ref="quantitationTypeService"/>
+		<property name="auditTrailService" ref="auditTrailService"/>
 	</bean>
 
 	<!-- <bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController"> 
@@ -194,23 +160,11 @@
 
 
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
-
-		<property name="commandName">
-			<value>arrayDesign</value>
-		</property>
-		<property name="commandClass">
-			<value>ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject
-			</value>
-		</property>
-		<property name="formView">
-			<value>arrayDesign.edit</value>
-		</property>
-		<property name="successView">
-			<value>redirect:/arrays/showAllArrayDesigns.html</value>
-		</property>
-		<property name="arrayDesignService">
-			<ref bean="arrayDesignService" />
-		</property>
+		<property name="commandName" value="arrayDesign"/>
+		<property name="commandClass" value="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject"/>
+		<property name="formView" value="arrayDesign.edit"/>
+		<property name="successView" value="redirect:/arrays/showAllArrayDesigns.html"/>
+		<property name="arrayDesignService" ref="arrayDesignService"/>
 	</bean>
 
 
@@ -230,7 +184,7 @@
 	</bean>
 
 	<bean id="emptyController" class="ubic.gemma.web.controller.EmptyController">
-		<dwr:remote javascript="EmptyController"></dwr:remote>
+		<dwr:remote javascript="EmptyController"/>
 	</bean>
 
 	<bean id="differentialExpressionSearchController" class="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController">
@@ -808,7 +762,7 @@
 		<dwr:convert type="bean"
 			class="ubic.gemma.core.tasks.visualization.DifferentialExpressionGenesConditionsValueObject$DiffExGene" />
 		<dwr:convert type="bean"
-			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchServiceImpl$TaskProgress" />
+			class="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress" />
 
 		<dwr:convert type="bean" class="ubic.gemma.core.search.SearchResult" />
 
@@ -920,24 +874,24 @@
 			<dwr:include method="expressionExperiment" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.basecode.ontology.model.DatatypePropertyImpl">
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.DatatypeProperty">
 			<dwr:include method="uri" />
 			<dwr:include method="label" />
 			<dwr:include method="type" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.basecode.ontology.model.ObjectPropertyImpl">
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.ObjectProperty">
 			<dwr:include method="uri" />
 			<dwr:include method="label" />
 			<dwr:include method="range" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyIndividualImpl">
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyIndividual">
 			<dwr:include method="uri" />
 			<dwr:include method="label" />
 		</dwr:convert>
 
-		<dwr:convert type="bean" class="ubic.basecode.ontology.model.AnnotationPropertyImpl">
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.AnnotationProperty">
 			<dwr:include method="contents" />
 			<dwr:include method="property" />
 		</dwr:convert>
@@ -962,7 +916,7 @@
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.diff.DiffExpressionSearchCommand" />
 		<dwr:convert type="bean" class="ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorCommand" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentDataFetchCommand" />
-		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetMemberImpl" />
+		<dwr:convert type="bean" class="ubic.gemma.model.genome.gene.GeneSetMember" />
 		<dwr:convert type="bean" class="ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.web.controller.common.description.BibliographicReferenceValueObject" />
 		<dwr:convert type="bean" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject" />
@@ -1003,7 +957,7 @@
 		<dwr:convert type="classConverter" class="java.lang.Class" />
 
 		<!-- OntologyTerm might not be needed; we use Characteristics -->
-		<dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyTermImpl">
+		<dwr:convert type="bean" class="ubic.basecode.ontology.model.OntologyTerm">
 			<dwr:include method="term" />
 			<dwr:include method="uri" />
 			<dwr:include method="label" />

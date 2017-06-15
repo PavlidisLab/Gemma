@@ -37,9 +37,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataV
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -79,56 +77,43 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @After
     public void tearDown() {
-        try {
-            ee = eeService.findByShortName( "GSE3443" );
 
-            if ( ee != null ) {
-                mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
+        ee = eeService.findByShortName( "GSE3443" );
 
-                eeService.thaw( ee );
+        if ( ee != null ) {
+            mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
 
-                eeService.remove( ee );
+            eeService.thaw( ee );
+            eeService.remove( ee.getId() );
 
-                for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-                    designElementDataVectorService.removeDataForQuantitationType( qt );
-                }
-
-                if ( mergedAA != null ) {
-                    mergedAA.setMergees( new HashSet<ArrayDesign>() );
-                    arrayDesignService.update( mergedAA );
-                    arrayDesignService.thaw( mergedAA );
-
-                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
-                        arrayDesign.setMergedInto( null );
-                        arrayDesignService.update( arrayDesign );
-                    }
-
-                    for ( CompositeSequence cs : mergedAA.getCompositeSequences() ) {
-                        designElementDataVectorService.removeDataForCompositeSequence( cs );
-                    }
-
-                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
-                        for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( arrayDesign ) ) {
-                            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
-                                designElementDataVectorService.removeDataForQuantitationType( qt );
-                            }
-                            processedExpressionDataVectorService.removeProcessedDataVectors( ee );
-                            eeService.remove( ee );
-                        }
-                        arrayDesignService.thaw( arrayDesign );
-                        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                            designElementDataVectorService.removeDataForCompositeSequence( cs );
-                        }
-                        arrayDesignService.remove( arrayDesign );
-                    }
-
-                    arrayDesignService.remove( mergedAA );
-                }
-
+            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                designElementDataVectorService.removeDataForQuantitationType( qt );
             }
-        } catch ( Exception e ) {
-            // oh well. Test might fail, it might not.
-            log.info( e.getMessage(), e );
+
+            if ( mergedAA != null ) {
+
+                // Remove mergees
+                Collection<ArrayDesign> mergees = mergedAA.getMergees();
+                //noinspection unchecked
+                arrayDesignService.update( mergedAA );
+                arrayDesignService.thaw( mergedAA );
+                for ( ArrayDesign arrayDesign : mergees ) {
+                    arrayDesign.setMergedInto( null );
+                    arrayDesignService.update( arrayDesign );
+                }
+                //noinspection unchecked
+                mergedAA.setMergees( Collections.EMPTY_SET );
+
+                // Remove composite sequences
+                Collection<CompositeSequence> css = mergedAA.getCompositeSequences();
+                //noinspection unchecked
+                mergedAA.setCompositeSequences( Collections.EMPTY_SET );
+                for ( CompositeSequence cs : css ) {
+                    designElementDataVectorService.removeDataForCompositeSequence( cs );
+                }
+                arrayDesignService.update( mergedAA );
+                arrayDesignService.remove( mergedAA );
+            }
         }
     }
 

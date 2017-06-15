@@ -20,6 +20,7 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -48,6 +49,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
+@Service
 public interface ExpressionExperimentService
         extends BaseVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 

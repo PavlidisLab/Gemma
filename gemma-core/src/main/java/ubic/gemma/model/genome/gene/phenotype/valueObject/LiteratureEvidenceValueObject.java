@@ -25,6 +25,9 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject<Literatur
 
     private static final long serialVersionUID = -4401437961722829548L;
 
+    public LiteratureEvidenceValueObject() {
+    }
+
     public LiteratureEvidenceValueObject( Long id ) {
         super( id );
     }

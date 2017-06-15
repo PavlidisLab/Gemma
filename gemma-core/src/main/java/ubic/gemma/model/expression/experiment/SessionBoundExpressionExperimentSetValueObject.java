@@ -49,6 +49,12 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
     private boolean modified;
 
     /**
+     * Required when using the class as a spring bean.
+     */
+    public SessionBoundExpressionExperimentSetValueObject() {
+    }
+
+    /**
      * default constructor to satisfy java bean contract
      */
     public SessionBoundExpressionExperimentSetValueObject(Long id) {

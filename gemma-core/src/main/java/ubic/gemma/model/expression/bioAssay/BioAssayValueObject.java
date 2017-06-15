@@ -47,6 +47,12 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
     // to hold state change, initialized as this.outlier
     private Boolean userFlaggedOutlier = false;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public BioAssayValueObject() {
+    }
+
     public BioAssayValueObject( Long id ) {
         super( id );
     }
@@ -61,7 +67,7 @@ public class BioAssayValueObject extends IdentifiableValueObject<BioAssay> imple
 
         ArrayDesign ad = bioAssay.getArrayDesignUsed();
         assert ad != null;
-        this.arrayDesign = new ArrayDesignValueObject(ad.getId());
+        this.arrayDesign = new ArrayDesignValueObject( ad.getId() );
         arrayDesign.setShortName( ad.getShortName() );
         arrayDesign.setName( ad.getName() );
 

@@ -30,6 +30,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject<Experim
     private static final long serialVersionUID = 4243531745086284715L;
     private Collection<CharacteristicValueObject> experimentCharacteristics = new TreeSet<>();
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ExperimentalEvidenceValueObject() {
+    }
+
     public ExperimentalEvidenceValueObject( Long id ) {
         super( id );
     }

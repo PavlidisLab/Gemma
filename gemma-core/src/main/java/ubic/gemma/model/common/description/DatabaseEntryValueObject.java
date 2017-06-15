@@ -14,6 +14,7 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 
 import java.io.Serializable;
@@ -39,6 +40,12 @@ public class DatabaseEntryValueObject extends IdentifiableValueObject<DatabaseEn
 
     public DatabaseEntryValueObject( long id ) {
         super( id );
+    }
+
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public DatabaseEntryValueObject() {
     }
 
     /* ********************************

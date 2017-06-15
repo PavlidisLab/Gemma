@@ -50,6 +50,12 @@ public class BibliographicReferenceValueObject extends IdentifiableValueObject<B
     private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<>();
     private boolean retracted = false;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public BibliographicReferenceValueObject() {
+    }
+
     public BibliographicReferenceValueObject( Long id ) {
         super( id );
     }

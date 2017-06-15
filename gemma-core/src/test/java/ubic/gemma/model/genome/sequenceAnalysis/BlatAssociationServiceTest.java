@@ -18,32 +18,29 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDaoImpl;
-import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.gene.GeneProductService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationService;
+import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
+
+import java.util.Collection;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class BlatAssociationServiceTest extends BaseSpringContextTest {
 

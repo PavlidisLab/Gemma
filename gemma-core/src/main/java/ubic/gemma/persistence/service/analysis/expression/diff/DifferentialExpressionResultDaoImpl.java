@@ -350,7 +350,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         //noinspection unchecked
         List<Object[]> ees = session.createQuery(
-                "select ee, rs from  ExpressionAnalysisResultSetImpl rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
+                "select ee, rs from  ExpressionAnalysisResultSet rs join fetch rs.experimentalFactors join rs.analysis a join a.experimentAnalyzed ee"
                         + " where rs.id in (:rsids)" ).setParameterList( "rsids", resultSets ).list();
 
         /*
@@ -940,7 +940,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
     public Histogram loadPvalueDistribution( Long resultSetId ) {
 
         List<?> pvds = this.getHibernateTemplate().findByNamedParam(
-                "select rs.pvalueDistribution from ExpressionAnalysisResultSetImpl rs where rs.id=:rsid ", "rsid",
+                "select rs.pvalueDistribution from ExpressionAnalysisResultSet rs where rs.id=:rsid ", "rsid",
                 resultSetId );
         if ( pvds.isEmpty() ) {
             return null;
@@ -1007,7 +1007,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             return factorsByResult;
         }
 
-        final String queryString = "select rs.experimentalFactors, r from ExpressionAnalysisResultSetImpl rs"
+        final String queryString = "select rs.experimentalFactors, r from ExpressionAnalysisResultSet rs"
                 + " inner join rs.results r where r in (:differentialExpressionAnalysisResults)";
 
         String[] paramNames = { "differentialExpressionAnalysisResults" };
@@ -1047,7 +1047,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
 
         //noinspection unchecked
-        return this.getSession().createQuery( "select ef from ExpressionAnalysisResultSetImpl rs"
+        return this.getSession().createQuery( "select ef from ExpressionAnalysisResultSet rs"
                 + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult" )
                 .setParameter( "differentialExpressionAnalysisResult", differentialExpressionAnalysisResult ).list();
 
