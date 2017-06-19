@@ -59,6 +59,7 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
     @Transactional
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results ) {
+        expressionExperimentService.thaw( source );
         expressionExperimentService.update( source );
         log.info( "Persisting " + results.size() + " vectors ... " );
         source.getRawExpressionDataVectors().addAll( results );
