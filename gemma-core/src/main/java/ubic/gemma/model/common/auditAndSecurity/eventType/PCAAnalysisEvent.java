@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class PCAAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class PCAAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent}.
@@ -32,7 +32,7 @@ public abstract class PCAAnalysisEvent extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent();
         }
 
     }

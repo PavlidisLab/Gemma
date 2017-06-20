@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * To indicate that the biomaterial to bioassay mapping of the expression experiment was modified.
  * </p>
  */
-public abstract class BioMaterialMappingUpdate extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class BioMaterialMappingUpdate extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate}.
@@ -35,7 +35,7 @@ public abstract class BioMaterialMappingUpdate extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdateImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate();
         }
 
     }

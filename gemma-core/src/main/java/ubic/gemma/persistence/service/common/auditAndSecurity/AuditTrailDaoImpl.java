@@ -53,7 +53,7 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
 
         if ( auditEvent.getPerformer() == null ) {
             User user = getUser(); // could be null, if anonymous.
-            Field f = FieldUtils.getField( AuditEventImpl.class, "performer", true );
+            Field f = FieldUtils.getField( AuditEvent.class, "performer", true );
             assert f != null;
             try {
                 f.set( auditEvent, user );

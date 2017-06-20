@@ -29,7 +29,7 @@ import ubic.gemma.persistence.service.expression.experiment.ExpressionExperiment
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.testing.BaseSpringWebTest;
 
@@ -65,7 +65,7 @@ public class AuditControllerTest extends BaseSpringWebTest {
         assertNotNull( lastEvent );
         AuditEventType eventType = lastEvent.getEventType();
         assertNotNull( eventType );
-        assertEquals( CommentedEventImpl.class, eventType.getClass() );
+        assertEquals( CommentedEvent.class, eventType.getClass() );
 
     }
 }

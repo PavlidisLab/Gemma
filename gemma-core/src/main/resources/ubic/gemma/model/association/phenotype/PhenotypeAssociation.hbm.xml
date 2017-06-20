@@ -77,13 +77,13 @@
 			fetch="select">
 			<column name="SCORE_TYPE_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
-		<subclass name="ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl" discriminator-value="LiteratureEvidenceImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.LiteratureEvidence" discriminator-value="LiteratureEvidence"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.GenericEvidenceImpl" discriminator-value="GenericEvidenceImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.GenericEvidence" discriminator-value="GenericEvidence"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl" discriminator-value="ExperimentalEvidenceImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.ExperimentalEvidence" discriminator-value="ExperimentalEvidence"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 			<many-to-one name="experiment" class="ubic.gemma.model.analysis.Investigation" lazy="proxy" fetch="select">
 				<column name="EXPERIMENT_FK" not-null="false" sql-type="BIGINT" />

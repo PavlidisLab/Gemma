@@ -21,13 +21,9 @@ package ubic.gemma.model.common.protocol;
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.AbstractAuditable;
 
-/**
- * 
- */
-public abstract class Protocol extends AbstractAuditable implements Securable {
-    /**
-     * 
-     */
+
+public class Protocol extends AbstractAuditable implements Securable {
+
     private static final long serialVersionUID = -1902891452989019766L;
 
     /**
@@ -38,7 +34,7 @@ public abstract class Protocol extends AbstractAuditable implements Securable {
          * Constructs a new instance of {@link Protocol}.
          */
         public static Protocol newInstance() {
-            return new ProtocolImpl();
+            return new Protocol();
         }
 
     }

@@ -63,13 +63,13 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     @Override
     public Collection<CoexpressionAnalysis> findByName( final String name ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "select a from CoexpressionAnalysisImpl as a where a.name = :name" )
+        return this.getSession().createQuery( "select a from CoexpressionAnalysis as a where a.name = :name" )
                 .setParameter( "name", name ).list();
     }
 
     @Override
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment ) {
-        String q = "select ccd from CoexpressionAnalysisImpl pca "
+        String q = "select ccd from CoexpressionAnalysis pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
         return ( CoexpCorrelationDistribution ) this.getSession().createQuery( q )
                 .setParameter( "ee", expressionExperiment ).uniqueResult();
@@ -78,7 +78,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
 
     @Override
     public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee ) {
-        String q = "select ccd from CoexpressionAnalysisImpl pca "
+        String q = "select ccd from CoexpressionAnalysis pca "
                 + "join pca.coexpCorrelationDistribution ccd where pca.experimentAnalyzed = :ee";
         return this.getSession().createQuery( q ).setParameter( "ee", ee ).uniqueResult()
                 != null;
@@ -88,7 +88,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter ) {
         //noinspection unchecked
         return this.getSession().createQuery(
-                "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
+                "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", idsToFilter ).list();
     }
 
@@ -98,7 +98,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
 
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByInvestigation( Investigation investigation ) {
-        final String queryString = "select distinct a from CoexpressionAnalysisImpl a where :e = a.experimentAnalyzed";
+        final String queryString = "select distinct a from CoexpressionAnalysis a where :e = a.experimentAnalyzed";
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
@@ -120,7 +120,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         final String queryString =
-                "select distinct an from CoexpressionAnalysisImpl an" + " inner join an.experimentAnalyzed ee "
+                "select distinct an from CoexpressionAnalysis an" + " inner join an.experimentAnalyzed ee "
                         + "inner join ee.bioAssays ba "
                         + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
         //noinspection unchecked
@@ -130,7 +130,7 @@ public class CoexpressionAnalysisDaoImpl extends AnalysisDaoBase<CoexpressionAna
     @Override
     protected Collection<CoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString =
-                "select distinct an from CoexpressionAnalysisImpl an" + " inner join an.experimentAnalyzed ee "
+                "select distinct an from CoexpressionAnalysis an" + " inner join an.experimentAnalyzed ee "
                         + "inner join ee.bioAssays ba "
                         + "inner join ba.sampleUsed sample where sample.sourceTaxon = :taxon ";
         //noinspection unchecked

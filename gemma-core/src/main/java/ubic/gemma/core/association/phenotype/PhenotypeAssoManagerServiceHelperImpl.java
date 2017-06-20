@@ -395,7 +395,7 @@ public class PhenotypeAssoManagerServiceHelperImpl implements PhenotypeAssoManag
     private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
 
         // create the entity to populate
-        LiteratureEvidenceImpl literatureEvidence = new LiteratureEvidenceImpl();
+        LiteratureEvidence literatureEvidence = new LiteratureEvidence();
 
         // populate common field to evidence
         populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );

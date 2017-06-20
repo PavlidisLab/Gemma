@@ -100,9 +100,9 @@
       <operations public="false" package="false" protected="false" private="false" static="false"/>    
     </display>  
   </class>  
-  <class id="10" language="java" name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisImpl" 
+  <class id="10" language="java" name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
     project="gemma-core"
-    file="/gemma-core/src/main/java/ubic/gemma/model/analysis/expression/coexpression/CoexpressionAnalysisImpl.java"
+    file="/gemma-core/src/main/java/ubic/gemma/model/analysis/expression/coexpression/CoexpressionAnalysis.java"
     binary="false" corner="BOTTOM_RIGHT">    
     <position height="-1" width="-1" x="168" y="395"/>    
     <display autosize="true" stereotype="true" package="true" initial-value="false" signature="true" accessors="true" 

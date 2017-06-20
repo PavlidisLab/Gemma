@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class ArrayDesignMergeEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignMergeEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent}.
@@ -33,7 +33,7 @@ public abstract class ArrayDesignMergeEvent extends
          * .
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent();
         }
 
     }

@@ -18,14 +18,9 @@
  */
 package ubic.gemma.model.common.description;
 
-/**
- * 
- */
-public abstract class Keyword extends BibRefAnnotationImpl {
 
-    /**
-     * 
-     */
+public class Keyword extends BibRefAnnotationImpl {
+
     private static final long serialVersionUID = 2663428244994277220L;
 
     /**
@@ -36,7 +31,7 @@ public abstract class Keyword extends BibRefAnnotationImpl {
          * Constructs a new instance of {@link ubic.gemma.model.common.description.Keyword}.
          */
         public static Keyword newInstance() {
-            return new KeywordImpl();
+            return new Keyword();
         }
     }
 

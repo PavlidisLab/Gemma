@@ -17,7 +17,7 @@
 			<key foreign-key="AUDIT_EVENT_AUDIT_TRAIL_FKC">
 				<column name="AUDIT_TRAIL_FK" sql-type="BIGINT" />
 			</key>
-			<one-to-many class="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" />
+			<one-to-many class="ubic.gemma.model.common.auditAndSecurity.AuditEvent" />
 		</bag>
 	</class>
 </hibernate-mapping>

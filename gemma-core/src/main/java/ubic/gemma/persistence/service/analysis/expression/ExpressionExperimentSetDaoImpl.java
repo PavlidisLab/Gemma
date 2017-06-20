@@ -168,7 +168,7 @@ public class ExpressionExperimentSetDaoImpl
         timer.start();
         //noinspection unchecked
         List<Object[]> withCoexp = this.getSession().createQuery(
-                "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysisImpl an join e.experiments ea "
+                "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
                         + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
 

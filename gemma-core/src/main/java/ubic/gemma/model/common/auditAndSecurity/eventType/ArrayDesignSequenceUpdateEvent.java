@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * The updating of the sequences associated with an ArrayDesign
  * </p>
  */
-public abstract class ArrayDesignSequenceUpdateEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignSequenceUpdateEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -36,7 +36,7 @@ public abstract class ArrayDesignSequenceUpdateEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent();
         }
 
     }

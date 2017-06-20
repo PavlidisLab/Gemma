@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.persister.Persister;
 import ubic.gemma.persistence.persister.PersisterHelper;
@@ -86,7 +86,7 @@ public class ArrayDesignMergeHelperServiceImpl implements ArrayDesignMergeHelper
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
         AuditEvent auditEvent = AuditEvent.Factory.newInstance( new Date(), AuditAction.UPDATE, note, null, null,
-                new ArrayDesignMergeEventImpl() );
+                new ArrayDesignMergeEvent() );
         arrayDesign.getAuditTrail().addEvent( auditEvent );
     }
 

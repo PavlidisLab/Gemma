@@ -86,7 +86,7 @@
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
-				<many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFileImpl" cascade="all"
+				<many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFile" cascade="all"
 					lazy="proxy" fetch="select">
 					<column name="RAW_DATA_FILE_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
@@ -97,7 +97,7 @@
 					</key>
 					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" />
 				</set>
-				<many-to-one name="meanVarianceRelation" class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelationImpl"
+				<many-to-one name="meanVarianceRelation" class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation"
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
@@ -120,7 +120,7 @@
 					<one-to-many class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorImpl" />
 				</set>
 			</subclass>
-			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" discriminator-value="ExpressionExperimentSubSetImpl"
+			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet" discriminator-value="ExpressionExperimentSubSet"
 				dynamic-insert="false" dynamic-update="false" abstract="false">
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
 					cascade="none" lazy="false" fetch="select">
@@ -136,7 +136,7 @@
 				</set>
 			</subclass>
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.GenericExperimentImpl" discriminator-value="GenericExperimentImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.GenericExperiment" discriminator-value="GenericExperiment"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 		</subclass>
 	</class>

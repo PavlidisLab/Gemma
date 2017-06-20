@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * The sequence alignment analysis of an ArrayDesign
  * </p>
  */
-public abstract class ArrayDesignSequenceAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignSequenceAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -36,7 +36,7 @@ public abstract class ArrayDesignSequenceAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent();
         }
 
     }

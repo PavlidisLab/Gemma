@@ -46,13 +46,13 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
         t.setFlushMode( HibernateAccessor.FLUSH_COMMIT );
         List<?> results;
         if ( localFile.getRemoteURL() == null ) {
-            results = t.findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL is null ", "u",
+            results = t.findByNamedParam( "from LocalFile where localURL=:u and remoteURL is null ", "u",
                     localFile.getLocalURL() );
         } else if ( localFile.getLocalURL() == null ) {
-            results = t.findByNamedParam( "from LocalFileImpl where localURL is null and remoteURL=:r", "r",
+            results = t.findByNamedParam( "from LocalFile where localURL is null and remoteURL=:r", "r",
                     localFile.getRemoteURL() );
         } else {
-            results = t.findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL=:r",
+            results = t.findByNamedParam( "from LocalFile where localURL=:u and remoteURL=:r",
                     new String[] { "u", "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
         }
 
@@ -95,7 +95,7 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     @Override
     public LocalFile findByLocalURL( final URL url, final java.lang.Long size ) {
         return this.findByLocalURL(
-                "from LocalFileImpl as localFile where localFile.url = :url and localFile.size = :size", url, size );
+                "from LocalFile as localFile where localFile.url = :url and localFile.size = :size", url, size );
     }
 
     /**
@@ -120,7 +120,7 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     @Override
     public LocalFile findByRemoteURL( final URL url, final java.lang.Long size ) {
         return this.findByRemoteURL(
-                "from LocalFileImpl as localFile " + "where localFile.url = :url and localFile.size = :size", url,
+                "from LocalFile as localFile " + "where localFile.url = :url and localFile.size = :size", url,
                 size );
     }
 

@@ -23,7 +23,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
@@ -72,9 +72,9 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         assertEquals( ad1ad2ad3, ad1.getMergedInto() );
         assertEquals( ad1ad2ad3, ad2.getMergedInto() );
         assertEquals( ad1ad2ad3, ad3.getMergedInto() );
-        assertEquals( ArrayDesignMergeEventImpl.class, ad1.getAuditTrail().getLast().getEventType().getClass() );
-        assertEquals( ArrayDesignMergeEventImpl.class, ad2.getAuditTrail().getLast().getEventType().getClass() );
-        assertEquals( ArrayDesignMergeEventImpl.class, ad3.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ad1.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ad2.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ad3.getAuditTrail().getLast().getEventType().getClass() );
 
         /*
          * Making a new one out of a merged design and an unmerged

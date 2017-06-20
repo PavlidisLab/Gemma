@@ -73,7 +73,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
     private Collection<SampleCoexpressionMatrix> findByExperiment( ExpressionExperiment ee ) {
         //noinspection unchecked
         return this.getSession().createQuery( "select sa.sampleCoexpressionMatrix"
-                + " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee" ).setParameter( "ee", ee )
+                + " from SampleCoexpressionAnalysis sa where sa.experimentAnalyzed = :ee" ).setParameter( "ee", ee )
                 .list();
     }
 

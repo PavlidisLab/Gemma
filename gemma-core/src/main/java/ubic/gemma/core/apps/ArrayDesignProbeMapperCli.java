@@ -221,7 +221,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         }
                         arrayDesignProbeMapperService
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
-                        audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEventImpl() );
+                        audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEvent() );
                     } catch ( IOException e ) {
                         return e;
                     }
@@ -236,13 +236,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     if ( useDB ) {
 
                         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
-                            audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEventImpl() );
+                            audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
                         } else if ( this.hasOption( CONFIG_OPTION ) ) {
                             audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
-                                    new AlignmentBasedGeneMappingEventImpl() );
+                                    new AlignmentBasedGeneMappingEvent() );
                         } else {
                             audit( arrayDesign, "Run with default parameters",
-                                    new AlignmentBasedGeneMappingEventImpl() );
+                                    new AlignmentBasedGeneMappingEvent() );
                         }
                     }
                 }
@@ -633,7 +633,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
             successObjects.add( design.getName() );
-            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEventImpl();
+            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
             audit( design, "Part of a batch job", eventType );
 
         } catch ( Exception e ) {

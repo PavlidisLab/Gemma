@@ -671,7 +671,7 @@ public class ExpressionExperimentValueObject extends AbstractCuratableValueObjec
     @Override
     public Class<? extends Securable> getSecurableClass() {
         if ( this.isSubset ) {
-            return ExpressionExperimentSubSetImpl.class;
+            return ExpressionExperimentSubSet.class;
         }
         return ExpressionExperiment.class;
     }

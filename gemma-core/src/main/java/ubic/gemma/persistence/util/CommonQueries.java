@@ -102,7 +102,7 @@ public class CommonQueries {
             // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
             // source.
             String subsetQuery =
-                    "select distinct ees.id,ad.id from ExpressionExperimentSubSetImpl as ees join ees.sourceExperiment ee "
+                    "select distinct ees.id,ad.id from ExpressionExperimentSubSet as ees join ees.sourceExperiment ee "
                             + " join ee.bioAssays b join b.arrayDesignUsed ad where ees.id in (:ees)";
             Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() ); // note:
             // CollectionUtils.removeAll

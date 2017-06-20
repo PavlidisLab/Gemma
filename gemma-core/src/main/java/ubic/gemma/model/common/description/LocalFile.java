@@ -25,7 +25,7 @@ import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
-public abstract class LocalFile implements Identifiable, Serializable, gemma.gsec.model.Securable {
+public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.Securable {
 
     private static final long serialVersionUID = 5057142607188347151L;
     private java.net.URL localURL;
@@ -90,6 +90,11 @@ public abstract class LocalFile implements Identifiable, Serializable, gemma.gse
         } else if ( !localURL.equals( other.localURL ) )
             return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return this.asFile() == null ? super.toString() : this.asFile().toString();
     }
 
     public FileFormat getFormat() {
@@ -180,7 +185,7 @@ public abstract class LocalFile implements Identifiable, Serializable, gemma.gse
          * Constructs a new instance of {@link ubic.gemma.model.common.description.LocalFile}.
          */
         public static LocalFile newInstance() {
-            return new LocalFileImpl();
+            return new LocalFile();
         }
 
     }

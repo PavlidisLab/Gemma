@@ -29,7 +29,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.CurationDetailsEvent;
 
 import java.lang.reflect.Method;
@@ -61,7 +61,7 @@ public class AuditTrailServiceImpl implements AuditTrailService {
     @Override
     @Transactional
     public void addComment( final Auditable auditable, final String comment, final String detail ) {
-        AuditEventType type = new CommentedEventImpl();
+        AuditEventType type = new CommentedEvent();
         this.addUpdateEvent( auditable, type, comment, detail );
     }
 

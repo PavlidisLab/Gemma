@@ -54,9 +54,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public static final int DEFAULT_PA_LIMIT = 10000;
     private static final String QUERY_EV_CODE = " and phen.EVIDENCE_CODE != 'IEA'";
     private static final String DISCRIMINATOR_CLAUSE =
-            "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
-                    + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
-                    + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
+            "('ubic.gemma.model.association.phenotype.LiteratureEvidence',"
+                    + "'ubic.gemma.model.association.phenotype.GenericEvidence',"
+                    + "'ubic.gemma.model.association.phenotype.ExperimentalEvidence',"
                     + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
     private static final Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
 

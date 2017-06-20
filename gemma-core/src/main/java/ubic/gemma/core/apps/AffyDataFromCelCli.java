@@ -22,7 +22,7 @@ package ubic.gemma.core.apps;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -60,7 +60,7 @@ public class AffyDataFromCelCli extends ExpressionExperimentManipulatingCLI {
             }
         }
 
-        return super.auditEventService.hasEvent( ee, DataReplacedEventImpl.class );
+        return super.auditEventService.hasEvent( ee, DataReplacedEvent.class );
 
     }
 

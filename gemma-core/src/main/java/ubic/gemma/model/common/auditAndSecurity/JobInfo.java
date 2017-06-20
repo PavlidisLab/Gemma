@@ -25,10 +25,7 @@ import ubic.gemma.model.common.Identifiable;
 import java.io.Serializable;
 import java.util.Date;
 
-/**
- *
- */
-public abstract class JobInfo implements Identifiable, Serializable, SecuredNotChild {
+public class JobInfo implements Identifiable, Serializable, SecuredNotChild {
 
     private static final long serialVersionUID = -4998165708433543706L;
     private Boolean runningStatus = Boolean.TRUE;
@@ -80,7 +77,6 @@ public abstract class JobInfo implements Identifiable, Serializable, SecuredNotC
         this.description = description;
     }
 
-
     public Date getEndTime() {
         return this.endTime;
     }
@@ -126,7 +122,6 @@ public abstract class JobInfo implements Identifiable, Serializable, SecuredNotC
     public void setPhases( Integer phases ) {
         this.phases = phases;
     }
-
 
     public Boolean getRunningStatus() {
         return this.runningStatus;
@@ -178,14 +173,14 @@ public abstract class JobInfo implements Identifiable, Serializable, SecuredNotC
          * Constructs a new instance of {@link JobInfo}.
          */
         public static JobInfo newInstance() {
-            return new JobInfoImpl();
+            return new JobInfo();
         }
 
         /**
          * Constructs a new instance of {@link JobInfo}, taking all required and/or read-only properties as arguments.
          */
         public static JobInfo newInstance( Boolean runningStatus, Date startTime, Integer phases ) {
-            final JobInfo entity = new JobInfoImpl();
+            final JobInfo entity = new JobInfo();
             entity.setRunningStatus( runningStatus );
             entity.setStartTime( startTime );
             entity.setPhases( phases );
@@ -196,10 +191,9 @@ public abstract class JobInfo implements Identifiable, Serializable, SecuredNotC
          * Constructs a new instance of {@link JobInfo}, taking all possible properties (except the identifier(s))as
          * arguments.
          */
-        public static JobInfo newInstance( Boolean runningStatus, String failedMessage, Date startTime,
-                Date endTime, Integer phases, String description, String messages, String taskId,
-                User user ) {
-            final JobInfo entity = new JobInfoImpl();
+        public static JobInfo newInstance( Boolean runningStatus, String failedMessage, Date startTime, Date endTime,
+                Integer phases, String description, String messages, String taskId, User user ) {
+            final JobInfo entity = new JobInfo();
             entity.setRunningStatus( runningStatus );
             entity.setFailedMessage( failedMessage );
             entity.setStartTime( startTime );

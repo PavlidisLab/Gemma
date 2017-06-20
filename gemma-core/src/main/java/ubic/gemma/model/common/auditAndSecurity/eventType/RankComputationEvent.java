@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * For backwards compatibility only.
  * </p>
  */
-public abstract class RankComputationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEventImpl {
+public class RankComputationEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent}.
@@ -34,7 +34,7 @@ public abstract class RankComputationEvent extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent();
         }
 
     }

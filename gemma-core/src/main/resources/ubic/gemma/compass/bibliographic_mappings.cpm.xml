@@ -84,13 +84,13 @@
 			<meta-data>accession</meta-data>
 		</property>
 	</class>
-	<class name="common.description.KeywordImpl" alias="keywords" root="false">
+	<class name="common.description.Keyword" alias="keywords" root="false">
 		<id name="id" />
 		<property name="term">
 			<meta-data>term</meta-data>
 		</property>
 	</class>
-	<class name="common.description.MedicalSubjectHeadingImpl" alias="meshTerms" root="false">
+	<class name="common.description.MedicalSubjectHeading" alias="meshTerms" root="false">
 		<id name="id" />
 		<property name="term">
 			<meta-data>term</meta-data>

@@ -63,7 +63,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         //noinspection unchecked
         return this.getSession().createQuery(
-                "select distinct fv from ExpressionExperimentSubSetImpl es join es.bioAssays ba join ba.sampleUsed bm "
+                "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.factorValues fv where es=:es and fv.experimentalFactor = :ef " )
                 .setParameter( "es", entity ).setParameter( "ef", factor ).list();
     }
@@ -72,7 +72,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
         //noinspection unchecked
         List<FactorValue> list = this.getSession().createQuery(
-                "select distinct fv from ExpressionExperimentSubSetImpl es join es.bioAssays ba join ba.sampleUsed bm "
+                "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.factorValues fv where es.id=:es and fv.experimentalFactor.id = :ef " )
                 .setParameter( "es", subSetId ).setParameter( "ef", experimentalFactor ).list();
         Collection<FactorValueValueObject> result = new HashSet<>();

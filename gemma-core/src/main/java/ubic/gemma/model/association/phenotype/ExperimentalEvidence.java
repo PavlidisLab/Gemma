@@ -21,7 +21,28 @@ package ubic.gemma.model.association.phenotype;
 /**
  * Evidence based on an experiment. This could be provided via a publication, or information known only to the provider.
  */
-public abstract class ExperimentalEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
+public class ExperimentalEvidence extends ubic.gemma.model.association.phenotype.PhenotypeAssociation {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -1310307976449116756L;
+    private ubic.gemma.model.analysis.Investigation experiment;
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public ExperimentalEvidence() {
+    }
+
+    public ubic.gemma.model.analysis.Investigation getExperiment() {
+        return this.experiment;
+    }
+
+    public void setExperiment( ubic.gemma.model.analysis.Investigation experiment ) {
+        this.experiment = experiment;
+    }
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.association.phenotype.ExperimentalEvidence}.
@@ -31,34 +52,9 @@ public abstract class ExperimentalEvidence extends ubic.gemma.model.association.
          * Constructs a new instance of {@link ubic.gemma.model.association.phenotype.ExperimentalEvidence}.
          */
         public static ubic.gemma.model.association.phenotype.ExperimentalEvidence newInstance() {
-            return new ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl();
+            return new ubic.gemma.model.association.phenotype.ExperimentalEvidence();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1310307976449116756L;
-    private ubic.gemma.model.analysis.Investigation experiment;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExperimentalEvidence() {
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.analysis.Investigation getExperiment() {
-        return this.experiment;
-    }
-
-    public void setExperiment( ubic.gemma.model.analysis.Investigation experiment ) {
-        this.experiment = experiment;
     }
 
 }

@@ -26,7 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
  */
-public class AuditEventImpl extends AuditEvent {
+public class AuditEvent extends AuditEvent {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

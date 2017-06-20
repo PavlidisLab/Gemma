@@ -21,7 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class AnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+public abstract class AnnotationEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
     /**
      * The serial version UID of this class. Needed for serialization.

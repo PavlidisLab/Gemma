@@ -174,7 +174,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
          * Deal with the analyses of subsets of the experiments given being analyzed; but we keep things organized by
          * the source experiment. Maybe that is confusing.
          */
-        String q2 = "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysis a "
+        String q2 = "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a "
                 + " inner join fetch a.resultSets res inner join fetch res.baselineGroup "
                 + " inner join fetch res.experimentalFactors facs inner join fetch facs.factorValues"
                 + " inner join fetch res.hitListSizes  "
@@ -255,7 +255,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             Collection<Long> probableSubSetIds = ListUtils.removeAll( used, ee2fv.keySet() );
             if ( !probableSubSetIds.isEmpty() ) {
                 fvs = this.getSession().createQuery(
-                        "select distinct ee.id, fv from " + "ExpressionExperimentSubSetImpl"
+                        "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
                                 + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                         .setParameterList( "ees", probableSubSetIds ).list();
 
@@ -273,7 +273,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
          * Subsets of those same experiments (there might not be any)
          */
         List<DifferentialExpressionAnalysis> analysesofSubsets = this.getSession()
-                .createQuery( "select distinct a from " + "ExpressionExperimentSubSetImpl"
+                .createQuery( "select distinct a from " + "ExpressionExperimentSubSet"
                         + " ee, DifferentialExpressionAnalysis a" + " join ee.sourceExperiment see "
                         + " join fetch a.experimentAnalyzed eeanalyzed where see.id in (:eeids) and ee=eeanalyzed" )
                 .setParameterList( "eeids", expressionExperimentIds ).list();
@@ -290,7 +290,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
             // factor value information for the subset. The key output is the ID of the subset, not of the source
             // experiment.
             fvs = this.getSession().createQuery(
-                    "select distinct ee.id, fv from " + "ExpressionExperimentSubSetImpl"
+                    "select distinct ee.id, fv from " + "ExpressionExperimentSubSet"
                             + " ee join ee.bioAssays ba join ba.sampleUsed bm join bm.factorValues fv where ee.id in (:ees)" )
                     .setParameterList( "ees", experimentSubsetIds ).list();
             for ( Object[] oa : fvs ) {
@@ -697,7 +697,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends DifferentialExpressio
          * Deal with the analyses of subsets of the investigation. User has to know this is possible.
          */
         results.addAll( this.getHibernateTemplate().findByNamedParam(
-                "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysis a"
+                "select distinct a from ExpressionExperimentSubSet eess, DifferentialExpressionAnalysis a"
                         + " join eess.sourceExperiment see "
                         + " join a.experimentAnalyzed eeanalyzed where see.id=:ee and eess=eeanalyzed", "ee", id ) );
 

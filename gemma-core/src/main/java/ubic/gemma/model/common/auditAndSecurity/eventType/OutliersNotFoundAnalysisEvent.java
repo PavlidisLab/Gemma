@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class OutliersNotFoundAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEventImpl {
+public class OutliersNotFoundAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.OutlierAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +34,7 @@ public abstract class OutliersNotFoundAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.OutliersNotFoundAnalysisEvent();
         }
 
     }

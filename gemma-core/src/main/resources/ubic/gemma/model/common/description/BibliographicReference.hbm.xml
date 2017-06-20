@@ -62,7 +62,7 @@
       <many-to-one name="pubAccession" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="proxy" fetch="select">
          <column name="PUB_ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="fullTextPdf" class="ubic.gemma.model.common.description.LocalFileImpl"  cascade="none" lazy="proxy" fetch="select">
+      <many-to-one name="fullTextPdf" class="ubic.gemma.model.common.description.LocalFile"  cascade="none" lazy="proxy" fetch="select">
          <column name="FULL_TEXT_PDF_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <set name="annotations" lazy="true" fetch="select" inverse="false" cascade="all">
@@ -77,7 +77,7 @@
          <key foreign-key="MEDICAL_SUBJECT_HEADING_MESH_BIB_REF_FKC">
             <column name="MESH_BIB_REF_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
       </set>
       <set name="publicationTypes" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
@@ -91,7 +91,7 @@
          <key foreign-key="KEYWORD_KEYWORD_BIB_REF_FKC">
             <column name="KEYWORD_BIB_REF_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.KeywordImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Keyword"/>
       </set>
       <set name="chemicals" lazy="true" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />

@@ -1306,7 +1306,7 @@ public class ExpressionExperimentDaoImpl
 
     @Override
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment ) {
-        String queryString = "select eess from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee where ee = :ee";
+        String queryString = "select eess from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee where ee = :ee";
 
         //noinspection unchecked
         return this.getSession().createQuery( queryString ).setParameter( "ee", expressionExperiment ).list();
@@ -1323,7 +1323,7 @@ public class ExpressionExperimentDaoImpl
                 return ( Taxon ) list.iterator().next();
         } else if ( ee instanceof ExpressionExperimentSubSet ) {
             String queryString =
-                    "select su.sourceTaxon from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee"
+                    "select su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
                             + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess = :ee";
             List list = this.getSession().createQuery( queryString ).setParameter( "ee", ee ).list();
             if ( list.size() > 0 )
@@ -1352,7 +1352,7 @@ public class ExpressionExperimentDaoImpl
             list = this.getSession().createQuery( queryString ).setParameterList( "ees", bioAssaySets ).list();
         } else if ( ExpressionExperimentSubSet.class.isAssignableFrom( example.getClass() ) ) {
             String queryString =
-                    "select eess, su.sourceTaxon from ExpressionExperimentSubSetImpl eess inner join eess.sourceExperiment ee"
+                    "select eess, su.sourceTaxon from ExpressionExperimentSubSet eess inner join eess.sourceExperiment ee"
                             + " inner join ee.bioAssays as BA inner join BA.sampleUsed as su where eess in (:ees)";
             list = this.getSession().createQuery( queryString ).setParameterList( "ees", bioAssaySets ).list();
         } else {
@@ -1680,7 +1680,7 @@ public class ExpressionExperimentDaoImpl
 
         //noinspection unchecked
         List<Long> withCoex = this.getSession().createQuery(
-                "select experimentAnalyzed.id from CoexpressionAnalysisImpl where experimentAnalyzed.id in (:ids)" )
+                "select experimentAnalyzed.id from CoexpressionAnalysis where experimentAnalyzed.id in (:ids)" )
                 .setParameterList( "ids", vo.keySet() ).list();
 
         for ( Long id : withCoex ) {

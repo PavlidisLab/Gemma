@@ -229,7 +229,7 @@ public class GeneDiffExMetaAnalysisDaoImpl extends AbstractDao<GeneDifferentialE
          */
         //noinspection unchecked
         results.addAll( this.getSession().createQuery(
-                "select distinct a from ExpressionExperimentSubSetImpl subset, GeneDifferentialExpressionMetaAnalysis a"
+                "select distinct a from ExpressionExperimentSubSet subset, GeneDifferentialExpressionMetaAnalysis a"
                         + " join subset.sourceExperiment see "
                         + "   inner join a.resultSetsIncluded rs  join rs.analysis ra inner join ra.experimentAnalyzed eeanalyzed where see.id=:ee and subset=eeanalyzed" )
                 .setParameter( "ee", id ).list() );

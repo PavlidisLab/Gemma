@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Event used when a sample is removed from an experiment (typically due to QC concerns)
  * </p>
  */
-public abstract class SampleRemovalEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class SampleRemovalEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent}.
@@ -34,7 +34,7 @@ public abstract class SampleRemovalEvent extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent();
         }
 
     }

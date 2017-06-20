@@ -144,7 +144,7 @@ public class AuditEventValueObject extends IdentifiableValueObject<AuditEvent> i
             buf.append( " on " + DateFormat.getDateInstance( DateFormat.LONG, Locale.getDefault() )
                     .format( this.getDate() ) );
         } catch ( Exception ex ) {
-            System.err.println( "AuditEventImpl toString problem." );
+            System.err.println( "AuditEvent toString problem." );
             System.err.println( ex );
         }
         buf.append( ": " );

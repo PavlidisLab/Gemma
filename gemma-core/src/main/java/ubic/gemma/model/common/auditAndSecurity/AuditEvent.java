@@ -117,7 +117,7 @@ public abstract class AuditEvent implements Identifiable, Serializable {
          * Constructs a new instance of {@link AuditEvent}.
          */
         public static AuditEvent newInstance() {
-            return new AuditEventImpl();
+            return new AuditEvent();
         }
 
         /**
@@ -126,7 +126,7 @@ public abstract class AuditEvent implements Identifiable, Serializable {
          */
         public static AuditEvent newInstance( Date date, AuditAction action, String note, String detail, User performer,
                 AuditEventType eventType ) {
-            final AuditEvent entity = new AuditEventImpl();
+            final AuditEvent entity = new AuditEvent();
             try {
                 if ( date != null )
                     FieldUtils.writeField( entity, "date", date, true );

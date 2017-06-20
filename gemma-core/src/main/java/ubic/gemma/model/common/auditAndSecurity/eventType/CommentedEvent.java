@@ -24,7 +24,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * added.
  * </p>
  */
-public abstract class CommentedEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+public class CommentedEvent extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent}.
@@ -34,7 +34,7 @@ public abstract class CommentedEvent extends ubic.gemma.model.common.auditAndSec
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent();
         }
 
     }
