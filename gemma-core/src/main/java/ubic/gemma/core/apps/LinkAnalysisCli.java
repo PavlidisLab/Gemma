@@ -67,6 +67,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     private LinkAnalysisService linkAnalysisService;
     private boolean initializeFromOldData = false;
     private boolean updateNodeDegree = false;
+    private boolean deleteAnalyses = false;
 
     public static void main( String[] args ) {
         LinkAnalysisCli p = new LinkAnalysisCli();
@@ -183,6 +184,11 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
                 .withDescription( "Skip strict QC for outliers, batch effects and correlation distribution" )
                 .create( "noqc" );
         addOption( skipQC );
+
+        Option deleteOption = OptionBuilder
+                .withDescription( "Delete analyses for selected experiments, instead of doing analysis; supercedes all other options" )
+                .create( "delete" );
+        addOption( deleteOption );
 
         // Option probeDegreeThresholdOption = OptionBuilder
         // .hasArg()
@@ -328,7 +334,10 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         this.autoSeekEventType = LinkAnalysisEvent.class;
         super.processOptions();
 
-        if ( hasOption( "init" ) ) {
+        if ( hasOption( "delete" ) ) {
+            this.deleteAnalyses = true;
+            return;
+        } else if ( hasOption( "init" ) ) {
             initializeFromOldData = true;
             if ( hasOption( 't' ) ) {
                 this.analysisTaxon = this.getOptionValue( 't' );
@@ -423,6 +432,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
             NormalizationMethod value = NormalizationMethod.valueOf( optionValue );
             if ( value == null ) {
+                // Hm, might be expecting an exception in this case.
                 log.error( "No such normalization method: " + value );
                 this.bail( ErrorCode.INVALID_OPTION );
             }
@@ -546,6 +556,16 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     private void processExperiment( ExpressionExperiment ee ) {
         ee = eeService.thaw( ee );
+
+        if ( this.deleteAnalyses ) {
+            log.info( "======= Deleting coexpression analysis (if any) for: " + ee );
+            if ( this.getBean( LinkAnalysisPersister.class ).deleteAnalyses( ee ) ) {
+                successObjects.add( ee.toString() );
+            } else {
+                errorObjects.add( ee + ": Seems to not have any eligible link analysis to delete" );
+            }
+            return;
+        }
 
         /*
          * If we're not using the database, always run it.

@@ -26,12 +26,13 @@ import ubic.gemma.model.genome.Taxon;
 public interface LinkAnalysisPersister {
 
     /**
-     * Remove any links and coexpression analyses for the given experiment. Exposed partly for testing, it gets called
+     * Remove any links and coexpression analyses for the given experiment. It gets called
      * automatically by saveLinksToDb();
      * 
      * @param ee
+     * @return true if anything was deleted.
      */
-    public void deleteAnalyses( BioAssaySet ee );
+    public boolean deleteAnalyses( BioAssaySet ee );
 
     /**
      * Temporary method.
