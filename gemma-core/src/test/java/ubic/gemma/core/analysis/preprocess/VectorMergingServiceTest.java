@@ -16,6 +16,7 @@ package ubic.gemma.core.analysis.preprocess;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
@@ -75,6 +76,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     private ArrayDesign mergedAA = null;
     private ExpressionExperiment ee = null;
 
+    @Before
     @After
     public void tearDown() {
 
@@ -119,7 +121,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Test
     final public void test() throws Exception {
-        tearDown();
         /*
          * Need a persistent experiment that uses multiple array designs. Then merge the designs, switch the vectors,
          * and merge the vectors. GSE3443

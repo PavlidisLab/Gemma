@@ -35,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- * @version $Id$
  */
 @Service
 public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissingValueHelperService {
@@ -48,18 +47,10 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
     @Autowired
     private AuditTrailService auditTrailService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.preprocess.TwoChannelMissingValueHelperService#persist(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, java.util.Collection)
-     */
     @Override
     @Transactional
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,
             Collection<RawExpressionDataVector> results ) {
-        expressionExperimentService.thaw( source );
         expressionExperimentService.update( source );
         log.info( "Persisting " + results.size() + " vectors ... " );
         source.getRawExpressionDataVectors().addAll( results );

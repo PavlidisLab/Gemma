@@ -49,7 +49,6 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-@Service
 public interface ExpressionExperimentService
         extends BaseVoEnabledService<ExpressionExperiment, ExpressionExperimentValueObject> {
 

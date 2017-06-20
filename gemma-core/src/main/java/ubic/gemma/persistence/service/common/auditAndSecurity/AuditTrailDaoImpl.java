@@ -19,6 +19,7 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -129,5 +130,4 @@ public class AuditTrailDaoImpl extends AbstractDao<AuditTrail> implements AuditT
         this.getSession().setReadOnly( result, true );
         return ( User ) result;
     }
-
 }

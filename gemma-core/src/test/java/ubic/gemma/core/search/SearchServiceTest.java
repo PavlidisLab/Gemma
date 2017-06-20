@@ -88,7 +88,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     private String geneNcbiId;
 
-    @Before
+
     public void setup() throws Exception {
         try (InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/fma.test.owl" );) {
             assert is != null;
@@ -175,7 +175,7 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
     }
 
-    @After
+
     public void tearDown() {
         if ( gene != null )
             geneService.remove( gene );
@@ -190,7 +190,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGeneralSearch4Brain() {
-
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.noSearches();
         settings.setQuery( "Brain" ); // should hit 'cavity of brain'.
@@ -204,10 +208,12 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
+                tearDown();
                 return;
             }
         }
 
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -216,7 +222,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testGeneUriSearch() {
-
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( GENE_URI + this.geneNcbiId );
         settings.setSearchGenes( true );
@@ -225,17 +235,23 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( Gene.class ) ) {
             if ( sr.getResultObject().equals( gene ) ) {
+                tearDown();
                 return;
             }
         }
 
+        tearDown();
         fail( "Didn't get expected result from search" );
 
     }
 
     @Test
     public void testSearchByBibRefIdProblems() {
-
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 9600966 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -257,15 +273,21 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
             if ( sr.getResultObject().equals( bibref ) ) {
+                tearDown();
                 return;
             }
         }
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 
     @Test
     public void testSearchByBibRefIdProblemsB() {
-
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
         BibliographicReference bibref = fetcher.retrieveByHTTP( 22780917 );
         bibref = ( BibliographicReference ) persisterHelper.persist( bibref );
@@ -287,16 +309,22 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( BibliographicReference.class ) ) {
             if ( sr.getResultObject().equals( bibref ) ) {
+                tearDown();
                 return;
             }
         }
 
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 
     @Test
     public void testSearchByBibRefId() {
-
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         String id;
         if ( ee.getPrimaryPublication() == null ) {
             PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
@@ -326,16 +354,22 @@ public class SearchServiceTest extends BaseSpringContextTest {
         assertTrue( !found.isEmpty() );
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
+                tearDown();
                 return;
             }
         }
 
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 
     @Test
     public void testSearchForUpdatedQueryResults() {
-
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         // test out the dao a bit
         UserQuery userQuery = userQueryService.load( thePastUserQuery.getId() );
 
@@ -346,21 +380,29 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
+                tearDown();
                 return;
             }
         }
 
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 
     @Test
     public void testSearchForUpdatedQueryResultsNoResults() {
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         // test out the dao a bit
         UserQuery userQuery = userQueryService.load( theFutureUserQuery.getId() );
 
         Map<Class<?>, List<SearchResult>> found = this.searchService.searchForNewlyCreatedUserQueryResults( userQuery );
         assertTrue( found.isEmpty() );
 
+        tearDown();
     }
 
     /**
@@ -368,6 +410,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURIChildSearch() {
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( "http://purl.obolibrary.org/obo/FMA_83153" ); // OrganComponent of Neuraxis; superclass of
         // 'spinal cord'.
@@ -377,9 +424,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
+                tearDown();
                 return;
             }
         }
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 
@@ -388,6 +437,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testURISearch() {
+        try {
+            this.setup();
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
         SearchSettings settings = SearchSettings.Factory.newInstance();
         settings.setQuery( SPINAL_CORD );
         settings.setSearchExperiments( true );
@@ -399,9 +453,11 @@ public class SearchServiceTest extends BaseSpringContextTest {
 
         for ( SearchResult sr : found.get( ExpressionExperiment.class ) ) {
             if ( sr.getResultObject().equals( ee ) ) {
+                tearDown();
                 return;
             }
         }
+        tearDown();
         fail( "Didn't get expected result from search" );
     }
 

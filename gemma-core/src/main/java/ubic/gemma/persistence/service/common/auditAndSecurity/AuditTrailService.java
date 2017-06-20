@@ -24,6 +24,7 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.List;
 
@@ -31,7 +32,7 @@ import java.util.List;
  * @author kelsey
  */
 @Service
-public interface AuditTrailService {
+public interface AuditTrailService extends BaseService<AuditTrail> {
 
     /*
      * Pre-post must happen at a different phase, because we end up with no transaction for checking security
