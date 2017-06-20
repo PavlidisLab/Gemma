@@ -30,7 +30,7 @@ import java.util.Date;
 /**
  * An event in the life of an object.
  */
-public abstract class AuditEvent implements Identifiable, Serializable {
+public class AuditEvent implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -1212093157703833905L;
     private AuditAction action = null;
