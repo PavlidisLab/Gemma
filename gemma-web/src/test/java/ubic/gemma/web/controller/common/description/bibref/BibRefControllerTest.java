@@ -109,7 +109,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
             log.error( "Test skipped due to failure to connect to NIH" );
             return;
         }
-        log.debug( "testing delete" );
+        log.debug( "testing remove" );
 
         req = new MockHttpServletRequest( "POST", "/bibRef/deleteBibRef.html" );
         req.addParameter( "_eventId", "delete" );
@@ -121,7 +121,7 @@ public class BibRefControllerTest extends BaseSpringWebTest {
     }
 
     /**
-     * Tests the exception handling of the controller's delete method.
+     * Tests the exception handling of the controller's remove method.
      * 
      * @throws Exception
      */

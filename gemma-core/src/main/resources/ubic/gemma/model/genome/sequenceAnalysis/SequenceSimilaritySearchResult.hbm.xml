@@ -21,7 +21,7 @@
       <many-to-one name="targetChromosome" class="ubic.gemma.model.genome.ChromosomeImpl"  lazy="proxy" fetch="select">
          <column name="TARGET_CHROMOSOME_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="searchedDatabase" class="ubic.gemma.model.common.description.ExternalDatabaseImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="searchedDatabase" class="ubic.gemma.model.common.description.ExternalDatabase"  lazy="proxy" fetch="select">
          <column name="SEARCHED_DATABASE_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
       <many-to-one name="targetAlignedRegion" class="ubic.gemma.model.genome.PhysicalLocationImpl"  cascade="all" lazy="false" fetch="select">

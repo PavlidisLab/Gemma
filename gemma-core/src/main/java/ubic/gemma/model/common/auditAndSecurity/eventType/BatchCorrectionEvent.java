@@ -29,7 +29,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * @author paul
  * @version $Id$
  */
-public abstract class BatchCorrectionEvent extends ExpressionExperimentAnalysisEventImpl {
+public class BatchCorrectionEvent extends ExpressionExperimentAnalysisEvent {
 
     /**
      * 
@@ -44,7 +44,7 @@ public abstract class BatchCorrectionEvent extends ExpressionExperimentAnalysisE
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchCorrectionEvent();
         }
 
     }

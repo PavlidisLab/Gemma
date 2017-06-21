@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 
 /* this importer cannot automatically download files it expects the files to already be there */
 /**

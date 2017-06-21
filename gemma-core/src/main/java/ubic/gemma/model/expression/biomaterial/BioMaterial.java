@@ -19,9 +19,6 @@
 
 package ubic.gemma.model.expression.biomaterial;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import gemma.gsec.model.Securable;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
@@ -29,56 +26,40 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * In MAGE, BioMaterial is an abstract class that represents the important substances such as cells, tissues, DNA,
  * proteins, etc... In MAGE, Biomaterial subclasses such as BioSample and BioSource can be related to other biomaterial
  * through a directed acyclic graph (represented by treatment(s)). In our implementation, we don't care so much about
  * the experimental procedures and we just lump all of the BioMaterial into one class.
  */
-public abstract class BioMaterial extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
+public class BioMaterial extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
 
-    /**
-     * 
-     */
+
     private static final long serialVersionUID = 4374359557498220256L;
-
-    /**
-     * Constructs new instances of {@link BioMaterial}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link BioMaterial}.
-         */
-        public static BioMaterial newInstance() {
-            return new BioMaterialImpl();
-        }
-
-    }
-
     private ubic.gemma.model.genome.Taxon sourceTaxon;
-
     private Collection<FactorValue> factorValues = new HashSet<>();
-
     private Collection<BioAssay> bioAssaysUsedIn = new HashSet<>();
-
     private Collection<Treatment> treatments = new HashSet<>();
-
     private Collection<Characteristic> characteristics = new HashSet<>();
-
     private DatabaseEntry externalAccession;
 
-    /**
-     * 
-     */
     public Collection<BioAssay> getBioAssaysUsedIn() {
         return this.bioAssaysUsedIn;
     }
 
-    /**
-     * 
-     */
+    public void setBioAssaysUsedIn( Collection<BioAssay> bioAssaysUsedIn ) {
+        this.bioAssaysUsedIn = bioAssaysUsedIn;
+    }
+
     public Collection<Characteristic> getCharacteristics() {
         return this.characteristics;
+    }
+
+    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+        this.characteristics = characteristics;
     }
 
     /**
@@ -91,6 +72,10 @@ public abstract class BioMaterial extends AbstractAuditable implements gemma.gse
         return this.externalAccession;
     }
 
+    public void setExternalAccession( DatabaseEntry externalAccession ) {
+        this.externalAccession = externalAccession;
+    }
+
     /**
      * The values that this BioAssay is associated with for the experiment.
      */
@@ -98,47 +83,42 @@ public abstract class BioMaterial extends AbstractAuditable implements gemma.gse
         return this.factorValues;
     }
 
+    public void setFactorValues( Collection<FactorValue> factorValues ) {
+        this.factorValues = factorValues;
+    }
+
     @Override
     public Securable getSecurityOwner() {
         return null;
     }
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Taxon getSourceTaxon() {
         return this.sourceTaxon;
-    }
-
-    /**
-     * 
-     */
-    public Collection<Treatment> getTreatments() {
-        return this.treatments;
-    }
-
-    public void setBioAssaysUsedIn( Collection<BioAssay> bioAssaysUsedIn ) {
-        this.bioAssaysUsedIn = bioAssaysUsedIn;
-    }
-
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
-        this.characteristics = characteristics;
-    }
-
-    public void setExternalAccession( DatabaseEntry externalAccession ) {
-        this.externalAccession = externalAccession;
-    }
-
-    public void setFactorValues( Collection<FactorValue> factorValues ) {
-        this.factorValues = factorValues;
     }
 
     public void setSourceTaxon( ubic.gemma.model.genome.Taxon sourceTaxon ) {
         this.sourceTaxon = sourceTaxon;
     }
 
+    public Collection<Treatment> getTreatments() {
+        return this.treatments;
+    }
+
     public void setTreatments( Collection<Treatment> treatments ) {
         this.treatments = treatments;
+    }
+
+    /**
+     * Constructs new instances of {@link BioMaterial}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link BioMaterial}.
+         */
+        public static BioMaterial newInstance() {
+            return new BioMaterial();
+        }
+
     }
 
 }

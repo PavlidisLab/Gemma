@@ -26,7 +26,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
@@ -100,7 +100,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
             designImporter.importDesign( ee,
                     this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
 
-            ee = expressionExperimentService.thaw( ee );
+            expressionExperimentService.thaw( ee );
         }
     }
 
@@ -145,7 +145,6 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
         config.getInteractionsToInclude().add( factors );
-        config.setQvalueThreshold( null );
 
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
@@ -163,19 +162,16 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
-            ears = differentialExpressionResultService.thaw( ears );
-
+            differentialExpressionResultService.thaw( ears );
         }
 
         checkResults( refetched );
 
-        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, null );
+        differentialExpressionAnalyzerService.redoAnalysis( ee, refetched, true );
 
     }
 
-    /**
-     * @param analysis
-     */
+
     public void checkResults( DifferentialExpressionAnalysis analysis ) {
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 

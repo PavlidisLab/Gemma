@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,65 +18,39 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.persistence.service.AbstractService;
+
+import java.util.Collection;
 
 /**
- * @version $Id$
+ * Spring Service base class for <code>BlatAssociationService</code>, provides access to all services and entities
+ * referenced by this service.
+ *
  * @see BlatAssociationService
  */
 @Service
-public class BlatAssociationServiceImpl extends BlatAssociationServiceBase {
+public class BlatAssociationServiceImpl extends AbstractService<BlatAssociation> implements BlatAssociationService {
 
-    /**
-     * @see BlatAssociationService#create(BlatAssociation)
-     */
-    @Override
-    protected BlatAssociation handleCreate( BlatAssociation blatAssociation ) {
-        return this.getBlatAssociationDao().create( blatAssociation );
-    }
+    private final BlatAssociationDao blatAssociationDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
-     */
-    @Override
-    protected Collection<BlatAssociation> handleFind( Gene gene ) {
-        return this.getBlatAssociationDao().find( gene );
-    }
-
-    /**
-     * @see BlatAssociationService#find(BioSequence)
-     */
-    @Override
-    protected Collection<BlatAssociation> handleFind( BioSequence bioSequence ) {
-        return this.getBlatAssociationDao().find( bioSequence );
+    @Autowired
+    public BlatAssociationServiceImpl( BlatAssociationDao blatAssociationDao ) {
+        super( blatAssociationDao );
+        this.blatAssociationDao = blatAssociationDao;
     }
 
     @Override
-    protected void handleThaw( BlatAssociation blatAssociation ) {
-        this.getBlatAssociationDao().thaw( blatAssociation );
+    public Collection<BlatAssociation> find( BioSequence bioSequence ) {
+        return this.blatAssociationDao.find( bioSequence );
     }
 
     @Override
-    protected void handleThaw( Collection<BlatAssociation> blatAssociations ) {
-        this.getBlatAssociationDao().thaw( blatAssociations );
+    public Collection<BlatAssociation> find( Gene gene ) {
+        return this.blatAssociationDao.find( gene );
     }
-
-    @Override
-    protected void handleUpdate( BlatAssociation blatAssociation ) {
-        this.getBlatAssociationDao().update( blatAssociation );
-    }
-
-    @Override
-    public void remove( BlatAssociation blatAssociation ) {
-        this.getBlatAssociationDao().remove( blatAssociation );
-    }
-
 }

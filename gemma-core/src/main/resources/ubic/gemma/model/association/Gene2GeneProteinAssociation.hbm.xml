@@ -12,10 +12,10 @@
 			<generator class="native">
 			</generator>
 		</id>
-		<many-to-one access="field" name="secondGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
+		<many-to-one access="field" name="secondGene" class="ubic.gemma.model.genome.Gene" lazy="proxy" fetch="select">
 			<column name="SECOND_GENE_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>
-		<many-to-one access="field" name="firstGene" class="ubic.gemma.model.genome.GeneImpl" lazy="proxy" fetch="select">
+		<many-to-one access="field" name="firstGene" class="ubic.gemma.model.genome.Gene" lazy="proxy" fetch="select">
 			<column name="FIRST_GENE_FK" not-null="true" sql-type="BIGINT" />
 		</many-to-one>
 
@@ -25,7 +25,7 @@
 		<property access="field" name="evidenceVector" type="byte[]">
 			<column name="EVIDENCE_VECTOR" not-null="false" unique="false" sql-type="MEDIUMBLOB" />
 		</property>
-		<many-to-one access="field" name="databaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"
+		<many-to-one access="field" name="databaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"
 			cascade="all" lazy="false" fetch="select">
 			<column name="DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>

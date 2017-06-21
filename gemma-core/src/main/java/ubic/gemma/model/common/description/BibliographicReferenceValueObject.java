@@ -18,100 +18,53 @@
  */
 package ubic.gemma.model.common.description;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 
+import java.util.*;
+
 /**
  * represents a BibliographicReferenceValueObject when this value object is needed in core, the same value object exists
  * in web
- * 
- * @see ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceCitationValueObject
- *      BibliographicReferenceCitationValueObject for a very light-weight alternative representation of
- *      BibliographicReference
+ *
  * @author pavlidis
- * @version
  */
-public class BibliographicReferenceValueObject {
-
-    public static CitationValueObject constructCitation( BibliographicReference bib ) {
-        return CitationValueObject.convert2CitationValueObject( bib );
-    }
-
-    public static Collection<CitationValueObject> constructCitations( Collection<BibliographicReference> bibs ) {
-        return CitationValueObject.convert2CitationValueObjects( bibs );
-    }
-
-    /**
-     * does not set related experiments field
-     * 
-     * @param refs
-     * @return
-     */
-    public static List<BibliographicReferenceValueObject> convert2ValueObjects( Collection<BibliographicReference> refs ) {
-
-        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
-
-        if ( refs != null ) {
-            for ( BibliographicReference ref : refs ) {
-                results.add( new BibliographicReferenceValueObject( ref ) );
-            }
-        }
-
-        return results;
-    }
+public class BibliographicReferenceValueObject extends IdentifiableValueObject<BibliographicReference> {
 
     private String abstractText;
-
     private String authorList;
-
     private CitationValueObject citation;
-
-    private Collection<ExpressionExperimentValueObject> experiments = new HashSet<ExpressionExperimentValueObject>();
-
-    private Long id;
-
+    private Collection<ExpressionExperimentValueObject> experiments = new HashSet<>();
     private String issue;
-
     private String pages;
-
     private String pubAccession;
-
     private String publication;
-
     private java.util.Date publicationDate;
-
     private String publisher;
-
     private String title;
     private String volume;
-
     private Collection<String> meshTerms;
-
     private Collection<String> chemicalsTerms;
-
-    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<BibliographicPhenotypesValueObject>();
-
+    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<>();
     private boolean retracted = false;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
     public BibliographicReferenceValueObject() {
-        super();
+    }
+
+    public BibliographicReferenceValueObject( Long id ) {
+        super( id );
     }
 
     /**
      * does not set related experiments field
-     * 
-     * @param ref
      */
     public BibliographicReferenceValueObject( BibliographicReference ref ) {
-
-        this.id = ref.getId();
+        super( ref.getId() );
         this.abstractText = ref.getAbstractText();
         this.authorList = ref.getAuthorList();
         this.pubAccession = ref.getPubAccession().getAccession();
@@ -124,16 +77,15 @@ public class BibliographicReferenceValueObject {
         this.volume = ref.getVolume();
         this.citation = constructCitation( ref );
 
-        this.meshTerms = extractTermsfromHeadings( ref.getMeshTerms() );
-        this.chemicalsTerms = extractChemfromHeadings( ref.getChemicals() );
+        this.meshTerms = extractTermsFromHeadings( ref.getMeshTerms() );
+        this.chemicalsTerms = extractChemFromHeadings( ref.getChemicals() );
         this.retracted = checkIfRetracted( ref );
     }
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String issue,
-            String pages, String pubAccession, String publication, Date publicationDate, String publisher,
-            String title, String volume, Collection<ExpressionExperimentValueObject> experiments ) {
-        super();
-        this.id = id;
+            String pages, String pubAccession, String publication, Date publicationDate, String publisher, String title,
+            String volume, Collection<ExpressionExperimentValueObject> experiments ) {
+        super( id );
         this.abstractText = abstractText;
         this.authorList = authorList;
         this.issue = issue;
@@ -147,11 +99,43 @@ public class BibliographicReferenceValueObject {
         this.experiments = experiments;
     }
 
+    public static CitationValueObject constructCitation( BibliographicReference bib ) {
+        return CitationValueObject.convert2CitationValueObject( bib );
+    }
+
+    public static Collection<CitationValueObject> constructCitations( Collection<BibliographicReference> bibs ) {
+        return CitationValueObject.convert2CitationValueObjects( bibs );
+    }
+
+    /**
+     * does not set related experiments field
+     */
+    public static List<BibliographicReferenceValueObject> convert2ValueObjects(
+            Collection<BibliographicReference> refs ) {
+
+        List<BibliographicReferenceValueObject> results = new ArrayList<>();
+
+        if ( refs != null ) {
+            for ( BibliographicReference ref : refs ) {
+                results.add( new BibliographicReferenceValueObject( ref ) );
+            }
+        }
+
+        return results;
+    }
+
     /**
      * @return the abstractText
      */
     public String getAbstractText() {
         return abstractText;
+    }
+
+    /**
+     * @param abstractText the abstractText to set
+     */
+    public void setAbstractText( String abstractText ) {
+        this.abstractText = abstractText;
     }
 
     /**
@@ -161,8 +145,19 @@ public class BibliographicReferenceValueObject {
         return authorList;
     }
 
+    /**
+     * @param authorList the authorList to set
+     */
+    public void setAuthorList( String authorList ) {
+        this.authorList = authorList;
+    }
+
     public Collection<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
         return this.bibliographicPhenotypes;
+    }
+
+    public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
+        this.bibliographicPhenotypes = bibliographicPhenotypes;
     }
 
     /**
@@ -180,6 +175,13 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
+     * @param citation the citation to set
+     */
+    public void setCitation( CitationValueObject citation ) {
+        this.citation = citation;
+    }
+
+    /**
      * @return the experiments
      */
     public Collection<ExpressionExperimentValueObject> getExperiments() {
@@ -187,10 +189,10 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
-     * @return the id
+     * @param experiments the experiments to set
      */
-    public Long getId() {
-        return id;
+    public void setExperiments( Collection<ExpressionExperimentValueObject> experiments ) {
+        this.experiments = experiments;
     }
 
     /**
@@ -198,6 +200,13 @@ public class BibliographicReferenceValueObject {
      */
     public String getIssue() {
         return issue;
+    }
+
+    /**
+     * @param issue the issue to set
+     */
+    public void setIssue( String issue ) {
+        this.issue = issue;
     }
 
     /**
@@ -215,98 +224,17 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
-     * @return the pubAccession
-     */
-    public String getPubAccession() {
-        return pubAccession;
-    }
-
-    /**
-     * @return the publication
-     */
-    public String getPublication() {
-        return publication;
-    }
-
-    /**
-     * @return the publicationDate
-     */
-    public java.util.Date getPublicationDate() {
-        return publicationDate;
-    }
-
-    /**
-     * @return the publisher
-     */
-    public String getPublisher() {
-        return publisher;
-    }
-
-    /**
-     * @return the title
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * @return the volume
-     */
-    public String getVolume() {
-        return volume;
-    }
-
-    /**
-     * @param abstractText the abstractText to set
-     */
-    public void setAbstractText( String abstractText ) {
-        this.abstractText = abstractText;
-    }
-
-    /**
-     * @param authorList the authorList to set
-     */
-    public void setAuthorList( String authorList ) {
-        this.authorList = authorList;
-    }
-
-    public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
-        this.bibliographicPhenotypes = bibliographicPhenotypes;
-    }
-
-    /**
-     * @param citation the citation to set
-     */
-    public void setCitation( CitationValueObject citation ) {
-        this.citation = citation;
-    }
-
-    /**
-     * @param experiments the experiments to set
-     */
-    public void setExperiments( Collection<ExpressionExperimentValueObject> experiments ) {
-        this.experiments = experiments;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    /**
-     * @param issue the issue to set
-     */
-    public void setIssue( String issue ) {
-        this.issue = issue;
-    }
-
-    /**
      * @param pages the pages to set
      */
     public void setPages( String pages ) {
         this.pages = pages;
+    }
+
+    /**
+     * @return the pubAccession
+     */
+    public String getPubAccession() {
+        return pubAccession;
     }
 
     /**
@@ -317,10 +245,24 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
+     * @return the publication
+     */
+    public String getPublication() {
+        return publication;
+    }
+
+    /**
      * @param publication the publication to set
      */
     public void setPublication( String publication ) {
         this.publication = publication;
+    }
+
+    /**
+     * @return the publicationDate
+     */
+    public java.util.Date getPublicationDate() {
+        return publicationDate;
     }
 
     /**
@@ -331,6 +273,13 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
+     * @return the publisher
+     */
+    public String getPublisher() {
+        return publisher;
+    }
+
+    /**
      * @param publisher the publisher to set
      */
     public void setPublisher( String publisher ) {
@@ -338,10 +287,24 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
+     * @return the title
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    /**
      * @param title the title to set
      */
     public void setTitle( String title ) {
         this.title = title;
+    }
+
+    /**
+     * @return the volume
+     */
+    public String getVolume() {
+        return volume;
     }
 
     /**
@@ -362,9 +325,9 @@ public class BibliographicReferenceValueObject {
     /**
      * Extract the Chemicals terms from the BibliographicReference
      */
-    private Collection<String> extractChemfromHeadings( Collection<Compound> chemCollection ) {
+    private Collection<String> extractChemFromHeadings( Collection<Compound> chemCollection ) {
 
-        ArrayList<String> chemTermList = new ArrayList<String>();
+        ArrayList<String> chemTermList = new ArrayList<>();
 
         for ( Compound compound : chemCollection ) {
             chemTermList.add( compound.getName() );
@@ -375,9 +338,9 @@ public class BibliographicReferenceValueObject {
     /**
      * Extract the Mesh terms from the BibliographicReference
      */
-    private Collection<String> extractTermsfromHeadings( Collection<MedicalSubjectHeading> mshCollection ) {
+    private Collection<String> extractTermsFromHeadings( Collection<MedicalSubjectHeading> mshCollection ) {
 
-        ArrayList<String> meshTermList = new ArrayList<String>();
+        ArrayList<String> meshTermList = new ArrayList<>();
 
         for ( MedicalSubjectHeading msh : mshCollection ) {
             meshTermList.add( msh.getTerm() );
@@ -387,9 +350,8 @@ public class BibliographicReferenceValueObject {
 
     private boolean checkIfRetracted( BibliographicReference ref ) {
         for ( PublicationType pt : ref.getPublicationTypes() ) {
-            if ( pt.getType() != null
-                    && ( pt.getType().indexOf( "Retraction of Publication" ) != -1 || pt.getType().indexOf(
-                            "Retracted Publication" ) != -1 ) ) {
+            if ( pt.getType() != null && ( pt.getType().contains( "Retraction of Publication" ) || pt.getType()
+                    .contains( "Retracted Publication" ) ) ) {
                 return true;
             }
         }

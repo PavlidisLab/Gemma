@@ -21,18 +21,33 @@ package ubic.gemma.persistence.service.association.phenotype;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl;
-import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
+import ubic.gemma.persistence.service.VoEnabledDao;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
 
 @Repository
-public class ExperimentalEvidenceDaoImpl extends AbstractDao<ExperimentalEvidence> implements ExperimentalEvidenceDao {
+public class ExperimentalEvidenceDaoImpl extends VoEnabledDao<ExperimentalEvidence, ExperimentalEvidenceValueObject>
+        implements ExperimentalEvidenceDao {
 
     @Autowired
     public ExperimentalEvidenceDaoImpl( SessionFactory sessionFactory ) {
-        super( ExperimentalEvidenceImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( ExperimentalEvidence.class, sessionFactory );
     }
 
+    @Override
+    public ExperimentalEvidenceValueObject loadValueObject( ExperimentalEvidence entity ) {
+        return new ExperimentalEvidenceValueObject( entity );
+    }
+
+    @Override
+    public Collection<ExperimentalEvidenceValueObject> loadValueObjects( Collection<ExperimentalEvidence> entities ) {
+        Collection<ExperimentalEvidenceValueObject> vos = new LinkedHashSet<>();
+        for ( ExperimentalEvidence e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

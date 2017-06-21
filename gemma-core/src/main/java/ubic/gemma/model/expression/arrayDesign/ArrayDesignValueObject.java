@@ -18,19 +18,22 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import org.hibernate.ScrollableResults;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.curation.AbstractCuratableValueObject;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignDaoImpl;
 
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Value object for quickly displaying varied information about Array Designs.
  *
  * @author paul et al
  */
-public class ArrayDesignValueObject extends AbstractCuratableValueObject
+public class ArrayDesignValueObject extends AbstractCuratableValueObject<ArrayDesign>
         implements java.io.Serializable, Comparable<ArrayDesignValueObject> {
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -38,56 +41,40 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
     private static final long serialVersionUID = -8259245319391937522L;
 
     private String color;
-
     private String dateCached;
-
     private String description;
-
     private Integer designElementCount;
-
     private Integer expressionExperimentCount;
-
     private Boolean hasBlatAssociations;
-
     private Boolean hasGeneAssociations;
-
     private Boolean hasSequenceAssociations;
-
     private Boolean isMerged;
-
     private Boolean isMergee;
-
     private Boolean isSubsumed;
-
     private Boolean isSubsumer;
-
     private java.util.Date lastGeneMapping;
-
     private java.util.Date lastRepeatMask;
-
     private java.util.Date lastSequenceAnalysis;
-
     private java.util.Date lastSequenceUpdate;
-
     private String name;
-
     private String numGenes;
-
     private String numProbeAlignments;
-
     private String numProbeSequences;
-
     private String numProbesToGenes;
-
     private String shortName;
-
     private String taxon;
-
     private String technologyType;
 
     private boolean hasAnnotationFile;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
     public ArrayDesignValueObject() {
+    }
+
+    public ArrayDesignValueObject( Long id ) {
+        super( id );
     }
 
     /**
@@ -112,12 +99,61 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
      * This will only work if the object is thawed (lightly). Not everything will be filled in -- test before using!
      */
     public ArrayDesignValueObject( ArrayDesign ad ) {
+        this( ad, null );
+    }
 
+    public ArrayDesignValueObject( ArrayDesign ad, Map<Long, Integer> eeCounts ) {
+        super( ad );
         this.name = ad.getName();
         this.shortName = ad.getShortName();
-        this.description = ad.getDescription();
-        this.id = ad.getId();
 
+        if ( ad.getTechnologyType() != null ) {
+            this.technologyType = ad.getTechnologyType().toString();
+            this.color = ad.getTechnologyType().getValue();
+        }
+
+        this.description = ad.getDescription();
+        this.isMergee = ad.getMergedInto() != null;
+        this.taxon = ad.getPrimaryTaxon().getCommonName();
+
+        this.expressionExperimentCount = ( eeCounts == null || !eeCounts.containsKey( this.getId() ) ) ?
+                0 :
+                eeCounts.get( this.getId() );
+    }
+
+    /**
+     * Creates a new array design from a given scrollable list.
+     * ! Does not populate curation events ! - call {@link ArrayDesignDaoImpl#addCurationEvents} with the created instance.
+     *
+     * @param list     the list has to have its values correctly populated.
+     *                 See {@link ArrayDesignDaoImpl#getEEValueObjectQueryString()}
+     * @param eeCounts map containing the counts of EEs in ADs. If it also contains the count for
+     *                 the AD that this VO will represent, the appropriate value in this VO will be populated.
+     */
+    public ArrayDesignValueObject( ScrollableResults list, Map<Long, Integer> eeCounts ) {
+        super( list.getLong( 0 ) );
+        this.name = list.getString( 1 );
+        this.shortName = list.getString( 2 );
+
+        TechnologyType color = ( TechnologyType ) list.get( 3 );
+        if ( color != null ) {
+            this.technologyType = color.toString();
+            this.color = color.getValue();
+        }
+
+        this.description = list.getString( 4 );
+        this.isMergee = list.get( 5 ) != null;
+
+        this.lastUpdated = list.getDate( 6 );
+        this.troubled = list.getBoolean( 7 );
+        this.needsAttention = list.getBoolean( 8 );
+        this.curationNote = list.getString( 9 );
+
+        this.taxon = list.getString( 10 );
+
+        this.expressionExperimentCount = ( eeCounts == null || !eeCounts.containsKey( this.getId() ) ) ?
+                0 :
+                eeCounts.get( this.getId() );
     }
 
     public ArrayDesignValueObject( Date lastUpdated, Boolean troubled, AuditEventValueObject troubledEvent,
@@ -317,9 +353,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.isSubsumer = isSubsumer;
     }
 
-    /**
-     *
-     */
     public java.util.Date getLastGeneMapping() {
         return this.lastGeneMapping;
     }
@@ -413,9 +446,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.numProbesToGenes = numProbesToGenes;
     }
 
-    /**
-     *
-     */
     public String getShortName() {
         return this.shortName;
     }
@@ -424,9 +454,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.shortName = shortName;
     }
 
-    /**
-     *
-     */
     public String getTaxon() {
         return this.taxon;
     }
@@ -435,9 +462,6 @@ public class ArrayDesignValueObject extends AbstractCuratableValueObject
         this.taxon = taxon;
     }
 
-    /**
-     *
-     */
     public String getTechnologyType() {
         return this.technologyType;
     }

@@ -32,16 +32,16 @@ import ubic.gemma.core.loader.genome.ProbeSequenceParser;
 import ubic.gemma.core.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 
 import java.io.*;
 import java.util.*;
@@ -60,21 +60,24 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * After seeing more than this number of compositeSequences lacking sequences we don't give a detailed warning.
      */
     private static final int MAX_NUM_WITH_NO_SEQUENCE_FOR_DETAILED_WARNINGS = 20;
-    private static Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
-    @Autowired
-    ArrayDesignReportService arrayDesignReportService;
+    private static final Log log = LogFactory.getLog( ArrayDesignSequenceProcessingServiceImpl.class.getName() );
+
+    private final ArrayDesignReportService arrayDesignReportService;
+    private final ArrayDesignService arrayDesignService;
+    private final BioSequenceService bioSequenceService;
+    private final ExternalDatabaseService externalDatabaseService;
+    private final Persister persisterHelper;
 
     @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private BioSequenceService bioSequenceService;
-
-    @Autowired
-    private ExternalDatabaseService externalDatabaseService;
-
-    @Autowired
-    private Persister persisterHelper;
+    public ArrayDesignSequenceProcessingServiceImpl( ArrayDesignReportService arrayDesignReportService,
+            ArrayDesignService arrayDesignService, BioSequenceService bioSequenceService,
+            ExternalDatabaseService externalDatabaseService, Persister persisterHelper ) {
+        this.arrayDesignReportService = arrayDesignReportService;
+        this.arrayDesignService = arrayDesignService;
+        this.bioSequenceService = bioSequenceService;
+        this.externalDatabaseService = externalDatabaseService;
+        this.persisterHelper = persisterHelper;
+    }
 
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
@@ -106,13 +109,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException {
-
-        FastaParser fp = new FastaParser();
-        fp.parse( fastaFile );
-        Collection<BioSequence> sequences = fp.getResults();
-        log.debug( "Parsed " + sequences.size() + " sequences" );
-
-        assignSequencesToDesignElements( designElements, sequences );
+        this.assignSequencesToDesignElements( designElements, new FileInputStream( fastaFile ) );
     }
 
     /**
@@ -122,7 +119,6 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     @Override
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile )
             throws IOException {
-
         FastaParser fp = new FastaParser();
         fp.parse( fastaFile );
         Collection<BioSequence> sequences = fp.getResults();
@@ -229,7 +225,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         arrayDesignService.update( arrayDesign );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         log.info( "Done adding sequence information!" );
         return bioSequences;
     }
@@ -304,7 +300,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             } else {
                 BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) {
-                    biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
+                    bioSequenceService.thaw( biologicalCharacteristic );
                     if ( biologicalCharacteristic.getSequenceDatabaseEntry() != null && gbIdMap
                             .containsKey( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() ) ) {
                         match = gbIdMap.get( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() );
@@ -343,7 +339,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         log.info( "Updating sequences on arrayDesign" );
         arrayDesignService.update( arrayDesign );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         return bioSequences;
 
     }
@@ -364,7 +360,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<BioSequence> finalResult = new HashSet<>();
         Collection<String> notFound = new HashSet<>();
 
-        // values that were enot found
+        // values that were not found
         notFound.addAll( probe2acc.values() );
 
         // the actual thing values to search for (with version numbers)
@@ -392,15 +388,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             finalResult.addAll( retrievedSequences );
 
             // replace the sequences.
-            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                String probeName = cs.getName();
-                String acc = probe2acc.get( probeName );
-                if ( found.containsKey( acc ) ) {
-                    numSwitched++;
-                    log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
-                    cs.setBiologicalCharacteristic( found.get( acc ) );
-                }
-            }
+            numSwitched = replaceSequences( arrayDesign, probe2acc, numSwitched, found );
 
             notFound = getUnFound( notFound, found );
 
@@ -448,15 +436,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             Map<String, BioSequence> found = findLocalSequences( notFound, taxon );
             finalResult.addAll( found.values() );
 
-            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-                String probeName = cs.getName();
-                String acc = probe2acc.get( probeName );
-                if ( found.containsKey( acc ) ) {
-                    numSwitched++;
-                    log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
-                    cs.setBiologicalCharacteristic( found.get( acc ) );
-                }
-            }
+            numSwitched = replaceSequences( arrayDesign, probe2acc, numSwitched, found );
             notFound = getUnFound( notFound, found );
         }
 
@@ -468,7 +448,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         arrayDesignService.update( arrayDesign );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         return finalResult;
 
     }
@@ -500,7 +480,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         // not taxon found
         if ( taxaOnArray.size() == 0 ) {
             throw new IllegalArgumentException(
-                    taxaOnArray.size() + " taxon found for " + arrayDesign + "please specifiy which taxon to run" );
+                    taxaOnArray.size() + " taxon found for " + arrayDesign + "please specify which taxon to run" );
         }
 
         Collection<String> notFound = accessionsToFetch.keySet();
@@ -547,7 +527,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
 
         log.info( finalResult.size() + " sequences found" );
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
 
         return finalResult;
 
@@ -599,6 +579,20 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         return taxon;
     }
 
+    private int replaceSequences( ArrayDesign arrayDesign, Map<String, String> probe2acc, int numSwitched,
+            Map<String, BioSequence> found ) {
+        for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+            String probeName = cs.getName();
+            String acc = probe2acc.get( probeName );
+            if ( found.containsKey( acc ) ) {
+                numSwitched++;
+                log.debug( "Setting seq. for " + cs + " to " + found.get( acc ) );
+                cs.setBiologicalCharacteristic( found.get( acc ) );
+            }
+        }
+        return numSwitched;
+    }
+
     private void addToMaps( Map<String, BioSequence> gbIdMap, Map<String, BioSequence> nameMap, BioSequence sequence ) {
         nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
 
@@ -620,7 +614,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     }
 
     /**
-     * @param found a new (nonpersistent) biosequence that can be used to create a new entry or update an existing one
+     * @param found a new (non-persistent) biosequence that can be used to create a new entry or update an existing one
      *              with the sequence. The sequence would have come from Genbank.
      * @param force If true, if an existing BioSequence that matches if found in the system, any existing sequence
      *              information in the BioSequence will be overwritten. Otherwise, the sequence will only be updated if the
@@ -632,7 +626,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         DatabaseEntry sequenceDatabaseEntry = found.getSequenceDatabaseEntry();
 
         assert sequenceDatabaseEntry != null; // this should always be the case because the sequences comes from
-        // genbank (blastdb)
+        // genbank (blastDb)
         assert sequenceDatabaseEntry.getExternalDatabase() != null;
 
         BioSequence existing;
@@ -671,16 +665,16 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * entire string.
      */
     private String deMangleProbeId( String probeId ) {
-        String[] toks = StringUtils.split( probeId, ":" );
-        if ( toks.length > 1 ) {
-            return toks[1];
+        String[] split = StringUtils.split( probeId, ":" );
+        if ( split.length > 1 ) {
+            return split[1];
         }
         return probeId;
     }
 
     /**
      * Unfortunately we have to make sure the database entry is filled in, even if we aren't using 'force'. This seems
-     * due in part to an old bug in the system that left these blank. This is our opporunity to fill them in.
+     * due in part to an old bug in the system that left these blank. This is our opportunity to fill them in.
      */
     private void fillInDatabaseEntry( BioSequence found, BioSequence existing ) {
         if ( existing.getSequenceDatabaseEntry() == null ) {
@@ -779,7 +773,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     continue;
                 }
                 sequence = createOrUpdateGenbankSequence( sequence, force );
-                sequence = this.bioSequenceService.thaw( sequence );
+                this.bioSequenceService.thaw( sequence );
                 String accession = sequence.getSequenceDatabaseEntry().getAccession();
                 found.put( accession, sequence );
                 accessionsToFetch.remove( accession );
@@ -810,7 +804,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
-        bs = this.bioSequenceService.thaw( bs );
+        this.bioSequenceService.thaw( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 
@@ -880,7 +874,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         int i = 0;
         for ( String string : notFound ) {
             string = string.replaceFirst( "\\.\\d$", "" );
-            buf.append( string + " " );
+            buf.append( string ).append( " " );
             if ( ++i > 10 ) {
                 buf.append( "... (skipping logging of rest)" );
                 break;
@@ -1006,18 +1000,18 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             Collection<String> accessionsToFetch, FastaCmd fc ) {
 
         Collection<BioSequence> retrievedSequences = new HashSet<>();
-        for ( String dbname : databaseNames ) {
+        for ( String dbName : databaseNames ) {
             Collection<BioSequence> moreBioSequences;
             if ( blastDbHome != null ) {
-                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname, blastDbHome );
+                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbName, blastDbHome );
             } else {
-                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbname );
+                moreBioSequences = fc.getBatchAccessions( accessionsToFetch, dbName );
             }
 
             if ( log.isDebugEnabled() )
                 log.debug(
                         moreBioSequences.size() + " sequences of " + accessionsToFetch.size() + " fetched " + " from "
-                                + dbname );
+                                + dbName );
             retrievedSequences.addAll( moreBioSequences );
         }
 
@@ -1032,12 +1026,12 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private BioSequence searchBlastDbs( String[] databaseNames, String blastDbHome, String accessionToFetch,
             FastaCmd fc ) {
 
-        for ( String dbname : databaseNames ) {
+        for ( String dbName : databaseNames ) {
             BioSequence moreBioSequence;
             if ( blastDbHome != null ) {
-                moreBioSequence = fc.getByAccession( accessionToFetch, dbname, blastDbHome );
+                moreBioSequence = fc.getByAccession( accessionToFetch, dbName, blastDbHome );
             } else {
-                moreBioSequence = fc.getByAccession( accessionToFetch, dbname, null );
+                moreBioSequence = fc.getByAccession( accessionToFetch, dbName, null );
             }
             if ( moreBioSequence != null )
                 return moreBioSequence;

@@ -61,16 +61,6 @@ public interface Persister {
     Object persist( Object obj );
 
     /**
-     * Special case for experiments.
-     * 
-     * @param ee
-     * @param c
-     * @return
-     */
-    @Secured({ "GROUP_USER" })
-    ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache c );
-
-    /**
      * Persist or update a single object. If the object already exists in the system, it will be replaced with the
      * supplied instance. This means that any existing data may be lost. Otherwise a new persistent instance will be
      * created from the supplied instance. Non-nullable dependencies will be replaced with existing persistent ones or

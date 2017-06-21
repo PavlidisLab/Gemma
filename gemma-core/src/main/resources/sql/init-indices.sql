@@ -34,7 +34,7 @@ alter table TAXON ADD INDEX taxonscientificname (SCIENTIFIC_NAME);
 alter table LOCAL_FILE ADD INDEX REMOTE_URL (REMOTE_U_R_L);
 alter table CONTACT add INDEX fullname (NAME, LAST_NAME);
 
--- should delete the FIRST_GENE_FK and SECOND_GENE_FK indices, but they get given 'random' names. 
+-- should remove the FIRST_GENE_FK and SECOND_GENE_FK indices, but they get given 'random' names.
 -- Drop the second_gene_fk constraint.
 --alter table HUMAN_GENE_COEXPRESSION drop foreign key FKF9E6557F21D58F19;
 --alter table MOUSE_GENE_COEXPRESSION drop foreign key FKFC61C4F721D58F19;

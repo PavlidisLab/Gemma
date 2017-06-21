@@ -14,40 +14,29 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.net.URL;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateAccessor;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.LocalFileImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.net.URL;
+import java.util.List;
+
 /**
  * @author pavlidis
- * @version $Id$
  */
 @Repository
 public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFileDao {
 
-    private static Log log = LogFactory.getLog( LocalFileDaoImpl.class.getName() );
-
     @Autowired
     public LocalFileDaoImpl( SessionFactory sessionFactory ) {
-        super( LocalFileImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( LocalFile.class, sessionFactory );
     }
 
-    /**
-     * 
-     */
     @Override
     public LocalFile find( LocalFile localFile ) {
 
@@ -57,21 +46,22 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
         t.setFlushMode( HibernateAccessor.FLUSH_COMMIT );
         List<?> results;
         if ( localFile.getRemoteURL() == null ) {
-            results = t.findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL is null ", "u",
+            results = t.findByNamedParam( "from LocalFile where localURL=:u and remoteURL is null ", "u",
                     localFile.getLocalURL() );
         } else if ( localFile.getLocalURL() == null ) {
-            results = t.findByNamedParam( "from LocalFileImpl where localURL is null and remoteURL=:r", "r",
+            results = t.findByNamedParam( "from LocalFile where localURL is null and remoteURL=:r", "r",
                     localFile.getRemoteURL() );
         } else {
-            results = t.findByNamedParam( "from LocalFileImpl where localURL=:u and remoteURL=:r", new String[] { "u",
-                    "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
+            results = t.findByNamedParam( "from LocalFile where localURL=:u and remoteURL=:r",
+                    new String[] { "u", "r" }, new Object[] { localFile.getLocalURL(), localFile.getRemoteURL() } );
         }
 
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + LocalFile.class.getName() + "' was found when executing query" );
+                        "More than one instance of '" + LocalFile.class.getName()
+                                + "' was found when executing query" );
 
             } else if ( results.size() == 1 ) {
                 result = results.get( 0 );
@@ -86,8 +76,8 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
      */
     public LocalFile findByLocalURL( final String queryString, final URL url, final java.lang.Long size ) {
 
-        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "url", "size" },
-                new Object[] { url, size } );
+        List<?> results = this.getHibernateTemplate()
+                .findByNamedParam( queryString, new String[] { "url", "size" }, new Object[] { url, size } );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -105,7 +95,7 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
     @Override
     public LocalFile findByLocalURL( final URL url, final java.lang.Long size ) {
         return this.findByLocalURL(
-                "from LocalFileImpl as localFile where localFile.url = :url and localFile.size = :size", url, size );
+                "from LocalFile as localFile where localFile.url = :url and localFile.size = :size", url, size );
     }
 
     /**
@@ -114,8 +104,8 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
 
     public LocalFile findByRemoteURL( final java.lang.String queryString, final URL url, final java.lang.Long size ) {
 
-        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "url", "size" },
-                new Object[] { url, size } );
+        List<?> results = this.getHibernateTemplate()
+                .findByNamedParam( queryString, new String[] { "url", "size" }, new Object[] { url, size } );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -127,27 +117,25 @@ public class LocalFileDaoImpl extends AbstractDao<LocalFile> implements LocalFil
         return ( LocalFile ) result;
     }
 
-    /**
-     * @see LocalFileDao#findByRemoteURL(int, URL, java.lang.Long)
-     */
     @Override
     public LocalFile findByRemoteURL( final URL url, final java.lang.Long size ) {
-        return this.findByRemoteURL( "from LocalFileImpl as localFile "
-                + "where localFile.url = :url and localFile.size = :size", url, size );
+        return this.findByRemoteURL(
+                "from LocalFile as localFile " + "where localFile.url = :url and localFile.size = :size", url,
+                size );
     }
 
-    /**
-     * 
-     */
     @Override
     public LocalFile findOrCreate( ubic.gemma.model.common.description.LocalFile localFile ) {
-        if ( localFile == null ) throw new IllegalArgumentException();
+        if ( localFile == null )
+            throw new IllegalArgumentException();
         LocalFile existingLocalFile = find( localFile );
         if ( existingLocalFile != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
+            if ( log.isDebugEnabled() )
+                log.debug( "Found existing localFile: " + existingLocalFile.getLocalURL() );
             return existingLocalFile;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new localFile: " + localFile.getLocalURL() );
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating new localFile: " + localFile.getLocalURL() );
         return create( localFile );
     }
 

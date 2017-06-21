@@ -50,12 +50,10 @@ public class ProcessedExpressionDataVectorCreateServiceImpl implements Processed
 
             // transaction
             ee = helperService.createProcessedExpressionData( ee );
-
             assert ee.getNumberOfDataVectors() != null;
 
             // transaction. We load the vectors again because otherwise we have a long dirty check? See bug 3597
             helperService.updateRanks( ee );
-
             assert ee.getNumberOfDataVectors() != null;
 
         } catch ( Exception e ) {

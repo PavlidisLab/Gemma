@@ -18,21 +18,12 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
-
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -40,11 +31,16 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest {
 
@@ -59,7 +55,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     @After
     public void after() {
         if ( ee != null ) {
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
     }
 
@@ -82,6 +78,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setTaxon( taxon );
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
+        metaData.setDescription( "Simple expression data loader service test - load" );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );
@@ -92,7 +89,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
             ee = service.create( metaData, data );
         }
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         assertNotNull( ee );
         assertEquals( 30, ee.getRawExpressionDataVectors().size() );
@@ -100,7 +97,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
     }
 
     /**
-     *  
+     *
      */
     @Test
     public final void testLoadB() throws Exception {
@@ -121,19 +118,20 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setTaxon( taxon );
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
+        metaData.setDescription( "Simple expression data loader service test - load B" );
         metaData.setQuantitationTypeName( "testing" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );) {
 
             ee = service.create( metaData, data );
         }
 
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         assertNotNull( ee );
         assertEquals( 200, ee.getRawExpressionDataVectors().size() );
@@ -162,6 +160,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         metaData.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         metaData.setShortName( metaData.getName() );
         metaData.setQuantitationTypeName( "testing" );
+        metaData.setDescription( "Simple expression data loader service test - load duplicate row" );
         metaData.setGeneralType( GeneralType.QUANTITATIVE );
         metaData.setScale( ScaleType.LOG2 );
         metaData.setType( StandardQuantitationType.AMOUNT );

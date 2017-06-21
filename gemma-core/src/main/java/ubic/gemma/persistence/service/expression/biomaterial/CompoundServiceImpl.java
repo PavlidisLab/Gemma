@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,52 +18,26 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.biomaterial.Compound;
+import ubic.gemma.model.expression.biomaterial.CompoundImpl;
+import ubic.gemma.persistence.service.AbstractService;
 
 /**
- * @author keshav
- * @author pavlidis
- * @version $Id$
+ * <p>
+ * Spring Service base class for <code>CompoundService</code>, provides access to all services and entities referenced
+ * by this service.
+ * </p>
+ *
  * @see CompoundService
  */
 @Service
-public class CompoundServiceImpl extends CompoundServiceBase {
+public class CompoundServiceImpl extends AbstractService<Compound> implements CompoundService {
 
-    /**
-     * @see CompoundService#createFromValueObject(Compound)
-     */
-    protected Compound handleCreate( Compound compound ) {
-        return this.getCompoundDao().create( compound );
-    }
-
-    /**
-     * @see CompoundService#find(Compound)
-     */
-    @Override
-    protected Compound handleFind( Compound compound ) {
-        return this.getCompoundDao().find( compound );
-    }
-
-    @Override
-    protected Compound handleFindOrCreate( Compound compound ) {
-        return this.getCompoundDao().findOrCreate( compound );
-    }
-
-    /**
-     * @see CompoundService#remove(Compound)
-     */
-    @Override
-    protected void handleRemove( Compound compound ) {
-        this.getCompoundDao().remove( compound );
-    }
-
-    /**
-     * @see CompoundService#update(Compound)
-     */
-    @Override
-    protected void handleUpdate( Compound compound ) {
-        this.getCompoundDao().update( compound );
+    @Autowired
+    public CompoundServiceImpl( CompoundDao compoundDao ) {
+        super( compoundDao );
     }
 
 }

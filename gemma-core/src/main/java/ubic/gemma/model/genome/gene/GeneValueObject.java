@@ -19,10 +19,12 @@
 
 package ubic.gemma.model.genome.gene;
 
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -30,7 +32,7 @@ import java.util.LinkedList;
 /**
  * @author kelsey
  */
-public class GeneValueObject implements java.io.Serializable {
+public class GeneValueObject extends IdentifiableValueObject<Gene> implements Serializable {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -44,7 +46,6 @@ public class GeneValueObject implements java.io.Serializable {
     private String description;
     private Collection<GeneSetValueObject> geneSets = null;
     private Collection<GeneValueObject> homologues = null;
-    private Long id;
     /**
      * Was this gene directly used in a query? Or is it inferred somehow. The default is true, use this when you need to
      * differentiate
@@ -79,14 +80,21 @@ public class GeneValueObject implements java.io.Serializable {
      * Constructors
      * ********************************/
 
+    /**
+     * Required when using the class as a spring bean.
+     */
     public GeneValueObject() {
+    }
+
+    public GeneValueObject(Long id) {
+        super(id);
     }
 
     /**
      * Aliases are not filled in.
      */
     public GeneValueObject( Gene gene ) {
-        this.id = gene.getId();
+        super(gene.getId());
         this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
@@ -112,7 +120,7 @@ public class GeneValueObject implements java.io.Serializable {
     public GeneValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId, String officialSymbol,
             String officialName, String description, Double score, Long taxonId, String taxonScientificName,
             String taxonCommonName ) {
-        this.id = id;
+        super(id);
         this.name = name;
         this.ncbiId = ncbiId;
         this.officialSymbol = officialSymbol;
@@ -126,33 +134,11 @@ public class GeneValueObject implements java.io.Serializable {
     }
 
     public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
-        this.id = geneId;
+        super(geneId);
         this.officialSymbol = geneSymbol;
         this.officialName = geneOfficialName;
         this.taxonId = taxon.getId();
         this.taxonCommonName = taxon.getCommonName();
-    }
-
-    /* ********************************
-     * Static methods
-     * ********************************/
-
-    /**
-     * Converts a collection of genes to gene value objects
-     * @param genes the collection of genes to be converted
-     * @return a collection of value objects with basic information about the genes given populated, including aliases
-     */
-    public static Collection<GeneValueObject> convert2ValueObjects( Collection<Gene> genes ) {
-
-        Collection<GeneValueObject> converted = new HashSet<>();
-        if ( genes == null )
-            return converted;
-
-        for ( Gene g : genes ) {
-            converted.add( convert2ValueObject( g ) );
-        }
-
-        return converted;
     }
 
     /**
@@ -195,6 +181,14 @@ public class GeneValueObject implements java.io.Serializable {
     /* ********************************
      * Public methods
      * ********************************/
+
+    private static void addConvertedAliases( Gene gene, GeneValueObject geneValueObject ) {
+        LinkedList<String> aliases = new LinkedList<>();
+        for ( GeneAlias ga : gene.getAliases() ) {
+            aliases.add( ga.getAlias() );
+        }
+        geneValueObject.setAliases( aliases );
+    }
 
     @Override
     public int hashCode() {
@@ -247,22 +241,6 @@ public class GeneValueObject implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * Copies all properties from the argument value object into this value object.
-     */
-    public void copy( GeneValueObject otherBean ) {
-        if ( otherBean != null ) {
-            this.setId( otherBean.getId() );
-            this.setName( otherBean.getName() );
-            this.setNcbiId( otherBean.getNcbiId() );
-            this.setOfficialSymbol( otherBean.getOfficialSymbol() );
-            this.setOfficialName( otherBean.getOfficialName() );
-            this.setDescription( otherBean.getDescription() );
-            this.setScore( otherBean.getScore() );
-            this.setAliases( otherBean.getAliases() );
-        }
-    }
-
     public Collection<String> getAliases() {
         return aliases;
     }
@@ -312,14 +290,6 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setHomologues( Collection<GeneValueObject> homologues ) {
         this.homologues = homologues;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public Boolean getIsQuery() {
@@ -460,20 +430,12 @@ public class GeneValueObject implements java.io.Serializable {
         return taxonScientificName;
     }
 
-    public void setTaxonScientificName( String taxonScientificName ) {
-        this.taxonScientificName = taxonScientificName;
-    }
-
     /* ********************************
      * Private methods
      * ********************************/
 
-    private static void addConvertedAliases( Gene gene, GeneValueObject geneValueObject ) {
-        LinkedList<String> aliases = new LinkedList<>(  );
-        for( GeneAlias ga : gene.getAliases()){
-            aliases.add( ga.getAlias() );
-        }
-        geneValueObject.setAliases( aliases );
+    public void setTaxonScientificName( String taxonScientificName ) {
+        this.taxonScientificName = taxonScientificName;
     }
 
 }

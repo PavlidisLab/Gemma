@@ -23,7 +23,7 @@ import ubic.gemma.core.analysis.preprocess.batcheffects.ExpressionExperimentBatc
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
@@ -112,7 +112,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
 
         this.checkArrayDesign( ee );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         this.checkCorrectable( ee );
 
@@ -142,7 +142,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     @Override
     public ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException {
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thaw( ee );
 
         try {
             removeInvalidatedData( ee );
@@ -180,7 +180,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
      * Checks all the given expression experiments bio assays for outlier flags and returns them in a collection
      *
      * @param ee the expression experiment to be checked
-     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware of.
+     * @return a collection of outlier details that contains all the outliers that the expression experiment is aware
+     *         of.
      */
     private Collection<OutlierDetails> getAlreadyKnownOutliers( ExpressionExperiment ee ) {
         Collection<OutlierDetails> outliers = new LinkedList<>();
@@ -196,8 +197,8 @@ public class PreprocessorServiceImpl implements PreprocessorService {
     }
 
     private ExpressionExperiment processExceptForVectorCreate( ExpressionExperiment ee ) {
-        // // refresh into context.
-        ee = expressionExperimentService.thawLite( ee );
+        // refresh into context.
+        expressionExperimentService.thawLite( ee );
 
         assert ee.getNumberOfDataVectors() != null;
 
@@ -213,7 +214,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
             Collection<DifferentialExpressionAnalysis> results = new HashSet<>();
             for ( DifferentialExpressionAnalysis copyMe : oldAnalyses ) {
                 try {
-                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe ) );
+                    results.addAll( this.analyzerService.redoAnalysis( ee, copyMe, true ) );
                 } catch ( Exception e ) {
                     log.error( "Could not redo analysis: " + " " + copyMe + ": " + e.getMessage() );
                 }
@@ -253,7 +254,7 @@ public class PreprocessorServiceImpl implements PreprocessorService {
         TechnologyType tt = arrayDesignUsed.getTechnologyType();
         if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
             log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             twoChannelMissingValueService.computeMissingValues( ee );
             wasProcessed = true;
         }

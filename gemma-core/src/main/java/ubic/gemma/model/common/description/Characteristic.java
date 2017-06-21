@@ -19,9 +19,13 @@
 
 package ubic.gemma.model.common.description;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+
+import java.util.Objects;
 
 /**
  * Instances of this are used to describe other entities. This base class is just a characteristic that is simply a
@@ -29,18 +33,67 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
  *
  * @author Paul
  */
-public abstract class Characteristic extends AbstractAuditable {
+public class Characteristic extends AbstractAuditable {
 
     private static final long serialVersionUID = -7242166109264718620L;
     private String category;
     private String categoryUri;
     private GOEvidenceCode evidenceCode;
     private String value;
+    private String valueUri;
 
     /**
      * No-arg constructor added to satisfy javabean contract
      */
     public Characteristic() {
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( object == null )
+            return false;
+        if ( this == object )
+            return true;
+        if ( !( object instanceof Characteristic ) )
+            return false;
+        Characteristic that = ( Characteristic ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return this.getId().equals( that.getId() );
+
+        /*
+         * at this point, we know we have two Characteristics, at least one of which is transient, so we have to look at
+         * the fields; we can't just compare the hashcodes because they also look at the id, so comparing one transient
+         * and one persistent would always fail...
+         */
+        return Objects.equals( this.getCategory(), that.getCategory() ) && Objects
+                .equals( this.getValue(), that.getValue() );
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder( 17, 1 ).append( this.getId() ).append( this.getCategory() )
+                .append( this.getValue() ).toHashCode();
+    }
+
+    @Override
+    public String toString() {
+        if ( StringUtils.isBlank( this.getCategory() ) ) {
+            return "[No category] Value = " + this.getValue();
+        }
+        return "Category = " + this.getCategory() + " Value = " + this.getValue();
+    }
+
+    /**
+     * This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL ontology
+     * term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for the
+     * abstract class.
+     */
+    public String getValueUri() {
+        return this.valueUri;
+    }
+
+    public void setValueUri( String valueUri ) {
+        this.valueUri = valueUri;
     }
 
     /**
@@ -97,7 +150,7 @@ public abstract class Characteristic extends AbstractAuditable {
          * Constructs a new instance of {@link Characteristic}.
          */
         public static Characteristic newInstance() {
-            return new CharacteristicImpl();
+            return new Characteristic();
         }
 
         /**
@@ -106,7 +159,7 @@ public abstract class Characteristic extends AbstractAuditable {
          */
         public static Characteristic newInstance( String name, String description, AuditTrail auditTrail, String value,
                 String category, String categoryUri, GOEvidenceCode evidenceCode ) {
-            final Characteristic entity = new CharacteristicImpl();
+            final Characteristic entity = new Characteristic();
             entity.setName( name );
             entity.setDescription( description );
             entity.setAuditTrail( auditTrail );

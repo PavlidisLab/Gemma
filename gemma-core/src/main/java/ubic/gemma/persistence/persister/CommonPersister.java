@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.*;
@@ -216,6 +217,7 @@ abstract public class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
+        this.getSession().setFlushMode( FlushMode.COMMIT );
         ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
 
         // don't use findOrCreate to avoid flush.
@@ -266,7 +268,9 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( protocol == null )
             return protocol;
         fillInProtocol( protocol );
-        return protocolDao.findOrCreate( protocol );
+        // I changed this to create instead of findOrCreate because in 
+        // practice protocols are not shared; we use them to store information about analyses we run. PP2017
+        return protocolDao.create( protocol );
     }
 
     QuantitationType persistQuantitationType( QuantitationType qType ) {

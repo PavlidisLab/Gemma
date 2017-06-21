@@ -27,20 +27,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
 import java.util.*;
 
 /**
  * @author Paul
- * @version $Id$
  */
 @Component
 public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService {
@@ -100,9 +99,6 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
     @Override
     public GeneDifferentialExpressionMetaAnalysis persist( GeneDifferentialExpressionMetaAnalysis analysis ) {
         for ( ExpressionAnalysisResultSet r : analysis.getResultSetsIncluded() ) {
-            // this will only be necessary if there are new results added. FIXME perhaps don't save everything. Just
-            // save the ones we need. Remove the unneeded ones. Drawback: could end up redoing this multiple times.
-            r.setQvalueThresholdForStorage( 1.0 );
             differentialExpressionResultService.update( r );
         }
 
@@ -464,7 +460,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
             }
-            expressionAnalysisResultSet = differentialExpressionResultService.thaw( expressionAnalysisResultSet );
+            differentialExpressionResultService.thaw( expressionAnalysisResultSet );
             resultSets.add( expressionAnalysisResultSet );
         }
         return resultSets;
@@ -589,33 +585,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
             throw new IllegalArgumentException( "Must have at least two result sets to meta-analyze" );
         }
 
-        /*
-         * 1. Thaw the result sets and do some validation. 2. Get all the probes for all the results sets that will be
-         * used. 3. Build a map of result to the source result set.
-         */
-        log.info( "Preparing to meta-analyze " + resultSets.size() + " resultSets ..." );
-
-        Collection<ExpressionAnalysisResultSet> updatedResultSets = new HashSet<>();
-        for ( ExpressionAnalysisResultSet rs : resultSets ) {
-
-            if ( rs.getQvalueThresholdForStorage() != null && rs.getQvalueThresholdForStorage() < 1.0 ) {
-
-                /*
-                 * We have to extend the analysis to include all probes, not just 'significant' ones.
-                 */
-                DifferentialExpressionAnalysis analysis = differentialExpressionResultService.getAnalysis( rs );
-                rs = extendAnalysis( rs, analysis );
-                updatedResultSets.add( rs );
-
-            } else {
-                // updatedResultSets.add( differentialExpressionResultService.thaw( rs ) );
-                updatedResultSets.add( rs );
-            }
-
-        }
-
-        assert !updatedResultSets.isEmpty();
-        return updatedResultSets;
+        return resultSets;
     }
 
     /**

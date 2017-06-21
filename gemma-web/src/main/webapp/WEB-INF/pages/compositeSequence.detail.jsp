@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="compositeSequence" scope="request"
-	class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" />
+	class="ubic.gemma.model.expression.designElement.CompositeSequence" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <head>
 <title><fmt:message key="compositeSequence.title" /> ${ compositeSequence.name}</title>

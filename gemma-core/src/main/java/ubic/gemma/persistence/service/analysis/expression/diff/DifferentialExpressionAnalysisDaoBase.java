@@ -18,74 +18,33 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.springframework.orm.hibernate3.HibernateCallback;
-
-import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.analysis.AnalysisDaoBase;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
- * Base DAO Class: is able to create, update, remove, load, and find objects of type
- * <code>DifferentialExpressionAnalysis</code>.
- * 
- * @see DifferentialExpressionAnalysis
+ * DAO able to create, update, remove, load, and find objects of type
+ * {@link DifferentialExpressionAnalysis}
  */
 public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoBase<DifferentialExpressionAnalysis>
         implements DifferentialExpressionAnalysisDao {
 
-    /**
-     * @see DifferentialExpressionAnalysisDao#create(int, Collection)
-     */
-    @Override
-    public Collection<? extends DifferentialExpressionAnalysis> create(
-            final Collection<? extends DifferentialExpressionAnalysis> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( Session session ) throws HibernateException {
-                for ( Iterator<? extends DifferentialExpressionAnalysis> entityIterator = entities.iterator(); entityIterator
-                        .hasNext(); ) {
-                    create( entityIterator.next() );
-                }
-                return null;
-            }
-        } );
-        return entities;
+    public DifferentialExpressionAnalysisDaoBase( SessionFactory sessionFactory ) {
+        super( DifferentialExpressionAnalysis.class, sessionFactory );
     }
 
     /**
-     * @see DifferentialExpressionAnalysisDao#create(int transform, DifferentialExpressionAnalysis)
+     * @see DifferentialExpressionAnalysisDao#find(Gene, ExpressionAnalysisResultSet, double)
      */
     @Override
-    public DifferentialExpressionAnalysis create(
-
-    final DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        if ( differentialExpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "DifferentialExpressionAnalysis.create - 'differentialExpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().save( differentialExpressionAnalysis );
-        return differentialExpressionAnalysis;
-    }
-
-    /**
-     * @see DifferentialExpressionAnalysisDao#find(Gene,
-     *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> find( final Gene gene,
-            final ExpressionAnalysisResultSet resultSet, final double threshold ) {
+    public Collection<DifferentialExpressionAnalysis> find( Gene gene, ExpressionAnalysisResultSet resultSet,
+            double threshold ) {
         return this.handleFind( gene, resultSet, threshold );
     }
 
@@ -94,7 +53,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoB
      */
     @Override
     public Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds(
-            final Collection<Long> investigationIds ) {
+            Collection<Long> investigationIds ) {
         return this.handleFindByInvestigationIds( investigationIds );
     }
 
@@ -102,67 +61,8 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoB
      * @see DifferentialExpressionAnalysisDao#findExperimentsWithAnalyses(Gene)
      */
     @Override
-    public Collection<BioAssaySet> findExperimentsWithAnalyses( final Gene gene ) {
+    public Collection<BioAssaySet> findExperimentsWithAnalyses( Gene gene ) {
         return this.handleFindExperimentsWithAnalyses( gene );
-    }
-
-    @Override
-    public Collection<? extends DifferentialExpressionAnalysis> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "from DifferentialExpressionAnalysisImpl where id in (:ids)", "ids", ids );
-    }
-
-    /**
-     * @see DifferentialExpressionAnalysisDao#load(int, java.lang.Long)
-     */
-
-    @Override
-    public DifferentialExpressionAnalysis load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( DifferentialExpressionAnalysisImpl.class, id );
-        return ( DifferentialExpressionAnalysis ) entity;
-    }
-
-    /**
-     * @see DifferentialExpressionAnalysisDao#loadAll(int)
-     */
-
-    @Override
-    public Collection<? extends DifferentialExpressionAnalysis> loadAll() {
-        final Collection<? extends DifferentialExpressionAnalysis> results = this.getHibernateTemplate().loadAll(
-                DifferentialExpressionAnalysisImpl.class );
-        return results;
-    }
-
-    /**
-     * @see DifferentialExpressionAnalysisDao#remove(java.lang.Long)
-     */
-
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.remove - 'id' can not be null" );
-        }
-        DifferentialExpressionAnalysis entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(Collection)
-     */
-
-    @Override
-    public void remove( Collection<? extends DifferentialExpressionAnalysis> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.remove - 'entities' can not be null" );
-        }
-        for ( DifferentialExpressionAnalysis a : entities ) {
-            this.remove( a );
-        }
     }
 
     /**
@@ -182,32 +82,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoB
     }
 
     /**
-     * @see ubic.gemma.model.common.SecurableDao#update(Collection)
-     */
-
-    @Override
-    public void update( final Collection<? extends DifferentialExpressionAnalysis> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "DifferentialExpressionAnalysis.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().update( entities );
-    }
-
-    /**
-     * @see DifferentialExpressionAnalysisDao#update(DifferentialExpressionAnalysis)
-     */
-    @Override
-    public void update( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        if ( differentialExpressionAnalysis == null ) {
-            throw new IllegalArgumentException(
-                    "DifferentialExpressionAnalysis.update - 'differentialExpressionAnalysis' can not be null" );
-        }
-        this.getHibernateTemplate().update( differentialExpressionAnalysis );
-    }
-
-    /**
-     * Performs the core logic for
-     * {@link #find(Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
+     * Performs the core logic for {@link #find(Gene, ExpressionAnalysisResultSet, double)}
      */
     protected abstract Collection<DifferentialExpressionAnalysis> handleFind( Gene gene,
             ExpressionAnalysisResultSet resultSet, double threshold );

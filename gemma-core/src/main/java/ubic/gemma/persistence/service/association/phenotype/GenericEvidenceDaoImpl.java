@@ -21,9 +21,7 @@ package ubic.gemma.persistence.service.association.phenotype;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.association.phenotype.GenericEvidence;
-import ubic.gemma.model.association.phenotype.GenericEvidenceImpl;
 import ubic.gemma.persistence.service.AbstractDao;
 
 @Repository
@@ -31,8 +29,6 @@ public class GenericEvidenceDaoImpl extends AbstractDao<GenericEvidence> impleme
 
     @Autowired
     public GenericEvidenceDaoImpl( SessionFactory sessionFactory ) {
-        super( GenericEvidenceImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( GenericEvidence.class, sessionFactory );
     }
-
 }

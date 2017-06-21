@@ -77,7 +77,7 @@ public class GeneNameEndpoint extends AbstractGemmaEndpoint {
 
         log.debug( "XML input read: " + geneInput.size() + " gene ids" );
 
-        Collection<Gene> geneCol = geneService.loadMultiple( geneIDs );
+        Collection<Gene> geneCol = geneService.load( geneIDs );
 
         if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "No gene with id '" + geneId + "' can be found.";

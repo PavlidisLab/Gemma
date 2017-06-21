@@ -19,6 +19,7 @@ import com.google.common.collect.Ordering;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
@@ -28,11 +29,14 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * CharacteristicValueObject containing a category to a value
+ * ValueObject wrapper for a Characteristic.
+ *
+ * @see Characteristic
  */
-public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
+public class CharacteristicValueObject extends IdentifiableValueObject<Characteristic>
+        implements Comparable<CharacteristicValueObject> {
 
-    private static Log log = LogFactory.getLog( CharacteristicValueObject.class );
+    private static final Log log = LogFactory.getLog( CharacteristicValueObject.class );
     /**
      * id used by url on the client side
      */
@@ -45,9 +49,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
      * child term from a root
      */
     private boolean child = false;
-    private Long id = null; // MUST be initialized with null or have equality
     private int numTimesUsed = 0;
-    // problems in javascript.
     /**
      * what Ontology uses this term
      */
@@ -65,30 +67,36 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String value = "";
     private String valueUri = null;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * Required when using the class as a spring bean.
+     */
     public CharacteristicValueObject() {
-        super();
+    }
+
+    public CharacteristicValueObject( Long id ) {
+        super( id );
     }
 
     public CharacteristicValueObject( Characteristic characteristic ) {
+        super( characteristic.getId() );
         if ( characteristic instanceof VocabCharacteristic ) {
-            this.valueUri = ( ( VocabCharacteristic ) characteristic ).getValueUri();
+            this.valueUri = characteristic.getValueUri();
             parseUrlId();
         }
         this.category = characteristic.getCategory();
         this.categoryUri = characteristic.getCategoryUri();
         this.value = characteristic.getValue();
-        this.id = characteristic.getId();
-
     }
 
-    public CharacteristicValueObject( String valueUri ) {
-        super();
+    public CharacteristicValueObject( Long id, String valueUri ) {
+        super( id );
         this.valueUri = valueUri;
-
         parseUrlId();
-
         if ( StringUtils.isNotBlank( this.urlId ) ) {
-
             try {
                 // we don't always populate from the database, give it an id anyway
                 this.id = new Long( this.urlId.replaceAll( "[^\\d.]", "" ) );
@@ -98,17 +106,20 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         }
     }
 
-    public CharacteristicValueObject( String value, String valueUri ) {
-        this( valueUri );
+    public CharacteristicValueObject( Long id, String value, String valueUri ) {
+        this( id, valueUri );
         this.value = value;
     }
 
-    public CharacteristicValueObject( String value, String category, String valueUri, String categoryUri ) {
-        this( valueUri );
+    public CharacteristicValueObject( Long id, String value, String category, String valueUri, String categoryUri ) {
+        this( id, value, valueUri );
         this.category = category;
         this.categoryUri = categoryUri;
-        this.value = value;
     }
+
+    /* ********************************
+     * Static methods
+     * ********************************/
 
     public static Collection<CharacteristicValueObject> characteristic2CharacteristicVO(
             Collection<? extends Characteristic> characteristics ) {
@@ -127,14 +138,34 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return characteristicValueObjects;
     }
 
+    /* ********************************
+     * Object override methods
+     * ********************************/
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        if ( this.valueUri != null ) {
+            result = prime * result + this.valueUri.hashCode();
+        } else {
+            result = prime * result + this.value.hashCode();
+        }
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
+    }
+
     @Override
     public int compareTo( CharacteristicValueObject o ) {
         return ComparisonChain.start()
                 .compare( category, o.category, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( taxon, o.taxon, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
                 .compare( value, o.value, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() )
-                .result();
+                .compare( valueUri, o.valueUri, Ordering.from( String.CASE_INSENSITIVE_ORDER ).nullsLast() ).result();
     }
 
     @Override
@@ -162,6 +193,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         return true;
     }
 
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     public String getCategory() {
         return this.category;
     }
@@ -176,14 +211,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     public void setCategoryUri( String categoryUri ) {
         this.categoryUri = categoryUri;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public int getNumTimesUsed() {
@@ -253,18 +280,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             this.valueUri = valueUri.toLowerCase();
     }
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        if ( this.valueUri != null ) {
-            result = prime * result + this.valueUri.hashCode();
-        } else {
-            result = prime * result + this.value.hashCode();
-        }
-        return result;
-    }
-
     public void incrementOccurrenceCount() {
         this.numTimesUsed++;
     }
@@ -301,10 +316,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.root = root;
     }
 
-    @Override
-    public String toString() {
-        return "[Category= " + category + " Value=" + value + ( valueUri != null ? " (" + valueUri + ")" : "" ) + "]";
-    }
+    /* ********************************
+     * Private methods
+     * ********************************/
 
     private void parseUrlId() {
         if ( StringUtils.isBlank( valueUri ) )

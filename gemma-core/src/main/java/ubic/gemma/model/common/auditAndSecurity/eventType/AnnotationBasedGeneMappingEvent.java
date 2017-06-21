@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * To signify the array design was mapped from an external source, not by our own sequence analysis.
  */
-public abstract class AnnotationBasedGeneMappingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl {
+public class AnnotationBasedGeneMappingEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +34,7 @@ public abstract class AnnotationBasedGeneMappingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent();
         }
 
     }

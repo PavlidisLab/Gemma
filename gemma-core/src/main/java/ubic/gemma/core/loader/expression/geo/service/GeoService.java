@@ -14,59 +14,43 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import java.util.Collection;
-
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface GeoService {
 
     /**
      * For the rare cases (Exon arrays) where we load the platform in two stages.
-     * 
+     *
      * @param targetPlatform already persistent array design.
      * @return updated (persistent) array design
      */
-    public abstract ArrayDesign addElements( ArrayDesign targetPlatform );
+    ArrayDesign addElements( ArrayDesign targetPlatform );
 
     /**
      * Load data, no restrictions on superseries or subseries
-     * 
-     * @param geoAccession
-     * @param loadPlatformOnly
-     * @param doSampleMatching
-     * @param aggressiveQuantitationTypeRemoval
-     * @param splitIncompatiblePlatforms
-     * @return
      */
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
+    Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
 
     /**
-     * @param geoAccession
-     * @param loadPlatformOnly
-     * @param doSampleMatching
-     * @param aggressiveQuantitationTypeRemoval
-     * @param splitIncompatiblePlatforms
      * @param allowSuperSeriesImport Allow loading if the Series is a SuperSeries
-     * @param allowSubSeriesImport Allow loading if the Series is a SubSeries
-     * @return
+     * @param allowSubSeriesImport   Allow loading if the Series is a SubSeries
      */
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+    Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
             boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
     /**
      * This is supplied to allow clients to check that the generator has been set correctly.
-     * 
-     * @return
      */
-    public abstract GeoDomainObjectGenerator getGeoDomainObjectGenerator();
+    GeoDomainObjectGenerator getGeoDomainObjectGenerator();
 
-    public abstract void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
+    void setGeoDomainObjectGenerator( GeoDomainObjectGenerator generator );
 
 }

@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**

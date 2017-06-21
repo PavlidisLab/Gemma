@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,89 +18,38 @@
  */
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.VoEnabledService;
 
 /**
- * @author pavlidis
- * @version $Id$
+ * <p>
+ * Spring Service base class for <code>BioAssayDimensionService</code>, provides access to all services and entities
+ * referenced by this service.
+ * </p>
+ *
  * @see BioAssayDimensionService
  */
 @Service
-public class BioAssayDimensionServiceImpl extends BioAssayDimensionServiceBase {
+public class BioAssayDimensionServiceImpl
+        extends VoEnabledService<BioAssayDimension, BioAssayDimensionValueObject> implements BioAssayDimensionService {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BioAssayDimensionService#thaw(ubic.gemma.model.expression.bioAssayData
-     * .BioAssayDimension)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
-        return this.getBioAssayDimensionDao().thaw( bioAssayDimension );
+    BioAssayDimensionDao bioAssayDimensionDao;
+
+    @Autowired
+    public BioAssayDimensionServiceImpl( BioAssayDimensionDao bioAssayDimensionDao ) {
+        super( bioAssayDimensionDao );
+        this.bioAssayDimensionDao = bioAssayDimensionDao;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension ) {
-        return this.getBioAssayDimensionDao().thawLite( bioAssayDimension );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BioAssayDimensionServiceBase#handleCreate(ubic.gemma.model.expression
-     * .bioAssayData.BioAssayDimension)
-     */
-    @Override
-    protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) {
-        return this.getBioAssayDimensionDao().create( bioAssayDimension );
-    }
-
-    /**
-     * @see BioAssayDimensionService#findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)
-     */
-    @Override
-    protected BioAssayDimension handleFindOrCreate( BioAssayDimension bioAssayDimension ) {
-        return this.getBioAssayDimensionDao().findOrCreate( bioAssayDimension );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioAssayDimensionServiceBase#handleLoad(java.lang.Long)
-     */
-    @Override
-    protected BioAssayDimension handleLoad( Long id ) {
-        return this.getBioAssayDimensionDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BioAssayDimensionServiceBase#handleRemove(ubic.gemma.model.expression
-     * .bioAssayData.BioAssayDimension)
-     */
-    @Override
-    protected void handleRemove( BioAssayDimension bioAssayDimension ) {
-        this.getBioAssayDimensionDao().remove( bioAssayDimension );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BioAssayDimensionServiceBase#handleUpdate(ubic.gemma.model.expression
-     * .bioAssayData.BioAssayDimension)
-     */
-    @Override
-    protected void handleUpdate( BioAssayDimension bioAssayDimension ) {
-        this.getBioAssayDimensionDao().update( bioAssayDimension );
+    public void thawLite( BioAssayDimension bioAssayDimension ) {
+        this.bioAssayDimensionDao.thawLite( bioAssayDimension );
     }
 
 }

@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -40,7 +40,6 @@ import ubic.gemma.persistence.util.EntityUtils;
 
 /**
  * @author klc
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContextTest {
 
@@ -51,18 +50,18 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     private ExpressionExperimentService expressionExperimentService;
 
     // Test Data
-    DifferentialExpressionAnalysis eAnalysis1;
-    DifferentialExpressionAnalysis eAnalysis2;
-    DifferentialExpressionAnalysis eAnalysis3;
-    DifferentialExpressionAnalysis eAnalysis4;
+    private DifferentialExpressionAnalysis eAnalysis1;
+    private DifferentialExpressionAnalysis eAnalysis2;
+    private DifferentialExpressionAnalysis eAnalysis3;
+    private DifferentialExpressionAnalysis eAnalysis4;
 
-    ExpressionExperiment e1;
-    ExpressionExperiment e2;
-    ExpressionExperiment e3;
-    ExpressionExperiment e4;
+    private ExpressionExperiment e1;
+    private ExpressionExperiment e2;
+    private ExpressionExperiment e3;
+    private ExpressionExperiment e4;
 
-    String dea1_name;
-    String dea2_name;
+    private String dea1_name;
+    private String dea2_name;
 
     private String testEESetName;
 
@@ -148,7 +147,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
      */
     @Test
     public void testFindByInvestigations() {
-        Collection<ExpressionExperiment> investigations = new ArrayList<ExpressionExperiment>();
+        Collection<ExpressionExperiment> investigations = new ArrayList<>();
         investigations.add( e1 );
         investigations.add( e3 );
 
@@ -183,20 +182,5 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         assertNotNull( result );
         assertEquals( this.testAnalysisName, result.iterator().next().getName() );
     }
-
-    /**
-     *  
-     */
-    // @Test
-    // public void testFindByUniqueInvestigations() {
-    // Collection<Investigation> investigations = new ArrayList<Investigation>();
-    // investigations.add( e1 );
-    // investigations.add( e2 );
-    //
-    // DifferentialExpressionAnalysis results = analysisService.findByUniqueInvestigations( investigations );
-    // assertNotNull( results );
-    // assertEquals( eAnalysis2.getId(), results.getId() );
-    //
-    // }
 
 }

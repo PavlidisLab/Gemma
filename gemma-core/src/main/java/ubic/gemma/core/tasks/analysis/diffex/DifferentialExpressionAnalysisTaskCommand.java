@@ -18,23 +18,21 @@
  */
 package ubic.gemma.core.tasks.analysis.diffex;
 
-import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
+import ubic.gemma.core.tasks.Task;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.tasks.Task;
 import ubic.gemma.persistence.util.Settings;
 
 import java.util.Collection;
 
 /**
  * A command object to be used by spaces.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
 
@@ -46,16 +44,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     private AnalysisType analysisType;
 
     private ExpressionExperiment expressionExperiment = null;
-
-    private Double qvalueThreshold = DifferentialExpressionAnalysisConfig.DEFAULT_QVALUE_THRESHOLD;
-
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
-    }
-
-    public void setQvalueThreshold( Double qvalueThreshold ) {
-        this.qvalueThreshold = qvalueThreshold;
-    }
 
     /**
      * The factors to actually use in the analysis. If null the system tries to figure it out.
@@ -70,10 +58,16 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
      */
     private boolean includeInteractions = false;
 
+    /**
+     * Whether to moderate test statistics via empirical Bayes
+     */
+    private boolean moderateStatistics = false;
+
     private ExperimentalFactor subsetFactor;
 
     private DifferentialExpressionAnalysis toRedo;
 
+    @Deprecated
     private boolean updateStatsOnly = true;
 
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee ) {
@@ -82,10 +76,8 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
     }
 
     /**
-     * @param ee
-     * @param toRedo
      * @param updateAnalysis if true, the analysis is updated. If false, only the summary statistics are updated (e.g.,
-     *        the pvalue distribution ).
+     *                       the pvalue distribution ).
      */
     public DifferentialExpressionAnalysisTaskCommand( ExpressionExperiment ee, DifferentialExpressionAnalysis toRedo,
             boolean updateAnalysis ) {
@@ -96,11 +88,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.remoteOnly = Settings.getBoolean( "gemma.grid.gridonly.diff" );
     }
 
-    /**
-     * @param taskId
-     * @param forceAnalysis
-     * @param expressionExperiment
-     */
     public DifferentialExpressionAnalysisTaskCommand( String taskId, boolean forceAnalysis,
             ExpressionExperiment expressionExperiment ) {
         super();
@@ -114,12 +101,24 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return analysisType;
     }
 
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
     public ExpressionExperiment getExpressionExperiment() {
         return expressionExperiment;
     }
 
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
+    }
+
     public Collection<ExperimentalFactor> getFactors() {
         return factors;
+    }
+
+    public void setFactors( Collection<ExperimentalFactor> factors ) {
+        this.factors = factors;
     }
 
     /**
@@ -129,47 +128,6 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         return subsetFactor;
     }
 
-    public DifferentialExpressionAnalysis getToRedo() {
-        return toRedo;
-    }
-
-    public boolean isForceAnalysis() {
-        return forceAnalysis;
-    }
-
-    public boolean isIncludeInteractions() {
-        return includeInteractions;
-    }
-
-    public boolean isUpdateStatsOnly() {
-        return updateStatsOnly;
-    }
-
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
-    }
-
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
-    public void setFactors( Collection<ExperimentalFactor> factors ) {
-        this.factors = factors;
-    }
-
-    public void setForceAnalysis( boolean forceAnalysis ) {
-        this.forceAnalysis = forceAnalysis;
-    }
-
-    /**
-     * Sets preference for interactions to be included.
-     * 
-     * @param includeInteractions
-     */
-    public void setIncludeInteractions( boolean includeInteractions ) {
-        this.includeInteractions = includeInteractions;
-    }
-
     /**
      * @param subsetFactor the subsetFactor to set
      */
@@ -177,16 +135,51 @@ public class DifferentialExpressionAnalysisTaskCommand extends TaskCommand {
         this.subsetFactor = subsetFactor;
     }
 
+    @Override
+    public Class<? extends Task<TaskResult, ? extends TaskCommand>> getTaskClass() {
+        return DifferentialExpressionAnalysisTask.class;
+    }
+
+    public DifferentialExpressionAnalysis getToRedo() {
+        return toRedo;
+    }
+
     public void setToRedo( DifferentialExpressionAnalysis toRedo ) {
         this.toRedo = toRedo;
     }
 
-    public void setUpdateStatsOnly( boolean updateStatsOnly ) {
-        this.updateStatsOnly = updateStatsOnly;
+    public boolean isForceAnalysis() {
+        return forceAnalysis;
     }
 
-    @Override
-    public Class<? extends Task<TaskResult, ? extends TaskCommand>>  getTaskClass() {
-        return DifferentialExpressionAnalysisTask.class;
+    public void setForceAnalysis( boolean forceAnalysis ) {
+        this.forceAnalysis = forceAnalysis;
+    }
+
+    public boolean isIncludeInteractions() {
+        return includeInteractions;
+    }
+
+    /**
+     * Sets preference for interactions to be included.
+     */
+    public void setIncludeInteractions( boolean includeInteractions ) {
+        this.includeInteractions = includeInteractions;
+    }
+
+    public boolean isModerateStatistics() {
+        return moderateStatistics;
+    }
+
+    public void setModerateStatistics( boolean moderateStatistics ) {
+        this.moderateStatistics = moderateStatistics;
+    }
+
+    public boolean isUpdateStatsOnly() {
+        return updateStatsOnly;
+    }
+
+    public void setUpdateStatsOnly( boolean updateStatsOnly ) {
+        this.updateStatsOnly = updateStatsOnly;
     }
 }

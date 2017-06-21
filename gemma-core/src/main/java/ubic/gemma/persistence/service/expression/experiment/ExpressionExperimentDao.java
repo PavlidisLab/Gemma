@@ -1,8 +1,6 @@
 package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Repository;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -17,6 +15,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 
 import java.util.Collection;
 import java.util.Date;
@@ -28,16 +27,19 @@ import java.util.Map;
  *
  * @author tesarst
  */
-@Repository
-public interface ExpressionExperimentDao extends InitializingBean, CuratableDao<ExpressionExperiment> {
+public interface ExpressionExperimentDao
+        extends InitializingBean, CuratableDao<ExpressionExperiment, ExpressionExperimentValueObject> {
 
     Collection<ExpressionExperiment> findByInvestigator( Contact investigator );
 
-    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
+    void thaw( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
+    void thawBioAssays( ExpressionExperiment expressionExperiment );
 
-    ExpressionExperiment thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
+    void thawBioAssaysLiter( ExpressionExperiment expressionExperiment );
+
+    Collection<ExpressionExperimentValueObject> listFilter( int offset, int limit, String orderBy, boolean asc,
+            DatabaseEntry accession );
 
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 
@@ -47,8 +49,6 @@ public interface ExpressionExperimentDao extends InitializingBean, CuratableDao<
 
     List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending,
             Collection<Long> ids );
-
-    ExpressionExperiment find( ExpressionExperiment entity );
 
     Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession );
 
@@ -69,8 +69,6 @@ public interface ExpressionExperimentDao extends InitializingBean, CuratableDao<
     Collection<ExpressionExperiment> getExperimentsWithOutliers();
 
     Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment expressionExperiment );
-
-    List<ExpressionExperimentValueObject> loadAllValueObjects();
 
     List<ExpressionExperimentValueObject> loadAllValueObjectsOrdered( String orderField, boolean descending );
 

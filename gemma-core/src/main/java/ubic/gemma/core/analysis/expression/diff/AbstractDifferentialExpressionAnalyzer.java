@@ -38,7 +38,7 @@ import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 
 /**
- * An abstract differential expression analyzer to be extended by analyzers which will make use of R.
+ * An abstract differential expression analyzer to be extended
  * 
  * @author keshav
  */
@@ -93,10 +93,17 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         return benjaminiHochberg.toArray();
     }
 
-    DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet ) {
-        // TODO pass the DifferentialExpressionAnalysisConfig in (see LinkAnalysisService)
-        /* Create the expression analysis and pack the results. */
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+    /**
+     * 
+     * @param bioAssaySet
+     * @param config
+     * @return
+     */
+    DifferentialExpressionAnalysis initAnalysisEntity( BioAssaySet bioAssaySet, DifferentialExpressionAnalysisConfig config ) {
+
+        if ( config == null ) {
+            config = new DifferentialExpressionAnalysisConfig();
+        }
         DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
         expressionAnalysis.setExperimentAnalyzed( bioAssaySet );
         return expressionAnalysis;
@@ -107,8 +114,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      *
      */
     Double nan2Null( Double e ) {
-        boolean isNaN = (e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY
-                || e == Double.POSITIVE_INFINITY);
+        boolean isNaN = ( e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY
+                || e == Double.POSITIVE_INFINITY );
         if ( isNaN ) {
             return null;
         }
@@ -120,7 +127,6 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      *
      * @return path to file where the pvalues were saved (a temporary file)
      */
-    @SuppressWarnings("unused") // Useful when debugging
     protected String savePvaluesForDebugging( double[] pvaluesToUse ) {
         try {
             File f = File.createTempFile( "diffanalysis_", ".pvalues.txt" );

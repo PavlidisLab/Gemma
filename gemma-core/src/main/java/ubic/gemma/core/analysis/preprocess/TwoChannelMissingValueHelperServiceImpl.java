@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
@@ -35,7 +35,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- * @version $Id$
  */
 @Service
 public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissingValueHelperService {
@@ -48,13 +47,6 @@ public class TwoChannelMissingValueHelperServiceImpl implements TwoChannelMissin
     @Autowired
     private AuditTrailService auditTrailService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.preprocess.TwoChannelMissingValueHelperService#persist(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, java.util.Collection)
-     */
     @Override
     @Transactional
     public Collection<RawExpressionDataVector> persist( ExpressionExperiment source,

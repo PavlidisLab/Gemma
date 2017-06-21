@@ -18,176 +18,105 @@
  */
 package ubic.gemma.persistence.service.expression.designElement;
 
-import java.util.Collection;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.VoEnabledService;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Spring Service base class for <code>CompositeSequenceService</code>, provides access to all services and entities
  * referenced by this service.
- * 
+ *
  * @see CompositeSequenceService
  */
-public abstract class CompositeSequenceServiceBase implements CompositeSequenceService {
+public abstract class CompositeSequenceServiceBase extends VoEnabledService<CompositeSequence, CompositeSequenceValueObject>
+        implements CompositeSequenceService {
 
-    @Autowired
-    private CompositeSequenceDao compositeSequenceDao;
+    protected final CompositeSequenceDao compositeSequenceDao;
+
+    public CompositeSequenceServiceBase( CompositeSequenceDao compositeSequenceDao ) {
+        super( compositeSequenceDao );
+        this.compositeSequenceDao = compositeSequenceDao;
+    }
 
     /**
-     * @see CompositeSequenceService#countAll()
+     * @see CompositeSequenceService#findByBioSequence(BioSequence)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer countAll() {
-
-        return this.handleCountAll();
-
-    }
-
-    /**
-     * @see CompositeSequenceService#create(java.util.Collection)
-     */
-    @Override
-    @Transactional
-    public java.util.Collection<CompositeSequence> create(
-            final java.util.Collection<CompositeSequence> compositeSequences ) {
-
-        return this.handleCreate( compositeSequences );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#create(CompositeSequence)
-     */
-    @Override
-    @Transactional
-    public CompositeSequence create( final CompositeSequence compositeSequence ) {
-
-        return this.handleCreate( compositeSequence );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#find(CompositeSequence)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public CompositeSequence find( final CompositeSequence compositeSequence ) {
-
-        return this.handleFind( compositeSequence );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> findByBioSequence(
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-
+    public Collection<CompositeSequence> findByBioSequence( final BioSequence bioSequence ) {
         return this.handleFindByBioSequence( bioSequence );
-
     }
 
     /**
-     * @see CompositeSequenceService#findByBioSequenceName(java.lang.String)
+     * @see CompositeSequenceService#findByBioSequenceName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> findByBioSequenceName( final java.lang.String name ) {
-
+    public Collection<CompositeSequence> findByBioSequenceName( final String name ) {
         return this.handleFindByBioSequenceName( name );
-
     }
 
     /**
-     * @see CompositeSequenceService#findByGene(ubic.gemma.model.genome.Gene)
+     * @see CompositeSequenceService#findByGene(Gene)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> findByGene( final ubic.gemma.model.genome.Gene gene ) {
-
+    public Collection<CompositeSequence> findByGene( final Gene gene ) {
         return this.handleFindByGene( gene );
-
     }
 
     /**
-     * @see CompositeSequenceService#findByGene(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.expression.arrayDesign.ArrayDesign)
+     * @see CompositeSequenceService#findByGene(Gene, ArrayDesign)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> findByGene( final ubic.gemma.model.genome.Gene gene,
-            final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-
+    public Collection<CompositeSequence> findByGene( final Gene gene, final ArrayDesign arrayDesign ) {
         return this.handleFindByGene( gene, arrayDesign );
-
     }
 
     /**
-     * @see CompositeSequenceService#findByName(java.lang.String)
+     * @see CompositeSequenceService#findByName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> findByName( final java.lang.String name ) {
-
+    public Collection<CompositeSequence> findByName( final String name ) {
         return this.handleFindByName( name );
-
     }
 
     /**
-     * @see CompositeSequenceService#findByName(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.String)
+     * @see CompositeSequenceService#findByName(ArrayDesign, String)
      */
     @Override
     @Transactional(readOnly = true)
-    public CompositeSequence findByName( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            final java.lang.String name ) {
-
+    public CompositeSequence findByName( final ArrayDesign arrayDesign, final String name ) {
         return this.handleFindByName( arrayDesign, name );
-
     }
 
     /**
-     * @see CompositeSequenceService#findByNamesInArrayDesigns(java.util.Collection, java.util.Collection)
+     * @see CompositeSequenceService#findByNamesInArrayDesigns(Collection, Collection)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> findByNamesInArrayDesigns(
-            final java.util.Collection<String> compositeSequenceNames,
-            final java.util.Collection<ArrayDesign> arrayDesigns ) {
-
+    public Collection<CompositeSequence> findByNamesInArrayDesigns( final Collection<String> compositeSequenceNames,
+            final Collection<ArrayDesign> arrayDesigns ) {
         return this.handleFindByNamesInArrayDesigns( compositeSequenceNames, arrayDesigns );
-
     }
 
     /**
-     * @see CompositeSequenceService#findOrCreate(CompositeSequence)
-     */
-    @Override
-    @Transactional
-    public CompositeSequence findOrCreate( final CompositeSequence compositeSequence ) {
-
-        return this.handleFindOrCreate( compositeSequence );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#getGenes(java.util.Collection)
+     * @see CompositeSequenceService#getGenes(Collection)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<CompositeSequence, Collection<Gene>> getGenes(
-            final java.util.Collection<CompositeSequence> sequences ) {
-
+    public Map<CompositeSequence, Collection<Gene>> getGenes( final Collection<CompositeSequence> sequences ) {
         return this.handleGetGenes( sequences );
-
     }
 
     /**
@@ -195,274 +124,132 @@ public abstract class CompositeSequenceServiceBase implements CompositeSequenceS
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<Gene> getGenes( final CompositeSequence compositeSequence ) {
-
+    public Collection<Gene> getGenes( final CompositeSequence compositeSequence ) {
         return this.handleGetGenes( compositeSequence );
-
     }
 
     /**
-     * @see CompositeSequenceService#getGenesWithSpecificity(java.util.Collection)
+     * @see CompositeSequenceService#getGenesWithSpecificity(Collection)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
-            final java.util.Collection<CompositeSequence> compositeSequences ) {
-
+    public Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
+            final Collection<CompositeSequence> compositeSequences ) {
         return this.handleGetGenesWithSpecificity( compositeSequences );
 
     }
 
     /**
-     * @see CompositeSequenceService#getRawSummary(java.util.Collection, java.lang.Integer)
+     * @see CompositeSequenceService#getRawSummary(Collection, Integer)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<Object[]> getRawSummary(
-            final java.util.Collection<CompositeSequence> compositeSequences, final java.lang.Integer numResults ) {
-
+    public Collection<Object[]> getRawSummary( final Collection<CompositeSequence> compositeSequences,
+            final Integer numResults ) {
         return this.handleGetRawSummary( compositeSequences, numResults );
 
     }
 
-    /**
-     * @see CompositeSequenceService#getRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign,
-     *      java.lang.Integer)
-     */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<Object[]> getRawSummary( final ArrayDesign arrayDesign,
-            final java.lang.Integer numResults ) {
-
+    public Collection<Object[]> getRawSummary( final ArrayDesign arrayDesign, final Integer numResults ) {
         return this.handleGetRawSummary( arrayDesign, numResults );
-
     }
 
     /**
-     * @see CompositeSequenceService#getRawSummary(CompositeSequence, java.lang.Integer)
-     * @Deprecated is this used anywhere?
+     * @see CompositeSequenceService#getRawSummary(CompositeSequence, Integer)
      */
     @Override
-    @Deprecated
     @Transactional(readOnly = true)
-    public java.util.Collection<Object[]> getRawSummary( final CompositeSequence compositeSequence,
-            final java.lang.Integer numResults ) {
-
+    public Collection<Object[]> getRawSummary( final CompositeSequence compositeSequence, final Integer numResults ) {
         return this.handleGetRawSummary( compositeSequence, numResults );
-
     }
 
     /**
-     * @see CompositeSequenceService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public CompositeSequence load( final java.lang.Long id ) {
-
-        return this.handleLoad( id );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#loadMultiple(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<CompositeSequence> loadMultiple( final java.util.Collection<Long> ids ) {
-
-        return this.handleLoadMultiple( ids );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#remove(java.util.Collection)
+     * @see CompositeSequenceService#remove(Collection)
      */
     @Override
     @Transactional
-    public void remove( final java.util.Collection<CompositeSequence> sequencesToDelete ) {
-
-        this.handleRemove( sequencesToDelete );
-
+    public void remove( Collection<CompositeSequence> entities ) {
+        this.handleRemove( entities );
     }
 
     /**
-     * @see CompositeSequenceService#remove(CompositeSequence)
+     * Performs the core logic for {@link #findByBioSequence(BioSequence)}
      */
-    @Override
-    @Transactional
-    public void remove( final CompositeSequence compositeSequence ) {
-
-        this.handleRemove( compositeSequence );
-
-    }
+    protected abstract Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence );
 
     /**
-     * Sets the reference to <code>compositeSequence</code>'s DAO.
+     * Performs the core logic for {@link #findByBioSequenceName(String)}
      */
-    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
-        this.compositeSequenceDao = compositeSequenceDao;
-    }
+    protected abstract Collection<CompositeSequence> handleFindByBioSequenceName( String name );
 
     /**
-     * @see CompositeSequenceService#thaw(java.util.Collection)
+     * Performs the core logic for {@link #findByGene(Gene)}
      */
-    @Override
-    @Transactional(readOnly = true)
-    public void thaw( final java.util.Collection<CompositeSequence> compositeSequences ) {
-
-        this.handleThaw( compositeSequences );
-
-    }
-
-    /**
-     * @see CompositeSequenceService#update(CompositeSequence)
-     */
-    @Override
-    @Transactional
-    public void update( final CompositeSequence compositeSequence ) {
-
-        this.handleUpdate( compositeSequence );
-
-    }
-
-    /**
-     * Gets the reference to <code>compositeSequence</code>'s DAO.
-     */
-    protected CompositeSequenceDao getCompositeSequenceDao() {
-        return this.compositeSequenceDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll();
-
-    /**
-     * Performs the core logic for {@link #create(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleCreate(
-            java.util.Collection<CompositeSequence> compositeSequences );
-
-    /**
-     * Performs the core logic for {@link #create(CompositeSequence)}
-     */
-    protected abstract CompositeSequence handleCreate( CompositeSequence compositeSequence );
-
-    /**
-     * Performs the core logic for {@link #find(CompositeSequence)}
-     */
-    protected abstract CompositeSequence handleFind( CompositeSequence compositeSequence );
-
-    /**
-     * Performs the core logic for {@link #findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequence(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Performs the core logic for {@link #findByBioSequenceName(java.lang.String)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByBioSequenceName( java.lang.String name );
-
-    /**
-     * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByGene( ubic.gemma.model.genome.Gene gene );
+    protected abstract Collection<CompositeSequence> handleFindByGene( Gene gene );
 
     /**
      * Performs the core logic for
-     * {@link #findByGene(ubic.gemma.model.genome.Gene, ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
+     * {@link #findByGene(Gene, ArrayDesign)}
      */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByGene( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
+    protected abstract Collection<CompositeSequence> handleFindByGene( Gene gene, ArrayDesign arrayDesign );
 
     /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
+     * Performs the core logic for {@link #findByName(String)}
      */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByName( java.lang.String name );
+    protected abstract Collection<CompositeSequence> handleFindByName( String name );
 
     /**
      * Performs the core logic for
-     * {@link #findByName(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.String)}
+     * {@link #findByName(ArrayDesign, String)}
      */
-    protected abstract CompositeSequence handleFindByName(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.String name );
+    protected abstract CompositeSequence handleFindByName( ArrayDesign arrayDesign, String name );
 
     /**
-     * Performs the core logic for {@link #findByNamesInArrayDesigns(java.util.Collection, java.util.Collection)}
+     * Performs the core logic for {@link #findByNamesInArrayDesigns(Collection, Collection)}
      */
-    protected abstract java.util.Collection<CompositeSequence> handleFindByNamesInArrayDesigns(
-            java.util.Collection<String> compositeSequenceNames, java.util.Collection<ArrayDesign> arrayDesigns );
+    protected abstract Collection<CompositeSequence> handleFindByNamesInArrayDesigns(
+            Collection<String> compositeSequenceNames, Collection<ArrayDesign> arrayDesigns );
 
     /**
-     * Performs the core logic for {@link #findOrCreate(CompositeSequence)}
+     * Performs the core logic for {@link #getGenes(Collection)}
      */
-    protected abstract CompositeSequence handleFindOrCreate( CompositeSequence compositeSequence );
-
-    /**
-     * Performs the core logic for {@link #getGenes(java.util.Collection)}
-     */
-    protected abstract java.util.Map<CompositeSequence, Collection<Gene>> handleGetGenes(
-            java.util.Collection<CompositeSequence> sequences );
+    protected abstract Map<CompositeSequence, Collection<Gene>> handleGetGenes(
+            Collection<CompositeSequence> sequences );
 
     /**
      * Performs the core logic for {@link #getGenes(CompositeSequence)}
      */
-    protected abstract java.util.Collection<Gene> handleGetGenes( CompositeSequence compositeSequence );
+    protected abstract Collection<Gene> handleGetGenes( CompositeSequence compositeSequence );
 
     /**
-     * Performs the core logic for {@link #getGenesWithSpecificity(java.util.Collection)}
+     * Performs the core logic for {@link #getGenesWithSpecificity(Collection)}
      */
-    protected abstract java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
-            java.util.Collection<CompositeSequence> compositeSequences );
+    protected abstract Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
+            Collection<CompositeSequence> compositeSequences );
 
     /**
-     * Performs the core logic for {@link #getRawSummary(java.util.Collection, java.lang.Integer)}
+     * Performs the core logic for {@link #getRawSummary(Collection, Integer)}
      */
-    protected abstract java.util.Collection<Object[]> handleGetRawSummary(
-            java.util.Collection<CompositeSequence> compositeSequences, java.lang.Integer numResults );
+    protected abstract Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences,
+            Integer numResults );
 
     /**
      * Performs the core logic for
-     * {@link #getRawSummary(ubic.gemma.model.expression.arrayDesign.ArrayDesign, java.lang.Integer)}
+     * {@link #getRawSummary(ArrayDesign, Integer)}
      */
-    protected abstract java.util.Collection<Object[]> handleGetRawSummary(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign, java.lang.Integer numResults );
+    protected abstract Collection<Object[]> handleGetRawSummary( ArrayDesign arrayDesign, Integer numResults );
 
     /**
-     * Performs the core logic for {@link #getRawSummary(CompositeSequence, java.lang.Integer)}
+     * Performs the core logic for {@link #getRawSummary(CompositeSequence, Integer)}
      */
-    protected abstract java.util.Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence,
-            java.lang.Integer numResults );
+    protected abstract Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence,
+            Integer numResults );
 
     /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
+     * Performs the core logic for {@link #remove(Collection)}
      */
-    protected abstract CompositeSequence handleLoad( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<CompositeSequence> handleLoadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #remove(java.util.Collection)}
-     */
-    protected abstract void handleRemove( java.util.Collection<CompositeSequence> sequencesToDelete );
-
-    /**
-     * Performs the core logic for {@link #remove(CompositeSequence)}
-     */
-    protected abstract void handleRemove( CompositeSequence compositeSequence );
-
-    /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract void handleThaw( java.util.Collection<CompositeSequence> compositeSequences );
-
-    /**
-     * Performs the core logic for {@link #update(CompositeSequence)}
-     */
-    protected abstract void handleUpdate( CompositeSequence compositeSequence );
+    protected abstract void handleRemove( Collection<CompositeSequence> sequencesToDelete );
 
 }

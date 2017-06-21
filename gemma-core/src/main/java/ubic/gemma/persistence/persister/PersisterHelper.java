@@ -53,7 +53,7 @@ public class PersisterHelper extends RelationshipPersister {
     public Object persist( Object entity ) {
         try {
 
-            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
+            this.getSession().setFlushMode( FlushMode.COMMIT );
 
             if ( entity instanceof Auditable ) {
                 Auditable auditable = ( Auditable ) entity;
@@ -63,22 +63,11 @@ public class PersisterHelper extends RelationshipPersister {
                 }
 
                 auditable.setAuditTrail( persistAuditTrail( auditable.getAuditTrail() ) );
-
-                if ( entity instanceof Curatable ) {
-                    this.initializeCurationDetails( ( Curatable ) entity );
-                }
             }
 
             return super.persist( entity );
         } finally {
             this.getSession().setFlushMode( FlushMode.AUTO );
-        }
-    }
-
-    private void initializeCurationDetails( Curatable curatable ) {
-        if ( curatable.getCurationDetails() == null ) {
-            CurationDetails cd = this.curationDetailsDao.create();
-            curatable.setCurationDetails( cd );
         }
     }
 

@@ -24,7 +24,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.CurationDetailsService;
@@ -75,7 +75,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
 
         Taxon taxon = Taxon.Factory
                 .newInstance( "text taxon scientific name " + RandomStringUtils.randomAlphanumeric( 8 ),
-                        RandomStringUtils.randomAlphanumeric( 8 ), "ttxn", "ttxn", "ttxn", 0, false, true );
+                        RandomStringUtils.randomAlphanumeric( 8 ), "ttxn", 0, false, true );
         this.persisterHelper.persist( taxon );
 
         BioMaterial bm = BioMaterial.Factory.newInstance();
@@ -107,7 +107,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
 
     @Test
     public void testCuratableValueObjectCreation() {
-        ArrayDesignValueObject adVO = this.arrayDesignService.loadValueObject( arrayDesign.getId() );
+        ArrayDesignValueObject adVO = this.arrayDesignService.loadValueObject( arrayDesign );
         assertNotNull( adVO );
 
         try {
@@ -117,7 +117,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
         }
 
         ExpressionExperimentValueObject eeVO = this.expressionExperimentService
-                .loadValueObject( expressionExperiment.getId() );
+                .loadValueObject( expressionExperiment );
         assertNotNull( eeVO );
 
         try {
@@ -135,11 +135,11 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
 
     @Test
     public void testCuratableValueObjectInteraction() {
-        ArrayDesignValueObject adVO = this.arrayDesignService.loadValueObject( arrayDesign.getId() );
+        ArrayDesignValueObject adVO = this.arrayDesignService.loadValueObject( arrayDesign );
         assertFalse( adVO.getTroubled() );
 
         ExpressionExperimentDetailsValueObject eeDVO = new ExpressionExperimentDetailsValueObject(
-                this.expressionExperimentService.loadValueObject( expressionExperiment.getId() ) );
+                this.expressionExperimentService.loadValueObject( expressionExperiment ) );
         eeDVO.setArrayDesigns( Collections.singleton( adVO ) );
 
         assertFalse( eeDVO.getTroubled() );
@@ -151,11 +151,11 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
                 .newInstance( new Date(), AuditAction.UPDATE, "testing trouble update on platform",
                         "trouble update details", null, TroubledStatusFlagEvent.Factory.newInstance() ) );
 
-        adVO = this.arrayDesignService.loadValueObject( arrayDesign.getId() );
+        adVO = this.arrayDesignService.loadValueObject( arrayDesign );
         assertTrue( adVO.getTroubled() );
 
         eeDVO = new ExpressionExperimentDetailsValueObject(
-                this.expressionExperimentService.loadValueObject( expressionExperiment.getId() ) );
+                this.expressionExperimentService.loadValueObject( expressionExperiment ) );
         eeDVO.setArrayDesigns( Collections.singleton( adVO ) );
 
         assertTrue( eeDVO.getTroubled() );
@@ -168,7 +168,7 @@ public class CuratableValueObjectTest extends BaseSpringWebTest {
                         "trouble update details", null, TroubledStatusFlagEvent.Factory.newInstance() ) );
 
         eeDVO = new ExpressionExperimentDetailsValueObject(
-                this.expressionExperimentService.loadValueObject( expressionExperiment.getId() ) );
+                this.expressionExperimentService.loadValueObject( expressionExperiment ) );
         eeDVO.setArrayDesigns( Collections.singleton( adVO ) );
 
         assertTrue( eeDVO.getTroubled() );

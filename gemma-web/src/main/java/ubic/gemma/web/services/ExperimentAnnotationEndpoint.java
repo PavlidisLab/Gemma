@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -93,7 +93,7 @@ public class ExperimentAnnotationEndpoint extends AbstractGemmaEndpoint {
                 String msg = "No expression experiment with id, " + eeId + ", can be found.";
                 return buildBadResponse( document, msg );
             }
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             Collection<Characteristic> characterCol = ee.getCharacteristics();
 
             for ( Characteristic character : characterCol ) {

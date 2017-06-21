@@ -31,10 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.model.Gene2CsStatus;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.model.Gene2CsStatus;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.persistence.service.genome.GeneDao;
 import ubic.gemma.persistence.util.MailEngine;
 import ubic.gemma.persistence.util.Settings;
@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author paul
  */
 @Service
-public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
+public class TableMaintenanceUtilImpl implements TableMaintenanceUtil {
 
     private static final AtomicBoolean running = new AtomicBoolean( false );
 
@@ -65,14 +65,14 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                     + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
                     + " WHERE geneprod.GENE_FK = gene.ID AND bsgp.GENE_PRODUCT_FK = geneprod.ID AND "
                     + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK ORDER BY gene.ID,cs.ARRAY_DESIGN_FK";
-    
+
     private static final String HOME_DIR = Settings.getString( "gemma.appdata.home" );
 
     /**
      * The location where reports are stored.
      */
     private static final String DB_INFO_DIR = "DbReports";
-    private static final Log log = LogFactory.getLog( TableMaintenanceUtilImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( TableMaintenanceUtil.class.getName() );
     @Autowired
     private AuditEventService auditEventService;
 

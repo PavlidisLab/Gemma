@@ -18,68 +18,67 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.core.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.core.loader.expression.geo.GeoConverter;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoSampleCorrespondence;
-import ubic.gemma.core.loader.expression.geo.model.GeoData;
-import ubic.gemma.core.loader.expression.geo.model.GeoDataset;
-import ubic.gemma.core.loader.expression.geo.model.GeoPlatform;
-import ubic.gemma.core.loader.expression.geo.model.GeoSample;
-import ubic.gemma.core.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.core.loader.expression.geo.model.GeoSubset;
+import ubic.gemma.core.loader.expression.geo.model.*;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
 import ubic.gemma.persistence.service.ExpressionExperimentPrePersistService;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.util.ArrayDesignsForExperimentCache;
+
+import java.util.*;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class GeoServiceImpl extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
 
-    @Autowired
-    private ArrayDesignReportService arrayDesignReportService;
+    private final ArrayDesignReportService arrayDesignReportService;
+    private final BioAssayService bioAssayService;
+    private final ExpressionExperimentReportService expressionExperimentReportService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     @Autowired
-    private BioAssayService bioAssayService;
+    public GeoServiceImpl( ArrayDesignReportService arrayDesignReportService, BioAssayService bioAssayService,
+            ExpressionExperimentReportService expressionExperimentReportService,
+            ExpressionExperimentService expressionExperimentService,
+            ExpressionExperimentPrePersistService expressionExperimentPrePersistService ) {
+        this.arrayDesignReportService = arrayDesignReportService;
+        this.bioAssayService = bioAssayService;
+        this.expressionExperimentReportService = expressionExperimentReportService;
+        this.expressionExperimentService = expressionExperimentService;
+        this.expressionExperimentPrePersistService = expressionExperimentPrePersistService;
+    }
 
-    @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
-
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public ArrayDesign addElements( ArrayDesign targetPlatform ) {
@@ -124,18 +123,12 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         arrayDesignService.update( targetPlatform );
 
-        this.arrayDesignReportService.generateArrayDesignReport( targetPlatform.getId() );
+        this.arrayDesignReportService.generateArrayDesignReport( targetPlatform );
 
         return targetPlatform;
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.expression.geo.service.AbstractGeoService#fetchAndLoad(java.lang.String, boolean, boolean,
-     * boolean, boolean)
-     */
     @Override
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
             boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform ) {
@@ -151,8 +144,6 @@ public class GeoServiceImpl extends AbstractGeoService {
      * <li>Convert the GDS and GSE into a ExpressionExperiment (or just the ArrayDesigns)
      * <li>Load the resulting ExpressionExperiment and/or ArrayDesigns into Gemma</li>
      * </ol>
-     * 
-     * @param geoDataSetAccession
      */
     @Override
     public Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
@@ -197,8 +188,9 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         Object obj = parseResult.iterator().next();
         if ( !( obj instanceof GeoSeries ) ) {
-            throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
-                    + GeoSeries.class.getName() + " (you may need to load platforms only)." );
+            throw new RuntimeException(
+                    "Got a " + obj.getClass().getName() + " instead of a " + GeoSeries.class.getName()
+                            + " (you may need to load platforms only)." );
         }
 
         GeoSeries series = ( GeoSeries ) obj;
@@ -238,8 +230,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         geoConverter.clear();
         geoConverter.setSplitByPlatform( splitByPlatform );
 
-        @SuppressWarnings("unchecked")
-        Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter.convert( series );
+        @SuppressWarnings("unchecked") Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoConverter
+                .convert( series );
 
         check( result );
 
@@ -250,8 +242,7 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         Collection<ExpressionExperiment> persistedResult = new HashSet<>();
         for ( ExpressionExperiment ee : result ) {
-            c = expressionExperimentPrePersistService.prepare( ee, c );
-            ee = persisterHelper.persist( ee, c );
+            ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
             persistedResult.add( ee );
             log.debug( "Persisted " + seriesAccession );
 
@@ -260,6 +251,10 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         return persistedResult;
     }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
 
     private void check( Collection<ExpressionExperiment> result ) {
         for ( ExpressionExperiment expressionExperiment : result ) {
@@ -282,9 +277,6 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     }
 
-    /**
-     * @param projectedAccessions
-     */
     private void checkForExisting( Collection<DatabaseEntry> projectedAccessions ) {
         if ( projectedAccessions == null || projectedAccessions.size() == 0 ) {
             return; // that's okay, it might have been a GPL.
@@ -302,11 +294,9 @@ public class GeoServiceImpl extends AbstractGeoService {
     /**
      * Another common case, typified by samples in GSE3193. We must confirm that all samples included in the data set
      * are not included in other data sets. In GEO this primarily occurs in 'superseries' that combine other series.
-     * 
-     * @param series
      */
     private void checkSamplesAreNew( GeoSeries series ) {
-        Collection<GeoSample> toSkip = new HashSet<GeoSample>();
+        Collection<GeoSample> toSkip = new HashSet<>();
 
         for ( GeoSample sample : series.getSamples() ) {
             if ( !sample.appearsInMultipleSeries() ) {
@@ -317,12 +307,13 @@ public class GeoServiceImpl extends AbstractGeoService {
             Collection<BioAssay> existingBioAssays = bioAssayService.findByAccession( sample.getGeoAccession() );
             for ( BioAssay ba : existingBioAssays ) {
                 DatabaseEntry acc = ba.getAccession();
-                if ( acc == null ) continue;
+                if ( acc == null )
+                    continue;
 
                 String sampleId = sample.getGeoAccession();
                 String existingAcc = acc.getAccession();
-                if ( existingAcc.equals( sampleId )
-                        && ba.getAccession().getExternalDatabase().getName().equals( GEO_DB_NAME ) ) {
+                if ( existingAcc.equals( sampleId ) && ba.getAccession().getExternalDatabase().getName()
+                        .equals( GEO_DB_NAME ) ) {
                     log.debug( sampleId + " appears in an expression experiment already in the system, skipping" );
                     toSkip.add( sample );
                 }
@@ -341,9 +332,9 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
 
         for ( GeoDataset gds : series.getDatasets() ) {
-            for ( GeoSubset gsub : gds.getSubsets() ) {
+            for ( GeoSubset gSub : gds.getSubsets() ) {
                 for ( GeoSample gs : toSkip ) {
-                    gsub.getSamples().remove( gs );
+                    gSub.getSamples().remove( gs );
                 }
             }
         }
@@ -352,8 +343,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         if ( toSkip.size() > 0 ) {
             series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
-                    + "were not imported from the GEO source. The following samples were removed: "
-                    + StringUtils.join( toSkip, "," ) );
+                    + "were not imported from the GEO source. The following samples were removed: " + StringUtils
+                    .join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {
@@ -363,8 +354,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
         if ( series.getSamples().size() < 2 /* we don't really have a lower limit set anywhere else */ ) {
             throw new IllegalStateException(
-                    "After removing samples already in the system, this data set is too small to load: "
-                            + series.getSamples().size() + " left (removed " + toSkip.size() + ")" );
+                    "After removing samples already in the system, this data set is too small to load: " + series
+                            .getSamples().size() + " left (removed " + toSkip.size() + ")" );
         }
 
         log.info( "Series now contains " + series.getSamples().size() + " (removed " + toSkip.size() + ")" );
@@ -376,7 +367,8 @@ public class GeoServiceImpl extends AbstractGeoService {
      * @return one data set, which contains all the samples and subsets.
      */
     private GeoDataset combineDatasets( Collection<GeoDataset> datasets ) {
-        if ( datasets.size() == 1 ) return datasets.iterator().next();
+        if ( datasets.size() == 1 )
+            return datasets.iterator().next();
 
         // defensive programming
         GeoPlatform lastPlatform = null;
@@ -393,7 +385,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         // arbitrarily use the first.
         GeoDataset result = datasets.iterator().next();
         for ( GeoDataset dataset : datasets ) {
-            if ( dataset.equals( result ) ) continue;
+            if ( dataset.equals( result ) )
+                continue;
             assert dataset.getPlatform().equals( lastPlatform );
             log.info( "Collapsing " + dataset + " into " + result + " Platform=" + dataset.getPlatform() );
             result.setDescription(
@@ -426,10 +419,6 @@ public class GeoServiceImpl extends AbstractGeoService {
     /**
      * Build the map between the existing probe names and the ones in gemma. The information is stored in the
      * GeoPlatform object
-     * 
-     * @param pl
-     * @param columnWithGemmaNames
-     * @param columnWithGeoNames
      */
     private void fillExistingProbeNameMap( GeoPlatform pl, String columnWithGemmaNames, String columnWithGeoNames ) {
 
@@ -448,7 +437,8 @@ public class GeoServiceImpl extends AbstractGeoService {
         for ( int i = 0; i < gemmaNames.size(); i++ ) {
             String gemmaName = gemmaNames.get( i );
             String geoName = geoNames.get( i );
-            if ( log.isDebugEnabled() ) log.debug( "GEO name:" + geoName + "; name to be used for Gemma:" + gemmaName );
+            if ( log.isDebugEnabled() )
+                log.debug( "GEO name:" + geoName + "; name to be used for Gemma:" + gemmaName );
             pl.getProbeNamesInGemma().put( geoName, gemmaName );
         }
     }
@@ -457,13 +447,8 @@ public class GeoServiceImpl extends AbstractGeoService {
      * If the names in Gemma are not the same as the ID in GEO, we have to switch the new data over. This only works if
      * the new names are given in another column in the GEO data. It also happens that sometimes some names in Gemma
      * match multiple columns in GEO (for example, blank spots). We need to find the column with the unique match.
-     * <p>
      * The default column is 'ID' as per GEO specifications. We always use this unless the platform probes have been
      * renamed (which we don't do routinely, any more; this was a practice in response to an annoying feature of GEO).
-     * 
-     * @param rawGEOPlatform
-     * @param existing
-     * @param columnWithGeoNames
      */
     private void getGemmaIDColumnNameInGEO( GeoPlatform rawGEOPlatform, Map<CompositeSequence, BioSequence> m,
             String columnWithGeoNames ) {
@@ -479,7 +464,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             return;
         }
 
-        Map<String, Integer> countMatches = new HashMap<String, Integer>();
+        Map<String, Integer> countMatches = new HashMap<>();
         for ( String geoColName : rawGEOPlatform.getColumnNames() ) {
             List<String> columnData = rawGEOPlatform.getColumnData( geoColName );
 
@@ -496,7 +481,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             }
 
             // figure out the best column;if not ID, then usually NAME or SPOT_ID etc
-            Set<String> colDataSet = new HashSet<String>( columnData );
+            Set<String> colDataSet = new HashSet<>( columnData );
 
             int numMatchesInColumn = 0;
             for ( CompositeSequence cs : m.keySet() ) {
@@ -515,44 +500,41 @@ public class GeoServiceImpl extends AbstractGeoService {
             countMatches.put( geoColName, numMatchesInColumn );
         }
 
-        String bestcol = "";
+        String bestCol = "";
         int bestMatchSize = 0;
         for ( String colName : countMatches.keySet() ) {
             if ( countMatches.get( colName ) > bestMatchSize ) {
                 bestMatchSize = countMatches.get( colName );
-                bestcol = colName;
+                bestCol = colName;
             }
         }
 
         /*
-         * Arbitrary threshold before we feel we got something horribly wrong. The problem is in tests this can be
+         * FIXME Arbitrary threshold before we feel we got something horribly wrong. The problem is in tests this can be
          * different.
          */
         // double fraction = 0.9;
         // if ( bestMatchSize < m.size() * fraction ) {
 
         if ( bestMatchSize == 0 ) {
-            log.warn( "The best-matching column, " + bestcol + " matched too few: " + bestMatchSize + "/" + m.size()
+            log.warn( "The best-matching column, " + bestCol + " matched too few: " + bestMatchSize + "/" + m.size()
                     + " probe names for " + rawGEOPlatform );
-            throw new IllegalStateException( "Could not figure out which column the Gemma probe names came (e.g.: "
-                    + m.keySet().iterator().next().getName() + ") from for platform=" + rawGEOPlatform );
+            throw new IllegalStateException(
+                    "Could not figure out which column the Gemma probe names came (e.g.: " + m.keySet().iterator()
+                            .next().getName() + ") from for platform=" + rawGEOPlatform );
         }
 
-        log.warn( "Using the best-matching column, " + bestcol + "  matched " + bestMatchSize + "/" + m.size()
+        log.warn( "Using the best-matching column, " + bestCol + "  matched " + bestMatchSize + "/" + m.size()
                 + " probe names for " + rawGEOPlatform );
-        fillExistingProbeNameMap( rawGEOPlatform, bestcol, columnWithGeoNames );
+        fillExistingProbeNameMap( rawGEOPlatform, bestCol, columnWithGeoNames );
 
     }
 
     /**
      * @param rawGEOPlatform Our representation of the original GEO platform
      * @param geoArrayDesign Our conversion
-     * @param columnWithGeoNames
-     * @return
      */
-    private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign,
-            String columnWithGeoNames ) {
-        Set<String> geoProbeNames = new HashSet<String>();
+    private String getGEOIDColumnName( GeoPlatform rawGEOPlatform, ArrayDesign geoArrayDesign ) {
 
         if ( rawGEOPlatform.getDesignElements().isEmpty() ) {
             log.info( "Platform has no elements: " + rawGEOPlatform );
@@ -562,16 +544,14 @@ public class GeoServiceImpl extends AbstractGeoService {
         // This should always be "ID", so this is just defensive programming.
         for ( CompositeSequence cs : geoArrayDesign.getCompositeSequences() ) {
             String geoProbeName = cs.getName();
-            geoProbeNames.add( geoProbeName );
             for ( String colName : rawGEOPlatform.getColumnNames() ) {
                 List<String> columnData = rawGEOPlatform.getColumnData( colName );
                 if ( columnData != null && columnData.contains( geoProbeName ) ) {
-                    columnWithGeoNames = colName;
-                    if ( !columnWithGeoNames.equals( "ID" ) ) {
+                    if ( !colName.equals( "ID" ) ) {
                         // this would be unusual
-                        log.info( "GEO probe names were found in GEO column=" + columnWithGeoNames );
+                        log.info( "GEO probe names were found in GEO column=" + colName );
                     }
-                    return columnWithGeoNames;
+                    return colName;
                 }
             }
         }
@@ -580,12 +560,8 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     }
 
-    /**
-     * @param series
-     * @return
-     */
     private Set<GeoPlatform> getPlatforms( GeoSeries series ) {
-        Set<GeoPlatform> platforms = new HashSet<GeoPlatform>();
+        Set<GeoPlatform> platforms = new HashSet<>();
 
         if ( series.getDatasets().size() > 0 ) {
             for ( GeoDataset dataset : series.getDatasets() ) {
@@ -600,13 +576,11 @@ public class GeoServiceImpl extends AbstractGeoService {
         return platforms;
     }
 
-    /**
-     * @param result
-     */
     private void getPubMedInfo( Collection<ExpressionExperiment> result ) {
         for ( ExpressionExperiment experiment : result ) {
             BibliographicReference pubmed = experiment.getPrimaryPublication();
-            if ( pubmed == null ) continue;
+            if ( pubmed == null )
+                continue;
             PubMedXMLFetcher fetcher = new PubMedXMLFetcher();
             try {
                 pubmed = fetcher.retrieveByHTTP( Integer.parseInt( pubmed.getPubAccession().getAccession() ) );
@@ -614,16 +588,15 @@ public class GeoServiceImpl extends AbstractGeoService {
                 log.warn( "Filed to get data from pubmed, continuing without it." );
                 log.error( e, e );
             }
-            if ( pubmed == null ) continue;
+            if ( pubmed == null )
+                continue;
             experiment.setPrimaryPublication( pubmed );
 
         }
     }
 
     /**
-     * Populate the series information based on the subseries.
-     * 
-     * @param superSeries
+     * Populate the series information based on the sub-series.
      */
     private void getSubSeriesInformation( GeoSeries superSeries ) {
         for ( String subSeriesAccession : superSeries.getSubSeries() ) {
@@ -638,8 +611,9 @@ public class GeoServiceImpl extends AbstractGeoService {
 
             Object obj = parseResult.iterator().next();
             if ( !( obj instanceof GeoSeries ) ) {
-                throw new RuntimeException( "Got a " + obj.getClass().getName() + " instead of a "
-                        + GeoSeries.class.getName() + " (you may need to load platforms only)." );
+                throw new RuntimeException(
+                        "Got a " + obj.getClass().getName() + " instead of a " + GeoSeries.class.getName()
+                                + " (you may need to load platforms only)." );
             }
             GeoSeries subSeries = ( GeoSeries ) obj;
 
@@ -650,11 +624,11 @@ public class GeoServiceImpl extends AbstractGeoService {
             superSeries.getContributers().addAll( subSeries.getContributers() );
             superSeries.getPubmedIds().addAll( subSeries.getPubmedIds() );
             String seriesSummary = superSeries.getSummaries();
-            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": "
-                    + subSeries.getSummaries();
+            seriesSummary = seriesSummary + "\nSummary from subseries " + subSeries.getGeoAccession() + ": " + subSeries
+                    .getSummaries();
             superSeries.setSummaries( seriesSummary );
 
-            // The following code needs a test case: where the subseries have associated GDS but the superseries does
+            // TODO The following code needs a test case: where the subseries have associated GDS but the superseries does
             // not.
             // /*
             // * Get experimental design information, if available.
@@ -688,10 +662,6 @@ public class GeoServiceImpl extends AbstractGeoService {
         }
     }
 
-    /**
-     * @param rawGEOPlatform
-     * @param c
-     */
     private void matchToExistingPlatform( GeoConverter geoConverter, GeoPlatform rawGEOPlatform,
             ArrayDesignsForExperimentCache c ) {
         // we have to populate this.
@@ -724,8 +694,8 @@ public class GeoServiceImpl extends AbstractGeoService {
             log.info( "Platform " + rawGEOPlatform.getGeoAccession()
                     + " exists in Gemma, checking for correct probe names and re-matching if necessary ..." );
 
-            String columnWithGeoNames = null;
-            columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign, columnWithGeoNames );
+            String columnWithGeoNames;
+            columnWithGeoNames = getGEOIDColumnName( rawGEOPlatform, geoArrayDesign );
 
             if ( columnWithGeoNames == null ) {
                 // no problem: this means the design has no elements, so it is actually a placeholder (e.g., MPSS)
@@ -745,33 +715,32 @@ public class GeoServiceImpl extends AbstractGeoService {
      * If platforms used exist in Gemma already, make sure the probe names match the ones in our system, and if not, try
      * to figure out the correct mapping. This is necessary because we sometimes rename probes to match other data
      * sources. Often GEO platforms just have integer ids.
-     * 
-     * @param converter
-     * @param series
-     * @param
      */
     private void matchToExistingPlatforms( GeoConverter geoConverter, GeoSeries series,
             ArrayDesignsForExperimentCache c ) {
 
         Set<GeoPlatform> platforms = getPlatforms( series );
-        if ( platforms.size() == 0 ) throw new IllegalStateException( "Series has no platforms" );
+        if ( platforms.size() == 0 )
+            throw new IllegalStateException( "Series has no platforms" );
         for ( GeoPlatform pl : platforms ) {
             /*
              * We suppress the analysis of the array design if it is not supported (i.e. MPSS or exon arrays)
              */
-            if ( !pl.useDataFromGeo() ) continue;
+            if ( !pl.useDataFromGeo() )
+                continue;
             matchToExistingPlatform( geoConverter, pl, c );
         }
     }
 
     /**
      * Combine data sets that use the same platform into one.
-     * 
+     *
      * @param datasets, some of which will be combined.
      */
     private Collection<GeoDataset> potentiallyCombineDatasets( Collection<GeoDataset> datasets ) {
-        if ( datasets.size() == 1 ) return datasets;
-        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<GeoPlatform, Collection<GeoDataset>>();
+        if ( datasets.size() == 1 )
+            return datasets;
+        Map<GeoPlatform, Collection<GeoDataset>> seenPlatforms = new HashMap<>();
         for ( GeoDataset dataset : datasets ) {
             GeoPlatform platform = dataset.getPlatform();
             if ( !seenPlatforms.containsKey( platform ) ) {
@@ -780,7 +749,7 @@ public class GeoServiceImpl extends AbstractGeoService {
             seenPlatforms.get( platform ).add( dataset );
         }
 
-        Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
+        Collection<GeoDataset> finishedDatasets = new HashSet<>();
         for ( GeoPlatform platform : seenPlatforms.keySet() ) {
             Collection<GeoDataset> datasetsForPlatform = seenPlatforms.get( platform );
             if ( datasetsForPlatform.size() > 1 ) {
@@ -794,17 +763,15 @@ public class GeoServiceImpl extends AbstractGeoService {
 
     }
 
-    /**
-     * @param entities
-     */
     private void updateReports( Collection<?> entities ) {
-        Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
+        Collection<ArrayDesign> adsToUpdate = new HashSet<>();
         for ( Object entity : entities ) {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
-                expressionExperiment = this.expressionExperimentService.thaw( expressionExperiment );
+                this.expressionExperimentService.thaw( expressionExperiment );
                 this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
+                this.expressionExperimentService.thaw( expressionExperiment );
                 for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
                     adsToUpdate.add( ba.getArrayDesignUsed() );
                 }
@@ -812,11 +779,10 @@ public class GeoServiceImpl extends AbstractGeoService {
             } else if ( entity instanceof ArrayDesign ) {
                 adsToUpdate.add( ( ArrayDesign ) entity );
             }
-
         }
 
         for ( ArrayDesign arrayDesign : adsToUpdate ) {
-            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+            this.arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         }
 
     }

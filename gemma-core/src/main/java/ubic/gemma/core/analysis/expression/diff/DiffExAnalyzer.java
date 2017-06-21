@@ -41,15 +41,13 @@ public interface DiffExAnalyzer {
             DifferentialExpressionAnalysisConfig config, boolean retainScale );
 
     /**
-     * @return analyses. There will be more than one if a subset factor is defined. Note that the qvalue threshold for
-     * retention is ignored by this method, all results are returned.
+     * @return analyses. There will be more than one if a subset factor is defined.
      */
     Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config );
 
     /***
-     * Allows entry of modified data matrices into the workflow.  Note that the configured qvalue threshold
-     * for retention is ignored by this method, all results are returned.
+     * Allows entry of modified data matrices into the workflow.
      *
      */
     Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
@@ -76,8 +74,7 @@ public interface DiffExAnalyzer {
 
     /**
      * Note that normally when we run a subset analysis, the subsetting is done internally, so we pass in the expression
-     * experiment, not the subset. This method is used for exceptions to that. Note that the configured qvalue threshold
-     * for retention is ignored by this method, all results are returned.
+     * experiment, not the subset. This method is used for exceptions to that.
      */
     DifferentialExpressionAnalysis run( ExpressionExperimentSubSet subset,
             DifferentialExpressionAnalysisConfig config );

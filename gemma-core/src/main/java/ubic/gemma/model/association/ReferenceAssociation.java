@@ -25,10 +25,16 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  */
 public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -6338026603382275762L;
+    private DatabaseEntry referencedDatabaseEntry;
+
+    public DatabaseEntry getReferencedDatabaseEntry() {
+        return this.referencedDatabaseEntry;
+    }
+
+    public void setReferencedDatabaseEntry( DatabaseEntry referencedDatabaseEntry ) {
+        this.referencedDatabaseEntry = referencedDatabaseEntry;
+    }
 
     /**
      * Constructs new instances of {@link ReferenceAssociation}.
@@ -41,19 +47,6 @@ public abstract class ReferenceAssociation extends BioSequence2GeneProduct {
             return new ReferenceAssociationImpl();
         }
 
-    }
-
-    private DatabaseEntry referencedDatabaseEntry;
-
-    /**
-     * 
-     */
-    public DatabaseEntry getReferencedDatabaseEntry() {
-        return this.referencedDatabaseEntry;
-    }
-
-    public void setReferencedDatabaseEntry( DatabaseEntry referencedDatabaseEntry ) {
-        this.referencedDatabaseEntry = referencedDatabaseEntry;
     }
 
 }

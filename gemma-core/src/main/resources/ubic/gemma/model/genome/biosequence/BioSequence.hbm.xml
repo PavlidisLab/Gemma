@@ -38,13 +38,13 @@
       <property name="fractionRepeats" type="java.lang.Double">
          <column name="FRACTION_REPEATS" not-null="false" unique="false" sql-type="DOUBLE"/>
       </property>
-      <many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  cascade="all" lazy="proxy" fetch="select">
+      <many-to-one name="sequenceDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"  cascade="all" lazy="proxy" fetch="select">
          <column name="SEQUENCE_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
-      <many-to-one name="taxon" class="ubic.gemma.model.genome.TaxonImpl"  lazy="false" fetch="select">
+      <many-to-one name="taxon" class="ubic.gemma.model.genome.Taxon"  lazy="false" fetch="select">
          <column name="TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <set name="bioSequence2GeneProduct" lazy="true" fetch="select" inverse="true">
+      <set name="bioSequence2GeneProduct" lazy="true" fetch="subselect" inverse="true">
          <cache usage="read-write" />
          <key foreign-key="BIO_SEQUENCE2_GENE_PRODUCT_BIO_SEQUENCE_FKC">
             <column name="BIO_SEQUENCE_FK" sql-type="BIGINT"/>

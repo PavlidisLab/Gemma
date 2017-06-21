@@ -90,7 +90,7 @@ public class Gene2GOdescriptionEndpoint extends AbstractGemmaEndpoint {
         responseWrapper.appendChild( responseElement );
 
         Collection<Long> geneIds = parseLongCollection( geneInput );
-        Collection<Gene> geneCol = geneService.loadMultiple( geneIds );
+        Collection<Gene> geneCol = geneService.load( geneIds );
         if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "No gene with the given ids can be found.";
             return buildBadResponse( document, msg );

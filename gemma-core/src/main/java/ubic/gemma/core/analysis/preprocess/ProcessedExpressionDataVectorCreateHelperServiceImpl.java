@@ -34,7 +34,7 @@ import ubic.gemma.persistence.service.expression.bioAssayData.BioAssayDimensionS
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.core.datastructure.matrix.*;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -81,12 +81,9 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     @Transactional
     public ExpressionExperiment createProcessedExpressionData( ExpressionExperiment ee ) {
         ee = processedDataService.createProcessedDataVectors( ee );
-        ee = this.eeService.thawLite( ee );
-
+        //this.eeService.thawLite( ee );
         assert ee.getNumberOfDataVectors() != null;
-
         audit( ee, "" );
-
         return ee;
     }
 
@@ -94,7 +91,7 @@ public class ProcessedExpressionDataVectorCreateHelperServiceImpl
     public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> vecs ) {
         ee = processedDataService.createProcessedDataVectors( ee, vecs );
-        ee = this.eeService.thawLite( ee );
+        this.eeService.thawLite( ee );
 
         assert ee.getNumberOfDataVectors() != null;
 

@@ -28,7 +28,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.apps.Blat;
+import ubic.gemma.core.apps.Blat;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 
@@ -47,7 +47,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     @Test
     public final void testProcessArrayDesign() throws Exception {
 
-        ad = arrayDesignService.thaw( ad );
+        arrayDesignService.thaw( ad );
 
         Collection<BioSequence> seqs = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
                 FileTools.resourceToPath( "/data/loader/genome/blast" ), true,
@@ -58,7 +58,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
 
         Blat mockBlat = new MockBlat( ad.getPrimaryTaxon() );
 
-        ad = arrayDesignService.thaw( ad );
+        arrayDesignService.thaw( ad );
 
         Collection<BlatResult> blatResults = aligner.processArrayDesign( ad, mockBlat );
         assertTrue( blatResults.size() > 200 );
@@ -70,6 +70,6 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     public final void tearDown() {
         super.tearDown();
 
-        // todo delete more stuff.
+        // todo remove more stuff.
     }
 }

@@ -18,8 +18,12 @@
  */
 package ubic.gemma.model.common.description;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+
+import java.util.Objects;
 
 /**
  * <p>
@@ -31,25 +35,40 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
  * an object (either another Characteristic or a DataProperty to hold a literal value).
  * </p>
  */
-public abstract class VocabCharacteristic extends CharacteristicImpl {
+public class VocabCharacteristic extends Characteristic {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = 9108913504702857653L;
-    private String valueUri;
 
-    /**
-     * This can be a URI to any resources that describes the characteristic. Often it might be a URI to an OWL ontology
-     * term. If the URI is an instance of an abstract class, the classUri should be filled in with the URI for the
-     * abstract class.
-     */
-    public String getValueUri() {
-        return this.valueUri;
+    @Override
+    public boolean equals( Object object ) {
+        if ( !super.equals( object ) )
+            return false;
+        if ( !( object instanceof VocabCharacteristic ) )
+            return false;
+        VocabCharacteristic that = ( VocabCharacteristic ) object;
+        return Objects.equals( this.getCategoryUri(), that.getCategoryUri() ) && Objects
+                .equals( this.getValueUri(), that.getValueUri() );
     }
 
-    public void setValueUri( String valueUri ) {
-        this.valueUri = valueUri;
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder( 17, 3 ).appendSuper( super.hashCode() ).append( this.getCategoryUri() )
+                .append( this.getValueUri() ).toHashCode();
+    }
+
+    /**
+     * @see ubic.gemma.model.common.description.Characteristic#toString()
+     */
+    @Override
+    public String toString() {
+        // return toString( 0 );
+        return super.toString() + " categoryUri=" + this.getCategoryUri() + " valueUri=" + this.getValueUri();
+    }
+
+    protected String toString( int indent ) {
+        String ind = StringUtils.repeat( "   ", indent );
+        ++indent;
+        return ind + this.getValue() + "\n";
     }
 
     /**
@@ -60,12 +79,12 @@ public abstract class VocabCharacteristic extends CharacteristicImpl {
          * Constructs a new instance of {@link VocabCharacteristic}.
          */
         public static VocabCharacteristic newInstance() {
-            return new VocabCharacteristicImpl();
+            return new VocabCharacteristic();
         }
 
         public static VocabCharacteristic newInstance( String name, String description, AuditTrail auditTrail,
                 String value, String valueUri, String category, String categoryUri, GOEvidenceCode evidenceCode ) {
-            final VocabCharacteristic entity = new VocabCharacteristicImpl();
+            final VocabCharacteristic entity = new VocabCharacteristic();
             entity.setName( name );
             entity.setDescription( description );
             entity.setAuditTrail( auditTrail );

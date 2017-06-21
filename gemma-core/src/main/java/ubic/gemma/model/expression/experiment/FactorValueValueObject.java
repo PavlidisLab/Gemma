@@ -9,6 +9,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import org.apache.commons.lang3.StringUtils;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 
@@ -22,7 +23,7 @@ import java.util.Iterator;
  *
  * @author Paul
  */
-public class FactorValueValueObject implements Serializable {
+public class FactorValueValueObject extends IdentifiableValueObject<FactorValue> implements Serializable {
 
     private static final long serialVersionUID = 3378801249808036785L;
 
@@ -37,40 +38,26 @@ public class FactorValueValueObject implements Serializable {
      */
     private Long charId;
     private Long factorId;
-    private Long id;
     private Boolean isBaseline = false;
     private boolean measurement = false;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
     public FactorValueValueObject() {
-        super();
     }
 
-    /*
-     * FIXME this constructor is messed up. We should not be using the Factor, this is for FactorValues!
-     */
-    public FactorValueValueObject( ExperimentalFactor ef ) {
-
-        this.description = ef.getDescription();
-        this.factor = ef.getName();
-        this.id = ef.getId();
-
-        Characteristic c = ef.getCategory();
-        if ( c == null )
-            this.category = "none";
-        else if ( c instanceof VocabCharacteristic ) {
-            VocabCharacteristic vc = ( VocabCharacteristic ) c;
-            this.category = vc.getCategory();
-        } else
-            this.category = c.getCategory();
+    public FactorValueValueObject( Long id ) {
+        super( id );
     }
 
     public FactorValueValueObject( FactorValue fv ) {
-        super();
+        super( fv.getId() );
         if ( fv.getCharacteristics().size() == 1 ) {
             init( fv, fv.getCharacteristics().iterator().next() );
         } else if ( fv.getCharacteristics().size() > 1 ) {
             /*
-             * Inadequate! Want to capture them all.
+             * FIXME Inadequate! Want to capture them all.
              */
             init( fv, fv.getCharacteristics().iterator().next() );
         } else {
@@ -81,11 +68,13 @@ public class FactorValueValueObject implements Serializable {
     /**
      * @param c - specific characteristic we're focusing on (yes, this is confusing). This is necessary if the
      *          FactorValue has multiple characteristics. DO NOT pass in the ExperimentalFactor category, this just
-     *          confuses things. FIXME this makes no sense and we _do_ pass in the EF category in several places.
+     *          confuses things.
      *          If c is null, the plain "value" is used.
+     * @deprecated FIXME this makes no sense and we _do_ pass in the EF category in several places.s
      */
+    @Deprecated
     public FactorValueValueObject( FactorValue value, Characteristic c ) {
-        super();
+        super( value.getId() );
         init( value, c );
     }
 
@@ -180,20 +169,6 @@ public class FactorValueValueObject implements Serializable {
         this.factor = value;
     }
 
-    /**
-     * @return the id
-     */
-    public Long getId() {
-        return id;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
     public Boolean getIsBaseline() {
         return isBaseline;
     }
@@ -265,7 +240,6 @@ public class FactorValueValueObject implements Serializable {
     }
 
     private void init( FactorValue val, Characteristic c ) {
-        this.setId( val.getId() );
         this.setFactorValue( getSummaryString( val ) );
         this.setFactorId( val.getExperimentalFactor().getId() );
         this.isBaseline = val.getIsBaseline() != null ? val.getIsBaseline() : this.isBaseline;

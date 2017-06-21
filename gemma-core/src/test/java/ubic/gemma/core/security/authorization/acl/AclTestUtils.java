@@ -15,7 +15,7 @@ import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.NotFoundException;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
@@ -55,7 +55,7 @@ public class AclTestUtils {
     public void checkDeletedAcl( Object f ) {
         try {
             Acl acl = getAcl( f );
-            fail( "Failed to  delete ACL for " + f + ", got " + acl );
+            fail( "Failed to  remove ACL for " + f + ", got " + acl );
         } catch ( NotFoundException okaye ) {
             // okay
             if ( log.isDebugEnabled() )
@@ -105,11 +105,10 @@ public class AclTestUtils {
 
     /**
      * Validate ACLs on EE
-     * 
-     * @param ee
+     *
      */
     public void checkEEAcls( ExpressionExperiment ee ) {
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
         checkHasAcl( ee );
         checkHasAces( ee );
 
@@ -167,7 +166,7 @@ public class AclTestUtils {
             assertTrue( getParentAcl( arrayDesign ) == null );
 
             // make sure the localfiles are associated with the array design, not the ee.
-            arrayDesign = arrayDesignService.thawLite( arrayDesign );
+            arrayDesignService.thawLite( arrayDesign );
             for ( LocalFile lf : arrayDesign.getLocalFiles() ) {
                 checkHasAcl( lf );
                 checkLacksAces( lf );
@@ -177,9 +176,7 @@ public class AclTestUtils {
         }
     }
 
-    /**
-     * @param eeset
-     */
+
     public void checkEESubSetAcls( ExpressionExperimentSubSet eeset ) {
         checkEEAcls( eeset.getSourceExperiment() );
         checkHasAcl( eeset );

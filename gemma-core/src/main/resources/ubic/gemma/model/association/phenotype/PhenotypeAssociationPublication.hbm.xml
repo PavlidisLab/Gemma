@@ -10,7 +10,7 @@
          <generator class="native">
          </generator>
       </id>
-      <many-to-one name="citation" class="ubic.gemma.model.common.description.BibliographicReferenceImpl" lazy="proxy"
+      <many-to-one name="citation" class="ubic.gemma.model.common.description.BibliographicReference" lazy="proxy"
 				fetch="select">
 				<column name="CITATION_FK" not-null="false" sql-type="BIGINT" />
 	  </many-to-one>

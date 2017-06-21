@@ -18,10 +18,14 @@
  */
 package ubic.gemma.model.genome.sequenceAnalysis;
 
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
+
 /**
  * 
  */
-public abstract class SequenceSimilaritySearchResult implements java.io.Serializable {
+public abstract class SequenceSimilaritySearchResult implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.

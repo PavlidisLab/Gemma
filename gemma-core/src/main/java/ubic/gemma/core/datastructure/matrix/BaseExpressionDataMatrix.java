@@ -44,7 +44,6 @@ import java.util.*;
 abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatrix<T>, Serializable {
 
     private static final Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class );
-    // protected LinkedHashSet<DesignElement> rowElements;
     protected ExpressionExperiment expressionExperiment;
     protected Collection<QuantitationType> quantitationTypes;
 
@@ -60,9 +59,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     private List<ExpressionDataMatrixRowElement> rowElements = null;
 
-    /* ********************************
+    /*
+     * ********************************
      * Public methods
-     * ********************************/
+     ********************************/
 
     @Override
     public int columns( CompositeSequence el ) {
@@ -195,9 +195,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return this.getRowElements().get( index );
     }
 
-    /* ********************************
+    /*
+     * ********************************
      * Protected methods
-     * ********************************/
+     ********************************/
 
     protected void init() {
         quantitationTypes = new HashSet<>();
@@ -233,9 +234,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return selectVectors( vectors, qTypes );
     }
 
-    /* ********************************
+    /*
+     * ********************************
      * Package-private methods
-     * ********************************/
+     ********************************/
 
     <R, C, V> void setMatBioAssayValues( AbstractMatrix<R, C, V> mat, Integer rowIndex, V[] vals,
             Collection<BioAssay> bioAssays, Iterator<BioAssay> it ) {
@@ -271,6 +273,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * For example, in the following diagram "-" indicates a biomaterial, while "*" indicates a bioassay. Each row of
      * "*" indicates samples run on a different microarray design (a different bio assay material). In the examples we
      * assume there is just a single biomaterial dimension.
+     * 
      * <pre>
      * ---------------
      * *****              -- only a few samples run on this platform
@@ -280,6 +283,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A simpler case:
      * </p>
+     * 
      * <pre>
      * ---------------
      * ***************
@@ -289,6 +293,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * A more typical and easy case (one microarray design used):
      * </p>
+     * 
      * <pre>
      * ----------------
      * ****************
@@ -296,6 +301,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * <p>
      * If every sample was run on two different array designs:
      * </p>
+     * 
      * <pre>
      * ----------------
      * ****************
@@ -303,6 +309,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * </pre>
      * <p>
      * Every sample was run on a different array design:
+     * 
      * <pre>
      * -----------------------
      * ******
@@ -482,9 +489,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return selectVectors( quantitationType, vectors );
     }
 
-    /* ********************************
+    /*
+     * ********************************
      * Private methods
-     * ********************************/
+     ********************************/
 
     private Collection<DesignElementDataVector> selectVectors( QuantitationType quantitationType,
             Collection<? extends DesignElementDataVector> vectors ) {
@@ -535,9 +543,10 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         return vectorSort;
     }
 
-    /* ********************************
+    /*
+     * ********************************
      * Abstract methods
-     * ********************************/
+     ********************************/
 
     protected abstract void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors );
 

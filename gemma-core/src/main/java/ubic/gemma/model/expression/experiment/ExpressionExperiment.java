@@ -36,12 +36,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     private static final long serialVersionUID = -1342753625018841735L;
     private DatabaseEntry accession;
-    private Collection<BioAssay> bioAssays = new HashSet<>();
     private ExperimentalDesign experimentalDesign;
     private Geeq geeq;
     private MeanVarianceRelation meanVarianceRelation;
     private Integer numberOfDataVectors;
-    private Integer numberOfSamples;
     private Collection<ProcessedExpressionDataVector> processedExpressionDataVectors = new HashSet<>();
     private Collection<QuantitationType> quantitationTypes = new HashSet<>();
     private LocalFile rawDataFile;
@@ -49,6 +47,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String shortName;
     private String source;
     private CurationDetails curationDetails;
+
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
@@ -86,6 +88,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     public String toString() {
         return super.toString() + " (" + this.getShortName() + ")";
     }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     public DatabaseEntry getAccession() {
         return this.accession;
@@ -139,20 +145,6 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
 
     public void setNumberOfDataVectors( Integer numberOfDataVectors ) {
         this.numberOfDataVectors = numberOfDataVectors;
-    }
-
-    /**
-     * The number of distinct BioMaterials associated with the experiment.
-     */
-    @SuppressWarnings("unused")
-    public Integer getNumberOfSamples() {
-        // FIXME this is not set. See bug 4307
-        return this.numberOfSamples;
-    }
-
-    @SuppressWarnings("unused")
-    public void setNumberOfSamples( Integer numberOfSamples ) {
-        this.numberOfSamples = numberOfSamples;
     }
 
     public Collection<ProcessedExpressionDataVector> getProcessedExpressionDataVectors() {
@@ -220,6 +212,10 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     public void setCurationDetails( CurationDetails curationDetails ) {
         this.curationDetails = curationDetails;
     }
+
+    /* ********************************
+     * Static classes
+     * ********************************/
 
     /**
      * Constructs new instances of {@link ExpressionExperiment}.

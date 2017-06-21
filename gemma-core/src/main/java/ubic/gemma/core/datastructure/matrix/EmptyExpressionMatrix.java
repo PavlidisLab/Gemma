@@ -31,7 +31,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
  * the sample information organized,but not the data. Data access operations are not supported.
  * 
  * @author paul
- * @version $Id$
  */
 public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
 
@@ -41,9 +40,15 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     private static final long serialVersionUID = 1L;
     private int numCols;
 
-    @Override
-    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
-        throw new UnsupportedOperationException();
+    /**
+     * @param ba
+     */
+    public EmptyExpressionMatrix( BioAssayDimension ba ) {
+        super();
+        super.init();
+        CompositeSequence dummy = CompositeSequence.Factory.newInstance();
+        this.bioAssayDimensions.put( dummy, ba );
+        this.numCols = this.setUpColumnElements();
     }
 
     public EmptyExpressionMatrix( Collection<BioAssayDimension> dims ) {
@@ -56,17 +61,6 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
             this.bioAssayDimensions.put( dummy, ba );
         }
 
-        this.numCols = this.setUpColumnElements();
-    }
-
-    /**
-     * @param ba
-     */
-    public EmptyExpressionMatrix( BioAssayDimension ba ) {
-        super();
-        super.init();
-        CompositeSequence dummy = CompositeSequence.Factory.newInstance();
-        this.bioAssayDimensions.put( dummy, ba );
         this.numCols = this.setUpColumnElements();
     }
 
@@ -125,6 +119,16 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         throw new UnsupportedOperationException();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix#hasMissingValues()
+     */
+    @Override
+    public boolean hasMissingValues() {
+        return false;
+    }
+
     @Override
     public int rows() {
         return 0;
@@ -134,6 +138,11 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     public void set( int row, int column, Object value ) {
         throw new UnsupportedOperationException();
 
+    }
+
+    @Override
+    protected void vectorsToMatrix( Collection<? extends DesignElementDataVector> vectors ) {
+        throw new UnsupportedOperationException();
     }
 
 }

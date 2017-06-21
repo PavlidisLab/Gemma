@@ -57,7 +57,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
             try {
                 principalComponentAnalysisService.removeForExperiment( expExp );
             } catch ( Exception e ) {
-                log.warn( "Could not delete pca for: " + expExp );
+                log.warn( "Could not remove pca for: " + expExp );
                 removedAll = false;
             }
         }
@@ -66,7 +66,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
             try {
                 differentialExpressionAnalysisService.delete( diff );
             } catch ( Exception e ) {
-                log.warn( "Could not delete analysis: " + diff + ": " + e.getMessage() );
+                log.warn( "Could not remove analysis: " + diff + ": " + e.getMessage() );
                 removedAll = false;
             }
         }
@@ -74,7 +74,7 @@ public class AnalysisUtilServiceImpl implements AnalysisUtilService {
             try {
                 coexpressionAnalysisService.delete( coex );
             } catch ( Exception e ) {
-                log.warn( "Could not delete analysis: " + coex + ": " + e.getMessage() );
+                log.warn( "Could not remove analysis: " + coex + ": " + e.getMessage() );
                 removedAll = false;
             }
         }

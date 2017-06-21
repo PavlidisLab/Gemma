@@ -1,8 +1,8 @@
 /*
  * The Gemma project
- * 
+ *
  * Copyright (c) 2006-2011 University of British Columbia
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,17 +18,7 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -36,30 +26,42 @@ import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
+import java.io.Serializable;
+import java.util.*;
+
 /**
+ * Holds the settings used for differential expression analysis, and defines some defaults.
+ *
  * @author keshav
- * @version $Id$
  */
 public class DifferentialExpressionAnalysisConfig implements Serializable {
 
+    /**
+     * Default value for whether empirical Bayes moderation of test statistics should be used.
+     */
+    public static final boolean DEFAULT_EBAYES = false;
+
     private static final long serialVersionUID = 622877438067070041L;
 
-    /**
-     * The default value used for retention of the results. If null, everything will be stored.
-     */
-    public static final Double DEFAULT_QVALUE_THRESHOLD = null;
+    private AnalysisType analysisType = null;
 
-    private AnalysisType analysisType;
+    private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<>();
 
-    private Map<ExperimentalFactor, FactorValue> baseLineFactorValues = new HashMap<ExperimentalFactor, FactorValue>();
+    private boolean ebayes = DEFAULT_EBAYES;
 
-    private List<ExperimentalFactor> factorsToInclude = new ArrayList<ExperimentalFactor>();
+    private List<ExperimentalFactor> factorsToInclude = new ArrayList<>();
 
-    private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<Collection<ExperimentalFactor>>();
+    private Collection<Collection<ExperimentalFactor>> interactionsToInclude = new HashSet<>();
+
+    // save to db or output to console?
+    private boolean persist = true;
 
     private ExperimentalFactor subsetFactor;
 
-    private Double qvalueThreshold = DEFAULT_QVALUE_THRESHOLD;
+    /**
+     * If this is non-null, this was a subset analysis, for this factor value.
+     */
+    private FactorValue subsetFactorValue = null;
 
     public void addInteractionToInclude( Collection<ExperimentalFactor> factors ) {
         interactionsToInclude.add( factors );
@@ -73,11 +75,22 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         return analysisType;
     }
 
+    public void setAnalysisType( AnalysisType analysisType ) {
+        this.analysisType = analysisType;
+    }
+
     /**
      * @return the baseLineFactorValues
      */
     public Map<ExperimentalFactor, FactorValue> getBaseLineFactorValues() {
         return baseLineFactorValues;
+    }
+
+    /**
+     * @param baseLineFactorValues the baseLineFactorValues to set
+     */
+    public void setBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baseLineFactorValues ) {
+        this.baseLineFactorValues = baseLineFactorValues;
     }
 
     /**
@@ -88,6 +101,13 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
+     * @param factorsToInclude the factorsToInclude to set
+     */
+    public void setFactorsToInclude( List<ExperimentalFactor> factorsToInclude ) {
+        this.factorsToInclude = factorsToInclude;
+    }
+
+    /**
      * @return the interactionsToInclude
      */
     public Collection<Collection<ExperimentalFactor>> getInteractionsToInclude() {
@@ -95,10 +115,36 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
-     * @return threshold for retention of results.
+     * @param interactionsToInclude the interactionsToInclude to set
      */
-    public Double getQvalueThreshold() {
-        return qvalueThreshold;
+    public void setInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactionsToInclude ) {
+        this.interactionsToInclude = interactionsToInclude;
+    }
+
+    /**
+     * @return true if empirical Bayes moderated test statisics should be used
+     */
+    public boolean getModerateStatistics() {
+        return this.ebayes;
+    }
+
+    /**
+     * @param ebayes
+     */
+    public void setModerateStatistics( boolean ebayes ) {
+        this.ebayes = ebayes;
+    }
+
+    public boolean getPersist() {
+        return this.persist;
+    }
+
+    /**
+     * @param persist
+     */
+    public void setPersist( boolean persist ) {
+        this.persist = persist;
+
     }
 
     /**
@@ -108,15 +154,22 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
         return subsetFactor;
     }
 
-    public void setAnalysisType( AnalysisType analysisType ) {
-        this.analysisType = analysisType;
+    /**
+     * @param subsetFactor the subsetFactor to set
+     */
+    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
+        this.subsetFactor = subsetFactor;
+    }
+
+    public FactorValue getSubsetFactorValue() {
+        return subsetFactorValue;
     }
 
     /**
-     * @param baseLineFactorValues the baseLineFactorValues to set
+     * @param subsetFactorValue
      */
-    public void setBaseLineFactorValues( Map<ExperimentalFactor, FactorValue> baseLineFactorValues ) {
-        this.baseLineFactorValues = baseLineFactorValues;
+    public void setSubsetFactorValue( FactorValue subsetFactorValue ) {
+        this.subsetFactorValue = subsetFactorValue;
     }
 
     /**
@@ -130,35 +183,7 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     }
 
     /**
-     * @param factorsToInclude the factorsToInclude to set
-     */
-    public void setFactorsToInclude( List<ExperimentalFactor> factorsToInclude ) {
-        this.factorsToInclude = factorsToInclude;
-    }
-
-    /**
-     * @param interactionsToInclude the interactionsToInclude to set
-     */
-    public void setInteractionsToInclude( Collection<Collection<ExperimentalFactor>> interactionsToInclude ) {
-        this.interactionsToInclude = interactionsToInclude;
-    }
-
-    /**
-     * @param qValueThreshold threshold for retention of results. Set to null to retain all.
-     */
-    public void setQvalueThreshold( Double qValueThreshold ) {
-        this.qvalueThreshold = qValueThreshold;
-    }
-
-    /**
-     * @param subsetFactor the subsetFactor to set
-     */
-    public void setSubsetFactor( ExperimentalFactor subsetFactor ) {
-        this.subsetFactor = subsetFactor;
-    }
-
-    /**
-     * @return representation of this analysis (not completely filled in - only the basic parameters)
+     * @return representation of this analysis with populated protocol holding information from this.
      */
     public DifferentialExpressionAnalysis toAnalysis() {
         DifferentialExpressionAnalysis analysis = DifferentialExpressionAnalysis.Factory.newInstance();
@@ -171,32 +196,38 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Object#toString()
      */
     @Override
     public String toString() {
 
         StringBuilder buf = new StringBuilder();
-        buf.append( "Factors:\n" );
-        for ( ExperimentalFactor factor : this.factorsToInclude ) {
-            buf.append( factor + "\n" );
+
+        buf.append( "# AnalysisType: " + this.analysisType + "\n" );
+
+        buf.append( "# Factors: " + StringUtils.join( this.factorsToInclude, " " ) );
+
+        buf.append( "\n" );
+
+        if ( this.subsetFactor != null ) {
+            buf.append( "# SubsetFactor: " + this.subsetFactor + "\n" );
+        } else if ( this.subsetFactorValue != null ) {
+            buf.append( "# Subset analysis for " + this.subsetFactorValue );
         }
-
         if ( !interactionsToInclude.isEmpty() ) {
-            buf.append( "Interactions:\n" );
-
-            for ( Collection<ExperimentalFactor> factors : this.interactionsToInclude ) {
-                buf.append( StringUtils.join( factors, ":" ) + "\n" );
-            }
+            buf.append( "# Interactions:  " + StringUtils.join( interactionsToInclude, ":" ) + "\n" );
         }
 
         if ( !baseLineFactorValues.isEmpty() ) {
-            buf.append( "Baselines:\n" );
-
+            buf.append( "# Baselines:\n" );
             for ( ExperimentalFactor ef : baseLineFactorValues.keySet() ) {
-                buf.append( ef + "-->" + baseLineFactorValues.get( ef ) + "\n" );
+                buf.append( "# " + ef.getName() + ": Baseline = " + baseLineFactorValues.get( ef ) + "\n" );
             }
+        }
+
+        if ( this.ebayes ) {
+            buf.append( "# Empirical Bayes moderated statistics used\n" );
         }
 
         return buf.toString();

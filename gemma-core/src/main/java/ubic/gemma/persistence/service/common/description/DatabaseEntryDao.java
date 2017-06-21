@@ -19,27 +19,14 @@
 package ubic.gemma.persistence.service.common.description;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
- * @see ubic.gemma.model.common.description.DatabaseEntry
+ * @see DatabaseEntry
  */
-public interface DatabaseEntryDao extends BaseDao<DatabaseEntry> {
+public interface DatabaseEntryDao extends BaseVoEnabledDao<DatabaseEntry, DatabaseEntryValueObject> {
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
-
-    /**
-     * 
-     */
-    public DatabaseEntry find( DatabaseEntry databaseEntry );
-
-    /**
-     * 
-     */
-    public DatabaseEntry findByAccession( java.lang.String accession, ExternalDatabase externalDb );
+    DatabaseEntry findByAccession( String accession );
 
 }

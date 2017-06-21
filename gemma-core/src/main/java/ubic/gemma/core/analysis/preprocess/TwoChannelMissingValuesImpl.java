@@ -32,11 +32,11 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -120,7 +120,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,
             double signalToNoiseThreshold, Collection<Double> extraMissingValueIndicators ) {
 
-        expExp = expressionExperimentService.thawLite( expExp );
+        expressionExperimentService.thawLite( expExp );
         Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
                 .getUsefulQuantitationTypes( expExp );
         StopWatch timer = new StopWatch();
@@ -206,15 +206,7 @@ public class TwoChannelMissingValuesImpl implements TwoChannelMissingValues {
      * Attempt to compute 'missing value' information for a two-channel data set. We attempt to do this even if we are
      * missing background intensity information or one intensity channel, though obviously it is better to have all four
      * sets of values.
-     * 
-     * @param source
-     * @param preferred
-     * @param signalChannelA
-     * @param signalChannelB
-     * @param bkgChannelA
-     * @param bkgChannelB
-     * @param signalToNoiseThreshold
-     * @param extraMissingValueIndicators
+     *
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the design elements and
      *         biomaterial dimension represented in the inputs.
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )

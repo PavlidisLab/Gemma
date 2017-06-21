@@ -18,48 +18,24 @@
  */
 package ubic.gemma.model.genome.gene;
 
-/**
- * 
- */
-public abstract class GeneSetMember implements java.io.Serializable {
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.model.genome.Gene;
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.gene.GeneSetMember}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneSetMember}.
-         */
-        public static ubic.gemma.model.genome.gene.GeneSetMember newInstance() {
-            return new ubic.gemma.model.genome.gene.GeneSetMemberImpl();
-        }
+import java.io.Serializable;
 
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneSetMember}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.genome.gene.GeneSetMember newInstance( Double score,
-                ubic.gemma.model.genome.Gene gene ) {
-            final ubic.gemma.model.genome.gene.GeneSetMember entity = new ubic.gemma.model.genome.gene.GeneSetMemberImpl();
-            entity.setScore( score );
-            entity.setGene( gene );
-            return entity;
-        }
-    }
+public abstract class GeneSetMember implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -926690781193097196L;
     private Double score;
-
     private Long id;
-
-    private ubic.gemma.model.genome.Gene gene;
+    private Gene gene;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public GeneSetMember() {
@@ -84,18 +60,20 @@ public abstract class GeneSetMember implements java.io.Serializable {
         return true;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene getGene() {
+    public Gene getGene() {
         return this.gene;
     }
 
-    /**
-     * 
-     */
+    public void setGene( Gene gene ) {
+        this.gene = gene;
+    }
+
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -106,6 +84,10 @@ public abstract class GeneSetMember implements java.io.Serializable {
      */
     public Double getScore() {
         return this.score;
+    }
+
+    public void setScore( Double score ) {
+        this.score = score;
     }
 
     /**
@@ -119,16 +101,27 @@ public abstract class GeneSetMember implements java.io.Serializable {
         return hashCode;
     }
 
-    public void setGene( ubic.gemma.model.genome.Gene gene ) {
-        this.gene = gene;
-    }
+    /**
+     * Constructs new instances of {@link GeneSetMember}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link GeneSetMember}.
+         */
+        public static GeneSetMember newInstance() {
+            return new GeneSetMemberImpl();
+        }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
+        /**
+         * Constructs a new instance of {@link GeneSetMember}, taking all possible
+         * properties (except the identifier(s))as arguments.
+         */
+        public static GeneSetMember newInstance( Double score, ubic.gemma.model.genome.Gene gene ) {
+            final GeneSetMember entity = new GeneSetMemberImpl();
+            entity.setScore( score );
+            entity.setGene( gene );
+            return entity;
+        }
     }
 
 }

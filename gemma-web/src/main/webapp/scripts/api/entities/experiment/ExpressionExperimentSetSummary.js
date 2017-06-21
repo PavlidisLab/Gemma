@@ -44,7 +44,7 @@ Gemma.ExpressionExperimentSetSummary = Ext
                   + Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT + "' />&nbsp;";
             }
             var sl = Gemma.SecurityManager.getSecurityLink(
-               "ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl", e.id, e.isPublic, e.isShared,
+               "ubic.gemma.model.analysis.expression.ExpressionExperimentSet", e.id, e.isPublic, e.isShared,
                e.userCanWrite, null, null, null, e.userOwned );
 
             statusString += sl;

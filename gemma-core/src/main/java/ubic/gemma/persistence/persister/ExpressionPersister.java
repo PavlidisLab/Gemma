@@ -52,41 +52,31 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 abstract public class ExpressionPersister extends ArrayDesignPersister {
 
+    private final Map<String, BioAssayDimension> bioAssayDimensionCache = new ConcurrentHashMap<>();
     @Autowired
     private BioAssayDimensionDao bioAssayDimensionDao;
-
     @Autowired
     private BioAssayDao bioAssayDao;
-
     @Autowired
     private BioMaterialDao bioMaterialDao;
-
     @Autowired
     private CompoundDao compoundDao;
-
     @Autowired
     private ExperimentalDesignDao experimentalDesignDao;
-
     @Autowired
     private ExperimentalFactorDao experimentalFactorDao;
-
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-
     @Autowired
     private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
-
     @Autowired
     private FactorValueDao factorValueDao;
-
     @Autowired
     private ExpressionExperimentPrePersistService expressionExperimentPrePersistService;
 
-    private final Map<String, BioAssayDimension> bioAssayDimensionCache = new ConcurrentHashMap<>();
 
-    @Override
     @Transactional
-    public ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache cachedArrays ) {
+    private ExpressionExperiment persist( ExpressionExperiment ee, ArrayDesignsForExperimentCache cachedArrays ) {
 
         if ( ee == null )
             return null;
@@ -107,7 +97,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             log.info( ">>>>>>>>>> Persisting " + ee );
 
-            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
+            this.getSession().setFlushMode( FlushMode.COMMIT );
 
             ee.setPrimaryPublication( ( BibliographicReference ) persist( ee.getPrimaryPublication() ) );
 
@@ -272,8 +262,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 throw new IllegalStateException( "You must provide the platform in the cache object" );
             }
 
-            arrayDesignUsed = ( ArrayDesign ) this.getSessionFactory().getCurrentSession()
-                    .load( ArrayDesign.class, arrayDesignUsed.getId() );
+            arrayDesignUsed = ( ArrayDesign ) this.getSession().load( ArrayDesign.class, arrayDesignUsed.getId() );
 
             if ( arrayDesignUsed == null ) {
                 throw new IllegalStateException( "No platform matching " + arrayDesign.getShortName() );
@@ -349,7 +338,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         assert dataVector.getQuantitationType() != null;
         QuantitationType qt = persistQuantitationType( dataVector.getQuantitationType() );
-        qt = ( QuantitationType ) this.getSessionFactory().getCurrentSession().merge( qt );
+        qt = ( QuantitationType ) this.getSession().merge( qt );
         dataVector.setQuantitationType( qt );
 
         return bioAssayDimension;

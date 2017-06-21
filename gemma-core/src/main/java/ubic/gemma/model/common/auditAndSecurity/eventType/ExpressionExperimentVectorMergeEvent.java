@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that the "Vector merging" has been done on the associated experiment.
  * </p>
  */
-public abstract class ExpressionExperimentVectorMergeEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class ExpressionExperimentVectorMergeEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -36,7 +36,7 @@ public abstract class ExpressionExperimentVectorMergeEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent();
         }
 
     }

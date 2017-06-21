@@ -23,7 +23,7 @@ import java.util.List;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -65,7 +65,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         }
 
         assertNotNull( newee );
-        newee = eeService.thawLite( newee );
+        eeService.thawLite( newee );
 
         assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
 
@@ -89,11 +89,11 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         }
 
         assertNotNull( newee );
-        newee = eeService.thawLite( newee );
+        eeService.thawLite( newee );
 
         assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
 
-        newee = eeService.thawLite( newee );
+        eeService.thawLite( newee );
 
         for ( ExperimentalFactor ef : newee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( ef.getName().equals( ExperimentalFactorService.BATCH_FACTOR_NAME ) ) {

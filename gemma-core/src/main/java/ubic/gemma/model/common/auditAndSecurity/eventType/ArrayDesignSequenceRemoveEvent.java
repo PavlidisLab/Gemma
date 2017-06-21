@@ -26,8 +26,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * misleading.
  * </p>
  */
-public abstract class ArrayDesignSequenceRemoveEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignSequenceRemoveEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -39,7 +39,7 @@ public abstract class ArrayDesignSequenceRemoveEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent();
         }
 
     }

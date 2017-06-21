@@ -102,7 +102,7 @@ public class CommonQueries {
             // ids might be invalid, but also might be subsets. Note that the output key is for the subset, not the
             // source.
             String subsetQuery =
-                    "select distinct ees.id,ad.id from ExpressionExperimentSubSetImpl as ees join ees.sourceExperiment ee "
+                    "select distinct ees.id,ad.id from ExpressionExperimentSubSet as ees join ees.sourceExperiment ee "
                             + " join ee.bioAssays b join b.arrayDesignUsed ad where ees.id in (:ees)";
             Collection<Long> possibleEEsubsets = ListUtils.removeAll( ees, ee2ads.keySet() ); // note:
             // CollectionUtils.removeAll
@@ -186,8 +186,8 @@ public class CommonQueries {
      */
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
 
-        final String csQueryString = "select distinct cs from GeneImpl as gene"
-                + " join gene.products gp, BioSequence2GeneProduct ba, CompositeSequenceImpl cs "
+        final String csQueryString = "select distinct cs from Gene as gene"
+                + " join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
                 + " where ba.bioSequence.id=cs.biologicalCharacteristic.id and ba.geneProduct.id = gp.id and gene.id = :gene ";
 
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
@@ -261,8 +261,8 @@ public class CommonQueries {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProduct ba, CompositeSequenceImpl cs "
+        final String csQueryString = "select distinct cs, gene from Gene as gene"
+                + " inner join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes) and cs.arrayDesign in (:ads) ";
 
@@ -291,8 +291,8 @@ public class CommonQueries {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProduct ba, CompositeSequenceImpl cs "
+        final String csQueryString = "select distinct cs, gene from Gene as gene"
+                + " inner join gene.products gp, BioSequence2GeneProduct ba, CompositeSequence cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
                 + " and gene in (:genes)  ";
 

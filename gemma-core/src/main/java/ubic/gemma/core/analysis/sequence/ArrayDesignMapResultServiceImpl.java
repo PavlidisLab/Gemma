@@ -51,118 +51,42 @@ import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
 @Component
 public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultService {
 
-    private static Log log = LogFactory.getLog( ArrayDesignMapResultServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ArrayDesignMapResultServiceImpl.class.getName() );
+
+    private final BlatResultService blatResultService;
+    private final BlatAssociationService blatAssociationService;
+    private final ArrayDesignService arrayDesignService;
+    private final CompositeSequenceService compositeSequenceService;
 
     @Autowired
-    private BlatResultService blatResultService;
+    public ArrayDesignMapResultServiceImpl( BlatResultService blatResultService,
+            BlatAssociationService blatAssociationService, ArrayDesignService arrayDesignService,
+            CompositeSequenceService compositeSequenceService ) {
+        this.blatResultService = blatResultService;
+        this.blatAssociationService = blatAssociationService;
+        this.arrayDesignService = arrayDesignService;
+        this.compositeSequenceService = compositeSequenceService;
+    }
 
-    @Autowired
-    private BlatAssociationService blatAssociationService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private CompositeSequenceService compositeSequenceService;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService#summarizeMapResults(ubic.gemma.model.expression.
-     * arrayDesign .ArrayDesign)
-     */
     @Override
     public Collection<CompositeSequenceMapSummary> summarizeMapResults( ArrayDesign arrayDesign ) {
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thaw( arrayDesign );
         return this.summarizeMapResults( arrayDesign.getCompositeSequences() );
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService#getSummaryMapValueObjects(ubic.gemma.model.expression
-     * .arrayDesign.ArrayDesign)
-     */
+
     @Override
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( ArrayDesign arrayDesign ) {
         Collection<Object[]> sequenceData = compositeSequenceService.getRawSummary( arrayDesign, null );
         return getSummaryMapValueObjects( sequenceData );
     }
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // * ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService#getSmallerSummaryMapValueObjects(java.util.Collection)
-    // */
-    // @Override
-    // public Collection<CompositeSequenceMapValueObject> getSmallerSummaryMapValueObjects(
-    // Collection<Object[]> sequenceData ) {
-    // Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<>();
-    // Map<Long, Set<Long>> blatResultCount = new HashMap<>();
-    //
-    // for ( Object o : sequenceData ) {
-    // Object[] row = ( Object[] ) o;
-    //
-    // Long csId = ( ( BigInteger ) row[0] ).longValue();
-    // CompositeSequenceMapValueObject vo;
-    // if ( summary.containsKey( csId ) ) {
-    // vo = summary.get( csId );
-    // } else {
-    // vo = new CompositeSequenceMapValueObject();
-    // summary.put( csId, vo );
-    // }
-    //
-    // String csName = ( String ) row[1];
-    // String bioSequenceName = ( String ) row[2];
-    // String bioSequenceNcbiId = ( String ) row[3];
-    //
-    // Object blatId = row[4];
-    //
-    // Object geneId = row[5];
-    //
-    // String geneName = ( String ) row[6];
-    //
-    // vo.setCompositeSequenceId( csId.toString() );
-    // vo.setCompositeSequenceName( csName );
-    //
-    // // fill in value object
-    // if ( bioSequenceName != null && vo.getBioSequenceName() == null ) {
-    // vo.setBioSequenceName( bioSequenceName );
-    // }
-    //
-    // // fill in value object
-    // if ( bioSequenceNcbiId != null && vo.getBioSequenceNcbiId() == null ) {
-    // vo.setBioSequenceNcbiId( bioSequenceNcbiId );
-    // }
-    //
-    // countBlatHits( blatResultCount, csId, vo, blatId );
-    //
-    // // fill in value object for genes
-    // if ( geneId != null ) {
-    // Map<String, GeneValueObject> geneSet = vo.getGenes();
-    // if ( !geneSet.containsKey( geneId ) ) {
-    // GeneValueObject gVo = new GeneValueObject();
-    // gVo.setId( ( ( BigInteger ) geneId ).longValue() );
-    // gVo.setOfficialSymbol( geneName );
-    // geneSet.put( ( ( BigInteger ) geneId ).toString(), gVo );
-    // }
-    // }
-    //
-    // }
-    //
-    // return summary.values();
-    // }
-
     /**
      * count the number of distinct blat hits
-     * 
-     * @param row
+     *
      * @param blatResultCount map of csid to blat result hashes.
-     * @param csId
-     * @param vo
+
      */
     private void countBlatHits( Object[] row, Map<Long, Set<Integer>> blatResultCount, Long csId,
             CompositeSequenceMapValueObject vo ) {
@@ -197,11 +121,6 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService#getSummaryMapValueObjects(java.util.Collection)
-     */
     @Override
     public Collection<CompositeSequenceMapValueObject> getSummaryMapValueObjects( Collection<Object[]> sequenceData ) {
         Map<Long, CompositeSequenceMapValueObject> summary = new HashMap<>();
@@ -245,8 +164,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
                 // if the geneProduct is already in the map, do not do anything.
                 // if it isn't there, put it in the map
                 if ( !geneProductSet.containsKey( geneProductId ) ) {
-                    GeneProductValueObject gpVo = new GeneProductValueObject();
-                    gpVo.setId( geneProductId.longValue() );
+                    GeneProductValueObject gpVo = new GeneProductValueObject( geneProductId );
                     gpVo.setName( geneProductName );
                     gpVo.setNcbiId( geneProductAccession );
                     if ( geneProductGeneId != null ) {
@@ -258,8 +176,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
 
                 Map<String, GeneValueObject> geneSet = vo.getGenes();
                 if ( !geneSet.containsKey( geneId ) ) {
-                    GeneValueObject gVo = new GeneValueObject();
-                    gVo.setId( ( ( BigInteger ) geneId ).longValue() );
+                    GeneValueObject gVo = new GeneValueObject(( ( BigInteger ) geneId ).longValue());
                     gVo.setOfficialSymbol( geneName );
                     gVo.setNcbiId( geneAccession );
                     geneSet.put( ( ( BigInteger ) geneId ).toString(), gVo );
@@ -273,7 +190,7 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
             String csDesc = ( String ) row[20];
             vo.setCompositeSequenceDescription( csDesc );
 
-            vo.setArrayDesignId( arrayDesignId.longValue() );
+            vo.setArrayDesignId( arrayDesignId );
 
             vo.setCompositeSequenceId( csId.toString() );
             vo.setCompositeSequenceName( csName );
@@ -298,15 +215,10 @@ public class ArrayDesignMapResultServiceImpl implements ArrayDesignMapResultServ
         return summary.values();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService#summarizeMapResults(java.util.Collection)
-     */
     @Override
     public Collection<CompositeSequenceMapSummary> summarizeMapResults(
             Collection<CompositeSequence> compositeSequences ) {
-        Collection<CompositeSequenceMapSummary> result = new HashSet<CompositeSequenceMapSummary>();
+        Collection<CompositeSequenceMapSummary> result = new HashSet<>();
 
         int count = 0;
         for ( CompositeSequence cs : compositeSequences ) {

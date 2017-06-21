@@ -54,7 +54,7 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * Methods that delete items in the persistent store
+     * Methods that remove items in the persistent store
      */
     @Pointcut("ubic.gemma.core.util.SystemArchitectureAspect.daoMethod() && (execution(* remove(..)) || execution(* delete*(..)))")
     public void deleter() {//
@@ -82,7 +82,7 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * Create, delete or update methods - with the exception of @Services flagged as @Infrastructure TODO can remove
+     * Create, remove or update methods - with the exception of @Services flagged as @Infrastructure TODO can remove
      * that, probably.
      */
     @Pointcut(" ubic.gemma.core.util.SystemArchitectureAspect.creator() || ubic.gemma.core.util.SystemArchitectureAspect.updater() || ubic.gemma.core.util.SystemArchitectureAspect.deleter( )")

@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -68,7 +68,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
     @Test
     public void test() throws Exception {
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 2, factors.size() );
@@ -86,7 +86,6 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
         config.setAnalysisType( aa );
         config.setFactorsToInclude( factors );
         config.addInteractionToInclude( factors );
-        config.setQvalueThreshold( null );
 
         analyzer = this.getBean( DiffExAnalyzer.class );
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
@@ -102,7 +101,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
     @After
     public void teardown() throws Exception {
-        if ( ee != null ) expressionExperimentService.delete( ee );
+        if ( ee != null ) expressionExperimentService.remove( ee );
     }
 
     @Before
@@ -119,9 +118,9 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
+        Collection<ExperimentalFactor> toremove = new HashSet<>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );
@@ -133,7 +132,7 @@ public class TwoWayAnovaWithInteractionsTest2 extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         designImporter.importDesign(
                 ee,

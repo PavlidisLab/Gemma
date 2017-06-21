@@ -21,7 +21,6 @@ package ubic.gemma.model.expression.experiment;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class GeeqImpl extends Geeq {
 

@@ -18,58 +18,52 @@
  */
 package ubic.gemma.core.analysis.report;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+
+import java.util.Collection;
 
 /**
  * @author paul
- * @version $Id$
  */
 public interface ArrayDesignReportService {
 
     /**
      * Report summarizing _all_ array designs.
      */
-    public void generateAllArrayDesignReport();
+    void generateAllArrayDesignReport();
 
     /**
      * Generate reports for all array designs, as well as the "global" report.
      */
-    @Secured( { "GROUP_AGENT" })
-    public void generateArrayDesignReport();
+    @Secured({ "GROUP_AGENT" })
+    void generateArrayDesignReport();
 
-    /**
-     * @param adVo
-     */
-    @Secured( { "GROUP_AGENT" })
-    public void generateArrayDesignReport( ArrayDesignValueObject adVo );
+    @Secured({ "GROUP_AGENT" })
+    void generateArrayDesignReport( ArrayDesignValueObject adVo );
 
-    /**
-     * @param id
-     * @return
-     */
-    @Secured( { "GROUP_AGENT" })
-    public ArrayDesignValueObject generateArrayDesignReport( Long id );
+    @Secured({ "GROUP_AGENT" })
+    ArrayDesignValueObject generateArrayDesignReport( ArrayDesign arrayDesign );
 
-    public ArrayDesignValueObject getSummaryObject( Long id );
+    ArrayDesignValueObject getSummaryObject( Long id );
 
-    public ArrayDesignValueObject getSummaryObject();
+    ArrayDesignValueObject getSummaryObject();
 
-    public void fillEventInformation( Collection<ArrayDesignValueObject> adVos );
+    Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids );
 
-    public void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects );
+    void fillEventInformation( Collection<ArrayDesignValueObject> adVos );
 
-    public void fillInValueObjects( Collection<ArrayDesignValueObject> adVos );
+    void fillInSubsumptionInfo( Collection<ArrayDesignValueObject> valueObjects );
 
-    public String getLastSequenceUpdateEvent( Long id );
+    void fillInValueObjects( Collection<ArrayDesignValueObject> adVos );
 
-    public String getLastSequenceAnalysisEvent( Long id );
+    String getLastSequenceUpdateEvent( Long id );
 
-    public String getLastRepeatMaskEvent( Long id );
+    String getLastSequenceAnalysisEvent( Long id );
 
-    public String getLastGeneMappingEvent( Long id );
+    String getLastRepeatMaskEvent( Long id );
+
+    String getLastGeneMappingEvent( Long id );
 
 }

@@ -18,30 +18,24 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface ChromosomeService {
+public interface ChromosomeService extends BaseService<Chromosome>{
 
     /**
      * Locate by name e.g. 'X'.
-     * 
-     * @param name
-     * @return
      */
-    public Collection<Chromosome> find( String name, Taxon taxon );
+    Collection<Chromosome> find( String name, Taxon taxon );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.genome.Chromosome findOrCreate( String namem, Taxon taxon );
+    @Secured({ "GROUP_USER" })
+    ubic.gemma.model.genome.Chromosome findOrCreate( String name, Taxon taxon );
 
 }

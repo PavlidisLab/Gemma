@@ -18,94 +18,22 @@
  */
 package ubic.gemma.persistence.service.common.protocol;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.protocol.Protocol;
+import ubic.gemma.persistence.service.AbstractService;
 
 /**
  * @author keshav
  * @author pavlidis
- * @version $Id$
  * @see ProtocolService
  */
 @Service
-public class ProtocolServiceImpl implements ProtocolService {
+public class ProtocolServiceImpl extends AbstractService<Protocol> implements ProtocolService {
 
     @Autowired
-    private ProtocolDao protocolDao;
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Protocol> loadAll() {
-        return ( Collection<Protocol> ) this.protocolDao.loadAll();
-    }
-
-    /**
-     * @see ProtocolService#find(ubic.gemma.model.common.protocol.Protocol)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Protocol find( final Protocol protocol ) {
-        try {
-            return this.protocolDao.find( protocol );
-        } catch ( Throwable th ) {
-            throw new ProtocolServiceException(
-                    "Error performing 'ProtocolService.find(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see ProtocolService#findOrCreate(ubic.gemma.model.common.protocol.Protocol)
-     */
-    @Override
-    @Transactional
-    public Protocol findOrCreate( final Protocol protocol ) {
-        try {
-            return this.protocolDao.findOrCreate( protocol );
-        } catch ( Throwable th ) {
-            throw new ProtocolServiceException(
-                    "Error performing 'ProtocolService.findOrCreate(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see ProtocolService#remove(ubic.gemma.model.common.protocol.Protocol)
-     */
-    @Override
-    @Transactional
-    public void remove( final ubic.gemma.model.common.protocol.Protocol protocol ) {
-        try {
-            this.protocolDao.remove( protocol );
-        } catch ( Throwable th ) {
-            throw new ProtocolServiceException(
-                    "Error performing 'ProtocolService.remove(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see ProtocolService#update(ubic.gemma.model.common.protocol.Protocol)
-     */
-    @Override
-    @Transactional
-    public void update( final ubic.gemma.model.common.protocol.Protocol protocol ) {
-        try {
-            this.protocolDao.update( protocol );
-        } catch ( Throwable th ) {
-            throw new ProtocolServiceException(
-                    "Error performing 'ProtocolService.update(ubic.gemma.model.common.protocol.Protocol protocol)' --> "
-                            + th,
-                    th );
-        }
+    public ProtocolServiceImpl( ProtocolDao protocolDao ) {
+        super( protocolDao );
     }
 
 }

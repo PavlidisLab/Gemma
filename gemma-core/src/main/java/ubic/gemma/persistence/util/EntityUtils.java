@@ -225,7 +225,7 @@ public class EntityUtils {
         // will be empty if anonymous
         //noinspection unchecked
         Collection<String> groups = sess.createQuery(
-                "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
+                "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
                 .setParameter( "user", userName ).list();
 
         Query query = sess.createSQLQuery( queryString ).setParameter( "clazz", securedClass.getName() )

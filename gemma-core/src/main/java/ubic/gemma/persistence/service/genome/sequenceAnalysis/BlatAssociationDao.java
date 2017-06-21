@@ -18,41 +18,25 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.persistence.service.BaseDao;
+
+import java.util.Collection;
 
 /**
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation
  */
 public interface BlatAssociationDao extends BaseDao<BlatAssociation> {
 
-    /**
-     * 
-     */
-    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
-    /**
-     * 
-     */
-    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
+    java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
 
-    /**
-     * 
-     */
-    public void thaw( java.util.Collection<BlatAssociation> blatAssociations );
+    void thaw( Collection<BlatAssociation> blatAssociations );
 
-    /**
-     * 
-     */
-    public void thaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
+    void thaw( BlatAssociation blatAssociation );
 
-    /**
-     * @param toRemove
-     * @return
-     */
-    public Collection<? extends BlatAssociation> find( Collection<GeneProduct> toRemove );
+    Collection<BlatAssociation> find( Collection<GeneProduct> toRemove );
 
 }

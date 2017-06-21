@@ -135,13 +135,13 @@ public class ArrayDesignFormController extends BaseFormController {
             }
             Collection<Long> ids = new HashSet<Long>();
             ids.add( id );
-            Collection<ArrayDesignValueObject> arrayDesigns = arrayDesignService.loadValueObjects( ids );
+            Collection<ArrayDesignValueObject> arrayDesigns = arrayDesignService.loadValueObjectsByIds( ids );
             if ( arrayDesigns.size() > 0 ) arrayDesign = arrayDesigns.iterator().next();
 
         }
 
         if ( arrayDesign == null ) {
-            return new ArrayDesignValueObject();
+            return new ArrayDesignValueObject(-1L);
         }
         return arrayDesign;
     }

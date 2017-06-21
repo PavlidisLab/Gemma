@@ -16,6 +16,7 @@ package ubic.gemma.core.association.phenotype;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -82,7 +83,7 @@ public interface PhenotypeAssociationManagerService {
      * @param userName user name
      * @return evidence satisfying the specified filters
      */
-    Collection<EvidenceValueObject> findEvidenceByFilters( Long taxonId, Integer limit, String userName );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByFilters( Long taxonId, Integer limit, String userName );
 
     /**
      * Return all evidence for a specific gene id
@@ -90,7 +91,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
-    Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneId( Long geneId );
 
     /**
      * Return all evidence for a specific gene id with evidence flagged, indicating more information
@@ -100,7 +101,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidenceFilter      can specify a taxon and to show modifiable evidence (optional)
      * @return The Gene we are interested in
      */
-    Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneId( Long geneId, Set<String> phenotypesValuesUri,
             EvidenceFilter evidenceFilter );
 
     /**
@@ -109,7 +110,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    Collection<EvidenceValueObject> findEvidenceByGeneNCBI( Integer geneNCBI );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByGeneNCBI( Integer geneNCBI );
 
     /**
      * return the list of the owners that have evidence in the system
@@ -158,7 +159,7 @@ public interface PhenotypeAssociationManagerService {
      *
      * @param id The Evidence database id
      */
-    EvidenceValueObject load( Long id );
+    EvidenceValueObject<? extends PhenotypeAssociation> load( Long id );
 
     /**
      * load all the valueUri and value of phenotype present in Neurocarta
@@ -186,7 +187,7 @@ public interface PhenotypeAssociationManagerService {
     /**
      * use if we want to reimport data from a specific external Database
      */
-    Collection<EvidenceValueObject> loadEvidenceWithExternalDatabaseName( String externalDatabaseName, Integer limit );
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithExternalDatabaseName( String externalDatabaseName, Integer limit );
 
     /**
      * returns an DifferentialExpressionEvidence for a geneDifferentialExpressionMetaAnalysisId if one exists (used to
@@ -201,7 +202,7 @@ public interface PhenotypeAssociationManagerService {
     /**
      * find all evidence that doesn't come from an external source
      */
-    Collection<EvidenceValueObject> loadEvidenceWithoutExternalDatabaseName();
+    Collection<EvidenceValueObject<? extends PhenotypeAssociation>> loadEvidenceWithoutExternalDatabaseName();
 
     /**
      * find statistics on evidence used in neurocarta
@@ -228,7 +229,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return Status of the operation
      */
-    ValidateEvidenceValueObject makeEvidence( EvidenceValueObject evidence );
+    ValidateEvidenceValueObject makeEvidence( EvidenceValueObject<? extends PhenotypeAssociation> evidence );
 
     /**
      * Removes an evidence
@@ -269,7 +270,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidenceValueObject the evidence with modified fields
      * @return Status of the operation
      */
-    ValidateEvidenceValueObject update( EvidenceValueObject evidenceValueObject );
+    ValidateEvidenceValueObject update( EvidenceValueObject<? extends PhenotypeAssociation> evidenceValueObject );
 
     /**
      * Validate an Evidence before we create it
@@ -277,7 +278,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
-    ValidateEvidenceValueObject validateEvidence( EvidenceValueObject evidence );
+    ValidateEvidenceValueObject validateEvidence( EvidenceValueObject<PhenotypeAssociation> evidence );
 
     /**
      * Creates a dump of all evidence in the database that can be downloaded on the client, this is run once per month

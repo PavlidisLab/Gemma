@@ -14,46 +14,41 @@
  */
 package ubic.gemma.core.association.phenotype;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.AbstractOntologyService;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.core.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
-import ubic.gemma.core.ontology.OntologyService;
+
+import java.util.*;
 
 /**
  * @author nicolas
- * @version $Id$
  */
 @Component
 public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, PhenotypeAssoOntologyHelper {
 
-    private static Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
+    private static final Log log = LogFactory.getLog( PhenotypeAssoOntologyHelperImpl.class );
 
-    private List<AbstractOntologyService> ontologies = new ArrayList<AbstractOntologyService>();
+    private final List<AbstractOntologyService> ontologies = new ArrayList<>();
+
+    private final OntologyService ontologyService;
 
     @Autowired
-    private OntologyService ontologyService;
+    public PhenotypeAssoOntologyHelperImpl( OntologyService ontologyService ) {
+        this.ontologyService = ontologyService;
+    }
 
     @Override
     public void afterPropertiesSet() {
@@ -84,11 +79,6 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PhenotypeAssoOntologyHelper#areOntologiesAllLoaded()
-     */
     @Override
     public boolean areOntologiesAllLoaded() {
         /*
@@ -109,18 +99,11 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
             return false;
         }
 
-        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded()
-                && this.ontologyService.getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
+        return ( this.ontologyService.getDiseaseOntologyService().isOntologyLoaded() && this.ontologyService
+                .getHumanPhenotypeOntologyService().isOntologyLoaded() && this.ontologyService
                 .getMammalianPhenotypeOntologyService().isOntologyLoaded() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * PhenotypeAssoOntologyHelper#characteristicValueObject2Characteristic(ubic.gemma
-     * .model.genome.gene.phenotype.valueObject.CharacteristicValueObject)
-     */
     @Override
     public VocabCharacteristic characteristicValueObject2Characteristic(
             CharacteristicValueObject characteristicValueObject ) {
@@ -135,8 +118,8 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         } else {
 
             // format the query for lucene to look for ontology terms with an exact match for the value
-            String value = "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " )
-                    + "\"";
+            String value =
+                    "\"" + StringUtils.join( characteristicValueObject.getValue().trim().split( " " ), " AND " ) + "\"";
 
             Collection<OntologyTerm> ontologyTerms = this.ontologyService.findTerms( value );
 
@@ -150,15 +133,10 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         return characteristic;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PhenotypeAssoOntologyHelper#findAllChildrenAndParent(java.util.Collection)
-     */
     @Override
     public Set<String> findAllChildrenAndParent( Collection<OntologyTerm> ontologyTerms ) {
 
-        Set<String> phenotypesFoundAndChildren = new HashSet<String>();
+        Set<String> phenotypesFoundAndChildren = new HashSet<>();
 
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
             // add the parent term found
@@ -174,35 +152,26 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         return phenotypesFoundAndChildren;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PhenotypeAssoOntologyHelper#findOntologyTermByUri(java.lang.String)
-     */
     @Override
     public OntologyTerm findOntologyTermByUri( String valueUri ) throws EntityNotFoundException {
 
         if ( valueUri.isEmpty() ) {
             throw new IllegalArgumentException( "URI to load was blank." );
         }
-
-        OntologyTerm ontologyTerm = null;
+        System.out.println(valueUri);
+        OntologyTerm ontologyTerm;
         for ( AbstractOntologyService ontology : this.ontologies ) {
             ontologyTerm = ontology.getTerm( valueUri );
-            if ( ontologyTerm != null ) return ontologyTerm;
+            if ( ontologyTerm != null )
+                return ontologyTerm;
         }
 
         throw new EntityNotFoundException( valueUri );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PhenotypeAssoOntologyHelper#findPhenotypesInOntology(java.lang.String)
-     */
     @Override
     public Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
-        Map<String, OntologyTerm> uniqueValueTerm = new HashMap<String, OntologyTerm>();
+        Map<String, OntologyTerm> uniqueValueTerm = new HashMap<>();
 
         for ( AbstractOntologyService ontology : this.ontologies ) {
             Collection<OntologyTerm> hits = ontology.findTerm( searchQuery );
@@ -217,35 +186,27 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
         return ontology2CharacteristicValueObject( uniqueValueTerm.values() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PhenotypeAssoOntologyHelper#findValueUriInOntology(java.lang.String)
-     */
     @Override
     public Collection<OntologyTerm> findValueUriInOntology( String searchQuery ) {
 
-        Collection<OntologyTerm> results = new TreeSet<OntologyTerm>();
+        Collection<OntologyTerm> results = new TreeSet<>();
         for ( AbstractOntologyService ontology : this.ontologies ) {
             assert ontology != null;
             Collection<OntologyTerm> found = ontology.findTerm( searchQuery );
-            if ( found != null && !found.isEmpty() ) results.addAll( found );
+            if ( found != null && !found.isEmpty() )
+                results.addAll( found );
         }
 
         return results;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see PhenotypeAssoOntologyHelper#valueUri2Characteristic(java.lang.String)
-     */
     @Override
     public Characteristic valueUri2Characteristic( String valueUri ) {
 
         try {
             OntologyTerm o = findOntologyTermByUri( valueUri );
-            if ( o == null ) return null;
+            if ( o == null )
+                return null;
             VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
             myPhenotype.setValueUri( o.getUri() );
             myPhenotype.setValue( o.getLabel() );
@@ -260,18 +221,18 @@ public class PhenotypeAssoOntologyHelperImpl implements InitializingBean, Phenot
 
     /**
      * Ontology term to CharacteristicValueObject
-     * 
-     * @param ontologyTerms
+     *
      * @return collection of the input, converted to 'shell' CharacteristicValueObjects (which have other slots we want
-     *         to use)
+     * to use)
      */
-    private Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms ) {
+    private Set<CharacteristicValueObject> ontology2CharacteristicValueObject(
+            Collection<OntologyTerm> ontologyTerms ) {
 
-        Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> characteristicsVO = new HashSet<>();
 
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel().toLowerCase(),
-                    ontologyTerm.getUri() );
+            CharacteristicValueObject phenotype = new CharacteristicValueObject( -1L,
+                    ontologyTerm.getLabel().toLowerCase(), ontologyTerm.getUri() );
             characteristicsVO.add( phenotype );
         }
         return characteristicsVO;

@@ -23,7 +23,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
@@ -54,9 +54,12 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
                 "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ),
                 "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ), false );
 
-        ad1 = arrayDesignService.thawLite( arrayDesignService.load( ad1.getId() ) );
-        ad2 = arrayDesignService.thawLite( arrayDesignService.load( ad2.getId() ) );
-        ad3 = arrayDesignService.thawLite( arrayDesignService.load( ad3.getId() ) );
+        ad1 = arrayDesignService.load( ad1.getId() );
+        arrayDesignService.thawLite( ad1 );
+        ad2 = arrayDesignService.load( ad2.getId() );
+        arrayDesignService.thawLite( ad2 );
+        ad3 = arrayDesignService.load( ad3.getId() );
+        arrayDesignService.thawLite( ad3 );
 
         /*
          * merged contains all three.
@@ -69,9 +72,9 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         assertEquals( ad1ad2ad3, ad1.getMergedInto() );
         assertEquals( ad1ad2ad3, ad2.getMergedInto() );
         assertEquals( ad1ad2ad3, ad3.getMergedInto() );
-        assertEquals( ArrayDesignMergeEventImpl.class, ad1.getAuditTrail().getLast().getEventType().getClass() );
-        assertEquals( ArrayDesignMergeEventImpl.class, ad2.getAuditTrail().getLast().getEventType().getClass() );
-        assertEquals( ArrayDesignMergeEventImpl.class, ad3.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ad1.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ad2.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEvent.class, ad3.getAuditTrail().getLast().getEventType().getClass() );
 
         /*
          * Making a new one out of a merged design and an unmerged

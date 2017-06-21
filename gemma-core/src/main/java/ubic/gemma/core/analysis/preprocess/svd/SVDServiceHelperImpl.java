@@ -37,7 +37,7 @@ import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.persistence.service.analysis.expression.pca.PrincipalComponentAnalysisService;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -631,12 +631,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
 
     /**
      * FIXME make this a transactional method.
-     * 
-     * @param ee
-     * @param svd
-     * @param v
-     * @param b
-     * @return
+     *
      */
     private PrincipalComponentAnalysis updatePca( ExpressionExperiment ee, ExpressionDataSVD svd,
             DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension b ) {
@@ -644,7 +639,7 @@ public class SVDServiceHelperImpl implements SVDServiceHelper {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
                 svd.getEigenvalues(), v, b, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
 
-        ee = expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
+        expressionExperimentService.thawLite( ee ); // I wish this wasn't needed.
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
         return pca;
     }

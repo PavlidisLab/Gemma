@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.math.Rank;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.service.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
@@ -273,12 +273,9 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
         return gomap;
     }
 
-    /**
-     * @param genes
-     * @param mfs
-     */
+
     private void saveBatch( Collection<Gene> genes, Map<Gene, Multifunctionality> mfs ) {
-        genes = geneService.thawLite( genes );
+        geneService.thawLite( genes );
         for ( Gene g : genes ) {
             if ( !mfs.containsKey( g ) ) {
                 g.setMultifunctionality( null );

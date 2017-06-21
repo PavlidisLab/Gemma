@@ -104,7 +104,7 @@ import ubic.gemma.core.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataWriterUtils;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
@@ -206,7 +206,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
@@ -222,7 +222,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionDataWriterUtils.appendBaseHeader( ee, "Outliers removed", buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-        ee = expressionExperimentService.thawLiter( ee );
+        expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
@@ -272,7 +272,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionDataWriterUtils.appendBaseHeader( ee, "Sample outlier", buf );
 
         ExperimentalDesignWriter edWriter = new ExperimentalDesignWriter();
-        ee = expressionExperimentService.thawLiter( ee );
+        expressionExperimentService.thawLiter( ee );
         edWriter.write( writer, ee, bioAssays, false, true, true );
 
         ModelAndView mav = new ModelAndView( new TextView() );
@@ -280,12 +280,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return mav;
     }
 
-    /**
-     * @param id
-     * @param os
-     * @return
-     * @throws Exception
-     */
+
     @RequestMapping("/expressionExperiment/pcaFactors.html")
     public ModelAndView pcaFactors( Long id, OutputStream os ) throws Exception {
         if ( id == null ) return null;
@@ -312,12 +307,7 @@ public class ExpressionExperimentQCController extends BaseController {
         return null;
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     * @throws Exception
-     */
+
     @RequestMapping("/expressionExperiment/pcaScree.html")
     public ModelAndView pcaScree( Long id, OutputStream os ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -340,7 +330,6 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * @param id of experiment
      * @param size Multiplier on the cell size. 1 or null for standard small size.
-     * @param contrVal
      * @param text if true, output a tabbed file instead of a png
      * @param showLabels if the row and column labels of the matrix should be shown.
      * @param os response output stream
@@ -464,11 +453,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return null;
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return
-     */
     @RequestMapping("/expressionExperiment/visualizeProbeCorrDist.html")
     public ModelAndView visualizeProbeCorrDist( Long id, OutputStream os ) throws Exception {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -484,7 +468,7 @@ public class ExpressionExperimentQCController extends BaseController {
     /**
      * @param id of the experiment
      * @param analysisId of the analysis
-     * @param rsId resultSet Id
+     * @param rsid resultSet Id
      * @param factorName deprecated, we will use rsId instead. Maintained for backwards compatibility.
      * @param size of the image.
      * @param os stream to write the image to.
@@ -513,11 +497,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return null; // nothing to return;
     }
 
-    /**
-     * @param eeid
-     * @param os
-     * @throws IOException
-     */
     @RequestMapping("/expressionExperiment/eigenGenes.html")
     public ModelAndView writeEigenGenes( Long eeid ) throws IOException {
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
@@ -569,7 +548,7 @@ public class ExpressionExperimentQCController extends BaseController {
         List<String> rowNames = new ArrayList<String>();
         int i = 0;
         Pattern p = Pattern.compile( "^.*?ID=([0-9]+).*$", Pattern.CASE_INSENSITIVE );
-        Pattern bipattern = Pattern.compile( "BioAssayImpl Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
+        Pattern bipattern = Pattern.compile( "BioAssay Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
         int MAX_BIO_ASSAY_NAME_LEN = 30;
 
         for ( String rn : rawRowNames ) {
@@ -893,7 +872,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         assert ee.getId().equals( svdo.getId() );
 
-        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
+        expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
         Map<Long, ExperimentalFactor> efIdMap = EntityUtils
@@ -1280,9 +1259,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Visualization of the correlation of principal components with factors or the date samples were run.
-     * 
-     * @param response
-     * @param ee
+
      * @param svdo SVD value object
      */
     private void writePCAFactors( OutputStream os, ExpressionExperiment ee, SVDValueObject svdo ) throws Exception {
@@ -1296,7 +1273,7 @@ public class ExpressionExperimentQCController extends BaseController {
             writePlaceholderImage( os );
             return;
         }
-        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
+        expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 10;
 
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
@@ -1363,11 +1340,6 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartUtilities.writeChartAsPNG( os, chart, width, DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
-    /**
-     * @param response
-     * @param svdo
-     * @return
-     */
     private boolean writePCAScree( OutputStream os, SVDValueObject svdo ) throws Exception {
         /*
          * Make a scree plot.
@@ -1433,10 +1405,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ImageIO.write( buffer, "png", os );
     }
 
-    /**
-     * @param response
-     * @param ee
-     */
+
     private boolean writeProbeCorrHistImage( OutputStream os, ExpressionExperiment ee ) throws IOException {
         XYSeries series = getCorrelHist( ee );
 
@@ -1462,12 +1431,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * Has to handle the situation where there might be more than one ResultSet.
-     * 
-     * @param os
-     * @param ee
-     * @param analysisId
-     * @param rsId
-     * @throws IOException
+     *
      */
     private boolean writePValueHistImage( OutputStream os, ExpressionExperiment ee, Long analysisId, Long rsId,
             String factorName ) throws IOException {

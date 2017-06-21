@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoServiceTest {
 
@@ -86,7 +85,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
         }
 
         assertNotNull( newee );
-        newee = expressionExperimentService.thawLite( newee );
+        expressionExperimentService.thawLite( newee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( newee );
         try (InputStream deis = this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse18162Short/design.txt" );) {
@@ -100,7 +99,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     private void cleanup() {
         ExpressionExperiment ee = expressionExperimentService.findByShortName( "GSE18162" );
         if ( ee != null ) {
-            expressionExperimentService.delete( ee );
+            expressionExperimentService.remove( ee );
         }
     }
 

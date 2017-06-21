@@ -14,6 +14,7 @@
  */
 package ubic.gemma.persistence.service.expression.arrayDesign;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -26,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventDao;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,6 +40,19 @@ import java.util.Set;
  */
 @Service
 public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
+
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    @Autowired
+    public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
+        super( arrayDesignDao, auditEventDao );
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     @Transactional
@@ -77,9 +92,31 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     @Transactional(readOnly = true)
-    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        return this.arrayDesignDao.thawLite( arrayDesigns );
+    public Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids ) {
+        return this.arrayDesignDao.loadValueObjectsByIds( ids );
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void thawLite( Collection<ArrayDesign> arrayDesigns ) {
+        this.arrayDesignDao.thawLite( arrayDesigns );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void thawLite( ArrayDesign arrayDesign ) {
+        this.arrayDesignDao.thawLite( arrayDesign );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int numExperiments( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.numExperiments( arrayDesign );
+    }
+
+    /* ********************************
+     * Protected methods
+     * ********************************/
 
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
@@ -97,16 +134,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
-    protected Integer handleCountAll() {
-        return this.arrayDesignDao.countAll();
-    }
-
-    @Override
-    protected ArrayDesign handleCreate( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.create( arrayDesign );
-    }
-
-    @Override
     protected void handleDeleteAlignmentData( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteAlignmentData( arrayDesign );
     }
@@ -114,14 +141,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.deleteGeneProductAssociations( arrayDesign );
-    }
-
-    /**
-     * @see ArrayDesignService#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    @Override
-    protected ArrayDesign handleFind( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.find( arrayDesign );
     }
 
     @Override
@@ -143,11 +162,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
-    protected ArrayDesign handleFindOrCreate( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.findOrCreate( arrayDesign );
-    }
-
-    @Override
     protected java.util.Collection<BioAssay> handleGetAllAssociatedBioAssays( java.lang.Long id ) {
         return this.arrayDesignDao.getAllAssociatedBioAssays( id );
 
@@ -156,12 +170,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.getExpressionExperiments( arrayDesign );
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public int numExperiments( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.numExperiments( arrayDesign );
     }
 
     @Override
@@ -250,35 +258,8 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
-    protected ArrayDesign handleLoad( long id ) {
-        return this.arrayDesignDao.load( id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<ArrayDesign> handleLoadAll() {
-        return this.arrayDesignDao.loadAll();
-    }
-
-    @Override
-    protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() {
-        return this.arrayDesignDao.loadAllValueObjects();
-    }
-
-    @Override
     protected Collection<CompositeSequence> handleLoadCompositeSequences( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.loadCompositeSequences( arrayDesign.getId() );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) {
-        return this.arrayDesignDao.load( ids );
-    }
-
-    @Override
-    protected Collection<ArrayDesignValueObject> handleLoadValueObjects( Collection<Long> ids ) {
-        return this.arrayDesignDao.loadValueObjects( ids );
     }
 
     @Override
@@ -364,35 +345,19 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     }
 
     @Override
-    protected void handleRemove( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.remove( arrayDesign );
-    }
-
-    @Override
-    protected void handleUpdate( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.update( arrayDesign );
-    }
-
-    @Override
     protected void handleRemoveBiologicalCharacteristics( ArrayDesign arrayDesign ) {
         this.arrayDesignDao.removeBiologicalCharacteristics( arrayDesign );
 
     }
 
     @Override
-    protected ArrayDesign handleThaw( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.thaw( arrayDesign );
-    }
-
-    @Override
-    protected ArrayDesign handleThawLite( ArrayDesign arrayDesign ) {
-        return this.arrayDesignDao.thawLite( arrayDesign );
-    }
-
-    @Override
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
             Class<? extends ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
@@ -435,5 +400,4 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
         }
     }
-
 }

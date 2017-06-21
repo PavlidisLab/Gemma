@@ -18,44 +18,39 @@
  */
 package ubic.gemma.core.annotation.reference;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
-import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.service.common.description.LocalFileDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+
+import java.util.*;
 
 /**
  * Service base class for <code>BibliographicReferenceService</code>, provides access to all services and entities
  * referenced by this service.
- * 
+ *
  * @see BibliographicReferenceService
  */
-public abstract class BibliographicReferenceServiceBase implements BibliographicReferenceService {
+public abstract class BibliographicReferenceServiceBase
+        extends VoEnabledService<BibliographicReference, BibliographicReferenceValueObject>
+        implements BibliographicReferenceService {
 
-    @Autowired
-    private BibliographicReferenceDao bibliographicReferenceDao;
+    final BibliographicReferenceDao bibliographicReferenceDao;
+    private final PhenotypeAssociationService phenotypeAssociationService;
 
-    @Autowired
-    private ExternalDatabaseDao externalDatabaseDao;
-
-    @Autowired
-    private LocalFileDao localFileDao;
-
-    @Autowired
-    private PhenotypeAssociationService phenotypeAssociationService;
+    public BibliographicReferenceServiceBase( BibliographicReferenceDao bibliographicReferenceDao,
+            PhenotypeAssociationService phenotypeAssociationService ) {
+        super( bibliographicReferenceDao );
+        this.bibliographicReferenceDao = bibliographicReferenceDao;
+        this.phenotypeAssociationService = phenotypeAssociationService;
+    }
 
     /**
      * @see BibliographicReferenceService#addPDF(LocalFile, BibliographicReference)
@@ -73,87 +68,40 @@ public abstract class BibliographicReferenceServiceBase implements Bibliographic
     }
 
     /**
-     * @see BibliographicReferenceService#create(BibliographicReference)
-     */
-    @Override
-    @Transactional
-    public BibliographicReference create( final BibliographicReference bibliographicReference ) {
-        try {
-            return this.handleCreate( bibliographicReference );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.create(BibliographicReference bibliographicReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see BibliographicReferenceService#find(BibliographicReference)
+     * @see BibliographicReferenceService#findByExternalId(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public BibliographicReference find( final BibliographicReference bibliographicReference ) {
-        try {
-            return this.handleFind( bibliographicReference );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.find(BibliographicReference bibliographicReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see BibliographicReferenceService#findByExternalId(java.lang.String)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BibliographicReference findByExternalId( final java.lang.String id ) {
+    public BibliographicReference findByExternalId( final String id ) {
         try {
             return this.handleFindByExternalId( id );
         } catch ( Throwable th ) {
             throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.findByExternalId(java.lang.String id)' --> " + th,
-                    th );
+                    "Error performing 'BibliographicReferenceService.findByExternalId(String id)' --> " + th, th );
         }
     }
 
     /**
-     * @see BibliographicReferenceService#findByExternalId(java.lang.String,
-     *      java.lang.String)
+     * @see BibliographicReferenceService#findByExternalId(String, String)
      */
     @Override
     @Transactional(readOnly = true)
-    public BibliographicReference findByExternalId( final java.lang.String id, final java.lang.String databaseName ) {
+    public BibliographicReference findByExternalId( final String id, final String databaseName ) {
         try {
             return this.handleFindByExternalId( id, databaseName );
         } catch ( Throwable th ) {
             throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.findByExternalId(java.lang.String id, java.lang.String databaseName)' --> "
+                    "Error performing 'BibliographicReferenceService.findByExternalId(String id, String databaseName)' --> "
                             + th, th );
         }
     }
 
     /**
-     * @see BibliographicReferenceService#findOrCreate(BibliographicReference)
-     */
-    @Override
-    @Transactional
-    public BibliographicReference findOrCreate( final BibliographicReference BibliographicReference ) {
-        try {
-            return this.handleFindOrCreate( BibliographicReference );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.findOrCreate(BibliographicReference BibliographicReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see BibliographicReferenceService#findVOByExternalId(java.lang.String)
+     * @see BibliographicReferenceService#findVOByExternalId(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public BibliographicReferenceValueObject findVOByExternalId( final java.lang.String id ) {
+    public BibliographicReferenceValueObject findVOByExternalId( final String id ) {
         try {
             BibliographicReference bibref = this.handleFindByExternalId( id );
             if ( bibref == null ) {
@@ -165,8 +113,7 @@ public abstract class BibliographicReferenceServiceBase implements Bibliographic
             return bibrefVO;
         } catch ( Throwable th ) {
             throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.findByExternalId(java.lang.String id)' --> " + th,
-                    th );
+                    "Error performing 'BibliographicReferenceService.findByExternalId(String id)' --> " + th, th );
         }
     }
 
@@ -180,7 +127,8 @@ public abstract class BibliographicReferenceServiceBase implements Bibliographic
             return this.handleGetAllExperimentLinkedReferences();
         } catch ( Throwable th ) {
             throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.getAllExperimentLinkedReferences()' --> " + th, th );
+                    "Error performing 'BibliographicReferenceService.getAllExperimentLinkedReferences()' --> " + th,
+                    th );
         }
     }
 
@@ -200,202 +148,64 @@ public abstract class BibliographicReferenceServiceBase implements Bibliographic
         }
     }
 
-    /**
-     * @see BibliographicReferenceService#load(java.lang.Long)
-     */
     @Override
-    @Transactional(readOnly = true)
-    public BibliographicReference load( final java.lang.Long id ) {
-        try {
-            return this.handleLoad( id );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.load(java.lang.Long id)' --> " + th, th );
-        }
+    public BibliographicReferenceValueObject loadValueObject( BibliographicReference entity ) {
+        return this.loadMultipleValueObjectsFromObjects( Collections.singleton( entity ) ).iterator().next();
     }
 
-    /**
-     * @see BibliographicReferenceService#loadMultiple(java.util.Collection)
-     */
     @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BibliographicReference> loadMultiple( final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoadMultiple( ids );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see BibliographicReferenceService#loadMultiple(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BibliographicReferenceValueObject> loadMultipleValueObjects(
-            final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoadMultipleValueObjects( ids );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.loadMultiple(java.util.Collection ids)' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see BibliographicReferenceService#remove(BibliographicReference)
-     */
-    @Override
-    @Transactional
-    public void remove( final BibliographicReference BibliographicReference ) {
-        try {
-            this.handleRemove( BibliographicReference );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.remove(BibliographicReference BibliographicReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Sets the reference to <code>bibliographicReference</code>'s DAO.
-     */
-    public void setBibliographicReferenceDao( BibliographicReferenceDao bibliographicReferenceDao ) {
-        this.bibliographicReferenceDao = bibliographicReferenceDao;
-    }
-
-    /**
-     * Sets the reference to <code>externalDatabase</code>'s DAO.
-     */
-    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
-        this.externalDatabaseDao = externalDatabaseDao;
-    }
-
-    /**
-     * Sets the reference to <code>localFile</code>'s DAO.
-     */
-    public void setLocalFileDao( LocalFileDao localFileDao ) {
-        this.localFileDao = localFileDao;
-    }
-
-    /**
-     * @see BibliographicReferenceService#update(BibliographicReference)
-     */
-    @Override
-    @Transactional
-    public void update( final BibliographicReference bibliographicReference ) {
-        try {
-            this.handleUpdate( bibliographicReference );
-        } catch ( Throwable th ) {
-            throw new BibliographicReferenceServiceException(
-                    "Error performing 'BibliographicReferenceService.update(BibliographicReference bibliographicReference)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * Gets the reference to <code>bibliographicReference</code>'s DAO.
-     */
-    protected BibliographicReferenceDao getBibliographicReferenceDao() {
-        return this.bibliographicReferenceDao;
-    }
-
-    /**
-     * Gets the reference to <code>externalDatabase</code>'s DAO.
-     */
-    protected ExternalDatabaseDao getExternalDatabaseDao() {
-        return this.externalDatabaseDao;
-    }
-
-    /**
-     * Gets the reference to <code>localFile</code>'s DAO.
-     */
-    protected LocalFileDao getLocalFileDao() {
-        return this.localFileDao;
+    public Collection<BibliographicReferenceValueObject> loadAllValueObjects() {
+        return this.loadMultipleValueObjectsFromObjects( this.loadAll() );
     }
 
     /**
      * Performs the core logic for {@link #addPDF(LocalFile, BibliographicReference)}
      */
     protected abstract void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
+            throws Exception;
 
     /**
-     * Performs the core logic for {@link #create(BibliographicReference)}
+     * Performs the core logic for {@link #findByExternalId(String)}
      */
-    protected abstract BibliographicReference handleCreate( BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
+    protected abstract BibliographicReference handleFindByExternalId( String id ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #find(BibliographicReference)}
+     * Performs the core logic for {@link #findByExternalId(String, String)}
      */
-    protected abstract BibliographicReference handleFind( BibliographicReference bibliographicReference )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #findByExternalId(java.lang.String)}
-     */
-    protected abstract BibliographicReference handleFindByExternalId( java.lang.String id ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #findByExternalId(java.lang.String, java.lang.String)}
-     */
-    protected abstract BibliographicReference handleFindByExternalId( java.lang.String id, java.lang.String databaseName )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(BibliographicReference)}
-     */
-    protected abstract BibliographicReference handleFindOrCreate( BibliographicReference BibliographicReference )
-            throws java.lang.Exception;
+    protected abstract BibliographicReference handleFindByExternalId( String id, String databaseName ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
      */
     protected abstract Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences()
-            throws java.lang.Exception;
+            throws Exception;
 
     /**
      * Performs the core logic for {@link #getRelatedExperiments(BibliographicReference)}
      */
     protected abstract java.util.Collection<ExpressionExperiment> handleGetRelatedExperiments(
-            BibliographicReference bibliographicReference ) throws java.lang.Exception;
+            BibliographicReference bibliographicReference ) throws Exception;
 
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract BibliographicReference handleLoad( java.lang.Long id ) throws java.lang.Exception;
+    @Transactional(readOnly = true)
+    private Collection<BibliographicReferenceValueObject> loadMultipleValueObjectsFromObjects(
+            Collection<BibliographicReference> bibRefs ) {
+        if ( bibRefs.isEmpty() ) {
+            return new ArrayList<>();
+        }
+        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<>();
 
-    /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BibliographicReference> handleLoadMultiple( java.util.Collection<Long> ids )
-            throws java.lang.Exception;
+        for ( BibliographicReference bibref : bibRefs ) {
+            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
+            idTobibRefVO.put( bibref.getId(), vo );
+        }
 
-    /**
-     * Performs the core logic for {@link #loadMultipleValueObjects(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects(
-            java.util.Collection<Long> ids ) throws java.lang.Exception;
+        this.populateRelatedExperiments( bibRefs, idTobibRefVO );
+        this.populateBibliographicPhenotypes( idTobibRefVO );
 
-    /**
-     * Performs the core logic for {@link #remove(BibliographicReference)}
-     */
-    protected abstract void handleRemove( BibliographicReference BibliographicReference ) throws java.lang.Exception;
+        return idTobibRefVO.values();
+    }
 
-    /**
-     * Performs the core logic for {@link #update(BibliographicReference)}
-     */
-    protected abstract void handleUpdate( BibliographicReference bibliographicReference ) throws java.lang.Exception;
-
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    protected void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {
+    void populateBibliographicPhenotypes( BibliographicReferenceValueObject bibRefVO ) {
 
         Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
                 .findPhenotypesForBibliographicReference( bibRefVO.getPubAccession() );
@@ -404,22 +214,14 @@ public abstract class BibliographicReferenceServiceBase implements Bibliographic
         bibRefVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
     }
 
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    protected void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
+    private void populateBibliographicPhenotypes( Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
 
         for ( BibliographicReferenceValueObject vo : idTobibRefVO.values() ) {
             this.populateBibliographicPhenotypes( vo );
         }
     }
 
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    protected void populateRelatedExperiments( BibliographicReference bibRef, BibliographicReferenceValueObject bibRefVO ) {
+    void populateRelatedExperiments( BibliographicReference bibRef, BibliographicReferenceValueObject bibRefVO ) {
         Collection<ExpressionExperiment> relatedExperiments = this.getRelatedExperiments( bibRef );
         if ( relatedExperiments.isEmpty() ) {
             bibRefVO.setExperiments( new ArrayList<ExpressionExperimentValueObject>() );
@@ -429,19 +231,15 @@ public abstract class BibliographicReferenceServiceBase implements Bibliographic
 
     }
 
-    /**
-     * @param bibRefs
-     * @param idTobibRefVO
-     */
-    protected void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,
+    private void populateRelatedExperiments( Collection<BibliographicReference> bibRefs,
             Map<Long, BibliographicReferenceValueObject> idTobibRefVO ) {
         Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this
                 .getRelatedExperiments( bibRefs );
         for ( BibliographicReference bibref : bibRefs ) {
             BibliographicReferenceValueObject vo = idTobibRefVO.get( bibref.getId() );
             if ( relatedExperiments.containsKey( bibref ) ) {
-                vo.setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments
-                        .get( bibref ) ) );
+                vo.setExperiments(
+                        ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments.get( bibref ) ) );
             }
         }
     }

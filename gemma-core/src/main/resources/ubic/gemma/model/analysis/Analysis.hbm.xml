@@ -23,17 +23,14 @@
 		<property name="description" type="org.springframework.orm.hibernate3.support.ClobStringType">
 			<column name="DESCRIPTION" not-null="false" unique="false" sql-type="text character set latin1 collate latin1_swedish_ci" />
 		</property>
-		<many-to-one name="protocol" class="ubic.gemma.model.common.protocol.ProtocolImpl" lazy="proxy" fetch="select">
+		<many-to-one name="protocol" class="ubic.gemma.model.common.protocol.Protocol" lazy="proxy" fetch="select">
 			<column name="PROTOCOL_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
-		<many-to-one name="source" class="ubic.gemma.model.common.description.ExternalDatabaseImpl" lazy="proxy"
-			fetch="select">
-			<column name="SOURCE_FK" not-null="false" sql-type="BIGINT" />
-		</many-to-one>
+		 
 		<subclass name="ubic.gemma.model.analysis.expression.ExpressionAnalysis" discriminator-value="ExpressionAnalysis"
 			dynamic-insert="false" dynamic-update="false" abstract="true">
-			<subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl"
-				discriminator-value="GeneDifferentialExpressionMetaAnalysisImpl" dynamic-insert="false" dynamic-update="false"
+			<subclass name="ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis"
+				discriminator-value="GeneDifferentialExpressionMetaAnalysis" dynamic-insert="false" dynamic-update="false"
 				abstract="false">
 				<property name="numGenesAnalyzed" type="java.lang.Integer">
 					<column name="NUM_GENES_ANALYZED" not-null="false" unique="false" sql-type="INTEGER" />
@@ -45,7 +42,7 @@
 					<key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_META_ANALYSES_FKC">
 						<column name="META_ANALYSES_FK" sql-type="BIGINT" />
 					</key>
-					<many-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl">
+					<many-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet">
 						<column name="RESULT_SETS_INCLUDED_FK" sql-type="BIGINT" />
 					</many-to-many>
 				</set>
@@ -65,8 +62,8 @@
 					fetch="select">
 					<column name="EXPERIMENT_ANALYZED_FK" not-null="false" sql-type="BIGINT" />
 				</many-to-one>
-				<subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisImpl"
-					discriminator-value="CoexpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+				<subclass name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis"
+					discriminator-value="CoexpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
 					<property name="numberOfLinks" type="java.lang.Integer">
 						<column name="NUMBER_OF_LINKS" not-null="false" unique="false" sql-type="INTEGER" />
 					</property>
@@ -75,16 +72,16 @@
 						<column name="COEXP_CORRELATION_DISTRIBUTION_FK" not-null="false" sql-type="BIGINT" />
 					</many-to-one>
 				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisImpl"
-					discriminator-value="SampleCoexpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+				<subclass name="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysis"
+					discriminator-value="SampleCoexpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
 					<many-to-one name="sampleCoexpressionMatrix" class="ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixImpl"
 						cascade="all" lazy="false" fetch="select">
 						<column name="SAMPLE_COEXPRESSION_MATRIX_FK" not-null="false" sql-type="BIGINT" unique="true" />
 					</many-to-one>
 				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl"
-					discriminator-value="DifferentialExpressionAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-					<many-to-one name="subsetFactorValue" class="ubic.gemma.model.expression.experiment.FactorValueImpl"
+				<subclass name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
+					discriminator-value="DifferentialExpressionAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
+					<many-to-one name="subsetFactorValue" class="ubic.gemma.model.expression.experiment.FactorValue"
 						lazy="proxy" fetch="select">
 						<column name="SUBSET_FACTOR_VALUE_FK" not-null="false" sql-type="BIGINT" />
 					</many-to-one>
@@ -93,11 +90,11 @@
 						<key foreign-key="EXPRESSION_ANALYSIS_RESULT_SET_ANALYSIS_FKC">
 							<column name="ANALYSIS_FK" sql-type="BIGINT" />
 						</key>
-						<one-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl" />
+						<one-to-many class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" />
 					</set>
 				</subclass>
-				<subclass name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl"
-					discriminator-value="PrincipalComponentAnalysisImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+				<subclass name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis"
+					discriminator-value="PrincipalComponentAnalysis" dynamic-insert="false" dynamic-update="false" abstract="false">
 					<property name="numComponentsStored" type="java.lang.Integer">
 						<column name="NUM_COMPONENTS_STORED" not-null="false" unique="false" sql-type="INTEGER" />
 					</property>

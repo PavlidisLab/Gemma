@@ -21,7 +21,8 @@ package ubic.gemma.model.analysis.expression.diff;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * 
+ * Represents a contrast between "conditions". In practice, this is the comparison between a factor level and the
+ * baseline; for interactions it is the difference of comparisons.
  */
 public abstract class ContrastResult implements java.io.Serializable {
 

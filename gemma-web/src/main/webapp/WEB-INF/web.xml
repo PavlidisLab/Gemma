@@ -301,9 +301,8 @@
    <!-- REST web service -->
    <servlet-mapping>
       <servlet-name>rest-ws-servlet</servlet-name>
-      <url-pattern>/rest/*</url-pattern>
+      <url-pattern>/rest/v2/*</url-pattern>
    </servlet-mapping>
-
 
    <session-config>
       <session-timeout>60</session-timeout>

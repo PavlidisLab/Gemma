@@ -18,21 +18,24 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+
+import java.io.Serializable;
 
 /**
  * An abstract class representing a one-dimensional vector of data about some aspect of an experiment.
  */
-public abstract class DataVector implements java.io.Serializable {
+public abstract class DataVector implements Identifiable, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -5823802521832643417L;
     private byte[] data;
     private Long id;
-
     private QuantitationType quantitationType;
+
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     /**
      * Returns <code>true</code> if the argument is an DataVector instance and all identifiers for this entity equal the
@@ -54,27 +57,6 @@ public abstract class DataVector implements java.io.Serializable {
     }
 
     /**
-     * 
-     */
-    public byte[] getData() {
-        return this.data;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * 
-     */
-    public QuantitationType getQuantitationType() {
-        return this.quantitationType;
-    }
-
-    /**
      * Returns a hash code based on this entity's identifiers.
      */
     @Override
@@ -85,12 +67,28 @@ public abstract class DataVector implements java.io.Serializable {
         return hashCode;
     }
 
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    public byte[] getData() {
+        return this.data;
+    }
+
     public void setData( byte[] data ) {
         this.data = data;
     }
 
+    public Long getId() {
+        return this.id;
+    }
+
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public QuantitationType getQuantitationType() {
+        return this.quantitationType;
     }
 
     public void setQuantitationType( QuantitationType quantitationType ) {

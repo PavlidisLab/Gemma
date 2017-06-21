@@ -18,48 +18,38 @@
  */
 package ubic.gemma.model.association;
 
-import java.io.Serializable;
-
 import ubic.gemma.model.analysis.Analysis;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
+
+import java.io.Serializable;
 
 /**
  * An association between a BioSequence and a Gene Product. This class is abstract and is variously subclassed with
  * BlatAssocation in order to capture the scores and other parameters that document why we think there is a connection
  * between a given sequence and a gene product.
  */
-public abstract class BioSequence2GeneProduct implements Serializable {
+public abstract class BioSequence2GeneProduct implements Identifiable, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 8361432485953690591L;
-
     private Long id = null;
-
     private Analysis sourceAnalysis = null;
-
     private Integer overlap = null;
-
     private Double score = null;
-
     private Long threePrimeDistance = null;
-
     private ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod = null;
-
     private Double specificity = null;
-
     private BioSequence bioSequence = null;
-
     private GeneProduct geneProduct = null;
 
-    /**
-     * 
-     */
     public BioSequence getBioSequence() {
         return this.bioSequence;
+    }
+
+    public void setBioSequence( BioSequence bioSequence ) {
+        this.bioSequence = bioSequence;
     }
 
     /**
@@ -70,8 +60,16 @@ public abstract class BioSequence2GeneProduct implements Serializable {
         return this.geneProduct;
     }
 
+    public void setGeneProduct( GeneProduct geneProduct ) {
+        this.geneProduct = geneProduct;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -82,6 +80,10 @@ public abstract class BioSequence2GeneProduct implements Serializable {
         return this.overlap;
     }
 
+    public void setOverlap( Integer overlap ) {
+        this.overlap = overlap;
+    }
+
     /**
      * The score for the association between the biosequence and the gene product. This could be a BLAT similarity or
      * other score.
@@ -90,8 +92,16 @@ public abstract class BioSequence2GeneProduct implements Serializable {
         return this.score;
     }
 
+    public void setScore( Double score ) {
+        this.score = score;
+    }
+
     public Analysis getSourceAnalysis() {
         return sourceAnalysis;
+    }
+
+    public void setSourceAnalysis( Analysis sourceAnalysis ) {
+        this.sourceAnalysis = sourceAnalysis;
     }
 
     /**
@@ -103,6 +113,10 @@ public abstract class BioSequence2GeneProduct implements Serializable {
         return this.specificity;
     }
 
+    public void setSpecificity( Double specificity ) {
+        this.specificity = specificity;
+    }
+
     /**
      * The distance from the 3' end where this BioSequence aligns with respect to the Gene Product. This is often the
      * location of the alignment with respect to an mRNA 3' end.
@@ -111,43 +125,15 @@ public abstract class BioSequence2GeneProduct implements Serializable {
         return this.threePrimeDistance;
     }
 
+    public void setThreePrimeDistance( Long threePrimeDistance ) {
+        this.threePrimeDistance = threePrimeDistance;
+    }
+
     /**
      * Specifies the method used to measure the distance from the threePrimeEnd.
      */
     public ThreePrimeDistanceMethod getThreePrimeDistanceMeasurementMethod() {
         return this.threePrimeDistanceMeasurementMethod;
-    }
-
-    public void setBioSequence( BioSequence bioSequence ) {
-        this.bioSequence = bioSequence;
-    }
-
-    public void setGeneProduct( GeneProduct geneProduct ) {
-        this.geneProduct = geneProduct;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setOverlap( Integer overlap ) {
-        this.overlap = overlap;
-    }
-
-    public void setScore( Double score ) {
-        this.score = score;
-    }
-
-    public void setSourceAnalysis( Analysis sourceAnalysis ) {
-        this.sourceAnalysis = sourceAnalysis;
-    }
-
-    public void setSpecificity( Double specificity ) {
-        this.specificity = specificity;
-    }
-
-    public void setThreePrimeDistance( Long threePrimeDistance ) {
-        this.threePrimeDistance = threePrimeDistance;
     }
 
     public void setThreePrimeDistanceMeasurementMethod( ThreePrimeDistanceMethod threePrimeDistanceMeasurementMethod ) {

@@ -33,7 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -59,13 +59,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
     @Autowired
     private ExpressionExperimentService eeService;
 
-    /**
-     * Tests showing an experimentalDesign which is implemented in
-     * {@link ubic.gemma.model.web.controller.expression.experiment.ExpressionExperimentController} in method
-     * {@link #handleRequest(HttpServletRequest request, HttpServletResponse response)}.
-     * 
-     * @throws Exception
-     */
+
     @Test
     public void testShowExperimentalDesign() throws Exception {
 
@@ -106,7 +100,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         Collection<FactorValueValueObject> fvs = experimentalDesignController
                 .getFactorValuesWithCharacteristics( new EntityDelegator( ee.getExperimentalDesign()
@@ -119,9 +113,9 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
-        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject();
+        ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject(-1L);
         evvo.setCategory( "foo" );
         experimentalDesignController.createExperimentalFactor( new EntityDelegator( ee.getExperimentalDesign() ), evvo );
 
@@ -132,7 +126,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );

@@ -19,17 +19,16 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import gemma.gsec.authentication.UserManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.expression.experiment.ExpressionExperimentSetValueObjectHelper;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
@@ -47,16 +46,13 @@ import static org.junit.Assert.assertNotNull;
 public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringContextTest {
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    ExpressionExperimentSetService expressionExperimentSetService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
-    UserManager userManager;
-
-    @Autowired
-    ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
+    private ExpressionExperimentSetValueObjectHelper expressionExperimentSetValueObjectHelper;
 
     private Taxon tax1;
     private ExpressionExperiment ee = null;
@@ -83,12 +79,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
 
     @After
     public void tearDown() {
-
-        // delete by id because otherwise get HibernateException: reassociated object has dirty collection reference
-        expressionExperimentService.delete( ee );
-
-        // getting "access is denied" error here, even with this.runAsAdmin()
-        // expressionExperimentSetService.delete( eeSet );
+        expressionExperimentService.remove( ee );
     }
 
     @Test
@@ -98,9 +89,9 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         Long id = eeSet.getId();
         assertNotNull( id );
 
-        assertNotNull( expressionExperimentService.loadValueObject( ee.getId() ) );
+        assertNotNull( expressionExperimentService.loadValueObject( ee ) );
 
-        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( id );
+        ExpressionExperimentSetValueObject eesvo = expressionExperimentSetService.loadValueObject( eeSet );
 
         assertEquals( 1, eeSet.getExperiments().size() );
 
@@ -144,12 +135,12 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertNotNull( id );
 
         // test loading without EEIds.
-        eesvo = expressionExperimentSetService.loadValueObject( id );
+        eesvo = expressionExperimentSetService.loadValueObjectById( id );
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
         this.equalValuesCheck( eesvo );
 
         // test the same thing, without using the overloaded method.
-        eesvo = expressionExperimentSetService.loadValueObject( id, false );
+        eesvo = expressionExperimentSetService.loadValueObjectById( id, false );
         assertEquals( 0, eesvo.getExpressionExperimentIds().size() );
         this.equalValuesCheck( eesvo );
 
@@ -166,7 +157,7 @@ public class ExpressionExperimentSetValueObjectHelperTest extends BaseSpringCont
         assertNotNull( id );
 
         // test loading with EEIds.
-        eesvo = expressionExperimentSetService.loadValueObject( id, true );
+        eesvo = expressionExperimentSetService.loadValueObjectById( id, true );
         assertEquals( 1, eesvo.getExpressionExperimentIds().size() );
         this.equalValuesCheck( eesvo );
     }

@@ -18,25 +18,22 @@
  */
 package ubic.gemma.model.expression.experiment;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.StringUtils;
-
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
+
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * @author luke
  * @author keshav
- * @version $Id$ This is the
- *          "experimentalFActor" value object
  */
-public class ExperimentalFactorValueObject implements java.io.Serializable {
+public class ExperimentalFactorValueObject extends IdentifiableValueObject<ExperimentalFactor> implements Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -2615804031123874251L;
 
     private String category;
@@ -46,21 +43,28 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
 
     private String factorValues;
 
-    private Long id;
     private String name;
     private Integer numValues = 0;
     private String type = "categorical"; // continuous or categorical.
     private Collection<FactorValueValueObject> values;
 
+    /**
+     * Required when using the class as a spring bean.
+     */
     public ExperimentalFactorValueObject() {
     }
 
+    public ExperimentalFactorValueObject( Long id ) {
+        super( id );
+    }
+
     public ExperimentalFactorValueObject( ExperimentalFactor factor ) {
-        this.setId( factor.getId() );
+        super( factor.getId() );
         this.setName( factor.getName() );
         this.setDescription( factor.getDescription() );
 
-        if ( factor.getCategory() != null ) this.setCategory( factor.getCategory().getCategory() );
+        if ( factor.getCategory() != null )
+            this.setCategory( factor.getCategory().getCategory() );
 
         this.setCategoryUri( getCategoryUri( factor.getCategory() ) );
 
@@ -92,18 +96,19 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         }
 
         Collection<FactorValue> fvs = factor.getFactorValues();
-        String factorValuesAsString = StringUtils.EMPTY;
+        StringBuilder factorValuesAsString = new StringBuilder( StringUtils.EMPTY );
         for ( FactorValue fv : fvs ) {
             String fvName = fv.toString();
             if ( StringUtils.isNotBlank( fvName ) ) {
-                factorValuesAsString += fvName + ", ";
+                factorValuesAsString.append( fvName ).append( ", " );
             }
         }
         /* clean up the start and end of the string */
-        factorValuesAsString = StringUtils.remove( factorValuesAsString, factor.getName() + ":" );
-        factorValuesAsString = StringUtils.removeEnd( factorValuesAsString, ", " );
+        factorValuesAsString = new StringBuilder(
+                StringUtils.remove( factorValuesAsString.toString(), factor.getName() + ":" ) );
+        factorValuesAsString = new StringBuilder( StringUtils.removeEnd( factorValuesAsString.toString(), ", " ) );
 
-        this.setFactorValues( factorValuesAsString );
+        this.setFactorValues( factorValuesAsString.toString() );
 
         this.numValues = factor.getFactorValues().size();
         Characteristic c = factor.getCategory();
@@ -119,77 +124,46 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         ExperimentalFactorValueObject other = ( ExperimentalFactorValueObject ) obj;
-        if ( id != other.id ) return false;
-        return true;
+        return Objects.equals( id, other.id );
     }
 
     public String getCategory() {
         return category;
     }
 
-    public String getCategoryUri() {
-        return categoryUri;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getFactorValues() {
-        return factorValues;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @return the numValues
-     */
-    public Integer getNumValues() {
-        return this.numValues;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public Collection<FactorValueValueObject> getValues() {
-        return values;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
-        return result;
-    }
-
     public void setCategory( String category ) {
         this.category = category;
+    }
+
+    public String getCategoryUri() {
+        return categoryUri;
     }
 
     public void setCategoryUri( String categoryUri ) {
         this.categoryUri = categoryUri;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public void setDescription( String description ) {
         this.description = description;
     }
 
+    public String getFactorValues() {
+        return factorValues;
+    }
+
     /**
      * Set a string which describes (in summary) the factor values
-     * 
-     * @param factorValues
      */
     public void setFactorValues( String factorValues ) {
         this.factorValues = factorValues;
@@ -199,8 +173,19 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.id = id;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public void setName( String name ) {
         this.name = name;
+    }
+
+    /**
+     * @return the numValues
+     */
+    public Integer getNumValues() {
+        return this.numValues;
     }
 
     /**
@@ -210,12 +195,28 @@ public class ExperimentalFactorValueObject implements java.io.Serializable {
         this.numValues = numValues;
     }
 
+    public String getType() {
+        return type;
+    }
+
     public void setType( String type ) {
         this.type = type;
     }
 
+    public Collection<FactorValueValueObject> getValues() {
+        return values;
+    }
+
     public void setValues( Collection<FactorValueValueObject> values ) {
         this.values = values;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( int ) ( id ^ ( id >>> 32 ) );
+        return result;
     }
 
     private String getCategoryUri( Characteristic c ) {

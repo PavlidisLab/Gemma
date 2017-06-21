@@ -18,7 +18,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -52,37 +51,19 @@ public interface DifferentialExpressionAnalyzerService {
     Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
-     * @param qvalueThreshold to use for the re-run.
+     * Redo
+     *
+     * @param copyMe analysis to base new one on
+     *               whether the results should be persisted
      */
     Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe, Double qvalueThreshold );
+            DifferentialExpressionAnalysis copyMe, boolean persist );
 
     /**
-     * Redo with the default qvalueThreshold.
-     */
-    Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
-            DifferentialExpressionAnalysis copyMe );
-
-    /**
-     * @return persistent analyses. The qvalue threshold configured for retention will be applied.
+     * @return persistent analyses.
      */
     Collection<DifferentialExpressionAnalysis> runDifferentialExpressionAnalyses(
             ExpressionExperiment expressionExperiment, DifferentialExpressionAnalysisConfig config );
-
-    /**
-     * @deprecated because we store this in the database, not a file; and it shouldn't be a problem any more
-     */
-    @Deprecated
-    void updateScoreDistributionFiles( ExpressionExperiment ee ) throws IOException;
-
-    /**
-     * Update the pvalue distributions and the hit count sizes, in cases where these are corrupted etc. One could use
-     * redoAnalysis but this should be faster.
-     *
-     * @deprecated because we store this in the database and it shouldn't be a problem any more
-     */
-    @Deprecated
-    void updateSummaries( DifferentialExpressionAnalysis toUpdate );
 
     /**
      * Made public for testing purposes only.

@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that batch information was obtained
  * </p>
  */
-public abstract class BatchInformationFetchingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class BatchInformationFetchingEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -36,7 +36,7 @@ public abstract class BatchInformationFetchingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent();
         }
 
     }

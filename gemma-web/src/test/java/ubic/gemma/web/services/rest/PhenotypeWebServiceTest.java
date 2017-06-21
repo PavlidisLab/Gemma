@@ -108,7 +108,7 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
     }
 
     private void createLiteratureEvidence( int geneNCBIid, String uri ) {
-        LiteratureEvidenceValueObject litEvidence = new LiteratureEvidenceValueObject();
+        LiteratureEvidenceValueObject litEvidence = new LiteratureEvidenceValueObject(-1L);
         litEvidence.setDescription( "Test Description" );
         litEvidence.setEvidenceCode( "TAS" );
         litEvidence.setGeneNCBI( geneNCBIid );
@@ -124,7 +124,7 @@ public class PhenotypeWebServiceTest extends BaseSpringWebTest {
 
         SortedSet<CharacteristicValueObject> phenotypes = new TreeSet<>();
 
-        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( uri );
+        CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L, uri );
 
         phenotypes.add( characteristicValueObject );
 

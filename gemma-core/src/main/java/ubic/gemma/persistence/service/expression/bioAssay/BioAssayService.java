@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -31,6 +32,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
  * @author kelsey
  * @version $Id$
  */
+@Service
 public interface BioAssayService {
 
     /**

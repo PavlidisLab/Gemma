@@ -53,7 +53,7 @@ import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
 
 /**
  * Handles deletions of a factor values. This process includes: 1. Determining if there are any biomaterials that use
- * the factor value 2. If so, delete any differential expression analysis results that use this factor 3. delete the
+ * the factor value 2. If so, remove any differential expression analysis results that use this factor 3. remove the
  * factor value
  * 
  * @author tvrossum
@@ -113,7 +113,7 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
         }
 
         for ( FactorValue fv : fvsToDelete ) {
-            factorValueService.delete( fv );
+            factorValueService.remove( fv );
         }
 
     }

@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -220,7 +220,7 @@ public class PersistentDummyObjectHelper {
 
     /**
      * @return another experiment using the same platform (assumed to be generated using
-     * getTestExpressionExperimentWithAllDependencies(true)
+     *         getTestExpressionExperimentWithAllDependencies(true)
      */
     public ExpressionExperiment getTestExpressionExperimentWithAllDependencies( ExpressionExperiment prototype ) {
 
@@ -257,7 +257,7 @@ public class PersistentDummyObjectHelper {
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = getBioAssays( bioMaterials, ad );
             bioAssays.addAll( bas );
-            ad = this.adService.thaw( ad );
+            this.adService.thaw( ad );
             vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bas, ad ) );
 
         }
@@ -270,8 +270,7 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
     }
@@ -330,8 +329,7 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
     }
@@ -368,8 +366,8 @@ public class PersistentDummyObjectHelper {
      * created, they are each associated with a single generated Reporter.
      *
      * @param numCompositeSequences The number of CompositeSequences to populate the ArrayDesign with.
-     * @param randomNames           If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
-     * @param dosequence            If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
+     * @param randomNames If true, probe names will be random strings; otherwise they will be 0_probe_at....N_probe_at
+     * @param dosequence If true, biosequences and biosequence2GeneProduct associations are filled in (slower).
      * @return ArrayDesign
      */
     public ArrayDesign getTestPersistentArrayDesign( int numCompositeSequences, boolean randomNames,

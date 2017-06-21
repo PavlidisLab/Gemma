@@ -18,14 +18,8 @@
  */
 package ubic.gemma.model.expression.biomaterial;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
@@ -33,56 +27,63 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
- * @version $Id$
  * @author lukem
  */
-public class BioMaterialValueObject implements Serializable {
+public class BioMaterialValueObject extends IdentifiableValueObject<BioMaterial> implements Serializable {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = -145137827948521045L;
     public static final String CHARACTERISTIC_DELIMITER = "::::";
+    private static final long serialVersionUID = -145137827948521045L;
     private String assayDescription;
     private String assayName;
     private Collection<BioAssayValueObject> bioAssays = new HashSet<>();
     private String characteristics;
-
     private String description;
-
-    /*
+    /**
      * Map of factor ids (factor232) to factor value (id or the actual value) for this biomaterial.
      */
     private Map<String, String> factorIdToFactorValueId;
 
-    /*
+    /**
      * Map of ids (factor232) to a representation of the factor (e.g., the name).
      */
     private Map<String, String> factors;
-
-    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<FactorValueValueObject>();
-    /*
+    private Collection<FactorValueValueObject> factorValueObjects = new HashSet<>();
+    /**
      * Map of ids (fv133) to a representation of the value (for this biomaterial.)
      */
     private Map<String, String> factorValues;
-
-    private Long id;
-
     private String name;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * Required when using the class as a spring bean.
+     */
     public BioMaterialValueObject() {
     }
 
+    public BioMaterialValueObject( Long id ) {
+        super( id );
+    }
+
     public BioMaterialValueObject( BioMaterial bm ) {
-        this.id = bm.getId();
+        super( bm.getId() );
         this.name = bm.getName();
         this.description = bm.getDescription();
         this.characteristics = getCharacteristicString( bm.getCharacteristics() );
 
-        this.factors = new HashMap<String, String>();
-        this.factorValues = new HashMap<String, String>();
-        this.factorIdToFactorValueId = new HashMap<String, String>();
+        this.factors = new HashMap<>();
+        this.factorValues = new HashMap<>();
+        this.factorIdToFactorValueId = new HashMap<>();
         for ( FactorValue fv : bm.getFactorValues() ) {
             this.factorValueObjects.add( new FactorValueValueObject( fv ) );
             ExperimentalFactor factor = fv.getExperimentalFactor();
@@ -104,76 +105,40 @@ public class BioMaterialValueObject implements Serializable {
 
     public BioMaterialValueObject( BioMaterial bm, BioAssay ba ) {
         this( bm );
-        BioAssayValueObject bavo = new BioAssayValueObject( ba );
-        this.bioAssays.add( bavo );
+        BioAssayValueObject baVo = new BioAssayValueObject( ba );
+        this.bioAssays.add( baVo );
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
         this.assayName = ba.getName();
         this.assayDescription = ba.getDescription();
     }
+
+    /* ********************************
+     * Object override
+     * ********************************/
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         BioMaterialValueObject other = ( BioMaterialValueObject ) obj;
 
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) )
-            return false;
-        else
-            return id.equals( other.id );
+            if ( other.id != null )
+                return false;
+        } else
+            return id.equals( other.id ) && id.equals( other.id );
 
         if ( name == null ) {
-            if ( other.name != null ) return false;
-        } else if ( !name.equals( other.name ) ) return false;
+            if ( other.name != null )
+                return false;
+        } else if ( !name.equals( other.name ) )
+            return false;
         return true;
-    }
-
-    public String getAssayDescription() {
-        return assayDescription;
-    }
-
-    public String getAssayName() {
-        return assayName;
-    }
-
-    public Collection<BioAssayValueObject> getBioAssays() {
-        return bioAssays;
-    }
-
-    public String getCharacteristics() {
-        return characteristics;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public Map<String, String> getFactorIdToFactorValueId() {
-        return factorIdToFactorValueId;
-    }
-
-    public Map<String, String> getFactors() {
-        return factors;
-    }
-
-    public Collection<FactorValueValueObject> getFactorValueObjects() {
-        return factorValueObjects;
-    }
-
-    public Map<String, String> getFactorValues() {
-        return factorValues;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
     }
 
     @Override
@@ -182,75 +147,109 @@ public class BioMaterialValueObject implements Serializable {
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
 
-        if ( id == null ) result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
+        if ( id == null )
+            result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
         return result;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    public String getAssayDescription() {
+        return assayDescription;
     }
 
     public void setAssayDescription( String assayDescription ) {
         this.assayDescription = assayDescription;
     }
 
+    public String getAssayName() {
+        return assayName;
+    }
+
     public void setAssayName( String assayName ) {
         this.assayName = assayName;
+    }
+
+    public Collection<BioAssayValueObject> getBioAssays() {
+        return bioAssays;
     }
 
     public void setBioAssays( Collection<BioAssayValueObject> bioAssays ) {
         this.bioAssays = bioAssays;
     }
 
+    public String getCharacteristics() {
+        return characteristics;
+    }
+
     public void setCharacteristics( String characteristics ) {
         this.characteristics = characteristics;
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public void setDescription( String description ) {
         this.description = description;
     }
 
+    public Map<String, String> getFactorIdToFactorValueId() {
+        return factorIdToFactorValueId;
+    }
+
     public void setFactorIdToFactorValueId( Map<String, String> factorIdToFactorValueId ) {
         this.factorIdToFactorValueId = factorIdToFactorValueId;
+    }
+
+    public Map<String, String> getFactors() {
+        return factors;
     }
 
     public void setFactors( Map<String, String> factors ) {
         this.factors = factors;
     }
 
+    public Collection<FactorValueValueObject> getFactorValueObjects() {
+        return factorValueObjects;
+    }
+
     public void setFactorValueObjects( Collection<FactorValueValueObject> factorValueObjects ) {
         this.factorValueObjects = factorValueObjects;
+    }
+
+    public Map<String, String> getFactorValues() {
+        return factorValues;
     }
 
     public void setFactorValues( Map<String, String> factorValues ) {
         this.factorValues = factorValues;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    public String getName() {
+        return name;
     }
 
     public void setName( String name ) {
         this.name = name;
     }
 
-    /**
-     * @param characters
-     * @return
-     */
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private String getCharacteristicString( Collection<Characteristic> characters ) {
         return StringUtils.join( characters, CHARACTERISTIC_DELIMITER );
     }
 
-    /**
-     * @param factor
-     * @return
-     */
     private String getExperimentalFactorString( ExperimentalFactor factor ) {
         return factor.getName();
     }
 
     /**
      * Format the value as a string, either using the characteristic, value or measurement.
-     * 
-     * @param value
-     * @return
      */
     private String getFactorValueString( FactorValue value ) {
         if ( !value.getCharacteristics().isEmpty() ) {

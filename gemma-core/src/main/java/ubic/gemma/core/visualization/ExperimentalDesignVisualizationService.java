@@ -14,52 +14,35 @@
  */
 package ubic.gemma.core.visualization;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * @author Paul
- * @version $Id$
  */
 public interface ExperimentalDesignVisualizationService {
 
     /**
      * Put data vectors in the order you'd want to display the experimental design. This causes the "isReorganized" flag
-     * of the dedvs to be set to true.
-     * 
-     * @param dedvs
-     * @return Map of EE ids to "layouts", which are Maps of BioAssays to map of experimentalfactors to doubles.
+     * of the dedVs to be set to true.
+     *
+     * @return Map of EE ids to "layouts", which are Maps of BioAssays to map of experimental factors to doubles.
      */
-    public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
-            Collection<DoubleVectorValueObject> dedvs );
-
-    // /**
-    // * Sorts the layouts passed in by factor with factors ordered by their number of values, from fewest values to
-    // most.
-    // * The LinkedHashMap<BioAssay, {value}> and LinkedHashMap<ExperimentalFactor, Double>> portions of each layout are
-    // * both sorted.
-    // *
-    // * @param layouts
-    // * @return sorted layouts
-    // */
-    // public abstract Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>>
-    // sortLayoutSamplesByFactor(
-    // Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> layouts );
+    Map<Long, LinkedHashMap<BioAssayValueObject, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
+            Collection<DoubleVectorValueObject> dedVs );
 
     /**
      * removed the cached layouts and cached BioAssayDimensions for this experiment (could be a subset?)
-     * 
-     * @param eeId
      */
-    public void clearCaches( Long eeId );
+    void clearCaches( Long eeId );
 
     /**
      * removed all cached layouts and cached BioAssayDimensions
      */
-    public void clearCaches();
+    void clearCaches();
 }

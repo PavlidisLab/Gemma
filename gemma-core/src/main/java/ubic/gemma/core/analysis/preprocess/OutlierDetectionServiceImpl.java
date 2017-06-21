@@ -26,7 +26,7 @@ import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.analysis.preprocess.svd.SVDServiceHelper;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -291,7 +291,7 @@ public class OutlierDetectionServiceImpl implements OutlierDetectionService {
         /*
          * Get the experimental design
          */
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         /*
          * Get the data matrix

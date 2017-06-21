@@ -30,7 +30,7 @@ import ubic.gemma.model.common.auditAndSecurity.curation.Curatable;
  * @author tesarst
  */
 public abstract class CurationDetailsEvent
-        extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
     /**
      * The serial version UID of this class. Needed for serialization.

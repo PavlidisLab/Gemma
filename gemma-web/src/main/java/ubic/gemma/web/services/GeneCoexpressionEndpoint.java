@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -146,7 +146,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 return buildBadResponse( document, msg );
             }
 
-            Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
+            Collection<Gene> rawGeneCol = geneService.load( geneIDLong );
+            geneService.thaw( rawGeneCol );
             if ( rawGeneCol.isEmpty() ) {
                 String msg = "None of the gene id's can be found.";
                 return buildBadResponse( document, msg );

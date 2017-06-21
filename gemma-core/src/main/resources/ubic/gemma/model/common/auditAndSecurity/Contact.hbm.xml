@@ -52,7 +52,7 @@
                <key foreign-key="JOB_INFO_USER_FKC">
                   <column name="USER_FK" sql-type="BIGINT"/>
                </key>
-               <one-to-many class="ubic.gemma.model.common.auditAndSecurity.JobInfoImpl"/>
+               <one-to-many class="ubic.gemma.model.common.auditAndSecurity.JobInfo"/>
             </set>
          </subclass>
       </subclass>

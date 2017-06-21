@@ -2,7 +2,7 @@ These files are used by the Differential expression meta-analysis tests.
 
 For the genes, the files the files were prepared with the help of:
 
-mysql -uxxxx -pxxxxxx -h db-write-1 -e "select g.OFFICIAL_SYMBOL,g.OFFICIAL_NAME FROM CHROMOSOME_FEATURE g  WHERE g.class='GeneImpl' AND g.TAXON_FK = 1 and g.NCBI_GENE_ID IS NOT NULL" gemd > human.genes.for.import.txt
+mysql -uxxxx -pxxxxxx -h db-write-1 -e "select g.OFFICIAL_SYMBOL,g.OFFICIAL_NAME FROM CHROMOSOME_FEATURE g  WHERE g.class='Gene' AND g.TAXON_FK = 1 and g.NCBI_GENE_ID IS NOT NULL" gemd > human.genes.for.import.txt
 
 gzip -dc /space/gemmaData/microAnnots/HG-U133A_B_Plus_2.an.txt.gz | sort | cut -f 1,2,2 | head -n 1000 > human.probes.for.import.txt
 

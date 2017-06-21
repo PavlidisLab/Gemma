@@ -18,103 +18,76 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+import ubic.gemma.persistence.service.BrowsingDao;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.persistence.service.BrowsingDao;
-
 /**
  * @see ubic.gemma.model.common.description.Characteristic
- * @version $Id$
  */
-public interface CharacteristicDao extends BrowsingDao<Characteristic> {
+public interface CharacteristicDao extends BrowsingDao<Characteristic>, BaseVoEnabledDao<Characteristic, CharacteristicValueObject> {
 
     /**
      * Browse through the characteristics, excluding GO annotations.
-     * 
+     *
      * @param start How far into the list to start
      * @param limit Maximum records to retrieve (might be subject to security filtering)
      */
     @Override
-    public List<Characteristic> browse( Integer start, Integer limit );
+    List<Characteristic> browse( Integer start, Integer limit );
 
     /**
      * Browse through the characteristics, excluding GO annotations, with sorting.
-     * 
-     * @param start
-     * @param limit
-     * @param sortField
-     * @param descending
-     * @return
      */
     @Override
-    public List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
+    List<Characteristic> browse( Integer start, Integer limit, String sortField, boolean descending );
 
-    /**
-     * @return how many Characteristics are in the system, excluding GO annotations.
-     */
-    @Override
-    public Integer count();
-
-    /**
-     * @param valuePrefix
-     * @return
-     */
-    public Collection<? extends Characteristic> findByCategory( String query );
+    Collection<? extends Characteristic> findByCategory( String query );
 
     /**
      * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
      * parent objects.
      */
-    public Map<Characteristic, Object> findByParentClass( java.lang.Class<?> parentClass );
+    Map<Characteristic, Object> findByParentClass( java.lang.Class<?> parentClass );
 
     /**
      * @param classes constraint of who the 'owner' of the Characteristic has to be.
-     * @param characteristicUris
-     * @return
      */
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
+    Collection<Characteristic> findByUri( Collection<Class<?>> classes, Collection<String> characteristicUris );
 
     /**
      * @param classesToFilterOn constraint of who the 'owner' of the Characteristic has to be.
-     * @param uriString
-     * @return
      */
-    public Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
+    Collection<Characteristic> findByUri( Collection<Class<?>> classesToFilterOn, String uriString );
 
-    /**
-     * 
-     */
-    public Collection<Characteristic> findByUri( Collection<String> uris );
+    Collection<Characteristic> findByUri( Collection<String> uris );
 
-    /**
-     * 
-     */
-    public Collection<Characteristic> findByUri( java.lang.String searchString );
+    Collection<Characteristic> findByUri( java.lang.String searchString );
 
     /**
      * @param classes constraint of who the 'owner' of the Characteristic has to be.
-     * @param string
-     * @return
      */
-    public Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
+    Collection<Characteristic> findByValue( Collection<Class<?>> classes, String string );
 
     /**
      * Finds all Characteristics whose value match the given search term
      */
-    public Collection<Characteristic> findByValue( java.lang.String search );
+    Collection<Characteristic> findByValue( java.lang.String search );
 
     /**
      * Returns a map of the specified characteristics to their parent objects.
      */
-    public Map<Characteristic, Object> getParents( java.lang.Class<?> parentClass,
+    Map<Characteristic, Object> getParents( java.lang.Class<?> parentClass,
             Collection<Characteristic> characteristics );
 
     /**
      * @return URIs of categories that are used.
      */
-    public Collection<String> getUsedCategories();
+    Collection<String> getUsedCategories();
 
 }

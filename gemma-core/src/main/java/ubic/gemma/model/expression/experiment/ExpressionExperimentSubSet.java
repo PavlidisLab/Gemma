@@ -20,15 +20,50 @@ package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.SecuredChild;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Collection;
-
-import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * A subset of samples from an ExpressionExperiment
  */
-public abstract class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
+public class ExpressionExperimentSubSet extends BioAssaySet implements SecuredChild {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -1880425342951467283L;
+    private ExpressionExperiment sourceExperiment;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public ExpressionExperimentSubSet() {
+    }
+
+    @Override
+    public Collection<BioAssay> getBioAssays() {
+        return this.bioAssays;
+    }
+
+    public void setBioAssays( Collection<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
+
+    @Override
+    public Securable getSecurityOwner() {
+        return sourceExperiment;
+    }
+
+    public ExpressionExperiment getSourceExperiment() {
+        return this.sourceExperiment;
+    }
+
+    public void setSourceExperiment( ExpressionExperiment sourceExperiment ) {
+        this.sourceExperiment = sourceExperiment;
+    }
 
     /**
      * Constructs new instances of {@link ExpressionExperimentSubSet}.
@@ -38,53 +73,9 @@ public abstract class ExpressionExperimentSubSet extends BioAssaySet implements 
          * Constructs a new instance of {@link ExpressionExperimentSubSet}.
          */
         public static ExpressionExperimentSubSet newInstance() {
-            return new ExpressionExperimentSubSetImpl();
+            return new ExpressionExperimentSubSet();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -1880425342951467283L;
-
-    private Collection<BioAssay> bioAssays = new java.util.HashSet<>();
-    private ExpressionExperiment sourceExperiment;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ExpressionExperimentSubSet() {
-    }
-
-    /**
-     * 
-     */
-    @Override
-    public Collection<BioAssay> getBioAssays() {
-        return this.bioAssays;
-    }
-
-    @Override
-    public Securable getSecurityOwner() {
-        return sourceExperiment;
-    }
-
-    /**
-     * 
-     */
-    public ExpressionExperiment getSourceExperiment() {
-        return this.sourceExperiment;
-    }
-
-    public void setBioAssays( Collection<BioAssay> bioAssays ) {
-        this.bioAssays = bioAssays;
-    }
-
-    public void setSourceExperiment( ExpressionExperiment sourceExperiment ) {
-        this.sourceExperiment = sourceExperiment;
     }
 
 }

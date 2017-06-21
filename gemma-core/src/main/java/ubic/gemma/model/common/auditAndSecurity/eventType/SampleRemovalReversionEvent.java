@@ -25,8 +25,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * back.
  * </p>
  */
-public abstract class SampleRemovalReversionEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class SampleRemovalReversionEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -38,7 +38,7 @@ public abstract class SampleRemovalReversionEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalReversionEvent();
         }
 
     }

@@ -14,39 +14,38 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Tests loading, platform switch, vector merge, and complex deletion (in teardown)
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
@@ -55,8 +54,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    private ExpressionExperiment ee = null;
 
     @Autowired
     private ExpressionExperimentPlatformSwitchService eePlatformSwitchService;
@@ -67,49 +64,63 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
     @Autowired
     private GeoService geoService;
 
-    private ArrayDesign mergedAA = null;
-
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
     private VectorMergingService vectorMergingService;
 
+    @Autowired
+    private DesignElementDataVectorService designElementDataVectorService;
+
+    private ArrayDesign mergedAA = null;
+    private ExpressionExperiment ee = null;
+
+    @Before
     @After
     public void tearDown() {
-        try {
-            ee = eeService.findByShortName( "GSE3443" );
 
-            if ( ee != null ) {
-                mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
-                eeService.delete( ee );
+        ee = eeService.findByShortName( "GSE3443" );
 
-                if ( mergedAA != null ) {
-                    mergedAA.setMergees( new HashSet<ArrayDesign>() );
-                    arrayDesignService.update( mergedAA );
+        if ( ee != null ) {
+            mergedAA = eeService.getArrayDesignsUsed( ee ).iterator().next();
 
-                    mergedAA = arrayDesignService.thawLite( mergedAA );
+            eeService.thaw( ee );
+            eeService.remove( ee.getId() );
 
-                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
-                        arrayDesign.setMergedInto( null );
-                        arrayDesignService.update( arrayDesign );
-                    }
-                    arrayDesignService.remove( mergedAA );
-                    for ( ArrayDesign arrayDesign : mergedAA.getMergees() ) {
-                        arrayDesignService.remove( arrayDesign );
-                    }
-                }
-
+            for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+                designElementDataVectorService.removeDataForQuantitationType( qt );
             }
-        } catch ( Exception e ) {
-            // oh well. Test might fail, it might not.
-            log.info( e.getMessage(), e );
+
+            if ( mergedAA != null ) {
+
+                // Remove mergees
+                Collection<ArrayDesign> mergees = mergedAA.getMergees();
+                //noinspection unchecked
+                arrayDesignService.update( mergedAA );
+                arrayDesignService.thaw( mergedAA );
+                for ( ArrayDesign arrayDesign : mergees ) {
+                    arrayDesign.setMergedInto( null );
+                    arrayDesignService.update( arrayDesign );
+                }
+                //noinspection unchecked
+                mergedAA.setMergees( Collections.EMPTY_SET );
+
+                // Remove composite sequences
+                Collection<CompositeSequence> css = mergedAA.getCompositeSequences();
+                //noinspection unchecked
+                mergedAA.setCompositeSequences( Collections.EMPTY_SET );
+                for ( CompositeSequence cs : css ) {
+                    designElementDataVectorService.removeDataForCompositeSequence( cs );
+                }
+                arrayDesignService.update( mergedAA );
+                arrayDesignService.remove( mergedAA );
+            }
         }
     }
 
     @Test
     final public void test() throws Exception {
-        tearDown();
         /*
          * Need a persistent experiment that uses multiple array designs. Then merge the designs, switch the vectors,
          * and merge the vectors. GSE3443
@@ -123,13 +134,13 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
          * Example of a sequence appearing on more than one platform: N57553
          */
 
-        geoService
-                .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse3443merge" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "gse3443merge" ) ) );
 
         Collection<?> results = geoService.fetchAndLoad( "GSE3443", false, false, true, false );
         ee = ( ExpressionExperiment ) results.iterator().next();
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         Collection<ArrayDesign> aas = eeService.getArrayDesignsUsed( ee );
 
@@ -139,12 +150,12 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
          * Check number of sequences across all platforms. This is how many elements we need on the new platform, plus
          * extras for duplicated sequences (e.g. elements that don't have a sequence...)
          */
-        Collection<ArrayDesign> taas = new HashSet<ArrayDesign>();
-        Set<BioSequence> oldbs = new HashSet<BioSequence>();
+        Collection<ArrayDesign> taas = new HashSet<>();
+        Set<BioSequence> oldbs = new HashSet<>();
         for ( ArrayDesign arrayDesign : aas ) {
-            ArrayDesign ta = arrayDesignService.thaw( arrayDesign );
-            taas.add( ta );
-            for ( CompositeSequence cs : ta.getCompositeSequences() ) {
+            arrayDesignService.thaw( arrayDesign );
+            taas.add( arrayDesign );
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                 log.info( cs + " " + cs.getBiologicalCharacteristic() );
                 oldbs.add( cs.getBiologicalCharacteristic() );
             }
@@ -179,11 +190,11 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         // just to make this explicit. The new array design has to contain all the old sequences.
         assertEquals( oldbs.size(), seenBs.size() );
 
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = eePlatformSwitchService.switchExperimentToArrayDesign( ee, mergedAA );
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
         // check we actually got switched over.
         for ( BioAssay ba : ee.getBioAssays() ) {
             assertEquals( mergedAA, ba.getArrayDesignUsed() );
@@ -196,7 +207,6 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
         assertEquals( 1828, ee.getRawExpressionDataVectors().size() );
 
         ee = vectorMergingService.mergeVectors( ee );
-        // ee = eeService.thaw( ee );
 
         // check we got the right processed data
         Collection<ProcessedExpressionDataVector> pvs = processedExpressionDataVectorService
@@ -204,6 +214,7 @@ public class VectorMergingServiceTest extends AbstractGeoServiceTest {
 
         assertEquals( 72, pvs.size() );
 
+        eeService.thaw( ee );
         Collection<DoubleVectorValueObject> processedDataArrays = processedExpressionDataVectorService
                 .getProcessedDataArrays( ee, 50 );
 

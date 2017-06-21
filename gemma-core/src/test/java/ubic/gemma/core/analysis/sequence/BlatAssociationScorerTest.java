@@ -75,8 +75,8 @@ public class BlatAssociationScorerTest {
 
         geneProduct.setGene( gene );
         geneProduct.setName( name );
-        geneProduct.setCytogenicLocation( cytogenicLocation );
-        gene.setCytogenicLocation( cytogenicLocation );
+        geneProduct.setCytogeneticLocation( cytogenicLocation );
+        gene.setCytogeneticLocation( cytogenicLocation );
 
         return geneProduct;
     }

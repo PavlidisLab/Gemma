@@ -18,7 +18,7 @@ import java.util.Collection;
 
 import org.springframework.dao.DataIntegrityViolationException;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.web.remote.EntityDelegator;
 
 /**
@@ -52,7 +52,7 @@ public interface SecurityController {
      * AJAX
      * 
      * @param groupName
-     * @throws DataIntegrityViolationException cannot delete a group if it is being used to set any permission, delete
+     * @throws DataIntegrityViolationException cannot remove a group if it is being used to set any permission, remove
      *         permission settings first (is thrown if the acl_entry table has rows with this sid)
      */
     public abstract void deleteGroup( String groupName );

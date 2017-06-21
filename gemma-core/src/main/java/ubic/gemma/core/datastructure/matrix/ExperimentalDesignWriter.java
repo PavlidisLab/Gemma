@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.util.StringUtil;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -65,7 +66,7 @@ public class ExperimentalDesignWriter {
         boolean writeBaseHeader = writeHeader;
         write( writer, ee, bioAssays, writeBaseHeader, writeHeader, sortByDesign );
     }
-    
+
     /**
      * @param writer
      * @param ExpressionExperiment ee
@@ -76,7 +77,8 @@ public class ExperimentalDesignWriter {
      *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
      * @throws IOException
      */
-    public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader, boolean writeHeader, boolean sortByDesign )
+    public void write( Writer writer, ExpressionExperiment ee, Collection<BioAssay> bioAssays, boolean writeBaseHeader, boolean writeHeader,
+            boolean sortByDesign )
             throws IOException {
 
         ExperimentalDesign ed = ee.getExperimentalDesign();
@@ -85,7 +87,7 @@ public class ExperimentalDesignWriter {
          * See BaseExpressionDataMatrix.setUpColumnElements() for how this is constructed for the DataMatrix, and for
          * some notes about complications.
          */
-        Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<BioMaterial, Collection<BioAssay>>();
+        Map<BioMaterial, Collection<BioAssay>> bioMaterials = new HashMap<>();
         for ( BioAssay bioAssay : bioAssays ) {
             BioMaterial bm = bioAssay.getSampleUsed();
             if ( !bioMaterials.containsKey( bm ) ) {
@@ -96,7 +98,7 @@ public class ExperimentalDesignWriter {
 
         Collection<ExperimentalFactor> efs = ed.getExperimentalFactors();
 
-        List<ExperimentalFactor> orderedFactors = new ArrayList<ExperimentalFactor>();
+        List<ExperimentalFactor> orderedFactors = new ArrayList<>();
         orderedFactors.addAll( efs );
 
         StringBuffer buf = new StringBuffer();
@@ -146,6 +148,8 @@ public class ExperimentalDesignWriter {
     }
 
     /**
+     * Write an (R-friendly) header
+     * 
      * @param writer
      * @param expressionExperiment
      * @param factors
@@ -179,7 +183,7 @@ public class ExperimentalDesignWriter {
         buf.append( "Bioassay\tExternalID" );
 
         for ( ExperimentalFactor ef : factors ) {
-            String efName = ef.getName();
+            String efName = StringUtil.makeValidForR( ef.getName() );
             buf.append( "\t" + efName );
         }
 

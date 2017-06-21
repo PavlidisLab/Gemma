@@ -18,6 +18,8 @@
  */
 package ubic.gemma.persistence.model;
 
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -26,7 +28,7 @@ import java.util.Date;
  * 
  * @author paul
  * @version $Id$
- * @see ubic.gemma.persistence.service.TableMaintenenceUtil
+ * @see TableMaintenanceUtil
  */
 public class Gene2CsStatus implements Serializable {
 

@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,88 +18,59 @@
  */
 package ubic.gemma.persistence.service.common.quantitationtype;
 
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
+import ubic.gemma.persistence.service.VoEnabledDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+
 /**
+ * <p>
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
+ * {@link QuantitationType}.
+ * </p>
+ *
  * @see ubic.gemma.model.common.quantitationtype.QuantitationType
  */
 @Repository
-public class QuantitationTypeDaoImpl extends QuantitationTypeDaoBase {
-
-    private static Log log = LogFactory.getLog( QuantitationTypeDaoImpl.class.getName() );
+public class QuantitationTypeDaoImpl extends VoEnabledDao<QuantitationType, QuantitationTypeValueObject>
+        implements QuantitationTypeDao {
 
     @Autowired
     public QuantitationTypeDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( QuantitationType.class, sessionFactory );
     }
 
     @Override
     public QuantitationType find( QuantitationType quantitationType ) {
-        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( QuantitationType.class );
-
+        Criteria queryObject = this.getSession().createCriteria( QuantitationType.class );
         BusinessKey.addRestrictions( queryObject, quantitationType );
-
-        java.util.List<QuantitationType> results = queryObject.list();
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                debug( results );
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '"
-                                + ubic.gemma.model.common.quantitationtype.QuantitationType.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( QuantitationType ) result;
-
-    }
-
-    @Override
-    public QuantitationType findOrCreate( QuantitationType quantitationType ) {
-        if ( quantitationType == null || quantitationType.getName() == null ) {
-            throw new IllegalArgumentException( "QuantitationType was null or had no name : " + quantitationType );
-        }
-        QuantitationType newQuantitationType = find( quantitationType );
-        if ( newQuantitationType != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found existing quantitationType: " + newQuantitationType );
-            return newQuantitationType;
-        }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new quantitationType: " + quantitationType );
-        return create( quantitationType );
-    }
-
-    /**
-     * @param results
-     */
-    private void debug( Collection<QuantitationType> results ) {
-        StringBuilder sb = new StringBuilder();
-        sb.append( "\nMultiple QuantitationTypes found matching query:\n" );
-        for ( QuantitationType object : results ) {
-            sb.append( object + "\n" );
-        }
-        log.error( sb.toString() );
+        return ( QuantitationType ) queryObject.uniqueResult();
     }
 
     @Override
     public List<QuantitationType> loadByDescription( String description ) {
-        final String query = "from QuantitationTypeImpl q where q.description like :description";
-        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( query );
-        queryObject.setParameter( "description", description );
-        return queryObject.list();
+        return this.findByStringProperty( "description", description );
     }
 
+    @Override
+    public QuantitationTypeValueObject loadValueObject( QuantitationType entity ) {
+        return new QuantitationTypeValueObject( entity );
+    }
+
+    @Override
+    public Collection<QuantitationTypeValueObject> loadValueObjects( Collection<QuantitationType> entities ) {
+        Collection<QuantitationTypeValueObject> vos = new LinkedHashSet<>();
+        for ( QuantitationType e : entities ) {
+            vos.add( this.loadValueObject( e ) );
+        }
+        return vos;
+    }
 }

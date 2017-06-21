@@ -18,30 +18,22 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
-import java.util.Collection;
-
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
-public interface BioSequenceDao extends BaseDao<BioSequence> {
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenceValueObject> {
 
-    /**
-     * 
-     */
-    public BioSequence find( BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public BioSequence findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
+    BioSequence findByAccession( DatabaseEntry accession );
 
     /**
      * <p>
@@ -49,39 +41,17 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
      * sequences are not included in the result.
      * </p>
      */
-    public java.util.Map<Gene, Collection<BioSequence>> findByGenes( java.util.Collection<Gene> genes );
+    Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes );
 
-    /**
-     * 
-     */
-    public java.util.Collection<BioSequence> findByName( java.lang.String name );
+    Collection<BioSequence> findByName( String name );
 
-    /**
-     * 
-     */
-    public BioSequence findOrCreate( BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> getGenesByAccession( java.lang.String search );
+    Collection<Gene> getGenesByAccession( String search );
 
     /**
      * For a biosequence name, get the genes
      */
-    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
+    Collection<Gene> getGenesByName( String search );
 
-    @Override
-    public Collection<BioSequence> load( Collection<Long> ids );
-
-    /**
-     * 
-     */
-    public Collection<BioSequence> thaw( java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * 
-     */
-    public BioSequence thaw( BioSequence bioSequence );
+    void thaw( Collection<BioSequence> bioSequences );
 
 }

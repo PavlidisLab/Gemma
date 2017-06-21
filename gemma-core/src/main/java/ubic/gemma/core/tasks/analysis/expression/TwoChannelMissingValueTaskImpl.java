@@ -32,9 +32,8 @@ public class TwoChannelMissingValueTaskImpl extends AbstractTask<TaskResult, Two
 
         Collection<RawExpressionDataVector> missingValueVectors = twoChannelMissingValues.computeMissingValues( ee,
                 taskCommand.getS2n(), taskCommand.getExtraMissingValueIndicators() );
+        System.out.println("MVs: " + missingValueVectors.size());
 
-        TaskResult result = new TaskResult( taskCommand, missingValueVectors.size() );
-
-        return result;
+        return new TaskResult( taskCommand, missingValueVectors.size() );
     }
 }

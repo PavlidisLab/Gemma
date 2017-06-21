@@ -47,7 +47,7 @@ import com.sdicons.json.parser.JSONParser;
 import antlr.ANTLRException;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate;
@@ -99,10 +99,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     }
 
     /**
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
+
      * @return ModelAndView
      * @throws Exception
      */
@@ -117,9 +114,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new IllegalArgumentException( "Could not load experiment" );
         }
 
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
 
-        /**
+        /*
          * Much more complicated
          */
         boolean changedQT = updateQuantTypes( request, expressionExperiment, eeCommand.getQuantitationTypes() );
@@ -227,11 +224,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
         this.quantitationTypeService = quantitationTypeService;
     }
 
-    /**
-     * @param request
-     * @return Object
-     * @throws ServletException
-     */
     @Override
     protected Object formBackingObject( HttpServletRequest request ) {
         Long id = null;
@@ -251,12 +243,11 @@ public class ExpressionExperimentFormController extends BaseFormController {
             throw new IllegalArgumentException( "Could not load experiment with id=" + id );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
-        qts.addAll( QuantitationTypeValueObject
-                .convert2ValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ) );
+        qts.addAll( quantitationTypeService.loadValueObjects( expressionExperimentService.getQuantitationTypes( ee ) ));
 
-        obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( id ) );
+        obj = new ExpressionExperimentEditValueObject( expressionExperimentService.loadValueObject( ee ) );
 
         obj.setQuantitationTypes( qts );
         obj.setBioAssays( BioAssayValueObject.convert2ValueObjects( ee.getBioAssays() ) );
@@ -292,9 +283,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
         return referenceData;
     }
 
-    /**
-     * @param arrayDesign
-     */
+
     private void audit( ExpressionExperiment ee, AuditEventType eventType, String note ) {
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
@@ -387,7 +376,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
         if ( anyChanges ) {
             /*
-             * FIXME Decide if we need to delete the biomaterial -> factor value associations, it could be completely
+             * FIXME Decide if we need to remove the biomaterial -> factor value associations, it could be completely
              * fouled up.
              */
             log.info( "There were changes to the BioMaterial -> BioAssay map" );

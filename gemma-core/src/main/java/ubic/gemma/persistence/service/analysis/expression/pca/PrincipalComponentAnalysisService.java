@@ -14,10 +14,7 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.pca;
 
-import java.util.List;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
@@ -25,39 +22,29 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author paul
- * @version $Id$
  */
-public interface PrincipalComponentAnalysisService {
+public interface PrincipalComponentAnalysisService extends BaseService<PrincipalComponentAnalysis> {
 
-    /**
-     * @param ee
-     * @param u
-     * @param vToStore
-     * @param bad
-     * @param numLoadingsToStore
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
-            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad,
-            int numComponentsToStore, int numLoadingsToStore );
+            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad, int numComponentsToStore,
+            int numLoadingsToStore );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
-    /**
-     * @param ee
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void removeForExperiment( ExpressionExperiment ee );
 
-    /**
-     * @param ee
-     * @return
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     PrincipalComponentAnalysis loadForExperiment( ExpressionExperiment ee );
 
+    Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee );
 }

@@ -18,44 +18,22 @@
  */
 package ubic.gemma.model.genome.gene;
 
-/**
- * 
- */
-public abstract class GeneAlias implements java.io.Serializable {
+import ubic.gemma.model.common.Identifiable;
 
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.gene.GeneAlias}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}.
-         */
-        public static ubic.gemma.model.genome.gene.GeneAlias newInstance() {
-            return new ubic.gemma.model.genome.gene.GeneAliasImpl();
-        }
+import java.io.Serializable;
 
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}, taking all possible properties
-         * (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.genome.gene.GeneAlias newInstance( String alias ) {
-            final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAliasImpl();
-            entity.setAlias( alias );
-            return entity;
-        }
-    }
+public class GeneAlias implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -4156628260205167700L;
     private String alias;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public GeneAlias() {
@@ -81,20 +59,6 @@ public abstract class GeneAlias implements java.io.Serializable {
     }
 
     /**
-     * 
-     */
-    public String getAlias() {
-        return this.alias;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
      * Returns a hash code based on this entity's identifiers.
      */
     @Override
@@ -105,12 +69,42 @@ public abstract class GeneAlias implements java.io.Serializable {
         return hashCode;
     }
 
+    public String getAlias() {
+        return this.alias;
+    }
+
     public void setAlias( String alias ) {
         this.alias = alias;
     }
 
+    public Long getId() {
+        return this.id;
+    }
+
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.genome.gene.GeneAlias}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}.
+         */
+        public static ubic.gemma.model.genome.gene.GeneAlias newInstance() {
+            return new ubic.gemma.model.genome.gene.GeneAlias();
+        }
+
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneAlias}, taking all possible properties
+         * (except the identifier(s))as arguments.
+         */
+        public static ubic.gemma.model.genome.gene.GeneAlias newInstance( String alias ) {
+            final ubic.gemma.model.genome.gene.GeneAlias entity = new ubic.gemma.model.genome.gene.GeneAlias();
+            entity.setAlias( alias );
+            return entity;
+        }
     }
 
 }

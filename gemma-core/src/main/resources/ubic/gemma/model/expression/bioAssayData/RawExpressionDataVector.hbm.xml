@@ -14,7 +14,7 @@
         <many-to-one name="bioAssayDimension" class="ubic.gemma.model.expression.bioAssayData.BioAssayDimensionImpl"  lazy="proxy" fetch="select">
             <column name="BIO_ASSAY_DIMENSION_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="designElement" class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl"  lazy="false" fetch="select">
+        <many-to-one name="designElement" class="ubic.gemma.model.expression.designElement.CompositeSequence"  lazy="false" fetch="select">
             <column name="DESIGN_ELEMENT_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
         <property name="data" type="ubic.gemma.persistence.model.usertypes.HibernateByteBlobType">

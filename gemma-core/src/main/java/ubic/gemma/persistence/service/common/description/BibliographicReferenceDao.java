@@ -18,77 +18,40 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import java.util.Collection;
-import java.util.Map;
-
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 import ubic.gemma.persistence.service.BrowsingDao;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @see BibliographicReference
  */
-public interface BibliographicReferenceDao extends BrowsingDao<BibliographicReference> {
+public interface BibliographicReferenceDao extends BrowsingDao<BibliographicReference>,
+        BaseVoEnabledDao<BibliographicReference, BibliographicReferenceValueObject> {
 
-    /**
-     * 
-     */
-    public BibliographicReference find( BibliographicReference bibliographicReference );
-
-    /**
-     * 
-     */
-    public BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
+    BibliographicReference findByExternalId( String id, String databaseName );
 
     /**
      * <p>
      * Find by the external database id, such as for PubMed
      * </p>
      */
-    public BibliographicReference findByExternalId( DatabaseEntry externalId );
+    BibliographicReference findByExternalId( DatabaseEntry externalId );
 
-    /**
-     * 
-     */
-    public BibliographicReference findOrCreate( BibliographicReference bibliographicReference );
+    Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
-    /**
-     * 
-     */
-    public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
+    Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference );
 
-    /**
-     * 
-     */
-    public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
-            BibliographicReference bibliographicReference );
+    Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
 
-    @Override
-    public Collection<BibliographicReference> load( Collection<Long> ids );
-
-    /**
-     * @param bibliographicReference
-     * @return
-     */
-    public BibliographicReference thaw( BibliographicReference bibliographicReference );
-
-    /**
-     * @param bibliographicReferences
-     * @return
-     */
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
-
-    /**
-     * @param records
-     * @return
-     */
-    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+    Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records );
 
-    /**
-     * @return
-     */
-    public Collection<Long> listAll();
+    Collection<Long> listAll();
 
 }

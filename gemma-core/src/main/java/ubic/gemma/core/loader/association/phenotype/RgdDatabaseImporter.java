@@ -18,7 +18,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
 /**

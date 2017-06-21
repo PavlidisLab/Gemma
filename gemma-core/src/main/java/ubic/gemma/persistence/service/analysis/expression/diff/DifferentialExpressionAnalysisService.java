@@ -108,7 +108,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    void thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( DifferentialExpressionAnalysis o );

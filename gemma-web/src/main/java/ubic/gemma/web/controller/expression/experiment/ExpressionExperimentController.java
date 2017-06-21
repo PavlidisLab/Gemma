@@ -45,12 +45,13 @@ import ubic.gemma.core.analysis.report.WhatsNewService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSearchService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
@@ -151,6 +152,8 @@ public class ExpressionExperimentController {
     private OutlierDetectionService outlierDetectionService;
     @Autowired
     private CoexpressionAnalysisService coexpressionAnalysisService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
@@ -372,7 +375,7 @@ public class ExpressionExperimentController {
         if ( ee == null )
             return null;
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> efs = ee.getExperimentalDesign().getExperimentalFactors();
 
@@ -430,25 +433,23 @@ public class ExpressionExperimentController {
         if ( ee == null )
             return null;
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
     }
 
     /**
      * AJAX
-     * FIXME why is this using FactorValueValueObject? The constructor doesn't seem correct; should use
-     * ExperimentalFactorValueObject(factor).
      *
      * @return a collection of factor value objects that represent the factors of a given experiment
      */
-    public Collection<FactorValueValueObject> getExperimentalFactors( EntityDelegator e ) {
+    public Collection<ExperimentalFactorValueObject> getExperimentalFactors( EntityDelegator e ) {
 
         if ( e == null || e.getId() == null )
             return null;
 
         ExpressionExperiment ee = this.expressionExperimentService.load( e.getId() );
 
-        Collection<FactorValueValueObject> result = new HashSet<>();
+        Collection<ExperimentalFactorValueObject> result = new HashSet<>();
 
         if ( ee.getExperimentalDesign() == null )
             return null;
@@ -456,7 +457,7 @@ public class ExpressionExperimentController {
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         for ( ExperimentalFactor factor : factors )
-            result.add( new FactorValueValueObject( factor ) );
+            result.add( new ExperimentalFactorValueObject( factor ) );
 
         return result;
     }
@@ -547,7 +548,7 @@ public class ExpressionExperimentController {
             return 0;
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         for ( BioAssay assay : ee.getBioAssays() ) {
             if ( assay.getIsOutlier() ) {
                 count++;
@@ -710,7 +711,7 @@ public class ExpressionExperimentController {
         // We only need to set the additional values:
 
         finalResult.setArrayDesigns(
-                arrayDesignService.loadValueObjects( EntityUtils.getIds( this.getADsSafely( ee ) ) ) );
+                arrayDesignService.loadValueObjects( this.getADsSafely( ee ) ) );
         finalResult.setQChtml( getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
 
@@ -785,7 +786,7 @@ public class ExpressionExperimentController {
         if ( ads == null ) {
             throw new IllegalArgumentException( "No array designs for experiment " + ee.getId() + " could be loaded." );
         }
-        ads = arrayDesignService.thawLite( ads );
+        arrayDesignService.thawLite( ads );
 
         return ads;
     }
@@ -798,7 +799,7 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "No experiment with id=" + id + " could be loaded" );
         }
-        ee = expressionExperimentService.thawLiter( ee );
+        expressionExperimentService.thawLiter( ee );
 
         return ee;
     }
@@ -948,10 +949,10 @@ public class ExpressionExperimentController {
 
         ExpressionExperiment ee = expressionExperimentService.load( eeid );
         // need to thaw?
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
 
-        return QuantitationTypeValueObject.convert2ValueObjects( qts );
+        return quantitationTypeService.loadValueObjects( qts );
     }
 
     /**
@@ -1111,7 +1112,7 @@ public class ExpressionExperimentController {
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
 
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -1136,7 +1137,7 @@ public class ExpressionExperimentController {
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );
@@ -1157,8 +1158,9 @@ public class ExpressionExperimentController {
         }
 
         Integer numBioMaterials = bioMaterials.size();
+        bioMaterialService.thaw( bioMaterials );
         mav.addObject( "numBioMaterials", numBioMaterials );
-        mav.addObject( "bioMaterials", bioMaterialService.thaw( bioMaterials ) );
+        mav.addObject( "bioMaterials", bioMaterials );
 
         addQCInfo( expressionExperiment, mav );
 
@@ -1212,7 +1214,7 @@ public class ExpressionExperimentController {
         if ( ee == null ) {
             throw new IllegalArgumentException( "Could not load experiment with id=" + eeId );
         }
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
 
         Collection<BioMaterial> needToProcess = new HashSet<>();
 
@@ -1377,20 +1379,20 @@ public class ExpressionExperimentController {
          */
         switch ( filter ) {
             case 1: // eligible for diff and don't have it.
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 eesToKeep.removeAll( expressionExperimentService.loadLackingFactors() );
                 break;
             case 2: // need coexp
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 3:
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 break;
             case 4:
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
@@ -1403,20 +1405,20 @@ public class ExpressionExperimentController {
                 eesToKeep = expressionExperimentService.loadLackingTags();
                 break;
             case 8: // needs batch info
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 auditEventService.retainLackingEvent( eesToKeep, FailedBatchInformationMissingEvent.class );
                 break;
             case 9:
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 break;
             case 10:
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainLackingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 11:
-                eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+                eesToKeep = expressionExperimentService.load( EntityUtils.getIds( eeValObjectCol ) );
                 auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 12:
@@ -1597,7 +1599,7 @@ public class ExpressionExperimentController {
         }
 
         Collection<ExpressionExperimentSetValueObject> dbEEsvos = expressionExperimentSetService
-                .loadValueObjects( eeSetIds );
+                .loadValueObjectsByIds( eeSetIds );
         Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<>();
 
         if ( !includeAutoGenerated ) {
@@ -1870,7 +1872,7 @@ public class ExpressionExperimentController {
         @Override
         public TaskResult execute() {
             ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
-            expressionExperimentService.delete( ee );
+            expressionExperimentService.remove( ee );
 
             return new TaskResult( taskCommand, new ModelAndView(
                     new RedirectView( "/Gemma/expressionExperiment/showAllExpressionExperiments.html" ) )
@@ -1889,7 +1891,7 @@ public class ExpressionExperimentController {
         public TaskResult execute() {
             ExpressionExperiment ee = expressionExperimentService.load( taskCommand.getEntityId() );
 
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
 
             if ( ee.getPrimaryPublication() == null ) {
                 return new TaskResult( taskCommand, false );
@@ -1969,11 +1971,11 @@ public class ExpressionExperimentController {
                     expressionExperimentService.update( expressionExperiment );
                 }
             }
-            ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
+            ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject(expressionExperiment.getId());
             result.setPubmedId( Integer.parseInt( pubmedId ) );
-            result.setId( expressionExperiment.getId() );
+            bibliographicReferenceService.thaw( publication );
             result.setPrimaryCitation( CitationValueObject
-                    .convert2CitationValueObject( bibliographicReferenceService.thaw( publication ) ) );
+                    .convert2CitationValueObject( publication ) );
             return new TaskResult( taskCommand, result );
         }
 

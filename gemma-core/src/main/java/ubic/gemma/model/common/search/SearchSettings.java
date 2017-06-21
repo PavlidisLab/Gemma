@@ -18,77 +18,49 @@
  */
 package ubic.gemma.model.common.search;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 
+import java.io.Serializable;
+
 /**
- * 
+ *
  */
-public abstract class SearchSettings implements java.io.Serializable {
+public abstract class SearchSettings implements Identifiable, Serializable {
 
     /**
      * How many results per result type are allowed. This implies that if you search for multiple types of things, you
      * can get more than this.
      */
     private static final int DEFAULT_MAX_RESULTS_PER_RESULT_TYPE = 500;
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.search.SearchSettings}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.search.SearchSettings}.
-         */
-        public static SearchSettings newInstance() {
-            return new SearchSettingsImpl();
-        }
-    }
-
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -982243911532743661L;
     private String query;
-
     private String termUri;
-
-    private Integer maxResults = Integer.valueOf( DEFAULT_MAX_RESULTS_PER_RESULT_TYPE );
-
-    private Boolean searchExperiments = Boolean.valueOf( true );
-
-    private Boolean searchGenes = Boolean.valueOf( true );
-
-    private Boolean searchPlatforms = Boolean.valueOf( true );
-
-    private Boolean searchExperimentSets = Boolean.valueOf( true );
-
-    private Boolean searchPhenotypes = Boolean.valueOf( true );
-
-    private Boolean searchProbes = Boolean.valueOf( true );
-
-    private Boolean searchGeneSets = Boolean.valueOf( true );
-
-    private Boolean searchBioSequences = Boolean.valueOf( true );
-
-    private Boolean searchBibrefs = Boolean.valueOf( true );
-
-    private Boolean useIndices = Boolean.valueOf( true );
-
-    private Boolean useDatabase = Boolean.valueOf( true );
-
-    private Boolean useCharacteristics = Boolean.valueOf( true );
-
-    private Boolean useGo = Boolean.valueOf( true );
-
+    private Integer maxResults = DEFAULT_MAX_RESULTS_PER_RESULT_TYPE;
+    private Boolean searchExperiments = Boolean.TRUE;
+    private Boolean searchGenes = Boolean.TRUE;
+    private Boolean searchPlatforms = Boolean.TRUE;
+    private Boolean searchExperimentSets = Boolean.TRUE;
+    private Boolean searchPhenotypes = Boolean.TRUE;
+    private Boolean searchProbes = Boolean.TRUE;
+    private Boolean searchGeneSets = Boolean.TRUE;
+    private Boolean searchBioSequences = Boolean.TRUE;
+    private Boolean searchBibrefs = Boolean.TRUE;
+    private Boolean useIndices = Boolean.TRUE;
+    private Boolean useDatabase = Boolean.TRUE;
+    private Boolean useCharacteristics = Boolean.TRUE;
+    private Boolean useGo = Boolean.TRUE;
     private Long id;
-
     private Taxon taxon;
-
     private ArrayDesign platformConstraint;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public SearchSettings() {
@@ -107,143 +79,7 @@ public abstract class SearchSettings implements java.io.Serializable {
             return false;
         }
         final SearchSettings that = ( SearchSettings ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * 
-     */
-    public Integer getMaxResults() {
-        return this.maxResults;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign getPlatformConstraint() {
-        return this.platformConstraint;
-    }
-
-    /**
-     * 
-     */
-    public String getQuery() {
-        return this.query;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchBibrefs() {
-        return this.searchBibrefs;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchBioSequences() {
-        return this.searchBioSequences;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchExperiments() {
-        return this.searchExperiments;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchExperimentSets() {
-        return this.searchExperimentSets;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchGenes() {
-        return this.searchGenes;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchGeneSets() {
-        return this.searchGeneSets;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchPhenotypes() {
-        return this.searchPhenotypes;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchPlatforms() {
-        return this.searchPlatforms;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getSearchProbes() {
-        return this.searchProbes;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon getTaxon() {
-        return this.taxon;
-    }
-
-    /**
-     * 
-     */
-    public String getTermUri() {
-        return this.termUri;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getUseCharacteristics() {
-        return this.useCharacteristics;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getUseDatabase() {
-        return this.useDatabase;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getUseGo() {
-        return this.useGo;
-    }
-
-    /**
-     * 
-     */
-    public Boolean getUseIndices() {
-        return this.useIndices;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
     /**
@@ -257,85 +93,170 @@ public abstract class SearchSettings implements java.io.Serializable {
         return hashCode;
     }
 
-    /**
-     * 
-     */
-    public abstract void noSearches();
+    public Long getId() {
+        return this.id;
+    }
 
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public Integer getMaxResults() {
+        return this.maxResults;
     }
 
     public void setMaxResults( Integer maxResults ) {
         this.maxResults = maxResults;
     }
 
+    public ubic.gemma.model.expression.arrayDesign.ArrayDesign getPlatformConstraint() {
+        return this.platformConstraint;
+    }
+
     public void setPlatformConstraint( ubic.gemma.model.expression.arrayDesign.ArrayDesign platformConstraint ) {
         this.platformConstraint = platformConstraint;
+    }
+
+    public String getQuery() {
+        return this.query;
     }
 
     public void setQuery( String query ) {
         this.query = query;
     }
 
+    public Boolean getSearchBibrefs() {
+        return this.searchBibrefs;
+    }
+
     public void setSearchBibrefs( Boolean searchBibrefs ) {
         this.searchBibrefs = searchBibrefs;
+    }
+
+    public Boolean getSearchBioSequences() {
+        return this.searchBioSequences;
     }
 
     public void setSearchBioSequences( Boolean searchBioSequences ) {
         this.searchBioSequences = searchBioSequences;
     }
 
+    public Boolean getSearchExperiments() {
+        return this.searchExperiments;
+    }
+
     public void setSearchExperiments( Boolean searchExperiments ) {
         this.searchExperiments = searchExperiments;
+    }
+
+    public Boolean getSearchExperimentSets() {
+        return this.searchExperimentSets;
     }
 
     public void setSearchExperimentSets( Boolean searchExperimentSets ) {
         this.searchExperimentSets = searchExperimentSets;
     }
 
+    public Boolean getSearchGenes() {
+        return this.searchGenes;
+    }
+
     public void setSearchGenes( Boolean searchGenes ) {
         this.searchGenes = searchGenes;
+    }
+
+    public Boolean getSearchGeneSets() {
+        return this.searchGeneSets;
     }
 
     public void setSearchGeneSets( Boolean searchGeneSets ) {
         this.searchGeneSets = searchGeneSets;
     }
 
+    public Boolean getSearchPhenotypes() {
+        return this.searchPhenotypes;
+    }
+
     public void setSearchPhenotypes( Boolean searchPhenotypes ) {
         this.searchPhenotypes = searchPhenotypes;
+    }
+
+    public Boolean getSearchPlatforms() {
+        return this.searchPlatforms;
     }
 
     public void setSearchPlatforms( Boolean searchPlatforms ) {
         this.searchPlatforms = searchPlatforms;
     }
 
+    public Boolean getSearchProbes() {
+        return this.searchProbes;
+    }
+
     public void setSearchProbes( Boolean searchProbes ) {
         this.searchProbes = searchProbes;
+    }
+
+    public ubic.gemma.model.genome.Taxon getTaxon() {
+        return this.taxon;
     }
 
     public void setTaxon( ubic.gemma.model.genome.Taxon taxon ) {
         this.taxon = taxon;
     }
 
+    public String getTermUri() {
+        return this.termUri;
+    }
+
     public void setTermUri( String termUri ) {
         this.termUri = termUri;
+    }
+
+    public Boolean getUseCharacteristics() {
+        return this.useCharacteristics;
     }
 
     public void setUseCharacteristics( Boolean useCharacteristics ) {
         this.useCharacteristics = useCharacteristics;
     }
 
+    public Boolean getUseDatabase() {
+        return this.useDatabase;
+    }
+
     public void setUseDatabase( Boolean useDatabase ) {
         this.useDatabase = useDatabase;
+    }
+
+    public Boolean getUseGo() {
+        return this.useGo;
     }
 
     public void setUseGo( Boolean useGo ) {
         this.useGo = useGo;
     }
 
+    public Boolean getUseIndices() {
+        return this.useIndices;
+    }
+
     public void setUseIndices( Boolean useIndices ) {
         this.useIndices = useIndices;
+    }
+
+    public abstract void noSearches();
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.common.search.SearchSettings}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.common.search.SearchSettings}.
+         */
+        public static SearchSettings newInstance() {
+            return new SearchSettingsImpl();
+        }
     }
 
 }

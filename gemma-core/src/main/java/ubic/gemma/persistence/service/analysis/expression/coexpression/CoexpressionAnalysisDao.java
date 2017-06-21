@@ -30,22 +30,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public interface CoexpressionAnalysisDao extends AnalysisDao<CoexpressionAnalysis> {
 
-    /**
-     * @param expressionExperiment
-     * @return
-     */
-    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
+    CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
 
-    /**
-     * @param idsToFilter
-     * @return
-     */
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
-    /**
-     * @param ee
-     * @return
-     */
-  public  Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
+    Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 
 }

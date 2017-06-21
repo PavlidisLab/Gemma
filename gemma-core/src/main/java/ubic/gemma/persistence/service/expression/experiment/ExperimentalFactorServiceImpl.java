@@ -14,74 +14,39 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+
+import java.util.Collection;
 
 /**
  * @author pavlidis
  * @see ExperimentalFactorService
  */
 @Service
-public class ExperimentalFactorServiceImpl
-        extends ExperimentalFactorServiceBase {
+public class ExperimentalFactorServiceImpl extends ExperimentalFactorServiceBase {
 
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<ExperimentalFactor> load( Collection<Long> ids ) {
-        return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().load( ids );
-    }
-
-    @Override
-    protected ExperimentalFactor handleCreate( ExperimentalFactor experimentalFactor ) {
-        return this.getExperimentalFactorDao().create( experimentalFactor );
+    @Autowired
+    public ExperimentalFactorServiceImpl( ExperimentalFactorDao experimentalFactorDao,
+            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        super( experimentalFactorDao, differentialExpressionAnalysisDao );
     }
 
     @Override
     protected void handleDelete( ExperimentalFactor experimentalFactor ) {
-
         /*
          * First, check to see if there are any diff results that use this factor.
          */
-        Collection<DifferentialExpressionAnalysis> analyses = getDifferentialExpressionAnalysisDao()
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisDao
                 .findByFactor( experimentalFactor );
         for ( DifferentialExpressionAnalysis a : analyses ) {
-            getDifferentialExpressionAnalysisDao().remove( a );
+            differentialExpressionAnalysisDao.remove( a );
         }
+        this.experimentalFactorDao.remove( experimentalFactor );
 
-        this.getExperimentalFactorDao().remove( experimentalFactor );
-
-    }
-
-    @Override
-    protected ExperimentalFactor handleFind( ExperimentalFactor experimentalFactor ) {
-        return this.getExperimentalFactorDao().find( experimentalFactor );
-    }
-
-    @Override
-    protected ExperimentalFactor handleFindOrCreate( ExperimentalFactor experimentalFactor ) {
-        return this.getExperimentalFactorDao().findOrCreate( experimentalFactor );
-    }
-
-    @Override
-    protected ExperimentalFactor handleLoad( Long id ) {
-        return this.getExperimentalFactorDao().load( id );
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<ExperimentalFactor> handleLoadAll() {
-        return ( Collection<ExperimentalFactor> ) this.getExperimentalFactorDao().loadAll();
-    }
-
-    @Override
-    protected void handleUpdate( ExperimentalFactor experimentalFactor ) {
-        this.getExperimentalFactorDao().update( experimentalFactor );
     }
 
 }

@@ -32,7 +32,7 @@
       <property name="technologyType" type="ubic.gemma.model.expression.arrayDesign.TechnologyTypeEnum">
          <column name="TECHNOLOGY_TYPE" not-null="false" unique="false" sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci"/>
       </property>
-      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.TaxonImpl" lazy="proxy" fetch="select">
+      <many-to-one name="primaryTaxon" class="ubic.gemma.model.genome.Taxon" lazy="proxy" fetch="select">
          <column name="PRIMARY_TAXON_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
       <set name="externalReferences"  lazy="true" fetch="select" inverse="false" cascade="all">
@@ -40,14 +40,14 @@
          <key foreign-key="DATABASE_ENTRY_ARRAY_DESIGN_FKC">
             <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.DatabaseEntryImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.DatabaseEntry"/>
       </set>
       <set name="compositeSequences"  lazy="true" fetch="select" inverse="true" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="COMPOSITE_SEQUENCE_ARRAY_DESIGN_FKC">
             <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.designElement.CompositeSequence"/>
       </set>
       <many-to-one name="mergedInto" class="ubic.gemma.model.expression.arrayDesign.ArrayDesign"  lazy="proxy" fetch="select">
          <column name="MERGED_INTO_FK" not-null="false" sql-type="BIGINT"/>
@@ -77,7 +77,7 @@
          <key foreign-key="LOCAL_FILE_ARRAY_DESIGN_FKC">
             <column name="ARRAY_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.LocalFileImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.LocalFile"/>
       </set>
       <set name="alternateNames" lazy="false" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />

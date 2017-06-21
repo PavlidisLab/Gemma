@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.persistence.service.genome.ChromosomeDao;
 import ubic.gemma.persistence.service.genome.GeneDao;
-import ubic.gemma.persistence.service.genome.TaxonDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatAssociationDao;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultDao;
@@ -37,6 +36,7 @@ import ubic.gemma.persistence.service.genome.biosequence.BioSequenceDao;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.persistence.service.genome.gene.GeneProductDao;
 import ubic.gemma.model.genome.sequenceAnalysis.*;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.SequenceBinUtils;
 
 import java.util.Collection;
@@ -180,17 +180,17 @@ abstract public class GenomePersister extends CommonPersister {
         existingGene.setOfficialName( newGeneInfo.getOfficialName() );
         existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
         existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
-        existingGene.setCytogenicLocation( newGeneInfo.getCytogenicLocation() );
+        existingGene.setCytogeneticLocation( newGeneInfo.getCytogeneticLocation() );
 
         fillChromosomeLocationAssociations( existingGene.getPhysicalLocation(), existingGene.getTaxon() );
-        fillChromosomeLocationAssociations( existingGene.getCytogenicLocation(), existingGene.getTaxon() );
+        fillChromosomeLocationAssociations( existingGene.getCytogeneticLocation(), existingGene.getTaxon() );
 
         existingGene.getAliases().clear();
         existingGene.getAliases().addAll( newGeneInfo.getAliases() );
 
         /*
          * This is the only tricky part - the gene products. We update them if they are already there, and add them if
-         * not. We do not normally delete 'old' ones that the new gene instance does not have, because they might be
+         * not. We do not normally remove 'old' ones that the new gene instance does not have, because they might be
          * from different sources. For example, Ensembl or GoldenPath. -- UNLESS the product has an NCBI GI because we
          * know those come from NCBI.
          */
@@ -229,7 +229,7 @@ abstract public class GenomePersister extends CommonPersister {
                      * is going to get 'reattached' to its original gene.
                      */
                     assert existingGeneProduct != null;
-                    existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
+                    geneProductDao.thaw( existingGeneProduct );
                     Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
                     if ( oldGeneForExistingGeneProduct != null ) {
                         Gene geneInfo = newGeneProductInfo.getGene(); // transient.
@@ -239,7 +239,7 @@ abstract public class GenomePersister extends CommonPersister {
                                     + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
 
                             // / Here we just remove its old association.
-                            oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
+                            geneDao.thaw( oldGeneForExistingGeneProduct );
                             oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
                             geneDao.update( oldGeneForExistingGeneProduct );
 
@@ -291,7 +291,7 @@ abstract public class GenomePersister extends CommonPersister {
      * FIXME this duplicates some code from GeneProductService, but we're using the DAOs here.
      */
     protected void removeGeneProducts( Collection<GeneProduct> toRemove ) {
-        Collection<? extends BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
+        Collection<BlatAssociation> associations = this.blatAssociationDao.find( toRemove );
         if ( !associations.isEmpty() ) {
             log.info( "Removing " + associations.size() + " blat associations involving up to " + toRemove.size()
                     + " products." );
@@ -409,7 +409,7 @@ abstract public class GenomePersister extends CommonPersister {
         gene.setProducts( null );
         gene.setTaxon( persistTaxon( gene.getTaxon() ) );
         fillChromosomeLocationAssociations( gene.getPhysicalLocation(), gene.getTaxon() );
-        fillChromosomeLocationAssociations( gene.getCytogenicLocation(), gene.getTaxon() );
+        fillChromosomeLocationAssociations( gene.getCytogeneticLocation(), gene.getTaxon() );
 
         if ( log.isInfoEnabled() )
             log.info( "New gene: " + gene );
@@ -660,7 +660,7 @@ abstract public class GenomePersister extends CommonPersister {
 
     private void addAnyNewAccessions( GeneProduct existing, GeneProduct geneProduct ) {
         Map<String, DatabaseEntry> updatedGpMap = new HashMap<>();
-        existing = geneProductDao.thaw( existing );
+        geneProductDao.thaw( existing );
         for ( DatabaseEntry de : existing.getAccessions() ) {
             updatedGpMap.put( de.getAccession(), de );
         }
@@ -713,7 +713,7 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * Check for deletions or changed GIs. If we have a GI that is not in the collection, then we might delete it from
+     * Check for deletions or changed GIs. If we have a GI that is not in the collection, then we might remove it from
      * the system.
      *
      * @param usedGIs return toRemove
@@ -734,8 +734,8 @@ abstract public class GenomePersister extends CommonPersister {
              * have to update the GI on our record. However, it might be that we _also_ have the one with the correct
              * GI. If that happens there are three situations. First, if the other one is already associated with this
              * gene, we should proceed with deleting the outdated copy and just keep the other one. Second, if the other
-             * one is not associated with any gene, we should delete that one and update the outdated record. Third, the
-             * other one might be associated with a _different_ gene, in which case we delete _that gp_ and update the
+             * one is not associated with any gene, we should remove that one and update the outdated record. Third, the
+             * other one might be associated with a _different_ gene, in which case we remove _that gp_ and update the
              * outdated record attached to _this_ gene.
              */
             boolean deleteIt = true;
@@ -755,7 +755,7 @@ abstract public class GenomePersister extends CommonPersister {
 
                     /*
                      * HOWEVER, if we ALREADY applied the same GI to some other product of the same gene, we have to
-                     * delete the duplicate. This is due to cruft, we shouldn't have such duplicates.
+                     * remove the duplicate. This is due to cruft, we shouldn't have such duplicates.
                      */
                     if ( switchedGis.contains( ngp.getNcbiGi() ) ) {
                         log.warn( "Another gene product with the same intended GI will be deleted: " + existingGp );
@@ -773,7 +773,7 @@ abstract public class GenomePersister extends CommonPersister {
                 }
 
                 // handle less common cases, largely due to database cruft.
-                otherGpUsingThisGi = geneProductDao.thaw( otherGpUsingThisGi );
+                geneProductDao.thaw( otherGpUsingThisGi );
 
                 Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
                 if ( oldGeneForExistingGeneProduct == null ) {
@@ -798,7 +798,7 @@ abstract public class GenomePersister extends CommonPersister {
                             + existingGene + " -- detected during GI update checks " );
 
                     // Here we just remove its old association.
-                    oldGeneForExistingGeneProduct = geneDao.thaw( oldGeneForExistingGeneProduct );
+                    geneDao.thaw( oldGeneForExistingGeneProduct );
                     oldGeneForExistingGeneProduct.getProducts().remove( otherGpUsingThisGi );
                     geneDao.update( oldGeneForExistingGeneProduct );
 
@@ -943,7 +943,7 @@ abstract public class GenomePersister extends CommonPersister {
         Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
         assert !isTransient( geneForExistingGeneProduct );
 
-        existingGeneProduct = geneProductDao.thaw( existingGeneProduct );
+        geneProductDao.thaw( existingGeneProduct );
 
         // Update all the fields. Note that usually, some of these can't have changed or we wouldn't have even
         // found the 'existing' one (name GI in particular); however, sometimes we are updating this information

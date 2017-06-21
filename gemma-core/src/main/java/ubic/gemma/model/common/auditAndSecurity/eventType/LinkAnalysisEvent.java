@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Computing coexpression links for an expression experiment
  * </p>
  */
-public abstract class LinkAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class LinkAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent}.
@@ -34,7 +34,7 @@ public abstract class LinkAnalysisEvent extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent();
         }
 
     }

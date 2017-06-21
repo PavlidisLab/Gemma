@@ -18,55 +18,41 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.FlushMode;
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
+import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.persistence.util.BusinessKey;
-import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  * @see ubic.gemma.model.genome.biosequence.BioSequence
  */
 @Repository
 public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
-    private static Log log = LogFactory.getLog( BioSequenceDaoImpl.class.getName() );
-
     @Autowired
     public BioSequenceDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#find(ubic.gemma
-     * .model.genome.biosequence.BioSequence)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public BioSequence find( BioSequence bioSequence ) {
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = BusinessKey.createQueryObject( getSessionFactory().getCurrentSession(), bioSequence );
+        Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), bioSequence );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         /*
@@ -101,13 +87,6 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
         return ( BioSequence ) result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * 
-     * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession (ubic.gemma.model.common.description.
-     * DatabaseEntry)
-     */
     @Override
     public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
         BusinessKey.checkValidKey( databaseEntry );
@@ -147,36 +126,21 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#findOrCreate(ubic
-     * .gemma.model.genome.biosequence.BioSequence )
-     */
     @Override
     public BioSequence findOrCreate( BioSequence bioSequence ) {
         BioSequence existingBioSequence = this.find( bioSequence );
         if ( existingBioSequence != null ) {
             return existingBioSequence;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new: " + bioSequence );
+        if ( log.isDebugEnabled() )
+            log.debug( "Creating new: " + bioSequence );
         return create( bioSequence );
     }
 
     @Override
-    protected Integer handleCountAll() {
-        final String query = "select count(*) from BioSequenceImpl";
-        return ( ( Long ) getHibernateTemplate().find( query ).iterator().next() ).intValue();
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
-     */
-    @Override
     protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) {
-        if ( genes == null || genes.isEmpty() ) return new HashMap<Gene, Collection<BioSequence>>();
+        if ( genes == null || genes.isEmpty() )
+            return new HashMap<Gene, Collection<BioSequence>>();
 
         Map<Gene, Collection<BioSequence>> results = new HashMap<Gene, Collection<BioSequence>>();
 
@@ -206,36 +170,30 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
     @Override
     protected Collection<BioSequence> handleFindByName( String name ) {
-        if ( name == null ) return null;
+        if ( name == null )
+            return null;
         final String query = "from BioSequenceImpl b where b.name = :name";
         return getHibernateTemplate().findByNamedParam( query, "name", name );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase# handleGetGenesByAccession(java.lang.String)
-     */
     @Override
     protected Collection<Gene> handleGetGenesByAccession( String search ) {
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
-                + " inner join bs2gp.bioSequence bs "
-                + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct " + " and de.accession = :search ";
+        final String queryString =
+                "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp"
+                        + " inner join bs2gp.bioSequence bs "
+                        + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct "
+                        + " and de.accession = :search ";
         return getHibernateTemplate().findByNamedParam( queryString, "search", search );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
-     */
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) {
         Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
-                + " and bs2gp.bioSequence.name like :search ";
+        final String queryString =
+                "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
+                        + " and bs2gp.bioSequence.name like :search ";
         try {
-            org.hibernate.Query queryObject = super.getSessionFactory().getCurrentSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -245,54 +203,33 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
         return genes;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#handleLoad(java .util.Collection)
-     */
     @Override
-    protected Collection<BioSequence> handleLoad( Collection<Long> ids ) {
-        final String queryString = "select distinct bs from BioSequenceImpl bs where bs.id in (:ids)";
-        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+    protected void handleThaw( final BioSequence bioSequence ) {
+        this.getSession().refresh( bioSequence );
+        Hibernate.initialize( bioSequence.getTaxon() );
+        if ( bioSequence.getTaxon() != null ) {
+            Hibernate.initialize( bioSequence.getTaxon().getExternalDatabase() );
+            Hibernate.initialize( bioSequence.getTaxon().getParentTaxon() );
+            if ( bioSequence.getTaxon().getParentTaxon() != null )
+                Hibernate.initialize( bioSequence.getTaxon().getParentTaxon().getExternalDatabase() );
+        }
+        Hibernate.initialize( bioSequence.getSequenceDatabaseEntry() );
+        if ( bioSequence.getSequenceDatabaseEntry() != null )
+            Hibernate.initialize( bioSequence.getSequenceDatabaseEntry().getExternalDatabase() );
+        Hibernate.initialize( bioSequence.getBioSequence2GeneProduct() );
+        for ( BioSequence2GeneProduct gp : bioSequence.getBioSequence2GeneProduct() ) {
+            Hibernate.initialize( gp.getGeneProduct() );
+            Hibernate.initialize( gp.getGeneProduct().getGene() );
+            Hibernate.initialize( gp.getGeneProduct().getGene().getAliases() );
+            Hibernate.initialize( gp.getGeneProduct().getGene().getAccessions() );
+        }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#handleThaw(ubic
-     * .gemma.model.genome.biosequence.BioSequence )
-     */
     @Override
-    protected BioSequence handleThaw( final BioSequence bioSequence ) {
-        if ( bioSequence == null ) return null;
-        if ( bioSequence.getId() == null ) return bioSequence;
-
-        List<?> res = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select b from BioSequenceImpl b "
-                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon pt "
-                                + " left join fetch pt.externalDatabase "
-                                + " left join fetch b.sequenceDatabaseEntry s left join fetch s.externalDatabase"
-                                + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                                + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                                + " left join fetch g.aliases left join fetch g.accessions  where b.id=:bid", "bid",
-                        bioSequence.getId() );
-
-        BioSequence thawedBioSequence = ( BioSequence ) res.iterator().next();
-
-        return thawedBioSequence;
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceDaoBase#handleThaw(java .util.Collection)
-     */
-    @Override
-    protected Collection<BioSequence> handleThaw( final Collection<BioSequence> bioSequences ) {
-        return doThaw( bioSequences );
+    protected void handleThaw( final Collection<BioSequence> bioSequences ) {
+        for ( BioSequence e : bioSequences ) {
+            handleThaw( e );
+        }
     }
 
     /**
@@ -320,51 +257,8 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
                 sb.append( " acc=" + entity.getSequenceDatabaseEntry().getAccession() );
             sb.append( "\n" );
         }
-        if ( log.isDebugEnabled() ) log.debug( sb.toString() );
-    }
-
-    /**
-     * @param bioSequences
-     * @param deep
-     */
-    private Collection<BioSequence> doThaw( final Collection<BioSequence> bioSequences ) {
-
-        if ( bioSequences.isEmpty() ) return new HashSet<BioSequence>();
-
-        Collection<BioSequence> result = new HashSet<BioSequence>();
-        Collection<BioSequence> batch = new HashSet<BioSequence>();
-
-        for ( BioSequence g : bioSequences ) {
-            batch.add( g );
-            if ( batch.size() == 100 ) {
-                result.addAll( doThawBatch( batch ) );
-                batch.clear();
-            }
-        }
-
-        if ( !batch.isEmpty() ) {
-            result.addAll( doThawBatch( batch ) );
-        }
-
-        return result;
-
-    }
-
-    /**
-     * @param batch
-     * @return
-     */
-    private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select b from BioSequenceImpl b "
-                                + " left join fetch b.taxon tax left join fetch tax.externalDatabase left join fetch tax.parentTaxon left join fetch b.sequenceDatabaseEntry s "
-                                + " left join fetch s.externalDatabase"
-                                + " left join fetch b.bioSequence2GeneProduct bs2gp "
-                                + " left join fetch bs2gp.geneProduct gp left join fetch gp.gene g"
-                                + " left join fetch g.aliases left join fetch g.accessions  where b.id in (:bids)",
-                        "bids", EntityUtils.getIds( batch ) );
+        if ( log.isDebugEnabled() )
+            log.debug( sb.toString() );
     }
 
     /**
@@ -372,7 +266,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
      * @param results
      */
     private void findByGenesBatch( Collection<Gene> genes, Map<Gene, Collection<BioSequence>> results ) {
-        final String queryString = "select distinct gene,bs from GeneImpl gene inner join fetch gene.products ggp,"
+        final String queryString = "select distinct gene,bs from Gene gene inner join fetch gene.products ggp,"
                 + " BioSequenceImpl bs inner join bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct bsgp"
                 + " where ggp=bsgp and gene in (:genes)";
 
@@ -385,5 +279,15 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
             }
             results.get( g ).add( b );
         }
+    }
+
+    @Override
+    public BioSequenceValueObject loadValueObject( BioSequence entity ) {
+        return BioSequenceValueObject.fromEntity( entity );
+    }
+
+    @Override
+    public Collection<BioSequenceValueObject> loadValueObjects( Collection<BioSequence> entities ) {
+        return null;
     }
 }

@@ -29,8 +29,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.apps.Blat;
-import ubic.gemma.apps.ShellDelegatingBlat;
+import ubic.gemma.core.apps.Blat;
+import ubic.gemma.core.apps.ShellDelegatingBlat;
 import ubic.gemma.core.externalDb.GoldenPathSequenceAnalysis;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;

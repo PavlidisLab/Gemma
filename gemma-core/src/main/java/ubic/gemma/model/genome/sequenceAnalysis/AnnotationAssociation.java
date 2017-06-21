@@ -28,26 +28,9 @@ import ubic.gemma.model.common.description.ExternalDatabase;
  * information is available; annotations are unavailable (e.g., non-model organisms); or sequences are too short to
  * align using our usual methods (e.g., miRNAs).
  */
-public abstract class AnnotationAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
+public class AnnotationAssociation extends ubic.gemma.model.association.BioSequence2GeneProduct {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 8648644792470060326L;
-
-    /**
-     * Constructs new instances of {@link AnnotationAssociation}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link AnnotationAssociation}.
-         */
-        public static AnnotationAssociation newInstance() {
-            return new AnnotationAssociationImpl();
-        }
-
-    }
-
     private ExternalDatabase source;
 
     /**
@@ -61,6 +44,19 @@ public abstract class AnnotationAssociation extends ubic.gemma.model.association
 
     public void setSource( ExternalDatabase source ) {
         this.source = source;
+    }
+
+    /**
+     * Constructs new instances of {@link AnnotationAssociation}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link AnnotationAssociation}.
+         */
+        public static AnnotationAssociation newInstance() {
+            return new AnnotationAssociation();
+        }
+
     }
 
 }

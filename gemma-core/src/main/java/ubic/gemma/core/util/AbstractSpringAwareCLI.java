@@ -22,7 +22,7 @@ import gemma.gsec.authentication.ManualAuthenticationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;

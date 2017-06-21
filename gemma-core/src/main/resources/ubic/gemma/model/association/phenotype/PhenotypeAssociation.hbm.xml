@@ -48,7 +48,7 @@
 		<property name="lastUpdated" type="java.util.Date">
 			<column name="LAST_UPDATED" not-null="true" unique="false" sql-type="DATETIME"/>
 		</property>
-		<many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl" cascade="none" lazy="false" fetch="select">
+		<many-to-one name="gene" class="ubic.gemma.model.genome.Gene" cascade="none" lazy="false" fetch="select">
 			<column name="GENE_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
 		<set name="phenotypes" lazy="false" fetch="select" inverse="false" cascade="all">
@@ -56,7 +56,7 @@
 			<key foreign-key="CHARACTERISTIC_PHENOTYPE_ASSOCIATION_FKC">
 				<column name="PHENOTYPE_ASSOCIATION_FK" sql-type="BIGINT" />
 			</key>
-			<one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl" />
+			<one-to-many class="ubic.gemma.model.common.description.Characteristic" />
 		</set>
 		<set name="phenotypeAssociationPublications" lazy="false" fetch="select" inverse="false" cascade="all">
 			<cache usage="read-write" />
@@ -65,11 +65,11 @@
 			</key>
 			<one-to-many class="ubic.gemma.model.association.phenotype.PhenotypeAssociationPublicationImpl" />
 		</set>
-		<many-to-one name="associationType" class="ubic.gemma.model.common.description.CharacteristicImpl"
+		<many-to-one name="associationType" class="ubic.gemma.model.common.description.Characteristic"
 			cascade="all" lazy="false" fetch="select">
 			<column name="ASSOCIATION_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true" />
 		</many-to-one>
-		<many-to-one name="evidenceSource" class="ubic.gemma.model.common.description.DatabaseEntryImpl" lazy="proxy"
+		<many-to-one name="evidenceSource" class="ubic.gemma.model.common.description.DatabaseEntry" lazy="proxy"
 			fetch="select">
 			<column name="EVIDENCE_SOURCE_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
@@ -77,13 +77,13 @@
 			fetch="select">
 			<column name="SCORE_TYPE_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
-		<subclass name="ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl" discriminator-value="LiteratureEvidenceImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.LiteratureEvidence" discriminator-value="LiteratureEvidence"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.GenericEvidenceImpl" discriminator-value="GenericEvidenceImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.GenericEvidence" discriminator-value="GenericEvidence"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl" discriminator-value="ExperimentalEvidenceImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.ExperimentalEvidence" discriminator-value="ExperimentalEvidence"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 			<many-to-one name="experiment" class="ubic.gemma.model.analysis.Investigation" lazy="proxy" fetch="select">
 				<column name="EXPERIMENT_FK" not-null="false" sql-type="BIGINT" />

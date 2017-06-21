@@ -19,8 +19,10 @@
 package ubic.gemma.persistence.service.association.phenotype;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
-public interface ExperimentalEvidenceDao extends BaseDao<ExperimentalEvidence> {
+public interface ExperimentalEvidenceDao
+        extends BaseVoEnabledDao<ExperimentalEvidence, ExperimentalEvidenceValueObject> {
 
 }

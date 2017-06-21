@@ -25,8 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import ubic.gemma.core.expression.experiment.service.ExperimentalDesignService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -78,8 +78,7 @@ public class CharacteristicBrowserController {
     private CharacteristicService characteristicService;
 
     public JsonReaderResponse<AnnotationValueObject> browse( ListBatchCommand batch ) {
-        Integer count = characteristicService.count(); // fixme: maybe don't do this every time. It's actually fast once
-        // it's cached.
+        Integer count = characteristicService.countAll();
 
         List<AnnotationValueObject> results = new ArrayList<>();
 
@@ -147,7 +146,7 @@ public class CharacteristicBrowserController {
     }
 
     public Integer count() {
-        return characteristicService.count();
+        return characteristicService.countAll();
     }
 
 

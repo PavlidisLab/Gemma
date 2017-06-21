@@ -25,15 +25,20 @@ package ubic.gemma.persistence.service.common.measurement;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.common.measurement.Measurement;
 
 /**
- * @see ubic.gemma.model.common.measurement.Measurement
+ * @see Measurement
  */
 @Repository
 public class MeasurementDaoImpl extends MeasurementDaoBase {
 
     @Autowired
     public MeasurementDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( sessionFactory );
+    }
+
+    @Override
+    public void thaw( Measurement entity ) {
     }
 }

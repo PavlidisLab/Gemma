@@ -14,37 +14,19 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.persistence.service.BaseDao;
 
 /**
  * @author paul
- * @version $Id$
  */
-public interface AnnotationAssociationDao {
+public interface AnnotationAssociationDao extends BaseDao<AnnotationAssociation>{
 
-    public AnnotationAssociation create( AnnotationAssociation annotationAssociation );
+    Collection<AnnotationAssociation> find( BioSequence bioSequence );
 
-    public Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection );
+    Collection<AnnotationAssociation> find( Gene gene );
 
-    public Collection<AnnotationAssociation> find( BioSequence bioSequence );
+    void thaw( Collection<AnnotationAssociation> anCollection );
 
-    public Collection<AnnotationAssociation> find( Gene gene );
-
-    public Collection<AnnotationAssociation> load( Collection<Long> id );
-
-    public AnnotationAssociation load( Long id );
-
-    public void remove( AnnotationAssociation annotationAssociation );
-
-    public void remove( Collection<AnnotationAssociation> anCollection );
-
-    public void thaw( AnnotationAssociation annotationAssociation );
-
-    public void thaw( Collection<AnnotationAssociation> anCollection );
-
-    public void update( AnnotationAssociation annotationAssociation );
-
-    public void update( Collection<AnnotationAssociation> anCollection );
-
-    public Collection<AnnotationAssociation> find( Collection<GeneProduct> gps );
+    Collection<AnnotationAssociation> find( Collection<GeneProduct> gps );
 
 }

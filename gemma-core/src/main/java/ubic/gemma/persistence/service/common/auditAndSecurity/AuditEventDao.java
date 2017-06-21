@@ -20,8 +20,10 @@ package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 import java.util.Date;
@@ -32,7 +34,7 @@ import java.util.Map;
  * @see AuditEvent
  * @see AuditEventService
  */
-public interface AuditEventDao extends BaseDao<AuditEvent> {
+public interface AuditEventDao extends BaseVoEnabledDao<AuditEvent, AuditEventValueObject> {
     /**
      * @return events for the given auditable.
      */
@@ -67,7 +69,5 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
     void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
-
-    void thaw( AuditEvent auditEvent );
 
 }

@@ -19,40 +19,30 @@
 
 package ubic.gemma.model.genome.gene;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import gemma.gsec.authentication.UserManager;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.genome.gene.GeneSetValueObjectHelper;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
- * TODO Document Me
- * 
  * @author tvrossum
- * @version $Id$
  */
 public class GeneSetValueObjectHelperTest extends BaseSpringContextTest {
 
+    @Autowired
+    private GeneSetService geneSetService;
+    @Autowired
+    private GeneSetValueObjectHelper geneSetValueObjectHelper;
     private Gene g1 = null;
     private Taxon tax1 = null;
     private GeneSet gset = null;
-
-    @Autowired
-    GeneSetService geneSetService;
-
-    @Autowired
-    UserManager userManager;
-
-    @Autowired
-    GeneSetValueObjectHelper geneSetValueObjectHelper;
 
     @Before
     public void setUp() {

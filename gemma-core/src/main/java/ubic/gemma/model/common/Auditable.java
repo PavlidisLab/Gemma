@@ -6,7 +6,7 @@ package ubic.gemma.model.common;
  * Interface that covers objects that are Auditable.
  * When creating new Auditable entity, new AuditTrail is automatically created in {@link ubic.gemma.persistence.persister.PersisterHelper}
  */
-public interface Auditable {
+public interface Auditable extends Identifiable{
 
     ubic.gemma.model.common.auditAndSecurity.AuditTrail getAuditTrail();
 

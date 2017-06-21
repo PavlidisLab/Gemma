@@ -23,32 +23,25 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.service.BaseDao;
 
 /**
- * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet
+ * @see ExpressionAnalysisResultSet
  */
 public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalysisResultSet> {
 
-    /**
-     * @return
-     */
-    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet );
+
+    void thaw( ExpressionAnalysisResultSet resultSet );
 
     /**
      * @param resultSet Only thaws the factor not the probe information
      */
-    public void thawLite( ExpressionAnalysisResultSet resultSet );
+    void thawLite( ExpressionAnalysisResultSet resultSet );
 
-    public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
-    /**
-     * @param differentialExpressionAnalysis
-     * @return
-     */
-    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    void thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     /**
      * @param resultSet Thaws without including contasts
-     * @return
      */
-    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
+    void thawWithoutContrasts( ExpressionAnalysisResultSet resultSet );
 
 }

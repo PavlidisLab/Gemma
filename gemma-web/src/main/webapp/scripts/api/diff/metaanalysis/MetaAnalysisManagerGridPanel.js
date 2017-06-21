@@ -340,7 +340,7 @@ Gemma.MetaAnalysisManagerGridPanel = Ext
                                       if ( Ext.get( "hasUser" ) != null && Ext.get( "hasUser" ).getValue() ) {
                                          adminLinks += Gemma.SecurityManager
                                             .getSecurityLink(
-                                               'ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysisImpl',
+                                               'ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis',
                                                record.data.id, record.data.public, record.data.shared,
                                                record.data.editable, // Can current user edit?
                                                null, null, null, // It is title in Security dialog. Specify null to use

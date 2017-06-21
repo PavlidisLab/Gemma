@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2010 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,72 +18,55 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import java.util.Collection;
-import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractDao;
+
+import java.util.Collection;
 
 /**
- * @author pavlidis
- * @version $Id$
+ * <p>
+ * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
+ * <code>ubic.gemma.model.genome.Chromosome</code>.
+ * </p>
+ *
+ * @see ubic.gemma.model.genome.Chromosome
  */
 @Repository
-public class ChromosomeDaoImpl extends ChromosomeDaoBase {
+public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements ChromosomeDao {
 
     @Autowired
     public ChromosomeDaoImpl( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
+        super( Chromosome.class, sessionFactory );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ChromosomeDao#find(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Collection<Chromosome> find( String name, Taxon taxon ) {
-        if ( StringUtils.isBlank( name ) ) {
-            throw new IllegalArgumentException( "Name cannot be blank" );
-
-        }
-        if ( taxon == null ) {
-            throw new IllegalArgumentException( "Taxon cannot be null" );
-        }
-
-        if ( taxon.getId() == null ) {
-            throw new IllegalArgumentException( "Taxon must be a persistent entity" );
-        }
-
-        String q = "from ChromosomeImpl c where c.name=:n and c.taxon=:t";
-        List<Chromosome> results = this.getHibernateTemplate().findByNamedParam( q, new String[] { "n", "t" },
-                new Object[] { name, taxon } );
-
-        if ( results == null || results.isEmpty() ) return null;
-
-        return results;
+        //noinspection unchecked
+        return this.getSession().createQuery( "from ChromosomeImpl c where c.name=:n and c.taxon=:t" )
+                .setParameter( "n", name ).setParameter( "t", taxon ).list();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ChromosomeDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
     @Override
     public Chromosome findOrCreate( String name, Taxon taxon ) {
         Collection<Chromosome> hits = this.find( name, taxon );
-
         if ( hits == null || hits.isEmpty() ) {
             Chromosome c = Chromosome.Factory.newInstance( name, taxon );
-
             return create( c );
         }
         return hits.iterator().next();
-
     }
 
+    @Override
+    public Chromosome findOrCreate( Chromosome entity ) {
+        return this.findOrCreate( entity.getName(), entity.getSequence().getTaxon() );
+    }
+
+    @Override
+    public Chromosome find( Chromosome entity ) {
+        return this.find( entity.getName(), entity.getSequence().getTaxon() ).iterator().next();
+    }
 }

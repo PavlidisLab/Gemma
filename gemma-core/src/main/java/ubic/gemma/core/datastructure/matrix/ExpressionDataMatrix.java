@@ -221,6 +221,12 @@ public interface ExpressionDataMatrix<T> {
     public T[][] getRows( List<CompositeSequence> designElements );
 
     /**
+     * 
+     * @return true if any values are null or NaN (for Doubles); all other values are considered non-missing.
+     */
+    public boolean hasMissingValues();
+
+    /**
      * @return int
      */
     public int rows();

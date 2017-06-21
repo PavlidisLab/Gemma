@@ -31,7 +31,7 @@ import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerSe
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchInfoPopulationServiceImpl;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -64,9 +64,7 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * Ajax method. Pick the analysis type when we want it to be completely automated.
-     * 
-     * @param id
-     * @return
+     *
      */
     public DifferentialExpressionAnalyzerInfo determineAnalysisType( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );
@@ -74,7 +72,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
                 .getExperimentalDesign().getExperimentalFactors() );
@@ -173,9 +171,7 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point when running completely automatically.
-     * 
-     * @return
-     * @throws Exception
+     *
      */
     public String run( Long id ) throws Exception {
 
@@ -184,7 +180,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
         this.experimentReportService.evictFromCache( ee.getId() );
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
@@ -196,12 +192,7 @@ public class DifferentialExpressionAnalysisController {
 
     /**
      * AJAX entry point for 'customized' analysis.
-     * 
-     * @param id
-     * @param includeInteractions
-     * @param subsetFactorId optional
-     * @return
-     * @throws Exception
+     *
      */
     public String runCustom( Long id, Collection<Long> factorids, boolean includeInteractions, Long subsetFactorId )
             throws Exception {
@@ -215,7 +206,7 @@ public class DifferentialExpressionAnalysisController {
             throw new IllegalArgumentException( "Cannot access experiment with id=" + id );
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         /*
          * Get the factors matching the factorids

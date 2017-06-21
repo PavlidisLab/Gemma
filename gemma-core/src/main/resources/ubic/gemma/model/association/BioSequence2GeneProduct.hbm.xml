@@ -39,18 +39,18 @@
       <many-to-one name="geneProduct" class="ubic.gemma.model.genome.gene.GeneProductImpl"  lazy="proxy" fetch="select">
          <column name="GENE_PRODUCT_FK" not-null="false" sql-type="BIGINT"/>
       </many-to-one>
-      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl" discriminator-value="BlatAssociationImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation" discriminator-value="BlatAssociation" dynamic-insert="false" dynamic-update="false" abstract="false">
          <many-to-one name="blatResult" class="ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl" cascade="none"  lazy="proxy" fetch="select">
             <column name="BLAT_RESULT_FK" not-null="false" sql-type="BIGINT"/>
          </many-to-one>
       </subclass> 
-      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationImpl" discriminator-value="AnnotationAssociationImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         <many-to-one name="source" class="ubic.gemma.model.common.description.ExternalDatabaseImpl"  lazy="proxy" fetch="select">
+      <subclass name="ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation" discriminator-value="AnnotationAssociation" dynamic-insert="false" dynamic-update="false" abstract="false">
+         <many-to-one name="source" class="ubic.gemma.model.common.description.ExternalDatabase"  lazy="proxy" fetch="select">
             <column name="SOURCE_FK" not-null="false" sql-type="BIGINT"/>
          </many-to-one>
       </subclass>
       <subclass name="ubic.gemma.model.association.ReferenceAssociationImpl" discriminator-value="ReferenceAssociationImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
-         <many-to-one name="referencedDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntryImpl"  lazy="proxy" fetch="select">
+         <many-to-one name="referencedDatabaseEntry" class="ubic.gemma.model.common.description.DatabaseEntry"  lazy="proxy" fetch="select">
             <column name="REFERENCED_DATABASE_ENTRY_FK" not-null="false" sql-type="BIGINT"/>
          </many-to-one>
       </subclass>

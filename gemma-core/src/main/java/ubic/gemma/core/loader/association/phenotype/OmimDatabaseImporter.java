@@ -33,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import ubic.basecode.ontology.ncbo.OmimAnnotatorClient;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.apps.GemmaCLI.CommandGroup;
+import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.model.genome.Gene;
 
 /**

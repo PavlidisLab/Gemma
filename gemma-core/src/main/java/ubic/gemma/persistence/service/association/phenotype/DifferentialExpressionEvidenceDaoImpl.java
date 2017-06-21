@@ -32,8 +32,7 @@ public class DifferentialExpressionEvidenceDaoImpl extends AbstractDao<Different
 
     @Autowired
     public DifferentialExpressionEvidenceDaoImpl( SessionFactory sessionFactory ) {
-        super( DifferentialExpressionEvidenceImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( DifferentialExpressionEvidence.class, sessionFactory );
     }
 
 }

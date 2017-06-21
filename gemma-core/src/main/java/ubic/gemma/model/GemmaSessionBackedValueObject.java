@@ -22,7 +22,7 @@ public interface GemmaSessionBackedValueObject {
 
     Long getId();
 
-    void setId( Long id );
+    void setId(Long id);
 
     boolean isModified();
 

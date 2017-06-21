@@ -33,7 +33,7 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.core.analysis.preprocess.filter.ExpressionExperimentFilter;
 import ubic.gemma.core.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;

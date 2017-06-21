@@ -18,22 +18,20 @@
  */
 package ubic.gemma.core.loader.expression.geo.service;
 
-import java.util.Collection;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.persister.Persister;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.Collection;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public abstract class AbstractGeoService implements BeanFactoryAware, GeoService {
 
@@ -49,39 +47,18 @@ public abstract class AbstractGeoService implements BeanFactoryAware, GeoService
 
     protected BeanFactory beanFactory;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.expression.geo.service.GeoService#fetchAndLoad(java.lang.String, boolean, boolean,
-     * boolean, boolean, boolean, boolean)
-     */
     @Override
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms,
             boolean allowSuperSeriesImport, boolean allowSubSeriesImport );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.expression.geo.service.GeoService#fetchAndLoad(java.lang.String, boolean, boolean,
-     * boolean, boolean)
-     */
     @Override
-    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly,
-            boolean doSampleMatching, boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
+    public abstract Collection<?> fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
+            boolean aggressiveQuantitationTypeRemoval, boolean splitIncompatiblePlatforms );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.expression.geo.service.GeoService#getGeoDomainObjectGenerator()
-     */
     @Override
     public GeoDomainObjectGenerator getGeoDomainObjectGenerator() {
         return this.geoDomainObjectGenerator;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     @Override
@@ -89,16 +66,14 @@ public abstract class AbstractGeoService implements BeanFactoryAware, GeoService
         this.geoDomainObjectGenerator = generator;
     }
 
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
     public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
-     */
     @Override
     public void setBeanFactory( BeanFactory beanFactory ) throws BeansException {
         this.beanFactory = beanFactory;

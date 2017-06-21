@@ -33,28 +33,29 @@ public abstract class ChromosomeFeature extends Describable {
     private String ncbiId;
     private String previousNcbiId;
 
-    private CytogeneticLocation cytogenicLocation;
+    private CytogeneticLocation cytogeneticLocation;
 
     private PhysicalLocation physicalLocation;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ChromosomeFeature() {
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.CytogeneticLocation getCytogenicLocation() {
-        return this.cytogenicLocation;
+    public CytogeneticLocation getCytogeneticLocation() {
+        return this.cytogeneticLocation;
+    }
+
+    public void setCytogeneticLocation( CytogeneticLocation cytogeneticLocation ) {
+        this.cytogeneticLocation = cytogeneticLocation;
     }
 
     /**
      * The NCBI id for this feature.
-     * 
+     *
      * @deprecated use NcbiGi or NcbiGeneId.
      */
     @Deprecated
@@ -62,11 +63,16 @@ public abstract class ChromosomeFeature extends Describable {
         return this.ncbiId;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.PhysicalLocation getPhysicalLocation() {
+    public void setNcbiId( String ncbiId ) {
+        this.ncbiId = ncbiId;
+    }
+
+    public PhysicalLocation getPhysicalLocation() {
         return this.physicalLocation;
+    }
+
+    public void setPhysicalLocation( PhysicalLocation physicalLocation ) {
+        this.physicalLocation = physicalLocation;
     }
 
     /**
@@ -74,18 +80,6 @@ public abstract class ChromosomeFeature extends Describable {
      */
     public String getPreviousNcbiId() {
         return this.previousNcbiId;
-    }
-
-    public void setCytogenicLocation( ubic.gemma.model.genome.CytogeneticLocation cytogenicLocation ) {
-        this.cytogenicLocation = cytogenicLocation;
-    }
-
-    public void setNcbiId( String ncbiId ) {
-        this.ncbiId = ncbiId;
-    }
-
-    public void setPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
-        this.physicalLocation = physicalLocation;
     }
 
     public void setPreviousNcbiId( String previousNcbiId ) {

@@ -23,7 +23,7 @@
         <property name="loadingRank" type="java.lang.Integer">
             <column name="LOADING_RANK" not-null="true" unique="false" sql-type="INTEGER"/>
         </property>
-        <many-to-one name="probe" class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl"  lazy="false" fetch="select">
+        <many-to-one name="probe" class="ubic.gemma.model.expression.designElement.CompositeSequence"  lazy="false" fetch="select">
             <column name="PROBE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>

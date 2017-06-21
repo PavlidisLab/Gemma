@@ -28,21 +28,52 @@ import java.util.Collection;
  */
 public interface BaseDao<T> {
 
-    Collection<? extends T> create( Collection<? extends T> entities );
+    /**
+     * Crates all the given entities in the persistent storage.
+     * @param entities the entities to be crated.
+     * @return collection of entities representing the instances in the persistent storage that were created.
+     */
+    Collection<T> create( Collection<T> entities );
 
     /**
-     * Create an object. If the entity type is immutable, this may also delete any existing entities identified by an
+     * Create an object. If the entity type is immutable, this may also remove any existing entities identified by an
      * appropriate 'find' method.
      */
     T create( T entity );
 
-    Collection<? extends T> load( Collection<Long> ids );
+    /**
+     * Loads entities with given ids form the persistent storage.
+     * @param ids the ids of entities to be loaded. If some id's are not found, they are skipped.
+     * @return collection of entities with given ids.
+     */
+    Collection<T> load( Collection<Long> ids );
 
+    /**
+     * Loads the entity with given id from the persistent storage.
+     * @param id the id of entity to load.
+     * @return the entity with given id, or null if such entity does not exist.
+     */
     T load( Long id );
 
-    Collection<? extends T> loadAll();
+    /**
+     * Loads all instanced of specific class from the persistent storage.
+     * @return a collection containing all instances that are currently accessible.
+     */
+    Collection<T> loadAll();
 
-    void remove( Collection<? extends T> entities );
+    /**
+     * Counts all instances of specific class in the persitent storage.
+     * @return number that is the amount of instances currently accessible.
+     */
+    Integer countAll();
+
+    /**
+     * Loads all properties of the given entity.
+     * @param entity the entity to have all its properties loaded.
+     */
+    void thaw( T entity );
+
+    void remove( Collection<T> entities );
 
     /**
      * Remove a persistent instance based on its id. The implementer is trusted to know what type of object to remove.
@@ -59,11 +90,26 @@ public interface BaseDao<T> {
     /**
      * Update the entities. Not supported if the entities are immutable.
      */
-    void update( Collection<? extends T> entities );
+    void update( Collection<T> entities );
 
     /**
      * Update the entity. Not supported if the entity is immutable.
      */
     void update( T entity );
 
+    /**
+     * Does a look up for the given entity in the persistent storage, usually looking for a specific identifier ( either
+     * id or a string property).
+     *
+     * @param entity the entity to look for.
+     * @return an entity that was found in the persistent storage, or null if no such entity was found.
+     */
+    T find( T entity );
+
+    /**
+     * Calls the find method, and if this method returns null, creates a new instance in the persistent storage.
+     * @param entity the entity to look for and persist if not found.
+     * @return the given entity, guaranteed to be representing an entity present in the persistent storage.
+     */
+    T findOrCreate( T entity );
 }

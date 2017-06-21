@@ -166,7 +166,7 @@ public class UserManagerImpl implements UserManager {
         String foundUsername = u.getUserName();
 
         if ( !foundUsername.equals( username ) ) {
-            throw new AccessDeniedException( "The wrong user name was provided for the email address." );
+            throw new AccessDeniedException( "Wrong user name was provided for the email address." );
         }
 
         logger.debug( "Changing password for user '" + username + "'" );

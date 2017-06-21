@@ -29,7 +29,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.core.analysis.preprocess.OutlierDetails;
 import ubic.gemma.core.analysis.preprocess.OutlierDetectionService;
 import ubic.gemma.core.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
@@ -78,7 +78,7 @@ public class BioAssayController {
             throw new IllegalArgumentException( "Could not load experiment with ID=" + eeId );
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         Collection<BioAssayValueObject> result = new HashSet<>();
 
         // this used to be in a separate method.

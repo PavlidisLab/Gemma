@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -150,7 +150,7 @@ public class BioMaterialController {
     }
 
     public Collection<BioMaterial> getBioMaterials( Collection<Long> ids ) {
-        return bioMaterialService.loadMultiple( ids );
+        return bioMaterialService.load( ids );
     }
 
     /**
@@ -162,7 +162,7 @@ public class BioMaterialController {
             throw new EntityNotFoundException( "Expression experiment with id=" + id + " not found" );
         }
 
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
         Collection<BioAssay> bioAssays = expressionExperiment.getBioAssays();
         Collection<BioMaterial> bioMaterials = new ArrayList<>();
         for ( BioAssay assay : bioAssays ) {

@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -113,14 +113,10 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
     public void tearDown() {
         if ( ee != null ) {
             ee = eeService.load( ee.getId() );
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
     }
 
-    /**
-     * Test method for
-     * {@link ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)} .
-     */
     @Test
     public final void testParseLoadDelete() throws Exception {
 
@@ -140,14 +136,14 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
         this.aclTestUtils.checkEEAcls( ee );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
         int s = ee.getExperimentalDesign().getExperimentalFactors().size();
         ExperimentalFactor toDelete = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
 
         experimentalFactorService.delete( toDelete );
 
         ee = this.expressionExperimentService.load( ee.getId() );
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
 
         assertEquals( s - 1, ee.getExperimentalDesign().getExperimentalFactors().size() );
 

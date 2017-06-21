@@ -139,15 +139,9 @@ public class CharacteristicValueObjectTest extends TestCase {
 
     public void testCompareToOrdering() {
         // Order is category, taxon, value, valueUri
-        CharacteristicValueObject c = new CharacteristicValueObject();
-        CharacteristicValueObject d = new CharacteristicValueObject();
-        CharacteristicValueObject e = new CharacteristicValueObject();
-
-        a.setId( 1L );
-        b.setId( 2L );
-        c.setId( 3L );
-        d.setId( 4L );
-        e.setId( 5L );
+        CharacteristicValueObject c = new CharacteristicValueObject(3L);
+        CharacteristicValueObject d = new CharacteristicValueObject(4L);
+        CharacteristicValueObject e = new CharacteristicValueObject(5L);
 
         a.setCategory( "aaa" );
         b.setCategory( "zzz" );
@@ -194,7 +188,7 @@ public class CharacteristicValueObjectTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        a = new CharacteristicValueObject();
-        b = new CharacteristicValueObject();
+        a = new CharacteristicValueObject(1L);
+        b = new CharacteristicValueObject(2L);
     }
 }

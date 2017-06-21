@@ -22,7 +22,7 @@ import java.io.InputStreamReader;
 
 import org.junit.Test;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 
 /**

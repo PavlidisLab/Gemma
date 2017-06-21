@@ -14,36 +14,42 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.description.ExternalDatabaseValueObject;
 
 /**
  * @author Paul
  */
-public class TaxonValueObject {
+public class TaxonValueObject extends IdentifiableValueObject<Taxon> {
 
     private String scientificName;
     private String commonName;
     private String abbreviation;
-    private String unigenePrefix;
-    private String swissProtSuffix;
     private Integer ncbiId;
     private Boolean isSpecies;
     private Boolean isGenesUsable;
-    private Long id;
     private ExternalDatabaseValueObject externalDatabase;
     private TaxonValueObject parentTaxon;
 
-    public static TaxonValueObject fromEntity( Taxon taxon ) {
-        TaxonValueObject vo = new TaxonValueObject();
-        vo.setScientificName( taxon.getScientificName() );
-        vo.setId( taxon.getId() );
-        vo.setCommonName( taxon.getCommonName() );
+    public TaxonValueObject( Taxon taxon ) {
+        super( taxon.getId() );
+        setScientificName( taxon.getScientificName() );
+        setCommonName( taxon.getCommonName() );
+        setAbbreviation( taxon.getAbbreviation() );
+
+        setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );
+        setNcbiId( taxon.getNcbiId() );
+        setIsGenesUsable( taxon.getIsGenesUsable() );
+        setIsSpecies( taxon.getIsSpecies() );
+        setParentTaxon( taxon.getParentTaxon() != null ? TaxonValueObject.fromEntity( taxon.getParentTaxon() ) : null );
 
         if ( taxon.getExternalDatabase() != null ) {
-            vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );
+            setExternalDatabase( ExternalDatabaseValueObject.fromEntity( taxon.getExternalDatabase() ) );
         }
+    }
 
-        return vo;
+    public static TaxonValueObject fromEntity( Taxon taxon ) {
+        return new TaxonValueObject( taxon );
     }
 
     public String getAbbreviation() {
@@ -68,14 +74,6 @@ public class TaxonValueObject {
 
     public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
         this.externalDatabase = externalDatabase;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
     public Boolean getIsGenesUsable() {
@@ -116,22 +114,6 @@ public class TaxonValueObject {
 
     public void setScientificName( String scientificName ) {
         this.scientificName = scientificName;
-    }
-
-    public String getSwissProtSuffix() {
-        return this.swissProtSuffix;
-    }
-
-    public void setSwissProtSuffix( String swissProtSuffix ) {
-        this.swissProtSuffix = swissProtSuffix;
-    }
-
-    public String getUnigenePrefix() {
-        return this.unigenePrefix;
-    }
-
-    public void setUnigenePrefix( String unigenePrefix ) {
-        this.unigenePrefix = unigenePrefix;
     }
 
 }

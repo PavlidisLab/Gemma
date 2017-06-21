@@ -21,8 +21,21 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * Signifies a mapping based on sequence alignment performed by the system.
  */
-public abstract class AlignmentBasedGeneMappingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl {
+public class AlignmentBasedGeneMappingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 7667960927701046528L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public AlignmentBasedGeneMappingEvent() {
+    }
 
     /**
      * Constructs new instances of
@@ -34,22 +47,9 @@ public abstract class AlignmentBasedGeneMappingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = 7667960927701046528L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public AlignmentBasedGeneMappingEvent() {
     }
 
 }

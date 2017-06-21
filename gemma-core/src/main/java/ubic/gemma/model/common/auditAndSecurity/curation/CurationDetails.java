@@ -18,8 +18,11 @@
  */
 package ubic.gemma.model.common.auditAndSecurity.curation;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -27,24 +30,17 @@ import java.util.Date;
  *
  * @author tesarst
  */
-public class CurationDetails implements java.io.Serializable {
+public class CurationDetails implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -3418540112052921387L;
 
     private Long id;
-
     private Date lastUpdated;
-
     private AuditEvent lastNeedsAttentionEvent;
-
     private Boolean needsAttention;
-
     private AuditEvent lastTroubledEvent;
-
     private Boolean troubled;
-
     private AuditEvent lastNoteUpdateEvent;
-
     private String curationNote;
 
     /* ********************************
@@ -140,7 +136,7 @@ public class CurationDetails implements java.io.Serializable {
 
     /**
      * If you are trying to check for trouble of an expression experiment, you might consider using the method
-     * {@link ubic.gemma.core.expression.experiment.service.ExpressionExperimentService#isTroubled(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
+     * {@link ExpressionExperimentService#isTroubled(ubic.gemma.model.expression.experiment.ExpressionExperiment)}
      * which also checks the parenting array designs
      *
      * @return true only if these curation details trouble flag is set to true.

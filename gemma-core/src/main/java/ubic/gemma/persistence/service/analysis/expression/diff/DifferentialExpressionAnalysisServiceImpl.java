@@ -254,8 +254,9 @@ public class DifferentialExpressionAnalysisServiceImpl implements DifferentialEx
 
     @Override
     @Transactional(readOnly = true)
-    public DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getExpressionAnalysisResultSetDao().thawFully( differentialExpressionAnalysis );
+    public void thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
+        this.thaw( differentialExpressionAnalysis ); // thaws analysis
+        this.getExpressionAnalysisResultSetDao().thawFully( differentialExpressionAnalysis ); // thaws result sets
     }
 
     @Override

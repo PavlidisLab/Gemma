@@ -18,43 +18,53 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
-
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * @author paul
- * @version $Id$
  */
-public abstract class DataVectorValueObject implements Serializable {
+public abstract class DataVectorValueObject extends IdentifiableValueObject<DataVector> implements Serializable {
 
     private static final long serialVersionUID = 4291090102921066018L;
 
-    protected static ByteArrayConverter byteArrayConverter;
+    static ByteArrayConverter byteArrayConverter;
 
     static {
         byteArrayConverter = new ByteArrayConverter();
     }
 
-    protected Long id;
-
     protected CompositeSequenceValueObject designElement;
     protected QuantitationTypeValueObject quantitationType;
     protected ExpressionExperimentValueObject expressionExperiment;
-    private Collection<Long> genes;
 
+    private Collection<Long> genes;
     private BioAssayDimensionValueObject bioAssayDimension;
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * Required when using the class as a spring bean.
+     */
     public DataVectorValueObject() {
     }
 
+    public DataVectorValueObject( Long id ) {
+        super( id );
+    }
+
     public DataVectorValueObject( DesignElementDataVector dedv, BioAssayDimensionValueObject badvo ) {
+        super( dedv.getId() );
         if ( badvo == null ) {
             BioAssayDimension badim = dedv.getBioAssayDimension();
             this.bioAssayDimension = new BioAssayDimensionValueObject( badim );
@@ -64,8 +74,7 @@ public abstract class DataVectorValueObject implements Serializable {
         assert !this.bioAssayDimension.getBioAssays().isEmpty();
         this.quantitationType = new QuantitationTypeValueObject( dedv.getQuantitationType() );
         this.designElement = new CompositeSequenceValueObject( dedv.getDesignElement() );
-        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment() );
-        this.id = dedv.getId();
+        this.expressionExperiment = new ExpressionExperimentValueObject( dedv.getExpressionExperiment(), true );
     }
 
     public DataVectorValueObject( DesignElementDataVector dedv, Collection<Long> genes,
@@ -74,26 +83,55 @@ public abstract class DataVectorValueObject implements Serializable {
         this.genes = genes;
     }
 
+    /* ********************************
+     * Object override methods
+     * ********************************/
+
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         final DoubleVectorValueObject other = ( DoubleVectorValueObject ) obj;
         if ( id == null ) {
             return false;
-        } else if ( !id.equals( other.id ) ) return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
         return true;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     /**
      * Represents the order of the bioassays for this. It might not be a real (persistent) BioAssayDimension: it might
      * be a subset, or a "padded" one.
-     * 
+     *
      * @return
      */
     public BioAssayDimensionValueObject getBioAssayDimension() {
         return this.bioAssayDimension;
+    }
+
+    public void setBioAssayDimension( BioAssayDimensionValueObject bioAssayDimension ) {
+        this.bioAssayDimension = bioAssayDimension;
     }
 
     public List<BioAssayValueObject> getBioAssays() {
@@ -105,8 +143,16 @@ public abstract class DataVectorValueObject implements Serializable {
         return designElement;
     }
 
+    public void setDesignElement( CompositeSequenceValueObject designElement ) {
+        this.designElement = designElement;
+    }
+
     public ExpressionExperimentValueObject getExpressionExperiment() {
         return expressionExperiment;
+    }
+
+    public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
     /**
@@ -116,34 +162,6 @@ public abstract class DataVectorValueObject implements Serializable {
         return genes;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public QuantitationTypeValueObject getQuantitationType() {
-        return quantitationType;
-    }
-
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
-        return result;
-    }
-
-    public void setBioAssayDimension( BioAssayDimensionValueObject bioAssayDimension ) {
-        this.bioAssayDimension = bioAssayDimension;
-    }
-
-    public void setDesignElement( CompositeSequenceValueObject designElement ) {
-        this.designElement = designElement;
-    }
-
-    public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
-        this.expressionExperiment = expressionExperiment;
-    }
-
     /**
      * @param genes the genes to set
      */
@@ -151,17 +169,14 @@ public abstract class DataVectorValueObject implements Serializable {
         this.genes = genes;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    public QuantitationTypeValueObject getQuantitationType() {
+        return quantitationType;
     }
 
     public void setQuantitationType( QuantitationTypeValueObject quantitationType ) {
         this.quantitationType = quantitationType;
     }
 
-    @Override
-    public String toString() {
-        return "EE=" + this.expressionExperiment.getId() + " Probe=" + this.designElement.getId();
-    }
+
 
 }

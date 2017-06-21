@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates the experiment was the subject of a differential expression analysis.
  * </p>
  */
-public abstract class DifferentialExpressionAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class DifferentialExpressionAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -36,7 +36,7 @@ public abstract class DifferentialExpressionAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent();
         }
 
     }

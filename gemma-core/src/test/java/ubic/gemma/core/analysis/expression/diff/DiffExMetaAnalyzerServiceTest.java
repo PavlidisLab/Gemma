@@ -20,10 +20,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
@@ -34,18 +30,22 @@ import ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.TableMaintenenceUtil;
+import ubic.gemma.persistence.service.TableMaintenanceUtil;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.io.File;
@@ -114,13 +114,13 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private boolean loadedGenes = false;
 
     @Autowired
-    private TableMaintenenceUtil maintenenceUtil;
+    private TableMaintenanceUtil maintenenceUtil;
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
-    private TableMaintenenceUtil tableMaintenenceUtil;
+    private TableMaintenanceUtil tableMaintenanceUtil;
 
     @Before
     public void before() throws Exception {
@@ -161,9 +161,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         assertNotNull( ds2 );
         assertNotNull( ds3 );
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        experimentService.thawLite( ds1 );
+        experimentService.thawLite( ds2 );
+        experimentService.thawLite( ds3 );
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds1 );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ds2 );
@@ -193,9 +193,12 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         experimentService.update( ds2 );
         experimentService.update( ds3 );
 
-        ds1 = experimentService.thawLite( experimentService.load( ds1.getId() ) );
-        ds2 = experimentService.thawLite( experimentService.load( ds2.getId() ) );
-        ds3 = experimentService.thawLite( experimentService.load( ds3.getId() ) ); // pain! fails sometimes.
+        ds1 = experimentService.load( ds1.getId() );
+        experimentService.thawLite( ds1 );
+        ds2 = experimentService.load( ds2.getId() );
+        experimentService.thawLite( ds2 );
+        ds3 = experimentService.load( ds3.getId() );
+        experimentService.thawLite( ds3 );
 
         designImporter.importDesign( ds1,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2018.design.txt" ) );
@@ -206,9 +209,9 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         designImporter.importDesign( ds3,
                 this.getClass().getResourceAsStream( "/data/loader/expression/geo/meta-analysis/gse2111.design.txt" ) );
 
-        ds1 = experimentService.thawLite( ds1 );
-        ds2 = experimentService.thawLite( ds2 );
-        ds3 = experimentService.thawLite( ds3 );
+        experimentService.thawLite( ds1 );
+        experimentService.thawLite( ds2 );
+        experimentService.thawLite( ds3 );
 
         /*
          * Run differential analyses.
@@ -258,7 +261,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         int numUp = 0;
         int numDown = 0;
         int foundTests = 0;
-        boolean foundcaprin1 = false, foundacly = false, foundacta2 = false, foundaco2 = false, foundthra = false, foundppm1g = false, foundSep21 = false, foundGuk1 = false, foundKxd1 = false;
+        boolean foundcaprin1 = false, foundacly = false, foundacta2 = false, foundaco2 = false, foundthra = false, foundppm1g = false,
+                foundSep21 = false, foundGuk1 = false, foundKxd1 = false;
 
         for ( GeneDifferentialExpressionMetaAnalysisResult r : metaAnalysis.getResults() ) {
             assertTrue( r.getMetaPvalue() <= 1.0 && r.getMetaPvalue() >= 0.0 );
@@ -383,11 +387,8 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         for ( GeneDifferentialExpressionMetaAnalysisIncludedResultSetInfoValueObject gdemairsivo : mdvo
                 .getIncludedResultSetsInfo() ) {
             DifferentialExpressionAnalysis thawedAnalysis = this.differentialExpressionAnalysisService
-                    .thawFully( this.differentialExpressionAnalysisService.load( gdemairsivo.getAnalysisId() ) );
-            // see bug 3365 for policy on storing results that are part of a meta-analysis.
-            for ( ExpressionAnalysisResultSet rs : thawedAnalysis.getResultSets() ) {
-                assertEquals( 1.0, rs.getQvalueThresholdForStorage(), 0.0001 );
-            }
+                    .load( gdemairsivo.getAnalysisId() );
+            this.differentialExpressionAnalysisService.thawFully( thawedAnalysis );
         }
 
         for ( GeneDifferentialExpressionMetaAnalysisResultValueObject vo : mdvo.getResults() ) {
@@ -513,7 +514,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         arrayDesignService.removeBiologicalCharacteristics( gpl97 );
         arrayDesignProbeMapperService.processArrayDesign( gpl97, human, annotationFile, genbank, false );
 
-        tableMaintenenceUtil.updateGene2CsEntries();
+        tableMaintenanceUtil.updateGene2CsEntries();
     }
 
     private void cleanup() {
@@ -531,7 +532,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         ArrayDesign gpl97 = arrayDesignService.findByShortName( "GPL97" );
         if ( gpl96 != null ) {
             for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl96 ) ) {
-                experimentService.delete( ee );
+                experimentService.remove( ee );
             }
 
             arrayDesignService.remove( gpl96 );
@@ -539,7 +540,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
 
         if ( gpl97 != null ) {
             for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( gpl97 ) ) {
-                experimentService.delete( ee );
+                experimentService.remove( ee );
             }
             arrayDesignService.remove( gpl97 );
         }
@@ -558,7 +559,7 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
     private void deleteSet( String shortName ) {
         ExpressionExperiment set = experimentService.findByShortName( shortName );
         if ( set != null )
-            experimentService.delete( set );
+            experimentService.remove( set );
 
     }
 
@@ -566,7 +567,6 @@ public class DiffExMetaAnalyzerServiceTest extends AbstractGeoServiceTest {
         DifferentialExpressionAnalysisConfig config1 = new DifferentialExpressionAnalysisConfig();
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
         config1.setFactorsToInclude( factors );
-        config1.setQvalueThreshold( 0.05 ); // realistic
         return config1;
     }
 

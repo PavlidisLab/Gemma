@@ -24,28 +24,17 @@ import ubic.basecode.util.Configuration;
 
 /**
  * Ontology created for Gemma. See bug 4312
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class GemmaOntologyService extends AbstractOntologyMemoryBackedService {
     private static final String ONTOLOGY_URL = "url.gemmaOntology";
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.basecode.ontology.providers.AbstractOntologyService#getOntologyName()
-     */
     @Override
     protected String getOntologyName() {
         return "gemmaOntology";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.basecode.ontology.providers.AbstractOntologyService#getOntologyUrl()
-     */
     @Override
     protected String getOntologyUrl() {
         return Configuration.getString( ONTOLOGY_URL );

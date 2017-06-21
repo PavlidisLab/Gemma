@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- */package ubic.gemma.web.controller.expression.experiment;
+ */
+package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -41,8 +42,8 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
@@ -280,7 +281,7 @@ public class ExpressionDataFileUploadController {
             Long arrayDesignId = arrayDesignIds.iterator().next();
 
             ArrayDesign design = arrayDesignService.load( arrayDesignId );
-            design = arrayDesignService.thaw( design );
+            arrayDesignService.thaw( design );
 
             // check that the probes can be matched up...
             int numRowsMatchingArrayDesign = 0;
@@ -333,7 +334,6 @@ public class ExpressionDataFileUploadController {
         o.setName( scrub( o.getName() ) );
         o.setDescription( scrub( o.getDescription() ) );
         o.setShortName( scrub( o.getShortName() ) );
-
     }
 
     private String scrub( String s ) {

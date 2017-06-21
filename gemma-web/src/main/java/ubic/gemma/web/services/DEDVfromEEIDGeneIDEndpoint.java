@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.persistence.service.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -84,9 +84,9 @@ public class DEDVfromEEIDGeneIDEndpoint extends AbstractGemmaEndpoint {
             eeIDLong.add( Long.parseLong( id ) );
 
         // Need to get and thaw the experiments.
-        Collection<ExpressionExperiment> eeObjs = expressionExperimentService.loadMultiple( eeIDLong );
+        Collection<ExpressionExperiment> eeObjs = expressionExperimentService.load( eeIDLong );
         for ( ExpressionExperiment ee : eeObjs ) {
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
         }
 
         // get gene id's from request

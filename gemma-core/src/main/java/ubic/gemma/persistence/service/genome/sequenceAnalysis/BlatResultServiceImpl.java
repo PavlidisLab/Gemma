@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,97 +18,40 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
+
 import java.util.Collection;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-
 /**
- * @version $Id$
+ * Spring Service base class for <code>BlatResultService</code>, provides access to all services and entities referenced
+ * by this service.
+ *
  * @see BlatResultService
  */
-@Service
-public class BlatResultServiceImpl extends BlatResultServiceBase {
+@Component
+public class BlatResultServiceImpl extends VoEnabledService<BlatResult, BlatResultValueObject>
+        implements BlatResultService {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatResultService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BlatResult load( Long id ) {
-        return this.getBlatResultDao().load( id );
-    }
+    private final BlatResultDao blatResultDao;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatResultService#thaw(ubic.gemma.model.genome.sequenceAnalysis.
-     * BlatResult )
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BlatResult thaw( BlatResult blatResult ) {
-        return this.getBlatResultDao().thaw( blatResult );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatResultService#thaw(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults ) {
-        return this.getBlatResultDao().thaw( blatResults );
+    @Autowired
+    public BlatResultServiceImpl( BlatResultDao blatResultDao ) {
+        super( blatResultDao );
+        this.blatResultDao = blatResultDao;
     }
 
     /**
-     * @see BlatResultService#create(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
+     * @see BlatResultService#findByBioSequence(ubic.gemma.model.genome.biosequence.BioSequence)
      */
     @Override
-    protected BlatResult handleCreate( BlatResult blatResult ) {
-        return this.getBlatResultDao().create( blatResult );
+    @Transactional(readOnly = true)
+    public Collection<BlatResult> findByBioSequence(
+            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
+        return this.blatResultDao.findByBioSequence( bioSequence );
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * BlatResultServiceBase#handleFindByBioSequence(ubic.gemma.model.genome
-     * .biosequence.BioSequence)
-     */
-    @Override
-    protected Collection<BlatResult> handleFindByBioSequence( BioSequence bioSequence ) {
-        return this.getBlatResultDao().findByBioSequence( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BlatResultServiceBase#handleLoad(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<BlatResult> handleLoad( Collection<Long> ids ) {
-        return ( Collection<BlatResult> ) this.getBlatResultDao().load( ids );
-    }
-
-    /**
-     * @see BlatResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
-     */
-    @Override
-    protected void handleRemove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
-        this.getBlatResultDao().remove( blatResult );
-    }
-
-    @Override
-    protected void handleUpdate( BlatResult blatResult ) {
-        this.getBlatResultDao().update( blatResult );
-    }
-
 }

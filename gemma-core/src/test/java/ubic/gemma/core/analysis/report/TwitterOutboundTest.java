@@ -29,9 +29,9 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author sshao
- * @version $Id$
  */
 public class TwitterOutboundTest extends BaseSpringContextTest {
+
     @Autowired
     private TwitterOutbound twitterOutbound;
 

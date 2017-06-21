@@ -14,45 +14,43 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * @author paul
- * @version $Id$
  */
-public interface TfGeneAssociationService {
+public interface TfGeneAssociationService extends BaseService<TfGeneAssociation> {
 
     @Secured({ "GROUP_ADMIN" })
-    public Collection<? extends TfGeneAssociation> create( Collection<? extends TfGeneAssociation> entities );
+    Collection<TfGeneAssociation> create( Collection<TfGeneAssociation> entities );
 
     @Secured({ "GROUP_ADMIN" })
-    public TfGeneAssociation create( TfGeneAssociation entity );
+    TfGeneAssociation create( TfGeneAssociation entity );
 
-    public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene );
+    Collection<TfGeneAssociation> findByTargetGene( Gene gene );
 
-    public Collection<? extends TfGeneAssociation> findByTf( Gene tf );
-
-    public Collection<? extends TfGeneAssociation> load( Collection<Long> ids );
-
-    public TfGeneAssociation load( Long id );
-
-    public Collection<? extends TfGeneAssociation> loadAll();
+    Collection<TfGeneAssociation> findByTf( Gene tf );
 
     @Secured({ "GROUP_ADMIN" })
-    public void remove( Collection<? extends TfGeneAssociation> entities );
+    void remove( Collection<TfGeneAssociation> entities );
 
     @Secured({ "GROUP_ADMIN" })
-    public void remove( Long id );
+    void remove( Long id );
 
     @Secured({ "GROUP_ADMIN" })
-    public void remove( TfGeneAssociation entity );
+    void remove( TfGeneAssociation entity );
 
     @Secured({ "GROUP_ADMIN" })
-    public void removeAll();
+    void removeAll();
 
+    @Secured({ "GROUP_ADMIN" })
+    void update( Collection<TfGeneAssociation> entities );
+
+    @Secured({ "GROUP_ADMIN" })
+    void update( TfGeneAssociation entity );
 }

@@ -93,7 +93,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl.eigenValues"
+	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenValues"
 		maxElementsOnDisk="10000" maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -103,7 +103,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl.results"
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.results"
 		maxElementsOnDisk="10000" maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -113,7 +113,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl.eigenVectors"
+	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.eigenVectors"
 		maxElementsOnDisk="10000" maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -123,7 +123,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl.treatments" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterial.treatments" maxElementsOnDisk="10000"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -132,7 +132,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisImpl.probeLoadings"
+	<cache name="ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis.probeLoadings"
 		maxElementsOnDisk="10000" maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -142,7 +142,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl.hitListSizes"
+	<cache name="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet.hitListSizes"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="12000" timeToLiveSeconds="12000"
 		overflowToDisk="false">
 		<terracotta>
@@ -171,7 +171,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -200,7 +200,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.gene.GeneAliasImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.gene.GeneAlias" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -245,7 +245,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.gene.GeneSetImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.gene.GeneSet" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -253,14 +253,7 @@
 			</nonstop>
 		</terracotta>
 	</cache>
-	<cache name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbeImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
+
 	<cache name="ubic.gemma.model.association.Gene2GeneProteinAssociationImpl" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
@@ -269,7 +262,7 @@
 			</nonstop>
 		</terracotta>
 	</cache>
-	<cache name="ubic.gemma.model.genome.gene.GeneSetImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.gene.GeneSet.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -277,7 +270,7 @@
 			</nonstop>
 		</terracotta>
 	</cache>
-	<cache name="ubic.gemma.model.genome.gene.GeneSetImpl.members" maxElementsOnDisk="10000" maxElementsInMemory="1"
+	<cache name="ubic.gemma.model.genome.gene.GeneSet.members" maxElementsOnDisk="10000" maxElementsInMemory="1"
 		eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -286,7 +279,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.gene.MappingCandidateGeneImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.gene.MappingCandidateGene" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -295,7 +288,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.gene.BibReferenceCandidateGeneImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.gene.BibReferenceCandidateGene" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -304,7 +297,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.gene.GeneInvestigationImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.gene.GeneInvestigation" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -313,7 +306,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.CytogeneticLocationImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.genome.CytogeneticLocation" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -340,7 +333,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.TaxonImpl" maxElementsOnDisk="10000" maxElementsInMemory="100" eternal="true"
+	<cache name="ubic.gemma.model.genome.Taxon" maxElementsOnDisk="10000" maxElementsInMemory="100" eternal="true"
 		overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -349,7 +342,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.GeneImpl" maxElementsOnDisk="10000" maxElementsInMemory="50000" eternal="true"
+	<cache name="ubic.gemma.model.genome.Gene" maxElementsOnDisk="10000" maxElementsInMemory="50000" eternal="true"
 		overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -358,7 +351,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.GeneImpl.products" maxElementsOnDisk="10000" maxElementsInMemory="50000"
+	<cache name="ubic.gemma.model.genome.Gene.products" maxElementsOnDisk="10000" maxElementsInMemory="50000"
 		eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -367,7 +360,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.GeneImpl.aliases" maxElementsOnDisk="10000" maxElementsInMemory="50000"
+	<cache name="ubic.gemma.model.genome.Gene.aliases" maxElementsOnDisk="10000" maxElementsInMemory="50000"
 		eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -376,7 +369,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.GeneImpl.accessions" maxElementsOnDisk="10000" maxElementsInMemory="200000"
+	<cache name="ubic.gemma.model.genome.Gene.accessions" maxElementsOnDisk="10000" maxElementsInMemory="200000"
 		eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -385,7 +378,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.DatabaseEntryImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.DatabaseEntry" maxElementsOnDisk="10000"
 		maxElementsInMemory="200000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -394,7 +387,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.ExternalDatabaseImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.ExternalDatabase" maxElementsOnDisk="10000"
 		maxElementsInMemory="100" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -403,7 +396,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.ExternalDatabaseImpl.flatFiles" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.ExternalDatabase.flatFiles" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -412,7 +405,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.LocalFileImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.description.LocalFile" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -430,7 +423,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -439,7 +432,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.annotations" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.annotations" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -448,7 +441,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.meshTerms" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.meshTerms" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -457,7 +450,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.publicationTypes" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.publicationTypes" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -466,7 +459,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.keywords" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.keywords" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -475,7 +468,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.BibliographicReferenceImpl.chemicals" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.BibliographicReference.chemicals" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -484,7 +477,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.CharacteristicImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.Characteristic" maxElementsOnDisk="10000"
 		maxElementsInMemory="200000" eternal="false" timeToIdleSeconds="6000" timeToLiveSeconds="6000" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -520,7 +513,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.VocabCharacteristicImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.VocabCharacteristic" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -529,7 +522,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.VocabCharacteristicImpl.properties" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.VocabCharacteristic.properties" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -538,7 +531,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.MedicalSubjectHeading" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -547,7 +540,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl.qualifiers" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.description.MedicalSubjectHeading.qualifiers" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -574,7 +567,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.description.KeywordImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.description.Keyword" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -592,7 +585,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroup" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -601,7 +594,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.notedReferenceLists" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroup.notedReferenceLists" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -610,7 +603,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.authorities" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.UserGroup.authorities" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -628,7 +621,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="200000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -712,7 +705,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.JobInfoImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.JobInfo" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -721,7 +714,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType" maxElementsOnDisk="10000"
 		maxElementsInMemory="100000" eternal="true" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -730,7 +723,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -739,7 +732,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -749,7 +742,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -758,7 +751,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -767,7 +760,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -777,7 +770,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -787,7 +780,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -797,7 +790,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -807,7 +800,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -817,7 +810,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdateImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.BioMaterialMappingUpdate" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -826,7 +819,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -836,7 +829,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -845,7 +838,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -855,7 +848,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -865,7 +858,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -894,7 +887,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.SampleRemovalEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -903,7 +896,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -913,7 +906,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -949,7 +942,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceRemoveEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -959,7 +952,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -969,7 +962,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEventImpl"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -988,7 +981,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEventImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.RankComputationEvent" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1069,7 +1062,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.common.protocol.ProtocolImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.common.protocol.Protocol" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1181,7 +1174,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.FactorValueImpl" maxElementsOnDisk="10000" eternal="false"
+	<cache name="ubic.gemma.model.expression.experiment.FactorValue" maxElementsOnDisk="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" maxElementsInMemory="5000">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1191,7 +1184,7 @@
 	</cache>
 
 	<!-- we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.FactorValueImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.FactorValue.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1200,7 +1193,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesign" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1210,7 +1203,7 @@
 	</cache>
 
 	<!-- we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.experimentalFactors"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesign.experimentalFactors"
 		maxElementsOnDisk="10000" maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1"
 		overflowToDisk="false">
 		<terracotta>
@@ -1220,7 +1213,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl.types" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalDesign.types" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1229,7 +1222,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1239,7 +1232,7 @@
 	</cache>
 
 	<!-- we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.factorValues" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor.factorValues" maxElementsOnDisk="10000"
 		maxElementsInMemory="1" eternal="false" timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1248,7 +1241,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl.annotations" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExperimentalFactor.annotations" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1266,7 +1259,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1275,7 +1268,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.designElement.CompositeSequenceImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.designElement.CompositeSequence" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1284,7 +1277,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.designElement.CompositeSequenceImpl.componentReporters"
+	<cache name="ubic.gemma.model.expression.designElement.CompositeSequence.componentReporters"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -1384,7 +1377,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.bioAssay.BioAssayImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.expression.bioAssay.BioAssay" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1393,7 +1386,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.bioAssay.BioAssayImpl.derivedDataFiles" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.bioAssay.BioAssay.derivedDataFiles" maxElementsOnDisk="10000"
 		maxElementsInMemory="20000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1465,7 +1458,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterial" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1474,7 +1467,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterialImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.expression.biomaterial.BioMaterial.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="20000" eternal="false" timeToIdleSeconds="100" timeToLiveSeconds="100" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1610,60 +1603,6 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.association.coexpression.MouseProbeCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.association.coexpression.HumanProbeCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.association.coexpression.RatProbeCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
-	<cache name="ubic.gemma.model.association.coexpression.OtherProbeCoExpressionImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
-		<terracotta>
-			<nonstop timeoutMillis="3000">
-				<timeoutBehavior type="noop" />
-			</nonstop>
-		</terracotta>
-	</cache>
-
 	<cache name="ubic.gemma.model.association.coexpression.MouseGeneCoExpressionImpl" maxElementsInMemory="100000"
 		eternal="true" overflowToDisk="false">
 		<terracotta>
@@ -1736,7 +1675,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.InvestigationImpl" maxElementsOnDisk="10000" maxElementsInMemory="10000"
+	<cache name="ubic.gemma.model.analysis.Investigation" maxElementsOnDisk="10000" maxElementsInMemory="10000"
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1745,7 +1684,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1792,7 +1731,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1801,7 +1740,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl.resultSets"
+	<cache name="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis.resultSets"
 		maxElementsOnDisk="10000" maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200"
 		overflowToDisk="false">
 		<terracotta>
@@ -1820,7 +1759,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetImpl" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1829,7 +1768,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetImpl.results" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet.results" maxElementsOnDisk="10000"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1849,8 +1788,8 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" maxElementsOnDisk="10000"
-		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
+	<cache name="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" maxElementsOnDisk="10000"
+           maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
 				<timeoutBehavior type="noop" />
@@ -1885,7 +1824,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.genome.GeneImpl.phenotypeAssociations" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.genome.Gene.phenotypeAssociations" maxElementsOnDisk="10000"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">
@@ -1894,7 +1833,7 @@
 		</terracotta>
 	</cache>
 
-	<cache name="ubic.gemma.model.analysis.InvestigationImpl.characteristics" maxElementsOnDisk="10000"
+	<cache name="ubic.gemma.model.analysis.Investigation.characteristics" maxElementsOnDisk="10000"
 		maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false">
 		<terracotta>
 			<nonstop timeoutMillis="3000">

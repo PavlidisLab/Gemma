@@ -18,31 +18,27 @@
  */
 package ubic.gemma.core.loader.genome.gene.ncbi;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
@@ -59,13 +55,10 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
     }
 
     @After
-    public void teardown() {
+    public void tearDown() {
         clean();
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testGeneLoader() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
@@ -102,7 +95,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         assertEquals( 1, geneCollection.size() );
 
         g = geneCollection.iterator().next();
-        g = geneService.thaw( g );
+        geneService.thaw( g );
 
         Collection<GeneProduct> products = g.getProducts();
         Collection<String> expectedAccessions = new ArrayList<String>();

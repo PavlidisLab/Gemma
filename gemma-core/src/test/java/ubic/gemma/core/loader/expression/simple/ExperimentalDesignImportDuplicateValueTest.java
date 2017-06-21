@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -90,7 +90,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
             ee = s.create( metaData, data );
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
     }
 
     /**

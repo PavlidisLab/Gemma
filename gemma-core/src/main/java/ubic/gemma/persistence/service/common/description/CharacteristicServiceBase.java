@@ -18,46 +18,22 @@
  */
 package ubic.gemma.persistence.service.common.description;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
 
 /**
  * Service base class for <code>CharacteristicService</code>, provides access to all
  * services and entities referenced by this service.
- * 
+ *
  * @see CharacteristicService
  */
-public abstract class CharacteristicServiceBase implements CharacteristicService {
+public abstract class CharacteristicServiceBase extends VoEnabledService<Characteristic, CharacteristicValueObject>
+        implements CharacteristicService {
 
-    @Autowired
-    private CharacteristicDao characteristicDao;
-
-    /**
-     * @see CharacteristicService#create(ubic.gemma.model.common.description.Characteristic)
-     */
-    @Override
-    @Transactional
-    public Characteristic create( final Characteristic c ) {
-        return this.handleCreate( c );
-    }
-
-    /**
-     * @see CharacteristicService#delete(java.lang.Long)
-     */
-    @Override
-    @Transactional
-    public void delete( final java.lang.Long id ) {
-        this.handleDelete( id );
-    }
-
-    /**
-     * @see CharacteristicService#delete(ubic.gemma.model.common.description.Characteristic)
-     */
-    @Override
-    @Transactional
-    public void delete( final Characteristic c ) {
-        this.handleDelete( c );
+    public CharacteristicServiceBase( CharacteristicDao dao ) {
+        super( dao );
     }
 
     /**
@@ -92,58 +68,11 @@ public abstract class CharacteristicServiceBase implements CharacteristicService
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<Characteristic, Object> getParents( final java.util.Collection<Characteristic> characteristics ) {
+    public java.util.Map<Characteristic, Object> getParents(
+            final java.util.Collection<Characteristic> characteristics ) {
         return this.handleGetParents( characteristics );
 
     }
-
-    /**
-     * @see CharacteristicService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ubic.gemma.model.common.description.Characteristic load( final java.lang.Long id ) {
-        return this.handleLoad( id );
-    }
-
-    /**
-     * Sets the reference to <code>characteristic</code>'s DAO.
-     */
-    public void setCharacteristicDao( CharacteristicDao characteristicDao ) {
-        this.characteristicDao = characteristicDao;
-    }
-
-    /**
-     * @see CharacteristicService#update(ubic.gemma.model.common.description.Characteristic)
-     */
-    @Override
-    @Transactional
-    public void update( final ubic.gemma.model.common.description.Characteristic c ) {
-        this.handleUpdate( c );
-    }
-
-    /**
-     * Gets the reference to <code>characteristic</code>'s DAO.
-     */
-    protected CharacteristicDao getCharacteristicDao() {
-        return this.characteristicDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.common.description.Characteristic)}
-     */
-    protected abstract ubic.gemma.model.common.description.Characteristic handleCreate(
-            ubic.gemma.model.common.description.Characteristic c );
-
-    /**
-     * Performs the core logic for {@link #delete(java.lang.Long)}
-     */
-    protected abstract void handleDelete( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #delete(ubic.gemma.model.common.description.Characteristic)}
-     */
-    protected abstract void handleDelete( ubic.gemma.model.common.description.Characteristic c );
 
     /**
      * Performs the core logic for {@link #findByUri(java.lang.String)}
@@ -165,15 +94,5 @@ public abstract class CharacteristicServiceBase implements CharacteristicService
      */
     protected abstract java.util.Map<Characteristic, Object> handleGetParents(
             java.util.Collection<Characteristic> characteristics );
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.common.description.Characteristic handleLoad( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.common.description.Characteristic)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.common.description.Characteristic c );
 
 }

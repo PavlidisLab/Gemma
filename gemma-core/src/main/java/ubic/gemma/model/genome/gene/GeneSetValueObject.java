@@ -143,7 +143,7 @@ public class GeneSetValueObject implements SecureValueObject {
 
     @Override
     public Class<? extends Securable> getSecurableClass() {
-        return GeneSetImpl.class;
+        return GeneSet.class;
     }
 
     /**

@@ -33,8 +33,9 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.math.*;
-import ubic.basecode.util.r.type.LinearModelSummary;
+import ubic.basecode.math.MathUtil;
+import ubic.basecode.math.MatrixStats;
+import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
@@ -64,6 +65,7 @@ import java.util.concurrent.*;
  * intercept in the fitted model. This is only appropriate for 'non-reference' designs on ratiometric arrays.
  * This also supports subsetting the data based on a factor. For example, a data set with "tissue" as a factor could be
  * analyzed per-tissue rather than with tissue as a covariate.
+ * This only handles the analysis, not the persistence or output of the results.
  *
  * @author paul
  */
@@ -76,7 +78,16 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private static final double[] qValueThresholdsForHitLists = new double[] { 0.001, 0.005, 0.01, 0.05, 0.1 };
     private static final Log log = LogFactory.getLog( LinearModelAnalyzer.class );
-    private static final List<String> EXCLUDE_CHARACTERISTICS_VALUES = new ArrayList<String>(){{ add("DE_Exclude"); }};
+
+    /**
+     * Factors that are always excluded from analysis
+     */
+    private static final List<String> EXCLUDE_CHARACTERISTICS_VALUES = new ArrayList<String>() {
+        {
+            add( "DE_Exclude" );
+        }
+    };
+
     private static final String EXCLUDE_WARNING = "Found Factor Value with DE_Exclude characteristic. Skipping current subset.";
 
     @Override
@@ -260,11 +271,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         /*
-         * Always retain all.
-         */
-        config.setQvalueThreshold( null );
-
-        /*
          * Note that this method relies on similar code to doAnalysis, for the setup stages.
          */
 
@@ -320,6 +326,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
                 .getProcessedExpressionDataMatrix( expressionExperiment );
 
+        /*
+         * FIXME remove flagged outlier samples ... at some point; so we don't carry NaNs around unnecessarily.
+         */
+
         return run( expressionExperiment, dmatrix, config );
 
     }
@@ -347,6 +357,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         List<ExperimentalFactor> factors = config.getFactorsToInclude();
 
+        /*
+         * FIXME this is the place to strip put the outliers.
+         */
         List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
 
         dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix ); // enforce ordering
@@ -410,7 +423,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subsets.get( subsetFactorValue ),
                         eesubSet, factors );
 
-                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config );
+                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config,
+                        subsetFactorValue );
 
                 if ( subsetFactors.isEmpty() ) {
                     log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
@@ -498,7 +512,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             return null;
         }
 
-        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config );
+        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config,
+                subsetFactorValue );
 
         DifferentialExpressionAnalysis analysis = doAnalysis( subset, subsetConfig, subsetMatrix, samplesInSubset,
                 config.getFactorsToInclude(), subsetFactorValue );
@@ -584,13 +599,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * Build the formula, omitting the factor taking the place of the intercept, if need be. (Mostly for R but with side
-     * effect of populating the interactionFactorLists and label2Factors)
+     * Populate the interactionFactorLists and label2Factors
      *
      * @param interactionFactorLists gets populated
      */
     private void buildModelFormula( final DifferentialExpressionAnalysisConfig config,
-            final Map<String, Collection<ExperimentalFactor>> label2Factors, final ExperimentalFactor interceptFactor,
+            final Map<String, Collection<ExperimentalFactor>> label2Factors,
             final List<String[]> interactionFactorLists ) {
 
         /*
@@ -598,6 +612,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          */
         boolean hasInteractionTerms =
                 config.getInteractionsToInclude() != null && !config.getInteractionsToInclude().isEmpty();
+
         if ( hasInteractionTerms ) {
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
 
@@ -616,6 +631,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
     }
 
+
     private int countNumberOfGenesNotSeenAlready( Collection<Gene> genesForProbe, Collection<Gene> seenGenes ) {
         int numGenes = 0;
         if ( genesForProbe != null ) {
@@ -633,7 +649,6 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
     /**
      * @param bioAssaySet       source data, could be a SubSet
-     * @param config
      * @param dmatrix           data
      * @param samplesUsed       analyzed
      * @param factors           included in the model
@@ -643,6 +658,12 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
+
+        // We may want to change this to fall back to running normally, though the real fix is to just finish the ebayes implementation.
+        if ( config.getModerateStatistics() && dmatrix.hasMissingValues() ) {
+            throw new UnsupportedOperationException(
+                    "Ebayes cannot be used when there are values missing in the data" );
+        }
 
         if ( factors.isEmpty() ) {
             log.error( "Must provide at least one factor" );
@@ -678,15 +699,19 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 .buildDesignMatrix( factors, samplesUsed, baselineConditions );
 
         setupFactors( designMatrix, baselineConditions );
+        config.setBaseLineFactorValues( baselineConditions );
 
         boolean oneSampleTTest = interceptFactor != null && factors.size() == 1;
         if ( !oneSampleTTest ) {
-            buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
+            buildModelFormula( config, label2Factors, interactionFactorLists );
         }
 
         // calculate library size before log transformation (FIXME we compute this twice)
         DoubleMatrix1D librarySize = MatrixStats.colSums( dmatrix.getMatrix() );
 
+        /*
+         * FIXME: remove columns that are marked as outliers.
+         */
         dmatrix = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( quantitationType, dmatrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
@@ -703,7 +728,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Run the analysis NOTE this can be simplified if we strip out R code.
          */
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, properDesignMatrix,
-                quantitationType, librarySize );
+                quantitationType, librarySize, config.getModerateStatistics() );
 
         if ( rawResults.size() == 0 ) {
             log.error( "Got no results from the analysis" );
@@ -911,17 +936,17 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      *
-     * @param factors the factors that will be included
+     * @param factors           the factors that will be included
      * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
      * involve the given factors.
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, FactorValue subsetFactorValue ) {
 
         DifferentialExpressionAnalysisConfig newConfig = new DifferentialExpressionAnalysisConfig();
         //
         // /*
-        // * Drop factors that are constant in the subset.
+        // * Drop factors that are constant in the subset.  FIXME why aren't we doing this?
         // */
         // Map<ExperimentalFactor, Collection<FactorValue>> ef2FvsUsedInSubset = new HashMap<ExperimentalFactor,
         // Collection<FactorValue>> ();
@@ -957,8 +982,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
 
         newConfig.setSubsetFactor( null );
+        newConfig.setSubsetFactorValue( subsetFactorValue );
         newConfig.setFactorsToInclude( factors );
-        newConfig.setQvalueThreshold( config.getQvalueThreshold() );
 
         return newConfig;
 
@@ -1107,7 +1132,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Map<String, ? extends Collection<DifferentialExpressionAnalysisResult>> resultLists,
             FactorValue subsetFactorValue ) {
 
-        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( bioAssaySet );
+        DifferentialExpressionAnalysis expressionAnalysis = super.initAnalysisEntity( bioAssaySet, config );
+
         /*
          * Complete analysis config
          */
@@ -1326,12 +1352,11 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
             // make List into Set
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory
-                    .newInstance( factorsUsed, numberOfProbesTested, numberOfGenesTested, null, baselineGroup,
+                    .newInstance( factorsUsed, numberOfProbesTested, numberOfGenesTested, baselineGroup,
                             new HashSet<>( results ), expressionAnalysis, null /*
-                                                                                                            * pvalue
-                                                                                                            * dists
-                                                                                                            */,
-                            hitListSizes );
+                                                                                * pvalue
+                                                                                * dists
+                                                                                */, hitListSizes );
             resultSets.add( resultSet );
 
             log.info( "Finished with result set for " + fName );
@@ -1399,18 +1424,19 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
             final DoubleMatrix<String, String> sNamedMatrix, DesignMatrix designMatrix,
-            QuantitationType quantitationType, final DoubleMatrix1D librarySize ) {
+            QuantitationType quantitationType, final DoubleMatrix1D librarySize, final boolean ebayes ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<>();
 
-        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType, librarySize );
+        Future<?> f = runAnalysisFuture( designMatrix, sNamedMatrix, rawResults, quantitationType, librarySize,
+                ebayes );
 
         StopWatch timer = new StopWatch();
         timer.start();
         long lasttime = 0;
 
         // this analysis should take just 10 or 20 seconds for most data sets.
-        double MAX_ANALYSIS_TIME = 60 * 1000 * 20; // 20 minutes.
+        double MAX_ANALYSIS_TIME = 60 * 1000 * 30; // 30 minutes.
         double updateIntervalMillis = 60 * 1000;// 1 minute
         while ( !f.isDone() ) {
             try {
@@ -1457,7 +1483,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
      */
     private Future<?> runAnalysisFuture( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
             final Map<String, LinearModelSummary> rawResults, final QuantitationType quantitationType,
-            final DoubleMatrix1D librarySize ) {
+            final DoubleMatrix1D librarySize, final boolean ebayes ) {
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<?> f = service.submit( new Runnable() {
@@ -1478,6 +1504,21 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 log.info( "Model fit data matrix " + data.rows() + " x " + data.columns() + ": " + timer.getTime()
                         + "ms" );
                 timer.reset();
+
+                timer.start();
+                if ( ebayes ) {
+                    if ( fit.isHasMissing() ) {
+                        // not implemented yet.
+                        throw new UnsupportedOperationException(
+                                "Ebayes cannot be run as there are missing values in the data" );
+                    }
+                    ModeratedTstat.ebayes( fit );
+                    log.info( "Moderate test statistics: " + timer.getTime() + "ms" );
+
+                }
+
+                timer.reset();
+
                 timer.start();
                 Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
                 log.info( "Model summarize/ANOVA: " + timer.getTime() + "ms" );

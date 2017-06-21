@@ -18,48 +18,28 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
+import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+
 import java.util.Collection;
 import java.util.Map;
 
-import org.springframework.security.access.annotation.Secured;
-
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.biosequence.BioSequence;
-
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface BioSequenceService {
+public interface BioSequenceService extends BaseVoEnabledService<BioSequence, BioSequenceValueObject> {
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    BioSequence findByAccession( DatabaseEntry accession );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public java.util.Collection<BioSequence> create( java.util.Collection<BioSequence> bioSequences );
+    @Secured({ "GROUP_USER" })
+    Collection<BioSequence> create( Collection<BioSequence> bioSequences );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public BioSequence create( BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence find(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession );
+    @Secured({ "GROUP_USER" })
+    BioSequence create( BioSequence bioSequence );
 
     /**
      * <p>
@@ -67,7 +47,7 @@ public interface BioSequenceService {
      * had no associated sequences are not included in the result.
      * </p>
      */
-    public Map<Gene, Collection<BioSequence>> findByGenes( java.util.Collection<Gene> genes );
+    Map<Gene, Collection<BioSequence>> findByGenes( Collection<Gene> genes );
 
     /**
      * <p>
@@ -75,69 +55,22 @@ public interface BioSequenceService {
      * accession.
      * </p>
      */
-    public java.util.Collection<BioSequence> findByName( java.lang.String name );
+    Collection<BioSequence> findByName( String name );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public java.util.Collection<BioSequence> findOrCreate( java.util.Collection<BioSequence> bioSequences );
+    @Secured({ "GROUP_USER" })
+    Collection<BioSequence> findOrCreate( Collection<BioSequence> bioSequences );
 
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    @Secured({ "GROUP_USER" })
+    BioSequence findOrCreate( BioSequence bioSequence );
 
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> getGenesByAccession( java.lang.String search );
+    Collection<Gene> getGenesByAccession( String search );
 
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> getGenesByName( java.lang.String search );
+    Collection<Gene> getGenesByName( String search );
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.biosequence.BioSequence load( long id );
+    @Secured({ "GROUP_USER" })
+    void remove( BioSequence bioSequence );
 
-    /**
-     * <p>
-     * loads all biosequences specified by the provided ids.
-     * </p>
-     */
-    public java.util.Collection<BioSequence> loadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public void remove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public Collection<BioSequence> thaw( java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * 
-     */
-    public BioSequence thaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public void update( java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
-    public void update( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    @Secured({ "GROUP_USER" })
+    void update( BioSequence bioSequence );
 
 }

@@ -20,14 +20,16 @@ package ubic.gemma.core.genome.gene.service;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.AnnotationValueObject;
+import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.persistence.service.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+import ubic.gemma.persistence.service.genome.RelativeLocationData;
 
 import java.util.Collection;
 import java.util.Map;
@@ -35,9 +37,7 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface GeneService {
-
-    Integer countAll();
+public interface GeneService extends BaseVoEnabledService<Gene, GeneValueObject> {
 
     @Secured({ "GROUP_ADMIN" })
     Collection<Gene> create( Collection<Gene> genes );
@@ -45,15 +45,13 @@ public interface GeneService {
     @Secured({ "GROUP_ADMIN" })
     Gene create( Gene gene );
 
-    Gene find( Gene gene );
-
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
      * region. If strand is non-null, only genes on the same strand are returned.
      */
     Collection<Gene> find( PhysicalLocation physicalLocation );
 
-    Gene findByAccession( String accession, ubic.gemma.model.common.description.ExternalDatabase source );
+    Gene findByAccession( String accession, ExternalDatabase source );
 
     Collection<Gene> findByAlias( String search );
 
@@ -129,10 +127,6 @@ public interface GeneService {
      */
     Collection<GeneProductValueObject> getProducts( Long geneId );
 
-    Gene load( Long id );
-
-    Collection<Gene> loadAll();
-
     /**
      * Returns a collection of genes for the specified taxon
      */
@@ -149,24 +143,17 @@ public interface GeneService {
     Collection<Gene> loadMicroRNAs( Taxon taxon );
 
     /**
-     * load all genes specified by the given ids.
-     *
-     * @return A collection containing up to ids.size() genes.
-     */
-    Collection<Gene> loadMultiple( Collection<Long> ids );
-
-    /**
      * Load with objects already thawed.
      */
     Collection<Gene> loadThawed( Collection<Long> ids );
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
 
-    GeneValueObject loadValueObject( Long id );
+    GeneValueObject loadValueObjectById( Long id );
 
-    Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
+    Collection<GeneValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
-    Collection<GeneValueObject> loadValueObjectsLiter( Collection<Long> ids );
+    Collection<GeneValueObject> loadValueObjectsByIdsLiter( Collection<Long> ids );
 
     @Secured({ "GROUP_ADMIN" })
     void remove( Collection<Gene> genes );
@@ -174,25 +161,23 @@ public interface GeneService {
     @Secured({ "GROUP_ADMIN" })
     void remove( Gene gene );
 
-    Gene thaw( Gene gene );
-
     /**
      * Only thaw the Aliases, very light version
      */
-    Gene thawAliases( Gene gene );
+    void thawAliases( Gene gene );
 
-    Collection<Gene> thawLite( Collection<Gene> genes );
+    void thawLite( Collection<Gene> genes );
 
-    Gene thawLite( Gene gene );
+    void thawLiter( Collection<Gene> genes );
 
-    Gene thawLiter( Gene gene );
+    void thawLite( Gene gene );
+
+    void thawLiter( Gene gene );
 
     @Secured({ "GROUP_ADMIN" })
     void update( Collection<Gene> genes );
 
     @Secured({ "GROUP_ADMIN" })
-    /*
-     * we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that
-     */ void update( Gene gene );
+    void update( Gene gene );
 
 }

@@ -50,13 +50,13 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
         if ( id == null ) {
             throw new IllegalArgumentException( "UserQuery.load - 'id' can not be null" );
         }
-        return ( UserQuery ) this.getSessionFactory().getCurrentSession().get( UserQuery.class, id );
+        return ( UserQuery ) this.getSession().get( UserQuery.class, id );
     }
 
     @Override
     public Collection<? extends UserQuery> loadAll() {
         //noinspection unchecked
-        return ( Collection<? extends UserQuery> ) this.getSessionFactory().getCurrentSession()
+        return ( Collection<? extends UserQuery> ) this.getSession()
                 .createCriteria( UserQuery.class );
     }
 
@@ -65,7 +65,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
         if ( userQuery == null ) {
             throw new IllegalArgumentException( "UserQuery.remove - 'userQuery' can not be null" );
         }
-        this.getSessionFactory().getCurrentSession().delete( userQuery );
+        this.getSession().delete( userQuery );
     }
 
 }

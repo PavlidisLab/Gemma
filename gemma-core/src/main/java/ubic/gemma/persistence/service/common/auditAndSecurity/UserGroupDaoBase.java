@@ -18,142 +18,69 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import java.util.Collection;
-
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+
+import java.util.Collection;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.auditAndSecurity.UserGroup</code>.
  * </p>
- * 
+ *
  * @see ubic.gemma.model.common.auditAndSecurity.UserGroup
  */
 public abstract class UserGroupDaoBase extends HibernateDaoSupport implements UserGroupDao {
 
-    /**
-     * @see UserGroupDao#create(int, java.util.Collection)
-     */
     @Override
-    public java.util.Collection<? extends UserGroup> create( final java.util.Collection<? extends UserGroup> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "UserGroup.create - 'entities' can not be null" );
+    public Collection<UserGroup> create( final Collection<UserGroup> entities ) {
+        for ( UserGroup e : entities ) {
+            this.create( e );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<UserGroup>() {
-                    @Override
-                    public UserGroup doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends UserGroup> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
         return entities;
     }
 
-    /**
-     * @see UserGroupDao#findByUserGroupName(int, java.lang.String)
-     */
     @Override
-    public UserGroup findByUserGroupName( final java.lang.String name ) {
-        return this.findByUserGroupName(
-                "from ubic.gemma.model.common.auditAndSecurity.UserGroup as userGroup where userGroup.name = :name",
-                name );
+    public UserGroup findByName( final String name ) {
+        return ( UserGroup ) this.getSession().createQuery( "from UserGroup as userGroup where userGroup.name = :name" )
+                .setParameter( "name", name ).uniqueResult();
     }
 
-    /**
-     * @see UserGroupDao#findByUserGroupName(int, java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
+    public Collection<UserGroup> load( Collection<Long> ids ) {
+        //noinspection unchecked
+        return this.getSession().createQuery( "from UserGroup where id in (:ids)" ).setParameterList( "ids", ids )
+                .list();
+    }
 
-    public UserGroup findByUserGroupName( final java.lang.String queryString, final java.lang.String name ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( name );
-        argNames.add( "name" );
-        java.util.Set<UserGroup> results = new java.util.LinkedHashSet<UserGroup>( this.getHibernateTemplate()
-                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.auditAndSecurity.UserGroup"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
+    @Override
+    public UserGroup load( final Long id ) {
+        return ( UserGroup ) this.getSession().get( UserGroup.class, id );
+    }
+
+    @Override
+    public Collection<UserGroup> loadAll() {
+        //noinspection unchecked
+        return this.getSession().createCriteria( UserGroup.class ).list();
+    }
+
+    @Override
+    public void remove( Collection<UserGroup> entities ) {
+        for ( UserGroup e : entities ) {
+            this.getSession().delete( e );
         }
-
-        return ( UserGroup ) result;
     }
 
     @Override
-    public Collection<? extends UserGroup> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from UserGroupImpl where id in (:ids)", "ids", ids );
-    }
-
-    /**
-     * @see UserGroupDao#load(int, java.lang.Long)
-     */
-
-    @Override
-    public UserGroup load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "UserGroup.load - 'id' can not be null" );
+    public void update( final Collection<UserGroup> entities ) {
+        for ( UserGroup entity : entities ) {
+            update( entity );
         }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.class, id );
-        return ( UserGroup ) entity;
     }
-
-    /**
-     * @see UserGroupDao#loadAll(int)
-     */
 
     @Override
-    public java.util.Collection<? extends UserGroup> loadAll() {
-        final Collection<? extends UserGroup> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.common.auditAndSecurity.UserGroupImpl.class );
-
-        return results;
+    public void update( UserGroup entity ) {
+        this.getSession().update( entity );
     }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-
-    @Override
-    public void remove( java.util.Collection<? extends UserGroup> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "UserGroup.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-
-    @Override
-    public void update( final java.util.Collection<? extends UserGroup> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "UserGroup.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<UserGroup>() {
-                    @Override
-                    public UserGroup doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends UserGroup> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
-
 }
