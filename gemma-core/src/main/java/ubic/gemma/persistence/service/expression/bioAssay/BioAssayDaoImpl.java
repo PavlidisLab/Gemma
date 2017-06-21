@@ -62,7 +62,7 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     public BioAssay find( BioAssay bioAssay ) {
         try {
             Criteria queryObject = BusinessKey
-                    .createQueryObject( this.getSession(), bioAssay );
+                    .createQueryObject( this.getSessionFactory().getCurrentSession(), bioAssay );
 
             List<?> results = queryObject.list();
             Object result = null;
@@ -85,7 +85,7 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     @Override
     public Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select bad from BioAssayDimensionImpl bad inner join bad.bioAssays as ba where :bioAssay in ba " )
                 .setParameter( "bioAssay", bioAssay ).list();
     }
@@ -96,7 +96,7 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
             return new HashSet<>();
 
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct b from BioAssay b inner join b.accession a where a.accession = :accession" )
                 .setParameter( "accession", accession ).list();
     }
@@ -131,7 +131,7 @@ public class BioAssayDaoImpl extends AbstractDao<BioAssay> implements BioAssayDa
     @Override
     public void thaw( final BioAssay bioAssay ) {
         try {
-            this.getSession().doWork( new Work() {
+            this.getSessionFactory().getCurrentSession().doWork( new Work() {
                 @Override
                 public void execute( Connection connection ) throws SQLException {
                     getSession().buildLockRequest( LockOptions.NONE ).lock( bioAssay );

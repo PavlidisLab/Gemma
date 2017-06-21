@@ -58,7 +58,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
-            Criteria queryObject = this.getSession().createCriteria( GeneProduct.class )
+            Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( GeneProduct.class )
                     .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY );
 
             BusinessKey.checkValidKey( geneProduct );
@@ -148,7 +148,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
         Collection<Gene> genes;
         final String queryString = "select distinct gene from Gene as gene inner join gene.products gp where  gp.name = :search";
         try {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -164,7 +164,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
         Collection<Gene> genes;
         final String queryString = "select distinct gene from Gene as gene inner join gene.products gp where gp.ncbiGi = :search";
         try {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -203,7 +203,7 @@ public class GeneProductDaoImpl extends GeneProductDaoBase {
     @Override
     public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
                         + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
                         + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "

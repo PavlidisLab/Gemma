@@ -61,7 +61,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         byte[] coexpressionMatrix = bac.doubleMatrixToBytes( matrix.getRawMatrix() );
         scm.setCoexpressionMatrix( coexpressionMatrix );
         sas.setSampleCoexpressionMatrix( scm );
-        this.getSession().save( sas );
+        this.getSessionFactory().getCurrentSession().save( sas );
 
         return sas;
     }
@@ -72,7 +72,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
 
     private Collection<SampleCoexpressionMatrix> findByExperiment( ExpressionExperiment ee ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "select sa.sampleCoexpressionMatrix"
+        return this.getSessionFactory().getCurrentSession().createQuery( "select sa.sampleCoexpressionMatrix"
                 + " from SampleCoexpressionAnalysis sa where sa.experimentAnalyzed = :ee" ).setParameter( "ee", ee )
                 .list();
     }

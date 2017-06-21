@@ -44,14 +44,14 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from BibliographicReference" ).setMaxResults( limit )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from BibliographicReference" ).setMaxResults( limit )
                 .setFirstResult( start ).list();
     }
 
     @Override
     public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from BibliographicReference order by :orderField " + ( descending ? "desc" : "" ) )
                 .setMaxResults( limit ).setFirstResult( start ).setParameter( "orderField", orderField ).list();
     }
@@ -60,7 +60,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
 
         BusinessKey.checkKey( bibliographicReference );
-        Criteria queryObject = this.getSession()
+        Criteria queryObject = this.getSessionFactory().getCurrentSession()
                 .createCriteria( BibliographicReference.class );
 
         /*
@@ -100,7 +100,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
 
         for ( Collection<BibliographicReference> batch : BatchIterator.batches( records, 200 ) ) {
             //noinspection unchecked
-            List<Object[]> os = this.getSession().createQuery( query ).setParameterList( "recs", batch ).list();
+            List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query ).setParameterList( "recs", batch ).list();
             for ( Object[] o : os ) {
                 ExpressionExperiment e = ( ExpressionExperiment ) o[0];
                 BibliographicReference b = ( BibliographicReference ) o[1];
@@ -116,7 +116,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public Collection<Long> listAll() {
         //noinspection unchecked
-        return this.getSession().createQuery( "select id from BibliographicReference" ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery( "select id from BibliographicReference" ).list();
     }
 
     @Override
@@ -124,7 +124,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
         final String query = "select distinct e, b from ExpressionExperiment e join e.primaryPublication b left join fetch b.pubAccession left join fetch b.publicationTypes ";
         Map<ExpressionExperiment, BibliographicReference> result = new HashMap<>();
         //noinspection unchecked
-        List<Object[]> os = this.getSession().createQuery( query ).list();
+        List<Object[]> os = this.getSessionFactory().getCurrentSession().createQuery( query ).list();
         for ( Object[] o : os ) {
             result.put( ( ExpressionExperiment ) o[0], ( BibliographicReference ) o[1] );
         }
@@ -145,7 +145,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
         if ( bibliographicReferences.isEmpty() )
             return bibliographicReferences;
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select b from BibliographicReference b left join fetch b.pubAccession left join fetch b.chemicals "
                         + "left join fetch b.meshTerms left join fetch b.keywords left join fetch b.publicationTypes where b.id in (:ids) " )
                 .setParameterList( "ids", EntityUtils.getIds( bibliographicReferences ) ).list();
@@ -155,7 +155,7 @@ public class BibliographicReferenceDaoImpl extends BibliographicReferenceDaoBase
     @Override
     public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibliographicReference ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct ee FROM ExpressionExperiment as ee left join ee.otherRelevantPublications as eeO"
                         + " where ee.primaryPublication = :bib OR (eeO = :bib) " )
                 .setParameter( "bib", bibliographicReference ).list();

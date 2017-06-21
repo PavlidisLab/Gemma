@@ -48,14 +48,14 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
 
     @Override
     public boolean canDelete( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
-        return this.getSession().createQuery( "select a from GeneDifferentialExpressionMetaAnalysis a"
+        return this.getSessionFactory().getCurrentSession().createQuery( "select a from GeneDifferentialExpressionMetaAnalysis a"
                 + "  inner join a.resultSetsIncluded rs where rs.analysis=:an" ).list().isEmpty();
     }
 
     @Override
     public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
         for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
@@ -97,7 +97,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
         StopWatch timer = new StopWatch();
         timer.start();
 
-        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSession()
+        differentialExpressionAnalysis = ( DifferentialExpressionAnalysis ) this.getSessionFactory().getCurrentSession()
                 .load( DifferentialExpressionAnalysis.class, differentialExpressionAnalysis.getId() );
         Collection<ExpressionAnalysisResultSet> thawed = new HashSet<>();
         for ( ExpressionAnalysisResultSet rs : differentialExpressionAnalysis.getResultSets() ) {
@@ -115,7 +115,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends ExpressionAnalysisResult
     protected void handleThaw( final ExpressionAnalysisResultSet resultSet ) {
         StopWatch timer = new StopWatch();
         timer.start();
-        this.getSession().refresh( resultSet );
+        this.getSessionFactory().getCurrentSession().refresh( resultSet );
         this.thawLite( resultSet );
 
         Hibernate.initialize( resultSet.getResults() );

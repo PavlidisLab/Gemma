@@ -14,7 +14,6 @@
  */
 package ubic.gemma.model.common.description;
 
-import org.hibernate.Hibernate;
 import ubic.gemma.model.IdentifiableValueObject;
 
 import java.io.Serializable;

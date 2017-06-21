@@ -274,7 +274,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         String sql = fetchResultsByGeneSQL;
 
         if ( threshold > 0.0 ) {
@@ -455,7 +455,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         Map<Long, Map<Long, DiffExprGeneSearchResult>> results = new HashMap<>();
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         Map<Long, DiffExResultSetSummaryValueObject> resultSetIdsMap = EntityUtils
                 .getIdMap( resultSets, "getResultSetId" );
@@ -679,7 +679,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
         List<Double> results;
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( fetchResultsByResultSetAndGeneQuery );
 
         queryObject.setLong( "gene_id", gene.getId() );
@@ -852,7 +852,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             StopWatch timer = new StopWatch();
             timer.start();
             //noinspection unchecked
-            probeResults.addAll( this.getSession().createQuery( queryString ).setParameterList( "ids", batch ).list() );
+            probeResults.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "ids", batch ).list() );
 
             if ( timer.getTime() > 1000 ) {
                 log.info( "Fetch " + batch.size() + "/" + ids.size() + " results with contrasts: " + timer.getTime()
@@ -892,7 +892,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             return probeResults;
         }
 
-        SQLQuery query = this.getSession().createSQLQuery( queryString );
+        SQLQuery query = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
 
         int BATCH_SIZE = 2000; // previously: 500, then 1000. New optimized query is plenty fast.
         StopWatch timer = new StopWatch();
@@ -966,7 +966,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
     @Override
     public void thaw( final Collection<DifferentialExpressionAnalysisResult> results ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         for ( DifferentialExpressionAnalysisResult result : results ) {
             session.buildLockRequest( LockOptions.NONE ).lock( result );
             Hibernate.initialize( result );
@@ -979,7 +979,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
 
     @Override
     public void thaw( final DifferentialExpressionAnalysisResult result ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         session.buildLockRequest( LockOptions.NONE ).lock( result );
         Hibernate.initialize( result );
@@ -1047,7 +1047,7 @@ public class DifferentialExpressionResultDaoImpl extends DifferentialExpressionR
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
 
         //noinspection unchecked
-        return this.getSession().createQuery( "select ef from ExpressionAnalysisResultSet rs"
+        return this.getSessionFactory().getCurrentSession().createQuery( "select ef from ExpressionAnalysisResultSet rs"
                 + " inner join rs.results r inner join rs.experimentalFactors ef where r=:differentialExpressionAnalysisResult" )
                 .setParameter( "differentialExpressionAnalysisResult", differentialExpressionAnalysisResult ).list();
 

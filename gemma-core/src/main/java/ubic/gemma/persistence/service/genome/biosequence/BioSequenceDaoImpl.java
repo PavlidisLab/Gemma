@@ -52,7 +52,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
         BusinessKey.checkValidKey( bioSequence );
 
-        Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), bioSequence );
+        Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), bioSequence );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         /*
@@ -193,7 +193,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
                 "select distinct gene from Gene as gene inner join gene.products gp,  BioSequence2GeneProduct as bs2gp where gp=bs2gp.geneProduct "
                         + " and bs2gp.bioSequence.name like :search ";
         try {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setString( "search", search );
             genes = queryObject.list();
 
@@ -205,7 +205,7 @@ public class BioSequenceDaoImpl extends BioSequenceDaoBase {
 
     @Override
     protected void handleThaw( final BioSequence bioSequence ) {
-        this.getSession().refresh( bioSequence );
+        this.getSessionFactory().getCurrentSession().refresh( bioSequence );
         Hibernate.initialize( bioSequence.getTaxon() );
         if ( bioSequence.getTaxon() != null ) {
             Hibernate.initialize( bioSequence.getTaxon().getExternalDatabase() );
