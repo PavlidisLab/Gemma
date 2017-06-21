@@ -329,7 +329,7 @@ public class ExpressionExperimentServiceImpl
         }
 
         /*
-         * FIXME: remove probecoexpression analysis; gene coexexpression will linger.
+         * FIXME: gene coexexpression will linger.
          */
 
         /*

@@ -45,7 +45,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
     private Gene2GOAssociationDao gene2GoAssociationDao;
 
     @Autowired
-    private CoexpressionAnalysisDao probeCoexpressionAnalysisDao;
+    private CoexpressionAnalysisDao coexpressionAnalysisDao;
 
     @Autowired
     private TfGeneAssociationDao tfGeneAssociationDao;
@@ -65,7 +65,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( entity instanceof Gene2GOAssociation ) {
             return persistGene2GOAssociation( ( Gene2GOAssociation ) entity );
         } else if ( entity instanceof CoexpressionAnalysis ) {
-            return persistProbeCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
+            return persistCoexpressionAnalysis( ( CoexpressionAnalysis ) entity );
         } else if ( entity instanceof ExpressionExperimentSet ) {
             return persistExpressionExperimentSet( ( ExpressionExperimentSet ) entity );
         } else if ( entity instanceof Gene2GeneProteinAssociation ) {
@@ -131,7 +131,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     }
 
-    private CoexpressionAnalysis persistProbeCoexpressionAnalysis( CoexpressionAnalysis entity ) {
+    private CoexpressionAnalysis persistCoexpressionAnalysis( CoexpressionAnalysis entity ) {
         if ( entity == null )
             return null;
         if ( !isTransient( entity ) )
@@ -141,7 +141,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
         }
 
-        return probeCoexpressionAnalysisDao.create( entity );
+        return coexpressionAnalysisDao.create( entity );
     }
 
     /**

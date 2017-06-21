@@ -183,23 +183,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
 
-        // /*
-        // * Add probes used. Note that this includes probes that were not ......
-        // */
-        // List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
-        // Collection<CoexpressionProbe> probesUsed = new HashSet<CoexpressionProbe>();
-        // for ( ExpressionDataMatrixRowElement el : rowElements ) {
-        // CoexpressionProbe p = CoexpressionProbe.Factory.newInstance();
-        // p.setProbe( el.getDesignElement() );
-        // /*
-        // * later we set node degree.
-        // */
-        // assert p.getProbe().getId() != null;
-        //
-        // probesUsed.add( p );
-        // }
-        // analysis.setProbesUsed( probesUsed );
-
         la.setAnalysisObj( analysis );
     }
 

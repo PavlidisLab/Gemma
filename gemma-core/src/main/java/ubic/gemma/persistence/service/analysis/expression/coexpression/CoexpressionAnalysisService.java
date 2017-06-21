@@ -32,38 +32,30 @@ import ubic.gemma.model.genome.Taxon;
  * Deals with the Analysis objects for Coexpression - not the coexpression results themselves.
  * 
  * @author kelsey
- * @version $Id$
  */
 public interface CoexpressionAnalysisService extends AnalysisService<CoexpressionAnalysis> {
 
-    /**
-     * 
-     */
+
     @Secured({ "GROUP_USER" })
-    public CoexpressionAnalysis create( CoexpressionAnalysis probeCoexpressionAnalysis );
+    CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis );
 
-    /**
-     * 
-     */
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<CoexpressionAnalysis> findByParentTaxon( Taxon taxon );
+    Collection<CoexpressionAnalysis> findByParentTaxon( Taxon taxon );
 
-    /**
-     * 
-     */
+
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
+    Collection<CoexpressionAnalysis> findByTaxon( Taxon taxon );
 
     /**
      * Not secured: for internal use only
-     * 
-     * @param taxon
+     *
      * @return ids of bioassaysets from the given taxon that have a coexpression analysis
      */
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
+    Collection<Long> getExperimentsWithAnalysis( Taxon taxon );
 
     /**
      * Not secured: for internal use only
@@ -72,32 +64,23 @@ public interface CoexpressionAnalysisService extends AnalysisService<Coexpressio
      * @return the ones which have a coexpression analysis.
      */
     @Override
-    public Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
+    Collection<Long> getExperimentsWithAnalysis( Collection<Long> idsToFilter );
 
-    /**
-     * @param o
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( CoexpressionAnalysis o );
+    void update( CoexpressionAnalysis o );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
+    CoexpCorrelationDistribution getCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment );
 
     /**
      * For backfilling of the coexpression distributions from flat files - remove when no longer needed.
-     * 
-     * @param expressionExperiment
-     * @param coexpd
+     *
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_EDIT" })
-    public void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
+    void addCoexpCorrelationDistribution( ExpressionExperiment expressionExperiment,
             CoexpCorrelationDistribution coexpd );
 
-    /**
-     * @param ee
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
+    Boolean hasCoexpCorrelationDistribution( ExpressionExperiment ee );
 
 }

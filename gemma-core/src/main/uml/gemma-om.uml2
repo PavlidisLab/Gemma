@@ -3584,12 +3584,6 @@
                   <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949280_361409_1995"/>
                 </ownedAttribute>
               </ownedMember>
-              <ownedMember xmi:type="uml:Association" xmi:id="_9_5_1_43d01b3_1265652447203_294966_18" name="CoexpressionProbe" memberEnd="_9_5_1_43d01b3_1265652447203_118290_17 _9_5_1_43d01b3_1265652447203_494064_16">
-                <ownedEnd xmi:id="_9_5_1_43d01b3_1265652447203_494064_16" visibility="private" type="_9_5_1_43d01b3_1265652431046_376614_0" association="_9_5_1_43d01b3_1265652447203_294966_18">
-                  <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949623_241316_2817" value="-1"/>
-                  <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949623_692039_2816"/>
-                </ownedEnd>
-              </ownedMember>
               <ownedMember xmi:type="uml:Association" xmi:id="_9_5_1_43d01b3_1298417820102_543266_56" name="ProbeForLoading" memberEnd="_9_5_1_43d01b3_1298417820102_720370_54 _9_5_1_43d01b3_1298417820102_612786_55">
                 <ownedEnd xmi:id="_9_5_1_43d01b3_1298417820102_720370_54" visibility="private" type="_9_5_1_43d01b3_1298417798046_776273_27" association="_9_5_1_43d01b3_1298417820102_543266_56">
                   <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949624_690647_2821" value="-1"/>
@@ -4403,56 +4397,6 @@
                   <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949685_162238_3037"/>
                 </ownedAttribute>
               </ownedMember>
-              <ownedMember xmi:type="uml:Class" xmi:id="I1140071m101d462efa4mm460f" name="Probe2ProbeCoexpression" isAbstract="true">
-                <eAnnotations xmi:id="_0Yv-Eh2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                  <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0Yv-Ex2HEeOjaaBf708ONQ" _andromdahibernateinheritance="concrete"/>
-                </eAnnotations>
-                <ownedComment xmi:id="_9_5_1_f24035d_1138398621132_347901_4890" body="Represents the correlation of two datavectors." annotatedElement="I1140071m101d462efa4mm460f"/>
-                <generalization xmi:id="I1140071m101d462efa4mm45fc" general="I830624m101c472e35bmm5863" isSubstitutable="true"/>
-                <ownedAttribute xmi:id="I1140071m101d462efa4mm4493" name="score" type="_9_0_1fe00f9_1119336925531_221770_56"/>
-                <ownedAttribute xmi:id="I1140071m101d462efa4mm4471" name="pvalue" type="_9_0_1fe00f9_1119336925531_221770_56"/>
-                <ownedAttribute xmi:id="_9_5_1_3bd0193_1219815638203_577281_541" name="firstVector" type="_9_5_1_3bd0193_1217088018750_215516_170" association="_9_5_1_3bd0193_1219815638203_987947_543">
-                  <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949657_116863_2923" value="1"/>
-                  <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949657_488900_2922" value="1"/>
-                </ownedAttribute>
-                <ownedAttribute xmi:id="_9_5_1_3bd0193_1219815635515_65666_538" name="secondVector" type="_9_5_1_3bd0193_1217088018750_215516_170" association="_9_5_1_3bd0193_1219815635515_991292_540">
-                  <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949656_15292_2919" value="1"/>
-                  <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949656_707425_2918" value="1"/>
-                </ownedAttribute>
-                <ownedAttribute xmi:id="_9_5_1_3bd0193_1209828325953_570362_881" name="expressionBioAssaySet" type="_9_5_1_3bd0193_1209825620281_155893_0" association="_9_5_1_3bd0193_1209828325953_129600_882">
-                  <eAnnotations xmi:id="_0Y5vEB2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                    <contents xmi:type="persistence_0:persistence__PersistentProperty" xmi:id="_0Y5vER2HEeOjaaBf708ONQ">
-                      <_andromdapersistencecolumn>EXPRESSION_EXPERIMENT_FK</_andromdapersistencecolumn>
-                    </contents>
-                  </eAnnotations>
-                  <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949608_515700_2771" value="1"/>
-                  <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949608_130809_2770" value="1"/>
-                </ownedAttribute>
-              </ownedMember>
-              <ownedMember xmi:type="uml:Class" xmi:id="I133a2a8m1023b73dc76mm2903" name="MouseProbeCoExpression">
-                <eAnnotations xmi:id="_0YEBkh2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                  <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0YEBkx2HEeOjaaBf708ONQ"/>
-                </eAnnotations>
-                <generalization xmi:id="I133a2a8m1023b73dc76mm28f0" general="I1140071m101d462efa4mm460f" isSubstitutable="true"/>
-              </ownedMember>
-              <ownedMember xmi:type="uml:Class" xmi:id="I133a2a8m1023b73dc76mm28e9" name="HumanProbeCoExpression">
-                <eAnnotations xmi:id="_0YpQYB2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                  <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0YpQYR2HEeOjaaBf708ONQ"/>
-                </eAnnotations>
-                <generalization xmi:id="I133a2a8m1023b73dc76mm28d6" general="I1140071m101d462efa4mm460f" isSubstitutable="true"/>
-              </ownedMember>
-              <ownedMember xmi:type="uml:Class" xmi:id="I133a2a8m1023b73dc76mm28cf" name="RatProbeCoExpression">
-                <eAnnotations xmi:id="_0X0J8B2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                  <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0X0J8R2HEeOjaaBf708ONQ"/>
-                </eAnnotations>
-                <generalization xmi:id="I133a2a8m1023b73dc76mm28bc" general="I1140071m101d462efa4mm460f" isSubstitutable="true"/>
-              </ownedMember>
-              <ownedMember xmi:type="uml:Class" xmi:id="I133a2a8m1023b73dc76mm28b5" name="OtherProbeCoExpression">
-                <eAnnotations xmi:id="_0X_JEB2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                  <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0X_JER2HEeOjaaBf708ONQ"/>
-                </eAnnotations>
-                <generalization xmi:id="I133a2a8m1023b73dc76mm28a2" general="I1140071m101d462efa4mm460f" isSubstitutable="true"/>
-              </ownedMember>
               <ownedMember xmi:type="uml:Class" xmi:id="Id2a49dm1025ed2a6cbmm77ba" name="MouseGeneCoExpression">
                 <eAnnotations xmi:id="_0YrFkB2HEeOjaaBf708ONQ" source="appliedStereotypes">
                   <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0YrFkR2HEeOjaaBf708ONQ"/>
@@ -4526,13 +4470,6 @@
                   <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_3_43d01b3_1334600570824_860061_1836" value="1"/>
                   <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_3_43d01b3_1334600570824_826392_1835"/>
                 </ownedAttribute>
-              </ownedMember>
-              <ownedMember xmi:type="uml:Class" xmi:id="_17_0_5_3bd0193_1339082732735_955844_1847" name="UserProbeCoExpression">
-                <eAnnotations xmi:id="_0Yjw0B2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                  <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0Yjw0R2HEeOjaaBf708ONQ"/>
-                </eAnnotations>
-                <ownedComment xmi:id="_17_0_5_3bd0193_1339082809487_172761_1870" body="Per-dataset level coexpression data for data loaded by users." annotatedElement="_17_0_5_3bd0193_1339082732735_955844_1847"/>
-                <generalization xmi:id="_17_0_5_3bd0193_1339082737811_749223_1867" general="I1140071m101d462efa4mm460f" isSubstitutable="true"/>
               </ownedMember>
             </ownedMember>
             <ownedMember xmi:type="uml:Class" xmi:id="Id2a49dm1025ed2a6cbmm7a45" name="GeneHomology">
@@ -4932,61 +4869,6 @@
             </ownedMember>
             <ownedMember xmi:type="uml:Package" xmi:id="_9_5_1_43d01b3_1205870402604_884666_235" name="expression">
               <ownedMember xmi:type="uml:Package" xmi:id="_9_5_1_43d01b3_1205870409852_808591_254" name="coexpression">
-                <ownedMember xmi:type="uml:Class" xmi:id="_9_5_1_43d01b3_1198172846261_576584_710" name="GeneCoexpressionAnalysis">
-                  <eAnnotations xmi:id="_0X5pgh2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                    <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0X5pgx2HEeOjaaBf708ONQ"/>
-                  </eAnnotations>
-                  <ownedComment xmi:id="_9_5_1_43d01b3_1198173058851_731927_738" body="A coexpression analysis done at the level of genes." annotatedElement="_9_5_1_43d01b3_1198172846261_576584_710"/>
-                  <generalization xmi:id="_9_5_1_43d01b3_1298560672239_660717_60" general="_9_5_1_43d01b3_1298560615413_931850_16" isSubstitutable="true"/>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1203650720141_534892_189" name="stringency" type="_9_0_1fe00f9_1119336925531_479934_4">
-                    <ownedComment xmi:id="_9_5_1_43d01b3_1203650772320_97717_196" body="The minimum stringency used." annotatedElement="_9_5_1_43d01b3_1203650720141_534892_189"/>
-                  </ownedAttribute>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1224692130812_113378_0" name="enabled" type="_9_0_1fe00f9_1119336925531_877505_40">
-                    <ownedComment xmi:id="_9_5_1_43d01b3_1224692134312_502482_6" body="Indicator of whether results from this analysis should be used. This should be set to 'false' while the analysis is being performed (and incomplete) and then 'true' when it is finished. Only one analysis per taxon should be enabled at any given time." annotatedElement="_9_5_1_43d01b3_1224692130812_113378_0"/>
-                  </ownedAttribute>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1203652256874_858589_232" name="taxon" type="I2863e477m101683735a4mm751f" association="_9_5_1_43d01b3_1203652256874_394159_233">
-                    <ownedComment xmi:id="_9_5_1_43d01b3_1203652321270_692375_277" body="The taxon the experiments used came from. This is a denomalization but saves us from looking it up through the experimentsAnalyzed." annotatedElement="_9_5_1_43d01b3_1203652256874_858589_232"/>
-                    <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949367_187974_2171" value="1"/>
-                    <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949367_994860_2170" value="1"/>
-                  </ownedAttribute>
-                </ownedMember>
-                <ownedMember xmi:type="uml:Class" xmi:id="_9_5_1_43d01b3_1198173469146_307620_771" name="ProbeCoexpressionAnalysis">
-                  <eAnnotations xmi:id="_0Yrsoh2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                    <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0Yrsox2HEeOjaaBf708ONQ"/>
-                  </eAnnotations>
-                  <ownedComment xmi:id="_9_5_1_43d01b3_1198173506225_754199_798" body="A coexpression analysis at the level of probes" annotatedElement="_9_5_1_43d01b3_1198173469146_307620_771"/>
-                  <generalization xmi:id="_9_5_1_43d01b3_1298560665717_657574_59" general="_9_5_1_43d01b3_1298560566704_982345_0" isSubstitutable="true"/>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1265652492140_305016_59" name="probesUsed" type="_9_5_1_43d01b3_1265652431046_376614_0" association="_9_5_1_43d01b3_1265652492140_929928_60" aggregation="composite">
-                    <ownedComment xmi:id="_9_5_1_43d01b3_1267224705359_828149_174" body="Probes that were not filtered based on initial filtering criteria. Not all probes used have links retained." annotatedElement="_9_5_1_43d01b3_1265652492140_305016_59"/>
-                    <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949730_254247_3168" value="-1"/>
-                    <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949730_87761_3167"/>
-                  </ownedAttribute>
-                  <ownedAttribute xmi:id="_17_0_5_3bd0193_1340162326743_208753_1836" name="numberOfLinks" type="_9_0_1fe00f9_1119336925531_479934_4" isUnique="false">
-                    <ownedComment xmi:id="_17_0_5_3bd0193_1340162373473_729425_1840" body="The number of links which were stored for this analysis." annotatedElement="_17_0_5_3bd0193_1340162326743_208753_1836"/>
-                    <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_5_3bd0193_1340162352233_298762_1839" value="1"/>
-                    <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_5_3bd0193_1340162352232_866944_1838"/>
-                  </ownedAttribute>
-                </ownedMember>
-                <ownedMember xmi:type="uml:Class" xmi:id="_9_5_1_43d01b3_1265652431046_376614_0" name="CoexpressionProbe">
-                  <eAnnotations xmi:id="_0YEBkB2HEeOjaaBf708ONQ" source="appliedStereotypes">
-                    <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0YEBkR2HEeOjaaBf708ONQ"/>
-                  </eAnnotations>
-                  <ownedComment xmi:id="_9_5_1_43d01b3_1267224679015_364093_172" body="Details of a probe included in the analysis." annotatedElement="_9_5_1_43d01b3_1265652431046_376614_0"/>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1265652626421_473209_100" name="nodeDegree" type="_9_0_1fe00f9_1119336925531_479934_4">
-                    <ownedComment xmi:id="_9_5_1_43d01b3_1265652646406_407788_109" body="How many other probes this probe was linked to. The filter applied may have removed it from consideration." annotatedElement="_9_5_1_43d01b3_1265652626421_473209_100"/>
-                    <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949709_966018_3099" value="1"/>
-                    <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949709_129026_3098"/>
-                  </ownedAttribute>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1265677642671_456333_309" name="nodeDegreeRank" type="_9_0_1fe00f9_1119336925531_221770_56">
-                    <ownedComment xmi:id="_9_5_1_43d01b3_1265677644281_175357_314" body="The (normalized) ranking of this probe in the node degree distribution for this analysis. 0 = lowest, 1=highest." annotatedElement="_9_5_1_43d01b3_1265677642671_456333_309"/>
-                    <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949709_259186_3101" value="1"/>
-                    <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949709_526436_3100"/>
-                  </ownedAttribute>
-                  <ownedAttribute xmi:id="_9_5_1_43d01b3_1265652447203_118290_17" name="probe" type="Im8f64ed4m101a5582751mm727e" association="_9_5_1_43d01b3_1265652447203_294966_18">
-                    <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_17_0_1_43d01b3_1299017949623_971570_2819" value="1"/>
-                    <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_17_0_1_43d01b3_1299017949623_705078_2818" value="1"/>
-                  </ownedAttribute>
-                </ownedMember>
                 <ownedMember xmi:type="uml:Class" xmi:id="_17_0_1_43d01b3_1305847900352_450151_3080" name="SampleCoexpressionMatrix">
                   <eAnnotations xmi:id="_0YJhIh2HEeOjaaBf708ONQ" source="appliedStereotypes">
                     <contents xmi:type="persistence_0:persistence__Entity" xmi:id="_0YJhIx2HEeOjaaBf708ONQ"/>

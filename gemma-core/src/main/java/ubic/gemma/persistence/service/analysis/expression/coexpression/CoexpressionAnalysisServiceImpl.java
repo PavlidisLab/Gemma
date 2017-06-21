@@ -62,13 +62,11 @@ public class CoexpressionAnalysisServiceImpl implements CoexpressionAnalysisServ
         this.update( analysis );
     }
 
-    /**
-     * @see ubic.gemma.model.analysis.expression.CoexpressionAnalysisService#createFromValueObject(ubic.gemma.model.analysis.expression.CoexpressionAnalysis)
-     */
+
     @Override
     @Transactional
-    public CoexpressionAnalysis create( CoexpressionAnalysis probeCoexpressionAnalysis ) {
-        return this.getCoexpressionAnalysisDao().create( probeCoexpressionAnalysis );
+    public CoexpressionAnalysis create( CoexpressionAnalysis coexpressionAnalysis ) {
+        return this.getCoexpressionAnalysisDao().create( coexpressionAnalysis );
     }
 
     @Override

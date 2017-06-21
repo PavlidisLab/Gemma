@@ -37,18 +37,7 @@ public interface RawExpressionDataVectorDao extends DesignElementDataVectorDao<R
 
     Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType );
 
-    /**
-     * <p>
-     * remove Design Element Data Vectors and Probe2ProbeCoexpression entries for a specified CompositeSequence.
-     * </p>
-     */
     void removeDataForCompositeSequence( CompositeSequence compositeSequence );
 
-    /**
-     * <p>
-     * Removes the DesignElementDataVectors and Probe2ProbeCoexpressions for a quantitation type, given a
-     * QuantitationType (which always comes from a specific ExpressionExperiment)
-     * </p>
-     */
     void removeDataForQuantitationType( QuantitationType quantitationType );
 }
