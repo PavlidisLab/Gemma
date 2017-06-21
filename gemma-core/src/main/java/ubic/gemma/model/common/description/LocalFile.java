@@ -18,50 +18,27 @@
  */
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.common.Identifiable;
+
 import java.io.File;
+import java.io.Serializable;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
-/**
- * 
- */
-public abstract class LocalFile implements java.io.Serializable, gemma.gsec.model.Securable {
+public class LocalFile implements Identifiable, Serializable, gemma.gsec.model.Securable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5057142607188347151L;
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.LocalFile}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.LocalFile}.
-         */
-        public static LocalFile newInstance() {
-            return new LocalFileImpl();
-        }
-
-    }
-
     private java.net.URL localURL;
-
     private java.net.URL remoteURL;
-
     private String version;
-
     private Long size;
-
     private Long id;
-
     private FileFormat format;
-
     private Collection<LocalFile> sourceFiles = new java.util.HashSet<>();
 
     /**
      * Attempt to create a java.io.File from the local URI. If it doesn't look like a URI, it is just treated as a path.
-     * 
+     *
      * @see ubic.gemma.model.common.description.LocalFile#asFile()
      */
     public java.io.File asFile() {
@@ -94,33 +71,47 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         LocalFile other = ( LocalFile ) obj;
         if ( id == null ) {
-            if ( other.id != null ) return false;
-        } else if ( !id.equals( other.id ) ) return false;
+            if ( other.id != null )
+                return false;
+        } else if ( !id.equals( other.id ) )
+            return false;
 
         if ( localURL == null ) {
-            if ( other.localURL != null ) return false;
-        } else if ( !localURL.equals( other.localURL ) ) return false;
+            if ( other.localURL != null )
+                return false;
+        } else if ( !localURL.equals( other.localURL ) )
+            return false;
         return true;
     }
 
-    /**
-     * 
-     */
+    @Override
+    public String toString() {
+        return this.asFile() == null ? super.toString() : this.asFile().toString();
+    }
+
     public FileFormat getFormat() {
         return this.format;
     }
 
-    /**
-     * 
-     */
+    public void setFormat( FileFormat format ) {
+        this.format = format;
+    }
+
     @Override
     public Long getId() {
         return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
     }
 
     /**
@@ -130,6 +121,10 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         return this.localURL;
     }
 
+    public void setLocalURL( java.net.URL localURL ) {
+        this.localURL = localURL;
+    }
+
     /**
      * Source where the file was downloaded from.
      */
@@ -137,11 +132,16 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         return this.remoteURL;
     }
 
-    /**
-     * 
-     */
+    public void setRemoteURL( java.net.URL remoteURL ) {
+        this.remoteURL = remoteURL;
+    }
+
     public Long getSize() {
         return this.size;
+    }
+
+    public void setSize( Long size ) {
+        this.size = size;
     }
 
     /**
@@ -151,11 +151,19 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         return this.sourceFiles;
     }
 
+    public void setSourceFiles( Collection<LocalFile> sourceFiles ) {
+        this.sourceFiles = sourceFiles;
+    }
+
     /**
      * The version identifier for the file; this could be as simple as the date of creation
      */
     public String getVersion() {
         return this.version;
+    }
+
+    public void setVersion( String version ) {
+        this.version = version;
     }
 
     @Override
@@ -164,36 +172,22 @@ public abstract class LocalFile implements java.io.Serializable, gemma.gsec.mode
         int result = 1;
         result = prime * result + ( ( id == null ) ? 0 : id.hashCode() );
 
-        if ( id != null ) result = prime * result + ( ( localURL == null ) ? 0 : localURL.hashCode() );
+        if ( id != null )
+            result = prime * result + ( ( localURL == null ) ? 0 : localURL.hashCode() );
         return result;
     }
 
-    public void setFormat( FileFormat format ) {
-        this.format = format;
-    }
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.common.description.LocalFile}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.common.description.LocalFile}.
+         */
+        public static LocalFile newInstance() {
+            return new LocalFile();
+        }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setLocalURL( java.net.URL localURL ) {
-        this.localURL = localURL;
-    }
-
-    public void setRemoteURL( java.net.URL remoteURL ) {
-        this.remoteURL = remoteURL;
-    }
-
-    public void setSize( Long size ) {
-        this.size = size;
-    }
-
-    public void setSourceFiles( Collection<LocalFile> sourceFiles ) {
-        this.sourceFiles = sourceFiles;
-    }
-
-    public void setVersion( String version ) {
-        this.version = version;
     }
 
 }

@@ -24,14 +24,14 @@ import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
  * @version $Id$
  */
 public interface SVDService {
-    public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count );
+    Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( Long eeId, int component, int count );
 
-    public boolean hasPca( Long eeId );
+    boolean hasPca( Long eeId );
 
-    public SVDValueObject getSvd( Long eeId );
+    SVDValueObject getSvd( Long eeId );
 
-    public SVDValueObject svd( Long eeId );
+    SVDValueObject svd( Long eeId );
 
-    public SVDValueObject getSvdFactorAnalysis( Long eeId );
+    SVDValueObject getSvdFactorAnalysis( Long eeId );
 
 }

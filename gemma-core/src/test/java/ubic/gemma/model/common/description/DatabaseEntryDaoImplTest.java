@@ -29,12 +29,11 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
 public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
 
     @Autowired
-    DatabaseEntryDao databaseEntryDao;
+    private DatabaseEntryDao databaseEntryDao;
 
     @Test
     @Transactional
@@ -44,10 +43,6 @@ public class DatabaseEntryDaoImplTest extends BaseSpringContextTest {
         assertEquals( de.getAccession(), actualReturn.getAccession() );
     }
 
-    /*
-     * Class under test for ubic.gemma.model.common.description.DatabaseEntry
-     * find(ubic.gemma.model.common.description.DatabaseEntry)
-     */
     @Test
     @Transactional
     public void testFindDatabaseEntry() {

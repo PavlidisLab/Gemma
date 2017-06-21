@@ -27,8 +27,8 @@ import ubic.gemma.core.analysis.expression.diff.DiffExpressionSelectedFactorComm
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.core.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
@@ -88,7 +88,8 @@ public class DifferentialExpressionSearchController {
     public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
             Integer limit ) {
 
-        Gene g = geneService.thaw( geneService.load( geneId ) );
+        Gene g = geneService.load( geneId );
+        geneService.thaw( g );
 
         if ( g == null ) {
             return new ArrayList<>();
@@ -228,7 +229,7 @@ public class DifferentialExpressionSearchController {
         if ( gsvo.getGeneIds().isEmpty() ) {
             genes = geneSetService.getGenesInGroup( gsvo );
         } else {
-            genes = geneService.loadValueObjects( gsvo.getGeneIds() );
+            genes = geneService.loadValueObjectsByIds( gsvo.getGeneIds() );
         }
 
         log.info( "Got genes" );
@@ -317,7 +318,7 @@ public class DifferentialExpressionSearchController {
         /*
          * Because this method returns the results, we have to screen.
          */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.load( ids );
 
         Collection<Long> filteredIds = new HashSet<>();
         for ( ExpressionExperiment ee : securityScreened ) {

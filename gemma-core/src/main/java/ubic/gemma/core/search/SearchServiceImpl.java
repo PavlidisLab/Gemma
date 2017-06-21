@@ -37,47 +37,50 @@ import org.compass.core.mapping.osem.ComponentMapping;
 import org.compass.core.spi.InternalCompassSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.core.annotation.reference.BibliographicReferenceService;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.persistence.service.common.description.CharacteristicService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.genome.gene.service.GeneSetService;
+import ubic.gemma.core.ontology.OntologyService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.UserQuery;
-import ubic.gemma.model.common.description.*;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.service.genome.TaxonDao;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.service.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.core.ontology.OntologyService;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.persistence.service.common.description.CharacteristicService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
+import ubic.gemma.persistence.service.genome.gene.GeneProductService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonDao;
 import ubic.gemma.persistence.util.CacheUtils;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
@@ -101,7 +104,7 @@ import java.util.regex.Pattern;
  * @author paul
  * @author keshav
  */
-@Component
+@Service
 public class SearchServiceImpl implements SearchService {
 
     private static final Log log = LogFactory.getLog( SearchServiceImpl.class.getName() );
@@ -216,9 +219,10 @@ public class SearchServiceImpl implements SearchService {
     void initializeSearchService() throws Exception {
         try {
             boolean terracottaEnabled = Settings.getBoolean( "gemma.cache.clustered", false );
-            this.childTermCache = CacheUtils.createOrLoadCache( cacheManager, ONTOLOGY_CHILDREN_CACHE_NAME, terracottaEnabled,
-                    ONTOLOGY_INFO_CACHE_SIZE, false, false, ONTOLOGY_CACHE_TIME_TO_IDLE, ONTOLOGY_CACHE_TIME_TO_DIE,
-                    false );
+            this.childTermCache = CacheUtils
+                    .createOrLoadCache( cacheManager, ONTOLOGY_CHILDREN_CACHE_NAME, terracottaEnabled,
+                            ONTOLOGY_INFO_CACHE_SIZE, false, false, ONTOLOGY_CACHE_TIME_TO_IDLE,
+                            ONTOLOGY_CACHE_TIME_TO_DIE, false );
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
         }
@@ -1095,8 +1099,9 @@ public class SearchServiceImpl implements SearchService {
         for ( SearchResult searchResult : searchResults ) {
             // this is a special case ... for some reason.
             if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
-                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
-                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
+                bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() );
+                SearchResult convertedSearchResult = new SearchResult(
+                        BioSequenceValueObject.fromEntity( ( BioSequence ) searchResult.getResultObject() ),
                         searchResult.getScore(), searchResult.getHighlightedText() );
                 convertedSearchResults.add( convertedSearchResult );
             } else {
@@ -1421,8 +1426,8 @@ public class SearchServiceImpl implements SearchService {
      *                              compass-searched for genes, and then used the genes to get sequences from the database, the gene is
      *                              compassHitsDerivedFrom. If null, we treat this as a direct hit.
      */
-    private List<SearchResult> dbHitsToSearchResult( Collection<?> entities,
-            SearchResult compassHitDerivedFrom, String matchText ) {
+    private List<SearchResult> dbHitsToSearchResult( Collection<?> entities, SearchResult compassHitDerivedFrom,
+            String matchText ) {
         StopWatch timer = startTiming();
         List<SearchResult> results = new ArrayList<>();
         for ( Object e : entities ) {
@@ -1453,8 +1458,7 @@ public class SearchServiceImpl implements SearchService {
      *                              compass-searched for genes, and then used the genes to get sequences from the database, the gene is
      *                              compassHitsDerivedFrom. If null, we treat this as a direct hit.
      */
-    private List<SearchResult> dbHitsToSearchResult( Map<?, String> entities,
-            SearchResult compassHitDerivedFrom ) {
+    private List<SearchResult> dbHitsToSearchResult( Map<?, String> entities, SearchResult compassHitDerivedFrom ) {
         List<SearchResult> results = new ArrayList<>();
         for ( Object e : entities.keySet() ) {
             SearchResult esr = dbHitToSearchResult( compassHitDerivedFrom, e, entities.get( e ) );
@@ -1981,17 +1985,17 @@ public class SearchServiceImpl implements SearchService {
     private Collection<?> retrieveResultEntities( Class<?> entityClass, List<SearchResult> results ) {
         List<Long> ids = getIds( results );
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {
-            return expressionExperimentService.loadMultiple( ids );
+            return expressionExperimentService.load( ids );
         } else if ( ArrayDesign.class.isAssignableFrom( entityClass ) ) {
-            return arrayDesignService.loadMultiple( ids );
+            return arrayDesignService.load( ids );
         } else if ( CompositeSequence.class.isAssignableFrom( entityClass ) ) {
-            return compositeSequenceService.loadMultiple( ids );
+            return compositeSequenceService.load( ids );
         } else if ( BibliographicReference.class.isAssignableFrom( entityClass ) ) {
-            return bibliographicReferenceService.loadMultiple( ids );
+            return bibliographicReferenceService.load( ids );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
-            return geneService.loadMultiple( ids );
+            return geneService.load( ids );
         } else if ( BioSequence.class.isAssignableFrom( entityClass ) ) {
-            return bioSequenceService.loadMultiple( ids );
+            return bioSequenceService.load( ids );
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             return geneSetService.load( ids );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
@@ -2041,8 +2045,7 @@ public class SearchServiceImpl implements SearchService {
      * @param results the results to which should any new results be accreted.
      * @return same object as given, possibly extended by new items from gene search.
      */
-    private void accreteResultsGenes( List<SearchResult> results, SearchSettings settings,
-            boolean webSpeedSearch ) {
+    private void accreteResultsGenes( List<SearchResult> results, SearchSettings settings, boolean webSpeedSearch ) {
         if ( settings.getSearchGenes() ) {
             Collection<SearchResult> genes = this.getGenesFromSettings( settings, webSpeedSearch );
             accreteResults( results, genes );

@@ -28,12 +28,11 @@ import ubic.gemma.core.testing.BaseSpringContextTest;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class TaxonServiceImplTest extends BaseSpringContextTest {
 
     /**
-     * Test method for {@link ubic.gemma.core.genome.taxon.service.TaxonServiceBase#findOrCreate(ubic.gemma.model.genome.Taxon)}.
+     * Test method for {@link ubic.gemma.persistence.service.genome.taxon.TaxonService#findOrCreate(Taxon)} )}.
      * Situation where the secondary id is treated as the primary, we must not make a new taxon!
      */
     @Test
@@ -42,7 +41,7 @@ public class TaxonServiceImplTest extends BaseSpringContextTest {
         t.setNcbiId( 559292 );
 
         Taxon yeast = taxonService.findByCommonName( "yeast" );
-        assertNotNull( yeast ); // this should be loaded automagically.
+        assertNotNull( yeast ); // this should be loaded automatically.
 
         Taxon found = taxonService.findOrCreate( t );
 

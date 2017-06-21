@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Expression Experiment
  * </p>
  */
-public abstract class ProcessedVectorComputationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class ProcessedVectorComputationEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -37,7 +37,7 @@ public abstract class ProcessedVectorComputationEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent();
         }
 
     }

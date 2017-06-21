@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Indicates that a data type (for a specific QuantitationType, possibly new) was added. This is always 'raw' data.
  * </p>
  */
-public abstract class DataAddedEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class DataAddedEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent}.
@@ -34,7 +34,7 @@ public abstract class DataAddedEvent extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataAddedEvent();
         }
 
     }

@@ -23,7 +23,7 @@ import org.apache.commons.cli.OptionBuilder;
 
 import ubic.basecode.ontology.providers.ExperimentalFactorOntologyService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.util.AbstractCLIContextCLI;

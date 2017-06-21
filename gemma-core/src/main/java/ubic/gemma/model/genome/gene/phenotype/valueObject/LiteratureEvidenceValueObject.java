@@ -21,22 +21,20 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 
-/**
- * @author ?
- * @version $Id$
- */
-public class LiteratureEvidenceValueObject extends EvidenceValueObject {
+public class LiteratureEvidenceValueObject extends EvidenceValueObject<LiteratureEvidence> {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -4401437961722829548L;
 
     public LiteratureEvidenceValueObject() {
-        super();
     }
 
-    /** Entity to Value Object */
+    public LiteratureEvidenceValueObject( Long id ) {
+        super( id );
+    }
+
+    /**
+     * Entity to Value Object
+     */
     public LiteratureEvidenceValueObject( LiteratureEvidence literatureEvidence ) {
         super( literatureEvidence );
     }

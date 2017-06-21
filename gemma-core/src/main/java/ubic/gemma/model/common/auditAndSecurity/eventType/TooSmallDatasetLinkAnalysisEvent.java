@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * Indicates that the data set had too few samples or probes to be analyzed (after filtering), and was skipped
  */
-public abstract class TooSmallDatasetLinkAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEventImpl {
+public class TooSmallDatasetLinkAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +34,7 @@ public abstract class TooSmallDatasetLinkAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.TooSmallDatasetLinkAnalysisEvent();
         }
 
     }

@@ -33,18 +33,18 @@ import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerService;
-import ubic.gemma.core.expression.experiment.service.ExperimentalDesignService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.*;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 
 import java.util.Date;
 
@@ -102,7 +102,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
     /**
      * Create Array design, check ACLs are put on correctly and removed when the design is removed. Array Designs are
      * _simple_ compared to EEs!
-     *
      */
     @Test
     public void testArrayDesignAcls() throws Exception {
@@ -238,7 +237,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
     /**
      * Test of EE ACLs and also SecurityNotInherited on EE set.
-     *
      */
     @Test
     public void testExpressionExperimentAcls() throws Exception {
@@ -272,7 +270,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         aclTestUtils.checkEEAcls( ee );
 
         /*
-         * Now associate with ee set, delete the set and then the ee, make sure things are done correctly!
+         * Now associate with ee set, remove the set and then the ee, make sure things are done correctly!
          */
 
         ExpressionExperimentSet ees = ExpressionExperimentSet.Factory.newInstance();
@@ -288,7 +286,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         assertNull( eeacl.getParentAcl() );
 
-        expressionExperimentSetService.delete( ees );
+        expressionExperimentSetService.remove( ees );
 
         // make sure ACL for ees is gone
         aclTestUtils.checkDeletedAcl( ees );
@@ -296,7 +294,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         // make sure the ACL for ee is still there
         aclTestUtils.checkHasAcl( ee );
 
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
 
@@ -338,7 +336,6 @@ public class AclAdviceTest extends BaseSpringContextTest {
     /**
      * Test that when a new associated object is persisted by a cascade, it gets the correct permissions of the parent
      * object
-     *
      */
     @Test
     public void testUpdateAcl() throws Exception {
@@ -373,7 +370,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
 
         aclTestUtils.checkEEAcls( ee );
 
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
 
         aclTestUtils.checkDeleteEEAcls( ee );
     }

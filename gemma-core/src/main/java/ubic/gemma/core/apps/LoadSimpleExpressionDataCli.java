@@ -34,8 +34,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
@@ -351,7 +351,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
             ExpressionExperiment ee = eeLoaderService.create( metaData, data );
 
-            ee = eeService.thawLite( ee );
+            eeService.thawLite( ee );
         }
     }
 

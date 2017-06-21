@@ -18,12 +18,10 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.hibernate.jdbc.Work;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.common.auditAndSecurity.Person;
+import ubic.gemma.persistence.service.AbstractDao;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Collection;
 
 /**
@@ -34,168 +32,28 @@ import java.util.Collection;
  *
  * @see ubic.gemma.model.common.auditAndSecurity.Person
  */
-public abstract class PersonDaoBase extends HibernateDaoSupport implements PersonDao {
+public abstract class PersonDaoBase extends AbstractDao<Person> implements PersonDao {
 
-    /**
-     * @see PersonDao#create(java.util.Collection)
-     */
-    @Override
-    public java.util.Collection<? extends Person> create( final java.util.Collection<? extends Person> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Person.create - 'entities' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-
-            @Override
-            public void execute( Connection connection ) throws SQLException {
-                for ( Person entity : entities ) {
-                    create( entity );
-                }
-            }
-        } );
-
-        return entities;
-    }
-
-    /**
-     * @see PersonDao#create(Object)
-     */
-    @Override
-    public Person create( final Person person ) {
-        if ( person == null ) {
-            throw new IllegalArgumentException( "Person.create - 'person' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().save( person );
-        return person;
+    public PersonDaoBase( SessionFactory sessionFactory ) {
+        super( Person.class, sessionFactory );
     }
 
     /**
      * @see PersonDao#findByFullName(String, String)
      */
     @Override
-    public java.util.Collection<Person> findByFullName( final String name, final String secondName ) {
-        return this.findByFullName(
-                "from Person p where p.firstName=:firstName and p.lastName=:lastName and p.middleName=:middleName",
-                name, secondName );
-    }
-
-    /**
-     * @see PersonDao#findByFullName(String, String)
-     */
-    @SuppressWarnings("unchecked")
-    private java.util.Collection<Person> findByFullName( final String queryString, final String name,
-            final String secondName ) {
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "name", name )
-                .setParameter( "secondName", secondName ).list();
+    public Collection<Person> findByFullName( String firstName, String lastName ) {
+        //noinspection unchecked
+        return this.getSession().createQuery( "from Person p where p.name = :firstName and p.lastName=:lastName " )
+                .setParameter( "firstName", firstName ).setParameter( "lastName", lastName ).list();
     }
 
     /**
      * @see PersonDao#findByLastName(String)
      */
     @Override
-    public java.util.Collection<Person> findByLastName( final String lastName ) {
-        return this.findByLastName(
-                "from ubic.gemma.model.common.auditAndSecurity.Person as person where person.lastName = :lastName",
-                lastName );
-    }
-
-    /**
-     * @see PersonDao#findByLastName(String)
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<Person> findByLastName( final String queryString, final String lastName ) {
-        return this.getSessionFactory().getCurrentSession().createQuery( queryString )
-                .setParameter( "lastName", lastName ).list();
-    }
-
-    @Override
-    public Collection<? extends Person> load( Collection<Long> ids ) {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createQuery( "from Person where id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
-    }
-
-    /**
-     * @see PersonDao#load(Long)
-     */
-    @Override
-    public Person load( final Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Person.load - 'id' can not be null" );
-        }
-        return ( Person ) this.getSessionFactory().getCurrentSession().get( Person.class, id );
-    }
-
-    /**
-     * @see PersonDao#loadAll()
-     */
-
-    @Override
-    public java.util.Collection<? extends Person> loadAll() {
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession().createCriteria( Person.class ).list();
-    }
-
-    /**
-     * @see PersonDao#remove(Long)
-     */
-
-    @Override
-    public void remove( Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Person.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.auditAndSecurity.Person entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    @Override
-    public void remove( Collection<? extends Person> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Person.remove - 'entities' can not be null" );
-        }
-        for ( Person p : entities ) {
-            this.remove( p );
-        }
-    }
-
-    /**
-     * @see PersonDao#remove(Object)
-     */
-    @Override
-    public void remove( Person person ) {
-        if ( person == null ) {
-            throw new IllegalArgumentException( "Person.remove - 'person' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().delete( person );
-    }
-
-    @Override
-    public void update( final java.util.Collection<? extends Person> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Person.update - 'entities' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().doWork( new Work() {
-            @Override
-            public void execute( Connection connection ) throws SQLException {
-                for ( Person entity : entities ) {
-                    update( entity );
-                }
-            }
-        } );
-    }
-
-    /**
-     * @see PersonDao#update(Object)
-     */
-    @Override
-    public void update( Person person ) {
-        if ( person == null ) {
-            throw new IllegalArgumentException( "Person.update - 'person' can not be null" );
-        }
-        this.getSessionFactory().getCurrentSession().update( person );
+    public Collection<Person> findByLastName( final String lastName ) {
+        return this.findByProperty( "lastName", lastName );
     }
 
 }

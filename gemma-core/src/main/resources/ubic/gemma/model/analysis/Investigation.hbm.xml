@@ -28,12 +28,12 @@
 			<key foreign-key="CHARACTERISTIC_INVESTIGATION_FKC">
 				<column name="INVESTIGATION_FK" sql-type="BIGINT" />
 			</key>
-			<one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl" />
+			<one-to-many class="ubic.gemma.model.common.description.Characteristic" />
 		</set>
 		<many-to-one name="owner" class="ubic.gemma.model.common.auditAndSecurity.Contact" lazy="proxy" fetch="select">
 			<column name="OWNER_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
-		<many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReferenceImpl"
+		<many-to-one name="primaryPublication" class="ubic.gemma.model.common.description.BibliographicReference"
 			lazy="proxy" fetch="select">
 			<column name="PRIMARY_PUBLICATION_FK" not-null="false" sql-type="BIGINT" />
 		</many-to-one>
@@ -41,7 +41,7 @@
 			<key foreign-key="BIBLIOGRAPHIC_REFERENCE_INVESTIGATIONS_FKC">
 				<column name="INVESTIGATIONS_FK" sql-type="BIGINT" />
 			</key>
-			<many-to-many class="ubic.gemma.model.common.description.BibliographicReferenceImpl">
+			<many-to-many class="ubic.gemma.model.common.description.BibliographicReference">
 				<column name="OTHER_RELEVANT_PUBLICATIONS_FK" sql-type="BIGINT" />
 			</many-to-many>
 		</set>
@@ -64,9 +64,6 @@
 					<column name="SHORT_NAME" not-null="false" unique="true"
 						sql-type="VARCHAR(255) character set latin1 collate latin1_swedish_ci" />
 				</property>
-				<property name="numberOfSamples" type="java.lang.Integer">
-					<column name="NUMBER_OF_SAMPLES" not-null="false" unique="false" sql-type="INTEGER" />
-				</property>
 				<property name="numberOfDataVectors" type="java.lang.Integer">
 					<column name="NUMBER_OF_DATA_VECTORS" not-null="false" unique="false" sql-type="INTEGER" />
 				</property>
@@ -81,15 +78,15 @@
 					</key>
 					<one-to-many class="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" />
 				</set>
-				<many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntryImpl" cascade="all"
-					lazy="proxy" fetch="select">
+				<many-to-one name="accession" class="ubic.gemma.model.common.description.DatabaseEntry" cascade="all"
+					lazy="false" fetch="select">
 					<column name="ACCESSION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
-				<many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl"
+				<many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesign"
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="EXPERIMENTAL_DESIGN_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
-				<many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFileImpl" cascade="all"
+				<many-to-one name="rawDataFile" class="ubic.gemma.model.common.description.LocalFile" cascade="all"
 					lazy="proxy" fetch="select">
 					<column name="RAW_DATA_FILE_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
@@ -98,9 +95,9 @@
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_FKC">
 						<column name="EXPRESSION_EXPERIMENT_FK" sql-type="BIGINT" />
 					</key>
-					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssayImpl" />
+					<one-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay" />
 				</set>
-				<many-to-one name="meanVarianceRelation" class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelationImpl"
+				<many-to-one name="meanVarianceRelation" class="ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation"
 					cascade="all" lazy="proxy" fetch="select">
 					<column name="MEAN_VARIANCE_RELATION_FK" not-null="false" sql-type="BIGINT" unique="true" />
 				</many-to-one>
@@ -123,7 +120,7 @@
 					<one-to-many class="ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorImpl" />
 				</set>
 			</subclass>
-			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" discriminator-value="ExpressionExperimentSubSetImpl"
+			<subclass name="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet" discriminator-value="ExpressionExperimentSubSet"
 				dynamic-insert="false" dynamic-update="false" abstract="false">
 				<many-to-one name="sourceExperiment" class="ubic.gemma.model.expression.experiment.ExpressionExperiment"
 					cascade="none" lazy="false" fetch="select">
@@ -133,13 +130,13 @@
 					<key foreign-key="BIO_ASSAY_EXPRESSION_EXPERIMENT_SUB_SET_FKC">
 						<column name="EXPRESSION_EXPERIMENT_SUB_SET_FK" sql-type="BIGINT" />
 					</key>
-					<many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssayImpl">
+					<many-to-many class="ubic.gemma.model.expression.bioAssay.BioAssay">
 						<column name="BIO_ASSAYS_FK" sql-type="BIGINT" />
 					</many-to-many>
 				</set>
 			</subclass>
 		</subclass>
-		<subclass name="ubic.gemma.model.association.phenotype.GenericExperimentImpl" discriminator-value="GenericExperimentImpl"
+		<subclass name="ubic.gemma.model.association.phenotype.GenericExperiment" discriminator-value="GenericExperiment"
 			dynamic-insert="false" dynamic-update="false" abstract="false">
 		</subclass>
 	</class>

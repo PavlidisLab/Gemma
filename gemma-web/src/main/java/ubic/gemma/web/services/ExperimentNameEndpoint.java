@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -75,7 +75,7 @@ public class ExperimentNameEndpoint extends AbstractGemmaEndpoint {
             eeLongs.add( Long.parseLong( ee ) );
         log.debug( "XML input read: expression experiment id, " + eeInput );
 
-        Collection<ExpressionExperiment> eeCol = expressionExperimentService.loadMultiple( eeLongs );
+        Collection<ExpressionExperiment> eeCol = expressionExperimentService.load( eeLongs );
 
         if ( eeCol == null || eeCol.isEmpty() ) {
             String msg = "No input Expression Experiments can be found.";

@@ -19,22 +19,20 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.assertNull;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.bioAssay.BioAssayService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author kelsey
- * @version $Id$
  */
 public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
 
@@ -42,18 +40,17 @@ public class ExpressionExperimentDeleteTest extends BaseSpringContextTest {
     private ExpressionExperimentService svc;
 
     @Autowired
-    BioAssayService bioAssayService;
+    private BioAssayService bioAssayService;
 
     @Test
-    public final void testRemove()   {
+    public final void testRemove() {
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
-        List<Long> ids = new ArrayList<Long>();
+        List<Long> ids = new ArrayList<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             ids.add( ba.getId() );
         }
 
-        svc.delete( ee );
-
+        svc.remove( ee );
         assertNull( svc.load( ee.getId() ) );
 
         // sure bioassays are gone.

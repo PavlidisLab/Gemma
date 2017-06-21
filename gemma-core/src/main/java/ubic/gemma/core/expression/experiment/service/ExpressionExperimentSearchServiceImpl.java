@@ -24,10 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchResultDisplayObject;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,9 +35,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchResultDisplayObject;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.persistence.service.analysis.expression.coexpression.CoexpressionAnalysisService;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.*;
@@ -50,21 +52,38 @@ import java.util.*;
 @Component
 public class ExpressionExperimentSearchServiceImpl implements ExpressionExperimentSearchService {
 
-    private final Log log = LogFactory.getLog( this.getClass() );
+    private static final Log log = LogFactory.getLog( ExpressionExperimentSearchServiceImpl.class );
+
+    private final ExpressionExperimentSetService expressionExperimentSetService;
+    private final CoexpressionAnalysisService coexpressionAnalysisService;
+    private final DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private final SecurityService securityService;
+    private final SearchService searchService;
+    private final TaxonService taxonService;
+    private final ExpressionExperimentService expressionExperimentService;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
+
     @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
-    @Autowired
-    private CoexpressionAnalysisService coexpressionAnalysisService;
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    @Autowired
-    private SecurityService securityService;
-    @Autowired
-    private SearchService searchService;
-    @Autowired
-    private TaxonService taxonService;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    public ExpressionExperimentSearchServiceImpl( ExpressionExperimentSetService expressionExperimentSetService,
+            CoexpressionAnalysisService coexpressionAnalysisService,
+            DifferentialExpressionAnalysisService differentialExpressionAnalysisService,
+            SecurityService securityService, SearchService searchService, TaxonService taxonService,
+            ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentSetService = expressionExperimentSetService;
+        this.coexpressionAnalysisService = coexpressionAnalysisService;
+        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+        this.securityService = securityService;
+        this.searchService = searchService;
+        this.taxonService = taxonService;
+        this.expressionExperimentService = expressionExperimentService;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
@@ -79,7 +98,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         for ( ExpressionExperimentSet set : sets ) {
             expressionExperimentSetService.thaw( set );
             if ( set.getTaxon().getId().equals( taxonId ) ) {
-                ExpressionExperimentSetValueObject eevo = expressionExperimentSetService.loadValueObject( set.getId() );
+                ExpressionExperimentSetValueObject eevo = expressionExperimentSetService.loadValueObject( set );
                 newSRDO = new SearchResultDisplayObject( eevo );
                 newSRDO.setUserOwned( securityService.isPrivate( set ) );
                 ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
@@ -220,6 +239,10 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentValueObjects;
     }
 
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private List<SearchResultDisplayObject> getExpressionExperimentResults(
             Map<Class<?>, List<SearchResult>> results ) {
         // get all expressionExperiment results and convert result object into a value object
@@ -246,24 +269,15 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
 
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
-            List<Long> eeSetIds = new ArrayList<>();
+            List<ExpressionExperimentSet> eeSets = new ArrayList<>();
             for ( SearchResult sr : results.get( ExpressionExperimentSet.class ) ) {
-                eeSetIds.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ).getId() );
+                eeSets.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ) );
             }
-
-            if ( eeSetIds.isEmpty() ) {
+            if ( eeSets.isEmpty() ) {
                 return experimentSets;
             }
-
             for ( ExpressionExperimentSetValueObject eesvo : expressionExperimentSetService
-                    .loadValueObjects( eeSetIds ) ) {
-                //
-                // if ( !SecurityUtil.isUserAdmin() ) {
-                // // have to security filter to get the accurate size. This is a performance hit so we don't do it.
-                // eesvo.setSize( expressionExperimentSetService.getExperimentValueObjectsInSet( eesvo.getId() )
-                // .size() );
-                // }
-
+                    .loadValueObjects( eeSets ) ) {
                 experimentSets.add( new SearchResultDisplayObject( eesvo ) );
             }
         }

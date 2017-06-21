@@ -36,7 +36,7 @@ import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateSe
 import ubic.gemma.core.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -114,7 +114,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
 
         for ( Object o : results ) {
             ExpressionExperiment e = ( ExpressionExperiment ) o;
-            e = eeService.thawLite( e );
+            eeService.thawLite( e );
 
             aclTestUtils.checkEEAcls( e );
 
@@ -122,9 +122,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             assertEquals( "6062-7", e.getPrimaryPublication().getPages() );
 
             try {
-                eeService.delete( e );
+                eeService.remove( e );
             } catch ( Exception ex ) {
-                log.info( "Failed to delete EE after test" );
+                log.info( "Failed to remove EE after test" );
             }
         }
 
@@ -168,7 +168,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.warn( "Test skipped because GSE2122 was not removed from the system prior to test" );
             return;
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         assertEquals( 4, ee.getBioAssays().size() );
         aclTestUtils.checkEEAcls( ee );
     }
@@ -189,7 +189,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE13657 was already loaded - clean the DB before running the test" );
             return;
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 13, qts.size() );
@@ -221,9 +221,9 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
     @After
     public void tearDown() throws Exception {
         if ( ee != null ) try {
-            eeService.delete( ee );
+            eeService.remove( ee );
         } catch ( Exception e ) {
-            log.info( "Failed to delete EE after test: " + e.getMessage() );
+            log.info( "Failed to remove EE after test: " + e.getMessage() );
             throw e;
         }
     }
@@ -241,7 +241,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         }
 
         ee = eeService.load( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         aclTestUtils.checkEEAcls( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 16, qts.size() );
@@ -249,7 +249,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         twoChannelMissingValues.computeMissingValues( ee );
 
         ee = eeService.load( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() ); // 16 that were imported plus the detection call we added.
 
@@ -260,7 +260,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         assertEquals( 10, dataVectors.size() );
 
         ee = eeService.load( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         qts = eeService.getQuantitationTypes( ee );
         assertEquals( 18, qts.size() );
         File f = dataFileService.writeOrLocateDataFile( ee, true, true );
@@ -316,7 +316,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE5949 was already loaded - clean the DB before running the test" );
             return;
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 1, qts.size() );
 
@@ -341,7 +341,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             return;
         }
         assertNotNull( newee );
-        newee = eeService.thaw( newee );
+        eeService.thaw( newee );
 
         /*
          * Test for bug 468 (merging of subsets across GDS's)
@@ -385,8 +385,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         for ( Object rowName : matrix.getRowNames() ) {
             buf.append( rowName );
             double[] array = matrix.getRowByName( rowName );
-            for ( int i = 0; i < array.length; i++ ) {
-                double array_element = array[i];
+            for ( double array_element : array ) {
                 buf.append( "\t" + array_element );
             }
             buf.append( "\n" );
@@ -394,13 +393,6 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
         log.debug( buf.toString() );
     }
 
-    /**
-     * @param ee
-     * @param matrix
-     * @param probeToTest
-     * @param sampleToTest
-     * @param expectedValue
-     */
     private void testMatrixValue( ExpressionExperiment exp, ExpressionDataMatrix<Double> matrix, String probeToTest,
             String sampleToTest, double expectedValue ) {
 
@@ -442,7 +434,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE30521 was already loaded - clean the DB before running the test" );
             return;
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         /*
          * Should load okay, but should not load the data.
@@ -466,7 +458,7 @@ public class GeoDatasetServiceTest extends AbstractGeoServiceTest {
             log.info( "Test skipped because GSE28383 was already loaded - clean the DB before running the test" );
             return;
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         /*
          * Should load okay, even though it has no data. See bug 3981.

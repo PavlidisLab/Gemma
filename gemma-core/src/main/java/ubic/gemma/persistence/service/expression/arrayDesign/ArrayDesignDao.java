@@ -2,7 +2,6 @@ package ubic.gemma.persistence.service.expression.arrayDesign;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Repository;
-import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
@@ -12,15 +11,17 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.common.auditAndSecurity.curation.CuratableDao;
 
 import java.util.Collection;
 import java.util.Map;
 
 /**
  * Created by tesarst on 13/03/17.
+ * ArrayDesignDao interface
  */
 @Repository
-public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign> {
+public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject> {
     ArrayDesign find( ArrayDesign entity );
 
     Map<Taxon, Long> getPerTaxonCount();
@@ -39,9 +40,9 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     int numExperiments( ArrayDesign arrayDesign );
 
-    ArrayDesign thawLite( ArrayDesign arrayDesign );
+    void thawLite( ArrayDesign arrayDesign );
 
-    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
+    void thawLite( Collection<ArrayDesign> arrayDesigns );
 
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
@@ -73,9 +74,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     Map<Long, Boolean> isSubsumer( Collection<Long> ids );
 
-    Collection<ArrayDesignValueObject> loadAllValueObjects();
-
-    Collection<ArrayDesignValueObject> loadValueObjects( Collection<Long> ids );
+    Collection<ArrayDesignValueObject> loadValueObjectsByIds( Collection<Long> ids );
 
     Collection<ArrayDesignValueObject> loadValueObjectsForEE( Long eeId );
 
@@ -113,7 +112,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
-    ArrayDesign thaw( ArrayDesign arrayDesign );
+    void thaw( ArrayDesign arrayDesign );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 }

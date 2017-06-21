@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.DataUpdater;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
@@ -95,7 +95,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     public void setUp() {
         ee = eeService.findByShortName( "GSE2982" );
         if ( ee != null ) {
-            eeService.delete( ee ); // might work, but array designs might be in the way.
+            eeService.remove( ee ); // might work, but array designs might be in the way.
         }
 
         try {
@@ -126,7 +126,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
     @After
     public void after() {
         try {
-            eeService.delete( ee );
+            eeService.remove( ee );
         } catch ( Exception e ) {
 
         }
@@ -186,7 +186,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
         aclTestUtils.checkEEAcls( ee );
-
+        eeService.thaw( ee );
         assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
 
         // convert byte[] to array[]
@@ -292,7 +292,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
 
         ee = eeService.findByShortName( "GSE29006" );
         if ( ee != null ) {
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
 
         assertNull( eeService.findByShortName( "GSE29006" ) );
@@ -301,10 +301,10 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             Collection<?> results = geoService.fetchAndLoad( "GSE29006", false, false, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            throw new IllegalStateException( "Need to delete this data set before test is run" );
+            throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
 
         qt = createOrUpdateQt( ScaleType.COUNT );
 
@@ -324,7 +324,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             // we have to find the right generic platform to use.
             ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
                     taxonService.findByCommonName( "human" ) );
-            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
+            arrayDesignService.thaw( targetArrayDesign );
 
             try {
                 dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
@@ -335,11 +335,11 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
         }
 
-        ExpressionExperiment updatedee = eeService.thaw( ee );
+        eeService.thaw( this.ee );
 
-        assertNotNull( updatedee.getId() );
+        assertNotNull( ee.getId() );
 
-        MeanVarianceRelation mvr = meanVarianceService.create( updatedee, true );
+        MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
         // convert byte[] to array[]
         // warning: order may have changed

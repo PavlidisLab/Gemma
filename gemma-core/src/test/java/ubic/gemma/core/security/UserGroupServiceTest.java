@@ -127,7 +127,7 @@ public class UserGroupServiceTest extends BaseSpringContextTest {
         this.securityService.makePrivate( ee );
         this.securityService.makeReadableByGroup( ee, this.groupName );
 
-        // delete the group
+        // remove the group
         this.userManager.deleteGroup( this.groupName );
 
     }

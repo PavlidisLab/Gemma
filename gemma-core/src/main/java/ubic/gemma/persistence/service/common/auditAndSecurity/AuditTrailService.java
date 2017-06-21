@@ -19,17 +19,20 @@
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+import ubic.gemma.persistence.service.BaseService;
 
 import java.util.List;
 
 /**
  * @author kelsey
  */
-public interface AuditTrailService {
+@Service
+public interface AuditTrailService extends BaseService<AuditTrail> {
 
     /*
      * Pre-post must happen at a different phase, because we end up with no transaction for checking security

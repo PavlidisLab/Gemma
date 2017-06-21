@@ -437,7 +437,7 @@ Gemma.DatasetGroupGridPanel = Ext
                                    .get( 'userOwned' ) : false;
 
                                 var sl = Gemma.SecurityManager.getSecurityLink(
-                                   "ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl", record
+                                   "ubic.gemma.model.analysis.expression.ExpressionExperimentSet", record
                                       .get( 'id' ), record.get( 'isPublic' ), record.get( 'isShared' ), canEdit, null,
                                    null, null, isCurrentOwner );
 

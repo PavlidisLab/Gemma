@@ -18,47 +18,25 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import java.util.Collection;
-
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.model.genome.gene.GeneProductValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
 
 /**
  * @see GeneProduct
  */
-public interface GeneProductDao extends BaseDao<GeneProduct> {
+public interface GeneProductDao extends BaseVoEnabledDao<GeneProduct, GeneProductValueObject> {
 
-    public GeneProduct findByNcbiId( String ncbiGi );
+    GeneProduct findByNcbiId( String ncbiGi );
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    Collection<Gene> getGenesByName( String search );
 
-    /**
-     * 
-     */
-    public GeneProduct find( GeneProduct geneProduct );
+    Collection<Gene> getGenesByNcbiId( String search );
 
-    /**
-     * 
-     */
-    public GeneProduct findOrCreate( GeneProduct geneProduct );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> getGenesByName( String search );
-
-    /**
-     * TODO: this really should return a unique gene only.
-     */
-    public Collection<Gene> getGenesByNcbiId( String search );
-
-    public GeneProduct thaw( GeneProduct existing );
-
-    public Collection<GeneProduct> findByName( String name, Taxon taxon );
+    Collection<GeneProduct> findByName( String name, Taxon taxon );
 
 }

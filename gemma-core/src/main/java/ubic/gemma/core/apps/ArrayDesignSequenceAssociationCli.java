@@ -22,7 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
 import ubic.basecode.util.FileTools;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -238,7 +238,7 @@ public class ArrayDesignSequenceAssociationCli extends ArrayDesignSequenceManipu
 
     private void audit( ArrayDesign arrayDesign, String note ) {
         // minor : don't add audit event if no sequences were changed, or --force.
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         AuditEventType eventType = ArrayDesignSequenceUpdateEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

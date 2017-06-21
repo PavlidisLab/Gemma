@@ -14,21 +14,20 @@
  */
 package ubic.gemma.persistence.service.association;
 
-import java.util.Collection;
-
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.BaseDao;
 
+import java.util.Collection;
+
 /**
  * @author paul
- * @version $Id$
  */
 public interface TfGeneAssociationDao extends BaseDao<TfGeneAssociation> {
 
-    public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene );
+    Collection<TfGeneAssociation> findByTargetGene( Gene gene );
 
-    public Collection<? extends TfGeneAssociation> findByTf( Gene tf );
+    Collection<TfGeneAssociation> findByTf( Gene tf );
 
-    public void removeAll();
+    void removeAll();
 }

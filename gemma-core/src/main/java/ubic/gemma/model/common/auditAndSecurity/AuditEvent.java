@@ -21,6 +21,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import gemma.gsec.model.User;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 
 import java.io.Serializable;
@@ -29,7 +30,7 @@ import java.util.Date;
 /**
  * An event in the life of an object.
  */
-public abstract class AuditEvent implements Serializable {
+public class AuditEvent implements Identifiable, Serializable {
 
     private static final long serialVersionUID = -1212093157703833905L;
     private AuditAction action = null;
@@ -39,6 +40,10 @@ public abstract class AuditEvent implements Serializable {
     private Long id = null;
     private String note = null;
     private User performer = null;
+
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     /**
      * Returns <code>true</code> if the argument is an AuditEvent instance and all identifiers for this entity equal the
@@ -57,11 +62,26 @@ public abstract class AuditEvent implements Serializable {
         return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    public ubic.gemma.model.common.auditAndSecurity.AuditAction getAction() {
+    /**
+     * Returns a hash code based on this entity's identifiers.
+     */
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
+
+        return hashCode;
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    public AuditAction getAction() {
         return this.action;
     }
 
-    public java.util.Date getDate() {
+    public Date getDate() {
         return this.date;
     }
 
@@ -69,7 +89,7 @@ public abstract class AuditEvent implements Serializable {
         return this.detail;
     }
 
-    public ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType getEventType() {
+    public AuditEventType getEventType() {
         return this.eventType;
     }
 
@@ -85,35 +105,28 @@ public abstract class AuditEvent implements Serializable {
         return this.performer;
     }
 
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
+    /* ********************************
+     * Static classes
+     * ********************************/
 
     /**
-     * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent}.
+     * Constructs new instances of {@link AuditEvent}.
      */
     public static final class Factory {
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent}.
+         * Constructs a new instance of {@link AuditEvent}.
          */
         public static AuditEvent newInstance() {
-            return new AuditEventImpl();
+            return new AuditEvent();
         }
 
         /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.AuditEvent}, taking all possible
+         * Constructs a new instance of {@link AuditEvent}, taking all possible
          * properties (except the identifier(s))as arguments.
          */
         public static AuditEvent newInstance( Date date, AuditAction action, String note, String detail, User performer,
                 AuditEventType eventType ) {
-            final AuditEvent entity = new AuditEventImpl();
+            final AuditEvent entity = new AuditEvent();
             try {
                 if ( date != null )
                     FieldUtils.writeField( entity, "date", date, true );

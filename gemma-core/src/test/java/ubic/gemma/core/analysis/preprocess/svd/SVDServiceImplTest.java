@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -70,7 +70,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
         assertNotNull( ee );
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         ee = eeService.findByShortName( "GSE674" );
@@ -111,7 +111,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
             }
         }
         assertNotNull( ee );
-        ee = eeService.thaw( ee );
+        eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         ee = eeService.findByShortName( "GSE482" );
@@ -130,7 +130,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
     public void tearDown() {
         if ( ee != null ) {
             try {
-                eeService.delete( ee );
+                eeService.remove( ee );
             } catch ( Exception e ) {
 
             }

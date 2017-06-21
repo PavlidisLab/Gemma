@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -257,7 +257,7 @@ public class PersistentDummyObjectHelper {
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             List<BioAssay> bas = getBioAssays( bioMaterials, ad );
             bioAssays.addAll( bas );
-            ad = this.adService.thaw( ad );
+            this.adService.thaw( ad );
             vectors.addAll( getDesignElementDataVectors( ee, quantitationTypes, bas, ad ) );
 
         }
@@ -270,8 +270,7 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
     }
@@ -330,8 +329,7 @@ public class PersistentDummyObjectHelper {
 
         ee.setRawExpressionDataVectors( vectors );
 
-        ArrayDesignsForExperimentCache c = persisterHelper.prepare( ee );
-        ee = persisterHelper.persist( ee, c );
+        ee = ( ExpressionExperiment ) persisterHelper.persist( ee );
 
         return ee;
     }

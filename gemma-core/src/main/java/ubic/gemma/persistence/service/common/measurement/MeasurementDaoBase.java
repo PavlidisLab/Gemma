@@ -18,152 +18,19 @@
  */
 package ubic.gemma.persistence.service.common.measurement;
 
-import java.util.Collection;
-
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.common.measurement.Measurement;
-import ubic.gemma.model.common.measurement.MeasurementImpl;
+import ubic.gemma.persistence.service.AbstractDao;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.common.measurement.Measurement</code>.
- * 
- * @see ubic.gemma.model.common.measurement.Measurement
+ *
+ * @see Measurement
  */
-public abstract class MeasurementDaoBase extends HibernateDaoSupport implements MeasurementDao {
+public abstract class MeasurementDaoBase extends AbstractDao<Measurement> implements MeasurementDao {
 
-    /**
-     * @see MeasurementDao#create(int, java.util.Collection)
-     */
-    @Override
-    public java.util.Collection<? extends Measurement> create(
-            final java.util.Collection<? extends Measurement> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Measurement.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Measurement> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-        return entities;
+    public MeasurementDaoBase( SessionFactory sessionFactory ) {
+        super( Measurement.class, sessionFactory );
     }
-
-    /**
-     * @see MeasurementDao#create(int transform,
-     *      ubic.gemma.model.common.measurement.Measurement)
-     */
-    @Override
-    public Measurement create( final ubic.gemma.model.common.measurement.Measurement measurement ) {
-        if ( measurement == null ) {
-            throw new IllegalArgumentException( "Measurement.create - 'measurement' can not be null" );
-        }
-        this.getHibernateTemplate().save( measurement );
-        return measurement;
-    }
-
-    @Override
-    public Collection<? extends Measurement> load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from MeasurementImpl where id in (:ids)", "ids", ids );
-    }
-
-    /**
-     * @see MeasurementDao#load(int, java.lang.Long)
-     */
-    @Override
-    public Measurement load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Measurement.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.common.measurement.MeasurementImpl.class, id );
-        return ( Measurement ) entity;
-    }
-
-    /**
-     * @see MeasurementDao#loadAll(int)
-     */
-    @Override
-    public java.util.Collection<? extends Measurement> loadAll() {
-        final java.util.Collection<? extends Measurement> results = this.getHibernateTemplate().loadAll(
-                MeasurementImpl.class );
-        return results;
-    }
-
-    /**
-     * @see MeasurementDao#remove(java.lang.Long)
-     */
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "Measurement.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.common.measurement.Measurement entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see MeasurementDao#remove(java.util.Collection)
-     */
-    @Override
-    public void remove( java.util.Collection<? extends Measurement> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Measurement.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see MeasurementDao#remove(ubic.gemma.model.common.measurement.Measurement)
-     */
-    @Override
-    public void remove( ubic.gemma.model.common.measurement.Measurement measurement ) {
-        if ( measurement == null ) {
-            throw new IllegalArgumentException( "Measurement.remove - 'measurement' can not be null" );
-        }
-        this.getHibernateTemplate().delete( measurement );
-    }
-
-    /**
-     * @see MeasurementDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final java.util.Collection<? extends Measurement> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "Measurement.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Measurement> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
-
-    /**
-     * @see MeasurementDao#update(ubic.gemma.model.common.measurement.Measurement)
-     */
-    @Override
-    public void update( ubic.gemma.model.common.measurement.Measurement measurement ) {
-        if ( measurement == null ) {
-            throw new IllegalArgumentException( "Measurement.update - 'measurement' can not be null" );
-        }
-        this.getHibernateTemplate().update( measurement );
-    }
-
 }

@@ -27,7 +27,7 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl.OutputType;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnnotationFileEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -220,7 +220,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         for ( ArrayDesign ad : allADs ) {
 
-            ad = arrayDesignService.thawLite( ad );
+            arrayDesignService.thawLite( ad );
             if ( ad.getCurationDetails().getTroubled() ) {
                 log.warn( "Troubled: " + ad + " (skipping)" );
                 continue;

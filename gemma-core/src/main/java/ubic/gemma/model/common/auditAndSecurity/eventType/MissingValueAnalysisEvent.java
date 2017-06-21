@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * Computing missing values for an expression experiment
  * </p>
  */
-public abstract class MissingValueAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class MissingValueAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent}.
@@ -35,7 +35,7 @@ public abstract class MissingValueAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent();
         }
 
     }

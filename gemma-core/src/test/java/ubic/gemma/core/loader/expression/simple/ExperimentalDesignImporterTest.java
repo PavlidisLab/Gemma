@@ -33,7 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -75,7 +75,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
     @After
     public void tearDown() {
         if ( ee != null ) {
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
     }
 
@@ -107,33 +107,24 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
     }
 
-    /**
-     * Test method for
-     * {@link ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)} .
-     */
     @Test
     public final void testParse() throws Exception {
-
         try (InputStream is = this.getClass()
-                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" );) {
+                .getResourceAsStream( "/data/loader/expression/experimentalDesignTest.txt" )) {
 
             experimentalDesignImporter.importDesign( ee, is, false );
         }
-        ee = eeService.thawLite( ee );
-
-        Collection<BioMaterial> bms = new HashSet<BioMaterial>();
+        eeService.thawLite( ee );
+        Collection<BioMaterial> bms = new HashSet<>();
         for ( BioAssay ba : ee.getBioAssays() ) {
             BioMaterial bm = ba.getSampleUsed();
             bms.add( bm );
         }
-
         checkResults( bms );
-
         this.aclTestUtils.checkEEAcls( ee );
-
     }
 
     @Test
@@ -145,7 +136,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             experimentalDesignImporter.importDesign( ee, is, true );
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         assertEquals( 4, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
     }
@@ -177,7 +168,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
             experimentalDesignImporter.importDesign( ee, is, false );
         }
 
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
 
         Collection<BioMaterial> bms = new HashSet<BioMaterial>();
         for ( BioAssay ba : ee.getBioAssays() ) {

@@ -18,7 +18,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
 import ubic.gemma.core.analysis.service.GeneMultifunctionalityPopulationService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.core.util.AbstractCLIContextCLI;
 

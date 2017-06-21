@@ -18,177 +18,190 @@
  */
 package ubic.gemma.persistence.service;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import ubic.gemma.model.common.Identifiable;
+import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
+import ubic.gemma.persistence.util.EntityUtils;
+
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
-
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
-
-import ubic.gemma.persistence.util.EntityUtils;
+import java.util.List;
 
 /**
  * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
- * 
+ *
  * @author Anton, Nicolas
- * @version $Id$
  */
-public abstract class AbstractDao<T> extends HibernateDaoSupport implements BaseDao<T> {
+public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
-    // generic class
+    protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
+
     private Class<T> elementClass;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected AbstractDao( Class elementClass ) {
-        assert elementClass.isAssignableFrom( elementClass );
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
+        super.setSessionFactory( sessionFactory );
         this.elementClass = elementClass;
     }
 
-    // Other way we could use to access generic types at runtime in Java (might be useful later)
-    /*
-     * @SuppressWarnings("unchecked") protected AbstractDao() { Class<?> cl = getClass();
-     * 
-     * if ( Object.class.getSimpleName().equals( cl.getSuperclass().getSimpleName() ) ) { throw new
-     * IllegalArgumentException( "Default constructor does not support direct instantiation" ); }
-     * 
-     * while ( !AbstractDao.class.getSimpleName().equals( cl.getSuperclass().getSimpleName() ) ) { // case of multiple
-     * inheritance, we are trying to get the first available generic info if ( cl.getGenericSuperclass() instanceof
-     * ParameterizedType ) { break; } cl = cl.getSuperclass(); }
-     * 
-     * if ( cl.getGenericSuperclass() instanceof ParameterizedType ) { elementClass = ( Class<T> ) ( ( ParameterizedType
-     * ) cl.getGenericSuperclass() ).getActualTypeArguments()[0]; } }
-     */
+    /* ********************************
+     * Public methods
+     * ********************************/
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#create(java.util.Collection)
-     */
     @Override
-    public Collection<? extends T> create( Collection<? extends T> entities ) {
-        nullCheck( entities );
-        if ( entities.isEmpty() ) return entities;
+    public Collection<T> create( Collection<T> entities ) {
         int i = 0;
         for ( T t : entities ) {
             this.create( t );
-            if ( ++i % 100 == 0 ) this.getSessionFactory().getCurrentSession().flush();
+            if ( ++i % 100 == 0 )
+                this.getSession().flush();
         }
-
         return entities;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#create(java.lang.Object)
-     */
     @Override
     public T create( T entity ) {
-        nullCheck( entity );
-        Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
+        Serializable id = this.getSession().save( entity );
         assert EntityUtils.getId( entity ) != null;
         assert id.equals( EntityUtils.getId( entity ) );
         return entity;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#load(java.util.Collection)
-     */
     @Override
     public Collection<T> load( Collection<Long> ids ) {
-        if ( ids.isEmpty() ) return new HashSet<T>();
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from   " + elementClass.getSimpleName() + " where id in (:ids)" )
+        //noinspection unchecked
+        return this.getSession().createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#load(java.lang.Long)
-     */
     @Override
     public T load( Long id ) {
-        nullCheck( id );
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
-        @SuppressWarnings("unchecked")
-        T entity = ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
-        return entity;
+        //noinspection unchecked
+        return id == null ? null : ( T ) this.getSession().get( elementClass, id );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#loadAll()
-     */
     @Override
     public Collection<T> loadAll() {
-        return this.getHibernateTemplate().loadAll( elementClass );
+        //noinspection unchecked
+        return this.getSession().createCriteria( elementClass ).list();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#remove(java.util.Collection)
-     */
     @Override
-    public void remove( Collection<? extends T> entities ) {
-        nullCheck( entities );
-        if ( entities.isEmpty() ) return;
-        this.getHibernateTemplate().deleteAll( entities );
+    public Integer countAll() {
+        return this.loadAll().size();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#remove(java.lang.Long)
-     */
+    @Override
+    public void remove( Collection<T> entities ) {
+        for ( T e : entities ) {
+            this.remove( e );
+        }
+    }
+
     @Override
     public void remove( Long id ) {
-        nullCheck( id );
-        this.getHibernateTemplate().delete( this.load( id ) );
+        this.remove( this.load( id ) );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#remove(java.lang.Object)
-     */
     @Override
     public void remove( T entity ) {
-        nullCheck( entity );
-        this.getHibernateTemplate().delete( entity );
+        this.getSession().delete( entity );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#update(java.util.Collection)
-     */
     @Override
-    public void update( Collection<? extends T> entities ) {
+    public void update( Collection<T> entities ) {
         for ( T entity : entities ) {
             this.update( entity );
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.persistence.service.BaseDao#update(java.lang.Object)
-     */
     @Override
     public void update( T entity ) {
-        nullCheck( entity );
-        this.getHibernateTemplate().update( entity );
+        this.getSession().update( entity );
+    }
+
+    @Override
+    public T findOrCreate( T entity ) {
+        T found = find( entity );
+        return found == null ? create( entity ) : found;
+    }
+
+    public T find( T entity ) {
+        return this.load( entity.getId() );
+    }
+
+    public void thaw( T entity ) {
+    }
+
+    /* ********************************
+     * Protected methods
+     * ********************************/
+
+    /**
+     * Does a like-match case insensitive search on given property and its value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return an entity whose property first like-matched the given value.
+     */
+    protected T findOneByStringProperty( String propertyName, String propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
+        criteria.setMaxResults( 1 );
+        //noinspection unchecked
+        return ( T ) criteria.uniqueResult();
     }
 
     /**
-     * @param entity
+     * Does a like-match case insensitive search on given property and its value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return a list of entities whose properties like-matched the given value.
      */
-    private void nullCheck( Object entity ) {
-        if ( entity == null ) throw new IllegalArgumentException( "Entity cannot be null" );
+    protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
+        //noinspection unchecked
+        return criteria.list();
+    }
+
+    /**
+     * Lists all entities whose given property matches the given value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return a list of entities whose properties matched the given value.
+     */
+    protected T findOneByProperty( String propertyName, Object propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
+        criteria.setMaxResults( 1 );
+        //noinspection unchecked
+        return ( T ) criteria.uniqueResult();
+    }
+
+    /**
+     * Does a search on given property and its value.
+     *
+     * @param propertyName  the name of property to be matched.
+     * @param propertyValue the value to look for.
+     * @return an entity whose property first matched the given value.
+     */
+    protected List<T> findByProperty( String propertyName, Object propertyValue ) {
+        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        criteria.add( Restrictions.eq( propertyName, propertyValue ) );
+        //noinspection unchecked
+        return criteria.list();
     }
 
 }

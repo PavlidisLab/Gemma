@@ -19,26 +19,15 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionValueObject;
 import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
-public interface BioAssayDimensionDao extends BaseDao<BioAssayDimension> {
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension find(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * 
-     */
-    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
-
-    public BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
+public interface BioAssayDimensionDao extends BaseVoEnabledDao<BioAssayDimension, BioAssayDimensionValueObject> {
     
-    public BioAssayDimension thawLite( BioAssayDimension bioAssayDimension );
+    void thawLite( BioAssayDimension bioAssayDimension );
 
 }

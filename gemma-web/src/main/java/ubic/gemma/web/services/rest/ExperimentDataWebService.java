@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -69,7 +69,7 @@ public class ExperimentDataWebService {
                     + " was invalid: doesn't exist in system, or you lack authorization.";
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         File f = expressionDataFileService.writeTemporaryDesignFile( ee );
 
@@ -87,7 +87,7 @@ public class ExperimentDataWebService {
 
         }
 
-        // delete file
+        // remove file
         if ( f.canWrite() && f.delete() ) {
             log.info( "Deleted: " + f );
         }
@@ -135,7 +135,7 @@ public class ExperimentDataWebService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         File f = null;
 
@@ -157,7 +157,7 @@ public class ExperimentDataWebService {
 
         }
 
-        // delete file
+        // remove file
         if ( f.canWrite() && f.delete() ) {
             log.info( "Deleted: " + f );
         }

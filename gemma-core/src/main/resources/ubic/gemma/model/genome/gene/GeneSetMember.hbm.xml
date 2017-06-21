@@ -14,7 +14,7 @@
       <property name="score" type="java.lang.Double">
          <column name="SCORE" not-null="true" unique="false" sql-type="DOUBLE"/>
       </property>
-      <many-to-one name="gene" class="ubic.gemma.model.genome.GeneImpl"  lazy="proxy" fetch="select">
+      <many-to-one name="gene" class="ubic.gemma.model.genome.Gene"  lazy="proxy" fetch="select">
          <column name="GENE_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
    </class>

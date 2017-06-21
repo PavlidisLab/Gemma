@@ -98,7 +98,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ZYXMMMM" );
         Gene gene = geneCollection.iterator().next();
 
-        gene = geneService.thaw( gene );
+        geneService.thaw( gene );
 
         Collection<GeneProduct> geneProducts = gene.getProducts();
 
@@ -118,7 +118,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         // show that we add a product if the gene exists, but is missing one.
         GeneProduct gp = gene.getProducts().iterator().next();
         gene.getProducts().clear();
-        geneProductService.delete( gp );
+        geneProductService.remove( gp );
         geneService.update( gene );
         assertEquals( 0, geneService.getProducts( gene.getId() ).size() );
         numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );

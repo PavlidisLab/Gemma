@@ -18,27 +18,26 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import java.util.Collection;
-import java.util.Iterator;
-
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.springframework.orm.hibernate3.HibernateCallback;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.hibernate.SessionFactory;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.persistence.service.AbstractDao;
+import ubic.gemma.persistence.service.VoEnabledDao;
 
 /**
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.expression.biomaterial.BioMaterial</code>.
- * 
+ *
  * @see ubic.gemma.model.expression.biomaterial.BioMaterial
- * @version $id$
  */
-public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements BioMaterialDao {
+public abstract class BioMaterialDaoBase extends VoEnabledDao<BioMaterial, BioMaterialValueObject> implements BioMaterialDao {
+
+    public BioMaterialDaoBase( SessionFactory sessionFactory ) {
+        super( BioMaterial.class, sessionFactory );
+    }
 
     /**
-     * @see BioMaterialDao#copy(ubic.gemma.model.expression.biomaterial.BioMaterial)
+     * @see BioMaterialDao#copy(BioMaterial)
      */
     @Override
     public BioMaterial copy( final BioMaterial bioMaterial ) {
@@ -52,174 +51,8 @@ public abstract class BioMaterialDaoBase extends HibernateDaoSupport implements 
     }
 
     /**
-     * @see BioMaterialDao#countAll()
+     * Performs the core logic for {@link #copy(BioMaterial)}
      */
-    @Override
-    public java.lang.Integer countAll() {
-        try {
-            return this.handleCountAll();
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'BioMaterialDao.countAll()' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see BioMaterialDao#create(int transform,
-     *      ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    public BioMaterial create( final BioMaterial bioMaterial ) {
-        if ( bioMaterial == null ) {
-            throw new IllegalArgumentException( "BioMaterial.create - 'bioMaterial' can not be null" );
-        }
-        this.getHibernateTemplate().save( bioMaterial );
-        return bioMaterial;
-    }
-
-    /**
-     * @see BioMaterialDao#create(int, java.util.Collection)
-     */
-    @Override
-    public java.util.Collection<? extends BioMaterial> create(
-            final java.util.Collection<? extends BioMaterial> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioMaterial.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
-            @Override
-            public Object doInHibernate( Session session ) throws HibernateException {
-                for ( java.util.Iterator<? extends BioMaterial> entityIterator = entities.iterator(); entityIterator
-                        .hasNext(); ) {
-                    create( entityIterator.next() );
-                }
-                return null;
-            }
-        } );
-        return entities;
-    }
-
-    /**
-     * @see BioMaterialDao#load(int, java.lang.Long)
-     */
-
-    @Override
-    public BioMaterial load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BioMaterial.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get( BioMaterialImpl.class, id );
-        return ( BioMaterial ) entity;
-    }
-
-    /**
-     * @see BioMaterialDao#load(java.util.Collection)
-     */
-    @Override
-    public Collection<BioMaterial> load( final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoad( ids );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'BioMaterialDao.load(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see BioMaterialDao#loadAll(int)
-     */
-
-    @Override
-    public Collection<? extends BioMaterial> loadAll() {
-        final java.util.Collection<? extends BioMaterial> results = this.getHibernateTemplate().loadAll(
-                BioMaterialImpl.class );
-        return results;
-    }
-
-    /**
-     * @see BioMaterialDao#remove(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    public void remove( BioMaterial bioMaterial ) {
-        if ( bioMaterial == null ) {
-            throw new IllegalArgumentException( "BioMaterial.remove - 'bioMaterial' can not be null" );
-        }
-        this.getHibernateTemplate().delete( bioMaterial );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#remove(java.util.Collection)
-     */
-
-    @Override
-    public void remove( Collection<? extends BioMaterial> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioMaterial.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
-    }
-
-    /**
-     * @see BioMaterialDao#remove(java.lang.Long)
-     */
-
-    @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BioMaterial.remove - 'id' can not be null" );
-        }
-        BioMaterial entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
-        }
-    }
-
-    /**
-     * @see BioMaterialDao#update(ubic.gemma.model.expression.biomaterial.BioMaterial)
-     */
-    @Override
-    public void update( BioMaterial bioMaterial ) {
-        if ( bioMaterial == null ) {
-            throw new IllegalArgumentException( "BioMaterial.update - 'bioMaterial' can not be null" );
-        }
-        this.getHibernateTemplate().update( bioMaterial );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
-     */
-
-    @Override
-    public void update( final Collection<? extends BioMaterial> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BioMaterial.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<BioMaterial>() {
-            @Override
-            public BioMaterial doInHibernate( Session session ) throws HibernateException {
-                for ( Iterator<? extends BioMaterial> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                    update( entityIterator.next() );
-                }
-                return null;
-            }
-        } );
-    }
-
-    /**
-     * Performs the core logic for {@link #copy(ubic.gemma.model.expression.biomaterial.BioMaterial)}
-     */
-    protected abstract BioMaterial handleCopy( BioMaterial bioMaterial ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract Integer handleCountAll() throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #load(java.util.Collection)}
-     */
-    protected abstract Collection<BioMaterial> handleLoad( java.util.Collection<Long> ids ) throws Exception;
+    protected abstract BioMaterial handleCopy( BioMaterial bioMaterial ) throws Exception;
 
 }

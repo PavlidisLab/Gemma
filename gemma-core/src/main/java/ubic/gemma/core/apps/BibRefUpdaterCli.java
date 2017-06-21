@@ -115,7 +115,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
                 log.info( "No reference with id=" + id );
                 continue;
             }
-            bibref = bibliographicReferenceService.thaw( bibref );
+            bibliographicReferenceService.thaw( bibref );
             try {
                 BibliographicReference updated = bibliographicReferenceService.refresh( bibref.getPubAccession()
                         .getAccession() );

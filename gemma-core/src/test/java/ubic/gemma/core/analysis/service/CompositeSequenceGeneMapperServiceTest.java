@@ -18,26 +18,13 @@
  */
 package ubic.gemma.core.analysis.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Map;
-import java.util.zip.GZIPInputStream;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.Blat;
 import ubic.gemma.core.apps.ShellDelegatingBlat;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceImpl;
@@ -48,21 +35,30 @@ import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+
+import static org.junit.Assert.*;
 
 /**
  * This test makes use of the {@link ArrayDesignProbeMapperServiceImpl}. These tests add array data and gene data to the
  * database to be used for testing. GPL96.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTest {
 
@@ -103,7 +99,7 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
         if ( ad != null ) {
             for ( ExpressionExperiment ee : arrayDesignService.getExpressionExperiments( ad ) ) {
-                eeService.delete( ee );
+                eeService.remove( ee );
             }
 
             arrayDesignService.remove( ad );
@@ -119,20 +115,16 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         }
     }
 
-    /**
-     *
-     */
     @Before
     public void setup() throws Exception {
         cleanup();
         geoService
                 .setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( getTestFileBasePath( "platform" ) ) );
-        @SuppressWarnings("unchecked")
-        final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession, true,
-                true, false, false );
+        @SuppressWarnings("unchecked") final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService
+                .fetchAndLoad( arrayAccession, true, true, false, false );
         ad = ads.iterator().next();
 
-        ad = arrayDesignService.thaw( ad );
+        arrayDesignService.thaw( ad );
 
         loadData();
 
@@ -140,22 +132,18 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     /**
      * Tests finding the composite sequences for a given gene id.
-     * 
-     * @throws Exception
      */
     @Test
     public void testGetCompositeSequencesByGeneId() throws Exception {
 
         Collection<Gene> genes = geneService.findByOfficialSymbol( geneOfficialSymbol );
 
-        if ( genes == null || genes.isEmpty() ) return;
+        if ( genes == null || genes.isEmpty() )
+            return;
 
         Gene g = genes.iterator().next();
 
         Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( g.getId() );
-
-        // log.info( "Found " + compositeSequences.size() + " composite sequence(s) for gene " + g.getOfficialSymbol()
-        // + " ... " );
 
         assertNotNull( compositeSequences );
         assertEquals( compositeSequences.size(), 1 );
@@ -164,15 +152,14 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     /**
      * Tests finding all genes for a given composite sequence.
-     * 
-     * @throws Exception
      */
     @Test
     public void testGetGenesForCompositeSequence() throws Exception {
 
         CompositeSequence cs = compositeSequenceService.findByName( ad, csName );
 
-        if ( cs == null ) return;
+        if ( cs == null )
+            return;
 
         Collection<Gene> genes = compositeSequenceService.getGenes( cs );
 
@@ -187,9 +174,6 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         }
     }
 
-    /**
-     * @throws IOException
-     */
     private void blatCollapsedSequences() throws IOException {
 
         Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
@@ -211,8 +195,6 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     /**
      * Adds gene, sequence, and blat results to the database.
-     * 
-     * @throws Exception
      */
     private void loadData() throws Exception {
 
@@ -227,10 +209,6 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
 
     }
 
-    /**
-     * 
-     *
-     */
     private void loadGeneData() throws Exception {
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
@@ -244,15 +222,12 @@ public class CompositeSequenceGeneMapperServiceTest extends AbstractGeoServiceTe
         loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, null, true );
     }
 
-    /**
-     * @throws IOException
-     */
     private void loadSequenceData() throws IOException {
         try (InputStream sequenceFile = this.getClass()
                 .getResourceAsStream( "/data/loader/genome/gpl96_short.sequences2.fasta" );) {
 
-            sequenceProcessingService.processArrayDesign( ad, sequenceFile, SequenceType.EST,
-                    taxonService.findByCommonName( "human" ) );
+            sequenceProcessingService
+                    .processArrayDesign( ad, sequenceFile, SequenceType.EST, taxonService.findByCommonName( "human" ) );
         }
 
     }

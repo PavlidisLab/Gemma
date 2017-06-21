@@ -12,7 +12,7 @@
 	version: $Id$
 -->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="common.description.BibliographicReferenceImpl" alias="bibliographicReference" root="true">
+	<class name="common.description.BibliographicReference" alias="bibliographicReference" root="true">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
@@ -78,19 +78,19 @@
 		<component name="meshTerms" ref-alias="meshTerms" />
 		<component name="chemicals" ref-alias="chemicals" />
 	</class>
-	<class name="common.description.DatabaseEntryImpl" alias="pubAccession" root="false">
+	<class name="common.description.DatabaseEntry" alias="pubAccession" root="false">
 		<id name="id" />
 		<property name="accession">
 			<meta-data>accession</meta-data>
 		</property>
 	</class>
-	<class name="common.description.KeywordImpl" alias="keywords" root="false">
+	<class name="common.description.Keyword" alias="keywords" root="false">
 		<id name="id" />
 		<property name="term">
 			<meta-data>term</meta-data>
 		</property>
 	</class>
-	<class name="common.description.MedicalSubjectHeadingImpl" alias="meshTerms" root="false">
+	<class name="common.description.MedicalSubjectHeading" alias="meshTerms" root="false">
 		<id name="id" />
 		<property name="term">
 			<meta-data>term</meta-data>
@@ -104,13 +104,13 @@
 		<component name="externalLIMS" ref-alias="externalLIMS" />
 		<component name="compoundIndices" ref-alias="compoundIndices" />
 	</class>
-	<class name="common.description.DatabaseEntryImpl" alias="externalLIMS" root="false">
+	<class name="common.description.DatabaseEntry" alias="externalLIMS" root="false">
 		<id name="id" />
 		<property name="accession">
 			<meta-data>accession</meta-data>
 		</property>
 	</class>
-	<class name="common.description.CharacteristicImpl" alias="compoundIndices" root="false">
+	<class name="common.description.Characteristic" alias="compoundIndices" root="false">
 		<id name="id" />
 		<property name="value">
 			<meta-data>value</meta-data>

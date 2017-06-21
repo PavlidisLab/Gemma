@@ -141,6 +141,11 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
 
     }
 
+    @Override
+    public void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors ) {
+        this.getProcessedExpressionDataVectorDao().remove( processedExpressionDataVectors );
+    }
+
     private ProcessedExpressionDataVectorDao getProcessedExpressionDataVectorDao() {
         return processedExpressionDataVectorDao;
     }

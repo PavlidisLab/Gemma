@@ -141,7 +141,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         cl.setBand( info.getMapLocation() );
 
         gene.setPhysicalLocation( pl );
-        gene.setCytogenicLocation( cl );
+        gene.setCytogeneticLocation( cl );
 
         Collection<GeneAlias> aliases = gene.getAliases();
         for ( String alias : info.getSynonyms() ) {

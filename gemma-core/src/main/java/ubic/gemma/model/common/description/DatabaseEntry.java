@@ -18,72 +18,42 @@
  */
 package ubic.gemma.model.common.description;
 
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
+
 /**
  * <p>
  * A reference to a record in a database.
  * </p>
  */
-public abstract class DatabaseEntry implements java.io.Serializable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.common.description.DatabaseEntry}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.DatabaseEntry}.
-         */
-        public static ubic.gemma.model.common.description.DatabaseEntry newInstance() {
-            return new ubic.gemma.model.common.description.DatabaseEntryImpl();
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.DatabaseEntry}, taking all possible
-         * properties (except the identifier(s))as arguments.
-         */
-        public static ubic.gemma.model.common.description.DatabaseEntry newInstance( String accession,
-                String accessionVersion, String Uri,
-                ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-            final ubic.gemma.model.common.description.DatabaseEntry entity = new ubic.gemma.model.common.description.DatabaseEntryImpl();
-            entity.setAccession( accession );
-            entity.setAccessionVersion( accessionVersion );
-            entity.setUri( Uri );
-            entity.setExternalDatabase( externalDatabase );
-            return entity;
-        }
-
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.common.description.DatabaseEntry}, taking all required
-         * and/or read-only properties as arguments.
-         */
-        public static ubic.gemma.model.common.description.DatabaseEntry newInstance(
-                ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-            final ubic.gemma.model.common.description.DatabaseEntry entity = new ubic.gemma.model.common.description.DatabaseEntryImpl();
-            entity.setExternalDatabase( externalDatabase );
-            return entity;
-        }
-    }
+public class DatabaseEntry implements Identifiable, Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 5418961655066735636L;
     private String accession;
-
     private String accessionVersion;
-
     private String Uri;
-
     private Long id;
+    private ExternalDatabase externalDatabase;
 
-    private ubic.gemma.model.common.description.ExternalDatabase externalDatabase;
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public DatabaseEntry() {
     }
+
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     /**
      * Returns <code>true</code> if the argument is an DatabaseEntry instance and all identifiers for this entity equal
@@ -98,78 +68,122 @@ public abstract class DatabaseEntry implements java.io.Serializable {
             return false;
         }
         final DatabaseEntry that = ( DatabaseEntry ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null )
+            return super.hashCode();
+
+        int hashCode = 0;
+        if ( this.getAccession() != null )
+            hashCode = 29 * this.getAccession().hashCode();
+
+        if ( this.getAccessionVersion() != null )
+            hashCode += this.getAccessionVersion().hashCode();
+
+        if ( this.getExternalDatabase() != null )
+            hashCode += this.getExternalDatabase().hashCode();
+
+        return hashCode;
     }
 
     /**
-     * <p>
+     * @see DatabaseEntry#toString()
+     */
+    @Override
+    public String toString() {
+        return ( this.getAccession() + " " ) + ( this.getExternalDatabase() == null ?
+                "[no external database]" :
+                this.getExternalDatabase().getName() ) + ( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    /**
      * The id
-     * </p>
      */
     public String getAccession() {
         return this.accession;
-    }
-
-    /**
-     * 
-     */
-    public String getAccessionVersion() {
-        return this.accessionVersion;
-    }
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.common.description.ExternalDatabase getExternalDatabase() {
-        return this.externalDatabase;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * 
-     */
-    public String getUri() {
-        return this.Uri;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
     }
 
     public void setAccession( String accession ) {
         this.accession = accession;
     }
 
+    public String getAccessionVersion() {
+        return this.accessionVersion;
+    }
+
     public void setAccessionVersion( String accessionVersion ) {
         this.accessionVersion = accessionVersion;
     }
 
-    public void setExternalDatabase( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+    public ExternalDatabase getExternalDatabase() {
+        return this.externalDatabase;
+    }
+
+    public void setExternalDatabase( ExternalDatabase externalDatabase ) {
         this.externalDatabase = externalDatabase;
+    }
+
+    public Long getId() {
+        return this.id;
     }
 
     public void setId( Long id ) {
         this.id = id;
     }
 
+    public String getUri() {
+        return this.Uri;
+    }
+
     public void setUri( String Uri ) {
         this.Uri = Uri;
+    }
+
+    /* ********************************
+     * Public static classes
+     * ********************************/
+
+    /**
+     * Constructs new instances of {@link DatabaseEntry}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link DatabaseEntry}.
+         */
+        public static DatabaseEntry newInstance() {
+            return new DatabaseEntry();
+        }
+
+        /**
+         * Constructs a new instance of {@link DatabaseEntry}, taking all possible
+         * properties (except the identifier(s))as arguments.
+         */
+        public static DatabaseEntry newInstance( String accession, String accessionVersion, String Uri,
+                ExternalDatabase externalDatabase ) {
+            final DatabaseEntry entity = new DatabaseEntry();
+            entity.setAccession( accession );
+            entity.setAccessionVersion( accessionVersion );
+            entity.setUri( Uri );
+            entity.setExternalDatabase( externalDatabase );
+            return entity;
+        }
+
+        /**
+         * Constructs a new instance of {@link DatabaseEntry}, taking all required
+         * and/or read-only properties as arguments.
+         */
+        public static DatabaseEntry newInstance( ExternalDatabase externalDatabase ) {
+            final DatabaseEntry entity = new DatabaseEntry();
+            entity.setExternalDatabase( externalDatabase );
+            return entity;
+        }
     }
 
 }

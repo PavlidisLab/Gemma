@@ -3,7 +3,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping>
     <class mutable="false"
-           name="ubic.gemma.model.common.auditAndSecurity.AuditEventImpl" table="AUDIT_EVENT">
+           name="ubic.gemma.model.common.auditAndSecurity.AuditEvent" table="AUDIT_EVENT">
         <cache include="all" usage="read-write"/>
         <id access="field" name="id" type="java.lang.Long">
             <column name="ID" sql-type="BIGINT"/>
@@ -31,7 +31,7 @@
             <column name="PERFORMER_FK" not-null="false" sql-type="BIGINT"/>
         </many-to-one>
         <many-to-one access="field" cascade="all"
-                     class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl"
+                     class="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType"
                      fetch="select" lazy="false" name="eventType">
             <!-- we cannot use component mapping here because of the polymorphism of auditeventtypes see HHH1152 -->
             <column name="EVENT_TYPE_FK" not-null="false" sql-type="BIGINT" unique="true"/>

@@ -23,7 +23,7 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.genome.GffParser;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;

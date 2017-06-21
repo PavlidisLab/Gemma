@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * system. This is always 'raw' data.
  * </p>
  */
-public abstract class DataReplacedEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class DataReplacedEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent}.
@@ -35,7 +35,7 @@ public abstract class DataReplacedEvent extends
          * Constructs a new instance of {@link ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.DataReplacedEvent();
         }
 
     }

@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.expression.AnalysisUtilService;
 import ubic.gemma.core.analysis.service.ExpressionExperimentVectorManipulatingService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentVectorMergeEvent;
@@ -122,7 +122,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             throw new IllegalArgumentException( "Cannot cope with more than one platform" );
         }
 
-        expExp = expressionExperimentService.thaw( expExp );
+        expressionExperimentService.thaw( expExp );
         Collection<QuantitationType> qts = expressionExperimentService.getQuantitationTypes( expExp );
         log.info( qts.size() + " quantitation types for potential merge" );
         /*
@@ -291,7 +291,7 @@ public class VectorMergingServiceImpl extends ExpressionExperimentVectorManipula
             try {
                 bioAssayDimensionService.remove( oldDim );
             } catch ( Exception e ) {
-                log.warn( "Could not delete an old bioAssayDimension with ID=" + oldDim.getId() );
+                log.warn( "Could not remove an old bioAssayDimension with ID=" + oldDim.getId() );
             }
         }
     }

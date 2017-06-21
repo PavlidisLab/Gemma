@@ -31,7 +31,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.genome.gene.service.GeneService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
@@ -83,7 +83,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
     public void tearDown() {
         try {
             if ( newee != null && newee.getId() != null ) {
-                expressionExperimentService.delete( newee );
+                expressionExperimentService.remove( newee );
             }
         } catch ( Exception e ) {
 
@@ -108,7 +108,7 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         newee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( newee );
 
-        newee = this.expressionExperimentService.thawLite( newee );
+        this.expressionExperimentService.thawLite( newee );
 
         DesignElementDataVectorService dedvs = this.getBean( DesignElementDataVectorService.class );
 
@@ -140,11 +140,12 @@ public class DesignElementDataVectorServiceTest extends AbstractGeoServiceTest {
         int i = 0;
         ArrayDesign ad = newee.getBioAssays().iterator().next().getArrayDesignUsed();
         Taxon taxon = taxonService.findByCommonName( "mouse" );
-        ad = this.arrayDesignService.thawLite( ad );
+        this.arrayDesignService.thawLite( ad );
         Collection<Gene> genes = new HashSet<Gene>();
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             if ( i >= 10 ) break;
-            Gene g = geneService.thaw( this.getTestPeristentGene() );
+            Gene g = this.getTestPeristentGene();
+            geneService.thaw( g );
             BlatAssociation blata = BlatAssociation.Factory.newInstance();
             blata.setGeneProduct( g.getProducts().iterator().next() );
             BlatResult br = BlatResult.Factory.newInstance();

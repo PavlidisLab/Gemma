@@ -33,7 +33,7 @@ import org.apache.commons.lang3.time.StopWatch;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.Describable;
@@ -201,7 +201,8 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
                         ArrayDesignService ads = getBean( ArrayDesignService.class );
                         for ( Object object : designs ) {
                             assert object instanceof ArrayDesign;
-                            ArrayDesign ad = ads.thawLite( ( ( ArrayDesign ) object ) );
+                            ArrayDesign ad = (ArrayDesign ) object  ;
+                            ads.thawLite( ad );
 
                             successObjects.add( ad.getName() + " ("
                                     + ad.getExternalReferences().iterator().next().getAccession() + ")" );
@@ -327,7 +328,7 @@ public class LoadExpressionDataCli extends AbstractCLIContextCLI {
         if ( !existing.isEmpty() ) {
             log.info( "Deleting existing version of " + accession );
             for ( ExpressionExperiment expressionExperiment : existing ) {
-                eeService.delete( expressionExperiment );
+                eeService.remove( expressionExperiment );
             }
         }
     }

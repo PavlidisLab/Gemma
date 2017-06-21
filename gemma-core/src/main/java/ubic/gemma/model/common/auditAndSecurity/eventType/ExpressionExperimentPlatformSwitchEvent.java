@@ -23,8 +23,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * The event that this expressionexperiment has had its array design switched (typically to a 'merged' one.
  * </p>
  */
-public abstract class ExpressionExperimentPlatformSwitchEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEventImpl {
+public class ExpressionExperimentPlatformSwitchEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -36,7 +36,7 @@ public abstract class ExpressionExperimentPlatformSwitchEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ExpressionExperimentPlatformSwitchEvent();
         }
 
     }

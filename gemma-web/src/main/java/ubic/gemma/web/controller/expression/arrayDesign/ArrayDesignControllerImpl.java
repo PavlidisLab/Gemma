@@ -38,20 +38,20 @@ import ubic.gemma.core.analysis.service.ArrayDesignAnnotationServiceImpl;
 import ubic.gemma.core.job.TaskCommand;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.security.audit.AuditableUtil;
+import ubic.gemma.core.tasks.AbstractTask;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.DatabaseEntryValueObject;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
-import ubic.gemma.core.security.audit.AuditableUtil;
-import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -155,7 +155,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new EntityNotFoundException( "Platform with id=" + id + " not found" );
         }
 
-        // check that no EE depend on the arraydesign we want to delete
+        // check that no EE depend on the arraydesign we want to remove
         // Do this by checking if there are any bioassays that depend this AD
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( id );
         if ( assays.size() != 0 ) {
@@ -315,7 +315,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         } else {// if ids are specified, then display only those arrayDesigns
 
             Collection<Long> adCol = new LinkedList<>( Arrays.asList( arrayDesignIds ) );
-            result.addAll( arrayDesignService.loadValueObjects( adCol ) );
+            result.addAll( arrayDesignService.loadValueObjectsByIds( adCol ) );
         }
 
         // Filter...
@@ -357,7 +357,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         ArrayDesign arrayDesign = this.getADSafely( id );
         log.info( "Loading details of " + arrayDesign );
 
-        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( id );
+        ArrayDesignValueObject vo = arrayDesignService.loadValueObject( arrayDesignService.load( id ) );
         arrayDesignReportService.fillInValueObjects( Lists.newArrayList( vo ) );
         arrayDesignReportService.fillInSubsumptionInfo( Lists.newArrayList( vo ) );
 
@@ -387,7 +387,8 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
             throw new IllegalArgumentException( "No platform with id=" + id + " could be loaded" );
         }
 
-        return arrayDesignService.thawLite( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
+        return arrayDesign;
     }
 
     /**
@@ -452,7 +453,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
 
         Collection<Long> ids = new ArrayList<>();
         ids.add( id );
-        Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjects( ids );
+        Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjectsByIds( ids );
         arrayDesignReportService.fillInValueObjects( advos );
 
         if ( !advos.isEmpty() && advos.toArray()[0] != null ) {
@@ -505,7 +506,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         Collection<BioAssay> assays = arrayDesignService.getAllAssociatedBioAssays( ed.getId() );
         if ( assays.size() != 0 ) {
             throw new IllegalArgumentException(
-                    "Cannot delete " + arrayDesign + ", it is used by an expression experiment" );
+                    "Cannot remove " + arrayDesign + ", it is used by an expression experiment" );
         }
 
         RemoveArrayLocalTask job = new RemoveArrayLocalTask( new TaskCommand( arrayDesign.getId() ) );
@@ -637,9 +638,11 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
         assert arrayDesign != null;
         assert result != null;
 
-        Collection<ArrayDesign> subsumees = arrayDesignService.thawLite( arrayDesign.getSubsumedArrayDesigns() );
+        Collection<ArrayDesign> subsumees = arrayDesign.getSubsumedArrayDesigns();
+        arrayDesignService.thawLite( subsumees );
         ArrayDesign subsumer = arrayDesign.getSubsumingArrayDesign();
-        Collection<ArrayDesign> mergees = arrayDesignService.thawLite( arrayDesign.getMergees() );
+        Collection<ArrayDesign> mergees = arrayDesign.getMergees();
+        arrayDesignService.thawLite( mergees );
         ArrayDesign merger = arrayDesign.getMergedInto();
 
         if ( subsumees != null && !subsumees.isEmpty() ) {
@@ -685,7 +688,7 @@ public class ArrayDesignControllerImpl implements ArrayDesignController {
                         new ModelAndView( new RedirectView( "/Gemma/arrays/showAllArrayDesignStatistics.html" ) ) );
             }
             ArrayDesignValueObject report = arrayDesignReportService
-                    .generateArrayDesignReport( taskCommand.getEntityId() );
+                    .generateArrayDesignReport( arrayDesignService.load( taskCommand.getEntityId() ) );
             return new TaskResult( taskCommand, report );
 
         }

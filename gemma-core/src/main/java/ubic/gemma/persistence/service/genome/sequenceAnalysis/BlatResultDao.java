@@ -18,26 +18,25 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
+import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
 import java.util.Collection;
 
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.service.BaseDao;
-
 /**
- * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
  * @author Gemma
- * @version $Id$
+ * @see BlatResult
  */
-public interface BlatResultDao extends BaseDao<BlatResult> {
+public interface BlatResultDao extends BaseVoEnabledDao<BlatResult, BlatResultValueObject> {
 
-    public BlatResult thaw( BlatResult blatResult );
-
-    public Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
+    void thaw( Collection<BlatResult> blatResults );
 
     /**
      * Find BLAT results for the given sequence
      */
-    public java.util.Collection<BlatResult> findByBioSequence(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    Collection<BlatResult> findByBioSequence( BioSequence bioSequence );
 
 }

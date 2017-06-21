@@ -18,32 +18,34 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface BlatAssociationService {
+public interface BlatAssociationService extends BaseService<BlatAssociation> {
 
     @Secured({ "GROUP_USER" })
-    public BlatAssociation create( BlatAssociation blatAssociation );
+    BlatAssociation create( BlatAssociation blatAssociation );
 
-    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    Collection<BlatAssociation> find( BioSequence bioSequence );
 
-    public java.util.Collection<BlatAssociation> find( ubic.gemma.model.genome.Gene gene );
+    Collection<BlatAssociation> find( Gene gene );
 
-    public void thaw( Collection<BlatAssociation> blatAssociations );
+    void thaw( Collection<BlatAssociation> blatAssociations );
 
-    public void thaw( BlatAssociation blatAssociation );
+    void thaw( BlatAssociation blatAssociation );
 
     @Secured({ "GROUP_USER" })
-    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
+    void update( BlatAssociation blatAssociation );
 
     @Secured({ "GROUP_ADMIN" })
-    public void remove( BlatAssociation blatAssociation );
+    void remove( BlatAssociation blatAssociation );
 
 }

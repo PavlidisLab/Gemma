@@ -4,14 +4,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -75,11 +75,11 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         for ( SearchResult sr : geneSearchResults ) {
             Gene g = ( Gene ) sr.getResultObject();
-            g = geneService.thaw( g );
+            geneService.thaw( g );
             genes.add( g );
             log.debug( "Gene search result: " + g.getOfficialSymbol() );
         }
-        Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( genes );
+        Collection<GeneValueObject> geneValueObjects = geneService.loadValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
     }

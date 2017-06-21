@@ -20,24 +20,65 @@
 package ubic.gemma.model.genome.gene;
 
 import gemma.gsec.model.SecuredNotChild;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Gene;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * A grouping of genes that share a common relationship
  */
-public abstract class GeneSet extends AbstractAuditable implements SecuredNotChild {
+public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4357218100681569138L;
+    private Collection<Characteristic> characteristics = new HashSet<>();
+    private DatabaseEntry sourceAccession;
+    private Collection<BibliographicReference> literatureSources = new HashSet<>();
+    private Collection<GeneSetMember> members = new java.util.HashSet<>();
+
+    static public GeneSetMember containsGene( Gene g, GeneSet gs ) {
+        for ( GeneSetMember gm : gs.getMembers() ) {
+            if ( gm.getGene().equals( g ) )
+                return gm;
+        }
+        return null;
+    }
+
+    public Collection<Characteristic> getCharacteristics() {
+        return this.characteristics;
+    }
+
+    public void setCharacteristics( Collection<Characteristic> characteristics ) {
+        this.characteristics = characteristics;
+    }
+
+    public Collection<BibliographicReference> getLiteratureSources() {
+        return this.literatureSources;
+    }
+
+    public void setLiteratureSources( Collection<BibliographicReference> literatureSources ) {
+        this.literatureSources = literatureSources;
+    }
+
+    public Collection<GeneSetMember> getMembers() {
+        return this.members;
+    }
+
+    public void setMembers( Collection<GeneSetMember> members ) {
+        this.members = members;
+    }
+
+    public DatabaseEntry getSourceAccession() {
+        return this.sourceAccession;
+    }
+
+    public void setSourceAccession( DatabaseEntry sourceAccession ) {
+        this.sourceAccession = sourceAccession;
+    }
 
     /**
      * Constructs new instances of {@link GeneSet}.
@@ -47,61 +88,9 @@ public abstract class GeneSet extends AbstractAuditable implements SecuredNotChi
          * Constructs a new instance of {@link GeneSet}.
          */
         public static GeneSet newInstance() {
-            return new GeneSetImpl();
+            return new GeneSet();
         }
 
-    }
-
-    private Collection<Characteristic> characteristics = new HashSet<>();
-
-    private DatabaseEntry sourceAccession;
-
-    private Collection<BibliographicReference> literatureSources = new HashSet<>();
-
-    private Collection<GeneSetMember> members = new java.util.HashSet<>();
-
-    /**
-     * 
-     */
-    public Collection<Characteristic> getCharacteristics() {
-        return this.characteristics;
-    }
-
-    /**
-     * 
-     */
-    public Collection<BibliographicReference> getLiteratureSources() {
-        return this.literatureSources;
-    }
-
-    /**
-     * 
-     */
-    public Collection<GeneSetMember> getMembers() {
-        return this.members;
-    }
-
-    /**
-     * 
-     */
-    public DatabaseEntry getSourceAccession() {
-        return this.sourceAccession;
-    }
-
-    public void setCharacteristics( Collection<Characteristic> characteristics ) {
-        this.characteristics = characteristics;
-    }
-
-    public void setLiteratureSources( Collection<BibliographicReference> literatureSources ) {
-        this.literatureSources = literatureSources;
-    }
-
-    public void setMembers( Collection<GeneSetMember> members ) {
-        this.members = members;
-    }
-
-    public void setSourceAccession( DatabaseEntry sourceAccession ) {
-        this.sourceAccession = sourceAccession;
     }
 
 }

@@ -96,7 +96,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             if (type == 'FailedLinkAnalysisEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Analysis failed"';
-            } else if (type == 'TooSmallDatasetLinkAnalysisEventImpl') {
+            } else if (type == 'TooSmallDatasetLinkAnalysisEvent') {
                 color = '#CCC';
                 qtip = 'ext:qtip="Analysis was too small"';
                 suggestRun = false;
@@ -203,7 +203,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
 
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if (type == 'FailedProcessedVectorComputationEventImpl') { // note:
+            if (type == 'FailedProcessedVectorComputationEvent') { // note:
                 // no
                 // such
                 // thing.
@@ -321,7 +321,7 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             var qtip = 'ext:qtip="OK"';
             var suggestRun = true;
 
-            if (type == 'FailedPCAAnalysisEventImpl') {
+            if (type == 'FailedPCAAnalysisEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             }
@@ -381,10 +381,10 @@ Gemma.ExpressionExperimentTools = Ext.extend(Gemma.CurationTools, {
             var color = "#000";
             var qtip = 'ext:qtip="OK"';
 
-            if (type == 'FailedBatchInformationFetchingEventImpl') {
+            if (type == 'FailedBatchInformationFetchingEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
-            } else if (type == 'FailedBatchInformationMissingEventImpl') {
+            } else if (type == 'FailedBatchInformationMissingEvent') {
                 color = '#CCC';
                 qtip = 'ext:qtip="Raw data files not available from source"';
             }

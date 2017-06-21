@@ -18,30 +18,36 @@
  */
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.persistence.service.AbstractService;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Spring Service base class for <code>DifferentialExpressionResultService</code>, provides access to all services and
  * entities referenced by this service.
- * 
+ *
  * @see DifferentialExpressionResultService
- * @version $Id$
  */
-public abstract class DifferentialExpressionResultServiceBase implements DifferentialExpressionResultService {
+public abstract class DifferentialExpressionResultServiceBase
+        extends AbstractService<DifferentialExpressionAnalysisResult> implements DifferentialExpressionResultService {
+
+    protected final DifferentialExpressionResultDao DERDao;
+
+    protected final ExpressionAnalysisResultSetDao EARDao;
 
     @Autowired
-    private DifferentialExpressionResultDao differentialExpressionAnalysisResultDao;
-
-    @Autowired
-    private ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao;
+    public DifferentialExpressionResultServiceBase( DifferentialExpressionResultDao DERDao,
+            ExpressionAnalysisResultSetDao EARDao ) {
+        super( DERDao );
+        this.DERDao = DERDao;
+        this.EARDao = EARDao;
+    }
 
     /**
      * @see DifferentialExpressionResultService#getExperimentalFactors(DifferentialExpressionAnalysisResult)
@@ -53,69 +59,16 @@ public abstract class DifferentialExpressionResultServiceBase implements Differe
         return this.handleGetExperimentalFactors( differentialExpressionAnalysisResult );
     }
 
-    /**
-     * Sets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
-     */
-    public void setDifferentialExpressionResultDao(
-            DifferentialExpressionResultDao differentialExpressionAnalysisResultDao ) {
-        this.differentialExpressionAnalysisResultDao = differentialExpressionAnalysisResultDao;
-    }
-
-    /**
-     * Sets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
-     */
-    public void setExpressionAnalysisResultSetDao( ExpressionAnalysisResultSetDao expressionAnalysisResultSetDao ) {
-        this.expressionAnalysisResultSetDao = expressionAnalysisResultSetDao;
-    }
-
-    /**
-     * @see DifferentialExpressionResultService.DifferentialExpressionResultService#thaw(ExpressionAnalysisResultSet)
-     */
     @Override
     @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
-        return this.handleThaw( resultSet );
-
+    public void thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
+        this.EARDao.thawWithoutContrasts( resultSet );
     }
 
-    /**
-     * @see DifferentialExpressionResultService.DifferentialExpressionResultService#thawWithoutContrasts(ExpressionAnalysisResultSet)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ExpressionAnalysisResultSet thawWithoutContrasts( ExpressionAnalysisResultSet resultSet ) {
-        return this.getExpressionAnalysisResultSetDao().thawWithoutContrasts( resultSet );
-    }
-
-    /**
-     * Gets the reference to <code>differentialExpressionAnalysisResult</code>'s DAO.
-     */
-    protected DifferentialExpressionResultDao getDifferentialExpressionResultDao() {
-        return this.differentialExpressionAnalysisResultDao;
-    }
-
-    /**
-     * Gets the reference to <code>expressionAnalysisResultSet</code>'s DAO.
-     */
-    protected ExpressionAnalysisResultSetDao getExpressionAnalysisResultSetDao() {
-        return this.expressionAnalysisResultSetDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #getExperimentalFactors(Collection)}
-     */
     protected abstract Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
             Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
 
-    /**
-     * Performs the core logic for {@link #getExperimentalFactors(diff.DifferentialExpressionAnalysisResult)}
-     */
     protected abstract Collection<ExperimentalFactor> handleGetExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
-
-    /**
-     * Performs the core logic for {@link #thaw(ExpressionAnalysisResultSet)}
-     */
-    protected abstract ExpressionAnalysisResultSet handleThaw( ExpressionAnalysisResultSet resultSet );
 
 }

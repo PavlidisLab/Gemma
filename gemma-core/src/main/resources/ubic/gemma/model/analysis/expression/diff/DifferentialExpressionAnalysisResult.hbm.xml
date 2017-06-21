@@ -33,10 +33,10 @@
             </key>
             <one-to-many class="ubic.gemma.model.analysis.expression.diff.ContrastResultImpl"/>
         </set>
-        <many-to-one name="resultSet" class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetImpl" cascade="none"  lazy="proxy" fetch="select">
+        <many-to-one name="resultSet" class="ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet" cascade="none" lazy="proxy" fetch="select">
             <column name="RESULT_SET_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
-        <many-to-one name="probe" class="ubic.gemma.model.expression.designElement.CompositeSequenceImpl"  lazy="proxy" fetch="select">
+        <many-to-one name="probe" class="ubic.gemma.model.expression.designElement.CompositeSequence"  lazy="proxy" fetch="select">
             <column name="PROBE_FK" not-null="true" sql-type="BIGINT"/>
         </many-to-one>
     </class>

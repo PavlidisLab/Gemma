@@ -44,10 +44,10 @@ import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.Securable;
 import gemma.gsec.model.User;
 import gemma.gsec.util.SecurityUtil;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
-import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.core.genome.gene.service.GeneSetService;
 import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.GeneDifferentialExpressionMetaAnalysis;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
@@ -176,7 +176,7 @@ public class SecurityControllerImpl implements SecurityController {
             throw new IllegalArgumentException( "You don't have permission to modify that group" );
         }
         /*
-         * Additional checks for ability to delete group handled by ss.
+         * Additional checks for ability to remove group handled by ss.
          */
         try {
             userManager.deleteGroup( groupName );

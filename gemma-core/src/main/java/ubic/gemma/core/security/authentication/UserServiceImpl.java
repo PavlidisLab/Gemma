@@ -24,24 +24,20 @@ import gemma.gsec.model.GroupAuthority;
 import gemma.gsec.model.User;
 import gemma.gsec.model.UserGroup;
 import gemma.gsec.util.SecurityUtil;
-
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserDao;
 import ubic.gemma.persistence.service.common.auditAndSecurity.UserGroupDao;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 /**
- * @see ubic.gemma.core.security.authentication.UserService
  * @author pavlidis
- * @version $Id$
  */
 @Service
 @Transactional
@@ -97,10 +93,7 @@ public class UserServiceImpl implements UserService {
 
         try {
             return this.userDao.create( ( ubic.gemma.model.common.auditAndSecurity.User ) user );
-        } catch ( DataIntegrityViolationException e ) {
-            throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
-        } catch ( InvalidDataAccessResourceUsageException e ) {
-            // shouldn't happen if we don't have duplicates in the first place...but just in case.
+        } catch ( DataIntegrityViolationException | InvalidDataAccessResourceUsageException e ) {
             throw new UserExistsException( "User '" + user.getUserName() + "' already exists!" );
         }
 
@@ -132,14 +125,14 @@ public class UserServiceImpl implements UserService {
         /*
          * make sure this isn't one of the special groups
          */
-        if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME )
-                || groupName.equals( AuthorityConstants.ADMIN_GROUP_NAME )
-                || groupName.equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
-            throw new IllegalArgumentException( "Cannot delete that group, it is required for system operation." );
+        if ( groupName.equals( AuthorityConstants.USER_GROUP_NAME ) || groupName
+                .equals( AuthorityConstants.ADMIN_GROUP_NAME ) || groupName
+                .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
+            throw new IllegalArgumentException( "Cannot remove that group, it is required for system operation." );
         }
 
         if ( !securityService.isOwnedByCurrentUser( findGroupByName( groupName ) ) && !SecurityUtil.isUserAdmin() ) {
-            throw new AccessDeniedException( "Only administrator or owner of a group can delete it" );
+            throw new AccessDeniedException( "Only administrator or owner of a group can remove it" );
         }
 
         String authority = securityService.getGroupAuthorityNameFromGroupName( groupName );
@@ -149,11 +142,7 @@ public class UserServiceImpl implements UserService {
         /*
          * clean up acls that use this group...do that last!
          */
-        try {
-            aclService.deleteSid( new AclGrantedAuthoritySid( authority ) );
-        } catch ( DataIntegrityViolationException div ) {
-            throw div;
-        }
+        aclService.deleteSid( new AclGrantedAuthoritySid( authority ) );
     }
 
     @Override
@@ -169,30 +158,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserGroup findGroupByName( String name ) {
-        return this.userGroupDao.findByUserGroupName( name );
+        return this.userGroupDao.findByName( name );
     }
 
     @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         Collection<UserGroup> ret = new ArrayList<>();
-        for ( ubic.gemma.model.common.auditAndSecurity.UserGroup grp : this.userGroupDao
-                .findGroupsForUser( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) ) {
-            ret.add( grp );
-        }
+        ret.addAll( this.userGroupDao.findGroupsForUser( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
         return ret;
     }
 
     @Override
     public boolean groupExists( String name ) {
-        return this.userGroupDao.findByUserGroupName( name ) != null;
+        return this.userGroupDao.findByName( name ) != null;
     }
 
     @Override
     public Collection<UserGroup> listAvailableGroups() {
         Collection<UserGroup> ret = new ArrayList<>();
-        for ( ubic.gemma.model.common.auditAndSecurity.UserGroup grp : this.userGroupDao.loadAll() ) {
-            ret.add( grp );
-        }
+        ret.addAll( this.userGroupDao.loadAll() );
         return ret;
     }
 
@@ -204,19 +188,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public Collection<User> loadAll() {
         Collection<User> ret = new ArrayList<>();
-        for ( ubic.gemma.model.common.auditAndSecurity.User user : this.userDao.loadAll() ) {
-            ret.add( user );
-        }
+        ret.addAll( this.userDao.loadAll() );
         return ret;
     }
 
     @Override
     public Collection<GroupAuthority> loadGroupAuthorities( User user ) {
         Collection<GroupAuthority> ret = new ArrayList<>();
-        for ( ubic.gemma.model.common.auditAndSecurity.GroupAuthority auth : this.userDao
-                .loadGroupAuthorities( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) ) {
-            ret.add( auth );
-        }
+        ret.addAll( this.userDao.loadGroupAuthorities( ( ubic.gemma.model.common.auditAndSecurity.User ) user ) );
         return ret;
     }
 
@@ -243,7 +222,7 @@ public class UserServiceImpl implements UserService {
         this.userGroupDao.update( ( ubic.gemma.model.common.auditAndSecurity.UserGroup ) group );
 
         /*
-         * TODO: if the group is empty, should we delete it? Not if it is GROUP_USER or ADMIN, but perhaps otherwise.
+         * TODO: if the group is empty, should we remove it? Not if it is GROUP_USER or ADMIN, but perhaps otherwise.
          */
     }
 

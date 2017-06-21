@@ -1,4 +1,4 @@
-/*
+package ubic.gemma.model.genome.gene;/*
  * The Gemma project.
  * 
  * Copyright (c) 2006-2012 University of British Columbia
@@ -16,72 +16,48 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.ChromosomeFeature;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 
 import java.util.Collection;
 
-import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.genome.PhysicalLocation;
-
-/**
- * 
- */
-public abstract class GeneProduct extends ubic.gemma.model.genome.ChromosomeFeature {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.gene.GeneProduct}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.gene.GeneProduct}.
-         */
-        public static ubic.gemma.model.genome.gene.GeneProduct newInstance() {
-            return new ubic.gemma.model.genome.gene.GeneProductImpl();
-        }
-
-    }
+public abstract class GeneProduct extends ChromosomeFeature {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 6559927399916235369L;
-    private ubic.gemma.model.genome.gene.GeneProductType type;
-
+    private GeneProductType type;
     private String ncbiGi;
-
     private Collection<DatabaseEntry> accessions = new java.util.HashSet<>();
-
     private Collection<PhysicalLocation> exons = new java.util.HashSet<>();
+    private Gene gene;
 
-    private ubic.gemma.model.genome.Gene gene;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public GeneProduct() {
-    }
-
-    /**
-     * 
-     */
-    public Collection<ubic.gemma.model.common.description.DatabaseEntry> getAccessions() {
+    public Collection<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
 
-    /**
-     * 
-     */
-    public Collection<ubic.gemma.model.genome.PhysicalLocation> getExons() {
+    public void setAccessions( Collection<DatabaseEntry> accessions ) {
+        this.accessions = accessions;
+    }
+
+    public Collection<PhysicalLocation> getExons() {
         return this.exons;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Gene getGene() {
+    public void setExons( Collection<PhysicalLocation> exons ) {
+        this.exons = exons;
+    }
+
+    public Gene getGene() {
         return this.gene;
+    }
+
+    public void setGene( Gene gene ) {
+        this.gene = gene;
     }
 
     /**
@@ -93,31 +69,29 @@ public abstract class GeneProduct extends ubic.gemma.model.genome.ChromosomeFeat
         return this.ncbiGi;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.gene.GeneProductType getType() {
-        return this.type;
-    }
-
-    public void setAccessions( Collection<ubic.gemma.model.common.description.DatabaseEntry> accessions ) {
-        this.accessions = accessions;
-    }
-
-    public void setExons( Collection<ubic.gemma.model.genome.PhysicalLocation> exons ) {
-        this.exons = exons;
-    }
-
-    public void setGene( ubic.gemma.model.genome.Gene gene ) {
-        this.gene = gene;
-    }
-
     public void setNcbiGi( String ncbiGi ) {
         this.ncbiGi = ncbiGi;
     }
 
-    public void setType( ubic.gemma.model.genome.gene.GeneProductType type ) {
+    public GeneProductType getType() {
+        return this.type;
+    }
+
+    public void setType( GeneProductType type ) {
         this.type = type;
+    }
+
+    /**
+     * Constructs new instances of {@link GeneProduct}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link GeneProduct}.
+         */
+        public static GeneProduct newInstance() {
+            return new GeneProductImpl();
+        }
+
     }
 
 }

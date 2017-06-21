@@ -21,8 +21,21 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * The mapping of probes to genes for an ArrayDesign
  */
-public abstract class ArrayDesignGeneMappingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignGeneMappingEvent
+        extends ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
+
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -7566135203525054499L;
+
+    /**
+     * No-arg constructor added to satisfy javabean contract
+     *
+     * @author Paul
+     */
+    public ArrayDesignGeneMappingEvent() {
+    }
 
     /**
      * Constructs new instances of
@@ -34,22 +47,9 @@ public abstract class ArrayDesignGeneMappingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent();
         }
 
-    }
-
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
-    private static final long serialVersionUID = -7566135203525054499L;
-
-    /**
-     * No-arg constructor added to satisfy javabean contract
-     * 
-     * @author Paul
-     */
-    public ArrayDesignGeneMappingEvent() {
     }
 
 }

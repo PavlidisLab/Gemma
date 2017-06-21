@@ -18,31 +18,55 @@
  */
 package ubic.gemma.model.association;
 
-import java.io.Serializable;
-
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.genome.Gene;
+
+import java.io.Serializable;
 
 /**
  * Entity representing a relationship between two genes. The designation of "first" and "second" gene is by default
  * completely arbitrary, there is no direction to the association defined by this. However, a direction can be imposed
  * by the implementing subclass.
- * <p>
  * Ideally subclasses are immutable, but this is not always possible. It can be done when the data is never updated but
  * just loaded in anew.
- * 
+ *
  * @author paul
- * @version $Id$
  */
-public abstract class Gene2GeneAssociation implements Serializable {
+public abstract class Gene2GeneAssociation implements Identifiable, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -322186137554528167L;
+
     final private Long id = null;
     final private Gene firstGene = null;
-
     final private Gene secondGene = null;
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
+
+        Gene2GeneAssociation other = ( Gene2GeneAssociation ) obj;
+
+        if ( this.id != null )
+            return this.id.equals( other.getId() );
+
+        if ( firstGene == null ) {
+            if ( other.firstGene != null )
+                return false;
+        } else if ( !firstGene.equals( other.firstGene ) )
+            return false;
+
+        if ( secondGene == null ) {
+            if ( other.secondGene != null )
+                return false;
+        } else if ( !secondGene.equals( other.secondGene ) )
+            return false;
+        return true;
+    }
 
     @Override
     public String toString() {
@@ -52,7 +76,8 @@ public abstract class Gene2GeneAssociation implements Serializable {
 
     @Override
     public int hashCode() {
-        if ( this.id != null ) return this.id.hashCode();
+        if ( this.id != null )
+            return this.id.hashCode();
 
         final int prime = 31;
         int result = 1;
@@ -61,43 +86,14 @@ public abstract class Gene2GeneAssociation implements Serializable {
         return result;
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
-
-        Gene2GeneAssociation other = ( Gene2GeneAssociation ) obj;
-
-        if ( this.id != null ) return this.id.equals( other.getId() );
-
-        if ( firstGene == null ) {
-            if ( other.firstGene != null ) return false;
-        } else if ( !firstGene.equals( other.firstGene ) ) return false;
-
-        if ( secondGene == null ) {
-            if ( other.secondGene != null ) return false;
-        } else if ( !secondGene.equals( other.secondGene ) ) return false;
-        return true;
-    }
-
-    /**
-     * 
-     */
     public Gene getFirstGene() {
         return this.firstGene;
     }
 
-    /**
-     * @return
-     */
     public Long getId() {
         return id;
     }
 
-    /**
-     * 
-     */
     public Gene getSecondGene() {
         return this.secondGene;
     }

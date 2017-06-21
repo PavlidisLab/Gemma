@@ -1,6 +1,6 @@
 <%@ include file="/common/taglibs.jsp"%>
 <jsp:useBean id="experimentalDesign" scope="request"
-	class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" />
+	class="ubic.gemma.model.expression.experiment.ExperimentalDesign" />
 <jsp:useBean id="expressionExperiment" scope="request"
 	class="ubic.gemma.model.expression.experiment.ExpressionExperiment" />
 <head>

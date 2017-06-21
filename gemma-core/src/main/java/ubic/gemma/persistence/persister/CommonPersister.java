@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.persister;
 
+import org.hibernate.FlushMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.common.auditAndSecurity.*;
 import ubic.gemma.model.common.description.*;
@@ -216,6 +217,7 @@ abstract public class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
+        this.getSession().setFlushMode( FlushMode.COMMIT );
         ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
 
         // don't use findOrCreate to avoid flush.

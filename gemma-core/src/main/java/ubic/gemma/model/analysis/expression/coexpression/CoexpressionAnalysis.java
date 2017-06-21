@@ -24,31 +24,24 @@ import ubic.gemma.model.analysis.SingleExperimentAnalysis;
  * A coexpression analysis of one experiment. Note that this is used to store meta-data about the analysis, the actual
  * results are not attached to this.
  */
-public abstract class CoexpressionAnalysis extends SingleExperimentAnalysis {
+public class CoexpressionAnalysis extends SingleExperimentAnalysis {
 
     private static final long serialVersionUID = -2036918876881877628L;
-
-    /**
-     * Constructs new instances of {@link CoexpressionAnalysis}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link CoexpressionAnalysis}.
-         */
-        public static CoexpressionAnalysis newInstance() {
-            return new CoexpressionAnalysisImpl();
-        }
-    }
-
     private CoexpCorrelationDistribution coexpCorrelationDistribution;
-
     /**
      * At gene level.
      */
     private Integer numberOfLinks;
 
+    public CoexpressionAnalysis() {
+    }
+
     public CoexpCorrelationDistribution getCoexpCorrelationDistribution() {
         return coexpCorrelationDistribution;
+    }
+
+    public void setCoexpCorrelationDistribution( CoexpCorrelationDistribution coexpCorrelationDistribution ) {
+        this.coexpCorrelationDistribution = coexpCorrelationDistribution;
     }
 
     /**
@@ -59,17 +52,22 @@ public abstract class CoexpressionAnalysis extends SingleExperimentAnalysis {
     }
 
     /**
-     * @param coexpCorrelationDistribution
-     */
-    public void setCoexpCorrelationDistribution( CoexpCorrelationDistribution coexpCorrelationDistribution ) {
-        this.coexpCorrelationDistribution = coexpCorrelationDistribution;
-    }
-
-    /**
      * @param numberOfLinks at the gene level.
      */
     public void setNumberOfLinks( Integer numberOfLinks ) {
         this.numberOfLinks = numberOfLinks;
+    }
+
+    /**
+     * Constructs new instances of {@link CoexpressionAnalysis}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link CoexpressionAnalysis}.
+         */
+        public static CoexpressionAnalysis newInstance() {
+            return new CoexpressionAnalysis();
+        }
     }
 
 }

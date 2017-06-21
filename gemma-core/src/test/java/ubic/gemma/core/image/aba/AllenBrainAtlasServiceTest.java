@@ -18,21 +18,19 @@
  */
 package ubic.gemma.core.image.aba;
 
-import static org.junit.Assert.assertNotNull;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Alan brain Atlas service test.
- * 
- * @version $Id$
+ *
  * @author kelsey
  */
 public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
@@ -40,9 +38,6 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
     @Autowired
     private AllenBrainAtlasService abaService = null;
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testGetGene() throws Exception {
         AbaGene grin1 = null;
@@ -60,6 +55,8 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
         Collection<ImageSeries> representativeSaggitalImages = new HashSet<ImageSeries>();
 
         for ( ImageSeries is : grin1.getImageSeries() ) {
+            if ( is == null )
+                continue;
             if ( is.getPlane().equalsIgnoreCase( "sagittal" ) ) {
 
                 Collection<Image> images = abaService.getImageseries( is.getImageSeriesId() );
@@ -71,7 +68,8 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
                     }
                 }
 
-                if ( representativeImages.isEmpty() ) continue;
+                if ( representativeImages.isEmpty() )
+                    continue;
 
                 // Only add if there is something to add
                 is.setImages( representativeImages );
@@ -84,9 +82,7 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
     }
 
     /**
-     * Not all ABA genes have the only the first letter capatalized
-     * 
-     * @throws Exception
+     * Not all ABA genes have the only the first letter capitalized
      */
     @Test
     public void testGetGeneCapitals() throws Exception {

@@ -18,72 +18,54 @@
  */
 package ubic.gemma.core.security.authorization.acl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.ValueObjectAwareIdentityRetrievalStrategyImpl;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
 import gemma.gsec.model.Securable;
-
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.acls.model.MutableAcl;
-import org.springframework.security.acls.model.MutableAclService;
-import org.springframework.security.acls.model.NotFoundException;
-import org.springframework.security.acls.model.ObjectIdentity;
-import org.springframework.security.acls.model.ObjectIdentityRetrievalStrategy;
+import org.springframework.security.acls.model.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
+import static org.junit.Assert.*;
 
 /**
  * @author pavlidis
  * @author keshav
- * @version $Id$
  */
 public class AclAuthorizationTest extends BaseSpringContextTest {
 
+    String aDifferentUsername = "AclAuthTest_" + RandomStringUtils.randomAlphabetic( 5 );
+    ArrayDesign arrayDesign;
+    String arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
+    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
+    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
     @Autowired
     private ArrayDesignService arrayDesignService;
-
     @Autowired
     private UserManager userManager;
-
     @Autowired
     private SecurityService securityService;
-
     private ObjectIdentityRetrievalStrategy objectIdentityRetrievalStrategy = new ValueObjectAwareIdentityRetrievalStrategyImpl();
     @Autowired
     private MutableAclService aclService;
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
-    String aDifferentUsername = RandomStringUtils.randomAlphabetic( 5 );
-
-    ArrayDesign arrayDesign;
-    String arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() throws Exception {
 
@@ -111,16 +93,14 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         try {
             userManager.loadUserByUsername( aDifferentUsername );
         } catch ( UsernameNotFoundException e ) {
-            userManager.createUser( new UserDetailsImpl( "foo", aDifferentUsername, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+            userManager.createUser( new UserDetailsImpl( "foo", aDifferentUsername, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
 
     }
 
     /**
      * Tests getting composite sequences (target objects) with correct privileges on domain object (array design).
-     * 
-     * @throws Exception
      */
     @Test
     public void testGetCompositeSequencesForArrayDesign() throws Exception {
@@ -139,7 +119,8 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
         super.runAsUser( this.aDifferentUsername );
         col = compositeSequenceService.findByName( compositeSequenceName1 );
 
-        assertEquals( "User should not be authorized to access composite sequences  for array design .", 0, col.size() );
+        assertEquals( "User should not be authorized to access composite sequences  for array design .", 0,
+                col.size() );
 
         try {
             securityService.makePublic( arrayDesign );
@@ -154,7 +135,7 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
     /**
      * Test modifying an arrayDesign with the correct authorization privileges. The security interceptor should be
      * called on this method, as should the AclInterceptor.
-     * 
+     *
      * @throws Exception
      */
     @Test
@@ -169,8 +150,9 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
         assertEquals( 1, SecurityContextHolder.getContext().getAuthentication().getAuthorities().size() );
 
-        assertEquals( "GROUP_USER", SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator()
-                .next().getAuthority() );
+        assertEquals( "GROUP_USER",
+                SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next()
+                        .getAuthority() );
 
         try {
             arrayDesignService.update( arrayDesign );

@@ -280,10 +280,9 @@ public class AssayViewTag extends TagSupport {
             } else {
                 buf.append( "<tr class='odd' align=justify>" );
             }
-            BioMaterialValueObject material = new BioMaterialValueObject();
 
             // FIXME this is a kludge: use negative ids to distinguish the new biomaterials.
-            material.setId( 0L - i );
+            BioMaterialValueObject material = new BioMaterialValueObject( 0L - i );
 
             material.setName( "[New biomaterial " + i + "]" );
             buf.append( "<td>" + material.getName() + "</td>" );

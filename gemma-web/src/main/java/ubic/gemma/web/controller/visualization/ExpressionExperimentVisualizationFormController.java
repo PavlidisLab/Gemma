@@ -29,7 +29,7 @@ import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.service.CompositeSequenceGeneMapperService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixRowElement;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
@@ -93,7 +93,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         Long id = eevc.getExpressionExperimentId();
 
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
-        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             return processErrors( request, response, command, errors,

@@ -51,7 +51,7 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
      * default constructor to satisfy java bean contract
      */
     public FreeTextExpressionExperimentResultsValueObject() {
-        super();
+        super( -1L );
     }
 
     /**
@@ -65,14 +65,13 @@ public class FreeTextExpressionExperimentResultsValueObject extends SessionBound
      */
     public FreeTextExpressionExperimentResultsValueObject( String name, String description, Long taxonId,
             String taxonName, Collection<Long> memberIds, String queryString ) {
-
+        super( -1l );
         this.setName( name );
         this.setDescription( description );
         this.setSize( memberIds.size() );
         this.setTaxonId( taxonId );
         this.setTaxonName( taxonName );
         this.setExpressionExperimentIds( memberIds );
-        this.setId( new Long( -1 ) );
         this.setModified( false );
         this.setQueryString( queryString );
     }

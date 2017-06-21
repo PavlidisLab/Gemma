@@ -25,37 +25,20 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 /**
  * @author Patrick
  */
-public abstract class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.model.SecuredChild {
-
-    /**
-     * Constructs new instances of {@link MeanVarianceRelation}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link MeanVarianceRelation}.
-         */
-        public static MeanVarianceRelation newInstance() {
-            return new MeanVarianceRelationImpl();
-        }
-
-    }
-
-    private Securable securityOwner;
+public class MeanVarianceRelation implements java.io.Serializable, gemma.gsec.model.SecuredChild {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -1442923993171126882L;
-
+    private Securable securityOwner;
     private byte[] means;
-
     private byte[] variances;
-
     private Long id;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public MeanVarianceRelation() {
@@ -74,40 +57,44 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
             return false;
         }
         final MeanVarianceRelation that = ( MeanVarianceRelation ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
 
-    /**
-     * 
-     */
     @Override
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public byte[] getMeans() {
         return this.means;
+    }
+
+    public void setMeans( byte[] means ) {
+        this.means = means;
     }
 
     /**
      * @see MeanVarianceRelation#getSecurityOwner()
      */
     @Override
-    public gemma.gsec.model.Securable getSecurityOwner() {
+    public Securable getSecurityOwner() {
         return this.securityOwner;
     }
 
-    /**
-     * 
-     */
+    public void setSecurityOwner( ExpressionExperiment ee ) {
+        this.securityOwner = ee;
+    }
+
     public byte[] getVariances() {
         return this.variances;
+    }
+
+    public void setVariances( byte[] variances ) {
+        this.variances = variances;
     }
 
     /**
@@ -121,20 +108,17 @@ public abstract class MeanVarianceRelation implements java.io.Serializable, gemm
         return hashCode;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
-    }
+    /**
+     * Constructs new instances of {@link MeanVarianceRelation}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link MeanVarianceRelation}.
+         */
+        public static MeanVarianceRelation newInstance() {
+            return new MeanVarianceRelation();
+        }
 
-    public void setMeans( byte[] means ) {
-        this.means = means;
-    }
-
-    public void setSecurityOwner( ExpressionExperiment ee ) {
-        this.securityOwner = ee;
-    }
-
-    public void setVariances( byte[] variances ) {
-        this.variances = variances;
     }
 
 }

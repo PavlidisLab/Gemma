@@ -18,46 +18,27 @@
  */
 package ubic.gemma.core.datastructure.matrix;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.core.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
 import ubic.gemma.core.analysis.service.OutlierFlaggingService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
 import ubic.gemma.core.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.common.quantitationtype.GeneralType;
-import ubic.gemma.model.common.quantitationtype.PrimitiveType;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.ScaleType;
-import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
+import ubic.gemma.model.common.quantitationtype.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
-import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -65,6 +46,14 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.persistence.service.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author keshav
@@ -98,11 +87,6 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     @Autowired
     private OutlierFlaggingService sampleRemoveService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
-     */
     @Before
     public void setup() throws Exception {
 
@@ -126,8 +110,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         metaData.setType( StandardQuantitationType.AMOUNT );
         metaData.setIsRatio( true );
 
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" )) {
             DoubleMatrix<String, String> matrix = simpleExpressionDataLoaderService.parse( data );
             ee = simpleExpressionDataLoaderService.convert( metaData, matrix );
         }
@@ -140,22 +124,16 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
     @After
     public void tearDown() {
-        try {
-            if ( ee != null && ee.getId() != null ) {
-                expressionExperimentService.delete( ee );
-            }
-            if ( newee != null && newee.getId() != null ) {
-                expressionExperimentService.delete( newee );
-            }
-        } catch ( Exception e ) {
-            log.error( e );
+        if ( ee != null && ee.getId() != null ) {
+            expressionExperimentService.remove( ee.getId() );
         }
-
+        if ( newee != null && newee.getId() != null ) {
+            expressionExperimentService.remove( newee.getId() );
+        }
     }
 
     /**
      * Tests the construction of an ExpressionDataDoubleMatrix
-     *
      */
     @Test
     public void testConstructExpressionDataDoubleMatrix() {
@@ -198,17 +176,13 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
     }
 
     /**
-     * This is a self-contained test. That is, it does not depend on the setup in {@link onSetUpInTransaction}. It tests
+     * This is a self-contained test. That is, it does not depend on the setup in onSetUpInTransaction}. It tests
      * creating an {@link ExpressionDataDoubleMatrix} using real values from the Gene Expression Omnibus (GEO). That is,
      * we have obtained information from GSE994. The probe sets used are 218120_s_at and 121_at, and the samples used
      * are GSM15697 and GSM15744. Specifically, we the Gemma objects that correspond to the GEO objects are:
-     * <p>
      * DesignElement 1 = 218120_s_at, DesignElement 2 = 121_at
-     * <p>
      * BioAssay 1 = "Current Smoker 73", BioAssay 2 = "Former Smoker 34"
-     * <p>
      * BioMaterial 1 = "GSM15697", BioMaterial 2 = "GSM15744"
-     * <p>
      * BioAssayDimension = "GSM15697, GSM15744" (the names of all the biomaterials).
      */
     @Test
@@ -325,7 +299,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
             newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
-        newee = expressionExperimentService.thaw( newee );
+        expressionExperimentService.thaw( newee );
         // make sure we really thaw them, so we can get the design element sequences.
 
         Collection<RawExpressionDataVector> vectors = newee.getRawExpressionDataVectors();
@@ -343,7 +317,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         processedDataVectorService.computeProcessedExpressionData( newee );
 
-        File f1 = expressionDataFileService.writeOrLocateDataFile( newee, true, true );
+        File f1 = expressionDataFileService
+                .writeOrLocateDataFile( expressionExperimentService.load( newee.getId() ), true, true );
         assertNotNull( f1 );
         assertTrue( f1.exists() );
 
@@ -360,7 +335,7 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
 
         assertTrue( tba.getIsOutlier() );
 
-        newee = expressionExperimentService.thaw( newee );
+        expressionExperimentService.thaw( newee );
         Collection<ProcessedExpressionDataVector> vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );
@@ -375,7 +350,8 @@ public class ExpressionDataDoubleMatrixTest extends AbstractGeoServiceTest {
         assertTrue( Double.isNaN( data.getColumn( tba )[10] ) );
 
         sampleRemoveService.unmarkAsMissing( ol );
-        newee = expressionExperimentService.thaw( expressionExperimentService.load( newee.getId() ) );
+        newee = expressionExperimentService.load( newee.getId());
+        expressionExperimentService.thaw( newee );
         vecs = newee.getProcessedExpressionDataVectors();
 
         this.designElementDataVectorService.thaw( vecs );

@@ -33,7 +33,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
 import ubic.gemma.core.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.core.loader.protein.string.StringProteinProteinInteractionObjectGenerator;

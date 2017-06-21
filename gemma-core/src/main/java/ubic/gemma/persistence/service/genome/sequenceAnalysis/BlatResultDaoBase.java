@@ -18,168 +18,100 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
+import ubic.gemma.persistence.service.VoEnabledDao;
+import ubic.gemma.persistence.util.BusinessKey;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.sequenceAnalysis.BlatResult</code>.
  * </p>
- * 
+ *
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResult
  */
-public abstract class BlatResultDaoBase extends HibernateDaoSupport implements BlatResultDao {
+@Repository
+public class BlatResultDaoBase extends VoEnabledDao<BlatResult, BlatResultValueObject> implements BlatResultDao {
 
-    /**
-     * @see BlatResultDao#create(int transform,
-     *      ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
-     */
-    @Override
-    public BlatResult create( final BlatResult blatResult ) {
-        if ( blatResult == null ) {
-            throw new IllegalArgumentException( "BlatResult.create - 'blatResult' can not be null" );
-        }
-        this.getHibernateTemplate().save( blatResult );
-        return blatResult;
+    @Autowired
+    public BlatResultDaoBase( SessionFactory sessionFactory ) {
+        super( BlatResult.class, sessionFactory );
     }
 
-    /**
-     * @see BlatResultDao#create(int, java.util.Collection)
-     */
-    @Override
-    public java.util.Collection<? extends BlatResult> create( final java.util.Collection<? extends BlatResult> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlatResult.create - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BlatResult> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-        return entities;
-    }
-
-    /**
-     * @see BlatResultDao#load(int, java.lang.Long)
-     */
-    @Override
-    public BlatResult load( final java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BlatResult.load - 'id' can not be null" );
-        }
-        final Object entity = this.getHibernateTemplate().get(
-                ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl.class, id );
-        return ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) entity;
-    }
-
-    /**
-     * @see BlatResultDao#load(java.util.Collection)
-     */
-    @Override
-    public java.util.Collection<BlatResult> load( final java.util.Collection<Long> ids ) {
-        try {
-            return this.handleLoad( ids );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'BlatResultDao.load(java.util.Collection ids)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see BlatResultDao#loadAll(int)
-     */
-    @Override
     @SuppressWarnings("unchecked")
-    public java.util.Collection<BlatResult> loadAll() {
-        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
-                ubic.gemma.model.genome.sequenceAnalysis.BlatResultImpl.class );
+    @Override
+    public Collection<BlatResult> findByBioSequence( BioSequence bioSequence ) {
+        BusinessKey.checkValidKey( bioSequence );
+
+        Criteria queryObject = this.getSession().createCriteria( BlatResult.class );
+
+        BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
+
+        List<?> results = queryObject.list();
+
+        if ( results != null ) {
+            for ( Object object : results ) {
+                BlatResult br = ( BlatResult ) object;
+                if ( br.getTargetChromosome() != null ) {
+                    Hibernate.initialize( br.getTargetChromosome() );
+                }
+                Hibernate.initialize( br.getQuerySequence() );
+            }
+        }
+
         return ( Collection<BlatResult> ) results;
     }
 
-    /**
-     * @see BlatResultDao#remove(java.lang.Long)
-     */
     @Override
-    public void remove( java.lang.Long id ) {
-        if ( id == null ) {
-            throw new IllegalArgumentException( "BlatResult.remove - 'id' can not be null" );
-        }
-        ubic.gemma.model.genome.sequenceAnalysis.BlatResult entity = this.load( id );
-        if ( entity != null ) {
-            this.remove( entity );
+    public void thaw( BlatResult blatResult ) {
+        this.getSession().refresh( blatResult );
+        Hibernate.initialize( blatResult.getQuerySequence() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon().getParentTaxon() );
+        Hibernate.initialize( blatResult.getQuerySequence().getTaxon().getExternalDatabase() );
+        Hibernate.initialize( blatResult.getQuerySequence().getSequenceDatabaseEntry() );
+        Hibernate.initialize( blatResult.getQuerySequence().getSequenceDatabaseEntry().getExternalDatabase() );
+        Hibernate.initialize( blatResult.getTargetSequence() );
+        Hibernate.initialize( blatResult.getSearchedDatabase() );
+        Hibernate.initialize( blatResult.getTargetChromosome() );
+        Hibernate.initialize( blatResult.getTargetChromosome().getTaxon() );
+        Hibernate.initialize( blatResult.getTargetChromosome().getSequence() );
+    }
+
+    @Override
+    public BlatResult find( BlatResult entity ) {
+        return load( entity.getId() );
+    }
+
+    @Override
+    public void thaw( Collection<BlatResult> blatResults ) {
+        for ( BlatResult br : blatResults ) {
+            thaw( br );
         }
     }
 
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#remove(java.util.Collection)
-     */
     @Override
-    public void remove( java.util.Collection<? extends BlatResult> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlatResult.remove - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().deleteAll( entities );
+    public BlatResultValueObject loadValueObject( BlatResult entity ) {
+        return new BlatResultValueObject( entity );
     }
 
-    /**
-     * @see BlatResultDao#remove(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
-     */
     @Override
-    public void remove( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
-        if ( blatResult == null ) {
-            throw new IllegalArgumentException( "BlatResult.remove - 'blatResult' can not be null" );
+    public Collection<BlatResultValueObject> loadValueObjects( Collection<BlatResult> entities ) {
+        Collection<BlatResultValueObject> vos = new LinkedHashSet<>();
+        for ( BlatResult e : entities ) {
+            vos.add( this.loadValueObject( e ) );
         }
-        this.getHibernateTemplate().delete( blatResult );
+        return vos;
     }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.SequenceSimilaritySearchResultDao#update(java.util.Collection)
-     */
-    @Override
-    public void update( final Collection<? extends BlatResult> entities ) {
-        if ( entities == null ) {
-            throw new IllegalArgumentException( "BlatResult.update - 'entities' can not be null" );
-        }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @Override
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends BlatResult> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
-    }
-
-    /**
-     * @see BlatResultDao#update(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
-     */
-    @Override
-    public void update( ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
-        if ( blatResult == null ) {
-            throw new IllegalArgumentException( "BlatResult.update - 'blatResult' can not be null" );
-        }
-        this.getHibernateTemplate().update( blatResult );
-    }
-
-    /**
-     * Performs the core logic for {@link #load(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BlatResult> handleLoad( java.util.Collection<Long> ids )
-            throws java.lang.Exception;
-
 }

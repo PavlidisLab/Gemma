@@ -22,7 +22,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.core.analysis.preprocess.PreprocessingException;
 import ubic.gemma.core.analysis.preprocess.PreprocessorService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -111,7 +111,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             return;
         }
         try {
-            ee = eeService.thawLite( ee );
+            eeService.thawLite( ee );
 
             if ( this.batchCorrect ) {
                 this.preprocessorService.batchCorrect( ee );

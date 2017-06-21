@@ -158,7 +158,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                         this.writeError( "went into the exception" );
 
                         // if a pubmed id was not found dont stop all processes and write to logs
-                        if ( ex.getMessage().indexOf( "pubmed id" ) != -1 ) {
+                        if ( ex.getMessage().contains( "pubmed id" ) ) {
                             this.writeError( ex.getMessage() );
                         } else {
                             throw ex;
@@ -316,9 +316,9 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         String primaryReferencePubmeds = tokens[this.mapColumns.get( "PrimaryPubMeds" )].trim();
 
         if ( primaryReferencePubmeds.equalsIgnoreCase( "" ) ) {
-            evidence = new GenericEvidenceValueObject();
+            evidence = new GenericEvidenceValueObject(-1L);
         } else {
-            evidence = new LiteratureEvidenceValueObject();
+            evidence = new LiteratureEvidenceValueObject(-1L);
         }
 
         populateCommonFields( evidence, tokens );
@@ -329,16 +329,15 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     /**
      * convert for ExperimentalEvidenceValueObject
      */
-    // TODO
     private ExperimentalEvidenceValueObject convertFileLine2ExperimentalValueObjects( String[] tokens )
             throws IOException {
 
-        ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject();
+        ExperimentalEvidenceValueObject evidence = new ExperimentalEvidenceValueObject(-1L);
         populateCommonFields( evidence, tokens );
 
         String reviewReferencePubmed = tokens[this.mapColumns.get( "OtherPubMed" )].trim();
 
-        Set<String> relevantPublicationsPubmed = new HashSet<String>();
+        Set<String> relevantPublicationsPubmed = new HashSet<>();
         if ( !reviewReferencePubmed.equals( "" ) ) {
 
             relevantPublicationsPubmed.add( reviewReferencePubmed );
@@ -358,7 +357,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         Set<String> treatment = trimArray( tokens[this.mapColumns.get( "Treatment" )].split( ";" ) );
         Set<String> experimentOBI = trimArray( tokens[this.mapColumns.get( "Experiment" )].split( ";" ) );
 
-        Set<CharacteristicValueObject> experimentTags = new HashSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
         experimentTags.addAll( experiementTags2Ontology( developmentStage, this.DEVELOPMENTAL_STAGE,
                 this.DEVELOPMENTAL_STAGE_ONTOLOGY, this.nifstdOntologyService ) );
@@ -403,7 +402,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     private Set<CharacteristicValueObject> experiementTags2Ontology( Set<String> values, String category,
             String categoryUri, AbstractOntologyService ontologyUsed ) throws IOException {
 
-        Set<CharacteristicValueObject> experimentTags = new HashSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> experimentTags = new HashSet<>();
 
         for ( String term : values ) {
 
@@ -418,7 +417,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 }
             }
 
-            CharacteristicValueObject c = new CharacteristicValueObject( term, category, valueUri, categoryUri );
+            CharacteristicValueObject c = new CharacteristicValueObject( -1L, term, category, valueUri, categoryUri );
             experimentTags.add( c );
         }
         return experimentTags;
@@ -426,12 +425,11 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     /**
      * Change the file received into an entity that can save in the database
-     * 
-     * @throws Exception
+     *
      */
     private Collection<EvidenceValueObject> file2Objects( String evidenceType ) throws Exception {
 
-        Collection<EvidenceValueObject> evidenceValueObjects = new ArrayList<EvidenceValueObject>();
+        Collection<EvidenceValueObject> evidenceValueObjects = new ArrayList<>();
         String line = "";
         int i = 1;
 
@@ -443,12 +441,15 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             log.info( "Reading evidence: " + i++ );
 
             try {
-                if ( evidenceType.equals( this.LITERATURE_EVIDENCE ) ) {
-                    evidenceValueObjects.add( convert2LiteratureOrGenereicVO( tokens ) );
-                } else if ( evidenceType.equals( this.EXPERIMENTAL_EVIDENCE ) ) {
-                    evidenceValueObjects.add( convertFileLine2ExperimentalValueObjects( tokens ) );
-                } else {
-                    throw new Exception( "unknow type" );
+                switch ( evidenceType ) {
+                    case LITERATURE_EVIDENCE:
+                        evidenceValueObjects.add( convert2LiteratureOrGenereicVO( tokens ) );
+                        break;
+                    case EXPERIMENTAL_EVIDENCE:
+                        evidenceValueObjects.add( convertFileLine2ExperimentalValueObjects( tokens ) );
+                        break;
+                    default:
+                        throw new Exception( "unknown type" );
                 }
             } catch ( EntityNotFoundException e ) {
                 writeWarning( e.getMessage() );
@@ -476,7 +477,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
         Collection<Gene> genes = this.geneService.findByOfficialSymbol( officialSymbol );
 
-        Collection<Gene> genesWithTaxon = new HashSet<Gene>();
+        Collection<Gene> genesWithTaxon = new HashSet<>();
 
         for ( Gene gene : genes ) {
 
@@ -532,7 +533,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
         OntologyTerm ot = null;
 
         // we got an uri, search by uri
-        if ( phenotypeToSearch.indexOf( "http://purl." ) != -1 ) {
+        if ( phenotypeToSearch.contains( "http://purl." ) ) {
             log.info( "Found an URI: " + phenotypeToSearch );
             ot = this.diseaseOntologyService.getTerm( phenotypeToSearch );
 
@@ -565,24 +566,12 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             }
         }
 
-        // we cannot find the specific phenotype given
-        if ( ot == null ) {
-            // ***flawed writeError( "phenotype not found in disease, hp and mp Ontology : " + phenotypeToSearch );
-            // return null;
-        }
-
-        // check for obsolete terms
-        // if ( ot.isTermObsolete() ) {
-        // writeError( "TERM IS OBSOLETE: " + ot.getLabel() + " " + ot.getUri() );
-        // }
-
-        return phenotypeToSearch;// /***testing...ot.getUri();
+        return phenotypeToSearch;
     }
 
     /**
      * File to valueObject conversion, populate the basics
-     * 
-     * @throws Exception
+     *
      */
     private void populateCommonFields( EvidenceValueObject evidence, String[] tokens ) throws IOException {
 
@@ -684,16 +673,16 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
             String description = evidence.getDescription();
 
-            if ( description.indexOf( "{" ) != -1 && description.indexOf( "}" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.6 ) );
-            } else if ( description.indexOf( "[" ) != -1 && description.indexOf( "]" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-            } else if ( description.indexOf( "{?" ) != -1 && description.indexOf( "}" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
-            } else if ( description.indexOf( "?" ) != -1 ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+            if ( description.contains( "{" ) && description.contains( "}" ) ) {
+                evidence.getScoreValueObject().setStrength( 0.6 );
+            } else if ( description.contains( "[" ) && description.contains( "]" ) ) {
+                evidence.getScoreValueObject().setStrength( 0.4 );
+            } else if ( description.contains( "{?" ) && description.contains( "}" ) ) {
+                evidence.getScoreValueObject().setStrength( 0.4 );
+            } else if ( description.contains( "?" ) ) {
+                evidence.getScoreValueObject().setStrength( 0.2 );
             } else {
-                evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
+                evidence.getScoreValueObject().setStrength( 0.8 );
             }
         }
 
@@ -705,31 +694,31 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
                 String evidenceCode = evidence.getEvidenceCode();
 
                 if ( evidenceCode.equalsIgnoreCase( "TAS" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.8 ) );
+                    evidence.getScoreValueObject().setStrength( 0.8 );
                 } else if ( evidenceCode.equalsIgnoreCase( "IEP" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.getScoreValueObject().setStrength( 0.4 );
                     evidence.setRelationship( "altered expression association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "IGI" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.getScoreValueObject().setStrength( 0.4 );
                 } else if ( evidenceCode.equalsIgnoreCase( "IED" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.getScoreValueObject().setStrength( 0.4 );
                 } else if ( evidenceCode.equalsIgnoreCase( "IAGP" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.getScoreValueObject().setStrength( 0.4 );
                     evidence.setRelationship( "genetic association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "QTM" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.4 ) );
+                    evidence.getScoreValueObject().setStrength( 0.4 );
                 } else if ( evidenceCode.equalsIgnoreCase( "IPM" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.getScoreValueObject().setStrength( 0.2 );
                     evidence.setRelationship( "genetic association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "IMP" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.getScoreValueObject().setStrength( 0.2 );
                     evidence.setRelationship( "mutation association" );
                 } else if ( evidenceCode.equalsIgnoreCase( "IDA" ) ) {
-                    evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                    evidence.getScoreValueObject().setStrength( 0.2 );
                 }
 
             } else if ( evidenceTaxon.equalsIgnoreCase( "rat" ) || evidenceTaxon.equalsIgnoreCase( "mouse" ) ) {
-                evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+                evidence.getScoreValueObject().setStrength( 0.2 );
             }
         }
         // for SFARI it is set into an other program
@@ -738,7 +727,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
             return;
         } else if ( externalDatabaseName.equalsIgnoreCase( "CTD" )
                 || externalDatabaseName.equalsIgnoreCase( "GWAS_Catalog" ) ) {
-            evidence.getScoreValueObject().setStrength( new Double( 0.2 ) );
+            evidence.getScoreValueObject().setStrength( 0.2 );
         } else if ( externalDatabaseName.equalsIgnoreCase( "MK4MDD" )
                 || externalDatabaseName.equalsIgnoreCase( "BDgene" ) || externalDatabaseName.equalsIgnoreCase( "DGA" ) ) {
             return;
@@ -754,14 +743,14 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
     // Change a set of phenotype to a set of CharacteristicValueObject
     private SortedSet<CharacteristicValueObject> toValuesUri( Set<String> phenotypes ) throws IOException {
 
-        SortedSet<CharacteristicValueObject> characteristicPhenotypes = new TreeSet<CharacteristicValueObject>();
+        SortedSet<CharacteristicValueObject> characteristicPhenotypes = new TreeSet<>();
 
         for ( String phenotype : phenotypes ) {
 
             String valueUri = phenotype2Ontology( phenotype );
 
             if ( valueUri != null ) {
-                CharacteristicValueObject c = new CharacteristicValueObject( valueUri );
+                CharacteristicValueObject c = new CharacteristicValueObject( -1L, valueUri );
                 characteristicPhenotypes.add( c );
             }
         }
@@ -869,9 +858,7 @@ public class EvidenceImporterCLI extends EvidenceImporterAbstractCLI {
 
     /**
      * check that all gene exists in Gemma
-     * 
-     * @throws IOException
-     * @throws Exception
+     *
      */
     private Gene verifyGeneIdExist( String geneId, String geneName ) throws IOException {
 

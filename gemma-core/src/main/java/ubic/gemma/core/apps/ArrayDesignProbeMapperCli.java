@@ -5,7 +5,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.core.analysis.sequence.ProbeMapperConfig;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
@@ -221,7 +221,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         }
                         arrayDesignProbeMapperService
                                 .processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
-                        audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEventImpl() );
+                        audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEvent() );
                     } catch ( IOException e ) {
                         return e;
                     }
@@ -236,13 +236,13 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     if ( useDB ) {
 
                         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
-                            audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEventImpl() );
+                            audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEvent() );
                         } else if ( this.hasOption( CONFIG_OPTION ) ) {
                             audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
-                                    new AlignmentBasedGeneMappingEventImpl() );
+                                    new AlignmentBasedGeneMappingEvent() );
                         } else {
                             audit( arrayDesign, "Run with default parameters",
-                                    new AlignmentBasedGeneMappingEventImpl() );
+                                    new AlignmentBasedGeneMappingEvent() );
                         }
                     }
                 }
@@ -278,7 +278,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return true;
         }
 
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
 
         /*
          * Do not run this on "Generic" platforms or those which are loaded using a direct annotation input file!
@@ -453,7 +453,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     private void audit( ArrayDesign arrayDesign, String note, ArrayDesignGeneMappingEvent eventType ) {
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 
@@ -629,11 +629,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         log.info( "============== Start processing: " + design + " ==================" );
         try {
-            design = arrayDesignService.thaw( design );
+            arrayDesignService.thaw( design );
 
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
             successObjects.add( design.getName() );
-            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEventImpl();
+            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEvent();
             audit( design, "Part of a batch job", eventType );
 
         } catch ( Exception e ) {
@@ -645,7 +645,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
-        arrayDesign = arrayDesignService.thawLite( arrayDesign );
+        arrayDesignService.thawLite( arrayDesign );
         CompositeSequenceService compositeSequenceService = this.getBean( CompositeSequenceService.class );
 
         for ( String probeName : this.probeNames ) {
@@ -656,7 +656,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 continue;
             }
 
-            probe = compositeSequenceService.thaw( probe );
+            compositeSequenceService.thaw( probe );
 
             Map<String, Collection<BlatAssociation>> results = this.arrayDesignProbeMapperService
                     .processCompositeSequence( this.config, taxon, null, probe );

@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class ManualAnnotationEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEventImpl {
+public class ManualAnnotationEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationEvent {
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent}.
@@ -33,7 +33,7 @@ public abstract class ManualAnnotationEvent extends
          * .
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ManualAnnotationEvent();
         }
 
     }

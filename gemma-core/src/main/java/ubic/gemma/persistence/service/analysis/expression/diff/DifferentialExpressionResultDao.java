@@ -35,10 +35,9 @@ import ubic.gemma.persistence.service.BaseDao;
 /**
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult
  */
-@Repository
 public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExpressionAnalysisResult> {
 
-    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
+    Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold );
 
     /**
      * Find differential expression for a gene in given data sets, exceeding a given significance level (using the
@@ -49,7 +48,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param threshold
      * @return
      */
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
@@ -60,7 +59,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param threshold
      * @return
      */
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
+    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find(
             Collection<Long> experimentsAnalyzed, double threshold, Integer limit );
 
     /**
@@ -69,7 +68,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param gene
      * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
+    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene );
 
     /**
      * Returns a map of a collection of {@link DifferentialExpressionAnalysisResult}s keyed by {@link BioAssaySet}.
@@ -78,7 +77,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param experimentsAnalyzed
      * @return Map<ExpressionExperiment, Collection<DifferentialExpressionAnalysisResult>>
      */
-    public Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
+    Map<ExpressionExperimentValueObject, List<DifferentialExpressionValueObject>> find( Gene gene,
             Collection<Long> experimentsAnalyzed );
 
     /**
@@ -86,14 +85,14 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param geneIds
      * @return map of resultsetId to map of gene to DiffExprGeneSearchResult
      */
-    public Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
+    Map<Long, Map<Long, DiffExprGeneSearchResult>> findDiffExAnalysisResultIdsInResultSets(
             Collection<DiffExResultSetSummaryValueObject> resultSets, Collection<Long> geneIds );
 
-    public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
+    List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
             Collection<Long> arrayDesignIds, Integer limit );
 
-    public List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet,
-            Double threshold, Integer maxResultsToReturn, Integer minNumberOfResults );
+    List<DifferentialExpressionValueObject> findInResultSet( ExpressionAnalysisResultSet resultSet, Double threshold,
+            Integer maxResultsToReturn, Integer minNumberOfResults );
 
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
@@ -102,42 +101,42 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param threshold
      * @return
      */
-    public Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
+    Map<ExpressionAnalysisResultSet, List<DifferentialExpressionAnalysisResult>> findInResultSets(
             Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
 
     /**
      * @param rs
      * @return
      */
-    public DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
+    DifferentialExpressionAnalysis getAnalysis( ExpressionAnalysisResultSet rs );
 
     /**
      * 
      */
-    public Collection<ExperimentalFactor> getExperimentalFactors(
+    Collection<ExperimentalFactor> getExperimentalFactors(
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult );
 
     /**
      * 
      */
-    public Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
+    Map<DifferentialExpressionAnalysisResult, Collection<ExperimentalFactor>> getExperimentalFactors(
             Collection<DifferentialExpressionAnalysisResult> differentialExpressionAnalysisResults );
 
     /**
      * @param ids
      * @return
      */
-    public Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
+    Map<Long, ContrastsValueObject> loadContrastDetailsForResults( Collection<Long> ids );
 
     /**
      * @param results
      */
-    public void thaw( Collection<DifferentialExpressionAnalysisResult> results );
+    void thaw( Collection<DifferentialExpressionAnalysisResult> results );
 
     /**
      * @param result
      */
-    public void thaw( final DifferentialExpressionAnalysisResult result );
+    void thaw( final DifferentialExpressionAnalysisResult result );
 
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
@@ -154,6 +153,6 @@ public interface DifferentialExpressionResultDao extends BaseDao<DifferentialExp
      * @param resultSetId
      * @return
      */
-    public Histogram loadPvalueDistribution( Long resultSetId );
+    Histogram loadPvalueDistribution( Long resultSetId );
 
 }

@@ -18,7 +18,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
-import java.io.IOException;
 import java.util.Collection;
 
 /**
@@ -53,10 +52,9 @@ public interface DifferentialExpressionAnalyzerService {
 
     /**
      * Redo
-     * 
-     * @param experiment
-     * @param analysis to base new one on
-     * @param whether the results should be persisted
+     *
+     * @param copyMe analysis to base new one on
+     *               whether the results should be persisted
      */
     Collection<DifferentialExpressionAnalysis> redoAnalysis( ExpressionExperiment ee,
             DifferentialExpressionAnalysis copyMe, boolean persist );

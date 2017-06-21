@@ -18,15 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -39,26 +30,139 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
 import ubic.gemma.core.analysis.service.ExpressionDataFileService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.core.job.executor.webapp.TaskRunningService;
-import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.core.tasks.AbstractTask;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.util.Settings;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * For the download of data files from the browser. We can send the 'raw' data for any one quantitation type, with gene
  * annotations, OR the 'filtered masked' matrix for the expression experiment.
- * 
+ *
  * @author pavlidis
  * @version $Id$
  */
 @Controller
 public class ExpressionExperimentDataFetchController {
+
+    public static final String DATA_DIR =
+            Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles" + File.separatorChar;
+    @Autowired
+    private TaskRunningService taskRunningService;
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
+    @Autowired
+    private ExpressionDataFileService expressionDataFileService;
+    @Autowired
+    private QuantitationTypeService quantitationTypeService;
+
+    /**
+     * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
+     * DATA_DIR.
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
+
+        String file = request.getParameter( "file" );
+
+        if ( StringUtils.isBlank( file ) ) {
+            throw new IllegalArgumentException( "The file name cannot be blank" );
+        }
+
+        String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
+        File f = new File( fullFilePath );
+
+        if ( !f.canRead() ) {
+            throw new IOException( "Cannot read from " + fullFilePath );
+        }
+
+        // response.setContentType( "application/octet-stream" ); // see Bug4206
+        response.setContentLength( ( int ) f.length() );
+        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
+        FileInputStream in = new FileInputStream( f );
+        FileCopyUtils.copy( in, response.getOutputStream() );
+        response.flushBuffer();
+
+        try {
+            in.close();
+        } catch ( IOException e ) {
+
+        }
+
+    }
+
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited co-expression data
+     * file
+     *
+     * @param eeId
+     * @return
+     */
+    public String getCoExpressionDataFile( Long eeId ) {
+        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
+        tc.setExpressionExperimentId( eeId );
+        CoExpressionDataWriterJob job = new CoExpressionDataWriterJob( tc );
+        return taskRunningService.submitLocalTask( job );
+    }
+
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design
+     * data file
+     *
+     * @param command
+     * @return
+     * @throws InterruptedException
+     */
+    public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
+        DataWriterJob job = new DataWriterJob( command );
+        return taskRunningService.submitLocalTask( job );
+    }
+
+    /**
+     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential
+     * expression data file
+     *
+     * @param analysisId
+     * @return
+     */
+    public String getDiffExpressionDataFile( Long analysisId ) {
+        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
+        tc.setAnalysisId( analysisId );
+        DiffExpressionDataWriterTask job = new DiffExpressionDataWriterTask( tc );
+        return taskRunningService.submitLocalTask( job );
+    }
+
+    /**
+     * @param filename
+     * @return
+     */
+    public File getOutputFile( String filename ) {
+        String fullFilePath = DATA_DIR + filename;
+        File f = new File( fullFilePath );
+        File parentDir = f.getParentFile();
+        if ( !parentDir.exists() )
+            parentDir.mkdirs();
+        return f;
+    }
+
+    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
+        this.quantitationTypeService = quantitationTypeService;
+    }
 
     class CoExpressionDataWriterJob extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
 
@@ -166,7 +270,7 @@ public class ExpressionExperimentDataFetchController {
                         "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
             }
 
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
 
             File f = null;
 
@@ -201,7 +305,8 @@ public class ExpressionExperimentDataFetchController {
                 }
             }
 
-            if ( f == null ) throw new IllegalStateException( "No file was obtained" );
+            if ( f == null )
+                throw new IllegalStateException( "No file was obtained" );
 
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
@@ -215,6 +320,8 @@ public class ExpressionExperimentDataFetchController {
         }
 
     }
+
+    // ========================================================
 
     // ==========================================================
     class DiffExpressionDataWriterTask extends AbstractTask<TaskResult, ExpressionExperimentDataFetchCommand> {
@@ -276,115 +383,6 @@ public class ExpressionExperimentDataFetchController {
 
         }
 
-    }
-
-    public static final String DATA_DIR = Settings.getString( "gemma.appdata.home" ) + File.separatorChar + "dataFiles"
-            + File.separatorChar;
-
-    @Autowired
-    private TaskRunningService taskRunningService;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private ExpressionDataFileService expressionDataFileService;
-    @Autowired
-    private QuantitationTypeService quantitationTypeService;
-
-    /**
-     * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the
-     * DATA_DIR.
-     * 
-     * @param file
-     * @return
-     */
-    @RequestMapping(value = "/getData.html", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public void downloadFile( HttpServletRequest request, HttpServletResponse response ) throws IOException {
-
-        String file = request.getParameter( "file" );
-
-        if ( StringUtils.isBlank( file ) ) {
-            throw new IllegalArgumentException( "The file name cannot be blank" );
-        }
-
-        String fullFilePath = ExpressionDataFileService.DATA_DIR + file;
-        File f = new File( fullFilePath );
-
-        if ( !f.canRead() ) {
-            throw new IOException( "Cannot read from " + fullFilePath );
-        }
-
-        // response.setContentType( "application/octet-stream" ); // see Bug4206
-        response.setContentLength( ( int ) f.length() );
-        response.addHeader( "Content-disposition", "attachment; filename=\"" + f.getName() + "\"" );
-        FileInputStream in = new FileInputStream( f );
-        FileCopyUtils.copy( in, response.getOutputStream() );
-        response.flushBuffer();
-
-        try {
-            in.close();
-        } catch ( IOException e ) {
-
-        }
-
-    }
-
-    /**
-     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited co-expression data
-     * file
-     * 
-     * @param eeId
-     * @return
-     */
-    public String getCoExpressionDataFile( Long eeId ) {
-        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
-        tc.setExpressionExperimentId( eeId );
-        CoExpressionDataWriterJob job = new CoExpressionDataWriterJob( tc );
-        return taskRunningService.submitLocalTask( job );
-    }
-
-    /**
-     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited experiment design
-     * data file
-     * 
-     * @param command
-     * @return
-     * @throws InterruptedException
-     */
-    public String getDataFile( ExpressionExperimentDataFetchCommand command ) throws InterruptedException {
-        DataWriterJob job = new DataWriterJob( command );
-        return taskRunningService.submitLocalTask( job );
-    }
-
-    /**
-     * AJAX Method - kicks off a job to start generating (if need be) the text based tab delimited differential
-     * expression data file
-     * 
-     * @param analysisId
-     * @return
-     */
-    public String getDiffExpressionDataFile( Long analysisId ) {
-        ExpressionExperimentDataFetchCommand tc = new ExpressionExperimentDataFetchCommand();
-        tc.setAnalysisId( analysisId );
-        DiffExpressionDataWriterTask job = new DiffExpressionDataWriterTask( tc );
-        return taskRunningService.submitLocalTask( job );
-    }
-
-    /**
-     * @param filename
-     * @return
-     */
-    public File getOutputFile( String filename ) {
-        String fullFilePath = DATA_DIR + filename;
-        File f = new File( fullFilePath );
-        File parentDir = f.getParentFile();
-        if ( !parentDir.exists() ) parentDir.mkdirs();
-        return f;
-    }
-
-    // ========================================================
-
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
     }
 
 }

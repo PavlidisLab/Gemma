@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -55,8 +55,8 @@ import ubic.gemma.model.genome.Taxon;
 /**
  * Generates textual views of the database so other people can use the data.
  * <p>
- * Development of this was started due to the collaboration with NIF. See {@link http
- * ://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1747}
+ * Development of this was started due to the collaboration with NIF. See <a href=" http
+ * ://www.chibi.ubc.ca/faculty/pavlidis/bugs/show_bug.cgi?id=1747">bug 1747</a>
  * <p>
  * It is essential that these views be created by a principal with Anonymous status, so as not to create views of
  * private data (that could be done, but would be separate).
@@ -146,7 +146,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
              */
             int i = 0;
             for ( ExpressionExperiment vo : vos ) {
-                vo = expressionExperimentService.thawLite( vo );
+                expressionExperimentService.thawLite( vo );
                 log.info( "Processing: " + vo.getShortName() );
 
                 String acc = "";
@@ -174,7 +174,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
                 for ( ArrayDesign ad : ads ) {
-                    ad = arrayDesignService.thawLite( ad );
+                    arrayDesignService.thawLite( ad );
                     if ( ad.getDesignProvider() == null ) {
                         log.debug( "Array Design: " + ad.getShortName()
                                 + " has no design provoider assoicated with it. Skipping" );
@@ -219,7 +219,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             writer.write( "GemmaDsId\tTerm\tTermURI\n" );
             int i = 0;
             for ( ExpressionExperiment vo : vos ) {
-                vo = expressionExperimentService.thawLite( vo );
+                expressionExperimentService.thawLite( vo );
 
                 log.info( "Processing: " + vo.getShortName() );
 
@@ -285,7 +285,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                     "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
             int i = 0;
             for ( ExpressionExperiment ee : experiments ) {
-                ee = expressionExperimentService.thawLite( ee );
+                expressionExperimentService.thawLite( ee );
 
                 Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService
                         .getAnalyses( ee );
@@ -304,7 +304,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 for ( DifferentialExpressionAnalysis analysis : results ) {
 
-                    analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
+                    this.differentialExpressionAnalysisService.thawFully( analysis );
 
                     for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 

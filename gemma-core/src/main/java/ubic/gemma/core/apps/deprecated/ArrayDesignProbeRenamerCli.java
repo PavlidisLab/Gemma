@@ -18,13 +18,7 @@
  */
 package ubic.gemma.core.apps.deprecated;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.core.apps.ArrayDesignSequenceManipulatingCli;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.loader.expression.arrayDesign.ArrayDesignProbeRenamingService;
@@ -32,14 +26,20 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenami
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * Put new names on probes. This is needed in some cases where probes were given generic names that weren't helpful for
  * matching them to sequences.
- * 
+ *
  * @author pavlidis
- * @version $Id$
  */
 public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingCli {
+
+    private String fileName;
 
     public static void main( String[] args ) {
         ArrayDesignProbeRenamerCli a = new ArrayDesignProbeRenamerCli();
@@ -58,22 +58,15 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         return CommandGroup.PLATFORM;
     }
 
-    private String fileName;
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "probeRename";
     }
 
-    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
+        //noinspection AccessStaticViaInstance
         addOption( OptionBuilder.isRequired().hasArg().withArgName( "file" )
                 .withDescription( "Two-column file with old and new identifiers (additional columns ignored)" )
                 .create( 'f' ) );
@@ -104,7 +97,7 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
         if ( !file.canRead() ) {
             return new IOException( "Cannot read from " + fileName );
         }
-        try (InputStream newIdFile = new FileInputStream( file );) {
+        try (InputStream newIdFile = new FileInputStream( file )) {
 
             arrayDesignProbeRenamingService.reName( arrayDesign, newIdFile );
             newIdFile.close();
@@ -119,16 +112,11 @@ public class ArrayDesignProbeRenamerCli extends ArrayDesignSequenceManipulatingC
     @Override
     protected void processOptions() {
         super.processOptions();
-
         this.fileName = getOptionValue( 'f' );
-
     }
 
-    /**
-     * @param arrayDesign
-     */
     private void audit( ArrayDesign arrayDesign, String note ) {
-        super.arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
+        super.arrayDesignReportService.generateArrayDesignReport( arrayDesign );
         AuditEventType eventType = ArrayDesignProbeRenamingEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }

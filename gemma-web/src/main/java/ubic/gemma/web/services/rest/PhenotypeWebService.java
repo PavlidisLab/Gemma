@@ -33,6 +33,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.core.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.EvidenceFilter;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DumpsValueObject;
@@ -76,7 +77,7 @@ public class PhenotypeWebService {
     @GET
     @Path("/find-evidence-by-external-database")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject> findEvidenceByExternalDatabase(
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidenceByExternalDatabase(
             @QueryParam("externalDatabaseName") String externalDatabaseName,
             @QueryParam("limit") Integer limit ) {
         return this.phenotypeAssociationManagerService.loadEvidenceWithExternalDatabaseName( externalDatabaseName,
@@ -93,7 +94,7 @@ public class PhenotypeWebService {
     @GET
     @Path("/find-evidence")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject> findEvidence( @QueryParam("taxonId") Long taxonId,
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> findEvidence( @QueryParam("taxonId") Long taxonId,
             @QueryParam("showOnlyEditable") boolean showOnlyEditable, @QueryParam("geneId") Long geneId,
             @QueryParam("phenotypeValueUris") List<String> phenotypeValueUris ) {
         return this.phenotypeAssociationManagerService.findEvidenceByGeneId( geneId, new HashSet<String>(

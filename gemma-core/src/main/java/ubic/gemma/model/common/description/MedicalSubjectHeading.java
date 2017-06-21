@@ -20,15 +20,18 @@ package ubic.gemma.model.common.description;
 
 import java.util.Collection;
 
-/**
- * 
- */
-public abstract class MedicalSubjectHeading extends BibRefAnnotationImpl {
+public class MedicalSubjectHeading extends BibRefAnnotationImpl {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 7820807342851172028L;
+    private Collection<MedicalSubjectHeading> qualifiers = new java.util.HashSet<>();
+
+    public Collection<MedicalSubjectHeading> getQualifiers() {
+        return this.qualifiers;
+    }
+
+    public void setQualifiers( Collection<MedicalSubjectHeading> qualifiers ) {
+        this.qualifiers = qualifiers;
+    }
 
     /**
      * Constructs new instances of {@link MedicalSubjectHeading}.
@@ -38,23 +41,9 @@ public abstract class MedicalSubjectHeading extends BibRefAnnotationImpl {
          * Constructs a new instance of {@link MedicalSubjectHeading}.
          */
         public static MedicalSubjectHeading newInstance() {
-            return new MedicalSubjectHeadingImpl();
+            return new MedicalSubjectHeading();
         }
 
-    }
- 
-    private Collection<MedicalSubjectHeading> qualifiers = new java.util.HashSet<>();
-
-     
-    /**
-     * 
-     */
-    public Collection<MedicalSubjectHeading> getQualifiers() {
-        return this.qualifiers;
-    }
-
-    public void setQualifiers( Collection<MedicalSubjectHeading> qualifiers ) {
-        this.qualifiers = qualifiers;
     }
 
 }

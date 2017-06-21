@@ -28,7 +28,7 @@
       <component name="primaryPublication" ref-alias="primaryPublication" />
       <component name="otherRelevantPublications" ref-alias="otherRelevantPublications" />
    </class>
-   <class name="expression.bioAssay.BioAssayImpl" alias="bioAssay" root="false">
+   <class name="expression.bioAssay.BioAssay" alias="bioAssay" root="false">
       <id name="id" />
       <property name="name">
          <meta-data>name</meta-data>
@@ -38,11 +38,11 @@
          <meta-data>bioassay description</meta-data>
       </property>
    </class>
-   <class name="expression.experiment.ExperimentalDesignImpl" alias="experimentalDesign" root="false">
+   <class name="expression.experiment.ExperimentalDesign" alias="experimentalDesign" root="false">
       <id name="id" />
       <component name="experimentalFactors" ref-alias="experimentalFactor" />
    </class>
-   <class name="expression.experiment.ExperimentalFactorImpl" alias="experimentalFactor" root="false">
+   <class name="expression.experiment.ExperimentalFactor" alias="experimentalFactor" root="false">
       <id name="id" />
       <property name="name">
          <meta-data>name</meta-data>
@@ -52,7 +52,7 @@
          <meta-data>experimentalFactor description</meta-data>
       </property>
    </class>
-   <class name="common.description.BibliographicReferenceImpl" alias="primaryPublication" root="false">
+   <class name="common.description.BibliographicReference" alias="primaryPublication" root="false">
       <id name="id" />
       <property name="authorList">
          <meta-data>author List</meta-data>
@@ -67,7 +67,7 @@
          <meta-data>abstract</meta-data>
       </property>
    </class>
-   <class name="common.description.BibliographicReferenceImpl" alias="otherRelevantPublications" root="false">
+   <class name="common.description.BibliographicReference" alias="otherRelevantPublications" root="false">
       <id name="id" />
       <property name="authorList">
          <meta-data>author List</meta-data>

@@ -311,7 +311,7 @@ public class BioAssayServiceImpl implements BioAssayService {
         this.update( bioAssayTemp );
 
         // Check to see if the bioMaterial is now orphaned.
-        // If it is, delete it; if not, update it.
+        // If it is, remove it; if not, update it.
         if ( currentBioAssays.size() == 0 ) {
             this.getBioMaterialDao().remove( biomaterialToBeRemoved );
         }

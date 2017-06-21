@@ -62,7 +62,7 @@ public class CompassUtils {
         //
         // for ( File file : lockFiles ) {
         // log.debug( "Removing Lucene lock file " + file );
-        // file.delete();
+        // file.remove();
         // }
     }
 

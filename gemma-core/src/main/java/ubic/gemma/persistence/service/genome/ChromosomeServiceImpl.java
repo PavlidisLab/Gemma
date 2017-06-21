@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2010 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,33 +18,44 @@
  */
 package ubic.gemma.persistence.service.genome;
 
-import java.util.Collection;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.AbstractService;
+
+import java.util.Collection;
 
 /**
+ * <p>
+ * Spring Service base class for <code>ChromosomeService</code>, provides access to all services
+ * and entities referenced by this service.
+ * </p>
+ *
  * @see ChromosomeService
- * @version $Id$
  */
 @Service
-public class ChromosomeServiceImpl extends ChromosomeServiceBase {
+public class ChromosomeServiceImpl extends AbstractService<Chromosome> implements ChromosomeService {
 
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<Chromosome> find( String name, Taxon taxon ) {
-        return this.getChromosomeDao().find( name, taxon );
+    private final ChromosomeDao chromosomeDao;
+
+    @Autowired
+    public ChromosomeServiceImpl( ChromosomeDao chromosomeDao ) {
+        super(chromosomeDao);
+        this.chromosomeDao = chromosomeDao;
     }
 
-    /**
-     * @see ChromosomeService#findOrCreate(ubic.gemma.model.genome.Chromosome)
-     */
     @Override
-    protected ubic.gemma.model.genome.Chromosome handleFindOrCreate( String name, Taxon taxon ) {
-        return this.getChromosomeDao().findOrCreate( name, taxon );
+    @Transactional
+    public Collection<Chromosome> find( String name, Taxon taxon ) {
+        return this.chromosomeDao.find( name, taxon );
+    }
 
+    @Override
+    @Transactional
+    public ubic.gemma.model.genome.Chromosome findOrCreate( String name, Taxon taxon ) {
+        return this.chromosomeDao.findOrCreate( name, taxon );
     }
 
 }

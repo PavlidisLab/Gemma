@@ -8,55 +8,44 @@
  */
 package ubic.gemma.persistence.service.genome.sequenceAnalysis;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
-
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseService;
+
+import java.util.Collection;
 
 /**
  * @author paul
- * @version $Id$
  */
-public interface AnnotationAssociationService {
+public interface AnnotationAssociationService extends BaseService<AnnotationAssociation> {
 
-    @Secured( { "GROUP_USER" })
-    public AnnotationAssociation create( AnnotationAssociation annotationAssociation );
+    @Secured({ "GROUP_USER" })
+    AnnotationAssociation create( AnnotationAssociation annotationAssociation );
 
-    @Secured( { "GROUP_USER" })
-    public Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection );
+    @Secured({ "GROUP_USER" })
+    Collection<AnnotationAssociation> create( Collection<AnnotationAssociation> anCollection );
 
-    public Collection<AnnotationAssociation> find( BioSequence bioSequence );
+    Collection<AnnotationAssociation> find( BioSequence bioSequence );
 
-    public Collection<AnnotationAssociation> find( Gene gene );
+    Collection<AnnotationAssociation> find( Gene gene );
 
-    public Collection<AnnotationAssociation> load( Collection<Long> id );
+    @Secured({ "GROUP_USER" })
+    void remove( AnnotationAssociation annotationAssociation );
 
-    public AnnotationAssociation load( Long id );
+    @Secured({ "GROUP_USER" })
+    void remove( Collection<AnnotationAssociation> anCollection );
 
-    @Secured( { "GROUP_USER" })
-    public void remove( AnnotationAssociation annotationAssociation );
+    void thaw( Collection<AnnotationAssociation> anCollection );
 
-    @Secured( { "GROUP_USER" })
-    public void remove( Collection<AnnotationAssociation> anCollection );
+    @Secured({ "GROUP_USER" })
+    void update( AnnotationAssociation annotationAssociation );
 
-    public void thaw( AnnotationAssociation annotationAssociation );
+    @Secured({ "GROUP_USER" })
+    void update( Collection<AnnotationAssociation> anCollection );
 
-    public void thaw( Collection<AnnotationAssociation> anCollection );
-
-    @Secured( { "GROUP_USER" })
-    public void update( AnnotationAssociation annotationAssociation );
-
-    @Secured( { "GROUP_USER" })
-    public void update( Collection<AnnotationAssociation> anCollection );
-
-    /**
-     * Remove root terms, like "molecular_function", "biological_process" and "cellular_component"
-     * 
-     * @param associations
-     */
     Collection<AnnotationValueObject> removeRootTerms( Collection<AnnotationValueObject> associations );
 }

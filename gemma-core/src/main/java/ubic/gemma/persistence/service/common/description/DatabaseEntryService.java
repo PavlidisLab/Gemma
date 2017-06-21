@@ -20,33 +20,20 @@ package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface DatabaseEntryService {
+public interface DatabaseEntryService extends BaseVoEnabledService<DatabaseEntry, DatabaseEntryValueObject> {
 
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+    DatabaseEntry load( String accession );
 
-    /**
-     * 
-     */
-    public DatabaseEntry find( DatabaseEntry databaseEntry );
-
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public void remove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    void remove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
 }

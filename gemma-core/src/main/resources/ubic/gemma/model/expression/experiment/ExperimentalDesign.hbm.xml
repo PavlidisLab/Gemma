@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" table="EXPERIMENTAL_DESIGN" dynamic-insert="false" dynamic-update="false">
+   <class name="ubic.gemma.model.expression.experiment.ExperimentalDesign" table="EXPERIMENTAL_DESIGN" dynamic-insert="false" dynamic-update="false">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -34,14 +34,14 @@
          <key foreign-key="EXPERIMENTAL_FACTOR_EXPERIMENTAL_DESIGN_FKC">
             <column name="EXPERIMENTAL_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.experiment.ExperimentalFactor"/>
       </set>
       <set name="types"  lazy="false" fetch="select" inverse="false" cascade="all">
          <cache usage="read-write" />
          <key foreign-key="CHARACTERISTIC_EXPERIMENTAL_DESIGN_FKC">
             <column name="EXPERIMENTAL_DESIGN_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
    </class>
 </hibernate-mapping>

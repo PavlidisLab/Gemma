@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
@@ -179,13 +179,11 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
     }
 
     /**
-     * @param ee
      * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
-     * @return
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         if ( ee.getAccession() == null ) {
             // in fact, currently it has to be from GEO.
@@ -224,7 +222,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private boolean needToRun( ExpressionExperiment ee ) {
 
-        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee.getId() );
+        ExpressionExperimentValueObject eevo = expressionExperimentService.loadValueObject( ee );
 
         assert eevo != null;
 

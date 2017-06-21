@@ -18,17 +18,6 @@
  */
 package ubic.gemma.web.controller.expression.designElement;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -36,38 +25,37 @@ import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
-
 import ubic.gemma.core.analysis.sequence.ArrayDesignMapResultService;
 import ubic.gemma.core.analysis.sequence.CompositeSequenceMapValueObject;
 import ubic.gemma.core.analysis.sequence.GeneMappingSummary;
 import ubic.gemma.core.analysis.sequence.ProbeMapUtils;
 import ubic.gemma.core.genome.gene.service.GeneService;
+import ubic.gemma.core.search.SearchResult;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
-import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.*;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
-import ubic.gemma.core.search.SearchResult;
-import ubic.gemma.core.search.SearchService;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.propertyeditor.SequenceTypePropertyEditor;
 import ubic.gemma.web.remote.EntityDelegator;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
+
 /**
  * @author joseph
  * @author paul
- * @version $Id$
  */
 @Controller
 @RequestMapping("/compositeSequence")
@@ -85,14 +73,9 @@ public class CompositeSequenceController extends BaseController {
     private SearchService searchService;
     @Autowired
     private BioSequenceService bioSequenceService;
+    @Autowired
+    private GeneService geneService;
 
-    /**
-     * Search for probes.
-     * 
-     * @param request
-     * @param response
-     * @return
-     */
     @RequestMapping("/filter")
     public ModelAndView filter( HttpServletRequest request, HttpServletResponse response ) {
         String filter = request.getParameter( "filter" );
@@ -124,9 +107,7 @@ public class CompositeSequenceController extends BaseController {
     /**
      * Exposed for AJAX calls (Probe browser) FIXME can probably remove soon since we should use getGeneCsSummaries?
      * Might be another use for this
-     * 
-     * @param ids
-     * @return
+     *
      */
     public Collection<CompositeSequenceMapValueObject> getCsSummaries( Collection<Long> ids ) {
 
@@ -134,16 +115,14 @@ public class CompositeSequenceController extends BaseController {
             return new HashSet<>();
         }
 
-        Collection<CompositeSequence> compositeSequences = compositeSequenceService.loadMultiple( ids );
+        Collection<CompositeSequence> compositeSequences = compositeSequenceService.load( ids );
         Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 
     /**
      * Exposed for AJAX calls (Elements tab on gene details page)
-     * 
-     * @param geneId
-     * @return
+     *
      */
     public Collection<CompositeSequenceMapValueObject> getGeneCsSummaries( Long geneId ) {
 
@@ -161,14 +140,9 @@ public class CompositeSequenceController extends BaseController {
         return arrayDesignMapResultService.getSummaryMapValueObjects( rawSummaries );
     }
 
-    @Autowired
-    private GeneService geneService;
-
     /**
      * Exposed for AJAX calls.
-     * 
-     * @param csd
-     * @return
+     *
      */
     public Collection<GeneMappingSummary> getGeneMappingSummary( EntityDelegator csd ) {
         log.debug( "Started proccessing AJAX call: getGeneMappingSummary" );
@@ -187,11 +161,7 @@ public class CompositeSequenceController extends BaseController {
         binder.registerCustomEditor( SequenceType.class, new SequenceTypePropertyEditor() );
     }
 
-    /**
-     * @param searchString
-     * @param arrayDesign
-     * @return
-     */
+
     public Collection<CompositeSequenceMapValueObject> search( String searchString, String arrayDesignId ) {
 
         if ( StringUtils.isBlank( searchString ) ) {
@@ -204,8 +174,8 @@ public class CompositeSequenceController extends BaseController {
          */
         ArrayDesign arrayDesign = loadArrayDesign( arrayDesignId );
 
-        Map<Class<?>, List<SearchResult>> search = searchService.search( SearchSettingsImpl.compositeSequenceSearch(
-                searchString, arrayDesign ) );
+        Map<Class<?>, List<SearchResult>> search = searchService
+                .search( SearchSettingsImpl.compositeSequenceSearch( searchString, arrayDesign ) );
 
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
         if ( search.containsKey( CompositeSequence.class ) ) {
@@ -223,11 +193,7 @@ public class CompositeSequenceController extends BaseController {
         return getSummaries( css );
     }
 
-    /**
-     * @param request
-     * @param response
-     * @return ModelAndView
-     */
+
     @RequestMapping(value = "/show")
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
         Long id = Long.parseLong( request.getParameter( "id" ) );
@@ -246,38 +212,34 @@ public class CompositeSequenceController extends BaseController {
 
     /**
      * Note that duplicate hits will be ignored here. See bug 4037.
-     * 
-     * @param cs
-     * @param blatResults
      */
     private void addBlatResultsLackingGenes( CompositeSequence cs, Map<Integer, GeneMappingSummary> blatResults ) {
         /*
          * Pick up blat results that didn't map to genes.
          */
-        BioSequence biologicalCharacteristic = bioSequenceService.thaw( cs.getBiologicalCharacteristic() );
+        BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
+        bioSequenceService.thaw( biologicalCharacteristic );
 
-        Collection<BlatResultValueObject> allBlatResultsForCs = BlatResultValueObject
-                .convert2ValueObjects( blatResultService.thaw( blatResultService
-                        .findByBioSequence( biologicalCharacteristic ) ) );
+        Collection<BlatResult> brs = blatResultService.findByBioSequence( biologicalCharacteristic );
+        blatResultService.thaw( brs );
+        Collection<BlatResultValueObject> allBlatResultsForCs = blatResultService.loadValueObjects( brs );
+
         for ( BlatResultValueObject blatResult : allBlatResultsForCs ) {
             if ( !blatResults.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.setBlatResult( blatResult );
-                summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
+                summary.setCompositeSequence( compositeSequenceService.loadValueObject( cs ) );
                 // no gene...
                 blatResults.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
             }
         }
     }
 
-    /**
-     * @param cs
-     * @return
-     */
+
     private Collection<GeneMappingSummary> getGeneMappingSummary( CompositeSequence cs ) {
         BioSequence biologicalCharacteristic = cs.getBiologicalCharacteristic();
 
-        biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
+        bioSequenceService.thaw( biologicalCharacteristic );
 
         Map<Integer, GeneMappingSummary> results = new HashMap<>();
         if ( biologicalCharacteristic == null || biologicalCharacteristic.getBioSequence2GeneProduct() == null ) {
@@ -293,32 +255,33 @@ public class CompositeSequenceController extends BaseController {
 
             assert gene != null;
 
-            BlatResultValueObject blatResult = null;
+            BlatResultValueObject blatResultVO = null;
 
             if ( ( bs2gp instanceof BlatAssociation ) ) {
                 BlatAssociation blatAssociation = ( BlatAssociation ) bs2gp;
-                blatResult = new BlatResultValueObject( blatResultService.thaw( blatAssociation.getBlatResult() ) );
+                BlatResult blatResult = blatAssociation.getBlatResult();
+                blatResultService.thaw( blatResult );
+                blatResultVO = new BlatResultValueObject( blatResult );
             } else if ( bs2gp instanceof AnnotationAssociation ) {
                 /*
                  * Make a dummy blat result
                  */
-                blatResult = new BlatResultValueObject();
-                blatResult.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
-                blatResult.setId( biologicalCharacteristic.getId() );
+                blatResultVO = new BlatResultValueObject(biologicalCharacteristic.getId());
+                blatResultVO.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
             }
 
-            if ( blatResult == null ) {
+            if ( blatResultVO == null ) {
                 continue;
             }
 
-            if ( results.containsKey( ProbeMapUtils.hashBlatResult( blatResult ) ) ) {
-                results.get( ProbeMapUtils.hashBlatResult( blatResult ) ).addGene( geneProduct, gene );
+            if ( results.containsKey( ProbeMapUtils.hashBlatResult( blatResultVO ) ) ) {
+                results.get( ProbeMapUtils.hashBlatResult( blatResultVO ) ).addGene( geneProduct, gene );
             } else {
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
-                summary.setBlatResult( blatResult );
-                summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
-                results.put( ProbeMapUtils.hashBlatResult( blatResult ), summary );
+                summary.setBlatResult( blatResultVO );
+                summary.setCompositeSequence( compositeSequenceService.loadValueObject( cs ) );
+                results.put( ProbeMapUtils.hashBlatResult( blatResultVO ), summary );
             }
 
         }
@@ -328,10 +291,9 @@ public class CompositeSequenceController extends BaseController {
         if ( results.size() == 0 ) {
             // add a 'dummy' that at least contains the information about the CS. This is a bit of a hack...
             GeneMappingSummary summary = new GeneMappingSummary();
-            summary.setCompositeSequence( compositeSequenceService.convertToValueObject( cs ) );
-            BlatResultValueObject newInstance = new BlatResultValueObject();
+            summary.setCompositeSequence( compositeSequenceService.loadValueObject( cs ) );
+            BlatResultValueObject newInstance = new BlatResultValueObject(-1L);
             newInstance.setQuerySequence( BioSequenceValueObject.fromEntity( biologicalCharacteristic ) );
-            newInstance.setId( -1L );
             summary.setBlatResult( newInstance );
             results.put( ProbeMapUtils.hashBlatResult( newInstance ), summary );
         }
@@ -339,11 +301,9 @@ public class CompositeSequenceController extends BaseController {
         return results.values();
     }
 
-    /**
-     * @param compositeSequences
-     * @return
-     */
-    private Collection<CompositeSequenceMapValueObject> getSummaries( Collection<CompositeSequence> compositeSequences ) {
+
+    private Collection<CompositeSequenceMapValueObject> getSummaries(
+            Collection<CompositeSequence> compositeSequences ) {
         Collection<CompositeSequenceMapValueObject> compositeSequenceSummary = new HashSet<CompositeSequenceMapValueObject>();
         if ( compositeSequences.size() > 0 ) {
             Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( compositeSequences, 0 );
@@ -352,10 +312,7 @@ public class CompositeSequenceController extends BaseController {
         return compositeSequenceSummary;
     }
 
-    /**
-     * @param arrayDesignId
-     * @return
-     */
+
     private ArrayDesign loadArrayDesign( String arrayDesignId ) {
         ArrayDesign arrayDesign = null;
         if ( arrayDesignId != null ) {

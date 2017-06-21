@@ -26,15 +26,10 @@ import ubic.gemma.model.common.description.DatabaseEntry;
  */
 public abstract class TfGeneAssociation extends Gene2GeneAssociation {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 8782500359591237278L;
-    final private DatabaseEntry databaseEntry = null;
 
-    /**
-     * 
-     */
+    private final DatabaseEntry databaseEntry = null;
+
     public DatabaseEntry getDatabaseEntry() {
         return this.databaseEntry;
     }

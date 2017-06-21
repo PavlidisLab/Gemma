@@ -19,21 +19,19 @@
 
 package ubic.gemma.model.expression.experiment;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.persistence.service.expression.biomaterial.BioMaterialService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.FactorValueService;
+
+import static org.junit.Assert.*;
 
 /**
  * @author paul
- * @version $Id$
  */
 public class FactorValueServiceTest extends BaseSpringContextTest {
 
@@ -51,7 +49,7 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues()
                 .iterator().next();
@@ -63,7 +61,7 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         // done with setup
 
@@ -78,7 +76,7 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
 
         Long id = fv.getId();
 
-        factorValueService.delete( fv );
+        factorValueService.remove( fv );
 
         assertNull( factorValueService.load( id ) );
 

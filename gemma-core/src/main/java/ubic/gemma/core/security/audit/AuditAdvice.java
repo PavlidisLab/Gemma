@@ -62,7 +62,7 @@ import java.util.NoSuchElementException;
 @Component
 public class AuditAdvice {
 
-    // Note that we have a special logger configured for this class, so delete events get stored.
+    // Note that we have a special logger configured for this class, so remove events get stored.
     private static final Logger log = LoggerFactory.getLogger( AuditAdvice.class.getName() );
 
     private boolean AUDIT_CREATE = true;

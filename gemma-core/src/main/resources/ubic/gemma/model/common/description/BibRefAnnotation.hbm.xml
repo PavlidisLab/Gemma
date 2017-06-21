@@ -18,16 +18,16 @@
       <property name="isMajorTopic" type="java.lang.Boolean">
          <column name="IS_MAJOR_TOPIC" not-null="false" unique="false" sql-type="TINYINT"/>
       </property>
-      <subclass name="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl" discriminator-value="MedicalSubjectHeadingImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+      <subclass name="ubic.gemma.model.common.description.MedicalSubjectHeading" discriminator-value="MedicalSubjectHeading" dynamic-insert="false" dynamic-update="false" abstract="false">
          <set name="qualifiers" lazy="false" fetch="select" inverse="false" cascade="all">
             <cache usage="read-write" />
             <key foreign-key="MEDICAL_SUBJECT_HEADING_QUALIFIES_FKC">
                <column name="QUALIFIES_FK" sql-type="BIGINT"/>
             </key>
-            <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeadingImpl"/>
+            <one-to-many class="ubic.gemma.model.common.description.MedicalSubjectHeading"/>
          </set>
       </subclass>
-      <subclass name="ubic.gemma.model.common.description.KeywordImpl" discriminator-value="KeywordImpl" dynamic-insert="false" dynamic-update="false" abstract="false">
+      <subclass name="ubic.gemma.model.common.description.Keyword" discriminator-value="Keyword" dynamic-insert="false" dynamic-update="false" abstract="false">
       </subclass>
    </class>
 </hibernate-mapping>

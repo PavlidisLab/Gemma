@@ -56,13 +56,12 @@ public interface AuditEventService {
 
     /**
      * Returns a collection of Auditable objects that were updated since the date entered.
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    /*
      * Note that this security setting works even though auditables aren't necessarily securable; non-securable
      * auditables will be returned. See AclEntryAfterInvocationCollectionFilteringProvider and
      * applicationContext-security.xml
-     */ java.util.Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    Collection<Auditable> getUpdatedSinceDate( java.util.Date date );
 
     boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 

@@ -42,14 +42,12 @@ public class ArrayDesignProbeMapperController {
 
     /**
      * AJAX entry point.
-     * 
-     * @return
-     * @throws Exception
+     *
      */
     public String run( Long id ) throws Exception {
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thaw( arrayDesign );
 
         ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();
         cmd.setArrayDesign( arrayDesign );

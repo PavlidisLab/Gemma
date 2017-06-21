@@ -51,41 +51,33 @@ import java.util.*;
  */
 @Repository
 public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociation> implements PhenotypeAssociationDao {
+    public static final int DEFAULT_PA_LIMIT = 10000;
     private static final String QUERY_EV_CODE = " and phen.EVIDENCE_CODE != 'IEA'";
     private static final String DISCRIMINATOR_CLAUSE =
-            "('ubic.gemma.model.association.phenotype.LiteratureEvidenceImpl',"
-                    + "'ubic.gemma.model.association.phenotype.GenericEvidenceImpl',"
-                    + "'ubic.gemma.model.association.phenotype.ExperimentalEvidenceImpl',"
+            "('ubic.gemma.model.association.phenotype.LiteratureEvidence',"
+                    + "'ubic.gemma.model.association.phenotype.GenericEvidence',"
+                    + "'ubic.gemma.model.association.phenotype.ExperimentalEvidence',"
                     + "'ubic.gemma.model.association.phenotype.DifferentialExpressionEvidenceImpl') ";
-
     private static final Log log = LogFactory.getLog( PhenotypeAssociationDaoImpl.class );
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     @Autowired
     public PhenotypeAssociationDaoImpl( SessionFactory sessionFactory ) {
-        super( PhenotypeAssociation.class );
-        super.setSessionFactory( sessionFactory );
+        super( PhenotypeAssociation.class, sessionFactory );
     }
 
-    private void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
-        if ( SecurityUtil.isUserAnonymous() ) {
-            return;
-        }
+    /* ********************************
+     * Public methods
+     * ********************************/
 
-        String userName = SecurityUtil.getCurrentUsername();
-
-        // if user is member of any groups.
-        if ( sqlQuery.contains( ":groups" ) ) {
-            //noinspection unchecked
-            Collection<String> groups = this.getSessionFactory().getCurrentSession().createQuery(
-                    "select ug.name from UserGroupImpl ug inner join ug.groupMembers memb where memb.userName = :user" )
-                    .setParameter( "user", userName ).list();
-            queryObject.setParameterList( "groups", groups );
-        }
-
-        if ( sqlQuery.contains( ":userName" ) ) {
-            queryObject.setParameter( "userName", userName );
-        }
-
+    @Override
+    public PhenotypeAssociation load( Long id ) {
+        return ( PhenotypeAssociation ) this.getSession()
+                .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" ).setParameter( "id", id )
+                .uniqueResult();
     }
 
     /**
@@ -97,7 +89,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return ( Long ) this.getHibernateTemplate()
                 .find( "select count (d) from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
-                        + "in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                        + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" ).iterator().next();
     }
 
@@ -112,12 +104,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         String queryString = "SELECT DISTINCT CATEGORY_URI, category FROM PHENOTYPE_ASSOCIATION "
                 + "JOIN INVESTIGATION ON PHENOTYPE_ASSOCIATION.EXPERIMENT_FK = INVESTIGATION.ID "
                 + "JOIN CHARACTERISTIC ON CHARACTERISTIC.INVESTIGATION_FK= INVESTIGATION.ID";
-        org.hibernate.SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( queryString );
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
         while ( results.next() ) {
 
-            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject();
+            CharacteristicValueObject characteristicValueObject = new CharacteristicValueObject( -1L );
             characteristicValueObject.setCategoryUri( ( String ) results.get( 0 ) );
             characteristicValueObject.setCategory( ( String ) results.get( 1 ) );
             mgedCategory.add( characteristicValueObject );
@@ -135,13 +127,13 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Set<String> owners = new HashSet<>();
 
-        // FIXME only shows owner who is a user, not a grantedauthority. That might be okay.
+        // FIXME only shows owner who is a user, not a granted authority. That might be okay.
         String sqlQuery =
                 "SELECT DISTINCT sid.PRINCIPAL FROM ACLOBJECTIDENTITY aoi JOIN ACLENTRY ace ON ace.OBJECTIDENTITY_FK = "
                         + "aoi.ID JOIN ACLSID sid ON sid.ID = aoi.OWNER_SID_FK WHERE aoi.OBJECT_CLASS " + "IN  "
                         + DISCRIMINATOR_CLAUSE;
 
-        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
 
@@ -160,18 +152,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findEvidencesWithExternalDatabaseName( String externalDatabaseName,
             Integer limit ) {
 
-        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
-
-        if ( limit != null ) {
-            tpl.setMaxResults( limit );
-        } else {
-            tpl.setMaxResults( 10000 );
-        }
         //noinspection unchecked
-        return tpl.findByNamedParam(
-                "select p from PhenotypeAssociation as p fetch all properties join p.evidenceSource es join es.externalDatabase ed where ed.name=:name",
-                "name", externalDatabaseName );
-
+        return this.getSession().createQuery( "select p from PhenotypeAssociation as p fetch all properties where "
+                + "p.evidenceSource.externalDatabase.name=:name" ).setParameter( "name", externalDatabaseName )
+                .setMaxResults( limit != null ? limit : DEFAULT_PA_LIMIT ).list();
     }
 
     /**
@@ -179,11 +163,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Collection<PhenotypeAssociation> findEvidencesWithoutExternalDatabaseName() {
-
         //noinspection unchecked
-        return this.getHibernateTemplate()
-                .find( "select p from PhenotypeAssociation as p fetch all properties where p.evidenceSource is null" );
-
+        return this.getSession().createQuery(
+                "select p from PhenotypeAssociation as p fetch all properties where p.evidenceSource is null" ).list();
     }
 
     /**
@@ -191,10 +173,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      */
     @Override
     public Collection<ExternalDatabase> findExternalDatabasesWithEvidence() {
-
         //noinspection unchecked
-        return ( Collection<ExternalDatabase> ) this.getHibernateTemplate()
-                .find( "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociation as p" );
+        return this.getSession()
+                .createQuery( "select distinct p.evidenceSource.externalDatabase from PhenotypeAssociation as p" )
+                .list();
     }
 
     @Override
@@ -210,7 +192,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         assert !uris.isEmpty();
 
-        Session sess = this.getSessionFactory().getCurrentSession();
+        Session sess = this.getSession();
 
         String q = "select distinct ph.gene, p.valueUri, p.evidenceCode "
                 + " from PhenotypeAssociation ph join ph.phenotypes p where p.valueUri in (:t)";
@@ -289,7 +271,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         sqlQuery += addExternalDatabaseQuery( externalDatabaseIds );
 
         // create query and set parameters.
-        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
         queryObject.setParameterList( "valueUris", phenotypeUris );
 
         if ( sqlQuery.contains( ":taxonId" ) ) {
@@ -327,7 +309,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         Collection<PhenotypeAssociation> evidenceWithSource;
 
         if ( externalDatabaseIds != null && !externalDatabaseIds.isEmpty() ) {
-            String ids = "";
+            StringBuilder ids = new StringBuilder();
 
             for ( Long id : externalDatabaseIds ) {
 
@@ -337,11 +319,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 } else {
                     // an External Database excluded
                     excludeExternalDatabase = true;
-                    ids = ids + id + ",";
+                    ids.append( id ).append( "," );
                 }
             }
 
-            ids = StringUtils.removeEnd( ids, "," );
+            ids = new StringBuilder( StringUtils.removeEnd( ids.toString(), "," ) );
 
             if ( !excludeManualCuration ) {
                 // get all manual curated evidence (the ones with no external source)
@@ -374,9 +356,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     public Collection<PhenotypeAssociation> findPhenotypeAssociationForGeneNCBI( Integer geneNCBI ) {
 
         //noinspection unchecked
-        return this.getHibernateTemplate().findByNamedParam(
-                "select p from PhenotypeAssociation as p fetch all properties join p.gene as g "
-                        + "where g.ncbiGeneId=:n", new String[] { "n" }, new Object[] { geneNCBI } );
+        return this.getSession().createQuery(
+                "select p from PhenotypeAssociation as p fetch all properties " + "where p.gene.ncbiGeneId=:n" )
+                .setParameter( "n", geneNCBI ).list();
 
     }
 
@@ -388,11 +370,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             Set<String> phenotype ) {
 
         //noinspection unchecked
-        return ( Collection<PhenotypeAssociation> ) this.getHibernateTemplate().findByNamedParam(
-                "select p from PhenotypeAssociation as p fetch all properties join p.phenotypes as phe join p.gene as g "
-                        + "where phe.valueUri in (:p) and g.ncbiGeneId=:n", new String[] { "p", "n" },
-                new Object[] { phenotype, geneNCBI } );
-
+        return this.getSession().createQuery(
+                "select p from PhenotypeAssociation as p join p.phenotypes as phe join p.gene as g "
+                        + "where phe.valueUri in (:p) and g.ncbiGeneId=:n " ).setParameterList( "p", phenotype )
+                .setParameter( "n", geneNCBI ).list();
     }
 
     /**
@@ -405,12 +386,10 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             return new HashSet<>();
         }
 
-        Session s = this.getSessionFactory().getCurrentSession();
-        Query q = s.createQuery( "select p from PhenotypeAssociation p fetch all properties where p.id in (:paIds) " );
-        q.setParameterList( "paIds", paIds );
-
         //noinspection unchecked
-        return q.list();
+        return this.getSession()
+                .createQuery( "select p from PhenotypeAssociation p fetch all properties where p.id in (:paIds) " )
+                .setParameterList( "paIds", paIds ).list();
     }
 
     /**
@@ -460,7 +439,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         sqlQuery += orderBy + limitAbs;
 
-        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
 
         if ( taxonId != null ) {
             queryObject.setParameter( "taxonId", taxonId );
@@ -513,7 +492,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += QUERY_EV_CODE;
         }
 
-        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
 
         if ( sqlQuery.contains( ":valueUris" ) ) {
             queryObject.setParameterList( "valueUris", valuesUri );
@@ -561,7 +540,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             sqlQuery += ") ";
         }
 
-        SQLQuery queryObject = this.getSessionFactory().getCurrentSession().createSQLQuery( sqlQuery );
+        SQLQuery queryObject = this.getSession().createSQLQuery( sqlQuery );
 
         if ( sqlQuery.contains( ":valueUris" ) ) {
             queryObject.setParameterList( "valueUris", valuesUri );
@@ -574,23 +553,6 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         addUserAndGroupParameters( sqlQuery, queryObject );
         return populateGenesAssociations( queryObject );
 
-    }
-
-    @Override
-    public Collection<PhenotypeAssociation> load( Collection<Long> ids ) {
-        if ( ids.isEmpty() )
-            return new HashSet<>();
-        //noinspection unchecked
-        return this.getSessionFactory().getCurrentSession()
-                .createQuery( "from PhenotypeAssociation fetch all properties where id in (:ids)" )
-                .setParameterList( "ids", ids ).list();
-    }
-
-    @Override
-    public PhenotypeAssociation load( Long id ) {
-        return ( PhenotypeAssociation ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "from PhenotypeAssociation fetch all properties where id = :id" ).setParameter( "id", id )
-                .uniqueResult();
     }
 
     @Override
@@ -607,7 +569,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         Collection<PhenotypeValueObject> phenotypeValueObjects = new HashSet<>();
 
-        List<?> res = this.getSessionFactory().getCurrentSession()
+        List<?> res = this.getSession()
                 .createQuery( "select distinct c.valueUri,c.value from PhenotypeAssociation p join p.phenotypes c" )
                 .list();
 
@@ -628,7 +590,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Set<String> loadAllPhenotypesUri() {
         //noinspection unchecked
-        return new HashSet<>( this.getSessionFactory().getCurrentSession()
+        return new HashSet<>( this.getSession()
                 .createQuery( "select distinct c.valueUri from PhenotypeAssociation p join p.phenotypes c" )
                 .setCacheable( true ).setCacheRegion( null ).list() );
     }
@@ -650,7 +612,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         //noinspection unchecked
         return ( List<DifferentialExpressionEvidence> ) tpl
                 .find( "select d from DifferentialExpressionEvidenceImpl as d where d.geneDifferentialExpressionMetaAnalysisResult "
-                        + "in (select r from GeneDifferentialExpressionMetaAnalysisImpl as g join g.results as r where g.id="
+                        + "in (select r from GeneDifferentialExpressionMetaAnalysis as g join g.results as r where g.id="
                         + geneDifferentialExpressionMetaAnalysisId + ")" );
     }
 
@@ -664,8 +626,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .find( "select count (p) from PhenotypeAssociation as p" ).iterator().next();
 
         Long numGenes = ( Long ) this.getHibernateTemplate()
-                .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p" )
-                .iterator().next();
+                .find( "select count (distinct g) from Gene as g inner join g.phenotypeAssociations as p" ).iterator()
+                .next();
 
         Long numPhenotypes = ( Long ) this.getHibernateTemplate()
                 .find( "select count (distinct c.valueUri) from PhenotypeAssociation as p inner join p.phenotypes as c" )
@@ -710,7 +672,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         //noinspection unchecked
         List<Object[]> numGenes = this.getHibernateTemplate()
-                .find( "select p.evidenceSource.externalDatabase.name, count (distinct g) from GeneImpl as g join g.phenotypeAssociations "
+                .find( "select p.evidenceSource.externalDatabase.name, count (distinct g) from Gene as g join g.phenotypeAssociations "
                         + "as p group by p.evidenceSource.externalDatabase" );
 
         for ( Object[] o : numGenes ) {
@@ -754,7 +716,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 .next();
 
         Long numGenes = ( Long ) this.getHibernateTemplate()
-                .find( "select count (distinct g) from GeneImpl as g inner join g.phenotypeAssociations as p where p.evidenceSource is null" )
+                .find( "select count (distinct g) from Gene as g inner join g.phenotypeAssociations as p where p.evidenceSource is null" )
                 .iterator().next();
 
         Long numPhenotypes = ( Long ) this.getHibernateTemplate()
@@ -794,10 +756,23 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 phenotypeAssociationPublicationId );
     }
 
+    @Override
+    public void thaw( PhenotypeAssociation entity ) {
+    }
+
+    @Override
+    public PhenotypeAssociation find( PhenotypeAssociation entity ) {
+        return load( entity.getId() );
+    }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private String addExternalDatabaseQuery( Collection<Long> externalDatabaseIds ) {
 
         String externalDatabaseSqlQuery = "";
-        String listIds = "";
+        StringBuilder listIds = new StringBuilder();
         Boolean excludeManualCuration = false;
         Boolean excludeExternalDatabase = false;
 
@@ -808,12 +783,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
                 if ( id.equals( 1L ) ) {
                     excludeManualCuration = true;
                 } else {
-                    listIds = listIds + id + ",";
+                    listIds.append( id ).append( "," );
                     excludeExternalDatabase = true;
                 }
             }
 
-            listIds = StringUtils.removeEnd( listIds, "," );
+            listIds = new StringBuilder( StringUtils.removeEnd( listIds.toString(), "," ) );
             // SLIGHTLY UNSAFE USE PARAMETER
             if ( excludeManualCuration && excludeExternalDatabase ) {
                 externalDatabaseSqlQuery = "and"
@@ -928,8 +903,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             if ( genesWithPhenotypes.get( geneId ) != null ) {
                 genesWithPhenotypes.get( geneId ).getPhenotypesValueUri().add( valueUri );
             } else {
-                GeneEvidenceValueObject g = new GeneEvidenceValueObject();
-                g.setId( geneId );
+                GeneEvidenceValueObject g = new GeneEvidenceValueObject( geneId );
                 g.setNcbiId( nbciGeneId );
                 g.setOfficialName( officialName );
                 g.setOfficialSymbol( officialSymbol );
@@ -947,4 +921,27 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return genesWithPhenotypes.values();
     }
+
+    private void addUserAndGroupParameters( String sqlQuery, SQLQuery queryObject ) {
+        if ( SecurityUtil.isUserAnonymous() ) {
+            return;
+        }
+
+        String userName = SecurityUtil.getCurrentUsername();
+
+        // if user is member of any groups.
+        if ( sqlQuery.contains( ":groups" ) ) {
+            //noinspection unchecked
+            Collection<String> groups = this.getSession().createQuery(
+                    "select ug.name from UserGroup ug inner join ug.groupMembers memb where memb.userName = :user" )
+                    .setParameter( "user", userName ).list();
+            queryObject.setParameterList( "groups", groups );
+        }
+
+        if ( sqlQuery.contains( ":userName" ) ) {
+            queryObject.setParameter( "userName", userName );
+        }
+
+    }
+
 }

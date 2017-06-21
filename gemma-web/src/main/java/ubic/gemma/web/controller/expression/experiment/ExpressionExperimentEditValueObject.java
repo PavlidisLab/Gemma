@@ -35,12 +35,14 @@ public class ExpressionExperimentEditValueObject extends ExpressionExperimentDet
     private Collection<QuantitationTypeValueObject> quantitationTypes;
     private Collection<BioAssayValueObject> bioAssays;
 
-    public ExpressionExperimentEditValueObject( ExpressionExperimentValueObject eevo ) {
-        super( eevo );
+    /**
+     * Required when using the class as a spring bean.
+     */
+    public ExpressionExperimentEditValueObject() {
     }
 
-    public ExpressionExperimentEditValueObject() {
-        super();
+    public ExpressionExperimentEditValueObject( ExpressionExperimentValueObject eevo ) {
+        super( eevo );
     }
 
     public Collection<QuantitationTypeValueObject> getQuantitationTypes() {

@@ -22,7 +22,7 @@ import java.util.List;
  * @author pavlidis
  * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail
  */
-public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.AuditTrail {
+public class AuditTrailImpl extends AuditTrail {
 
     private static final long serialVersionUID = 5316032533526337630L;
 
@@ -38,7 +38,6 @@ public class AuditTrailImpl extends ubic.gemma.model.common.auditAndSecurity.Aud
     }
 
     /**
-     *
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrail#getCreationEvent()
      */
     @Override

@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * had very generic identifiers (such as consecutive integers).
  * </p>
  */
-public abstract class ArrayDesignProbeRenamingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignProbeRenamingEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -37,7 +37,7 @@ public abstract class ArrayDesignProbeRenamingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignProbeRenamingEvent();
         }
 
     }

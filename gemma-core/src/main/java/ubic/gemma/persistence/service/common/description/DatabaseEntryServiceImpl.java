@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2007 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,54 +16,45 @@
  * limitations under the License.
  *
  */
-
 package ubic.gemma.persistence.service.common.description;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
 
 /**
- * @author keshav
- * @version $Id$
+ * Spring Service base class for <code>DatabaseEntryService</code>, provides access to all services and entities
+ * referenced by this service.
+ *
  * @see DatabaseEntryService
  */
 @Service
-public class DatabaseEntryServiceImpl extends DatabaseEntryServiceBase {
+public class DatabaseEntryServiceImpl extends VoEnabledService<DatabaseEntry, DatabaseEntryValueObject>
+        implements DatabaseEntryService {
 
-    @Override
-    protected Integer handleCountAll() {
-        return this.getDatabaseEntryDao().countAll();
+    private DatabaseEntryDao databaseEntryDao;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    @Autowired
+    public DatabaseEntryServiceImpl( DatabaseEntryDao databaseEntryDao ) {
+        super( databaseEntryDao );
+        this.databaseEntryDao = databaseEntryDao;
     }
 
-    /**
-     * @see DatabaseEntryService#createFromValueObject(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    protected DatabaseEntry handleCreate( DatabaseEntry databaseEntry ) {
-        return this.getDatabaseEntryDao().create( databaseEntry );
-    }
+    /* ********************************
+     * Public methods
+     * ********************************/
 
-    /**
-     * @see DatabaseEntryService#find(ubic.gemma.model.common.description.DatabaseEntry)
-     */
     @Override
-    protected DatabaseEntry handleFind( DatabaseEntry databaseEntry ) {
-        return this.getDatabaseEntryDao().find( databaseEntry );
-    }
-
-    /**
-     * @see DatabaseEntryService#remove(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @Override
-    protected void handleRemove( DatabaseEntry databaseEntry ) {
-        this.getDatabaseEntryDao().remove( databaseEntry );
-    }
-
-    /**
-     * @see DatabaseEntryService#update(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @Override
-    protected void handleUpdate( ubic.gemma.model.common.description.DatabaseEntry databaseEntry ) {
-        this.getDatabaseEntryDao().update( databaseEntry );
+    @Transactional
+    public DatabaseEntry load( String accession ) {
+        return this.databaseEntryDao.findByAccession( accession );
     }
 
 }

@@ -14,58 +14,50 @@
  */
 package ubic.gemma.core.apps;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang3.StringUtils;
-
 import ubic.gemma.core.analysis.report.ArrayDesignReportService;
 import ubic.gemma.core.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.core.util.AbstractCLIContextCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.persistence.service.common.description.ExternalDatabaseService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.genome.biosequence.BioSequenceService;
 import ubic.gemma.persistence.service.genome.sequenceAnalysis.AnnotationAssociationService;
-import ubic.gemma.core.util.AbstractCLIContextCLI;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Creates an array design based on the current set of transcripts for a taxon.
- * <p>
  * This is used to create a 'platform' for linking non-array based data to the system, or data for which we have only
  * gene or transcript-level information.
- * <p>
  * See also: To generate annotation files for all genes in a taxon, this can also accomplished by
  * ArrayDesignAnnotationFileCli. The difference here is that an array design is actually created.
- * 
+ *
  * @author paul
- * @version $Id$
  */
 public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
-    public static void main( String[] args ) {
-        GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
-        b.doWork( args );
-    }
 
     private AnnotationAssociationService annotationAssociationService;
     private ArrayDesignAnnotationService arrayDesignAnnotationService;
@@ -75,24 +67,22 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
     private CompositeSequenceService compositeSequenceService;
     private ExternalDatabaseService externalDatabaseService;
     private GeneService geneService;
-
-    private Taxon taxon = null;
-
     private TaxonService taxonService;
 
+    private Taxon taxon = null;
     private boolean useEnsemblIds = false;
     private boolean useNCBIIds = false;
+
+    public static void main( String[] args ) {
+        GenericGenelistDesignGenerator b = new GenericGenelistDesignGenerator();
+        b.doWork( args );
+    }
 
     @Override
     public CommandGroup getCommandGroup() {
         return CommandGroup.PLATFORM;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "genericPlatform";
@@ -157,7 +147,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
             log.info( "Creating new 'generic' platform" );
             arrayDesign = arrayDesignService.create( arrayDesign );
         }
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        arrayDesignService.thaw( arrayDesign );
 
         // temporary: making sure we set it, as it is new.
         arrayDesign.setTechnologyType( TechnologyType.NONE );
@@ -185,7 +175,7 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         int numNewElements = 0;
         int numUpdatedElements = 0;
         for ( Gene gene : knownGenes ) {
-            gene = geneService.thaw( gene );
+            geneService.thaw( gene );
 
             Collection<GeneProduct> products = gene.getProducts();
 
@@ -224,8 +214,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     csForGene = existingSymbolmap.get( gene.getOfficialSymbol() );
                 } else if ( existingGeneMap.containsKey( gene ) ) {
                     csForGene = existingGeneMap.get( gene );
-                    log.debug( "Gene symbol has changed for: " + gene + "? Current element has name="
-                            + csForGene.getName() );
+                    log.debug( "Gene symbol has changed for: " + gene + "? Current element has name=" + csForGene
+                            .getName() );
                     csForGene.setName( gene.getOfficialSymbol() );
                 }
             }
@@ -295,7 +285,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                 }
 
                 if ( csForGene == null ) {
-                    if ( log.isDebugEnabled() ) log.debug( "New element " + " with " + bioSequence + " for " + gene );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "New element " + " with " + bioSequence + " for " + gene );
                     csForGene = CompositeSequence.Factory.newInstance();
                     if ( useNCBIIds ) {
                         if ( gene.getNcbiGeneId() == null ) {
@@ -320,7 +311,8 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
                     numNewElements++;
                 } else {
                     if ( log.isDebugEnabled() )
-                        log.debug( "Updating existing element: " + csForGene + " with " + bioSequence + " for " + gene );
+                        log.debug(
+                                "Updating existing element: " + csForGene + " with " + bioSequence + " for " + gene );
                     csForGene.setArrayDesign( arrayDesign );
                     csForGene.setBiologicalCharacteristic( bioSequence );
                     csForGene.setDescription( "Generic expression element for " + gene );
@@ -359,10 +351,10 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         log.info( "Array design has " + arrayDesignService.numCompositeSequenceWithGenes( arrayDesign )
                 + " 'probes' associated with genes." );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
-        auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(), count
-                + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
-                + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        auditTrailService.addUpdateEvent( arrayDesign, AnnotationBasedGeneMappingEvent.Factory.newInstance(),
+                count + " genes processed; " + numNewElements + " new elements; " + numUpdatedElements
+                        + " updated elements; " + numWithNoTranscript + " genes had no transcript and were skipped." );
         try {
             arrayDesignAnnotationService.deleteExistingFiles( arrayDesign );
         } catch ( IOException e ) {
@@ -403,16 +395,13 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         }
     }
 
-    /**
-     * @return
-     */
     private String generateShortName() {
         String ncbiIdSuffix = useNCBIIds ? "_ncbiIds" : "";
         String ensemblIdSuffix = useEnsemblIds ? "_ensemblIds" : "";
         String shortName = "";
         if ( StringUtils.isBlank( taxon.getCommonName() ) ) {
-            shortName = "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" )
-                    + ncbiIdSuffix;
+            shortName =
+                    "Generic_" + StringUtils.strip( taxon.getScientificName() ).replaceAll( " ", "_" ) + ncbiIdSuffix;
         } else {
             shortName = "Generic_" + StringUtils.strip( taxon.getCommonName() ).replaceAll( " ", "_" ) + ncbiIdSuffix
                     + ensemblIdSuffix;
@@ -422,19 +411,17 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
 
     /**
      * For gene symbols.
-     * 
-     * @param arrayDesign
-     * @return
      */
     private Map<Gene, CompositeSequence> getExistingGeneMap( ArrayDesign arrayDesign ) {
 
         Map<Gene, CompositeSequence> existingElements = new HashMap<>();
 
-        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
+        if ( arrayDesign.getCompositeSequences().isEmpty() )
+            return existingElements;
 
         log.info( "Loading genes for existing platform ..." );
-        Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService.getGenes( arrayDesign
-                .getCompositeSequences() );
+        Map<CompositeSequence, Collection<Gene>> genemap = compositeSequenceService
+                .getGenes( arrayDesign.getCompositeSequences() );
 
         log.info( "Platform has genes already for " + genemap.size() + "/" + arrayDesign.getCompositeSequences().size()
                 + " elements." );
@@ -462,15 +449,12 @@ public class GenericGenelistDesignGenerator extends AbstractCLIContextCLI {
         return existingElements;
     }
 
-    /**
-     * @param arrayDesign
-     * @return
-     */
     private Map<String, CompositeSequence> getExistingProbeNameMap( ArrayDesign arrayDesign ) {
 
         Map<String, CompositeSequence> existingElements = new HashMap<>();
 
-        if ( arrayDesign.getCompositeSequences().isEmpty() ) return existingElements;
+        if ( arrayDesign.getCompositeSequences().isEmpty() )
+            return existingElements;
 
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             assert cs.getId() != null : "Null id for " + cs;

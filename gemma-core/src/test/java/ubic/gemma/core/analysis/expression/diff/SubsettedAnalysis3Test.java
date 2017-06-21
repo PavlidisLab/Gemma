@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -89,7 +89,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -103,7 +103,7 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         designImporter.importDesign( ee, this.getClass()
                 .getResourceAsStream( "/data/analysis/expression/gse26927short/2684_GSE26927_expdesign.data.txt" ) );
@@ -112,13 +112,13 @@ public class SubsettedAnalysis3Test extends AbstractGeoServiceTest {
 
     @After
     public void teardown() throws Exception {
-        // if ( ee != null ) expressionExperimentService.delete( ee );
+        // if ( ee != null ) expressionExperimentService.remove( ee );
     }
 
     @Test
     public void test() throws Exception {
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 3, factors.size() );

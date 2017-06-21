@@ -30,7 +30,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.expression.diff.DifferentialExpressionAnalyzerServiceImpl.AnalysisType;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -43,10 +43,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
- * See bug 3466
- * 
  * @author Paul
- * @version $Id$
  */
 public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
@@ -108,8 +105,8 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
     }
 
     @After
-    public void teardown() throws Exception {
-        if ( ee != null ) expressionExperimentService.delete( ee );
+    public void tearDown() throws Exception {
+        if ( ee != null ) expressionExperimentService.remove( ee );
     }
 
     @Before
@@ -130,7 +127,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
 
-        ee = expressionExperimentService.thawLite( ee );
+        expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -144,7 +141,7 @@ public class ContinuousVariableDiffExTest extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        ee = expressionExperimentService.thaw( ee );
+        expressionExperimentService.thaw( ee );
 
         designImporter.importDesign(
                 ee,

@@ -23,6 +23,7 @@ import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Represents a set of BioAssays. This is not associated with any actual data, and soley represents a logical grouping
@@ -33,6 +34,13 @@ public abstract class BioAssaySet extends Investigation {
 
     private static final long serialVersionUID = 2368063046639481521L;
 
-    public abstract Collection<BioAssay> getBioAssays();
+    protected Collection<BioAssay> bioAssays = new HashSet<>();
 
+    public Collection<BioAssay> getBioAssays() {
+        return bioAssays;
+    }
+
+    public void setBioAssays( Collection<BioAssay> bioAssays ) {
+        this.bioAssays = bioAssays;
+    }
 }

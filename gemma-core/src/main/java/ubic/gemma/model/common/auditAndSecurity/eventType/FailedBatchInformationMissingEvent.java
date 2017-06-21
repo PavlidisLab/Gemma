@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * look again. Do not use to indicate other types of failure such as an unsupported raw data type.
  * </p>
  */
-public abstract class FailedBatchInformationMissingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEventImpl {
+public class FailedBatchInformationMissingEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent {
 
     /**
      * Constructs new instances of
@@ -37,7 +37,7 @@ public abstract class FailedBatchInformationMissingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent();
         }
 
     }

@@ -18,33 +18,36 @@
  */
 package ubic.gemma.persistence.service.expression.biomaterial;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
+import ubic.gemma.persistence.service.VoEnabledService;
 import ubic.gemma.persistence.service.expression.bioAssay.BioAssayDao;
 import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.persistence.service.expression.experiment.FactorValueDao;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
  * Spring Service base class for <code>BioMaterialService</code>, provides access to all services and entities
  * referenced by this service.
- * 
+ *
  * @see BioMaterialService
  */
-public abstract class BioMaterialServiceBase implements BioMaterialService {
+public abstract class BioMaterialServiceBase extends VoEnabledService<BioMaterial, BioMaterialValueObject>
+        implements BioMaterialService {
 
-    @Autowired
-    protected BioMaterialDao bioMaterialDao;
+    final BioMaterialDao bioMaterialDao;
+    final FactorValueDao factorValueDao;
+    final BioAssayDao bioAssayDao;
+    final ExperimentalFactorDao experimentalFactorDao;
 
-    @Autowired
-    protected FactorValueDao factorValueDao;
-
-    @Autowired
-    protected BioAssayDao bioAssayDao;
-
-    @Autowired
-    protected ExperimentalFactorDao experimentalFactorDao;
+    public BioMaterialServiceBase( BioMaterialDao bioMaterialDao, FactorValueDao factorValueDao,
+            BioAssayDao bioAssayDao, ExperimentalFactorDao experimentalFactorDao ) {
+        super( bioMaterialDao );
+        this.bioMaterialDao = bioMaterialDao;
+        this.factorValueDao = factorValueDao;
+        this.bioAssayDao = bioAssayDao;
+        this.experimentalFactorDao = experimentalFactorDao;
+    }
 
     /**
      * @see BioMaterialService#copy(BioMaterial)
@@ -53,27 +56,6 @@ public abstract class BioMaterialServiceBase implements BioMaterialService {
     @Transactional
     public BioMaterial copy( final BioMaterial bioMaterial ) {
         return this.handleCopy( bioMaterial );
-    }
-
-    /**
-     * @see BioMaterialService#countAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Integer countAll() {
-        return this.handleCountAll();
-
-    }
-
-    /**
-     * @see BioMaterialService#create(BioMaterial)
-     */
-    @Override
-    @Transactional
-    public BioMaterial create( final BioMaterial bioMaterial ) {
-
-        return this.handleCreate( bioMaterial );
-
     }
 
     /**
@@ -87,112 +69,13 @@ public abstract class BioMaterialServiceBase implements BioMaterialService {
     }
 
     /**
-     * @see BioMaterialService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BioMaterial load( final java.lang.Long id ) {
-
-        return this.handleLoad( id );
-    }
-
-    /**
-     * @see BioMaterialService#loadAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BioMaterial> loadAll() {
-
-        return this.handleLoadAll();
-    }
-
-    /**
-     * @see BioMaterialService#loadMultiple(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BioMaterial> loadMultiple( final java.util.Collection<Long> ids ) {
-
-        return this.handleLoadMultiple( ids );
-    }
-
-    /**
-     * @see BioMaterialService#remove(BioMaterial)
-     */
-    @Override
-    @Transactional
-    public void remove( final BioMaterial bioMaterial ) {
-
-        this.handleRemove( bioMaterial );
-    }
-
-    /**
-     * Sets the reference to <code>bioMaterial</code>'s DAO.
-     */
-    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
-        this.bioMaterialDao = bioMaterialDao;
-    }
-
-    /**
-     * @see BioMaterialService#update(BioMaterial)
-     */
-    @Override
-    @Transactional
-    public void update( final BioMaterial bioMaterial ) {
-        this.handleUpdate( bioMaterial );
-
-    }
-
-    /**
-     * Gets the reference to <code>bioMaterial</code>'s DAO.
-     */
-    protected BioMaterialDao getBioMaterialDao() {
-        return this.bioMaterialDao;
-    }
-
-    /**
      * Performs the core logic for {@link #copy(BioMaterial)}
      */
     protected abstract BioMaterial handleCopy( BioMaterial bioMaterial );
 
     /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll();
-
-    /**
-     * Performs the core logic for {@link #create(BioMaterial)}
-     */
-    protected abstract BioMaterial handleCreate( BioMaterial bioMaterial );
-
-    /**
      * Performs the core logic for {@link #findOrCreate(BioMaterial)}
      */
     protected abstract BioMaterial handleFindOrCreate( BioMaterial bioMaterial );
-
-    /**
-     * Performs the core logic for {@link #load(java.lang.Long)}
-     */
-    protected abstract BioMaterial handleLoad( java.lang.Long id );
-
-    /**
-     * Performs the core logic for {@link #loadAll()}
-     */
-    protected abstract java.util.Collection<BioMaterial> handleLoadAll();
-
-    /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BioMaterial> handleLoadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #remove(BioMaterial)}
-     */
-    protected abstract void handleRemove( BioMaterial bioMaterial );
-
-    /**
-     * Performs the core logic for {@link #update(BioMaterial)}
-     */
-    protected abstract void handleUpdate( BioMaterial bioMaterial );
 
 }

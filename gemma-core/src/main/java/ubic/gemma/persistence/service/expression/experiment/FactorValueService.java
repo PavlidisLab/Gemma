@@ -18,60 +18,37 @@
  */
 package ubic.gemma.persistence.service.expression.experiment;
 
-import java.util.Collection;
-
 import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueValueObject;
+import ubic.gemma.persistence.service.BaseVoEnabledService;
+
+import java.util.Collection;
 
 /**
  * @author kelsey
- * @version $Id$
  */
-public interface FactorValueService {
+public interface FactorValueService extends BaseVoEnabledService<FactorValue, FactorValueValueObject> {
 
-    /**
-     * @param factorValue
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void delete( FactorValue factorValue );
+    void remove( FactorValue factorValue );
 
-    /**
-     * @param valuePrefix
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<FactorValue> findByValue( String valuePrefix );
+    Collection<FactorValue> findByValue( String valuePrefix );
 
-    /**
-     * @param factorValue
-     * @return
-     */
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
-    public FactorValue findOrCreate( FactorValue factorValue );
+    FactorValue findOrCreate( FactorValue factorValue );
 
-    /**
-     * @param id
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public FactorValue load( Long id );
+    FactorValue load( Long id );
 
-    /**
-     * @return
-     */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<FactorValue> loadAll();
+    Collection<FactorValue> loadAll();
 
-    /**
-     * @param factorValues
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_COLLECTION_EDIT" })
-    public void update( Collection<FactorValue> factorValues );
+    void update( Collection<FactorValue> factorValues );
 
-    /**
-     * @param factorValue
-     */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public void update( FactorValue factorValue );
+    void update( FactorValue factorValue );
 
 }

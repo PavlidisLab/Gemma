@@ -82,7 +82,7 @@ public class PhysicalLocationEndpoint extends AbstractGemmaEndpoint {
 
         Gene gene = geneService.load( Long.parseLong( geneId ) );
 
-        gene = geneService.thaw( gene );
+        geneService.thaw( gene );
         PhysicalLocation physicalLocation = geneService.getMaxPhysicalLength( gene );
         log.info( "Webservice - Phyisical location for gene: " + gene.getOfficialSymbol() + "physicallocation is: "
                 + physicalLocation );

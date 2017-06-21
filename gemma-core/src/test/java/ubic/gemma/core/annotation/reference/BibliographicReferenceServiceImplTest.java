@@ -18,44 +18,42 @@
  */
 package ubic.gemma.core.annotation.reference;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expectLastCall;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import ubic.gemma.core.search.SearchService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.persistence.service.common.description.ExternalDatabaseDao;
-import junit.framework.TestCase;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+
+import static org.easymock.EasyMock.*;
 
 /**
  * @author pavlidis
- * @version $Id$
  */
-public class BibliographicReferenceServiceImplTest extends TestCase {
+public class BibliographicReferenceServiceImplTest extends BaseSpringContextTest {
+
+    @Autowired
+    private SearchService searchService;
+
+    @Autowired
+    private PhenotypeAssociationService pas;
 
     private BibliographicReferenceServiceImpl svc = null;
     private BibliographicReferenceDao brdao = null;
-    private ExternalDatabaseDao eddao = null;
     private DatabaseEntry de = null;
     private ExternalDatabase extDB = null;
 
-    /*
-     * @see TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        svc = new BibliographicReferenceServiceImpl();
+    @Before
+    public void setUp() throws Exception {
 
         brdao = createMock( BibliographicReferenceDao.class );
-        eddao = createMock( ExternalDatabaseDao.class );
 
-        svc.setBibliographicReferenceDao( brdao );
-        svc.setExternalDatabaseDao( eddao );
+        svc = new BibliographicReferenceServiceImpl( brdao, pas, searchService );
+
         extDB = ExternalDatabase.Factory.newInstance();
         extDB.setName( "PUBMED" );
 
@@ -64,14 +62,7 @@ public class BibliographicReferenceServiceImplTest extends TestCase {
         de.setExternalDatabase( extDB );
     }
 
-    /*
-     * @see TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
+    @Test
     public final void testFindByExternalId() {
 
         BibliographicReference mockBR = BibliographicReference.Factory.newInstance();

@@ -20,15 +20,18 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 
-/**
- * 
- */
-public abstract class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
+public class SampleCoexpressionAnalysis extends SingleExperimentAnalysis {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5006465967597402551L;
+    private SampleCoexpressionMatrix sampleCoexpressionMatrix;
+
+    public SampleCoexpressionMatrix getSampleCoexpressionMatrix() {
+        return this.sampleCoexpressionMatrix;
+    }
+
+    public void setSampleCoexpressionMatrix( SampleCoexpressionMatrix sampleCoexpressionMatrix ) {
+        this.sampleCoexpressionMatrix = sampleCoexpressionMatrix;
+    }
 
     /**
      * Constructs new instances of {@link SampleCoexpressionAnalysis}.
@@ -38,22 +41,9 @@ public abstract class SampleCoexpressionAnalysis extends SingleExperimentAnalysi
          * Constructs a new instance of {@link SampleCoexpressionAnalysis}.
          */
         public static SampleCoexpressionAnalysis newInstance() {
-            return new SampleCoexpressionAnalysisImpl();
+            return new SampleCoexpressionAnalysis();
         }
 
-    }
-
-    private SampleCoexpressionMatrix sampleCoexpressionMatrix;
-
-    /**
-     * 
-     */
-    public SampleCoexpressionMatrix getSampleCoexpressionMatrix() {
-        return this.sampleCoexpressionMatrix;
-    }
-
-    public void setSampleCoexpressionMatrix( SampleCoexpressionMatrix sampleCoexpressionMatrix ) {
-        this.sampleCoexpressionMatrix = sampleCoexpressionMatrix;
     }
 
 }

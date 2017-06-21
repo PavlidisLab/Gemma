@@ -24,8 +24,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * just isn't available, use the specific subtype of this.
  * </p>
  */
-public abstract class FailedBatchInformationFetchingEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEventImpl {
+public class FailedBatchInformationFetchingEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent {
 
     /**
      * Constructs new instances of
@@ -37,7 +37,7 @@ public abstract class FailedBatchInformationFetchingEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent();
         }
 
     }

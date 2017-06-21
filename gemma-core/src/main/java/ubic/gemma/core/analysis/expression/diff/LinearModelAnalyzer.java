@@ -18,22 +18,9 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
+import cern.colt.matrix.DoubleMatrix1D;
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.jet.math.Functions;
 import org.apache.commons.collections.Transformer;
 import org.apache.commons.collections.TransformerUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -43,57 +30,43 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import cern.colt.matrix.DoubleMatrix1D;
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.jet.math.Functions;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.MathUtil;
 import ubic.basecode.math.MatrixStats;
-import ubic.basecode.math.linearmodels.DesignMatrix;
-import ubic.basecode.math.linearmodels.LeastSquaresFit;
-import ubic.basecode.math.linearmodels.LinearModelSummary;
-import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
-import ubic.basecode.math.linearmodels.ModeratedTstat;
+import ubic.basecode.math.linearmodels.*;
 import ubic.gemma.core.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.core.datastructure.matrix.MatrixWriter;
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.analysis.expression.diff.Direction;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.HitListSize;
+import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
  * Interactions can be included if a DifferentialExpressionAnalysisConfig is passed as an argument to 'run'. Currently
  * we only support interactions if there are two factors in the model (no more).
- * <p>
  * One factor can be constant (the same value for all samples); such a factor will be analyzed by looking at the
  * intercept in the fitted model. This is only appropriate for 'non-reference' designs on ratiometric arrays.
  * This also supports subsetting the data based on a factor. For example, a data set with "tissue" as a factor could be
  * analyzed per-tissue rather than with tissue as a covariate.
- * <p>
  * This only handles the analysis, not the persistence or output of the results.
- * 
+ *
  * @author paul
  */
 @Component
@@ -221,8 +194,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             Integer downGenes = downCountGenes.get( thresh ) == null ? 0 : downCountGenes.get( thresh );
             Integer eitherGenes = eitherCountGenes.get( thresh ) == null ? 0 : eitherCountGenes.get( thresh );
 
-            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes || allGenes
-                    .size() < eitherGenes ) : "There were more genes differentially expressed than exist in the experment";
+            assert !( allGenes.size() < upGenes || allGenes.size() < downGenes || allGenes.size()
+                    < eitherGenes ) : "There were more genes differentially expressed than exist in the experment";
 
             HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
             HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
@@ -281,10 +254,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param matrix on which to perform regression.
-     * @param config containing configuration of factors to include. Any interactions or subset configuration is
-     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qvaluethreshold will be
-     *        ignored)
+     * @param matrix      on which to perform regression.
+     * @param config      containing configuration of factors to include. Any interactions or subset configuration is
+     *                    ignored. Data are <em>NOT</em> log transformed unless they come in that way. (the qvaluethreshold will be
+     *                    ignored)
      * @param retainScale if true, the data retain the global mean (intercept)
      * @return residuals from the regression.
      */
@@ -450,7 +423,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 Collection<ExperimentalFactor> subsetFactors = fixFactorsForSubset( subsets.get( subsetFactorValue ),
                         eesubSet, factors );
 
-                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config, subsetFactorValue );
+                DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( factors, config,
+                        subsetFactorValue );
 
                 if ( subsetFactors.isEmpty() ) {
                     log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
@@ -538,7 +512,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             return null;
         }
 
-        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config, subsetFactorValue );
+        DifferentialExpressionAnalysisConfig subsetConfig = fixConfigForSubset( config.getFactorsToInclude(), config,
+                subsetFactorValue );
 
         DifferentialExpressionAnalysis analysis = doAnalysis( subset, subsetConfig, subsetMatrix, samplesInSubset,
                 config.getFactorsToInclude(), subsetFactorValue );
@@ -635,8 +610,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         /*
          * Add interaction terms
          */
-        boolean hasInteractionTerms = config.getInteractionsToInclude() != null
-                && !config.getInteractionsToInclude().isEmpty();
+        boolean hasInteractionTerms =
+                config.getInteractionsToInclude() != null && !config.getInteractionsToInclude().isEmpty();
 
         if ( hasInteractionTerms ) {
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
@@ -656,12 +631,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
         }
     }
 
-    /**
-     * 
-     * @param genesForProbe
-     * @param seenGenes
-     * @return
-     */
+
     private int countNumberOfGenesNotSeenAlready( Collection<Gene> genesForProbe, Collection<Gene> seenGenes ) {
         int numGenes = 0;
         if ( genesForProbe != null ) {
@@ -678,11 +648,10 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     }
 
     /**
-     * @param bioAssaySet source data, could be a SubSet
-     * @param config
-     * @param dmatrix data
-     * @param samplesUsed analyzed
-     * @param factors included in the model
+     * @param bioAssaySet       source data, could be a SubSet
+     * @param dmatrix           data
+     * @param samplesUsed       analyzed
+     * @param factors           included in the model
      * @param subsetFactorValue null unless analyzing a subset (only used for book-keeping)
      * @return analysis, or null if there was a problem.
      */
@@ -692,7 +661,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
 
         // We may want to change this to fall back to running normally, though the real fix is to just finish the ebayes implementation.
         if ( config.getModerateStatistics() && dmatrix.hasMissingValues() ) {
-            throw new UnsupportedOperationException( "Ebayes cannot be used when there are values missing in the data" );
+            throw new UnsupportedOperationException(
+                    "Ebayes cannot be used when there are values missing in the data" );
         }
 
         if ( factors.isEmpty() ) {
@@ -966,10 +936,9 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
     /**
      * Remove all configurations that have to do with factors that aren't in the selected factors.
      *
-     * @param factors the factors that will be included
-     * @param subsetFactorValue
+     * @param factors           the factors that will be included
      * @return an updated config; the baselines are cleared; subset is cleared; interactions are only kept if they only
-     *         involve the given factors.
+     * involve the given factors.
      */
     private DifferentialExpressionAnalysisConfig fixConfigForSubset( List<ExperimentalFactor> factors,
             DifferentialExpressionAnalysisConfig config, FactorValue subsetFactorValue ) {
@@ -1124,8 +1093,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 continue;
             }
 
-            assert pvalArray.length == resultLists.get( fName ).size() : pvalArray.length + " != "
-                    + resultLists.get( fName ).size();
+            assert pvalArray.length == resultLists.get( fName ).size() :
+                    pvalArray.length + " != " + resultLists.get( fName ).size();
 
             assert pvalArray.length == ranks.length;
 
@@ -1169,10 +1138,14 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
          * Complete analysis config
          */
         expressionAnalysis.setName( this.getClass().getSimpleName() );
-        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors"
-                + ( interceptFactor == null ? "" : " with intercept treated as factor" )
-                + ( interactionFactorLists.isEmpty() ? "" : " with interaction" ) + ( subsetFactorValue == null ? ""
-                        : "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
+        expressionAnalysis.setDescription( "Linear model with " + config.getFactorsToInclude().size() + " factors" + (
+                interceptFactor == null ?
+                        "" :
+                        " with intercept treated as factor" ) + ( interactionFactorLists.isEmpty() ?
+                "" :
+                " with interaction" ) + ( subsetFactorValue == null ?
+                "" :
+                "Using subset " + bioAssaySet + " subset value= " + subsetFactorValue ) );
         expressionAnalysis.setSubsetFactorValue( subsetFactorValue );
 
         Collection<ExpressionAnalysisResultSet> resultSets = makeResultSets( label2Factors, baselineConditions,
@@ -1337,8 +1310,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
              */
             log.info( ef );
 
-            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) : baselineConditions.get( ef )
-                    + " is not a value of " + ef;
+            assert baselineConditions.get( ef ).getExperimentalFactor().equals( ef ) :
+                    baselineConditions.get( ef ) + " is not a value of " + ef;
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );
         }
         return properDesignMatrix;
@@ -1383,8 +1356,7 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                             new HashSet<>( results ), expressionAnalysis, null /*
                                                                                 * pvalue
                                                                                 * dists
-                                                                                */,
-                            hitListSizes );
+                                                                                */, hitListSizes );
             resultSets.add( resultSet );
 
             log.info( "Finished with result set for " + fName );
@@ -1501,8 +1473,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
             throw new RuntimeException( e );
         }
 
-        assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got "
-                + rawResults.size();
+        assert rawResults.size() == namedMatrix.rows() :
+                "expected " + namedMatrix.rows() + " results, got " + rawResults.size();
         return rawResults;
     }
 
@@ -1537,7 +1509,8 @@ public class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer 
                 if ( ebayes ) {
                     if ( fit.isHasMissing() ) {
                         // not implemented yet.
-                        throw new UnsupportedOperationException( "Ebayes cannot be run as there are missing values in the data" );
+                        throw new UnsupportedOperationException(
+                                "Ebayes cannot be run as there are missing values in the data" );
                     }
                     ModeratedTstat.ebayes( fit );
                     log.info( "Moderate test statistics: " + timer.getTime() + "ms" );

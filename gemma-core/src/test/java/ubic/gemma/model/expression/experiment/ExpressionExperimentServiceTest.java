@@ -22,7 +22,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -32,7 +32,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -70,7 +70,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
             ee.setOwner( c );
 
             expressionExperimentService.update( ee );
-            ee = expressionExperimentService.thaw( ee );
+            expressionExperimentService.thaw( ee );
 
             persisted = true;
         } else {
@@ -152,7 +152,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         Map<Taxon, Long> counts = expressionExperimentService.getPerTaxonCount();
         long oldCount = counts.get( taxonService.findByCommonName( "mouse" ) );
         assertNotNull( counts );
-        expressionExperimentService.delete( ee );
+        expressionExperimentService.remove( ee );
         counts = expressionExperimentService.getPerTaxonCount();
         assertEquals( oldCount - 1, counts.get( taxonService.findByCommonName( "mouse" ) ).longValue() );
     }

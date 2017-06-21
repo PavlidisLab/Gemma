@@ -77,7 +77,7 @@ public class OrderVectorsByDesignCli extends ExpressionExperimentManipulatingCLI
             if ( !( ee instanceof ExpressionExperiment ) ) {
                 continue;
             }
-            ee = this.eeService.thawLite( ( ExpressionExperiment ) ee );
+            this.eeService.thawLite( ( ExpressionExperiment ) ee );
             processedExpressionDataVectorCreateService.reorderByDesign( ee.getId() );
 
         }

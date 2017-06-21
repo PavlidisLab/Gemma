@@ -23,12 +23,12 @@ alter table ACLOBJECTIDENTITY drop column OLD_OBJECT_CLASS ;
 
 select distinct * from  ACLOBJECTIDENTITY o, INVESTIGATION subset, ACLOBJECTIDENTITY op  
  where o.OBJECT_ID=subset.ID  and subset.SOURCE_EXPERIMENT_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" 
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
  and o.PARENT_OBJECT_FK IS NULL limit 1 \G
  
 update ACLOBJECTIDENTITY o, INVESTIGATION subset, ACLOBJECTIDENTITY op set o.PARENT_OBJECT_FK=op.ID
  where o.OBJECT_ID=subset.ID  and subset.SOURCE_EXPERIMENT_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.ExpressionExperimentSet" and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
  and o.PARENT_OBJECT_FK IS NULL;
  
  -- fill in parent for analyses
@@ -40,8 +40,8 @@ update ACLOBJECTIDENTITY o, INVESTIGATION subset, ACLOBJECTIDENTITY op set o.PAR
  select count(*) from ACLOBJECTIDENTITY where OBJECT_CLASS='ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisImpl' and PARENT_OBJECT_FK is null;
  select count(*) from ACLOBJECTIDENTITY where OBJECT_CLASS='ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisImpl' and PARENT_OBJECT_FK is not null;
  
- select count(*) from ACLOBJECTIDENTITY where OBJECT_CLASS='ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl' and PARENT_OBJECT_FK is null;
- select count(*) from ACLOBJECTIDENTITY where OBJECT_CLASS='ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl' and PARENT_OBJECT_FK is not null;
+ select count(*) from ACLOBJECTIDENTITY where OBJECT_CLASS='ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis' and PARENT_OBJECT_FK is null;
+ select count(*) from ACLOBJECTIDENTITY where OBJECT_CLASS='ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis' and PARENT_OBJECT_FK is not null;
  
  --- coexpression
  
@@ -94,26 +94,26 @@ select * from ACLOBJECTIDENTITY o, ANALYSIS an, ACLOBJECTIDENTITY op
  
  select * from ACLOBJECTIDENTITY o, ANALYSIS an, ACLOBJECTIDENTITY op 
  where o.OBJECT_ID=an.ID  and an.EXPERIMENT_ANALYZED_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
  and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl" 
  and o.PARENT_OBJECT_FK IS NULL limit 1 \G
  -- none
  
  --orphans:
  select count(*) from ACLOBJECTIDENTITY o left outer join ANALYSIS an on o.OBJECT_ID=an.ID 
- where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
   and o.PARENT_OBJECT_FK IS NULL and an.ID is null;
   
   select count(*) from ACLOBJECTIDENTITY o left outer join ANALYSIS an on o.OBJECT_ID=an.ID 
- where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
    and an.ID is null;
   
  delete e from ACLENTRY e join ACLOBJECTIDENTITY o on e.OBJECTIDENTITY_FK=o.ID left outer join ANALYSIS an on o.OBJECT_ID=an.ID 
- where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
   and o.PARENT_OBJECT_FK IS NULL and an.ID is null;
   
  delete o from ACLOBJECTIDENTITY o left outer join ANALYSIS an on o.OBJECT_ID=an.ID 
- where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ where o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
   and o.PARENT_OBJECT_FK IS NULL and an.ID is null;
  
   
@@ -148,13 +148,13 @@ select * from ACLOBJECTIDENTITY o, ANALYSIS an, ACLOBJECTIDENTITY op
   -- -for subsets.
   select * from ACLOBJECTIDENTITY o, ANALYSIS an, ACLOBJECTIDENTITY op 
  where o.OBJECT_ID=an.ID  and an.EXPERIMENT_ANALYZED_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
  and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" 
  and o.PARENT_OBJECT_FK IS NULL limit 1 \G
  
  update ACLOBJECTIDENTITY o, ANALYSIS an, ACLOBJECTIDENTITY op set o.PARENT_OBJECT_FK=op.ID
 where o.OBJECT_ID=an.ID  and an.EXPERIMENT_ANALYZED_FK=op.OBJECT_ID 
- and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl" 
+ and o.OBJECT_CLASS="ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis"
  and op.OBJECT_CLASS="ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetImpl" 
  and o.PARENT_OBJECT_FK IS NULL;
  

@@ -18,30 +18,23 @@
  */
 package ubic.gemma.model.association;
 
-import java.io.Serializable;
-
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 
-/**
- * 
- */
-public abstract class Gene2OntologyEntryAssociation implements Serializable {
+import java.io.Serializable;
 
-    /**
-     * 
-     */
+/**
+ *
+ */
+public abstract class Gene2OntologyEntryAssociation implements Identifiable, Serializable {
+
     private static final long serialVersionUID = -6097916172357707966L;
 
     final private Long id = null;
-
     final private Gene gene = null;
-
     final private VocabCharacteristic ontologyEntry = null;
 
-    /**
-     * 
-     */
     public ubic.gemma.model.genome.Gene getGene() {
         return this.gene;
     }
@@ -50,9 +43,6 @@ public abstract class Gene2OntologyEntryAssociation implements Serializable {
         return id;
     }
 
-    /**
-     * 
-     */
     public VocabCharacteristic getOntologyEntry() {
         return this.ontologyEntry;
     }

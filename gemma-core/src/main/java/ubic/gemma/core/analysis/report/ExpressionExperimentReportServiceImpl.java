@@ -28,7 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.Auditable;
@@ -185,7 +185,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Long, Date> results = new HashMap<>();
 
         // do this ahead to avoid round trips - this also filters...
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( ids );
+        Collection<ExpressionExperiment> ees = expressionExperimentService.load( ids );
 
         if ( ees.size() == 0 ) {
             return results;
@@ -429,7 +429,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         /*
          * Because this method returns the results, we have to screen.
          */
-        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.loadMultiple( ids );
+        Collection<ExpressionExperiment> securityScreened = expressionExperimentService.load( ids );
 
         Collection<Long> filteredIds = new HashSet<>();
         for ( ExpressionExperiment ee : securityScreened ) {

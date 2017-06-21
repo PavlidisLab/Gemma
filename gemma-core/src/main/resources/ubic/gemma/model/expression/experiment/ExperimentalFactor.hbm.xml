@@ -4,7 +4,7 @@
     "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping default-cascade="none">
-   <class name="ubic.gemma.model.expression.experiment.ExperimentalFactorImpl" table="EXPERIMENTAL_FACTOR" dynamic-insert="false" dynamic-update="false">
+   <class name="ubic.gemma.model.expression.experiment.ExperimentalFactor" table="EXPERIMENTAL_FACTOR" dynamic-insert="false" dynamic-update="false">
       <cache usage="read-write" />
       <id name="id" type="java.lang.Long" unsaved-value="null">
          <column name="ID" sql-type="BIGINT"/>
@@ -28,12 +28,12 @@
          <key foreign-key="FACTOR_VALUE_EXPERIMENTAL_FACTOR_FKC">
             <column name="EXPERIMENTAL_FACTOR_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.expression.experiment.FactorValueImpl"/>
+         <one-to-many class="ubic.gemma.model.expression.experiment.FactorValue"/>
       </set>
-      <many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesignImpl" cascade="none"  lazy="proxy" fetch="select">
+      <many-to-one name="experimentalDesign" class="ubic.gemma.model.expression.experiment.ExperimentalDesign" cascade="none"  lazy="proxy" fetch="select">
          <column name="EXPERIMENTAL_DESIGN_FK" not-null="true" sql-type="BIGINT"/>
       </many-to-one>
-      <many-to-one name="category" class="ubic.gemma.model.common.description.CharacteristicImpl"  cascade="all" lazy="false" fetch="select">
+      <many-to-one name="category" class="ubic.gemma.model.common.description.Characteristic"  cascade="all" lazy="false" fetch="select">
          <column name="CATEGORY_FK" not-null="false" sql-type="BIGINT" unique="true"/>
       </many-to-one>
       <set name="annotations"  lazy="false" fetch="select" inverse="false" cascade="all">
@@ -41,7 +41,7 @@
          <key foreign-key="CHARACTERISTIC_EXPERIMENTAL_FACTOR_FKC">
             <column name="EXPERIMENTAL_FACTOR_FK" sql-type="BIGINT"/>
          </key>
-         <one-to-many class="ubic.gemma.model.common.description.CharacteristicImpl"/>
+         <one-to-many class="ubic.gemma.model.common.description.Characteristic"/>
       </set>
    </class>
 </hibernate-mapping>

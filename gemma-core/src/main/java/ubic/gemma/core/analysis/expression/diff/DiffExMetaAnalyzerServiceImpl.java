@@ -27,20 +27,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 import ubic.gemma.model.analysis.expression.diff.*;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.*;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.analysis.expression.diff.GeneDiffExMetaAnalysisService;
+import ubic.gemma.persistence.service.expression.designElement.CompositeSequenceService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSubSetService;
 
 import java.util.*;
 
 /**
  * @author Paul
- * @version $Id$
  */
 @Component
 public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService {
@@ -145,7 +144,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
      * The pvalues stored in a DifferentialExpressionAnalysisResult are two-tailed, so we have to divide by two, and
      * then decide which tail to provide.
      *
-     * @param res that are all from the same gene, from a single resultset.
+     * @param res       that are all from the same gene, from a single resultset.
      * @param upperTail if true, the upper tail probability is given, lower tail otehrwise.
      * @return the pvalue that represents the overall results.
      */
@@ -461,7 +460,7 @@ public class DiffExMetaAnalyzerServiceImpl implements DiffExMetaAnalyzerService 
                 log.warn( "No diff ex result set with ID=" + analysisResultSetId );
                 throw new IllegalArgumentException( "No diff ex result set with ID=" + analysisResultSetId );
             }
-            expressionAnalysisResultSet = differentialExpressionResultService.thaw( expressionAnalysisResultSet );
+            differentialExpressionResultService.thaw( expressionAnalysisResultSet );
             resultSets.add( expressionAnalysisResultSet );
         }
         return resultSets;

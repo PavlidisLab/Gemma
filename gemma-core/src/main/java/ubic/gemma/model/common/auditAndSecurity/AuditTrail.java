@@ -18,35 +18,20 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import ubic.gemma.model.common.Identifiable;
+
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * The trail of events (create or update) that occurred in an objects lifetime. The first event added must be a "Create"
  * event, or an exception will be thrown.
  */
-public abstract class AuditTrail implements java.io.Serializable {
+public abstract class AuditTrail implements Identifiable, Serializable {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -7450755789163303140L;
-
-    /**
-     * Constructs new instances of {@link AuditTrail}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link AuditTrail}.
-         */
-        public static AuditTrail newInstance() {
-            return new AuditTrailImpl();
-        }
-
-    }
-
     private Long id;
-
-    private Collection<AuditEvent> events = new java.util.ArrayList<AuditEvent>();
+    private Collection<AuditEvent> events = new java.util.ArrayList<>();
 
     /**
      * Add an event to the AuditTrail
@@ -66,35 +51,8 @@ public abstract class AuditTrail implements java.io.Serializable {
             return false;
         }
         final AuditTrail that = ( AuditTrail ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
-        }
-        return true;
+        return !( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) );
     }
-
-    /**
-     * Get the first event in the audit trail.
-     */
-    public abstract AuditEvent getCreationEvent();
-
-    /**
-     * 
-     */
-    public Collection<AuditEvent> getEvents() {
-        return this.events;
-    }
-
-    /**
-     * 
-     */
-    public Long getId() {
-        return this.id;
-    }
-
-    /**
-     * Get the last (most recent) event in the AuditTrail.
-     */
-    public abstract AuditEvent getLast();
 
     /**
      * Returns a hash code based on this entity's identifiers.
@@ -108,22 +66,20 @@ public abstract class AuditTrail implements java.io.Serializable {
     }
 
     /**
-     * 
+     * Get the first event in the audit trail.
      */
-    public abstract void read();
+    public abstract AuditEvent getCreationEvent();
 
-    /**
-     * 
-     */
-    public abstract void read( String note );
-
-    /**
-     * 
-     */
-    public abstract void read( String note, User actor );
+    public Collection<AuditEvent> getEvents() {
+        return this.events;
+    }
 
     public void setEvents( Collection<AuditEvent> events ) {
         this.events = events;
+    }
+
+    public Long getId() {
+        return this.id;
     }
 
     public void setId( Long id ) {
@@ -131,33 +87,39 @@ public abstract class AuditTrail implements java.io.Serializable {
     }
 
     /**
-     * 
+     * Get the last (most recent) event in the AuditTrail.
      */
+    public abstract AuditEvent getLast();
+
+    public abstract void read();
+
+    public abstract void read( String note );
+
+    public abstract void read( String note, User actor );
+
     public abstract void start();
 
-    /**
-     * 
-     */
     public abstract void start( String note );
 
-    /**
-     * 
-     */
     public abstract void start( String note, User actor );
 
-    /**
-     * 
-     */
     public abstract void update();
 
-    /**
-     * 
-     */
     public abstract void update( String note );
 
-    /**
-     * 
-     */
     public abstract void update( String note, User actor );
+
+    /**
+     * Constructs new instances of {@link AuditTrail}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link AuditTrail}.
+         */
+        public static AuditTrail newInstance() {
+            return new AuditTrailImpl();
+        }
+
+    }
 
 }

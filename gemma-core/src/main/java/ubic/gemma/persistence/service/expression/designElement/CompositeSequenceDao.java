@@ -18,105 +18,64 @@
  */
 package ubic.gemma.persistence.service.expression.designElement;
 
-import java.util.Collection;
-
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.designElement.CompositeSequenceValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @see CompositeSequence
  */
-public interface CompositeSequenceDao extends BaseDao<CompositeSequence> {
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
+public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence, CompositeSequenceValueObject> {
 
-    /**
-     * 
-     */
-    public CompositeSequence find( CompositeSequence compositeSequence );
 
-    /**
-     * 
-     */
-    public java.util.Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
+    Collection<CompositeSequence> findByBioSequence( BioSequence bioSequence );
 
-    /**
-     * 
-     */
-    public java.util.Collection<CompositeSequence> findByBioSequenceName( java.lang.String name );
+    Collection<CompositeSequence> findByBioSequenceName( String name );
 
-    /**
-     * 
-     */
-    public java.util.Collection<CompositeSequence> findByGene( Gene gene );
+    Collection<CompositeSequence> findByGene( Gene gene );
 
-    /**
-     * 
-     */
-    public java.util.Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
+    Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign );
 
-    /**
-     * 
-     */
-    public Collection<CompositeSequence> findByName( java.lang.String name );
+    Collection<CompositeSequence> findByName( String name );
 
-    /**
-     * 
-     */
-    public CompositeSequence findByName( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign,
-            java.lang.String name );
-
-    /**
-     * 
-     */
-    public CompositeSequence findOrCreate( CompositeSequence compositeSequence );
+    CompositeSequence findByName( ArrayDesign arrayDesign, String name );
 
     /**
      * <p>
      * Given a collection of composite sequences returns a map of the given composite sequences to a collection of genes
      * </p>
      */
-    public java.util.Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences );
+    Map<CompositeSequence, Collection<Gene>> getGenes( Collection<CompositeSequence> compositeSequences );
 
     /**
      * given a composite sequence returns a collection of genes
      */
-    public java.util.Collection<Gene> getGenes( CompositeSequence compositeSequence );
+    Collection<Gene> getGenes( CompositeSequence compositeSequence );
 
     /**
      * Returns a map of CompositeSequences to BlatAssociations .
      */
-    public java.util.Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
-            java.util.Collection<CompositeSequence> compositeSequences );
+    Map<CompositeSequence, Collection<BioSequence2GeneProduct>> getGenesWithSpecificity(
+            Collection<CompositeSequence> compositeSequences );
 
-    /**
-     * 
-     */
-    public Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults );
+    Collection<Object[]> getRawSummary( Collection<CompositeSequence> compositeSequences, Integer numResults );
 
-    /**
-     * 
-     */
-    public Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, java.lang.Integer numResults );
+    Collection<Object[]> getRawSummary( ArrayDesign arrayDesign, Integer numResults );
 
     /**
      * <p>
      * See ArrayDesignDao.getRawCompositeSequenceSummary.
      * </p>
      */
-    public Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, java.lang.Integer numResults );
+    Collection<Object[]> getRawSummary( CompositeSequence compositeSequence, Integer numResults );
 
-    /**
-     * 
-     */
-    public void thaw( java.util.Collection<CompositeSequence> compositeSequences );
-
-    public CompositeSequence thaw( CompositeSequence compositeSequence );
+    void thaw( Collection<CompositeSequence> compositeSequences );
 
 }

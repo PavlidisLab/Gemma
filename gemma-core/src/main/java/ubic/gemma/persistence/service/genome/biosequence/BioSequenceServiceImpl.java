@@ -18,181 +18,65 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+
 /**
  * @author keshav
  * @author pavlidis
- * @version $Id$
  * @see BioSequenceService
  */
 @Service
 public class BioSequenceServiceImpl extends BioSequenceServiceBase {
 
-    @Override
-    protected Integer handleCountAll() {
-        return this.getBioSequenceDao().countAll();
+    @Autowired
+    public BioSequenceServiceImpl( BioSequenceDao bioSequenceDao ) {
+        super( bioSequenceDao );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(ubic.gemma.model.genome.biosequence.
-     * BioSequence)
-     */
-    @Override
-    protected BioSequence handleCreate( BioSequence bioSequence ) {
-        return this.getBioSequenceDao().create( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleCreate(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected Collection<BioSequence> handleCreate( Collection<BioSequence> bioSequences ) {
-        return ( Collection<BioSequence> ) this.getBioSequenceDao().create( bioSequences );
-    }
-
-    /**
-     * @see BioSequenceService#find(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected ubic.gemma.model.genome.biosequence.BioSequence handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this.getBioSequenceDao().find( bioSequence );
-    }
+    /* ********************************
+     * Public methods
+     * ********************************/
 
     @Override
     protected BioSequence handleFindByAccession( DatabaseEntry accession ) {
-        return this.getBioSequenceDao().findByAccession( accession );
+        return this.bioSequenceDao.findByAccession( accession );
     }
 
     @Override
     protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) {
-        return this.getBioSequenceDao().findByGenes( genes );
+        return this.bioSequenceDao.findByGenes( genes );
     }
 
     @Override
     protected Collection<BioSequence> handleFindByName( String name ) {
-        return this.getBioSequenceDao().findByName( name );
+        return this.bioSequenceDao.findByName( name );
     }
 
-    /**
-     * @see BioSequenceService#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected BioSequence handleFindOrCreate( BioSequence bioSequence ) {
-        return this.getBioSequenceDao().findOrCreate( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleFindOrCreate(java.util.Collection)
-     */
     @Override
     protected Collection<BioSequence> handleFindOrCreate( Collection<BioSequence> bioSequences ) {
         Collection<BioSequence> result = new HashSet<BioSequence>();
         for ( BioSequence bioSequence : bioSequences ) {
-            result.add( this.getBioSequenceDao().findOrCreate( bioSequence ) );
+            result.add( this.bioSequenceDao.findOrCreate( bioSequence ) );
         }
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleGetGenesByAccession(java.lang.String)
-     */
     @Override
     protected Collection<Gene> handleGetGenesByAccession( String search ) {
-        return this.getBioSequenceDao().getGenesByAccession( search );
+        return this.bioSequenceDao.getGenesByAccession( search );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleGetGenesByName(java.lang.String)
-     */
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) {
-        return this.getBioSequenceDao().getGenesByName( search );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleLoad(long)
-     */
-    @Override
-    protected BioSequence handleLoad( long id ) {
-        return this.getBioSequenceDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleLoadMultiple(java.util.Collection)
-     */
-    @Override
-    protected Collection<BioSequence> handleLoadMultiple( Collection<Long> ids ) {
-        return this.getBioSequenceDao().load( ids );
-    }
-
-    /**
-     * @see BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        this.getBioSequenceDao().remove( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleThaw(ubic.gemma.model.genome.biosequence.
-     * BioSequence )
-     */
-    @Override
-    protected BioSequence handleThaw( BioSequence bioSequence ) {
-        return this.getBioSequenceDao().thaw( bioSequence );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BioSequenceServiceBase#handleThaw(java.util.Collection)
-     */
-    @Override
-    protected Collection<BioSequence> handleThaw( Collection<BioSequence> bioSequences ) {
-        return this.getBioSequenceDao().thaw( bioSequences );
-    }
-
-    /**
-     * @see BioSequenceService#update(java.util.Collection)
-     */
-    @Override
-    protected void handleUpdate( Collection<BioSequence> bioSequences ) {
-        this.getBioSequenceDao().update( bioSequences );
-    }
-
-    /**
-     * @see BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    protected void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        this.getBioSequenceDao().update( bioSequence );
+        return this.bioSequenceDao.getGenesByName( search );
     }
 
 }

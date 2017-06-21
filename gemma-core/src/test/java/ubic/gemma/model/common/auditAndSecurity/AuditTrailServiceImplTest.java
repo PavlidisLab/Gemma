@@ -22,11 +22,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.core.testing.BaseSpringContextTest;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -69,7 +69,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
+        auditable = arrayDesignService.load( auditable.getId() );
+        arrayDesignService.thawLite( auditable );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
@@ -86,7 +87,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
+        auditable = arrayDesignService.load( auditable.getId() );
+        arrayDesignService.thawLite( auditable );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
         assertNotNull( auditable.getCurationDetails() );
@@ -109,7 +111,7 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( auditable.getCurationDetails() );
         assertNotNull( auditable.getCurationDetails().getLastUpdated() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
-        assertEquals( ArrayDesignGeneMappingEventImpl.class,
+        assertEquals( ArrayDesignGeneMappingEvent.class,
                 ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size ).getEventType().getClass() );
     }
 
@@ -127,7 +129,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
+        auditable = arrayDesignService.load( auditable.getId() );
+        arrayDesignService.thawLite( auditable );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
@@ -151,7 +154,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         AuditEvent ev = auditTrailService.addUpdateEvent( auditable, eventType, "nothing special, just testing" );
         assertNotNull( ev.getId() );
 
-        auditable = arrayDesignService.thawLite( arrayDesignService.load( auditable.getId() ) );
+        auditable = arrayDesignService.load( auditable.getId() );
+        arrayDesignService.thawLite( auditable );
 
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );

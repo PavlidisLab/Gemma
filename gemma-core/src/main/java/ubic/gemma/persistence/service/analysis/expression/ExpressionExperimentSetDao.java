@@ -24,14 +24,14 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 
 /**
- * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSet
+ * @see ExpressionExperimentSet
  */
-public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperimentSet> {
+public interface ExpressionExperimentSetDao extends BaseVoEnabledDao<ExpressionExperimentSet, ExpressionExperimentSetValueObject> {
 
     /**
      * Locate expressionExperimentSets that contain the given bioAssaySet.
@@ -87,7 +87,6 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @param loadEEIds whether the returned value object should have the ExpressionExperimentIds collection populated.
      *                  This might be a useful information, but loading the IDs takes slightly longer, so for larger amount of
      *                  EESets this might want to be avoided.
-     * @return
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObject( Long id, boolean loadEEIds );

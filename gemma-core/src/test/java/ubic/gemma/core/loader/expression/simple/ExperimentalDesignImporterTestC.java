@@ -34,8 +34,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.core.expression.experiment.service.ExperimentalDesignService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -97,7 +97,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
     public void tearDown() {
         if ( ee != null ) {
             ee = eeService.load( ee.getId() );
-            eeService.delete( ee );
+            eeService.remove( ee );
         }
     }
 
@@ -147,10 +147,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
         // eeService.thawLite( ee );
     }
 
-    /**
-     * Test method for
-     * {@link ubic.gemma.core.loader.expression.simple.ExperimentalDesignImporterImpl#parse(java.io.InputStream)} .
-     */
+
     @Test
     public final void testUploadBadDesign() throws Exception {
 
@@ -172,7 +169,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
          * make sure we didn't load anything
          */
         ee = this.expressionExperimentService.load( ee.getId() );
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
         assertEquals( 0, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         /*
@@ -194,7 +191,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         ee = this.expressionExperimentService.load( ee.getId() );
         this.aclTestUtils.checkEEAcls( ee );
-        ee = this.expressionExperimentService.thawLite( ee );
+        this.expressionExperimentService.thawLite( ee );
 
         assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
 

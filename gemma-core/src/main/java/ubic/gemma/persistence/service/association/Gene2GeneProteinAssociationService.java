@@ -40,7 +40,7 @@ public interface Gene2GeneProteinAssociationService {
     public Gene2GeneProteinAssociation create( Gene2GeneProteinAssociation gene2GeneProteinAssociation );
 
     /**
-     * delete the given gene2geneProteinAssociation
+     * remove the given gene2geneProteinAssociation
      */
     @Secured({ "GROUP_ADMIN" })
     public void delete( Gene2GeneProteinAssociation gene2GeneProteinAssociation );

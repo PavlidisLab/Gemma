@@ -21,17 +21,13 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * An event involving the analysis of an ArrayDesign
  */
-public abstract class ArrayDesignAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+public abstract class ArrayDesignAnalysisEvent extends AuditEventType {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -8391873112717801492L;
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public ArrayDesignAnalysisEvent() {

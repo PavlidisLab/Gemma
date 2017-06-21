@@ -31,7 +31,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Used to delete results that were not run after institution of precomputed hitlists, and for whatever reason will not
+ * Used to remove results that were not run after institution of precomputed hitlists, and for whatever reason will not
  * be re-run automagically.
  * 
  * @author Paul

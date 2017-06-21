@@ -24,7 +24,7 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
  * </p>
  */
 public abstract class ExpressionExperimentAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl {
+        ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType {
 
     /**
      * The serial version UID of this class. Needed for serialization.

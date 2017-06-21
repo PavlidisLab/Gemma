@@ -24,7 +24,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -128,7 +128,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
             Collection<GeneProductValueObject> existingProducts = geneService.getProducts( gene.getId() );
             if ( existingProducts.isEmpty() ) {
                 log.warn( "Gene " + gene + " exists, but has no products; adding one" );
-                gene = geneService.thaw( gene );
+                geneService.thaw( gene );
                 GeneProduct newgp = createGeneProduct( gene );
                 newgp = geneProductService.create( newgp );
                 gene.getProducts().add( newgp );

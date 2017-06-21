@@ -19,6 +19,8 @@
 
 package ubic.gemma.model.expression.experiment;
 
+import ubic.gemma.model.common.Identifiable;
+
 /**
  * Represents quality information about a data set. The class name comes from the research project name, GEEQ.
  * <p>
@@ -34,7 +36,7 @@ package ubic.gemma.model.expression.experiment;
  * @author paul
  * @version $Id$
  */
-public abstract class Geeq {
+public abstract class Geeq implements Identifiable {
 
     private Double distExpSize;
     private Double distPlatCount;

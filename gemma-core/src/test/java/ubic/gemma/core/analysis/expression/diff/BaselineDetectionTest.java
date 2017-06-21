@@ -28,7 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataMatrixColumnSort;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -72,17 +72,17 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
                 ee = ( ExpressionExperiment ) e.getData();
             }
         }
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             ee = eeService.load( ee.getId() );
-            ee = eeService.thawLite( ee );
+            eeService.thawLite( ee );
 
             try (InputStream is = this.getClass().getResourceAsStream(
                     "/data/loader/expression/geo/gse18162Short/design.txt" );) {
                 experimentalDesignImporter.importDesign( ee, is, false );
             }
             ee = eeService.load( ee.getId() );
-            ee = eeService.thawLite( ee );
+            eeService.thawLite( ee );
         }
         // end setup
     }
@@ -91,7 +91,7 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
     public void tearDown() {
         if ( ee != null ) {
             try {
-                eeService.delete( ee );
+                eeService.remove( ee );
             } catch ( Exception e ) {
 
             }

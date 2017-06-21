@@ -18,15 +18,12 @@
  */
 package ubic.gemma.persistence.service.genome.gene;
 
-import org.springframework.stereotype.Repository;
-
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.persistence.service.BaseDao;
 
 /**
- * @see ubic.gemma.model.genome.gene.GeneAlias
+ * @see GeneAlias
  */
-@Repository
 public interface GeneAliasDao extends BaseDao<GeneAlias> {
 
 }

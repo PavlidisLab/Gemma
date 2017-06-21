@@ -118,4 +118,5 @@ public interface ProcessedExpressionDataVectorService {
     @Secured({ "GROUP_USER" })
     void update( java.util.Collection<ProcessedExpressionDataVector> dedvs );
 
+    void remove( Collection<ProcessedExpressionDataVector> processedExpressionDataVectors );
 }

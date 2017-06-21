@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.job.TaskResult;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -52,16 +52,22 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
 
     private static final Log log = LogFactory.getLog( CharacteristicUpdateTask.class );
 
+    private final BioMaterialService bioMaterialService;
+    private final CharacteristicService characteristicService;
+    private final ExpressionExperimentService expressionExperimentService;
+    private final FactorValueService factorValueService;
+    private final SecurityService securityService;
+
     @Autowired
-    private BioMaterialService bioMaterialService;
-    @Autowired
-    private CharacteristicService characteristicService;
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    private FactorValueService factorValueService;
-    @Autowired
-    private SecurityService securityService;
+    public CharacteristicUpdateTaskImpl( BioMaterialService bioMaterialService,
+            CharacteristicService characteristicService, ExpressionExperimentService expressionExperimentService,
+            FactorValueService factorValueService, SecurityService securityService ) {
+        this.bioMaterialService = bioMaterialService;
+        this.characteristicService = characteristicService;
+        this.expressionExperimentService = expressionExperimentService;
+        this.factorValueService = factorValueService;
+        this.securityService = securityService;
+    }
 
     @Override
     public TaskResult execute() {
@@ -80,7 +86,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     private void addToParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().add( c );
             expressionExperimentService.update( ee );
         } else if ( parent instanceof BioMaterial ) {
@@ -187,7 +193,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             Characteristic cFromDatabase = characteristicService.load( cFromClient.getId() );
             Object parent = charToParent.get( cFromDatabase );
             removeFromParent( cFromDatabase, parent );
-            characteristicService.delete( cFromDatabase );
+            characteristicService.remove( cFromDatabase );
             log.info( "Characteristic deleted: " + cFromDatabase + " (associated with " + parent + ")" );
         }
         return new TaskResult( taskCommand, true );
@@ -241,7 +247,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
             /*
              * if one of the characteristics is a VocabCharacteristic and the other is not, we have to change the
              * characteristic in the database so that it matches the one from the client; since we can't change the
-             * class of the object, we have to delete the old characteristic and make a new one of the appropriate
+             * class of the object, we have to remove the old characteristic and make a new one of the appropriate
              * class.
              */
             Object parent = charToParent.get( cFromDatabase );
@@ -265,7 +271,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                 vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( vc );
 
                 removeFromParent( cFromDatabase, parent );
-                characteristicService.delete( cFromDatabase );
+                characteristicService.remove( cFromDatabase );
                 addToParent( vcFromDatabase, parent );
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
@@ -275,7 +281,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
                                 StringUtils.strip( vcFromDatabase.getValue() ), vcFromDatabase.getCategory(),
                                 vcFromDatabase.getCategoryUri(), vcFromDatabase.getEvidenceCode() ) );
                 removeFromParent( vcFromDatabase, parent );
-                characteristicService.delete( vcFromDatabase );
+                characteristicService.remove( vcFromDatabase );
                 addToParent( cFromDatabase, parent );
             }
 
@@ -330,7 +336,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     private void removeFromParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            ee = expressionExperimentService.thawLite( ee );
+            expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().remove( c );
             expressionExperimentService.update( ee );
         } else if ( parent instanceof BioMaterial ) {

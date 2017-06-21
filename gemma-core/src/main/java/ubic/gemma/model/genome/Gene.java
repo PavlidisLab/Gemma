@@ -18,78 +18,141 @@
  */
 package ubic.gemma.model.genome;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.Multifunctionality;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 /**
  * Represents a functionally transcribed unit in the genome, recognized by other databases (NCBI, Ensembl).
  */
-public abstract class Gene extends ChromosomeFeature {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.Gene}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.Gene}.
-         */
-        public static Gene newInstance() {
-            return new GeneImpl();
-        }
-
-    }
+public class Gene extends ChromosomeFeature {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = -5693198926006383546L;
-
     private String officialSymbol;
-
     private String officialName;
-
     private Integer ncbiGeneId;
-
     private String ensemblId;
-
-    private Collection<GeneProduct> products = new HashSet<GeneProduct>();
-
-    private Collection<GeneAlias> aliases = new HashSet<GeneAlias>();
-
+    private Collection<GeneProduct> products = new HashSet<>();
+    private Collection<GeneAlias> aliases = new HashSet<>();
     private Taxon taxon;
-
-    private Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
-
+    private Collection<DatabaseEntry> accessions = new HashSet<>();
     private Multifunctionality multifunctionality;
-
     private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public Gene() {
     }
 
-    /**
-     * 
-     */
+    /* ********************************
+     * Object override methods
+     * ********************************/
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( this == object ) {
+            return true;
+        }
+        if ( !( object instanceof Gene ) ) {
+            return false;
+        }
+        final Gene that = ( Gene ) object;
+
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+
+            // to be unambiguous need NCBI id OR (symbol + taxon + (name OR physical location))
+
+            boolean bothHaveNcbi = this.getNcbiGeneId() != null && that.getNcbiGeneId() != null;
+
+            if ( bothHaveNcbi ) {
+                return this.getNcbiGeneId().equals( that.getNcbiGeneId() );
+            }
+
+            boolean bothHaveSymbol = this.getOfficialSymbol() != null && that.getOfficialSymbol() != null;
+            boolean bothHaveTaxon = this.getTaxon() != null && that.getTaxon() != null;
+
+            if ( bothHaveTaxon && bothHaveSymbol && this.getTaxon().equals( that.getTaxon() ) && this
+                    .getOfficialSymbol().equalsIgnoreCase( that.getOfficialSymbol() ) ) {
+
+                boolean bothHaveName = this.getOfficialName() != null && that.getOfficialName() != null;
+                boolean bothHavePhysicalLocation =
+                        this.getPhysicalLocation() != null && that.getPhysicalLocation() != null;
+
+                if ( bothHaveName ) {
+                    return this.getOfficialName().equals( that.getOfficialName() );
+                } else
+                    /*
+                     * The gene must be thawed, which isn't certain, but if the gene is persistent, we _probably_
+                     * wouldn't get this far. See bug 1840, which involves code that _shouldn't_ get this far but it
+                     * does.
+                     */
+                    return bothHavePhysicalLocation && this.getPhysicalLocation().equals( that.getPhysicalLocation() );
+                // can't decide, assume unequal.
+
+            }
+            return false; //
+
+        }
+        return true;
+
+    }
+
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() );
+        return hashCode;
+    }
+
+    @Override
+    public String toString() {
+
+        // This causes too many lazy load problems.
+        // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
+        // + this.getPhysicalLocation() + "] " : "" );
+
+        return this.getClass().getSimpleName().replace( "Impl", "" ) + ( this.getId() == null ?
+                " " :
+                " Id:" + this.getId() + " " ) + this.getOfficialSymbol() + " " + ( this.getOfficialName() == null ?
+                "" :
+                this.getOfficialName() + " " ) + ( this.getNcbiGeneId() == null ?
+                "" :
+                " (NCBI " + this.getNcbiGeneId() + ")" );
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     public Collection<DatabaseEntry> getAccessions() {
         return this.accessions;
     }
 
-    /**
-     * 
-     */
+    public void setAccessions( Collection<DatabaseEntry> accessions ) {
+        this.accessions = accessions;
+    }
+
     public Collection<GeneAlias> getAliases() {
         return this.aliases;
+    }
+
+    public void setAliases( Collection<GeneAlias> aliases ) {
+        this.aliases = aliases;
     }
 
     /**
@@ -99,46 +162,56 @@ public abstract class Gene extends ChromosomeFeature {
         return this.ensemblId;
     }
 
-    /**
-     * 
-     */
+    public void setEnsemblId( String ensemblId ) {
+        this.ensemblId = ensemblId;
+    }
+
     public Multifunctionality getMultifunctionality() {
         return this.multifunctionality;
     }
 
-    /**
-     * 
-     */
+    public void setMultifunctionality( Multifunctionality multifunctionality ) {
+        this.multifunctionality = multifunctionality;
+    }
+
     public Integer getNcbiGeneId() {
         return this.ncbiGeneId;
     }
 
-    /**
-     * 
-     */
+    public void setNcbiGeneId( Integer ncbiGeneId ) {
+        this.ncbiGeneId = ncbiGeneId;
+    }
+
     public String getOfficialName() {
         return this.officialName;
     }
 
-    /**
-     * 
-     */
+    public void setOfficialName( String officialName ) {
+        this.officialName = officialName;
+    }
+
     public String getOfficialSymbol() {
         return this.officialSymbol;
     }
 
-    /**
-     * 
-     */
+    public void setOfficialSymbol( String officialSymbol ) {
+        this.officialSymbol = officialSymbol;
+    }
+
     public Collection<PhenotypeAssociation> getPhenotypeAssociations() {
         return this.phenotypeAssociations;
     }
 
-    /**
-     * 
-     */
+    public void setPhenotypeAssociations( Collection<PhenotypeAssociation> phenotypeAssociations ) {
+        this.phenotypeAssociations = phenotypeAssociations;
+    }
+
     public Collection<GeneProduct> getProducts() {
         return this.products;
+    }
+
+    public void setProducts( Collection<GeneProduct> products ) {
+        this.products = products;
     }
 
     /**
@@ -149,44 +222,55 @@ public abstract class Gene extends ChromosomeFeature {
         return this.taxon;
     }
 
-    public void setAccessions( Collection<DatabaseEntry> accessions ) {
-        this.accessions = accessions;
-    }
-
-    public void setAliases( Collection<GeneAlias> aliases ) {
-        this.aliases = aliases;
-    }
-
-    public void setEnsemblId( String ensemblId ) {
-        this.ensemblId = ensemblId;
-    }
-
-    public void setMultifunctionality( Multifunctionality multifunctionality ) {
-        this.multifunctionality = multifunctionality;
-    }
-
-    public void setNcbiGeneId( Integer ncbiGeneId ) {
-        this.ncbiGeneId = ncbiGeneId;
-    }
-
-    public void setOfficialName( String officialName ) {
-        this.officialName = officialName;
-    }
-
-    public void setOfficialSymbol( String officialSymbol ) {
-        this.officialSymbol = officialSymbol;
-    }
-
-    public void setPhenotypeAssociations( Collection<PhenotypeAssociation> phenotypeAssociations ) {
-        this.phenotypeAssociations = phenotypeAssociations;
-    }
-
-    public void setProducts( Collection<GeneProduct> products ) {
-        this.products = products;
-    }
-
     public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
+    }
+
+    private int computeHashCode() {
+        int hashCode = 29;
+
+        if ( this.getNcbiGeneId() != null ) {
+            hashCode += this.getNcbiGeneId().hashCode();
+            return hashCode;
+        }
+
+        if ( this.getOfficialSymbol() != null ) {
+            hashCode += this.getOfficialSymbol().hashCode();
+        }
+
+        if ( this.getTaxon() != null ) {
+            hashCode += this.getTaxon().hashCode();
+        }
+
+        if ( this.getOfficialName() != null ) {
+            hashCode += this.getOfficialName().hashCode();
+        } else if ( this.getPhysicalLocation() != null ) {
+            hashCode += this.getPhysicalLocation().hashCode();
+        } else if ( this.getProducts() != null && this.getProducts().size() > 0 ) {
+            GeneProduct gp = this.getProducts().iterator().next();
+            hashCode += gp.hashCode();
+        }
+
+        hashCode += super.hashCode();
+
+        return hashCode;
+    }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.genome.Gene}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.genome.Gene}.
+         */
+        public static Gene newInstance() {
+            return new Gene();
+        }
+
     }
 
 }

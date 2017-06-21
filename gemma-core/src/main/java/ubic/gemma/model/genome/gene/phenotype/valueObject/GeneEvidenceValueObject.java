@@ -19,49 +19,67 @@
 
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneValueObject;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneValueObject;
-
 /**
  * @author kelsey
- * @version $Id$
  */
 public class GeneEvidenceValueObject extends GeneValueObject {
 
     private static final long serialVersionUID = -3484291071757959936L;
 
-    /** Added field for the Candidate Gene Management System */
-    private Collection<EvidenceValueObject> evidence = new HashSet<>();
-
+    /**
+     * Added field for the Candidate Gene Management System
+     */
+    private Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence = new HashSet<>();
     private Set<String> phenotypesValueUri = new HashSet<>();
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * Required when using the class as a spring bean.
+     */
     public GeneEvidenceValueObject() {
-        super();
     }
 
-    public GeneEvidenceValueObject( Gene gene, Collection<EvidenceValueObject> evidence ) {
+    public GeneEvidenceValueObject( Long id ) {
+        super( id );
+    }
+
+    public GeneEvidenceValueObject( Gene gene, Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         super( gene );
         this.evidence = evidence;
     }
 
     public GeneEvidenceValueObject( Long id, String name, Collection<String> aliases, Integer ncbiId,
             String officialSymbol, String officialName, String description, Double score, Long taxonId,
-            String taxonScientificName, String taxonCommonName, Collection<EvidenceValueObject> evidence ) {
+            String taxonScientificName, String taxonCommonName,
+            Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
         super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
                 taxonScientificName, taxonCommonName );
         this.evidence = evidence;
     }
 
-    /** Given a geneVO finds all valueRI of phenotypes for that gene */
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    /**
+     * Given a geneVO finds all valueRI of phenotypes for that gene
+     */
     public Set<String> findAllPhenotpyesOnGene() {
 
         Set<String> allPhenotypesOnGene = new HashSet<>();
 
-        for ( EvidenceValueObject evidenceVO : this.evidence ) {
+        for ( EvidenceValueObject<? extends PhenotypeAssociation> evidenceVO : this.evidence ) {
             for ( CharacteristicValueObject chaVO : evidenceVO.getPhenotypes() ) {
                 allPhenotypesOnGene.add( chaVO.getValueUri() );
             }
@@ -70,16 +88,16 @@ public class GeneEvidenceValueObject extends GeneValueObject {
         return allPhenotypesOnGene;
     }
 
-    public Collection<EvidenceValueObject> getEvidence() {
+    public Collection<EvidenceValueObject<? extends PhenotypeAssociation>> getEvidence() {
         return this.evidence;
+    }
+
+    public void setEvidence( Collection<EvidenceValueObject<? extends PhenotypeAssociation>> evidence ) {
+        this.evidence = evidence;
     }
 
     public Set<String> getPhenotypesValueUri() {
         return this.phenotypesValueUri;
-    }
-
-    public void setEvidence( Collection<EvidenceValueObject> evidence ) {
-        this.evidence = evidence;
     }
 
     public void setPhenotypesValueUri( Set<String> phenotypesValueUri ) {

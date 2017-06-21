@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class ArrayDesignSubsumeCheckEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignSubsumeCheckEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +34,7 @@ public abstract class ArrayDesignSubsumeCheckEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSubsumeCheckEvent();
         }
 
     }

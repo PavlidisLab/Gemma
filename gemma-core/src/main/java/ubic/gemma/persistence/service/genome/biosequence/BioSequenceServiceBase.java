@@ -18,317 +18,123 @@
  */
 package ubic.gemma.persistence.service.genome.biosequence;
 
-import java.util.Collection;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
+import ubic.gemma.persistence.service.AbstractService;
+import ubic.gemma.persistence.service.VoEnabledService;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * Spring Service base class for <code>BioSequenceService</code>, provides access to
  * all services and entities referenced by this service.
- * 
+ *
  * @see BioSequenceService
- * @version $Id$
  */
-public abstract class BioSequenceServiceBase implements BioSequenceService {
+public abstract class BioSequenceServiceBase extends VoEnabledService<BioSequence, BioSequenceValueObject>
+        implements BioSequenceService {
+
+    final BioSequenceDao bioSequenceDao;
 
     @Autowired
-    private BioSequenceDao bioSequenceDao;
+    public BioSequenceServiceBase( BioSequenceDao bioSequenceDao ) {
+        super( bioSequenceDao );
+        this.bioSequenceDao = bioSequenceDao;
+    }
 
     /**
-     * @see BioSequenceService#countAll()
+     * @see BioSequenceService#findByAccession(DatabaseEntry)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.lang.Integer countAll() {
-        return this.handleCountAll();
-
-    }
-
-    /**
-     * @see BioSequenceService#create(java.util.Collection)
-     */
-    @Override
-    @Transactional
-    public java.util.Collection<BioSequence> create( final java.util.Collection<BioSequence> bioSequences ) {
-        return this.handleCreate( bioSequences );
-
-    }
-
-    /**
-     * @see BioSequenceService#create(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    @Transactional
-    public ubic.gemma.model.genome.biosequence.BioSequence create(
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this.handleCreate( bioSequence );
-
-    }
-
-    /**
-     * @see BioSequenceService#find(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ubic.gemma.model.genome.biosequence.BioSequence find(
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this.handleFind( bioSequence );
-
-    }
-
-    /**
-     * @see BioSequenceService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public ubic.gemma.model.genome.biosequence.BioSequence findByAccession(
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
+    public BioSequence findByAccession( final DatabaseEntry accession ) {
         return this.handleFindByAccession( accession );
 
     }
 
     /**
-     * @see BioSequenceService#findByGenes(java.util.Collection)
+     * @see BioSequenceService#findByGenes(Collection)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<Gene, Collection<BioSequence>> findByGenes( final java.util.Collection<Gene> genes ) {
+    public Map<Gene, Collection<BioSequence>> findByGenes( final Collection<Gene> genes ) {
         return this.handleFindByGenes( genes );
 
     }
 
     /**
-     * @see BioSequenceService#findByName(java.lang.String)
+     * @see BioSequenceService#findByName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<BioSequence> findByName( final java.lang.String name ) {
+    public Collection<BioSequence> findByName( final String name ) {
         return this.handleFindByName( name );
 
     }
 
     /**
-     * @see BioSequenceService#findOrCreate(java.util.Collection)
+     * @see BioSequenceService#findOrCreate(Collection)
      */
     @Override
     @Transactional
-    public java.util.Collection<BioSequence> findOrCreate( final java.util.Collection<BioSequence> bioSequences ) {
+    public Collection<BioSequence> findOrCreate( final Collection<BioSequence> bioSequences ) {
         return this.handleFindOrCreate( bioSequences );
 
     }
 
     /**
-     * @see BioSequenceService#findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    @Transactional
-    public ubic.gemma.model.genome.biosequence.BioSequence findOrCreate(
-            final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this.handleFindOrCreate( bioSequence );
-
-    }
-
-    /**
-     * @see BioSequenceService#getGenesByAccession(java.lang.String)
+     * @see BioSequenceService#getGenesByAccession(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<Gene> getGenesByAccession( final java.lang.String search ) {
+    public Collection<Gene> getGenesByAccession( final String search ) {
         return this.handleGetGenesByAccession( search );
 
     }
 
     /**
-     * @see BioSequenceService#getGenesByName(java.lang.String)
+     * @see BioSequenceService#getGenesByName(String)
      */
     @Override
     @Transactional(readOnly = true)
-    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
+    public Collection<Gene> getGenesByName( final String search ) {
         return this.handleGetGenesByName( search );
 
     }
 
     /**
-     * @see BioSequenceService#load(long)
+     * Performs the core logic for {@link #findByAccession(DatabaseEntry)}
      */
-    @Override
-    @Transactional(readOnly = true)
-    public ubic.gemma.model.genome.biosequence.BioSequence load( final long id ) {
-        return this.handleLoad( id );
-
-    }
+    protected abstract BioSequence handleFindByAccession( DatabaseEntry accession );
 
     /**
-     * @see BioSequenceService#loadMultiple(java.util.Collection)
+     * Performs the core logic for {@link #findByGenes(Collection)}
      */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BioSequence> loadMultiple( final java.util.Collection<Long> ids ) {
-        return this.handleLoadMultiple( ids );
-
-    }
+    protected abstract Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes );
 
     /**
-     * @see BioSequenceService#remove(ubic.gemma.model.genome.biosequence.BioSequence)
+     * Performs the core logic for {@link #findByName(String)}
      */
-    @Override
-    @Transactional
-    public void remove( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        this.handleRemove( bioSequence );
-
-    }
+    protected abstract Collection<BioSequence> handleFindByName( String name );
 
     /**
-     * Sets the reference to <code>bioSequence</code>'s DAO.
+     * Performs the core logic for {@link #findOrCreate(Collection)}
      */
-    public void setBioSequenceDao( BioSequenceDao bioSequenceDao ) {
-        this.bioSequenceDao = bioSequenceDao;
-    }
+    protected abstract Collection<BioSequence> handleFindOrCreate( Collection<BioSequence> bioSequences );
 
     /**
-     * @see BioSequenceService#thaw(java.util.Collection)
+     * Performs the core logic for {@link #getGenesByAccession(String)}
      */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioSequence> thaw( final java.util.Collection<BioSequence> bioSequences ) {
-        return this.handleThaw( bioSequences );
-
-    }
+    protected abstract Collection<Gene> handleGetGenesByAccession( String search );
 
     /**
-     * @see BioSequenceService#thaw(ubic.gemma.model.genome.biosequence.BioSequence)
+     * Performs the core logic for {@link #getGenesByName(String)}
      */
-    @Override
-    @Transactional(readOnly = true)
-    public BioSequence thaw( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        return this.handleThaw( bioSequence );
-
-    }
-
-    /**
-     * @see BioSequenceService#update(java.util.Collection)
-     */
-    @Override
-    @Transactional
-    public void update( final java.util.Collection<BioSequence> bioSequences ) {
-        this.handleUpdate( bioSequences );
-
-    }
-
-    /**
-     * @see BioSequenceService#update(ubic.gemma.model.genome.biosequence.BioSequence)
-     */
-    @Override
-    @Transactional
-    public void update( final ubic.gemma.model.genome.biosequence.BioSequence bioSequence ) {
-        this.handleUpdate( bioSequence );
-
-    }
-
-    /**
-     * Gets the reference to <code>bioSequence</code>'s DAO.
-     */
-    protected BioSequenceDao getBioSequenceDao() {
-        return this.bioSequenceDao;
-    }
-
-    /**
-     * Performs the core logic for {@link #countAll()}
-     */
-    protected abstract java.lang.Integer handleCountAll();
-
-    /**
-     * Performs the core logic for {@link #create(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BioSequence> handleCreate( java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * Performs the core logic for {@link #create(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFind(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Performs the core logic for {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFindByAccession(
-            ubic.gemma.model.common.description.DatabaseEntry accession );
-
-    /**
-     * Performs the core logic for {@link #findByGenes(java.util.Collection)}
-     */
-    protected abstract java.util.Map<Gene, Collection<BioSequence>> handleFindByGenes( java.util.Collection<Gene> genes );
-
-    /**
-     * Performs the core logic for {@link #findByName(java.lang.String)}
-     */
-    protected abstract java.util.Collection<BioSequence> handleFindByName( java.lang.String name );
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BioSequence> handleFindOrCreate(
-            java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleFindOrCreate(
-            ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
-     */
-    protected abstract java.util.Collection<Gene> handleGetGenesByAccession( java.lang.String search );
-
-    /**
-     * Performs the core logic for {@link #getGenesByName(java.lang.String)}
-     */
-    protected abstract java.util.Collection<Gene> handleGetGenesByName( java.lang.String search );
-
-    /**
-     * Performs the core logic for {@link #load(long)}
-     */
-    protected abstract ubic.gemma.model.genome.biosequence.BioSequence handleLoad( long id );
-
-    /**
-     * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
-     */
-    protected abstract java.util.Collection<BioSequence> handleLoadMultiple( java.util.Collection<Long> ids );
-
-    /**
-     * Performs the core logic for {@link #remove(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract void handleRemove( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Performs the core logic for {@link #thaw(java.util.Collection)}
-     */
-    protected abstract Collection<BioSequence> handleThaw( java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract BioSequence handleThaw( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * Performs the core logic for {@link #update(java.util.Collection)}
-     */
-    protected abstract void handleUpdate( java.util.Collection<BioSequence> bioSequences );
-
-    /**
-     * Performs the core logic for {@link #update(ubic.gemma.model.genome.biosequence.BioSequence)}
-     */
-    protected abstract void handleUpdate( ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
+    protected abstract Collection<Gene> handleGetGenesByName( String search );
 
 }

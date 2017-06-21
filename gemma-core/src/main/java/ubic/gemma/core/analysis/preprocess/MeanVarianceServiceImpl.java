@@ -14,27 +14,26 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
-import java.util.Collection;
-
+import cern.colt.matrix.DoubleMatrix2D;
+import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import cern.colt.matrix.DoubleMatrix2D;
-import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.math.linearmodels.MeanVarianceEstimator;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.MeanVarianceRelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
 
 /**
  * Manage the mean-variance relationship.
- * 
+ *
  * @author ptan
  * @version $Id$
  */
@@ -52,7 +51,7 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     /**
      * @param matrix on which mean variance relation is computed with
-     * @param MeanVarianceRelation object, if null, a new object is created
+     * @param mvr    object, if null, a new object is created
      * @return MeanVarianceRelation object
      */
     private MeanVarianceRelation calculateMeanVariance( ExpressionDataDoubleMatrix matrix, MeanVarianceRelation mvr ) {
@@ -100,27 +99,29 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
             log.info( "Recomputing mean-variance" );
 
-            ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
-            mvr = updatedEe.getMeanVarianceRelation();
-            ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( updatedEe );
+            expressionExperimentService.thawLiter( ee );
+            mvr = ee.getMeanVarianceRelation();
+            ExpressionDataDoubleMatrix intensities = meanVarianceServiceHelper.getIntensities( ee );
             if ( intensities == null ) {
-                throw new IllegalStateException( "Could not locate intensity matrix for " + updatedEe.getShortName() );
+                throw new IllegalStateException( "Could not locate intensity matrix for " + ee.getShortName() );
             }
 
-            Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( updatedEe );
+            Collection<QuantitationType> qtList = expressionExperimentService.getPreferredQuantitationType( ee );
             QuantitationType qt = null;
 
             if ( qtList.size() == 0 ) {
                 log.error( "Did not find any preferred quantitation type. Mean-variance relation was not computed." );
             } else {
                 qt = qtList.iterator().next();
-                log.warn( "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
-                        + qt + ") will be used." );
+                log.warn(
+                        "Found more than one preferred quantitation type. Only the first preferred quantitation type ("
+                                + qt + ") will be used." );
 
                 try {
                     intensities = ExpressionDataDoubleMatrixUtil.filterAndLogTransform( qt, intensities );
                 } catch ( UnknownLogScaleException e ) {
-                    log.warn( "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
+                    log.warn(
+                            "Problem log transforming data. Check that the appropriate log scale is used. Mean-variance will be computed as is." );
                 }
 
                 mvr = calculateMeanVariance( intensities, mvr );
@@ -136,37 +137,19 @@ public class MeanVarianceServiceImpl implements MeanVarianceService {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.MeanVarianceService#findOrCreate(ExpressionExperiment)
-     */
     @Override
     public MeanVarianceRelation findOrCreate( ExpressionExperiment ee ) {
         return create( ee, false );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.analysis.preprocess.MeanVarianceService#hasMeanVariance(ExpressionExperiment)
-     */
     @Override
     public boolean hasMeanVariance( ExpressionExperiment ee ) {
         return ee.getMeanVarianceRelation() != null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.core.analysis.preprocess.MeanVarianceService#find(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment
-     * )
-     */
     @Override
     public MeanVarianceRelation find( ExpressionExperiment ee ) {
-        ExpressionExperiment updatedEe = expressionExperimentService.thawLiter( ee );
-        return updatedEe.getMeanVarianceRelation();
+        expressionExperimentService.thawLiter( ee );
+        return ee.getMeanVarianceRelation();
     }
 }

@@ -19,59 +19,42 @@
 
 package ubic.gemma.persistence.service.association.coexpression;
 
-import java.util.List;
-
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
-import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeImpl;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.service.AbstractDao;
 
+import java.util.List;
+
 /**
  * @author paul
- * @version $Id$
  */
 @Component
-public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionNodeDegree> implements
-        CoexpressionNodeDegreeDao {
+public class CoexpressionNodeDegreeDaoImpl extends AbstractDao<GeneCoexpressionNodeDegree>
+        implements CoexpressionNodeDegreeDao {
 
     @Autowired
     public CoexpressionNodeDegreeDaoImpl( SessionFactory sessionFactory ) {
-        super( GeneCoexpressionNodeDegreeImpl.class );
-        super.setSessionFactory( sessionFactory );
+        super( GeneCoexpressionNodeDegree.class, sessionFactory );
     }
 
     @Override
     public void deleteFor( Gene gene ) {
-        List<GeneCoexpressionNodeDegree> existing = this.getHibernateTemplate().findByNamedParam(
-                "from GeneCoexpressionNodeDegreeImpl n where n.gene = :g", "g", gene );
-        if ( existing.isEmpty() ) return;
+        //noinspection unchecked
+        List<GeneCoexpressionNodeDegree> existing = this.findByProperty( "gene", gene );
+        if ( existing.isEmpty() )
+            return;
         this.remove( existing );
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeDao#findOrCreate(ubic.gemma.model.genome.
-     * Gene)
-     */
     @Override
     @Transactional
     public GeneCoexpressionNodeDegree findOrCreate( Gene gene ) {
-        List<GeneCoexpressionNodeDegree> existing = this.getHibernateTemplate().findByNamedParam(
-                " from GeneCoexpressionNodeDegreeImpl n where n.geneId = :g", "g", gene.getId() );
-        if ( existing.isEmpty() ) {
-            GeneCoexpressionNodeDegree nd = GeneCoexpressionNodeDegree.Factory.newInstance( gene );
-            return this.create( nd );
-        }
-        return existing.get( 0 );
+        GeneCoexpressionNodeDegree existing = this.findOneByProperty( "geneId", gene.getId() );
+        return existing == null ? this.create( GeneCoexpressionNodeDegree.Factory.newInstance( gene ) ) : existing;
 
     }
-
 }

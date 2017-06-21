@@ -29,11 +29,11 @@ import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.*;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.persistence.util.EntityUtils;
 import ubic.gemma.persistence.util.Settings;
 
@@ -45,30 +45,29 @@ import java.util.*;
  */
 @Component
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
-    private String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
-
-    private String ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX = "ArrayDesignReport";
-
+    private final static String HOME_DIR = Settings.getString( "gemma.appdata.home" );
+    private final static Log log = LogFactory.getLog( ArrayDesignReportServiceImpl.class );
+    private final static String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
+    private final static String ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX = "ArrayDesignReport";
     // For all array designs
-    private String ARRAY_DESIGN_SUMMARY = "AllArrayDesignsSummary";
+    private final static String ARRAY_DESIGN_SUMMARY = "AllArrayDesignsSummary";
 
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private AuditEventService auditEventService;
+    private final ArrayDesignService arrayDesignService;
+    private final AuditEventService auditEventService;
 
     /**
      * Batch of classes we can get events for all at once.
      */
     @SuppressWarnings("unchecked")
-    private Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignSequenceUpdateEvent.class,
+    private final Class<? extends AuditEventType>[] eventTypes = new Class[] { ArrayDesignSequenceUpdateEvent.class,
             ArrayDesignSequenceAnalysisEvent.class, ArrayDesignGeneMappingEvent.class,
             ArrayDesignRepeatAnalysisEvent.class };
 
-    private String HOME_DIR = Settings.getString( "gemma.appdata.home" );
-
-    private Log log = LogFactory.getLog( this.getClass() );
+    @Autowired
+    public ArrayDesignReportServiceImpl( ArrayDesignService arrayDesignService, AuditEventService auditEventService ) {
+        this.arrayDesignService = arrayDesignService;
+        this.auditEventService = auditEventService;
+    }
 
     /**
      * Fill in event information
@@ -96,7 +95,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
-        Collection<ArrayDesign> arrayDesigns = arrayDesignService.loadMultiple( ids );
+        Collection<ArrayDesign> arrayDesigns = arrayDesignService.load( ids );
 
         Map<Long, ArrayDesign> idMap = EntityUtils.getIdMap( arrayDesigns );
 
@@ -200,7 +199,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     public void generateAllArrayDesignReport() {
         log.info( "Generating report summarizing all platforms ... " );
 
-        // obtain time information (for timestamping)
+        // obtain time information (for timestamp)
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
@@ -210,7 +209,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         long numGenes = arrayDesignService.numAllGenes();
 
         // create a surrogate ArrayDesignValue object to represent the total of all platforms
-        ArrayDesignValueObject adVo = new ArrayDesignValueObject();
+        ArrayDesignValueObject adVo = new ArrayDesignValueObject( -1L );
         adVo.setNumProbeSequences( Long.toString( numCsBioSequences ) );
         adVo.setNumProbeAlignments( Long.toString( numCsBlatResults ) );
         adVo.setNumProbesToGenes( Long.toString( numCsGenes ) );
@@ -258,7 +257,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         if ( ad == null )
             return;
 
-        // obtain time information (for timestamping)
+        // obtain time information (for timestamp)
         Date d = new Date( System.currentTimeMillis() );
         String timestamp = DateFormatUtils.format( d, "yyyy.MM.dd HH:mm" );
 
@@ -295,7 +294,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         try (FileOutputStream fos = new FileOutputStream( reportFileName );
                 ObjectOutputStream oos = new ObjectOutputStream( fos )) {
-            // remove old file first (possible todo: don't do this until after new file is okayed - maybe this delete
+            // remove old file first (possible todo: don't do this until after new file is okayed - maybe this remove
             // isn't needed, just clobber.)
 
             oos.writeObject( adVo );
@@ -307,17 +306,10 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     }
 
     @Override
-    public ArrayDesignValueObject generateArrayDesignReport( Long id ) {
-        Collection<Long> ids = new ArrayList<>();
-        ids.add( id );
-        Collection<ArrayDesignValueObject> adVo = arrayDesignService.loadValueObjects( ids );
-        if ( adVo != null && adVo.size() > 0 ) {
-            generateArrayDesignReport( adVo.iterator().next() );
-            return getSummaryObject( id );
-        }
-        log.warn( "No value objects return for requested platforms" );
-        return null;
-
+    public ArrayDesignValueObject generateArrayDesignReport( ArrayDesign arrayDesign ) {
+        ArrayDesignValueObject ad = arrayDesignService.loadValueObject( arrayDesign );
+        generateArrayDesignReport( ad );
+        return getSummaryObject( ad.getId() );
     }
 
     @Override
@@ -366,6 +358,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      *
      * @return arrayDesignValueObjects the specified summary object
      */
+    @Override
     public Collection<ArrayDesignValueObject> getSummaryObject( Collection<Long> ids ) {
         Collection<ArrayDesignValueObject> adVos = new ArrayList<>();
         for ( Long id : ids ) {
@@ -374,7 +367,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                 adVos.add( getSummaryObject( id ) );
             }
         }
-
         return adVos;
     }
 
@@ -399,13 +391,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
             }
         }
         return adVo;
-    }
-
-    /**
-     * @param arrayDesignService the arrayDesignService to set
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**

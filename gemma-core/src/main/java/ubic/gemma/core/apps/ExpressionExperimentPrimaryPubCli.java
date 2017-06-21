@@ -22,7 +22,7 @@ package ubic.gemma.core.apps;
 import cern.colt.Arrays;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.entrez.pubmed.ExpressionExperimentBibRefFinder;
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -102,7 +102,7 @@ public class ExpressionExperimentPrimaryPubCli extends ExpressionExperimentManip
             if ( experiment.getPrimaryPublication() == null ) {
                 log.warn( experiment + " has no existing primary publication" );
             }
-            experiment = ees.thawLite( experiment );
+            ees.thawLite( experiment );
 
             // get from GEO or get from a file
             BibliographicReference ref = fetcher.retrieveByHTTP( pubmedIds.get( experiment.getShortName() ) );

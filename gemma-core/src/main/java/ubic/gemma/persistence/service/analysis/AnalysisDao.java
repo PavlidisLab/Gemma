@@ -18,44 +18,35 @@
  */
 package ubic.gemma.persistence.service.analysis;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.Investigation;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.service.BaseDao;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * @see ubic.gemma.model.analysis.Analysis
- * @version $Id$
  */
 public interface AnalysisDao<T extends Analysis> extends BaseDao<T> {
-    /**
-     * 
-     */
-    public java.util.Collection<T> findByInvestigation( Investigation investigation );
+
+    Collection<T> findByInvestigation( Investigation investigation );
 
     /**
-     * <p>
      * Given a collection of investigations returns a Map of Analysis --> collection of Investigations
-     * <p>
      * The collection of investigations returned by the map will include all the investigations for the analysis key iff
      * one of the investigations for that analysis was in the given collection started with
      */
-    public java.util.Map<Investigation, Collection<T>> findByInvestigations( Collection<Investigation> investigations );
+    Map<Investigation, Collection<T>> findByInvestigations( Collection<Investigation> investigations );
 
     /**
-     * Returns a collection of anaylsis that have a name that starts with the given name
+     * Returns a collection of analysis that have a name that starts with the given name
      */
-    public java.util.Collection<T> findByName( java.lang.String name );
+    Collection<T> findByName( String name );
 
-    /**
-     * 
-     */
-    public java.util.Collection<T> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
+    Collection<T> findByParentTaxon( Taxon taxon );
 
-    /**
-     * 
-     */
-    public java.util.Collection<T> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
+    Collection<T> findByTaxon( Taxon taxon );
 
 }

@@ -18,82 +18,44 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
-/**
- * 
- */
-public abstract class Taxon implements java.io.Serializable {
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.genome.Taxon}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.genome.Taxon}.
-         */
-        public static ubic.gemma.model.genome.Taxon newInstance() {
-            return new ubic.gemma.model.genome.TaxonImpl();
-        }
-
-        /**
-         * (used in tests)
-         */
-        public static ubic.gemma.model.genome.Taxon newInstance( String scientificName, String commonName,
-                String abbreviation, String unigenePrefix, String swissProtSuffix, Integer ncbiId, Boolean isSpecies,
-                Boolean isGenesUsable ) {
-            final ubic.gemma.model.genome.Taxon entity = new ubic.gemma.model.genome.TaxonImpl();
-            entity.setScientificName( scientificName );
-            entity.setCommonName( commonName );
-            entity.setAbbreviation( abbreviation );
-            entity.setUnigenePrefix( unigenePrefix );
-            entity.setSwissProtSuffix( swissProtSuffix );
-            entity.setNcbiId( ncbiId );
-            entity.setIsSpecies( isSpecies );
-            entity.setIsGenesUsable( isGenesUsable );
-
-            return entity;
-        }
-    }
+public class Taxon implements Identifiable, java.io.Serializable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 9219471082900615778L;
     private String scientificName;
-
     private String commonName;
-
     private String abbreviation;
-
-    private String unigenePrefix;
-
-    private String swissProtSuffix;
-
     private Integer ncbiId;
-
     private Boolean isSpecies;
-
     private Boolean isGenesUsable;
-
     private Integer secondaryNcbiId;
-
     private Long id;
-
     private ExternalDatabase externalDatabase;
-
     private Taxon parentTaxon;
+
+    /* ********************************
+     * Constructors
+     * ********************************/
 
     /**
      * No-arg constructor added to satisfy javabean contract
-     * 
+     *
      * @author Paul
      */
     public Taxon() {
     }
 
+    /* ********************************
+     * Object override methods
+     * ********************************/
+
     /**
-     * Returns <code>true</code> if the argument is an Taxon instance and all identifiers for this entity equal the
+     * Returns <code>true</code> if the argument is a Taxon instance and all identifiers for this entity equal the
      * identifiers of the argument entity. Returns <code>false</code> otherwise.
      */
     @Override
@@ -105,73 +67,133 @@ public abstract class Taxon implements java.io.Serializable {
             return false;
         }
         final Taxon that = ( Taxon ) object;
-        if ( this.id == null || that.getId() == null || !this.id.equals( that.getId() ) ) {
-            return false;
+
+        if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
+
+            // use ncbi id OR scientific name.
+
+            if ( this.getNcbiId() != null && that.getNcbiId() != null && !this.getNcbiId().equals( that.getNcbiId() ) )
+                return false;
+
+            if ( this.getSecondaryNcbiId() != null && that.getSecondaryNcbiId() != null && !this.getSecondaryNcbiId()
+                    .equals( that.getSecondaryNcbiId() ) )
+                return false;
+
+            if ( this.getScientificName() != null && that.getScientificName() != null && !this.getScientificName()
+                    .equals( that.getScientificName() ) )
+                return false;
+
         }
         return true;
     }
 
+    @Override
+    public int hashCode() {
+        int hashCode = 0;
+        hashCode = 29 * hashCode + ( this.getId() == null ? computeHashCode() : this.getId().hashCode() );
+
+        return hashCode;
+    }
+
     /**
-     * e.g. E.coli
+     * @see Taxon#toString()
      */
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        buf.append( "Taxon:" );
+        if ( this.getId() != null ) {
+            buf.append( " Id = " ).append( this.getId() );
+        }
+        if ( this.getScientificName() != null ) {
+            buf.append( " " ).append( this.getScientificName() );
+        }
+        if ( this.getCommonName() != null ) {
+            buf.append( " (" ).append( this.getCommonName() ).append( ")" );
+        }
+        if ( this.getNcbiId() != null ) {
+            buf.append( " NCBI id=" ).append( this.getNcbiId() );
+        }
+        if ( this.getAbbreviation() != null ) {
+            buf.append( " Abbreviation =" ).append( this.getAbbreviation() );
+        }
+        return buf.toString();
+    }
+
+    /* ********************************
+     * Public methods
+     * ********************************/
+
     public String getAbbreviation() {
         return this.abbreviation;
     }
 
-    /**
-     * e.g. mouse, rat, human.
-     */
+    public void setAbbreviation( String abbreviation ) {
+        this.abbreviation = abbreviation;
+    }
+
     public String getCommonName() {
         return this.commonName;
     }
 
-    /**
-     * 
-     */
+    public void setCommonName( String commonName ) {
+        this.commonName = commonName;
+    }
+
     public ExternalDatabase getExternalDatabase() {
         return this.externalDatabase;
     }
 
-    /**
-     * 
-     */
+    public void setExternalDatabase( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
+        this.externalDatabase = externalDatabase;
+    }
+
     public Long getId() {
         return this.id;
     }
 
-    /**
-     * 
-     */
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     public Boolean getIsGenesUsable() {
         return this.isGenesUsable;
     }
 
-    /**
-     * 
-     */
+    public void setIsGenesUsable( Boolean isGenesUsable ) {
+        this.isGenesUsable = isGenesUsable;
+    }
+
     public Boolean getIsSpecies() {
         return this.isSpecies;
     }
 
-    /**
-     * Identifier in NCBI. This is here for convenience.
-     */
+    public void setIsSpecies( Boolean isSpecies ) {
+        this.isSpecies = isSpecies;
+    }
+
     public Integer getNcbiId() {
         return this.ncbiId;
     }
 
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.Taxon getParentTaxon() {
+    public void setNcbiId( Integer ncbiId ) {
+        this.ncbiId = ncbiId;
+    }
+
+    public Taxon getParentTaxon() {
         return this.parentTaxon;
     }
 
-    /**
-     * e.g. Homo sapiens
-     */
+    public void setParentTaxon( Taxon parentTaxon ) {
+        this.parentTaxon = parentTaxon;
+    }
+
     public String getScientificName() {
         return this.scientificName;
+    }
+
+    public void setScientificName( String scientificName ) {
+        this.scientificName = scientificName;
     }
 
     /**
@@ -182,83 +204,53 @@ public abstract class Taxon implements java.io.Serializable {
         return this.secondaryNcbiId;
     }
 
-    /**
-     * e.g. "_Human"
-     * 
-     * @deprecated
-     */
-    @Deprecated
-    public String getSwissProtSuffix() {
-        return this.swissProtSuffix;
-    }
-
-    /**
-     * e.g. Hs
-     * 
-     * @deprecated
-     */
-    @Deprecated
-    public String getUnigenePrefix() {
-        return this.unigenePrefix;
-    }
-
-    /**
-     * Returns a hash code based on this entity's identifiers.
-     */
-    @Override
-    public int hashCode() {
-        int hashCode = 0;
-        hashCode = 29 * hashCode + ( id == null ? 0 : id.hashCode() );
-
-        return hashCode;
-    }
-
-    public void setAbbreviation( String abbreviation ) {
-        this.abbreviation = abbreviation;
-    }
-
-    public void setCommonName( String commonName ) {
-        this.commonName = commonName;
-    }
-
-    public void setExternalDatabase( ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        this.externalDatabase = externalDatabase;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsGenesUsable( Boolean isGenesUsable ) {
-        this.isGenesUsable = isGenesUsable;
-    }
-
-    public void setIsSpecies( Boolean isSpecies ) {
-        this.isSpecies = isSpecies;
-    }
-
-    public void setNcbiId( Integer ncbiId ) {
-        this.ncbiId = ncbiId;
-    }
-
-    public void setParentTaxon( ubic.gemma.model.genome.Taxon parentTaxon ) {
-        this.parentTaxon = parentTaxon;
-    }
-
-    public void setScientificName( String scientificName ) {
-        this.scientificName = scientificName;
-    }
-
     public void setSecondaryNcbiId( Integer secondaryNcbiId ) {
         this.secondaryNcbiId = secondaryNcbiId;
     }
 
-    public void setSwissProtSuffix( String swissProtSuffix ) {
-        this.swissProtSuffix = swissProtSuffix;
+    private int computeHashCode() {
+        int hashCode = 0;
+        if ( this.getNcbiId() != null ) {
+            hashCode += this.getNcbiId().hashCode();
+        } else if ( this.getScientificName() != null ) {
+            hashCode += this.getScientificName().hashCode();
+        } else {
+            hashCode += super.hashCode();
+        }
+
+        return hashCode;
     }
 
-    public void setUnigenePrefix( String unigenePrefix ) {
-        this.unigenePrefix = unigenePrefix;
+    /* ********************************
+     * Public classes
+     * ********************************/
+
+    /**
+     * Constructs new instances of {@link Taxon}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link Taxon}.
+         */
+        public static Taxon newInstance() {
+            return new Taxon();
+        }
+
+        /**
+         * (used in tests)
+         */
+        public static Taxon newInstance( String scientificName, String commonName, String abbreviation, Integer ncbiId,
+                Boolean isSpecies, Boolean isGenesUsable ) {
+            final Taxon entity = new Taxon();
+            entity.setScientificName( scientificName );
+            entity.setCommonName( commonName );
+            entity.setAbbreviation( abbreviation );
+            entity.setNcbiId( ncbiId );
+            entity.setIsSpecies( isSpecies );
+            entity.setIsGenesUsable( isGenesUsable );
+
+            return entity;
+        }
     }
 
 }

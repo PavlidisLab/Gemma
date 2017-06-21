@@ -30,7 +30,7 @@ import ubic.gemma.persistence.service.expression.designElement.CompositeSequence
 import java.io.*;
 
 /**
- * Delete design elements (probes) that are invalid for one reason or another. The impetus for this was to delete probes
+ * Delete design elements (probes) that are invalid for one reason or another. The impetus for this was to remove probes
  * in the MG-U74 version 1 set, but this is of general use. Probes to be removed are given in a file.
  *
  * @author Paul

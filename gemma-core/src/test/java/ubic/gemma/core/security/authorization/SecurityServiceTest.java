@@ -18,22 +18,11 @@
  */
 package ubic.gemma.core.security.authorization;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import gemma.gsec.SecurityService;
 import gemma.gsec.acl.domain.AclGrantedAuthoritySid;
 import gemma.gsec.acl.domain.AclPrincipalSid;
 import gemma.gsec.authentication.UserDetailsImpl;
 import gemma.gsec.authentication.UserManager;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,20 +34,22 @@ import org.springframework.security.acls.model.MutableAcl;
 import org.springframework.security.acls.model.Sid;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-
+import ubic.gemma.core.security.authorization.acl.AclTestUtils;
+import ubic.gemma.core.testing.BaseSpringContextTest;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.security.authorization.acl.AclTestUtils;
-import ubic.gemma.core.testing.BaseSpringContextTest;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests the SecurityService: making objects public or private and testing the permissions.
- * 
+ *
  * @author keshav
- * @version $Id$
  */
 public class SecurityServiceTest extends BaseSpringContextTest {
 
@@ -79,11 +70,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     @Autowired
     private AclTestUtils aclTestUtils;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.BaseDependencyInjectionSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() {
         this.arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( 5 );
@@ -119,8 +105,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     /**
      * Tests that the same ACE can not be added twice to a securable object.
-     * 
-     * @throws Exception
      */
     @Test
     public void testDuplicateAcesNotAddedOnPrivateExpressionExperiment() throws Exception {
@@ -222,9 +206,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
 
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public void testMakeExpressionExperimentPrivate() throws Exception {
 
@@ -237,8 +218,9 @@ public class SecurityServiceTest extends BaseSpringContextTest {
                     this.securityService.isPrivate( ee ) );
 
             for ( BioAssay ba : ee.getBioAssays() ) {
-                assertTrue( "BioAssay not private, acl of ee was: " + aclTestUtils.getAcl( ee )
-                        + "\nacl of bioassay was: " + aclTestUtils.getAcl( ba ), this.securityService.isPrivate( ba ) );
+                assertTrue(
+                        "BioAssay not private, acl of ee was: " + aclTestUtils.getAcl( ee ) + "\nacl of bioassay was: "
+                                + aclTestUtils.getAcl( ba ), this.securityService.isPrivate( ba ) );
             }
 
             this.securityService.makePublic( ee );
@@ -256,8 +238,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     /**
      * Tests changing object level security on the ArrayDesign from public to private WITHOUT the correct permission
      * (You need to be administrator).
-     * 
-     * @throws Exception
      */
     @Test
     public void testMakePrivateWithoutPermission() throws Exception {
@@ -277,8 +257,6 @@ public class SecurityServiceTest extends BaseSpringContextTest {
     /**
      * Tests an unlikely scenario?? but if there is an acl that was duplicated with same principal, permission and
      * object then both acls can be deleted.
-     * 
-     * @throws Exception
      */
     @Test
     public void testRemoveMultipleAcesFromPrivateExpressionExperiment() throws Exception {
@@ -314,7 +292,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         MutableAcl aclAfterReadableAddedDuplicate = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces + 1, aclAfterReadableAddedDuplicate.getEntries().size() );
 
-        // delete the ace now and check removed permission completely.
+        // remove the ace now and check removed permission completely.
         this.securityService.makeUnreadableByGroup( ee, groupName );
         MutableAcl aclAfterReadableAddedDuplicateRemoval = aclTestUtils.getAcl( ee );
         assertEquals( numberOfAces, aclAfterReadableAddedDuplicateRemoval.getEntries().size() );
@@ -404,8 +382,8 @@ public class SecurityServiceTest extends BaseSpringContextTest {
         try {
             this.userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
-            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
+            this.userManager.createUser( new UserDetailsImpl( "foo", username, true, null,
+                    RandomStringUtils.randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 }

@@ -403,7 +403,7 @@ Gemma.EEReportGridColumnRenderers = {
             if (type === 'FailedLinkAnalysisEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
-            } else if (type === 'TooSmallDatasetLinkAnalysisEventImpl') {
+            } else if (type === 'TooSmallDatasetLinkAnalysisEvent') {
                 color = '#CCC';
                 qtip = 'ext:qtip="Too small to perform link analysis"';
                 suggestRun = false;
@@ -435,7 +435,7 @@ Gemma.EEReportGridColumnRenderers = {
             var color = "#000";
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if (type === 'FailedPCAAnalysisEventImpl') {
+            if (type === 'FailedPCAAnalysisEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             }
@@ -473,10 +473,10 @@ Gemma.EEReportGridColumnRenderers = {
             var color = "#000";
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if (type == 'FailedBatchInformationFetchingEventImpl') {
+            if (type == 'FailedBatchInformationFetchingEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
-            } else if (type == 'FailedBatchInformationMissingEventImpl') {
+            } else if (type == 'FailedBatchInformationMissingEvent') {
                 if (hasBatchInformation) {
                     return '<span style="color:#000;">Provided</span>&nbsp;';
                 } else {
@@ -544,7 +544,7 @@ Gemma.EEReportGridColumnRenderers = {
 
             var suggestRun = true;
             var qtip = 'ext:qtip="OK"';
-            if (type == 'FailedProcessedVectorComputationEventImpl') {
+            if (type == 'FailedProcessedVectorComputationEvent') {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             }

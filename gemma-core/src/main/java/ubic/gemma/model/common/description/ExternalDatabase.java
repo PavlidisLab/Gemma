@@ -26,7 +26,7 @@ import java.util.Collection;
 /**
  * @author Paul
  */
-public abstract class ExternalDatabase extends AbstractAuditable {
+public class ExternalDatabase extends AbstractAuditable {
 
     /**
      * The serial version UID of this class. Needed for serialization.
@@ -43,6 +43,26 @@ public abstract class ExternalDatabase extends AbstractAuditable {
      * No-arg constructor added to satisfy javabean contract
      */
     public ExternalDatabase() {
+    }
+
+    @Override
+    public boolean equals( Object object ) {
+        if ( !( object instanceof ExternalDatabase ) )
+            return false;
+
+        ExternalDatabase that = ( ExternalDatabase ) object;
+        if ( this.getId() != null && that.getId() != null )
+            return super.equals( object );
+
+        return this.getName().equals( that.getName() );
+    }
+
+    @Override
+    public int hashCode() {
+        if ( this.getId() != null )
+            return super.hashCode();
+
+        return this.getName().hashCode();
     }
 
     public ubic.gemma.model.common.auditAndSecurity.Contact getDatabaseSupplier() {
@@ -104,7 +124,7 @@ public abstract class ExternalDatabase extends AbstractAuditable {
          * Constructs a new instance of {@link ubic.gemma.model.common.description.ExternalDatabase}.
          */
         public static ubic.gemma.model.common.description.ExternalDatabase newInstance() {
-            return new ubic.gemma.model.common.description.ExternalDatabaseImpl();
+            return new ubic.gemma.model.common.description.ExternalDatabase();
         }
 
     }

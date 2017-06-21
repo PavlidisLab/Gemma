@@ -163,7 +163,7 @@ Gemma.ExpressionExperimentDetails = Ext
                if ( type == 'FailedLinkAnalysisEvent' ) {
                   color = 'red';
                   qtip = 'ext:qtip="Failed"';
-               } else if ( type == 'TooSmallDatasetLinkAnalysisEventImpl' ) {
+               } else if ( type == 'TooSmallDatasetLinkAnalysisEvent' ) {
                   color = '#CCC';
                   qtip = 'ext:qtip="Too small"';
                   suggestRun = false;
@@ -226,7 +226,7 @@ Gemma.ExpressionExperimentDetails = Ext
 
                var suggestRun = true;
                var qtip = 'ext:qtip="OK"';
-               if ( type == 'FailedProcessedVectorComputationEventImpl' ) { // note:
+               if ( type == 'FailedProcessedVectorComputationEvent' ) { // note:
                   // no
                   // such
                   // thing.

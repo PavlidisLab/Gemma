@@ -14,40 +14,32 @@
  */
 package ubic.gemma.core.analysis.preprocess;
 
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * TODO Document Me
  * 
  * @author Paul
- * @version $Id$
  */
+@Service
 public interface PreprocessorService {
 
-    /**
-     * @param ee
-     * @return
-     * @throws PreprocessingException
-     */
-    public abstract ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException;
+    ExpressionExperiment process( ExpressionExperiment ee ) throws PreprocessingException;
 
     /**
-     * @param ee
      * @param light if true, just do the bare minimum. The following are skipped: two-channel missing values; redoing
      *        differential expression.
      */
-    public abstract ExpressionExperiment process( ExpressionExperiment ee, boolean light )
+    ExpressionExperiment process( ExpressionExperiment ee, boolean light )
             throws PreprocessingException;
 
     /**
      * If possible, batch correct the processed data vectors. This entails repeating the other preprocessing steps. But
      * it should only be run after the experimental design is set up, the batch information has been fetched, and (of
      * course) the processed data are already available.
-     * 
-     * @param ee
-     * @return
-     * @throws PreprocessingException
+     *
      */
-    public abstract ExpressionExperiment batchCorrect( ExpressionExperiment ee ) throws PreprocessingException;
+    ExpressionExperiment batchCorrect( ExpressionExperiment ee ) throws PreprocessingException;
 
 }

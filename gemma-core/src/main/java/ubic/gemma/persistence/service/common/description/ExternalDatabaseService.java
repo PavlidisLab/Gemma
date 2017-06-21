@@ -19,34 +19,23 @@
 package ubic.gemma.persistence.service.common.description;
 
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Service;
 import ubic.gemma.model.common.description.ExternalDatabase;
 
 /**
- * @version $Id$
  * @author Gemma
  */
+@Service
 public interface ExternalDatabaseService {
 
-    /**
-     * 
-     */
-    public ExternalDatabase find( java.lang.String name );
+    ExternalDatabase find( java.lang.String name );
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
+    ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
 
-    /**
-     * 
-     */
-    public java.util.Collection<ExternalDatabase> loadAll();
+    java.util.Collection<ExternalDatabase> loadAll();
 
-    /**
-     * 
-     */
     @Secured({ "GROUP_USER" })
-    public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
+    void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
 
 }

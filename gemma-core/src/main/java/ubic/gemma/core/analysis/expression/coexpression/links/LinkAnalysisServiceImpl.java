@@ -40,7 +40,7 @@ import ubic.gemma.core.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.core.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.core.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.core.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpCorrelationDistribution;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -183,23 +183,6 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
 
-        // /*
-        // * Add probes used. Note that this includes probes that were not ......
-        // */
-        // List<ExpressionDataMatrixRowElement> rowElements = eeDoubleMatrix.getRowElements();
-        // Collection<CoexpressionProbe> probesUsed = new HashSet<CoexpressionProbe>();
-        // for ( ExpressionDataMatrixRowElement el : rowElements ) {
-        // CoexpressionProbe p = CoexpressionProbe.Factory.newInstance();
-        // p.setProbe( el.getDesignElement() );
-        // /*
-        // * later we set node degree.
-        // */
-        // assert p.getProbe().getId() != null;
-        //
-        // probesUsed.add( p );
-        // }
-        // analysis.setProbesUsed( probesUsed );
-
         la.setAnalysisObj( analysis );
     }
 
@@ -248,7 +231,7 @@ public class LinkAnalysisServiceImpl implements LinkAnalysisService {
 
     private void audit( ExpressionExperiment ee, String note, AuditEventType eventType ) {
         expressionExperimentReportService.generateSummary( ee.getId() );
-        ee = eeService.thawLite( ee );
+        eeService.thawLite( ee );
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 

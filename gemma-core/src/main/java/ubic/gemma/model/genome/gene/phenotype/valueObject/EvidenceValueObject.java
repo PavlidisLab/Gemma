@@ -18,44 +18,36 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
-import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
+import ubic.gemma.model.IdentifiableValueObject;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociationPublication;
 import ubic.gemma.model.association.phenotype.PhenotypeMappingType;
 import ubic.gemma.model.common.description.Characteristic;
 
+import java.io.Serializable;
+import java.util.*;
+
 /**
  * Parent class of all evidence value objects
- * 
- * @version $Id$
+ *
  * @author nicolas
  */
-public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Serializable {
+public class EvidenceValueObject<E extends PhenotypeAssociation> extends IdentifiableValueObject<E>
+        implements Comparable<EvidenceValueObject>, Serializable {
 
     private static final long serialVersionUID = -2483508971580975L;
 
-    private Long id = null;
     private String description = "";
     private String evidenceCode = null;
     private boolean isNegativeEvidence = false;
-
     private String className = "";
-    private SortedSet<CharacteristicValueObject> phenotypes = null;
+    private Set<CharacteristicValueObject> phenotypes = null;
     private EvidenceSourceValueObject evidenceSource = null;
-
     private String externalUrl = "";
-
     // last modified date of the evidence
     private Long lastUpdated = null;
     // security for the evidence
     private EvidenceSecurityValueObject evidenceSecurityValueObject = null;
-
     // linked to what gene
     private Long geneId = null;
     private Integer geneNCBI = null;
@@ -64,24 +56,30 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
     private String taxonCommonName = "";
     private String relationship = "";
     private boolean isHomologueEvidence = false;
-
     private boolean containQueryPhenotype = false;
-
     private String originalPhenotype = "";
     private String phenotypeMapping = "";
-
-    private SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO = new TreeSet<>();
-
+    private Set<PhenotypeAssPubValueObject> phenotypeAssPubVO = new HashSet<>();
     private ScoreValueObject scoreValueObject = new ScoreValueObject();
 
+    /* ********************************
+     * Constructors
+     * ********************************/
+
+    /**
+     * Required when using the class as a spring bean.
+     */
     public EvidenceValueObject() {
-        super();
     }
 
-    protected EvidenceValueObject( Integer geneNCBI, SortedSet<CharacteristicValueObject> phenotypes,
+    public EvidenceValueObject( Long id ) {
+        super( id );
+    }
+
+    protected EvidenceValueObject( Long id, Integer geneNCBI, Set<CharacteristicValueObject> phenotypes,
             String description, String evidenceCode, boolean isNegativeEvidence,
             EvidenceSourceValueObject evidenceSource ) {
-        super();
+        super( id );
         this.description = description;
         this.evidenceCode = evidenceCode;
         this.isNegativeEvidence = isNegativeEvidence;
@@ -90,11 +88,12 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         this.geneNCBI = geneNCBI;
     }
 
-    /** set fields common to all evidence. Entity to Value Object */
+    /**
+     * set fields common to all evidence. Entity to Value Object
+     */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
-
+        super( phenotypeAssociation.getId() );
         this.className = this.getClass().getSimpleName();
-        this.id = phenotypeAssociation.getId();
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
@@ -115,7 +114,6 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
             CharacteristicValueObject characteristicVO = new CharacteristicValueObject( c );
-            characteristicVO.setId( c.getId() );
             this.phenotypes.add( characteristicVO );
         }
 
@@ -145,20 +143,9 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         }
     }
 
-    private int compareEvidenceSource( EvidenceValueObject evidenceValueObject ) {
-
-        if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() != null ) {
-
-            if ( !this.evidenceSource.equals( evidenceValueObject.getEvidenceSource() ) ) {
-                return -1;
-            }
-        } else if ( this.evidenceSource == null && evidenceValueObject.getEvidenceSource() != null ) {
-            return -1;
-        } else if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() == null ) {
-            return -1;
-        }
-        return 0;
-    }
+    /* ********************************
+     * Object override methods
+     * ********************************/
 
     @Override
     public int compareTo( EvidenceValueObject evidenceValueObject ) {
@@ -174,15 +161,19 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
 
     @Override
     public boolean equals( Object obj ) {
-        if ( this == obj ) return true;
-        if ( obj == null ) return false;
-        if ( getClass() != obj.getClass() ) return false;
+        if ( this == obj )
+            return true;
+        if ( obj == null )
+            return false;
+        if ( getClass() != obj.getClass() )
+            return false;
         EvidenceValueObject other = ( EvidenceValueObject ) obj;
 
         if ( this.phenotypes.size() != other.phenotypes.size() ) {
             return false;
         }
 
+        //noinspection unchecked
         Set<String> otherPhenotypesValueUri = other.getPhenotypesValueUri();
 
         for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
@@ -192,103 +183,28 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         }
 
         if ( this.evidenceSource == null ) {
-            if ( other.evidenceSource != null ) return false;
-        } else if ( !this.evidenceSource.equals( other.evidenceSource ) ) return false;
+            if ( other.evidenceSource != null )
+                return false;
+        } else if ( !this.evidenceSource.equals( other.evidenceSource ) )
+            return false;
 
         if ( this.geneNCBI == null ) {
-            if ( other.geneNCBI != null ) return false;
-        } else if ( !this.geneNCBI.equals( other.geneNCBI ) ) return false;
+            if ( other.geneNCBI != null )
+                return false;
+        } else if ( !this.geneNCBI.equals( other.geneNCBI ) )
+            return false;
 
         if ( this.phenotypeAssPubVO.size() != other.phenotypeAssPubVO.size() ) {
             return false;
         }
 
-        for ( PhenotypeAssPubValueObject phenotypeAssPubValueObject : other.phenotypeAssPubVO ) {
-            if ( !this.phenotypeAssPubVO.contains( phenotypeAssPubValueObject ) ) {
+        for ( PhenotypeAssPubValueObject vo : this.phenotypeAssPubVO ) {
+            if ( !other.phenotypeAssPubVO.contains( vo ) ) {
                 return false;
             }
         }
 
         return true;
-    }
-
-    public String getClassName() {
-        return this.className;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public String getEvidenceCode() {
-        return this.evidenceCode;
-    }
-
-    public EvidenceSecurityValueObject getEvidenceSecurityValueObject() {
-        return this.evidenceSecurityValueObject;
-    }
-
-    public EvidenceSourceValueObject getEvidenceSource() {
-        return this.evidenceSource;
-    }
-
-    public String getExternalUrl() {
-        return this.externalUrl;
-    }
-
-    public Long getGeneId() {
-        return this.geneId;
-    }
-
-    public Integer getGeneNCBI() {
-        return this.geneNCBI;
-    }
-
-    public String getGeneOfficialName() {
-        return this.geneOfficialName;
-    }
-
-    public String getGeneOfficialSymbol() {
-        return this.geneOfficialSymbol;
-    }
-
-    public Long getId() {
-        return this.id;
-    }
-
-    public boolean getIsNegativeEvidence() {
-        return this.isNegativeEvidence;
-    }
-
-    public Long getLastUpdated() {
-        return this.lastUpdated;
-    }
-
-    public SortedSet<CharacteristicValueObject> getPhenotypes() {
-        return this.phenotypes;
-    }
-
-    public Set<String> getPhenotypesValueUri() {
-
-        Set<String> phenotypesValueUri = new HashSet<>();
-
-        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
-            phenotypesValueUri.add( characteristicValueObject.getValueUri() );
-        }
-
-        return phenotypesValueUri;
-    }
-
-    public ScoreValueObject getScoreValueObject() {
-        return this.scoreValueObject;
-    }
-
-    public String getTaxonCommonName() {
-        return this.taxonCommonName;
-    }
-    
-    public String getRelationship() {
-        return this.relationship;
     }
 
     @Override
@@ -308,82 +224,6 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         return prime * result;
     }
 
-    public boolean isContainQueryPhenotype() {
-        return this.containQueryPhenotype;
-    }
-
-    public boolean isHomologueEvidence() {
-        return this.isHomologueEvidence;
-    }
-
-    public void setClassName( String className ) {
-        this.className = className;
-    }
-
-    public void setContainQueryPhenotype( boolean containQueryPhenotype ) {
-        this.containQueryPhenotype = containQueryPhenotype;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public void setEvidenceCode( String evidenceCode ) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public void setEvidenceSecurityValueObject( EvidenceSecurityValueObject evidenceSecurityValueObject ) {
-        this.evidenceSecurityValueObject = evidenceSecurityValueObject;
-    }
-
-    public void setEvidenceSource( EvidenceSourceValueObject evidenceSource ) {
-        this.evidenceSource = evidenceSource;
-    }
-
-    public void setGeneId( Long geneId ) {
-        this.geneId = geneId;
-    }
-
-    public void setGeneNCBI( Integer geneNCBI ) {
-        this.geneNCBI = geneNCBI;
-    }
-
-    public void setGeneOfficialName( String geneOfficialName ) {
-        this.geneOfficialName = geneOfficialName;
-    }
-
-    public void setGeneOfficialSymbol( String geneOfficialSymbol ) {
-        this.geneOfficialSymbol = geneOfficialSymbol;
-    }
-
-    public void setHomologueEvidence( boolean isHomologueEvidence ) {
-        this.isHomologueEvidence = isHomologueEvidence;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
-    }
-
-    public void setIsNegativeEvidence( boolean isNegativeEvidence ) {
-        this.isNegativeEvidence = isNegativeEvidence;
-    }
-
-    public void setLastUpdated( Long lastUpdated ) {
-        this.lastUpdated = lastUpdated;
-    }
-
-    public void setPhenotypes( SortedSet<CharacteristicValueObject> phenotypes ) {
-        this.phenotypes = phenotypes;
-    }
-
-    public void setScoreValueObject( ScoreValueObject scoreValueObject ) {
-        this.scoreValueObject = scoreValueObject;
-    }
-
-    public void setTaxonCommonName( String taxonCommonName ) {
-        this.taxonCommonName = taxonCommonName;
-    }
-
     @Override
     public String toString() {
         return "EvidenceValueObject [id=" + id + ", description=" + description + ", evidenceCode=" + evidenceCode
@@ -396,8 +236,208 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
                 + scoreValueObject + "]";
     }
 
+    /* ********************************
+     * Public methods
+     * ********************************/
+
+    public String getClassName() {
+        return this.className;
+    }
+
+    public void setClassName( String className ) {
+        this.className = className;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public String getEvidenceCode() {
+        return this.evidenceCode;
+    }
+
+    public void setEvidenceCode( String evidenceCode ) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    public EvidenceSecurityValueObject getEvidenceSecurityValueObject() {
+        return this.evidenceSecurityValueObject;
+    }
+
+    public void setEvidenceSecurityValueObject( EvidenceSecurityValueObject evidenceSecurityValueObject ) {
+        this.evidenceSecurityValueObject = evidenceSecurityValueObject;
+    }
+
+    public EvidenceSourceValueObject getEvidenceSource() {
+        return this.evidenceSource;
+    }
+
+    public void setEvidenceSource( EvidenceSourceValueObject evidenceSource ) {
+        this.evidenceSource = evidenceSource;
+    }
+
+    public String getExternalUrl() {
+        return this.externalUrl;
+    }
+
+    public Long getGeneId() {
+        return this.geneId;
+    }
+
+    public void setGeneId( Long geneId ) {
+        this.geneId = geneId;
+    }
+
+    public Integer getGeneNCBI() {
+        return this.geneNCBI;
+    }
+
+    public void setGeneNCBI( Integer geneNCBI ) {
+        this.geneNCBI = geneNCBI;
+    }
+
+    public String getGeneOfficialName() {
+        return this.geneOfficialName;
+    }
+
+    public void setGeneOfficialName( String geneOfficialName ) {
+        this.geneOfficialName = geneOfficialName;
+    }
+
+    public String getGeneOfficialSymbol() {
+        return this.geneOfficialSymbol;
+    }
+
+    public void setGeneOfficialSymbol( String geneOfficialSymbol ) {
+        this.geneOfficialSymbol = geneOfficialSymbol;
+    }
+
+    public boolean getIsNegativeEvidence() {
+        return this.isNegativeEvidence;
+    }
+
+    public void setIsNegativeEvidence( boolean isNegativeEvidence ) {
+        this.isNegativeEvidence = isNegativeEvidence;
+    }
+
+    public Long getLastUpdated() {
+        return this.lastUpdated;
+    }
+
+    public void setLastUpdated( Long lastUpdated ) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public Set<CharacteristicValueObject> getPhenotypes() {
+        return this.phenotypes;
+    }
+
+    public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
+        this.phenotypes = phenotypes;
+    }
+
+    public Set<String> getPhenotypesValueUri() {
+
+        Set<String> phenotypesValueUri = new HashSet<>();
+
+        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
+            phenotypesValueUri.add( characteristicValueObject.getValueUri() );
+        }
+
+        return phenotypesValueUri;
+    }
+
+    public ScoreValueObject getScoreValueObject() {
+        return this.scoreValueObject;
+    }
+
+    public void setScoreValueObject( ScoreValueObject scoreValueObject ) {
+        this.scoreValueObject = scoreValueObject;
+    }
+
+    public String getTaxonCommonName() {
+        return this.taxonCommonName;
+    }
+
+    public void setTaxonCommonName( String taxonCommonName ) {
+        this.taxonCommonName = taxonCommonName;
+    }
+
+    public String getRelationship() {
+        return this.relationship;
+    }
+
+    public void setRelationship( String relationship ) {
+        this.relationship = relationship;
+    }
+
+    public boolean isContainQueryPhenotype() {
+        return this.containQueryPhenotype;
+    }
+
+    public void setContainQueryPhenotype( boolean containQueryPhenotype ) {
+        this.containQueryPhenotype = containQueryPhenotype;
+    }
+
+    public boolean isHomologueEvidence() {
+        return this.isHomologueEvidence;
+    }
+
+    public void setHomologueEvidence( boolean isHomologueEvidence ) {
+        this.isHomologueEvidence = isHomologueEvidence;
+    }
+
+    public Set<PhenotypeAssPubValueObject> getPhenotypeAssPubVO() {
+        return phenotypeAssPubVO;
+    }
+
+    public void setPhenotypeAssPubVO( Set<PhenotypeAssPubValueObject> phenotypeAssPubVO ) {
+        this.phenotypeAssPubVO = phenotypeAssPubVO;
+    }
+
+    public String getOriginalPhenotype() {
+        return originalPhenotype;
+    }
+
+    public void setOriginalPhenotype( String originalPhenotype ) {
+        this.originalPhenotype = originalPhenotype;
+    }
+
+    public String getPhenotypeMapping() {
+        return phenotypeMapping;
+    }
+
+    public void setPhenotypeMapping( String phenotypeMapping ) {
+        this.phenotypeMapping = phenotypeMapping;
+    }
+
+    public PhenotypeMappingType findPhenotypeMappingAsEnum() {
+        if ( this.phenotypeMapping == null )
+            return null;
+        if ( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) ) {
+            return PhenotypeMappingType.XREF;
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Curated" ) ) {
+            return PhenotypeMappingType.CURATED;
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) ) {
+            return PhenotypeMappingType.INFERRED_XREF;
+        } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
+            return PhenotypeMappingType.INFERRED_CURATED;
+        }
+
+        return null;
+    }
+
+    /* ********************************
+     * Private methods
+     * ********************************/
+
     private int comparePropertiesTo( EvidenceValueObject evidenceValueObject ) {
-        if ( this == evidenceValueObject ) return 0;
+        if ( this == evidenceValueObject )
+            return 0;
 
         if ( this.containQueryPhenotype && !evidenceValueObject.isContainQueryPhenotype() ) {
             return -1;
@@ -405,8 +445,10 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
             return 1;
         }
 
-        if ( !this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence ) return -1;
-        if ( this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence ) return 1;
+        if ( !this.isHomologueEvidence && evidenceValueObject.isHomologueEvidence )
+            return -1;
+        if ( this.isHomologueEvidence && !evidenceValueObject.isHomologueEvidence )
+            return 1;
 
         // sort them using the score server side
 
@@ -428,13 +470,13 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
             }
         }
 
-        if ( ( this.phenotypes != null && this.phenotypes.size() > 0 )
-                && ( evidenceValueObject.phenotypes == null || evidenceValueObject.phenotypes.size() == 0 ) ) {
+        if ( ( this.phenotypes != null && this.phenotypes.size() > 0 ) && ( evidenceValueObject.phenotypes == null
+                || evidenceValueObject.phenotypes.size() == 0 ) ) {
             return -1;
         }
 
-        if ( ( this.phenotypes == null || this.phenotypes.size() == 0 )
-                && ( evidenceValueObject.phenotypes != null && evidenceValueObject.phenotypes.size() > 0 ) ) {
+        if ( ( this.phenotypes == null || this.phenotypes.size() == 0 ) && ( evidenceValueObject.phenotypes != null
+                && evidenceValueObject.phenotypes.size() > 0 ) ) {
             return 1;
         }
 
@@ -442,35 +484,46 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
 
         if ( this.phenotypes != null && evidenceValueObject.phenotypes != null ) {
             Iterator<CharacteristicValueObject> thisIterator = this.phenotypes.iterator();
+            //noinspection unchecked
             Iterator<CharacteristicValueObject> otherIterator = evidenceValueObject.phenotypes.iterator();
 
             while ( true ) {
                 boolean thisHasNext = thisIterator.hasNext();
                 boolean otherHasNext = otherIterator.hasNext();
 
-                if ( !thisHasNext && otherHasNext ) return -1;
-                if ( thisHasNext && !otherHasNext ) return 1;
-                if ( !thisHasNext && !otherHasNext ) break;
+                if ( !thisHasNext && otherHasNext )
+                    return -1;
+                if ( thisHasNext && !otherHasNext )
+                    return 1;
+                if ( !thisHasNext && !otherHasNext )
+                    break;
 
                 comparison = thisIterator.next().compareTo( otherIterator.next() );
-                if ( comparison != 0 ) return comparison;
+                if ( comparison != 0 )
+                    return comparison;
             }
         }
 
-        if ( !this.isNegativeEvidence && evidenceValueObject.isNegativeEvidence ) return -1;
-        if ( this.isNegativeEvidence && !evidenceValueObject.isNegativeEvidence ) return 1;
+        if ( !this.isNegativeEvidence && evidenceValueObject.isNegativeEvidence )
+            return -1;
+        if ( this.isNegativeEvidence && !evidenceValueObject.isNegativeEvidence )
+            return 1;
 
         comparison = this.className.compareTo( evidenceValueObject.className );
-        if ( comparison != 0 ) return comparison;
+        if ( comparison != 0 )
+            return comparison;
 
         comparison = this.evidenceCode.compareTo( evidenceValueObject.evidenceCode );
-        if ( comparison != 0 ) return comparison;
+        if ( comparison != 0 )
+            return comparison;
 
         comparison = this.evidenceCode.compareTo( evidenceValueObject.evidenceCode );
-        if ( comparison != 0 ) return comparison;
+        if ( comparison != 0 )
+            return comparison;
 
         comparison = compareEvidenceSource( evidenceValueObject );
-        if ( comparison != 0 ) return comparison;
+        if ( comparison != 0 )
+            return comparison;
 
         // compare their pubmeds
 
@@ -487,47 +540,19 @@ public class EvidenceValueObject implements Comparable<EvidenceValueObject>, Ser
         return 0;
     }
 
-    public SortedSet<PhenotypeAssPubValueObject> getPhenotypeAssPubVO() {
-        return phenotypeAssPubVO;
-    }
+    private int compareEvidenceSource( EvidenceValueObject evidenceValueObject ) {
 
-    public void setPhenotypeAssPubVO( SortedSet<PhenotypeAssPubValueObject> phenotypeAssPubVO ) {
-        this.phenotypeAssPubVO = phenotypeAssPubVO;
-    }
+        if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() != null ) {
 
-    public String getOriginalPhenotype() {
-        return originalPhenotype;
-    }
-
-    public void setOriginalPhenotype( String originalPhenotype ) {
-        this.originalPhenotype = originalPhenotype;
-    }
-
-    public String getPhenotypeMapping() {
-        return phenotypeMapping;
-    }
-
-    public void setPhenotypeMapping( String phenotypeMapping ) {
-        this.phenotypeMapping = phenotypeMapping;
-    }
-    
-    public void setRelationship( String relationship) {
-        this.relationship = relationship;
-    }
-
-    public PhenotypeMappingType findPhenotypeMappingAsEnum() {
-        if ( this.phenotypeMapping == null ) return null;
-        if ( phenotypeMapping.equalsIgnoreCase( "Cross Reference" ) ) {
-            return PhenotypeMappingType.XREF;
-        } else if ( phenotypeMapping.equalsIgnoreCase( "Curated" ) ) {
-            return PhenotypeMappingType.CURATED;
-        } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Cross Reference" ) ) {
-            return PhenotypeMappingType.INFERRED_XREF;
-        } else if ( phenotypeMapping.equalsIgnoreCase( "Inferred Curated" ) ) {
-            return PhenotypeMappingType.INFERRED_CURATED;
+            if ( !this.evidenceSource.equals( evidenceValueObject.getEvidenceSource() ) ) {
+                return -1;
+            }
+        } else if ( this.evidenceSource == null && evidenceValueObject.getEvidenceSource() != null ) {
+            return -1;
+        } else if ( this.evidenceSource != null && evidenceValueObject.getEvidenceSource() == null ) {
+            return -1;
         }
-
-        return null;
+        return 0;
     }
 
 }

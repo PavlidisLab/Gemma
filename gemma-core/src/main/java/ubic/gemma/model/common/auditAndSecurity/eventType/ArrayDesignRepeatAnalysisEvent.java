@@ -21,8 +21,8 @@ package ubic.gemma.model.common.auditAndSecurity.eventType;
 /**
  * 
  */
-public abstract class ArrayDesignRepeatAnalysisEvent extends
-        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEventImpl {
+public class ArrayDesignRepeatAnalysisEvent extends
+        ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent {
 
     /**
      * Constructs new instances of
@@ -34,7 +34,7 @@ public abstract class ArrayDesignRepeatAnalysisEvent extends
          * {@link ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent}.
          */
         public static ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent newInstance() {
-            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEventImpl();
+            return new ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent();
         }
 
     }

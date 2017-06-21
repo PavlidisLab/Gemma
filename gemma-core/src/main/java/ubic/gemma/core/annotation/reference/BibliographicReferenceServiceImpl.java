@@ -14,18 +14,12 @@
  */
 package ubic.gemma.core.annotation.reference;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import ubic.gemma.core.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.core.search.SearchService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -34,103 +28,78 @@ import ubic.gemma.model.common.search.SearchSettings;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
 import ubic.gemma.model.common.search.SearchSettingsValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.search.SearchService;
+import ubic.gemma.persistence.service.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.persistence.service.common.description.BibliographicReferenceDao;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Implementation of BibliographicReferenceService.
- * <p>
  * Note: This is only in Core because it uses SearchService, but it could be refactored.
- * 
+ *
  * @author keshav
- * @version $Id$
  * @see BibliographicReferenceService
  */
 @Service
 public class BibliographicReferenceServiceImpl extends BibliographicReferenceServiceBase {
 
     private static final String PUB_MED_DATABASE_NAME = "PubMed";
-    private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+    private final SearchService searchService;
+    private final PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
     @Autowired
-    private SearchService searchService;
+    public BibliographicReferenceServiceImpl( BibliographicReferenceDao bibliographicReferenceDao,
+            PhenotypeAssociationService phenotypeAssociationService, SearchService searchService ) {
+        super( bibliographicReferenceDao, phenotypeAssociationService );
+        this.searchService = searchService;
+    }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#browse(java.lang.Integer, java.lang.Integer)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReference> browse( Integer start, Integer limit ) {
-        return this.getBibliographicReferenceDao().browse( start, limit );
+        return this.bibliographicReferenceDao.browse( start, limit );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#browse(java.lang.Integer, java.lang.Integer, java.lang.String, boolean)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending ) {
-        return this.getBibliographicReferenceDao().browse( start, limit, orderField, descending );
+        return this.bibliographicReferenceDao.browse( start, limit, orderField, descending );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#count()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Integer count() {
-        return this.getBibliographicReferenceDao().count();
-    }
-
-    /**
-     * 
-     */
     @Override
     @Transactional(readOnly = true)
     public BibliographicReference findByExternalId( DatabaseEntry accession ) {
-        return this.getBibliographicReferenceDao().findByExternalId( accession );
+        return this.bibliographicReferenceDao.findByExternalId( accession );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
-        Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
+        Collection<BibliographicReference> records = new ArrayList<>();
         records.add( bibRef );
-        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.getBibliographicReferenceDao()
+        Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.bibliographicReferenceDao
                 .getRelatedExperiments( records );
         if ( map.containsKey( bibRef ) ) {
             return map.get( bibRef );
         }
-        return new ArrayList<ExpressionExperiment>();
+        return new ArrayList<>();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#getRelatedExperiments(java.util.Collection)
-     */
     @Override
     @Transactional(readOnly = true)
     public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
             Collection<BibliographicReference> records ) {
-        return this.getBibliographicReferenceDao().getRelatedExperiments( records );
+        return this.bibliographicReferenceDao.getRelatedExperiments( records );
 
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<Long> listAll() {
-        return getBibliographicReferenceDao().listAll();
+        return bibliographicReferenceDao.listAll();
     }
 
     @Override
@@ -146,7 +115,7 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
             return null;
         }
 
-        existingBibRef = thaw( existingBibRef );
+        thaw( existingBibRef );
 
         String oldAccession = existingBibRef.getPubAccession().getAccession();
 
@@ -159,7 +128,7 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         BibliographicReference fresh = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
 
         if ( fresh == null || fresh.getPublicationDate() == null ) {
-            throw new IllegalStateException( "Unable to retrive record from pubmed for id=" + pubMedId );
+            throw new IllegalStateException( "Unable to retrieve record from pubmed for id=" + pubMedId );
         }
 
         assert fresh.getPubAccession().getAccession().equals( pubMedId );
@@ -185,20 +154,13 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         return existingBibRef;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#search(ubic.gemma.model.common.search.
-     * SearchSettingsValueObject)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
 
-        @SuppressWarnings("unchecked")
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService.search( ss,
-                BibliographicReference.class );
+        @SuppressWarnings("unchecked") List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+                .search( ss, BibliographicReference.class );
 
         List<BibliographicReferenceValueObject> results = new ArrayList<>();
 
@@ -229,16 +191,12 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
         return results;
     }
 
-    /*
-     * @see BibliographicReferenceService#search(java.lang.String)
-     */
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) {
-        @SuppressWarnings("unchecked")
-        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+        @SuppressWarnings("unchecked") List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
                 .search( SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
+        List<BibliographicReferenceValueObject> results = new ArrayList<>();
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
             this.populateBibliographicPhenotypes( vo );
@@ -250,147 +208,41 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeBibliographicReferenceService#thaw( BibliographicReference)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
-        return this.getBibliographicReferenceDao().thaw( bibliographicReference );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * 
-     * /* (non-Javadoc)
-     * 
-     * @see BibliographicReferenceService#thaw(java.util.Collection)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
-        return this.getBibliographicReferenceDao().thaw( bibliographicReferences );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceServiceBase#handleAddDocument(byte[], BibliographicReference)
-     */
     @Override
     protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) {
         bibliographicReference.setFullTextPdf( pdfFile );
-        this.getBibliographicReferenceDao().update( bibliographicReference );
+        this.bibliographicReferenceDao.update( bibliographicReference );
 
     }
 
     /**
-     * @see BibliographicReferenceService#saveBibliographicReference(BibliographicReference)
+     * @see BibliographicReferenceService#findByExternalId(String)
      */
     @Override
-    protected BibliographicReference handleCreate( BibliographicReference bibliographicReference ) {
-        return getBibliographicReferenceDao().create( bibliographicReference );
-    }
+    protected BibliographicReference handleFindByExternalId( String id ) {
 
-    /**
-     * Check to see if the reference already exists
-     * 
-     * @see BibliographicReferenceService#alreadyExists(BibliographicReference)
-     */
-    @Override
-    protected BibliographicReference handleFind( BibliographicReference bibliographicReference ) {
-
-        return getBibliographicReferenceDao().find( bibliographicReference );
-    }
-
-    /**
-     * @see BibliographicReferenceService#findByExternalId(java.lang.String)
-     */
-    @Override
-    protected BibliographicReference handleFindByExternalId( java.lang.String id ) {
-
-        return this.getBibliographicReferenceDao().findByExternalId( id, PUB_MED_DATABASE_NAME );
+        return this.bibliographicReferenceDao.findByExternalId( id, PUB_MED_DATABASE_NAME );
 
     }
 
     /**
-     * @see BibliographicReferenceService#findByExternalId(java.lang.String,
-     *      java.lang.String)
+     * @see BibliographicReferenceService#findByExternalId(String, String)
      */
     @Override
-    protected BibliographicReference handleFindByExternalId( java.lang.String id, java.lang.String databaseName ) {
+    protected BibliographicReference handleFindByExternalId( String id, String databaseName ) {
 
-        return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
-    }
-
-    @Override
-    protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference ) {
-        return this.getBibliographicReferenceDao().findOrCreate( bibliographicReference );
+        return this.bibliographicReferenceDao.findByExternalId( id, databaseName );
     }
 
     @Override
     protected Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
-        return this.getBibliographicReferenceDao().getAllExperimentLinkedReferences();
+        return this.bibliographicReferenceDao.getAllExperimentLinkedReferences();
     }
 
     @Override
     protected Collection<ExpressionExperiment> handleGetRelatedExperiments(
             BibliographicReference bibliographicReference ) {
-        return this.getBibliographicReferenceDao().getRelatedExperiments( bibliographicReference );
-    }
-
-    @Override
-    protected BibliographicReference handleLoad( Long id ) {
-        return this.getBibliographicReferenceDao().load( id );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see BibliographicReferenceServiceBase#handleLoadBibliographicReference(java.lang .Long)
-     */
-    protected BibliographicReference handleLoadBibliographicReference( Long id ) {
-        return getBibliographicReferenceDao().load( id );
-    }
-
-    @Override
-    protected Collection<BibliographicReference> handleLoadMultiple( Collection<Long> ids ) {
-        return this.getBibliographicReferenceDao().load( ids );
-    }
-
-    @Override
-    protected Collection<BibliographicReferenceValueObject> handleLoadMultipleValueObjects( Collection<Long> ids ) {
-        Collection<BibliographicReference> bibRefs = this.getBibliographicReferenceDao().load( ids );
-        if ( bibRefs.isEmpty() ) {
-            return new ArrayList<>();
-        }
-        Map<Long, BibliographicReferenceValueObject> idTobibRefVO = new HashMap<>();
-
-        for ( BibliographicReference bibref : bibRefs ) {
-            BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( bibref );
-            idTobibRefVO.put( bibref.getId(), vo );
-        }
-
-        this.populateRelatedExperiments( bibRefs, idTobibRefVO );
-        this.populateBibliographicPhenotypes( idTobibRefVO );
-
-        return idTobibRefVO.values();
-    }
-
-    @Override
-    protected void handleRemove( BibliographicReference bibliographicReference ) {
-        this.getBibliographicReferenceDao().remove( bibliographicReference );
-    }
-
-    /**
-     * @see BibliographicReferenceService#saveBibliographicReference(BibliographicReference)
-     */
-    @Override
-    protected void handleUpdate( BibliographicReference BibliographicReference ) {
-        getBibliographicReferenceDao().update( BibliographicReference );
+        return this.bibliographicReferenceDao.getRelatedExperiments( bibliographicReference );
     }
 
 }

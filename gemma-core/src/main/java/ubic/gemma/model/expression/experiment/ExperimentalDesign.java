@@ -19,44 +19,18 @@
 package ubic.gemma.model.expression.experiment;
 
 import gemma.gsec.model.Securable;
-
-import java.util.Collection;
-
 import ubic.gemma.model.common.AbstractAuditable;
 import ubic.gemma.model.common.description.Characteristic;
 
-/**
- * 
- */
-public abstract class ExperimentalDesign extends AbstractAuditable implements
-        gemma.gsec.model.SecuredChild {
+import java.util.Collection;
 
-    /**
-     * 
-     */
+public class ExperimentalDesign extends AbstractAuditable implements gemma.gsec.model.SecuredChild {
+
     private static final long serialVersionUID = 1734101852541885497L;
-
-    /**
-     * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
-     */
-    public static final class Factory {
-        /**
-         * Constructs a new instance of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
-         */
-        public static ExperimentalDesign newInstance() {
-            return new ExperimentalDesignImpl();
-        }
-
-    }
-
     private String replicateDescription;
-
     private String qualityControlDescription;
-
     private String normalizationDescription;
-
     private Collection<ExperimentalFactor> experimentalFactors = new java.util.HashSet<>();
-
     private Collection<Characteristic> types = new java.util.HashSet<>();
 
     /**
@@ -66,25 +40,32 @@ public abstract class ExperimentalDesign extends AbstractAuditable implements
         return this.experimentalFactors;
     }
 
-    /**
-     * 
-     */
+    public void setExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
+        this.experimentalFactors = experimentalFactors;
+    }
+
     public String getNormalizationDescription() {
         return this.normalizationDescription;
     }
 
-    /**
-     * 
-     */
+    public void setNormalizationDescription( String normalizationDescription ) {
+        this.normalizationDescription = normalizationDescription;
+    }
+
     public String getQualityControlDescription() {
         return this.qualityControlDescription;
     }
 
-    /**
-     * 
-     */
+    public void setQualityControlDescription( String qualityControlDescription ) {
+        this.qualityControlDescription = qualityControlDescription;
+    }
+
     public String getReplicateDescription() {
         return this.replicateDescription;
+    }
+
+    public void setReplicateDescription( String replicateDescription ) {
+        this.replicateDescription = replicateDescription;
     }
 
     @Override
@@ -92,31 +73,25 @@ public abstract class ExperimentalDesign extends AbstractAuditable implements
         return null;
     }
 
-    /**
-     * 
-     */
     public Collection<Characteristic> getTypes() {
         return this.types;
     }
 
-    public void setExperimentalFactors( Collection<ExperimentalFactor> experimentalFactors ) {
-        this.experimentalFactors = experimentalFactors;
-    }
-
-    public void setNormalizationDescription( String normalizationDescription ) {
-        this.normalizationDescription = normalizationDescription;
-    }
-
-    public void setQualityControlDescription( String qualityControlDescription ) {
-        this.qualityControlDescription = qualityControlDescription;
-    }
-
-    public void setReplicateDescription( String replicateDescription ) {
-        this.replicateDescription = replicateDescription;
-    }
-
     public void setTypes( Collection<Characteristic> types ) {
         this.types = types;
+    }
+
+    /**
+     * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
+     */
+    public static final class Factory {
+        /**
+         * Constructs a new instance of {@link ubic.gemma.model.expression.experiment.ExperimentalDesign}.
+         */
+        public static ExperimentalDesign newInstance() {
+            return new ExperimentalDesign();
+        }
+
     }
 
 }

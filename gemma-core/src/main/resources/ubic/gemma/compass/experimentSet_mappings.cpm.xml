@@ -8,7 +8,7 @@
 		attributes (as well as associations) should be included here. author: pp version: $Id$
 	-->
 <compass-core-mapping package="ubic.gemma.model">
-	<class name="analysis.expression.ExpressionExperimentSetImpl" alias="expressionExperimentSet" root="true">
+	<class name="analysis.expression.ExpressionExperimentSet" alias="expressionExperimentSet" root="true">
 		<id name="id" />
 		<property name="name">
 			<meta-data>name</meta-data>
@@ -20,7 +20,7 @@
 		</property>
 		<component name="taxon" ref-alias="taxon" />
 	</class>
-	<class name="genome.TaxonImpl" alias="taxon" root="false"  support-unmarshall="false">
+	<class name="genome.Taxon" alias="taxon" root="false"  support-unmarshall="false">
 		<id name="id" />
 		<property name="scientificName">
 			<meta-data>scientific name</meta-data>

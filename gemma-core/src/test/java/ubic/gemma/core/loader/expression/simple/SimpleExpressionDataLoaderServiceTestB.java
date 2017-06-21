@@ -14,17 +14,11 @@
  */
 package ubic.gemma.core.loader.expression.simple;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.io.InputStream;
-
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -32,13 +26,17 @@ import ubic.gemma.core.loader.expression.simple.model.SimpleExpressionExperiment
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.io.InputStream;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Paul
- * @version $Id$
  */
 public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTest {
 
@@ -65,13 +63,11 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
     public void tearDown() {
         if ( ee != null ) {
             ee = eeService.load( ee.getId() );
-            eeService.delete( ee );
+            System.out.println("removing ee w/ id"+ee.getId());
+            eeService.remove( ee );
         }
     }
 
-    /**
-     * @throws Exception
-     */
     @Test
     public final void testLoadWithDuplicateBioMaterials() throws Exception {
 
@@ -97,8 +93,8 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
         assertNotNull( ad );
 
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/gill2006hormone.head.txt" );) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
@@ -110,8 +106,8 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
         /*
          * Do second one that has overlapping bioassay names.
          */
-        try (InputStream data = this.getClass().getResourceAsStream(
-                "/data/loader/expression/flatfileload/gill2006oceanfate.head.txt" );) {
+        try (InputStream data = this.getClass()
+                .getResourceAsStream( "/data/loader/expression/flatfileload/gill2006oceanfate.head.txt" );) {
 
             SimpleExpressionExperimentMetaData metaData = new SimpleExpressionExperimentMetaData();
 
@@ -123,19 +119,14 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
             // ugly, but try to
             // clean up .
-            eeService.delete( a );
+            eeService.remove( a );
         }
 
     }
 
-    /**
-     * @param salmon
-     * @param ad
-     * @param metaData
-     */
     private void makeMetaData( Taxon salmon, ArrayDesign ad, SimpleExpressionExperimentMetaData metaData ) {
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
-        metaData.setDescription( "bar" );
+        metaData.setDescription( "Simple expression data loader service test B" );
         metaData.setIsRatio( false );
         metaData.setTaxon( salmon );
         metaData.setQuantitationTypeName( "value" );

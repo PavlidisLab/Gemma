@@ -24,10 +24,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang3.StringUtils;
 import ubic.gemma.core.apps.GemmaCLI.CommandGroup;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentService;
-import ubic.gemma.core.expression.experiment.service.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.core.genome.taxon.service.TaxonService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.service.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.search.SearchSettingsImpl;
@@ -277,7 +277,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractCLICon
                 log.warn( shortName + " not found" );
                 continue;
             }
-            expressionExperiments.add( eeService.thawLite( expressionExperiment ) );
+            eeService.thawLite( expressionExperiment );
+            expressionExperiments.add( expressionExperiment );
         }
         if ( expressionExperiments.size() == 0 ) {
             log.error( "There were no valid experimnents specified" );
