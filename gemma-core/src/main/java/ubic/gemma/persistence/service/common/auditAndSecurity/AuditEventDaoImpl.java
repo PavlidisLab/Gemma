@@ -83,7 +83,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
                 + "and et.class in (:classes) order by event.date,event.id desc ";
 
-        Query queryObject = this.getSession().createQuery( queryString );
+        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setParameterList( "trails", atMap.keySet() );
         queryObject.setParameterList( "classes", classes );
 
@@ -206,7 +206,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
             batch.add( at );
 
             if ( batch.size() == batchSize ) {
-                org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+                org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
                 queryObject.setParameterList( "trails", batch );
                 queryObject.setParameterList( "classes", classes );
                 queryObject.setReadOnly( true );
@@ -223,7 +223,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
         }
 
         if ( !batch.isEmpty() ) {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameterList( "trails", batch ); // if too many will fail.
             queryObject.setParameterList( "classes", classes );
             queryObject.setReadOnly( true );
@@ -281,7 +281,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
         Long id = auditable.getAuditTrail().getId();
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select e from AuditTrailImpl t join t.events e where t.id = :id order by e.date,e.id " )
                 .setParameter( "id", id ).list();
 
@@ -315,7 +315,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
 
     private void tryAddAllToResult( Collection<Auditable> result, String queryString, Date date ) {
         try {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "date", date );
             //noinspection unchecked
             result.addAll( queryObject.list() );
@@ -359,7 +359,7 @@ public class AuditEventDaoImpl extends AuditEventDaoBase {
                 + "fetch all properties where trail = :trail and et.class in (:classes) "
                 + "order by event.date,event.id desc ";
 
-        org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+        org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         queryObject.setCacheable( true );
         queryObject.setReadOnly( true );
         queryObject.setParameter( "trail", auditTrail );

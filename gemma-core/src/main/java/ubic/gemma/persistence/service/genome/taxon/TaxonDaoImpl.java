@@ -55,7 +55,7 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
 
         BusinessKey.checkValidKey( taxon );
 
-        Criteria queryObject = this.getSession().createCriteria( Taxon.class ).setReadOnly( true );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Taxon.class ).setReadOnly( true );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
         BusinessKey.addRestrictions( queryObject, taxon );
@@ -110,7 +110,7 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     @Override
     public Collection<Taxon> findTaxonUsedInEvidence() {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct taxon from Gene as g join g.phenotypeAssociations as evidence join g.taxon as taxon" )
                 .list();
     }
@@ -118,13 +118,13 @@ public class TaxonDaoImpl extends VoEnabledDao<Taxon, TaxonValueObject> implemen
     @Override
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Taxon as taxon where taxon.parentTaxon = :parentTaxon" )
                 .setParameter( "parentTaxon", parentTaxon ).list();
     }
 
     @Override
     public void thaw( final Taxon taxon ) {
-        this.getSession().doWork( new Work() {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
             @Override
             public void execute( Connection connection ) throws SQLException {
                 getSession().buildLockRequest( LockOptions.NONE ).lock( taxon );

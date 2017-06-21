@@ -52,7 +52,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
 
     @Override
     public ExpressionExperimentSubSet find( ExpressionExperimentSubSet entity ) {
-        Criteria queryObject = this.getSession()
+        Criteria queryObject = this.getSessionFactory().getCurrentSession()
                 .createCriteria( ExpressionExperimentSubSet.class );
         BusinessKey.checkKey( entity );
         BusinessKey.createQueryObject( queryObject, entity );
@@ -62,7 +62,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     @Override
     public Collection<FactorValue> getFactorValuesUsed( ExpressionExperimentSubSet entity, ExperimentalFactor factor ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.factorValues fv where es=:es and fv.experimentalFactor = :ef " )
                 .setParameter( "es", entity ).setParameter( "ef", factor ).list();
@@ -71,7 +71,7 @@ public class ExpressionExperimentSubSetDaoImpl extends AbstractDao<ExpressionExp
     @Override
     public Collection<FactorValueValueObject> getFactorValuesUsed( Long subSetId, Long experimentalFactor ) {
         //noinspection unchecked
-        List<FactorValue> list = this.getSession().createQuery(
+        List<FactorValue> list = this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct fv from ExpressionExperimentSubSet es join es.bioAssays ba join ba.sampleUsed bm "
                         + "join bm.factorValues fv where es.id=:es and fv.experimentalFactor.id = :ef " )
                 .setParameter( "es", subSetId ).setParameter( "ef", experimentalFactor ).list();

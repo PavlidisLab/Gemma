@@ -46,7 +46,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
         log.debug( "Start find" );
-        Criteria queryObject = this.getSession().createCriteria( BioMaterial.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
 
@@ -69,7 +69,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
                 .setParameter( "ee", experiment ).list();
     }
@@ -77,21 +77,21 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv = :f" )
                 .setParameter( "f", fv ).list();
     }
 
     @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
-        return ( ExpressionExperiment ) this.getSession().createQuery(
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
                 .setParameter( "bmid", bioMaterialId ).uniqueResult();
     }
 
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
         Hibernate.initialize( bioMaterial );
         Hibernate.initialize( bioMaterial.getSourceTaxon() );

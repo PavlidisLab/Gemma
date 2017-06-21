@@ -69,7 +69,7 @@ public abstract class CompositeSequenceDaoBase extends VoEnabledDao<CompositeSeq
 
     @Override
     public CompositeSequence findByName( ArrayDesign arrayDesign, final String name ) {
-        List results = this.getSession().createQuery(
+        List results = this.getSessionFactory().getCurrentSession().createQuery(
                 "from CompositeSequence as compositeSequence where compositeSequence.arrayDesign = :arrayDesign and compositeSequence.name = :name" )
                 .setParameter( "arrayDesign", arrayDesign ).setParameter( "name", name ).list();
 

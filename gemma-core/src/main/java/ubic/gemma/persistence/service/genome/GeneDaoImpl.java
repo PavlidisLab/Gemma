@@ -76,14 +76,14 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public Gene findByNcbiId( Integer ncbiId ) {
-        return ( Gene ) this.getSession().createQuery( "from Gene g where g.ncbiGeneId = :n" )
+        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ncbiGeneId = :n" )
                 .setParameter( "n", ncbiId ).uniqueResult();
     }
 
     @Override
     public Collection<Gene> findByOfficialSymbol( String officialSymbol ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from Gene g where g.officialSymbol=:officialSymbol order by g.officialName" )
                 .setParameter( "officialSymbol", officialSymbol ).list();
     }
@@ -96,14 +96,14 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<Gene> findByPhysicalLocation( final PhysicalLocation location ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from Gene as gene where gene.physicalLocation = :location" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Gene as gene where gene.physicalLocation = :location" )
                 .setParameter( "location", location ).list();
     }
 
     @Override
     public Gene find( Gene gene ) {
 
-        Criteria queryObject = this.getSession().createCriteria( Gene.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene.class );
 
         BusinessKey.checkKey( gene );
 
@@ -194,13 +194,13 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<? extends Gene> findByEnsemblId( String id ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from Gene g where g.ensemblId = :id" ).setParameter( "id", id ).list();
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Gene g where g.ensemblId = :id" ).setParameter( "id", id ).list();
     }
 
     @Override
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from Gene g where g.officialName like :officialName order by g.officialName" )
                 .setParameter( "officialName", officialName ).setMaxResults( MAX_RESULTS ).list();
     }
@@ -208,7 +208,7 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "from Gene g where g.officialSymbol like :officialSymbol order by g.officialSymbol" )
                 .setParameter( "officialSymbol", officialSymbol ).setMaxResults( MAX_RESULTS ).list();
     }
@@ -444,7 +444,7 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
      */
     @Override
     public void thawAliases( final Gene gene ) {
-        this.getSession().refresh( gene );
+        this.getSessionFactory().getCurrentSession().refresh( gene );
         Hibernate.initialize( gene.getAliases() );
         Hibernate.initialize( gene.getAccessions() );
     }
@@ -504,14 +504,14 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
     @Override
     public Collection<Gene> findByAlias( String search ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct g from Gene as g inner join g.aliases als where als.alias = :search" )
                 .setParameter( "search", search ).list();
     }
 
     @Override
     public Gene findByOfficialSymbol( String symbol, Taxon taxon ) {
-        return ( Gene ) this.getSession().createQuery(
+        return ( Gene ) this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct g from Gene as g inner join g.taxon t where g.officialSymbol = :symbol and t= :taxon" )
                 .setParameter( "symbol", symbol ).setParameter( "taxon", taxon ).uniqueResult();
     }
@@ -541,7 +541,7 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
                         + " and gene = :gene and cs.arrayDesign = :arrayDesign ";
 
         try {
-            org.hibernate.Query queryObject = this.getSession().createQuery( queryString );
+            org.hibernate.Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
             queryObject.setParameter( "arrayDesign", arrayDesign );
             queryObject.setParameter( "gene", gene );
             //noinspection unchecked
@@ -631,7 +631,7 @@ public class GeneDaoImpl extends VoEnabledDao<Gene, GeneValueObject> implements 
 
     @Override
     public void thaw( final Gene gene ) {
-        this.getSession().refresh( gene );
+        this.getSessionFactory().getCurrentSession().refresh( gene );
         thawAliases( gene );
         for ( DatabaseEntry de : gene.getAccessions() ) {
             Hibernate.initialize( de.getExternalDatabase() );

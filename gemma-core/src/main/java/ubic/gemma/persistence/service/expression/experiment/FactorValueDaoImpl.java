@@ -54,7 +54,7 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     @Override
     public FactorValue find( FactorValue factorValue ) {
         try {
-            Criteria queryObject = this.getSession().createCriteria( FactorValue.class );
+            Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( FactorValue.class );
 
             BusinessKey.checkKey( factorValue );
 
@@ -82,7 +82,7 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
     @Override
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from FactorValue where value like :q" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from FactorValue where value like :q" )
                 .setParameter( "q", valuePrefix + "%" ).list();
     }
 
@@ -103,7 +103,7 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
             return;
 
         //noinspection unchecked
-        Collection<BioMaterial> bms = this.getSession()
+        Collection<BioMaterial> bms = this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct bm from BioMaterial as bm join bm.factorValues fv where fv = :fv" )
                 .setParameter( "fv", factorValue ).list();
 
@@ -111,7 +111,7 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
         for ( BioMaterial bioMaterial : bms ) {
             log.info( "Processing " + bioMaterial ); // temporary, debugging.
             if ( bioMaterial.getFactorValues().remove( factorValue ) ) {
-                this.getSession().update( bioMaterial );
+                this.getSessionFactory().getCurrentSession().update( bioMaterial );
             } else {
                 log.warn( "Unexpectedly the factor value was not actually associated with " + bioMaterial );
             }
@@ -123,13 +123,13 @@ public class FactorValueDaoImpl extends VoEnabledDao<FactorValue, FactorValueVal
 
         ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
         ef.getFactorValues().remove( factorValue );
-        this.getSession().update( ef );
+        this.getSessionFactory().getCurrentSession().update( ef );
 
         // will get the dreaded 'already in session' error if we don't do this.
-        this.getSession().flush();
-        this.getSession().clear();
+        this.getSessionFactory().getCurrentSession().flush();
+        this.getSessionFactory().getCurrentSession().clear();
 
-        this.getSession().delete( factorValue );
+        this.getSessionFactory().getCurrentSession().delete( factorValue );
 
     }
 

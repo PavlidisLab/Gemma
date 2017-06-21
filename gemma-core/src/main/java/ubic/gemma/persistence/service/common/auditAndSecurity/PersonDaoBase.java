@@ -44,7 +44,7 @@ public abstract class PersonDaoBase extends AbstractDao<Person> implements Perso
     @Override
     public Collection<Person> findByFullName( String firstName, String lastName ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from Person p where p.name = :firstName and p.lastName=:lastName " )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Person p where p.name = :firstName and p.lastName=:lastName " )
                 .setParameter( "firstName", firstName ).setParameter( "lastName", lastName ).list();
     }
 

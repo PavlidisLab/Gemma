@@ -42,7 +42,7 @@ public class JobInfoDaoImpl extends AbstractDao<JobInfo> implements JobInfoDao {
     @Override
     public Collection<JobInfo> getUsersJob( String userName ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "select j from JobInfo j inner join j.user u on u.userName = :un" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "select j from JobInfo j inner join j.user u on u.userName = :un" )
                 .setParameter( "un", userName ).list();
     }
 }

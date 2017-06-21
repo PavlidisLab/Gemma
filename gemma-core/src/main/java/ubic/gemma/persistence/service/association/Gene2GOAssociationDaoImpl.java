@@ -58,7 +58,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     @Override
     public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
         BusinessKey.checkValidKey( gene2GOAssociation );
-        Criteria queryObject = this.getSession().createCriteria( Gene2GOAssociation.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Gene2GOAssociation.class );
         BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
         return ( Gene2GOAssociation ) queryObject.uniqueResult();
     }
@@ -107,7 +107,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     @Override
     public Collection<Gene> getGenes( Collection<String> ids ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+        return this.getSessionFactory().getCurrentSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
                 + "where geneAss.ontologyEntry.value in ( :goIDs)" ).setParameterList( "goIDs", ids ).list();
     }
 
@@ -117,7 +117,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
             return getGenes( ids );
 
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct  " + "  gene from Gene2GOAssociationImpl as geneAss join geneAss.gene as gene "
                         + "where geneAss.ontologyEntry.value in ( :goIDs) and gene.taxon = :tax" )
                 .setParameterList( "goIDs", ids ).setParameter( "tax", taxon ).list();
@@ -130,7 +130,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
                 + "where geneAss.ontologyEntry.value in ( :goIDs)";
 
         Map<String, Collection<Gene>> result = new HashMap<>();
-        List<?> list = this.getSession().createQuery( queryString ).setParameterList( "goIDs", ids ).list();
+        List<?> list = this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "goIDs", ids ).list();
 
         for ( Object o : list ) {
             Object[] oa = ( Object[] ) o;
@@ -156,7 +156,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     @Override
     protected Collection<VocabCharacteristic> handleFindByGene( Gene gene ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene" )
                 .setParameter( "gene", gene ).list();
     }
@@ -164,7 +164,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     @Override
     protected Collection<Gene> handleFindByGoTerm( String goId ) {
         //noinspection unchecked
-        return super.getSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+        return super.getSessionFactory().getCurrentSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
                 + "where geneAss.ontologyEntry.value = :goID" ).setParameter( "goID", goId.replaceFirst( ":", "_" ) )
                 .list();
     }
@@ -172,7 +172,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     @Override
     protected Collection<Gene> handleFindByGoTerm( String goId, Taxon taxon ) {
         //noinspection unchecked
-        return super.getSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+        return super.getSessionFactory().getCurrentSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
                 + "where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon" )
                 .setParameter( "goID", goId.replaceFirst( ":", "_" ) ).setParameter( "taxon", taxon ).list();
     }
@@ -183,7 +183,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
             return new HashSet<>();
 
         //noinspection unchecked
-        return this.getSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss"
+        return this.getSessionFactory().getCurrentSession().createQuery( "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss"
                 + "  where geneAss.ontologyEntry.valueUri in (:goIDs) and geneAss.gene.taxon = :taxon" )
                 .setParameter( "goIDs", goTerms ).setParameter( "taxon", taxon ).list();
     }
@@ -192,7 +192,7 @@ public class Gene2GOAssociationDaoImpl extends Gene2GOAssociationDaoBase {
     protected void handleRemoveAll() {
 
         int total = 0;
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         while ( true ) {
             Query q = session.createQuery( "from Gene2GOAssociationImpl" );

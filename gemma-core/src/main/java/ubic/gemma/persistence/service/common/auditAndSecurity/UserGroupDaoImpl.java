@@ -76,7 +76,7 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ug from UserGroup ug inner join ug.groupMembers memb where memb = :user" )
                 .setParameter( "user", user ).list();
     }
@@ -90,7 +90,7 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot remove group: " + userGroup );
         }
-        this.getSession().delete( userGroup );
+        this.getSessionFactory().getCurrentSession().delete( userGroup );
     }
 
     @Override
