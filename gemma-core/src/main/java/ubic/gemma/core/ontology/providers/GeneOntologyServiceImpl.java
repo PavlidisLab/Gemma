@@ -96,10 +96,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     private Map<String, Collection<OntologyTerm>> parentsCache = Collections
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
-    /* ********************************
-     * Public class methods
-     * ********************************/
-
     /**
      * @return Usual formatted GO id, e.g., GO:0039392
      */
@@ -151,10 +147,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return enabled;
     }
 
-    /* ********************************
-     * Private class methods
-     * ********************************/
-
     /**
      * Turn an id like GO:0038128 into a URI.
      */
@@ -162,10 +154,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         String uriTerm = goId.replace( ":", "_" );
         return BASE_GO_URI + uriTerm;
     }
-
-    /* ********************************
-     * Setters for autowiring
-     * ********************************/
 
     @Autowired
     public void setGene2GOAssociationService( Gene2GOAssociationService gene2GOAssociationService ) {
@@ -176,10 +164,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
     public void setGeneService( GeneService geneService ) {
         this.geneService = geneService;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     @Override
     public void afterPropertiesSet() {
@@ -623,10 +607,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         return ready.get();
     }
 
-    /* ********************************
-     * Protected methods
-     * ********************************/
-
     /**
      *
      */
@@ -644,10 +624,6 @@ public class GeneOntologyServiceImpl implements GeneOntologyService {
         this.indices.add( OntologyIndexer.indexOntology( url.replaceFirst( ".*/", "" ).replace( ".owl", "" ), model ) );
         addTerms( terms );
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     private void putOverlapGenes( Map<Long, Collection<OntologyTerm>> overlap, Collection<OntologyTerm> queryGeneTerms,
             Collection<Gene> genes ) {

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.auditAndSecurity.GroupAuthority;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -76,7 +77,7 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     @Override
     public Collection<UserGroup> findGroupsForUser( User user ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ug from UserGroup ug inner join ug.groupMembers memb where memb = :user" )
                 .setParameter( "user", user ).list();
     }
@@ -90,7 +91,7 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
                 .equals( AuthorityConstants.AGENT_GROUP_NAME ) ) {
             throw new IllegalArgumentException( "Cannot remove group: " + userGroup );
         }
-        this.getSession().delete( userGroup );
+        this.getSessionFactory().getCurrentSession().delete( userGroup );
     }
 
     @Override
@@ -136,10 +137,6 @@ public class UserGroupDaoImpl extends UserGroupDaoBase {
     @Override
     public Integer countAll() {
         return this.loadAll().size();
-    }
-
-    @Override
-    public void thaw( UserGroup entity ) {
     }
 
 }

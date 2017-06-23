@@ -47,9 +47,7 @@ public class AnnotationsWebService extends WebService {
     private OntologyService ontologyService;
     private TaxonService taxonService;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required by spring
@@ -66,9 +64,7 @@ public class AnnotationsWebService extends WebService {
         this.taxonService = taxonService;
     }
 
-    /* ********************************
-     * API GET Methods
-     * ********************************/
+
 
     /**
      * Placeholder for root call

@@ -202,7 +202,7 @@ public class TwoChannelMissingValueCLI extends ExpressionExperimentManipulatingC
 
         Collection<QuantitationType> types = eeService.getQuantitationTypes( ee );
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         if ( !force && !needToRun( ee, MissingValueAnalysisEvent.class ) ) return false;
 

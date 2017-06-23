@@ -192,7 +192,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         try {
 
-            this.eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
 
             if ( delete ) {
                 log.info( "Deleting any analyses for experiment=" + ee );

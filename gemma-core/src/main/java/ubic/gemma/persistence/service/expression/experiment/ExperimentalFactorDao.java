@@ -27,8 +27,10 @@ import ubic.gemma.persistence.service.BaseVoEnabledDao;
  */
 public interface ExperimentalFactorDao extends BaseVoEnabledDao<ExperimentalFactor, ExperimentalFactorValueObject> {
 
+    @Override
     ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 
+    @Override
     ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
 }

@@ -85,7 +85,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
         }
 
         assertNotNull( newee );
-        expressionExperimentService.thawLite( newee );
+        newee = expressionExperimentService.thawLite( newee );
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( newee );
         try (InputStream deis = this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/gse18162Short/design.txt" );) {

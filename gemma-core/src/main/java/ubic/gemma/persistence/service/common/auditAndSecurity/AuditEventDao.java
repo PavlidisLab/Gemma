@@ -22,7 +22,6 @@ import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
@@ -70,4 +69,5 @@ public interface AuditEventDao extends BaseVoEnabledDao<AuditEvent, AuditEventVa
 
     void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
 
+    void thaw( AuditEvent auditEvent );
 }

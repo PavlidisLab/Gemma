@@ -54,7 +54,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     @Override
     public BioAssayDimension find( BioAssayDimension bioAssayDimension ) {
 
-        Criteria queryObject = this.getSession().createCriteria( BioAssayDimension.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioAssayDimension.class );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
@@ -68,7 +68,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
 
         queryObject.add( Restrictions.sizeEq( "bioAssays", bioAssayDimension.getBioAssays().size() ) );
 
-        Collection<String> names = new HashSet<>();
+        Collection<String> names = new HashSet<String>();
         assert bioAssayDimension.getBioAssays().size() > 0;
         for ( BioAssay bioAssay : bioAssayDimension.getBioAssays() ) {
             names.add( bioAssay.getName() );
@@ -114,7 +114,9 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
     }
 
     @Override
-    public void thaw( final BioAssayDimension bioAssayDimension ) {
+    public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null ) return null;
+        if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
@@ -138,20 +140,26 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
                 return null;
             }
         } );
+        return bioAssayDimension;
     }
 
     @Override
-    public void thawLite( final BioAssayDimension bioAssayDimension ) {
+    public BioAssayDimension thawLite( final BioAssayDimension bioAssayDimension ) {
+        if ( bioAssayDimension == null )
+            return null;
+        if ( bioAssayDimension.getId() == null )
+            return bioAssayDimension;
+
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension.getBioAssays() );
-
                 return null;
             }
         } );
+        return bioAssayDimension;
     }
 
     @Override
@@ -161,7 +169,7 @@ public class BioAssayDimensionDaoImpl extends VoEnabledDao<BioAssayDimension, Bi
 
     @Override
     public Collection<BioAssayDimensionValueObject> loadValueObjects( Collection<BioAssayDimension> entities ) {
-        Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<>();
+        Collection<BioAssayDimensionValueObject> vos = new LinkedHashSet<BioAssayDimensionValueObject>();
         for ( BioAssayDimension e : entities ) {
             vos.add( loadValueObject( e ) );
         }

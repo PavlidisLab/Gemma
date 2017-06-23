@@ -146,7 +146,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
              */
             int i = 0;
             for ( ExpressionExperiment vo : vos ) {
-                expressionExperimentService.thawLite( vo );
+                vo = expressionExperimentService.thawLite( vo );
                 log.info( "Processing: " + vo.getShortName() );
 
                 String acc = "";
@@ -174,7 +174,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 // TODO could cache the arrayDesigns to make faster, thawing ad is time consuming
                 for ( ArrayDesign ad : ads ) {
-                    arrayDesignService.thawLite( ad );
+                    ad = arrayDesignService.thawLite( ad );
                     if ( ad.getDesignProvider() == null ) {
                         log.debug( "Array Design: " + ad.getShortName()
                                 + " has no design provoider assoicated with it. Skipping" );
@@ -219,7 +219,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
             writer.write( "GemmaDsId\tTerm\tTermURI\n" );
             int i = 0;
             for ( ExpressionExperiment vo : vos ) {
-                expressionExperimentService.thawLite( vo );
+                vo = expressionExperimentService.thawLite( vo );
 
                 log.info( "Processing: " + vo.getShortName() );
 
@@ -285,7 +285,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
                     "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
             int i = 0;
             for ( ExpressionExperiment ee : experiments ) {
-                expressionExperimentService.thawLite( ee );
+                ee = expressionExperimentService.thawLite( ee );
 
                 Collection<DifferentialExpressionAnalysis> results = differentialExpressionAnalysisService
                         .getAnalyses( ee );
@@ -304,7 +304,7 @@ public class DatabaseViewGeneratorImpl implements DatabaseViewGenerator {
 
                 for ( DifferentialExpressionAnalysis analysis : results ) {
 
-                    this.differentialExpressionAnalysisService.thawFully( analysis );
+                    analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
 
                     for ( ExpressionAnalysisResultSet ears : analysis.getResultSets() ) {
 

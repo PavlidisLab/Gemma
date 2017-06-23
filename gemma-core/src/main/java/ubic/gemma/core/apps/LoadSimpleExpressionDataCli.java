@@ -351,7 +351,7 @@ public class LoadSimpleExpressionDataCli extends AbstractCLIContextCLI {
 
             ExpressionExperiment ee = eeLoaderService.create( metaData, data );
 
-            eeService.thawLite( ee );
+            ee = this.eeService.thawLite( ee );
         }
     }
 

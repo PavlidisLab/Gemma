@@ -19,60 +19,48 @@
 
 package ubic.gemma.web.services;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
-import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentSetService;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.*;
 
 /**
  * Allows access to the differential expression analysis. Given 1) an expression experiment set id 2) a collection of
  * gene ids, 3) a taxon id, and a 4) threshold (enter 1 to include all results) The Expression Experiment Set ID (1) can
  * be found by using the ExpressionExperimentSetIDEndpoint, which will return all the expression experiment set ids for
- * all taxons and their corresponding description. The stringency is the miniumum number of times we found a particular
+ * all taxons and their corresponding description. The stringency is the minimum number of times we found a particular
  * relationship. Returns a list consisting of 4 fields: 1) the gene id, 2) the EE ID, 3) probe name, and 4) the q value
- * 
+ *
  * @author gavin
- * @version$Id$
  */
 public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionProbeResultEndpoint.class );
-
-    private ExpressionExperimentService expressionExperimentService;
-
-    private GeneService geneService;
-
-    private TaxonService taxonService;
-
-    private DifferentialExpressionResultService differentialExpressionResultService;
-
-    private ExpressionExperimentSetService expressionExperimentSetService;
-
+    private static final Log log = LogFactory.getLog( DifferentialExpressionProbeResultEndpoint.class );
     /**
      * The local name of the expected request/response.
      */
-    public static final String LOCAL_NAME = "differentialExpressionProbeResult";
+    private static final String LOCAL_NAME = "differentialExpressionProbeResult";
+    private ExpressionExperimentService expressionExperimentService;
+    private GeneService geneService;
+    private TaxonService taxonService;
+    private DifferentialExpressionResultService differentialExpressionResultService;
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     public void setDifferentialExpressionResultService(
             DifferentialExpressionResultService differentialExpressionAnalysisResultService ) {
@@ -97,9 +85,9 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override
@@ -125,8 +113,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         Collection<Long> geneIDLong = new HashSet<Long>();
         for ( String id : geneInput )
             geneIDLong.add( Long.parseLong( id ) );
-        Collection<Gene> rawGeneCol = geneService.load( geneIDLong );
-        geneService.thaw( rawGeneCol );
+        Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
         if ( rawGeneCol.isEmpty() ) {
             String msg = "None of the gene id's can be found.";
             return buildBadResponse( document, msg );
@@ -149,8 +136,8 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
             return buildBadResponse( document, msg );
         }
         if ( !( ees.getTaxon().getId() ).equals( taxon.getId() ) ) {
-            String msg = "Expression experiment set " + analysisId + " does not match input taxon "
-                    + taxon.getCommonName();
+            String msg =
+                    "Expression experiment set " + analysisId + " does not match input taxon " + taxon.getCommonName();
             return buildBadResponse( document, msg );
         }
         Collection<ExpressionExperiment> eeCol = getExperiments( ees );
@@ -186,7 +173,8 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
                             + " & experiment: " + ee );
                     buildXMLResponse( document, responseElement, gene.getId().toString(), ee.getId().toString(), null );
                 } else
-                    buildXMLResponse( document, responseElement, gene.getId().toString(), ee.getId().toString(), parCol );
+                    buildXMLResponse( document, responseElement, gene.getId().toString(), ee.getId().toString(),
+                            parCol );
 
             }
         }
@@ -199,7 +187,7 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
     }
 
     private void buildXMLResponse( Document document, Element responseElement, String gene, String ee,
-            Collection<DifferentialExpressionValueObject> parCol ) throws Exception {
+            Collection<DifferentialExpressionValueObject> parCol ) {
 
         if ( parCol != null ) {
             for ( DifferentialExpressionValueObject par : parCol ) {

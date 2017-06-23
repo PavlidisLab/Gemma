@@ -41,9 +41,15 @@ public class BioSequenceServiceImpl extends BioSequenceServiceBase {
         super( bioSequenceDao );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+    @Override
+    public BioSequence thaw( BioSequence bioSequence ) {
+        return this.bioSequenceDao.thaw( bioSequence );
+    }
+
+    @Override
+    public Collection<BioSequence> thaw( Collection<BioSequence> bioSequences ) {
+        return this.bioSequenceDao.thaw( bioSequences );
+    }
 
     @Override
     protected BioSequence handleFindByAccession( DatabaseEntry accession ) {

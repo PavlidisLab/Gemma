@@ -76,9 +76,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
     private Long taxonId;
     private String taxonScientificName;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required when using the class as a spring bean.
@@ -178,9 +176,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         return converted;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     private static void addConvertedAliases( Gene gene, GeneValueObject geneValueObject ) {
         LinkedList<String> aliases = new LinkedList<>();
@@ -430,9 +426,7 @@ public class GeneValueObject extends IdentifiableValueObject<Gene> implements Se
         return taxonScientificName;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     public void setTaxonScientificName( String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;

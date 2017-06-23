@@ -144,7 +144,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
             ee = simpleExpressionDataLoaderService.create( metaData, data );
         }
-        // eeService.thawLite( ee );
+        // ee = this.eeService.thawLite( ee );
     }
 
 
@@ -169,7 +169,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
          * make sure we didn't load anything
          */
         ee = this.expressionExperimentService.load( ee.getId() );
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         assertEquals( 0, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
         /*
@@ -191,7 +191,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         ee = this.expressionExperimentService.load( ee.getId() );
         this.aclTestUtils.checkEEAcls( ee );
-        this.expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         assertEquals( 3, ee.getExperimentalDesign().getExperimentalFactors().size() );
 

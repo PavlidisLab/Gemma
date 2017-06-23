@@ -19,11 +19,18 @@
 package ubic.gemma.persistence.service.genome.gene;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.service.BaseDao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * @author kelsey
@@ -37,6 +44,29 @@ public class GeneSetMemberDaoImpl extends AbstractDao<GeneSetMember> implements 
     }
 
     @Override
-    public void thaw( GeneSetMember entity ) {
+    public Collection<GeneSetMember> create( final Collection<GeneSetMember> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( GeneSetMember entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+        return entities;
     }
+
+    @Override
+    public void update( final Collection<GeneSetMember> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( GeneSetMember entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
+    }
+
+
 }

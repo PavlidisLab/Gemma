@@ -41,10 +41,6 @@ public class AuditEvent implements Identifiable, Serializable {
     private String note = null;
     private User performer = null;
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
-
     /**
      * Returns <code>true</code> if the argument is an AuditEvent instance and all identifiers for this entity equal the
      * identifiers of the argument entity. Returns <code>false</code> otherwise.
@@ -73,10 +69,6 @@ public class AuditEvent implements Identifiable, Serializable {
         return hashCode;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
-
     public AuditAction getAction() {
         return this.action;
     }
@@ -104,10 +96,6 @@ public class AuditEvent implements Identifiable, Serializable {
     public User getPerformer() {
         return this.performer;
     }
-
-    /* ********************************
-     * Static classes
-     * ********************************/
 
     /**
      * Constructs new instances of {@link AuditEvent}.

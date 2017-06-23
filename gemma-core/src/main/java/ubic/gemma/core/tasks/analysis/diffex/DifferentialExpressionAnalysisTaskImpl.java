@@ -98,12 +98,12 @@ public class DifferentialExpressionAnalysisTaskImpl
                 throw new UnsupportedOperationException( "Update stats functionality has been removed" );
             }
             log.info( "Redoing analysis" );
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
             return differentialExpressionAnalyzerService.redoAnalysis( ee, taskCommand.getToRedo(), true );
 
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
                 .getAnalyses( ee );

@@ -43,32 +43,32 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements Us
 
     @Override
     public UserGroup findByName( final String name ) {
-        return ( UserGroup ) this.getSession().createQuery( "from UserGroup as userGroup where userGroup.name = :name" )
+        return ( UserGroup ) this.getSessionFactory().getCurrentSession().createQuery( "from UserGroup as userGroup where userGroup.name = :name" )
                 .setParameter( "name", name ).uniqueResult();
     }
 
     @Override
     public Collection<UserGroup> load( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from UserGroup where id in (:ids)" ).setParameterList( "ids", ids )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from UserGroup where id in (:ids)" ).setParameterList( "ids", ids )
                 .list();
     }
 
     @Override
     public UserGroup load( final Long id ) {
-        return ( UserGroup ) this.getSession().get( UserGroup.class, id );
+        return ( UserGroup ) this.getSessionFactory().getCurrentSession().get( UserGroup.class, id );
     }
 
     @Override
     public Collection<UserGroup> loadAll() {
         //noinspection unchecked
-        return this.getSession().createCriteria( UserGroup.class ).list();
+        return this.getSessionFactory().getCurrentSession().createCriteria( UserGroup.class ).list();
     }
 
     @Override
     public void remove( Collection<UserGroup> entities ) {
         for ( UserGroup e : entities ) {
-            this.getSession().delete( e );
+            this.getSessionFactory().getCurrentSession().delete( e );
         }
     }
 
@@ -81,6 +81,6 @@ public abstract class UserGroupDaoBase extends HibernateDaoSupport implements Us
 
     @Override
     public void update( UserGroup entity ) {
-        this.getSession().update( entity );
+        this.getSessionFactory().getCurrentSession().update( entity );
     }
 }

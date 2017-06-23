@@ -59,9 +59,7 @@ public class DatasetsWebService extends WebService {
     private ArrayDesignService arrayDesignService;
     private BioAssayDao bioAssayDao;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * Required by spring
@@ -80,9 +78,7 @@ public class DatasetsWebService extends WebService {
         this.bioAssayDao = bioAssayDao;
     }
 
-    /* ********************************
-     * API GET Methods
-     * ********************************/
+
 
     /**
      * Lists all datasets available in gemma.
@@ -272,9 +268,7 @@ public class DatasetsWebService extends WebService {
         return prepareEEAnnotationsUnstructured( bioAssays, chars );
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private ResponseDataObject autoCodeResponse( DatasetArg datasetArg, Object response, HttpServletResponse sr ) {
         if ( response == null ) {

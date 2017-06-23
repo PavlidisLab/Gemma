@@ -47,7 +47,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
     @Test
     public final void testProcessArrayDesign() throws Exception {
 
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         Collection<BioSequence> seqs = app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
                 FileTools.resourceToPath( "/data/loader/genome/blast" ), true,
@@ -58,7 +58,7 @@ public class ArrayDesignSequenceAlignmentandMappingTest extends AbstractArrayDes
 
         Blat mockBlat = new MockBlat( ad.getPrimaryTaxon() );
 
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         Collection<BlatResult> blatResults = aligner.processArrayDesign( ad, mockBlat );
         assertTrue( blatResults.size() > 200 );

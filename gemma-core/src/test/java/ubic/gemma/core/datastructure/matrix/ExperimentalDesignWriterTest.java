@@ -67,7 +67,7 @@ public class ExperimentalDesignWriterTest extends AbstractGeoServiceTest {
             Collection<?> results = geoService.fetchAndLoad( shortName, false, true, false, false );
             ee = ( ExpressionExperiment ) results.iterator().next();
         }
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
     }
 
     @After

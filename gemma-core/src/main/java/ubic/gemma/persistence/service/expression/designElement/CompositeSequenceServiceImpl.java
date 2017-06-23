@@ -17,6 +17,7 @@ package ubic.gemma.persistence.service.expression.designElement;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -39,6 +40,17 @@ public class CompositeSequenceServiceImpl extends CompositeSequenceServiceBase {
     @Autowired
     public CompositeSequenceServiceImpl( CompositeSequenceDao compositeSequenceDao ) {
         super( compositeSequenceDao );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CompositeSequence thaw( CompositeSequence compositeSequence ) {
+        return this.compositeSequenceDao.thaw( compositeSequence );
+    }
+
+    @Override
+    public void thaw( Collection<CompositeSequence> compositeSequences ) {
+        this.compositeSequenceDao.thaw( compositeSequences );
     }
 
     @Override

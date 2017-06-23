@@ -55,20 +55,19 @@ import java.util.*;
  * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
  *
  * @author pavlidis
- * @version $Id$
  */
 @Component
 public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDataLoaderService {
 
-    private static Log log = LogFactory.getLog( SimpleExpressionDataLoaderServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( SimpleExpressionDataLoaderServiceImpl.class.getName() );
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
     @Autowired
-    Persister persisterHelper;
+    private Persister persisterHelper;
     @Autowired
-    PreprocessorService preprocessorService;
+    private PreprocessorService preprocessorService;
     @Autowired
-    TaxonService taxonService;
+    private TaxonService taxonService;
 
     /**
      * This method establishes the way raw input sample names are converted to biomaterial names in the system. SUch
@@ -158,9 +157,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
         List<String> designElements = new ArrayList<String>();
         List<String> columnNames = new ArrayList<String>();
 
-        for ( String originalColumnName : matrix.getColNames() ) {
-            columnNames.add( originalColumnName );
-        }
+        columnNames.addAll( matrix.getColNames() );
 
         List<double[]> rows = new ArrayList<double[]>();
 
@@ -223,7 +220,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = convert( metaData, matrix );
 
-        experiment = ( ExpressionExperiment ) persisterHelper.persist( experiment );
+        experiment = persisterHelper.persist( experiment, persisterHelper.prepare( experiment ) );
 
         assert experiment.getShortName() != null;
 
@@ -248,14 +245,13 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             ArrayDesign existing = null;
             if ( arrayDesignService != null ) {
                 // not sure why we need a thaw here, if it's not persistent...must check first anyway to avoid errors.
-                if ( design.getId() != null )
-                    arrayDesignService.thawLite( design );
+                if ( design.getId() != null ) design = arrayDesignService.thawLite( design );
                 existing = arrayDesignService.find( design );
             }
             if ( existing != null ) {
                 log.info( "Array Design exists" );
                 if ( arrayDesignService != null ) {
-                    arrayDesignService.thaw( existing );
+                    existing = arrayDesignService.thaw( existing );
                 }
                 existingDesigns.add( existing );
             } else {
@@ -295,7 +291,7 @@ public class SimpleExpressionDataLoaderServiceImpl implements SimpleExpressionDa
             bioMaterial.setSourceTaxon( taxon );
 
             BioAssay assay = BioAssay.Factory.newInstance();
-            assay.setName( columnName.toString() );
+            assay.setName( columnName );
             assay.setArrayDesignUsed( arrayDesign );
             assay.setSampleUsed( bioMaterial );
             assay.setIsOutlier( false );

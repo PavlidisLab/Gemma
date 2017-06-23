@@ -83,7 +83,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
             Collection<BioSequence> sequences ) {
 
-        Map<String, BioSequence> nameMap = new HashMap<>();
+        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : sequences ) {
             nameMap.put( this.deMangleProbeId( sequence.getName() ), sequence );
         }
@@ -135,7 +135,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         // arrayDesignService.thaw( arrayDesign );
         boolean wasOriginallyLackingCompositeSequences = arrayDesign.getCompositeSequences().size() == 0;
         taxon = validateTaxon( taxon, arrayDesign );
-        Collection<BioSequence> bioSequences = new HashSet<>();
+        Collection<BioSequence> bioSequences = new HashSet<BioSequence>();
 
         int done = 0;
         int percent = 0;
@@ -146,9 +146,9 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         int total = compositeSequencesFromProbes.size();
 
-        Map<String, CompositeSequence> quickFindMap = new HashMap<>();
-        List<BioSequence> sequenceBuffer = new ArrayList<>();
-        Map<String, CompositeSequence> csBuffer = new HashMap<>();
+        Map<String, CompositeSequence> quickFindMap = new HashMap<String, CompositeSequence>();
+        List<BioSequence> sequenceBuffer = new ArrayList<BioSequence>();
+        Map<String, CompositeSequence> csBuffer = new HashMap<String, CompositeSequence>();
         for ( CompositeSequence newCompositeSequence : compositeSequencesFromProbes ) {
 
             // these composite sequences are just use
@@ -225,7 +225,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         arrayDesignService.update( arrayDesign );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         log.info( "Done adding sequence information!" );
         return bioSequences;
     }
@@ -256,8 +256,8 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         Collection<BioSequence> bioSequences = fastaParser.getResults();
 
         // make two maps: one for genbank ids, one for the sequence name.
-        Map<String, BioSequence> gbIdMap = new HashMap<>();
-        Map<String, BioSequence> nameMap = new HashMap<>();
+        Map<String, BioSequence> gbIdMap = new HashMap<String, BioSequence>();
+        Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
 
         int total = bioSequences.size() + arrayDesign.getCompositeSequences().size();
         int done = 0;
@@ -300,7 +300,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             } else {
                 BioSequence biologicalCharacteristic = compositeSequence.getBiologicalCharacteristic();
                 if ( biologicalCharacteristic != null ) {
-                    bioSequenceService.thaw( biologicalCharacteristic );
+                    biologicalCharacteristic = bioSequenceService.thaw( biologicalCharacteristic );
                     if ( biologicalCharacteristic.getSequenceDatabaseEntry() != null && gbIdMap
                             .containsKey( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() ) ) {
                         match = gbIdMap.get( biologicalCharacteristic.getSequenceDatabaseEntry().getAccession() );
@@ -339,7 +339,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         log.info( "Updating sequences on arrayDesign" );
         arrayDesignService.update( arrayDesign );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         return bioSequences;
 
     }
@@ -357,14 +357,14 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         checkForCompositeSequences( arrayDesign );
 
         Map<String, String> probe2acc = parseAccessionFile( sequenceIdentifierFile );
-        Collection<BioSequence> finalResult = new HashSet<>();
-        Collection<String> notFound = new HashSet<>();
+        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
+        Collection<String> notFound = new HashSet<String>();
 
         // values that were not found
         notFound.addAll( probe2acc.values() );
 
         // the actual thing values to search for (with version numbers)
-        Collection<String> accessionsToFetch = new HashSet<>();
+        Collection<String> accessionsToFetch = new HashSet<String>();
         accessionsToFetch.addAll( probe2acc.values() );
 
         // only 1 taxon should be on array design if taxon not supplied on command line
@@ -416,7 +416,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         if ( !notFound.isEmpty() && taxon != null ) {
 
-            Collection<String> stillLooking = new HashSet<>();
+            Collection<String> stillLooking = new HashSet<String>();
             stillLooking.addAll( notFound );
             notFound.clear();
 
@@ -448,7 +448,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         arrayDesignService.update( arrayDesign );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
         return finalResult;
 
     }
@@ -484,7 +484,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
 
         Collection<String> notFound = accessionsToFetch.keySet();
-        Collection<BioSequence> finalResult = new HashSet<>();
+        Collection<BioSequence> finalResult = new HashSet<BioSequence>();
 
         int versionNumber = 1;
         if ( fc == null )
@@ -527,7 +527,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         }
 
         log.info( finalResult.size() + " sequences found" );
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         return finalResult;
 
@@ -698,7 +698,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     }
 
     private Map<String, BioSequence> findLocalSequences( Collection<String> identifiersToSearch, Taxon taxon ) {
-        Map<String, BioSequence> found = new HashMap<>();
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( String id : identifiersToSearch ) {
             BioSequence template = BioSequence.Factory.newInstance();
             template.setTaxon( taxon );
@@ -721,7 +721,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private Map<String, BioSequence> findOrUpdateSequences( Collection<String> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Taxon taxon, boolean force ) {
 
-        Map<String, BioSequence> found = new HashMap<>();
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( BioSequence sequence : retrievedSequences ) {
             if ( log.isDebugEnabled() )
                 log.debug( "Processing retrieved sequence: " + sequence );
@@ -747,7 +747,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private Map<String, BioSequence> findOrUpdateSequences( Map<String, BioSequence> accessionsToFetch,
             Collection<BioSequence> retrievedSequences, Collection<Taxon> taxa, boolean force ) {
 
-        Map<String, BioSequence> found = new HashMap<>();
+        Map<String, BioSequence> found = new HashMap<String, BioSequence>();
         for ( Taxon taxon : taxa ) {
 
             if ( taxon == null ) {
@@ -773,7 +773,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
                     continue;
                 }
                 sequence = createOrUpdateGenbankSequence( sequence, force );
-                this.bioSequenceService.thaw( sequence );
+                sequence = this.bioSequenceService.thaw( sequence );
                 String accession = sequence.getSequenceDatabaseEntry().getAccession();
                 found.put( accession, sequence );
                 accessionsToFetch.remove( accession );
@@ -804,7 +804,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
-        this.bioSequenceService.thaw( bs );
+        bs = this.bioSequenceService.thaw( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 
@@ -813,7 +813,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     }
 
     private Collection<String> getUnFound( Collection<String> accessionsToFetch, Map<String, BioSequence> found ) {
-        Collection<String> notFound = new HashSet<>();
+        Collection<String> notFound = new HashSet<String>();
         for ( String accession : accessionsToFetch ) {
             if ( !found.containsKey( accession ) ) {
                 notFound.add( accession );
@@ -835,7 +835,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
      * @return map of biosequence accessions to BioSequences (the existing ones)
      */
     private Map<String, BioSequence> initializeFetchList( ArrayDesign arrayDesign, boolean force ) {
-        Map<String, BioSequence> accessionsToFetch = new HashMap<>();
+        Map<String, BioSequence> accessionsToFetch = new HashMap<String, BioSequence>();
         int sequenceProvided = 0;
         int noSequence = 0;
         boolean warned = false;
@@ -905,7 +905,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
             StopWatch timer = new StopWatch();
             timer.start();
 
-            Map<String, String> probe2acc = new HashMap<>();
+            Map<String, String> probe2acc = new HashMap<String, String>();
             int count = 0;
             int totalLines = 0;
             while ( ( line = br.readLine() ) != null ) {
@@ -960,7 +960,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
 
         int numWithNoSequence = 0;
 
-        Collection<BioSequence> res = new HashSet<>();
+        Collection<BioSequence> res = new HashSet<BioSequence>();
         for ( CompositeSequence compositeSequence : arrayDesign.getCompositeSequences() ) {
 
             if ( log.isTraceEnabled() )
@@ -999,7 +999,7 @@ public class ArrayDesignSequenceProcessingServiceImpl implements ArrayDesignSequ
     private Collection<BioSequence> searchBlastDbs( String[] databaseNames, String blastDbHome,
             Collection<String> accessionsToFetch, FastaCmd fc ) {
 
-        Collection<BioSequence> retrievedSequences = new HashSet<>();
+        Collection<BioSequence> retrievedSequences = new HashSet<BioSequence>();
         for ( String dbName : databaseNames ) {
             Collection<BioSequence> moreBioSequences;
             if ( blastDbHome != null ) {

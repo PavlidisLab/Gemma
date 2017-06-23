@@ -139,7 +139,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( Collection<DifferentialExpressionAnalysisResult> results ) {
+    public void thaw(
+            Collection<DifferentialExpressionAnalysisResult> results ) {
         this.DERDao.thaw( results );
     }
 
@@ -151,8 +152,8 @@ public class DifferentialExpressionResultServiceImpl extends DifferentialExpress
 
     @Override
     @Transactional(readOnly = true)
-    public void thaw( ExpressionAnalysisResultSet resultSet ) {
-        this.EARDao.thaw( resultSet );
+    public ExpressionAnalysisResultSet thaw( ExpressionAnalysisResultSet resultSet ) {
+        return this.EARDao.thaw( resultSet );
     }
 
     @Override

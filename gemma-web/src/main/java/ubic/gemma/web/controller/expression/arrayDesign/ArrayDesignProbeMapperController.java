@@ -47,7 +47,7 @@ public class ArrayDesignProbeMapperController {
     public String run( Long id ) throws Exception {
 
         ArrayDesign arrayDesign = arrayDesignService.load( id );
-        arrayDesignService.thaw( arrayDesign );
+        arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         ArrayDesignProbeMapTaskCommand cmd = new ArrayDesignProbeMapTaskCommand();
         cmd.setArrayDesign( arrayDesign );

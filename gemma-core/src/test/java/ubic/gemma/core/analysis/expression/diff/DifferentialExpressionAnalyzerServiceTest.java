@@ -110,7 +110,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         processedDataVectorService.createProcessedDataVectors( ee );
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         differentialExpressionAnalyzerService.deleteAnalyses( ee );
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
 
@@ -135,8 +135,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
 
-        DifferentialExpressionAnalysis analysis = analyses.iterator().next();
-        differentialExpressionAnalysisService.thawFully( analysis );
+        DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService
+                .thawFully( analyses.iterator().next() );
 
         aclTestUtils.checkHasAcl( analysis );
         aclTestUtils.checkLacksAces( analysis );
@@ -168,9 +168,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
 
         assertEquals( 99, readIn.rows() );
-        System.out.println(readIn.toString());
+        System.out.println( readIn.toString() );
         assertEquals( 9, readIn.columns() );
-
 
         expressionDataFileService.deleteAllFiles( ee );
 
@@ -250,14 +249,14 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         }
         processedDataVectorService.createProcessedDataVectors( ee );
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
         for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
             experimentalFactorService.delete( experimentalFactor );
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         try (InputStream is = this.getClass()
                 .getResourceAsStream( "/data/loader/expression/geo/GSE32136.design.txt" )) {
@@ -270,7 +269,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         assertEquals( 3, experimentalFactors.size() );
 
-        // Wshew, done with setting it up.
+        // Done with setting it up.
 
         Collection<ExperimentalFactor> factors = new HashSet<>();
         ExperimentalFactor subsetFactor = null;

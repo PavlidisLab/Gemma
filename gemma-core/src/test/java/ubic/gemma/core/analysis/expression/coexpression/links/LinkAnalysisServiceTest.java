@@ -186,7 +186,7 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
 
         // now add another experiment that has overlapping links (same data...
         Map<CompositeSequence, byte[]> dataMap = new HashMap<>();
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
         for ( RawExpressionDataVector v : ee.getRawExpressionDataVectors() ) {
             dataMap.put( v.getDesignElement(), v.getData() );
         }

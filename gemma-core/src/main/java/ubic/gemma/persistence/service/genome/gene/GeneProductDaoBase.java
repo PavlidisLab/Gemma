@@ -41,7 +41,7 @@ public abstract class GeneProductDaoBase extends VoEnabledDao<GeneProduct, GeneP
 
     @Override
     public GeneProduct findByNcbiId( String ncbiId ) {
-        return ( GeneProduct ) this.getSession().createQuery( "from GeneProductImpl g where g.ncbiGi = :ncbiId" )
+        return ( GeneProduct ) this.getSessionFactory().getCurrentSession().createQuery( "from GeneProductImpl g where g.ncbiGi = :ncbiId" )
                 .setParameter( "ncbiId", ncbiId ).uniqueResult();
     }
 

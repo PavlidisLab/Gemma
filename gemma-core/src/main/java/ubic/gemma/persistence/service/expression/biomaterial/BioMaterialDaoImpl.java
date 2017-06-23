@@ -26,6 +26,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterialValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.persistence.util.BusinessKey;
+import ubic.gemma.persistence.util.EntityUtils;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -46,7 +47,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public BioMaterial find( BioMaterial bioMaterial ) {
         log.debug( "Start find" );
-        Criteria queryObject = this.getSession().createCriteria( BioMaterial.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( BioMaterial.class );
 
         BusinessKey.addRestrictions( queryObject, bioMaterial );
 
@@ -69,7 +70,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public Collection<BioMaterial> findByExperiment( ExpressionExperiment experiment ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct bm from ExpressionExperiment e join e.bioAssays b join b.sampleUsed bm where e = :ee" )
                 .setParameter( "ee", experiment ).list();
     }
@@ -77,21 +78,21 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     @Override
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct b from BioMaterial b join b.factorValues fv where fv = :f" )
                 .setParameter( "f", fv ).list();
     }
 
     @Override
     public ExpressionExperiment getExpressionExperiment( Long bioMaterialId ) {
-        return ( ExpressionExperiment ) this.getSession().createQuery(
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession().createQuery(
                 "select distinct e from ExpressionExperiment e inner join e.bioAssays ba inner join ba.sampleUsed bm where bm.id =:bmid " )
                 .setParameter( "bmid", bioMaterialId ).uniqueResult();
     }
 
     @Override
     public void thaw( final BioMaterial bioMaterial ) {
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         session.buildLockRequest( LockOptions.NONE ).lock( bioMaterial );
         Hibernate.initialize( bioMaterial );
         Hibernate.initialize( bioMaterial.getSourceTaxon() );
@@ -101,10 +102,15 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
     }
 
     @Override
-    public void thaw( Collection<BioMaterial> bioMaterials ) {
-        for ( BioMaterial b : bioMaterials ) {
-            this.thaw( b );
-        }
+    public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
+        if ( bioMaterials.isEmpty() )
+            return bioMaterials;
+        //noinspection unchecked
+        return this.getSessionFactory().getCurrentSession().createQuery(
+                "select distinct b from BioMaterial b left join fetch b.sourceTaxon left join fetch b.bioAssaysUsedIn"
+                        + " left join fetch b.treatments left join fetch b.factorValues left join fetch b.auditTrail at "
+                        + "left join fetch at.events where b.id in (:ids)" )
+                .setParameterList( "ids", EntityUtils.getIds( bioMaterials ) ).list();
     }
 
     @Override
@@ -131,7 +137,7 @@ public class BioMaterialDaoImpl extends BioMaterialDaoBase {
 
     @Override
     public Collection<BioMaterialValueObject> loadValueObjects( Collection<BioMaterial> entities ) {
-        Collection<BioMaterialValueObject> vos = new LinkedHashSet<>();
+        Collection<BioMaterialValueObject> vos = new LinkedHashSet<BioMaterialValueObject>();
         for ( BioMaterial e : entities ) {
             vos.add( this.loadValueObject( e ) );
         }

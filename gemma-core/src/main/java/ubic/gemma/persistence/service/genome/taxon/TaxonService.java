@@ -38,21 +38,27 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
 
     Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon );
 
+    @Override
     @Secured({ "GROUP_USER" })
     Taxon findOrCreate( Taxon taxon );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Taxon taxon );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( Taxon taxon );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Collection<Taxon> entities );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void remove( Long id );
 
+    @Override
     @Secured({ "GROUP_USER" })
     void update( Collection<Taxon> entities );
 
@@ -88,4 +94,5 @@ public interface TaxonService extends BaseVoEnabledService<Taxon, TaxonValueObje
      */
     Collection<Taxon> loadTaxonWithEvidence();
 
+    void thaw( Taxon taxon );
 }

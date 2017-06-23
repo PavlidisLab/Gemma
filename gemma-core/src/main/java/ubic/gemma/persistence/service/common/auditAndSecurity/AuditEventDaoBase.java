@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -41,17 +42,9 @@ import java.util.Map;
 public abstract class AuditEventDaoBase extends VoEnabledDao<AuditEvent, AuditEventValueObject>
         implements AuditEventDao {
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     protected AuditEventDaoBase( SessionFactory sessionFactory ) {
         super( AuditEvent.class, sessionFactory );
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     @Override
     public List<AuditEvent> getEvents( Auditable auditable ) {
@@ -74,8 +67,7 @@ public abstract class AuditEventDaoBase extends VoEnabledDao<AuditEvent, AuditEv
         try {
             return this.handleGetNewSinceDate( date );
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'AuditEventDao.getNewSinceDate(Date date)' --> " + th, th );
+            throw new RuntimeException( "Error performing 'AuditEventDao.getNewSinceDate(Date date)' --> " + th, th );
         }
     }
 
@@ -84,16 +76,19 @@ public abstract class AuditEventDaoBase extends VoEnabledDao<AuditEvent, AuditEv
         try {
             return this.handleGetUpdatedSinceDate( date );
         } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'AuditEventDao.getUpdatedSinceDate(Date date)' --> " + th, th );
+            throw new RuntimeException( "Error performing 'AuditEventDao.getUpdatedSinceDate(Date date)' --> " + th,
+                    th );
         }
     }
 
-    /* ********************************
-     * Protected abstract methods FIXME protected abstract methods?!
-     * ********************************/
+    @Override
+    public void thaw( AuditEvent auditEvent ) {
+        Hibernate.initialize( auditEvent.getAction() );
+        Hibernate.initialize( auditEvent.getPerformer() );
+        Hibernate.initialize( auditEvent.getPerformer().getLastName() );
+    }
 
-    protected abstract List handleGetEvents( Auditable auditable );
+    protected abstract List<AuditEvent> handleGetEvents( Auditable auditable );
 
     protected abstract AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
@@ -103,17 +98,11 @@ public abstract class AuditEventDaoBase extends VoEnabledDao<AuditEvent, AuditEv
     /**
      * Performs the core logic for {@link #getNewSinceDate(Date)}
      */
-    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date ) throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetNewSinceDate( Date date ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getUpdatedSinceDate(Date)}
      */
-    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditEvent)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent )
-            throws java.lang.Exception;
+    protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date ) throws Exception;
 
 }

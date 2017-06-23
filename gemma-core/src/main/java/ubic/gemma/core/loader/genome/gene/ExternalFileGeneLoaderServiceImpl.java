@@ -50,7 +50,7 @@ import java.util.Collection;
  */
 @Component
 public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoaderService {
-    private static Log log = LogFactory.getLog( ExternalFileGeneLoaderServiceImpl.class.getName() );
+    private static final Log log = LogFactory.getLog( ExternalFileGeneLoaderServiceImpl.class.getName() );
 
     @Autowired
     private GeneService geneService;
@@ -72,11 +72,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return load( b, taxon );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.loader.genome.gene.ExternalFileGeneLoaderService#load(java.lang.String, java.lang.String)
-     */
+
     @Override
     public int load( String geneFile, String taxonName ) throws Exception {
 
@@ -84,10 +80,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         Taxon taxon = validateTaxon( taxonName );
         log.info( "Taxon and file validation passed for " + geneFile + " for taxon " + taxonName );
 
-        try (BufferedReader bufferedReaderGene = readFile( geneFile );) {
+        try (BufferedReader bufferedReaderGene = readFile( geneFile )) {
 
-            int loadedGeneCount = load( bufferedReaderGene, taxon );
-            return loadedGeneCount;
+            return load( bufferedReaderGene, taxon );
         }
     }
 
@@ -112,7 +107,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         String uniProt = "";
         if ( fields.length > 2 )
             uniProt = fields[2];
-        Gene gene = null;
+        Gene gene;
         // need at least the gene symbol and gene name
         if ( StringUtils.isBlank( geneSymbol ) || StringUtils.isBlank( geneName ) ) {
             log.warn( "Line did not contain valid gene information; GeneSymbol=" + geneSymbol + "GeneName=" + geneName
@@ -128,7 +123,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
             Collection<GeneProductValueObject> existingProducts = geneService.getProducts( gene.getId() );
             if ( existingProducts.isEmpty() ) {
                 log.warn( "Gene " + gene + " exists, but has no products; adding one" );
-                geneService.thaw( gene );
+                gene = geneService.thaw( gene );
                 GeneProduct newgp = createGeneProduct( gene );
                 newgp = geneProductService.create( newgp );
                 gene.getProducts().add( newgp );
@@ -167,15 +162,9 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
         return geneProduct;
     }
 
-    /**
-     * @param bufferedReaderGene
-     * @param taxon
-     * @return
-     * @throws IOException
-     */
     private int load( BufferedReader bufferedReaderGene, Taxon taxon ) throws IOException {
         int loadedGeneCount = 0;
-        String line = null;
+        String line;
         int linesSkipped = 0;
         while ( ( line = bufferedReaderGene.readLine() ) != null ) {
             String[] lineContents = readLine( line );
@@ -240,7 +229,6 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      * then those child genes should not be used and the flag for those child taxon set to false.
      *
      * @param taxon The taxon to update
-     * @throws Thrown if error accessing updating taxon details
      */
     private void updateTaxonWithGenesLoaded( Taxon taxon ) {
         Collection<Taxon> childTaxa = taxonService.findChildTaxaByParent( taxon );
@@ -250,7 +238,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
                 if ( childTaxon != null && childTaxon.getIsGenesUsable() ) {
                     childTaxon.setIsGenesUsable( false );
                     taxonService.update( childTaxon );
-                    log.warn( "Child taxa" + childTaxon + " genes have been loaded parent taxa should superseed" );
+                    log.warn( "Child taxa" + childTaxon + " genes have been loaded parent taxa should suppressed" );
                 }
             }
         }
@@ -268,7 +256,7 @@ public class ExternalFileGeneLoaderServiceImpl implements ExternalFileGeneLoader
      *
      * @param taxonName Taxon common name
      * @return Full Taxon details
-     * @throws If taxon is not found in the system.
+     * @throws IllegalArgumentException If taxon is not found in the system.
      */
     private Taxon validateTaxon( String taxonName ) throws IllegalArgumentException {
         Taxon taxon = taxonService.findByCommonName( taxonName );

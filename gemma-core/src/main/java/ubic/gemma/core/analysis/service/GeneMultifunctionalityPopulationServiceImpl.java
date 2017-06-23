@@ -275,7 +275,7 @@ public class GeneMultifunctionalityPopulationServiceImpl implements GeneMultifun
 
 
     private void saveBatch( Collection<Gene> genes, Map<Gene, Multifunctionality> mfs ) {
-        geneService.thawLite( genes );
+        genes = geneService.thawLite( genes );
         for ( Gene g : genes ) {
             if ( !mfs.containsKey( g ) ) {
                 g.setMultifunctionality( null );

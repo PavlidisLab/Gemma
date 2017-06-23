@@ -38,18 +38,10 @@ import java.util.LinkedHashSet;
 public class DatabaseEntryDaoImpl extends VoEnabledDao<DatabaseEntry, DatabaseEntryValueObject>
         implements DatabaseEntryDao {
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     @Autowired
     public DatabaseEntryDaoImpl( SessionFactory sessionFactory ) {
         super( DatabaseEntry.class, sessionFactory );
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     @Override
     public DatabaseEntry findByAccession( String accession ) {

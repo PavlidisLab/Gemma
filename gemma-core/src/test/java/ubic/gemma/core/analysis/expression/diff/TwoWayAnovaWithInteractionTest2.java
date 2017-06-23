@@ -100,7 +100,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
             designImporter.importDesign( ee,
                     this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );
 
-            expressionExperimentService.thaw( ee );
+            ee = expressionExperimentService.thaw( ee );
         }
     }
 
@@ -162,7 +162,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
         differentialExpressionAnalysisService.thaw( refetched );
         for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
-            differentialExpressionResultService.thaw( ears );
+            ears = differentialExpressionResultService.thaw( ears );
         }
 
         checkResults( refetched );

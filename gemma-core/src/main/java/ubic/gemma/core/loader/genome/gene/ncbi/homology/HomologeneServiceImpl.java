@@ -65,9 +65,7 @@ public class HomologeneServiceImpl implements HomologeneService {
     
     private String homologeneFileName = "homologene.data";
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public HomologeneServiceImpl( GeneService geneService, TaxonService taxonService ) {
@@ -75,9 +73,7 @@ public class HomologeneServiceImpl implements HomologeneService {
         this.taxonService = taxonService;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public Gene getHomologue( Gene gene, Taxon taxon ) {
@@ -305,9 +301,7 @@ public class HomologeneServiceImpl implements HomologeneService {
 
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     /**
      * Given an NCBI Homologene Group ID returns a list of all the genes in gemma in that given group

@@ -70,20 +70,6 @@ public interface BaseService<O extends Identifiable> {
     int countAll();
 
     /**
-     * Thaws the given entity, making sure that all its properties are populated.
-     *
-     * @param entity the entity to be thawed.
-     */
-    void thaw( O entity );
-
-    /**
-     * Thaws all entities in given collection, making sure all their properties are populated.
-     *
-     * @param entities the entities to be thawed.
-     */
-    void thaw( Collection<O> entities );
-
-    /**
      * Removes all the given entities from persistent storage.
      *
      * @param entities the entities to be removed.

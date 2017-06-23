@@ -20,7 +20,6 @@ package ubic.gemma.persistence.service.expression.experiment;
 
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.stereotype.Service;
 import ubic.gemma.core.analysis.preprocess.batcheffects.BatchEffectDetails;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
@@ -74,6 +73,7 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
 
+    @Override
     @Secured({ "GROUP_USER" })
     ExpressionExperiment create( ExpressionExperiment expressionExperiment );
 
@@ -82,9 +82,11 @@ public interface ExpressionExperimentService
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
      * will not be deleted automatically, though this behavior could be changed)
      */
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ExpressionExperiment expressionExperiment );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( Long id );
 
@@ -95,6 +97,7 @@ public interface ExpressionExperimentService
      */
     Collection<Long> filter( String searchString );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
@@ -179,6 +182,7 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_AGENT", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> findByUpdatedLimit( Integer limit );
 
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
@@ -342,10 +346,12 @@ public interface ExpressionExperimentService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     Taxon getTaxon( BioAssaySet bioAssaySet );
 
+    @Override
     @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     ExpressionExperiment load( Long id );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadAll();
 
@@ -353,6 +359,7 @@ public interface ExpressionExperimentService
     Collection<ExpressionExperimentValueObject> loadAllFilter( int offset, int limit, String orderBy, boolean asc,
             String accession );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
@@ -372,6 +379,7 @@ public interface ExpressionExperimentService
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> loadLackingTags();
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperiment> load( Collection<Long> ids );
 
@@ -432,17 +440,18 @@ public interface ExpressionExperimentService
             Collection<RawExpressionDataVector> vectors );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thaw( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
      * Partially thaw the expression experiment given - do not thaw the raw data.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thawLite( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thawLiter( ExpressionExperiment expressionExperiment );
+    ExpressionExperiment thawLiter( ExpressionExperiment expressionExperiment );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperiment expressionExperiment );
 

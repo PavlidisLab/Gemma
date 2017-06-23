@@ -305,7 +305,7 @@ public class GeneralSearchControllerImpl extends BaseFormController implements G
                     .loadValueObjects( bibliographicReferenceService.load( EntityUtils.getIds( results ) ) );
         } else if ( Gene.class.isAssignableFrom( entityClass ) ) {
             Collection<Gene> genes = geneService.load( EntityUtils.getIds( results ) );
-            geneService.thawLite( genes );
+            genes = geneService.thawLite( genes );
             vos = geneService.loadValueObjects( genes );
         } else if ( Characteristic.class.isAssignableFrom( entityClass ) ) {
             Collection<CharacteristicValueObject> cvos = new ArrayList<>();

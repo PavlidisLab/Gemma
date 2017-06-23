@@ -124,7 +124,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
@@ -138,7 +138,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         designImporter.importDesign( ee,
                 this.getClass().getResourceAsStream( "/data/analysis/expression/2976_GSE19420_expdesign.data.txt" ) );
@@ -150,7 +150,7 @@ public class LowVarianceDataTest extends AbstractGeoServiceTest {
      */
     @Test
     public void test() throws Exception {
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         AnalysisType aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign().getExperimentalFactors(),
                 null, true );

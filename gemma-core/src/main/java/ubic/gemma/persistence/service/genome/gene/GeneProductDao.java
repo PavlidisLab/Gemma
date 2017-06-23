@@ -39,4 +39,6 @@ public interface GeneProductDao extends BaseVoEnabledDao<GeneProduct, GeneProduc
 
     Collection<GeneProduct> findByName( String name, Taxon taxon );
 
+    GeneProduct thaw( GeneProduct existing );
+
 }

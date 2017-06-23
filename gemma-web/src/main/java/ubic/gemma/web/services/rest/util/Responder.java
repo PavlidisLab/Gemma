@@ -145,9 +145,7 @@ public class Responder {
         return code200( toReturn, servletResponse );
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private static boolean isCodeAnError( Response.Status code ) {
         return code.getFamily() == Response.Status.Family.CLIENT_ERROR

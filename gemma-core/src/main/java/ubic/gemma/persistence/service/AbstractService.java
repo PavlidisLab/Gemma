@@ -20,17 +20,13 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
 
     private BaseDao<O> mainDao;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     public AbstractService( BaseDao<O> mainDao ) {
         this.mainDao = mainDao;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     @Transactional(readOnly = true)
@@ -78,20 +74,6 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Transactional
     public int countAll() {
         return this.loadAll().size();
-    }
-
-    @Override
-    @Transactional
-    public void thaw( O entity ) {
-        mainDao.thaw( entity );
-    }
-
-    @Override
-    @Transactional
-    public void thaw( Collection<O> entities ) {
-        for ( O o : entities ) {
-            this.thaw( o );
-        }
     }
 
     @Override

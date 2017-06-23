@@ -91,9 +91,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
     private final Persister persisterHelper;
     private final ProbeMapper probeMapper;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public ArrayDesignProbeMapperServiceImpl( AnnotationAssociationService annotationAssociationService,
@@ -116,9 +114,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         this.persisterHelper = persisterHelper;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public void printResult( CompositeSequence compositeSequence, Collection<BlatAssociation> col ) {
@@ -152,7 +148,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         GoldenPathSequenceAnalysis goldenPathDb = new GoldenPathSequenceAnalysis( taxon );
 
-        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<>( QUEUE_SIZE );
+        BlockingQueue<BACS> persistingQueue = new ArrayBlockingQueue<BACS>( QUEUE_SIZE );
         AtomicBoolean generatorDone = new AtomicBoolean( false );
         AtomicBoolean loaderDone = new AtomicBoolean( false );
 
@@ -207,12 +203,12 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
         log.info( "Processed " + count + " composite sequences with blat results; " + hits + " mappings found." );
 
-        arrayDesignReportService.generateArrayDesignReport( arrayDesign );
+        arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
         try {
             this.deleteOldFiles( arrayDesign );
         } catch ( IOException e ) {
-            log.error( "Failed to remove all old files associated with " + arrayDesign
+            log.error( "Failed to delete all old files associated with " + arrayDesign
                     + ", be sure to clean them up manually or regenerate them" );
         }
 
@@ -275,7 +271,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 }
 
                 // a probe can have more than one gene associated with it if so they are piped |
-                Collection<Gene> geneListProbe = new HashSet<>();
+                Collection<Gene> geneListProbe = new HashSet<Gene>();
 
                 // indicate multiple genes
                 Gene geneDetails;
@@ -308,7 +304,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
                 if ( bs != null ) {
                     if ( StringUtils.isNotBlank( seqName ) ) {
-                        bioSequenceService.thaw( bs );
+                        bs = bioSequenceService.thaw( bs );
                         if ( !bs.getName().equals( seqName ) ) {
                             log.warn( "Sequence name '" + seqName + "' given for " + probeId
                                     + " does not match existing entry " + bs.getName() + ", skipping" );
@@ -346,7 +342,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
                 assert bs != null;
                 assert bs.getId() != null;
                 for ( Gene gene : geneListProbe ) {
-                    geneService.thaw( gene );
+                    gene = geneService.thaw( gene );
                     if ( gene.getProducts().size() == 0 ) {
                         log.warn( "There are no gene products for " + gene
                                 + ", it cannot be mapped to probes. Skipping" );
@@ -365,7 +361,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
 
             }
 
-            arrayDesignReportService.generateArrayDesignReport( arrayDesign);
+            arrayDesignReportService.generateArrayDesignReport( arrayDesign.getId() );
 
             this.deleteOldFiles( arrayDesign );
 
@@ -406,9 +402,7 @@ public class ArrayDesignProbeMapperServiceImpl implements ArrayDesignProbeMapper
         return probeMapper.processBlatResults( db, blatResults, config );
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private void doLoad( final BlockingQueue<BACS> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone,
             boolean persist ) {

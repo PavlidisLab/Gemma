@@ -62,9 +62,7 @@ public class VisualizationValueObject {
 
     private List<String> sampleNames;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     public VisualizationValueObject() {
         super();
@@ -190,9 +188,7 @@ public class VisualizationValueObject {
         profiles.add( profile );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public String toString() {
@@ -287,9 +283,7 @@ public class VisualizationValueObject {
         this.eevo.setMinPvalue( minP );
     }
 
-    /* ********************************
-     * PPrivate methods
-     * ********************************/
+
 
     private void populateColorMap( List<Long> genes ) {
         int i = 0;

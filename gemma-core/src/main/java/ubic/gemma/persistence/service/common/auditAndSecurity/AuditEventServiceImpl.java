@@ -18,6 +18,7 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
@@ -35,41 +36,46 @@ import java.util.Map;
 @Service
 public class AuditEventServiceImpl extends AuditEventServiceBase {
 
+    @Autowired
+    public AuditEventServiceImpl( AuditEventDao auditEventDao ) {
+        super( auditEventDao );
+    }
+
     @Override
     @Transactional(readOnly = true)
     public List<AuditEvent> getEvents( Auditable auditable ) {
-        return this.getAuditEventDao().getEvents( auditable );
+        return this.auditEventDao.getEvents( auditable );
     }
 
     @Override
     @Transactional(readOnly = true)
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
-        return this.getAuditEventDao().getLastEvent( auditable, type );
+        return this.auditEventDao.getLastEvent( auditable, type );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
             Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
-        return this.getAuditEventDao().getLastEvents( auditables, types );
+        return this.auditEventDao.getLastEvents( auditables, types );
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
-        return this.getAuditEventDao().hasEvent( a, type );
+        return this.auditEventDao.hasEvent( a, type );
     }
 
     @Override
     @Transactional(readOnly = true)
     public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
-        this.getAuditEventDao().retainHavingEvent( a, type );
+        this.auditEventDao.retainHavingEvent( a, type );
     }
 
     @Override
     @Transactional(readOnly = true)
     public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
-        this.getAuditEventDao().retainLackingEvent( a, type );
+        this.auditEventDao.retainLackingEvent( a, type );
     }
 
     /**
@@ -77,7 +83,7 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
      */
     @Override
     protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
-        return this.getAuditEventDao().getNewSinceDate( date );
+        return this.auditEventDao.getNewSinceDate( date );
     }
 
     /**
@@ -85,12 +91,7 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
      */
     @Override
     protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
-        return this.getAuditEventDao().getUpdatedSinceDate( date );
-    }
-
-    @Override
-    protected void handleThaw( AuditEvent auditEvent ) {
-        this.getAuditEventDao().thaw( auditEvent );
+        return this.auditEventDao.getUpdatedSinceDate( date );
     }
 
 }

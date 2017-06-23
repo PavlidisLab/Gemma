@@ -62,9 +62,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     private final TaxonService taxonService;
     private final ExpressionExperimentService expressionExperimentService;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     @Autowired
     public ExpressionExperimentSearchServiceImpl( ExpressionExperimentSetService expressionExperimentSetService,
@@ -81,14 +79,12 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         this.expressionExperimentService = expressionExperimentService;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public List<SearchResultDisplayObject> getAllTaxonExperimentGroup( Long taxonId ) {
 
-        List<SearchResultDisplayObject> setResults = new LinkedList<>();
+        List<SearchResultDisplayObject> setResults = new LinkedList<SearchResultDisplayObject>();
 
         Taxon taxon = taxonService.load( taxonId );
 
@@ -115,7 +111,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     @Override
     public List<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
         // if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
         // session-bound sets (not autogen sets until handling of large searches is fixed)
@@ -138,7 +134,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         // if >1 result, add a group whose members are all experiments returned from search
 
-        Map<Long, Set<Long>> eeIdsByTaxonId = new HashMap<>();
+        Map<Long, Set<Long>> eeIdsByTaxonId = new HashMap<Long, Set<Long>>();
 
         // add every individual experiment to the set, grouped by taxon and also altogether.
         for ( SearchResultDisplayObject srdo : experiments ) {
@@ -229,7 +225,7 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
             log.info( "No experiments for search: " + query );
-            return new HashSet<>();
+            return new HashSet<ExpressionExperimentValueObject>();
         }
 
         log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
@@ -239,25 +235,21 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
         return experimentValueObjects;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
-
     private List<SearchResultDisplayObject> getExpressionExperimentResults(
             Map<Class<?>, List<SearchResult>> results ) {
         // get all expressionExperiment results and convert result object into a value object
         List<SearchResult> srEEs = results.get( ExpressionExperiment.class );
         if ( srEEs == null ) {
-            srEEs = new ArrayList<>();
+            srEEs = new ArrayList<SearchResult>();
         }
 
-        List<Long> eeIds = new ArrayList<>();
+        List<Long> eeIds = new ArrayList<Long>();
         for ( SearchResult sr : srEEs ) {
             eeIds.add( sr.getId() );
         }
 
         Collection<ExpressionExperimentValueObject> eevos = expressionExperimentService.loadValueObjects( eeIds, true );
-        List<SearchResultDisplayObject> experiments = new ArrayList<>();
+        List<SearchResultDisplayObject> experiments = new ArrayList<SearchResultDisplayObject>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             experiments.add( new SearchResultDisplayObject( eevo ) );
         }
@@ -266,18 +258,19 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
 
     private List<SearchResultDisplayObject> getExpressionExperimentSetResults(
             Map<Class<?>, List<SearchResult>> results ) {
-        List<SearchResultDisplayObject> experimentSets = new ArrayList<>();
+        List<SearchResultDisplayObject> experimentSets = new ArrayList<SearchResultDisplayObject>();
 
         if ( results.get( ExpressionExperimentSet.class ) != null ) {
-            List<ExpressionExperimentSet> eeSets = new ArrayList<>();
+            List<Long> eeSetIds = new ArrayList<Long>();
             for ( SearchResult sr : results.get( ExpressionExperimentSet.class ) ) {
-                eeSets.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ) );
+                eeSetIds.add( ( ( ExpressionExperimentSet ) sr.getResultObject() ).getId() );
             }
-            if ( eeSets.isEmpty() ) {
+
+            if ( eeSetIds.isEmpty() ) {
                 return experimentSets;
             }
             for ( ExpressionExperimentSetValueObject eesvo : expressionExperimentSetService
-                    .loadValueObjects( eeSets ) ) {
+                    .loadValueObjectsByIds( eeSetIds ) ) {
                 experimentSets.add( new SearchResultDisplayObject( eesvo ) );
             }
         }
@@ -303,11 +296,11 @@ public class ExpressionExperimentSearchServiceImpl implements ExpressionExperime
     private List<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery( Long taxonId ) {
         boolean taxonLimited = taxonId != null;
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
         // These are widely considered to be the most important results and
         // therefore need to be at the top
-        List<SearchResultDisplayObject> masterResults = new LinkedList<>();
+        List<SearchResultDisplayObject> masterResults = new LinkedList<SearchResultDisplayObject>();
 
         Collection<ExpressionExperimentSetValueObject> evos = expressionExperimentSetService
                 .loadAllExperimentSetValueObjects( true );

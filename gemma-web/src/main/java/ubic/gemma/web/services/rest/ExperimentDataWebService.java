@@ -69,7 +69,7 @@ public class ExperimentDataWebService {
                     + " was invalid: doesn't exist in system, or you lack authorization.";
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         File f = expressionDataFileService.writeTemporaryDesignFile( ee );
 
@@ -135,7 +135,7 @@ public class ExperimentDataWebService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         File f = null;
 

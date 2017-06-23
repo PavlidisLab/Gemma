@@ -22,7 +22,6 @@ import java.util.Map;
  */
 @Repository
 public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesign, ArrayDesignValueObject> {
-    ArrayDesign find( ArrayDesign entity );
 
     Map<Taxon, Long> getPerTaxonCount();
 
@@ -40,9 +39,9 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     int numExperiments( ArrayDesign arrayDesign );
 
-    void thawLite( ArrayDesign arrayDesign );
+    ArrayDesign thawLite( ArrayDesign arrayDesign );
 
-    void thawLite( Collection<ArrayDesign> arrayDesigns );
+    Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
@@ -112,7 +111,7 @@ public interface ArrayDesignDao extends InitializingBean, CuratableDao<ArrayDesi
 
     void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
-    void thaw( ArrayDesign arrayDesign );
+    ArrayDesign thaw( ArrayDesign arrayDesign );
 
     Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 }

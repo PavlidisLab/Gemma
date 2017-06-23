@@ -186,7 +186,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
         MeanVarianceRelation mvr = meanVarianceService.create( ee, true );
 
         aclTestUtils.checkEEAcls( ee );
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
         assertEquals( 97, ee.getProcessedExpressionDataVectors().size() );
 
         // convert byte[] to array[]
@@ -304,7 +304,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             throw new IllegalStateException( "Need to remove this data set before test is run" );
         }
 
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
 
         qt = createOrUpdateQt( ScaleType.COUNT );
 
@@ -324,7 +324,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             // we have to find the right generic platform to use.
             ArrayDesign targetArrayDesign = this.getTestPersistentArrayDesign( probeNames,
                     taxonService.findByCommonName( "human" ) );
-            arrayDesignService.thaw( targetArrayDesign );
+            targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
             try {
                 dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, false );
@@ -335,7 +335,7 @@ public class MeanVarianceServiceTest extends AbstractGeoServiceTest {
             dataUpdater.addCountData( ee, targetArrayDesign, countMatrix, rpkmMatrix, 36, true, true );
         }
 
-        eeService.thaw( this.ee );
+        ee = eeService.thaw( this.ee );
 
         assertNotNull( ee.getId() );
 

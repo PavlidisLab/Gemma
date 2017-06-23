@@ -35,10 +35,10 @@ import java.util.HashSet;
 public class GeneSet extends AbstractAuditable implements SecuredNotChild {
 
     private static final long serialVersionUID = 4357218100681569138L;
-    private Collection<Characteristic> characteristics = new HashSet<>();
+    private Collection<Characteristic> characteristics = new HashSet<Characteristic>();
     private DatabaseEntry sourceAccession;
-    private Collection<BibliographicReference> literatureSources = new HashSet<>();
-    private Collection<GeneSetMember> members = new java.util.HashSet<>();
+    private Collection<BibliographicReference> literatureSources = new HashSet<BibliographicReference>();
+    private Collection<GeneSetMember> members = new HashSet<GeneSetMember>();
 
     static public GeneSetMember containsGene( Gene g, GeneSet gs ) {
         for ( GeneSetMember gm : gs.getMembers() ) {

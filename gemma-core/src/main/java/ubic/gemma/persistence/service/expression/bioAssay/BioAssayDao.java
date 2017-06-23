@@ -19,26 +19,23 @@
 package ubic.gemma.persistence.service.expression.bioAssay;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayValueObject;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.persistence.service.BaseDao;
+import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
 
 /**
  * @see BioAssay
  */
-public interface BioAssayDao extends BaseDao<BioAssay> {
-
-    BioAssay find( BioAssay bioAssay );
+public interface BioAssayDao extends BaseVoEnabledDao<BioAssay, BioAssayValueObject> {
 
     Collection<BioAssayDimension> findBioAssayDimensions( BioAssay bioAssay );
 
     Collection<BioAssay> findByAccession( String accession );
 
-    BioAssay findOrCreate( BioAssay bioAssay );
+    void thaw( BioAssay bioAssay );
 
     Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
-
-    Collection<BioAssay> loadValueObjects( Collection<Long> ids );
 
 }

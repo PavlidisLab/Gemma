@@ -46,10 +46,17 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
     }
 
     @Override
+    public ExperimentalFactor load( Long id ) {
+        return ( ExperimentalFactor ) this.getSessionFactory().getCurrentSession().createQuery(
+                "select ef from ExperimentalFactor ef left join fetch ef.factorValues fv left join fetch fv.characteristics c where ef.id=:id" )
+                .setParameter( "id", id ).uniqueResult();
+    }
+
+    @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
 
         BusinessKey.checkValidKey( experimentalFactor );
-        Criteria queryObject = this.getSession().createCriteria( ExperimentalFactor.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( ExperimentalFactor.class );
         BusinessKey.addRestrictions( queryObject, experimentalFactor );
 
         java.util.List<?> results = queryObject.list();
@@ -81,13 +88,9 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
     }
 
     @Override
-    public void thaw( ExperimentalFactor entity ) {
-    }
-
-    @Override
     public void remove( ExperimentalFactor experimentalFactor ) {
         Long experimentalDesignId = experimentalFactor.getExperimentalDesign().getId();
-        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSession()
+        ExperimentalDesign ed = ( ExperimentalDesign ) this.getSessionFactory().getCurrentSession()
                 .load( ExperimentalDesign.class, experimentalDesignId );
 
         final String queryString = "select distinct ee from ExpressionExperiment as ee where ee.experimentalDesign = :ed";
@@ -106,19 +109,19 @@ public class ExperimentalFactorDaoImpl extends VoEnabledDao<ExperimentalFactor, 
             for ( FactorValue factorValue : bm.getFactorValues() ) {
                 if ( experimentalFactor.equals( factorValue.getExperimentalFactor() ) ) {
                     factorValuesToRemoveFromBioMaterial.add( factorValue );
-                    this.getSession().evict( factorValue.getExperimentalFactor() );
+                    this.getSessionFactory().getCurrentSession().evict( factorValue.getExperimentalFactor() );
                 }
             }
 
             // if there are factor values to remove
             if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
                 bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
-                // this.getSession().update( bm ); // needed? see bug 4341
+                // this.getSessionFactory().getCurrentSession().update( bm ); // needed? see bug 4341
             }
         }
 
         // ed.getExperimentalFactors().remove( experimentalFactor );
-        // remove the experimental factor this cascades to values.
+        // delete the experimental factor this cascades to values.
 
         // this.getExperimentalDesignDao().update( ed );
         this.getHibernateTemplate().delete( experimentalFactor );

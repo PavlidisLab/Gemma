@@ -22,7 +22,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
-import ubic.gemma.persistence.service.BaseDao;
 import ubic.gemma.persistence.service.BaseVoEnabledDao;
 
 import java.util.Collection;
@@ -52,6 +51,8 @@ public interface BioSequenceDao extends BaseVoEnabledDao<BioSequence, BioSequenc
      */
     Collection<Gene> getGenesByName( String search );
 
-    void thaw( Collection<BioSequence> bioSequences );
+    Collection<BioSequence> thaw( Collection<BioSequence> bioSequences );
+
+    BioSequence thaw( BioSequence bioSequence );
 
 }

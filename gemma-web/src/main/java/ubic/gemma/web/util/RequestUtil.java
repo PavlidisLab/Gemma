@@ -89,7 +89,7 @@ public class RequestUtil {
      * Convenience method for deleting a cookie by name
      * 
      * @param response the current web response
-     * @param cookie the cookie to remove
+     * @param cookie the cookie to delete
      * @param path the path on which the cookie was set (i.e. /appfuse)
      */
     public static void deleteCookie( HttpServletResponse response, Cookie cookie, String path ) {

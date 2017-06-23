@@ -54,14 +54,14 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     @Override
     public List<Characteristic> browse( Integer start, Integer limit ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from Characteristic where value not like 'GO_%'" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from Characteristic where value not like 'GO_%'" )
                 .setMaxResults( limit ).setFirstResult( start ).list();
     }
 
     @Override
     public List<Characteristic> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "from Characteristic where value not like 'GO_%' order by " + orderField + " " + ( descending ?
                         "desc" :
                         "" ) ).setMaxResults( limit ).setFirstResult( start ).list();
@@ -86,7 +86,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
                     "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
                             + " join parent." + field + " as char where char.valueUri in  (:uriStrings) ";
             //noinspection unchecked
-            result.addAll( this.getSession().createQuery( queryString ).setParameterList( "uriStrings", characteristicUris )
+            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "uriStrings", characteristicUris )
                     .list() );
         }
 
@@ -107,7 +107,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
                     "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
                             + " join parent." + field + " as char " + "where char.valueUri = :uriString";
             //noinspection unchecked
-            result.addAll( this.getSession().createQuery( queryString ).setParameter( "uriString", uriString ).list() );
+            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "uriString", uriString ).list() );
         }
 
         return result;
@@ -128,7 +128,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
                     "select char from " + EntityUtils.getImplClass( clazz ).getSimpleName() + " as parent "
                             + " join parent." + field + " as char " + "where char.value like :v";
             //noinspection unchecked
-            result.addAll( this.getSession().createQuery( queryString ).setParameter( "v", string + "%" ).list() );
+            result.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "v", string + "%" ).list() );
         }
         return result;
     }
@@ -136,7 +136,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     @Override
     public Collection<String> getUsedCategories() {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct categoryUri from Characteristic where categoryUri is not null" )
                 .list();
     }
@@ -151,7 +151,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
                         + "inner join parent." + field + " as char";
 
         Map<Characteristic, Object> charToParent = new HashMap<>();
-        for ( Object o : this.getSession().createQuery( queryString ).list() ) {
+        for ( Object o : this.getSessionFactory().getCurrentSession().createQuery( queryString ).list() ) {
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );
         }
@@ -181,7 +181,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     @Override
     protected Collection<Characteristic> handleFindByUri( String searchString ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from VocabCharacteristic as char where  char.valueUri = :search" )
                 .setParameter( "search", searchString ).list();
     }
@@ -189,7 +189,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
     @Override
     protected Collection<Characteristic> handleFindByValue( String search ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select char from Characteristic as char where char.value like :search " )
                 .setParameter( "search", search.endsWith( "%" ) ? search : search + "%" ).list();
     }
@@ -240,7 +240,7 @@ public class CharacteristicDaoImpl extends CharacteristicDaoBase {
                 "select parent, char from " +  parentClass.getSimpleName() + " as parent "
                         + " join parent." + field + " as char " + "where char  in (:chars)";
 
-        for ( Object o : this.getSession().createQuery( queryString ).setParameterList( "chars", characteristics )
+        for ( Object o : this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "chars", characteristics )
                 .list() ) {
             Object[] row = ( Object[] ) o;
             charToParent.put( ( Characteristic ) row[1], row[0] );

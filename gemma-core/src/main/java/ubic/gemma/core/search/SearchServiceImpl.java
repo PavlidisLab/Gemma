@@ -1099,9 +1099,8 @@ public class SearchServiceImpl implements SearchService {
         for ( SearchResult searchResult : searchResults ) {
             // this is a special case ... for some reason.
             if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
-                bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() );
-                SearchResult convertedSearchResult = new SearchResult(
-                        BioSequenceValueObject.fromEntity( ( BioSequence ) searchResult.getResultObject() ),
+                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
+                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
                         searchResult.getScore(), searchResult.getHighlightedText() );
                 convertedSearchResults.add( convertedSearchResult );
             } else {

@@ -43,8 +43,8 @@ public interface ArrayDesignReportService {
     @Secured({ "GROUP_AGENT" })
     void generateArrayDesignReport( ArrayDesignValueObject adVo );
 
-    @Secured({ "GROUP_AGENT" })
-    ArrayDesignValueObject generateArrayDesignReport( ArrayDesign arrayDesign );
+    @Secured( { "GROUP_AGENT" })
+    ArrayDesignValueObject generateArrayDesignReport( Long id );
 
     ArrayDesignValueObject getSummaryObject( Long id );
 

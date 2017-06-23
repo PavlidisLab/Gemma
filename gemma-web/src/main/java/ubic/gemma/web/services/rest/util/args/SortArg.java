@@ -14,9 +14,7 @@ public class SortArg extends PrimitiveArg {
     private String field;
     private boolean asc;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     private SortArg( String field, boolean asc ) {
         this.field = field;
@@ -33,9 +31,7 @@ public class SortArg extends PrimitiveArg {
         super( errorMessage, exception );
     }
 
-    /* ********************************
-     * Class methods
-     * ********************************/
+
 
     /**
      * Used by RS to parse value of request parameters.
@@ -54,9 +50,7 @@ public class SortArg extends PrimitiveArg {
         }
     }
 
-    /* ********************************
-     * Private class methods
-     * ********************************/
+
 
     private static Boolean parseBoolean( char c ) {
         if ( c == '+' ) {
@@ -69,9 +63,7 @@ public class SortArg extends PrimitiveArg {
     }
 
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     /**
      * @return the field to sort by. If the original argument was not well-composed, will produce a {@link GemmaApiException} instead.

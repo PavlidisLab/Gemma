@@ -18,7 +18,6 @@ import java.io.InputStream;
 
 /**
  * @author paul, Louise
- * @version $Id$
  */
 public interface ExternalFileGeneLoaderService {
 
@@ -29,18 +28,16 @@ public interface ExternalFileGeneLoaderService {
      * to true to indicate that there are genes loaded for this taxon.
      * 
      * @param geneFile Full path to file containing genes details
-     * @param taxon taxonName to be associated to this gene, does not have to be a species.
+     * @param taxonName taxonName to be associated to this gene, does not have to be a species.
      * @return number of genes loaded
-     * @exception Thrown with a file format error or problem in persisting gene to database.
+     * @exception Exception Thrown with a file format error or problem in persisting gene to database.
      */
-    public abstract int load( String geneFile, String taxonName ) throws Exception;
+    int load( String geneFile, String taxonName ) throws Exception;
 
     /**
-     * @param geneInputStream
-     * @param taxonName
+
      * @return number of genes loaded
-     * @throws Exception
      */
-    public abstract int load( InputStream geneInputStream, String taxonName ) throws Exception;
+    int load( InputStream geneInputStream, String taxonName ) throws Exception;
 
 }

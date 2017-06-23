@@ -103,7 +103,7 @@ public class BibliographicReferenceControllerImpl extends BaseController impleme
 
         for ( BibliographicReference ref : records ) {
 
-            this.bibliographicReferenceService.thaw( ref );
+            ref = this.bibliographicReferenceService.thaw( ref );
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( ref );
 
             if ( relatedExperiments.containsKey( ref ) ) {

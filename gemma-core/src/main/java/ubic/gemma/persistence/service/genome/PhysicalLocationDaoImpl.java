@@ -62,8 +62,4 @@ public class PhysicalLocationDaoImpl extends PhysicalLocationDaoBase {
 
     }
 
-    @Override
-    public PhysicalLocation find( PhysicalLocation entity ) {
-        return load( entity.getId() );
-    }
 }

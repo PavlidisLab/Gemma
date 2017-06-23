@@ -48,9 +48,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
     private String source;
     private CurationDetails curationDetails;
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     @Override
@@ -89,9 +87,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         return super.toString() + " (" + this.getShortName() + ")";
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public DatabaseEntry getAccession() {
         return this.accession;
@@ -213,9 +209,7 @@ public class ExpressionExperiment extends BioAssaySet implements SecuredNotChild
         this.curationDetails = curationDetails;
     }
 
-    /* ********************************
-     * Static classes
-     * ********************************/
+
 
     /**
      * Constructs new instances of {@link ExpressionExperiment}.

@@ -19,7 +19,6 @@
 package ubic.gemma.core.annotation.reference;
 
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -35,7 +34,8 @@ import java.util.Map;
 /**
  * @author kelsey
  */
-public interface BibliographicReferenceService extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
+public interface BibliographicReferenceService
+        extends BaseVoEnabledService<BibliographicReference, BibliographicReferenceValueObject> {
 
     /**
      * Adds a document (in PDF format) for the reference.
@@ -47,12 +47,14 @@ public interface BibliographicReferenceService extends BaseVoEnabledService<Bibl
 
     List<BibliographicReference> browse( Integer start, Integer limit, String orderField, boolean descending );
 
+    @Override
     @Secured({ "GROUP_USER" })
     BibliographicReference create( BibliographicReference bibliographicReference );
 
     /**
      * check to see if the object already exists
      */
+    @Override
     BibliographicReference find( BibliographicReference bibliographicReference );
 
     BibliographicReference findByExternalId( DatabaseEntry accession );
@@ -67,6 +69,7 @@ public interface BibliographicReferenceService extends BaseVoEnabledService<Bibl
      */
     BibliographicReference findByExternalId( java.lang.String id, java.lang.String databaseName );
 
+    @Override
     @Secured({ "GROUP_USER" })
     BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
@@ -100,6 +103,7 @@ public interface BibliographicReferenceService extends BaseVoEnabledService<Bibl
     @Secured({ "GROUP_ADMIN" })
     BibliographicReference refresh( String pubMedId );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void remove( BibliographicReference BibliographicReference );
 
@@ -107,7 +111,12 @@ public interface BibliographicReferenceService extends BaseVoEnabledService<Bibl
 
     List<BibliographicReferenceValueObject> search( String query );
 
+    @Override
     @Secured({ "GROUP_ADMIN" })
     void update( BibliographicReference bibliographicReference );
+
+    BibliographicReference thaw( BibliographicReference bibliographicReference );
+
+    Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences );
 
 }

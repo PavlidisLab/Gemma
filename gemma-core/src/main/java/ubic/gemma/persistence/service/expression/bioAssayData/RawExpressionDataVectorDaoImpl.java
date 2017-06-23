@@ -58,7 +58,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
                         + "and dev.quantitationType = :quantitationType ";
 
         //noinspection unchecked
-        return this.getSession().createQuery( queryString ).setParameter( "quantitationType", quantitationType )
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameter( "quantitationType", quantitationType )
                 .setParameter( "adid", arrayDesign.getId() ).list();
 
     }
@@ -68,12 +68,12 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         Collection<? extends DesignElementDataVector> results = new HashSet<>();
 
         //noinspection unchecked
-        results.addAll( this.getSession()
+        results.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad" )
                 .setParameter( "bad", bioAssayDimension ).list() );
 
         //noinspection unchecked
-        results.addAll( this.getSession()
+        results.addAll( this.getSessionFactory().getCurrentSession()
                 .createQuery( "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad" )
                 .setParameter( "bad", bioAssayDimension ).list() );
         return results;
@@ -85,7 +85,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
         //noinspection unchecked
-        return this.getSession().createQuery( queryString ).setParameterList( "quantitationTypes", quantitationTypes )
+        return this.getSessionFactory().getCurrentSession().createQuery( queryString ).setParameterList( "quantitationTypes", quantitationTypes )
                 .list();
     }
 

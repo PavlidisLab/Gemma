@@ -46,7 +46,7 @@ public class ChromosomeDaoImpl extends AbstractDao<Chromosome> implements Chromo
     @Override
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from ChromosomeImpl c where c.name=:n and c.taxon=:t" )
+        return this.getSessionFactory().getCurrentSession().createQuery( "from ChromosomeImpl c where c.name=:n and c.taxon=:t" )
                 .setParameter( "n", name ).setParameter( "t", taxon ).list();
     }
 

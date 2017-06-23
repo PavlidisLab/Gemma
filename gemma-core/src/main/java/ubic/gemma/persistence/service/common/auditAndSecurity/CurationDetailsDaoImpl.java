@@ -40,18 +40,10 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
 
     private static final String ILLEGAL_EVENT_TYPE_ERR_MSG = "Can not set trouble with event of given type.";
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     @Autowired
     public CurationDetailsDaoImpl( SessionFactory sessionFactory ) {
         super( CurationDetails.class, sessionFactory );
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     /**
      * Creates new CurationDetails object and persists it.
@@ -86,13 +78,9 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
 
         eventType.setCurationDetails( curatable, auditEvent );
 
-        this.getSession().merge( curatable.getCurationDetails() );
+        this.getSessionFactory().getCurrentSession().merge( curatable.getCurationDetails() );
 
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     /**
      * Checks whether the auditEvent has all the properties to be accepted for processing.
@@ -109,7 +97,4 @@ public class CurationDetailsDaoImpl extends AbstractDao<CurationDetails> impleme
                 != CurationDetailsEvent.class; // ...but not the CurationDetailsEvent itself.
     }
 
-    @Override
-    public void thaw( CurationDetails entity ) {
-    }
 }

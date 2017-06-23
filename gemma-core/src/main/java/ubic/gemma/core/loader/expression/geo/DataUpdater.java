@@ -111,8 +111,8 @@ public class DataUpdater {
 
         ArrayDesign ad = ads.iterator().next();
 
-        arrayDesignService.thaw( ad );
-        experimentService.thawLite( ee );
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
@@ -149,8 +149,8 @@ public class DataUpdater {
         if ( files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
-        arrayDesignService.thaw( ad );
-        experimentService.thawLite( ee );
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
@@ -194,8 +194,8 @@ public class DataUpdater {
 
         ArrayDesign ad = ads.iterator().next();
 
-        arrayDesignService.thaw( ad );
-        experimentService.thawLite( ee );
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
 
         Taxon primaryTaxon = ad.getPrimaryTaxon();
 
@@ -238,9 +238,9 @@ public class DataUpdater {
         if ( countMatrix == null )
             throw new IllegalArgumentException( "You must provide count matrix (rpkm is optional)" );
 
-        arrayDesignService.thaw( targetArrayDesign );
+        targetArrayDesign = arrayDesignService.thaw( targetArrayDesign );
 
-        experimentService.thawLite( ee );
+        ee = experimentService.thawLite( ee );
 
         ee = dealWithMissingSamples( ee, countMatrix, allowMissingSamples );
 
@@ -455,8 +455,8 @@ public class DataUpdater {
         if ( files.isEmpty() ) {
             throw new RuntimeException( "Data was apparently not available" );
         }
-        arrayDesignService.thaw( ad );
-        experimentService.thawLite( ee );
+        ad = arrayDesignService.thaw( ad );
+        ee = experimentService.thawLite( ee );
 
         AffyPowerToolsProbesetSummarize apt = new AffyPowerToolsProbesetSummarize();
 
@@ -538,7 +538,7 @@ public class DataUpdater {
                     ee.getBioAssays().removeAll( toRemove );
                     experimentService.update( ee );
                     ee = experimentService.load( ee.getId() );
-                    experimentService.thawLite( ee );
+                    ee = experimentService.thawLite( ee );
 
                     if ( ee.getBioAssays().size() != countMatrix.columns() ) {
                         throw new IllegalStateException( "Something went wrong, could not remove unused samples" );
@@ -836,7 +836,7 @@ public class DataUpdater {
         ArrayDesign targetPlatform = arrayDesignService.findByShortName( targetPlatformAcc );
 
         if ( targetPlatform != null ) {
-            arrayDesignService.thaw( targetPlatform );
+            targetPlatform = arrayDesignService.thaw( targetPlatform );
 
             if ( targetPlatform.getCompositeSequences().isEmpty() ) {
                 /*

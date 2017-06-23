@@ -151,7 +151,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
 
         ee.setShortName( RandomStringUtils.randomAlphabetic( 12 ) );
         expressionExperimentService.update( ee );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         processedDataVectorService.createProcessedDataVectors( ee );
         Collection<ExpressionExperiment> e = new HashSet<>();
         e.add( ee );
@@ -163,7 +163,7 @@ public class ProcessedExpressionDataVectorServiceTest extends AbstractGeoService
         Collection<Gene> genes = new HashSet<Gene>();
         for ( ArrayDesign ad : ads ) {
             Taxon taxon = this.getTaxon( "mouse" );
-            this.arrayDesignService.thaw( ad );
+            ad = this.arrayDesignService.thaw( ad );
 
             for ( CompositeSequence cs : ad.getCompositeSequences() ) {
                 Gene g = this.getTestPeristentGene();

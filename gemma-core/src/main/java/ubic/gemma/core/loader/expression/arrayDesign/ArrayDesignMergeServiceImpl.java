@@ -85,13 +85,13 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
 
         // make map of biosequence -> design elements for all the array designs. But watch out for biosequences that
         // appear more than once per array design.
-        Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<>();
+        Map<BioSequence, Collection<CompositeSequence>> globalBsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
 
         ArrayDesign thawed = makeBioSeqMap( globalBsMap, arrayDesign );
 
         log.info( globalBsMap.keySet().size() + " sequences in first array design." );
         // Now check the other designs, add slots for additional probes if necessary.
-        Collection<ArrayDesign> thawedOthers = new HashSet<>();
+        Collection<ArrayDesign> thawedOthers = new HashSet<ArrayDesign>();
         for ( ArrayDesign otherArrayDesign : otherArrayDesigns ) {
 
             if ( otherArrayDesign.getMergedInto() != null ) {
@@ -127,7 +127,7 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
         result = mergeServiceHelper.persistMerging( result, arrayDesign, otherArrayDesigns, mergeWithExisting,
                 newProbes );
 
-        arrayDesignReportService.generateArrayDesignReport( result );
+        arrayDesignReportService.generateArrayDesignReport( result.getId() );
 
         return result;
     }
@@ -199,8 +199,8 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
      */
     private ArrayDesign makeBioSeqMap( Map<BioSequence, Collection<CompositeSequence>> globalBsMap,
             ArrayDesign arrayDesign ) {
-        Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<>();
-        this.arrayDesignService.thaw( arrayDesign );
+        Map<BioSequence, Collection<CompositeSequence>> bsMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+        arrayDesign = this.arrayDesignService.thaw( arrayDesign );
         int count = 0;
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
@@ -246,10 +246,10 @@ public class ArrayDesignMergeServiceImpl implements ArrayDesignMergeService {
     private Collection<CompositeSequence> makeNewProbes( ArrayDesign arrayDesign,
             Map<BioSequence, Collection<CompositeSequence>> globalBsMap, boolean mergeWithExisting ) {
 
-        Collection<CompositeSequence> newProbes = new HashSet<>();
+        Collection<CompositeSequence> newProbes = new HashSet<CompositeSequence>();
         log.info( globalBsMap.size() + " unique sequences" );
 
-        Collection<String> probeNames = new HashSet<>();
+        Collection<String> probeNames = new HashSet<String>();
         for ( BioSequence bs : globalBsMap.keySet() ) {
             assert bs != null; // should be the placeholder NULL_BIOSEQUENCE
             for ( CompositeSequence cs : globalBsMap.get( bs ) ) {

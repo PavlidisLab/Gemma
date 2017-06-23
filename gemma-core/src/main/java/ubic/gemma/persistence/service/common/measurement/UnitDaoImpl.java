@@ -23,6 +23,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.measurement.Unit;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.persistence.util.BusinessKey;
 
 import java.util.List;
@@ -43,7 +44,7 @@ public class UnitDaoImpl extends UnitDaoBase {
     public Unit find( Unit unit ) {
         try {
             BusinessKey.checkValidKey( unit );
-            Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), unit );
+            Criteria queryObject = BusinessKey.createQueryObject( this.getSessionFactory().getCurrentSession(), unit );
             List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
@@ -59,9 +60,5 @@ public class UnitDaoImpl extends UnitDaoBase {
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-    }
-
-    @Override
-    public void thaw( Unit entity ) {
     }
 }

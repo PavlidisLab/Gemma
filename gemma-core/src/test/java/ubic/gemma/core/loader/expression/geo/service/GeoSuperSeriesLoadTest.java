@@ -90,7 +90,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
 
         for ( ArrayDesign a : adService.loadAll() ) {
             try {
-                adService.thawLite( a );
+                a = adService.thawLite( a );
                 for ( ArrayDesign b : a.getSubsumedArrayDesigns() ) {
                     adService.remove( b );
                 }
@@ -139,7 +139,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         ee = results.iterator().next();
 
         ee = ees.findByShortName( "GSE14618" );
-        ees.thawLite( ee );
+        ee = ees.thawLite( ee );
         Collection<QuantitationType> qts = ee.getQuantitationTypes();
 
         assertEquals( 1, qts.size() );
@@ -160,7 +160,7 @@ public class GeoSuperSeriesLoadTest extends AbstractGeoServiceTest {
         ee = ees.load( ee.getId() );
 
         ee = ees.findByShortName( "GSE14618" );
-        ees.thaw( ee );
+        ee = ees.thaw( ee );
 
         assertEquals( 40, ee.getProcessedExpressionDataVectors().size() );
         // System.err.println( ee.getProcessedExpressionDataVectors().size() );

@@ -64,11 +64,6 @@ public class BlatAssociationServiceTest extends BaseSpringContextTest {
     @Autowired
     private GeneService geneService;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.testing.BaseTransactionalSpringContextTest#onSetUpInTransaction()
-     */
     @Before
     public void setup() {
 

@@ -43,10 +43,6 @@ public class CurationDetails implements Identifiable, Serializable {
     private AuditEvent lastNoteUpdateEvent;
     private String curationNote;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     public CurationDetails() {
     }
 
@@ -60,10 +56,6 @@ public class CurationDetails implements Identifiable, Serializable {
         this.lastNoteUpdateEvent = lastNoteUpdateEvent;
         this.curationNote = curationNote;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     /**
      * Compares the objects type and IDs.

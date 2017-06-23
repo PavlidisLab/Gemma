@@ -86,7 +86,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     private void addToParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().add( c );
             expressionExperimentService.update( ee );
         } else if ( parent instanceof BioMaterial ) {
@@ -336,7 +336,7 @@ public class CharacteristicUpdateTaskImpl extends AbstractTask<TaskResult, Chara
     private void removeFromParent( Characteristic c, Object parent ) {
         if ( parent instanceof ExpressionExperiment ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) parent;
-            expressionExperimentService.thawLite( ee );
+            ee = expressionExperimentService.thawLite( ee );
             ee.getCharacteristics().remove( c );
             expressionExperimentService.update( ee );
         } else if ( parent instanceof BioMaterial ) {

@@ -43,7 +43,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
 
-        Criteria queryObject = this.getSession().createCriteria( ExperimentalDesign.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( ExperimentalDesign.class );
 
         queryObject.add( Restrictions.eq( "name", experimentalDesign.getName() ) );
 
@@ -73,7 +73,7 @@ public class ExperimentalDesignDaoImpl extends AbstractDao<ExperimentalDesign> i
      */
     @Override
     public ExpressionExperiment getExpressionExperiment( final ExperimentalDesign experimentalDesign ) {
-        return ( ExpressionExperiment ) this.getSession()
+        return ( ExpressionExperiment ) this.getSessionFactory().getCurrentSession()
                 .createQuery( "select distinct ee FROM ExpressionExperiment as ee where ee.experimentalDesign = :ed " )
                 .setParameter( "ed", experimentalDesign ).uniqueResult();
     }

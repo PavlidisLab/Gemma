@@ -19,7 +19,10 @@
 package ubic.gemma.persistence.service.analysis.expression;
 
 import org.apache.commons.lang3.time.StopWatch;
-import org.hibernate.*;
+import org.hibernate.Hibernate;
+import org.hibernate.LockOptions;
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -44,10 +47,6 @@ public class ExpressionExperimentSetDaoImpl
 
     private final ExpressionExperimentDao expressionExperimentDao;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     @Autowired
     public ExpressionExperimentSetDaoImpl( SessionFactory sessionFactory,
             ExpressionExperimentDao expressionExperimentDao ) {
@@ -55,14 +54,11 @@ public class ExpressionExperimentSetDaoImpl
         this.expressionExperimentDao = expressionExperimentDao;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
-
     @Override
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "select ees from ExpressionExperimentSet ees inner join ees.experiments e where e = :ee" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "select ees from ExpressionExperimentSet ees inner join ees.experiments e where e = :ee" )
                 .setParameter( "ee", bioAssaySet ).list();
     }
 
@@ -74,7 +70,7 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select ees.experiments from ExpressionExperimentSet ees where ees.id = :id" )
                 .setParameter( "id", id ).list();
     }
@@ -82,7 +78,7 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperimentValueObject> getExperimentValueObjectsInSet( Long id ) {
         //noinspection unchecked
-        return expressionExperimentDao.loadValueObjects( this.getSession().createQuery(
+        return expressionExperimentDao.loadValueObjects( this.getSessionFactory().getCurrentSession().createQuery(
                 "select i.id from ExpressionExperimentSet eset join eset.experiments i where eset.id = :id" )
                 .setParameter( "id", id ).list(), false );
     }
@@ -90,21 +86,21 @@ public class ExpressionExperimentSetDaoImpl
     @Override
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         //noinspection unchecked
-        return this.getSession().createCriteria( ExpressionExperimentSet.class )
+        return this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSet.class )
                 .add( Restrictions.isNotNull( "taxon" ) ).list();
     }
 
     @Override
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         //noinspection unchecked
-        return this.getSession().createCriteria( ExpressionExperimentSet.class )
+        return this.getSessionFactory().getCurrentSession().createCriteria( ExpressionExperimentSet.class )
                 .add( Restrictions.sizeGt( "experiments", 1 ) ).list();
     }
 
     @Override
-    public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
-        Session session = this.getSession();
-        session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
+    public void thaw( final ExpressionExperimentSet expressionExperimentSet ) {
+        this.getSessionFactory().getCurrentSession().buildLockRequest( LockOptions.NONE )
+                .lock( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet );
         Hibernate.initialize( expressionExperimentSet.getTaxon() );
         Hibernate.initialize( expressionExperimentSet.getExperiments() );
@@ -146,10 +142,6 @@ public class ExpressionExperimentSetDaoImpl
         return this.loadValueObjects( EntityUtils.getIds( entities ), false );
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
-
     private Collection<Long> getExperimentIdsInSet( Long setId ) {
         //noinspection unchecked
         return this.getHibernateTemplate().findByNamedParam(
@@ -167,7 +159,7 @@ public class ExpressionExperimentSetDaoImpl
         StopWatch timer = new StopWatch();
         timer.start();
         //noinspection unchecked
-        List<Object[]> withCoexp = this.getSession().createQuery(
+        List<Object[]> withCoexp = this.getSessionFactory().getCurrentSession().createQuery(
                 "select e.id, count(an) from ExpressionExperimentSet e, CoexpressionAnalysis an join e.experiments ea "
                         + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
                 .setParameterList( "ids", idMap.keySet() ).list();
@@ -183,7 +175,7 @@ public class ExpressionExperimentSetDaoImpl
          * have more than one)
          */
         //noinspection unchecked
-        List<Object[]> withDiffEx = this.getSession().createQuery(
+        List<Object[]> withDiffEx = this.getSessionFactory().getCurrentSession().createQuery(
                 "select e.id, count(distinct an.experimentAnalyzed) "
                         + "from ExpressionExperimentSet e, DifferentialExpressionAnalysis an join e.experiments ea "
                         + "where an.experimentAnalyzed = ea and e.id in (:ids) group by e.id" )
@@ -220,7 +212,7 @@ public class ExpressionExperimentSetDaoImpl
                 + " from ExpressionExperimentSet as eeset inner join eeset.taxon taxon inner join eeset.experiments ees "
                 + idClause + " group by eeset.id ";
 
-        Query queryObject = this.getSession().createQuery( queryString );
+        Query queryObject = this.getSessionFactory().getCurrentSession().createQuery( queryString );
         if ( ids != null )
             queryObject.setParameterList( "ids", ids );
         return queryObject;
@@ -234,7 +226,7 @@ public class ExpressionExperimentSetDaoImpl
      */
     private Collection<ExpressionExperimentSetValueObject> fetchValueObjects( Collection<Long> ids,
             boolean loadEEIds ) {
-        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<>();
+        Map<Long, ExpressionExperimentSetValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentSetValueObject>();
         Query queryObject = this.getLoadValueObjectsQueryString( ids );
         List<?> list = queryObject.list();
         for ( Object object : list ) {

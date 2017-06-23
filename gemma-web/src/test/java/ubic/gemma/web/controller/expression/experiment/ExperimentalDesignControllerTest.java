@@ -100,7 +100,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         Collection<FactorValueValueObject> fvs = experimentalDesignController
                 .getFactorValuesWithCharacteristics( new EntityDelegator( ee.getExperimentalDesign()
@@ -113,7 +113,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         ExperimentalFactorValueObject evvo = new ExperimentalFactorValueObject(-1L);
         evvo.setCategory( "foo" );
@@ -126,7 +126,7 @@ public class ExperimentalDesignControllerTest extends BaseSpringWebTest {
 
         ExpressionExperiment ee = this.getTestPersistentCompleteExpressionExperiment( false );
 
-        eeService.thawLite( ee );
+        ee = this.eeService.thawLite( ee );
 
         ExperimentalFactor ef = ee.getExperimentalDesign().getExperimentalFactors().iterator().next();
         EntityDelegator e = new EntityDelegator( ef.getFactorValues().iterator().next() );

@@ -240,7 +240,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
             }
 
             loadTaxon();
-            arrayDesignService.thawLite( arrayDesign );
+            arrayDesign = arrayDesignService.thawLite( arrayDesign );
 
             Collection<ProcessedExpressionDataVector> dataVectors = new HashSet<>();
 
@@ -555,7 +555,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
     }
 
     private void processExperiment( ExpressionExperiment ee ) {
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
 
         if ( this.deleteAnalyses ) {
             log.info( "======= Deleting coexpression analysis (if any) for: " + ee );

@@ -98,7 +98,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         Collection<Gene> geneCollection = geneService.findByOfficialSymbol( "ZYXMMMM" );
         Gene gene = geneCollection.iterator().next();
 
-        geneService.thaw( gene );
+        gene = geneService.thaw( gene );
 
         Collection<GeneProduct> geneProducts = gene.getProducts();
 

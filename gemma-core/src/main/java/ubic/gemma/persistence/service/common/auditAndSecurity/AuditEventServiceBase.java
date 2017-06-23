@@ -18,10 +18,8 @@
  */
 package ubic.gemma.persistence.service.common.auditAndSecurity;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 
 import java.util.Collection;
 import java.util.Date;
@@ -34,8 +32,11 @@ import java.util.Date;
  */
 public abstract class AuditEventServiceBase implements AuditEventService {
 
-    @Autowired
-    private AuditEventDao auditEventDao;
+    final AuditEventDao auditEventDao;
+
+    public AuditEventServiceBase( AuditEventDao auditEventDao ) {
+        this.auditEventDao = auditEventDao;
+    }
 
     /**
      * @see AuditEventService#getNewSinceDate(Date)
@@ -56,20 +57,6 @@ public abstract class AuditEventServiceBase implements AuditEventService {
     }
 
     /**
-     * Gets the reference to <code>auditEvent</code>'s DAO.
-     */
-    AuditEventDao getAuditEventDao() {
-        return this.auditEventDao;
-    }
-
-    /**
-     * Sets the reference to <code>auditEvent</code>'s DAO.
-     */
-    public void setAuditEventDao( AuditEventDao auditEventDao ) {
-        this.auditEventDao = auditEventDao;
-    }
-
-    /**
      * Performs the core logic for {@link #getNewSinceDate(Date)}
      */
     protected abstract Collection<Auditable> handleGetNewSinceDate( Date date );
@@ -78,7 +65,5 @@ public abstract class AuditEventServiceBase implements AuditEventService {
      * Performs the core logic for {@link #getUpdatedSinceDate(Date)}
      */
     protected abstract Collection<Auditable> handleGetUpdatedSinceDate( Date date );
-
-    protected abstract void handleThaw( AuditEvent auditEvent ) throws java.lang.Exception;
 
 }

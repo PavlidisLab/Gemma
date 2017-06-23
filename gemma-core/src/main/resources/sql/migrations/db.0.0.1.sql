@@ -42,7 +42,7 @@ ALTER TABLE HIT_LIST_SIZE drop column HIT_LIST_SIZE_RESULT_SET_FK;
 -- no longer needed.
 drop table GENE_DIFFERENTIAL_EXPRESSION_META_ANALYSES2RESULT_SETS_INCLU;
 
---- Now, remove all results that are above the threshold we want to use by default.
+--- Now, delete all results that are above the threshold we want to use by default.
 DELETE c,r from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT r inner join CONTRAST c ON c.DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT_FK=r.ID WHERE r.PVALUE >= 0.05;
 
 -- drop more unneded columns 

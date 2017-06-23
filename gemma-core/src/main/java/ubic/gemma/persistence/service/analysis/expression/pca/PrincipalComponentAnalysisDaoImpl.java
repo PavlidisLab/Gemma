@@ -41,7 +41,7 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
     @Override
     public Collection<PrincipalComponentAnalysis> findByExperiment( ExpressionExperiment ee ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "select p from PrincipalComponentAnalysis as p fetch all properties where p.experimentAnalyzed = :ee" )
                 .setParameter( "ee", ee ).list();
     }
@@ -52,7 +52,7 @@ public class PrincipalComponentAnalysisDaoImpl extends AbstractDao<PrincipalComp
             return Collections.emptyList();
 
         //noinspection unchecked
-        return this.getSession().createQuery( "select pr from PrincipalComponentAnalysis p join p.probeLoadings pr"
+        return this.getSessionFactory().getCurrentSession().createQuery( "select pr from PrincipalComponentAnalysis p join p.probeLoadings pr"
                 + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank " )
                 .setParameter( "ee", ee ).setParameter( "cmp", component ).setMaxResults( count ).list();
     }

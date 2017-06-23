@@ -19,9 +19,14 @@
 package ubic.gemma.persistence.service.expression.bioAssayData;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.jdbc.Work;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.service.AbstractDao;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
 
 /**
@@ -37,6 +42,31 @@ public abstract class DesignElementDataVectorDaoBase<T extends DesignElementData
 
     DesignElementDataVectorDaoBase( Class<T> elementClass, SessionFactory sessionFactory ) {
         super( elementClass, sessionFactory );
+    }
+
+    @Override
+    public Collection<T> create( final Collection<T> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( T entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+        return entities;
+    }
+
+    @Override
+    public void update( final Collection<T> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( T entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
     }
 
     /**

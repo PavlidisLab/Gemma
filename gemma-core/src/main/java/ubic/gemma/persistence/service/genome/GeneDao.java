@@ -123,18 +123,17 @@ public interface GeneDao extends BaseVoEnabledDao<Gene, GeneValueObject> {
      */
     Collection<Gene> loadKnownGenes( Taxon taxon );
 
-    /**
-     * Only thaw the Aliases, very light version
-     */
-    void thawAliases( Gene gene );
-
-    void thawLite( Collection<Gene> genes );
-
-    void thawLite( Gene gene );
-
-    void thawLiter( Gene gene );
-
     Collection<Gene> loadThawed( Collection<Long> ids );
 
     Collection<Gene> loadThawedLiter( Collection<Long> ids );
+
+    Gene thaw( Gene gene );
+
+    Gene thawAliases( Gene gene );
+
+    Collection<Gene> thawLite( Collection<Gene> genes );
+
+    Gene thawLite( Gene gene );
+
+    Gene thawLiter( Gene gene );
 }

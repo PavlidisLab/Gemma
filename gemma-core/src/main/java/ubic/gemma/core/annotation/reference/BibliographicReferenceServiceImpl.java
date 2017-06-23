@@ -78,14 +78,14 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     @Override
     @Transactional(readOnly = true)
     public Collection<ExpressionExperiment> getRelatedExperiments( BibliographicReference bibRef ) {
-        Collection<BibliographicReference> records = new ArrayList<>();
+        Collection<BibliographicReference> records = new ArrayList<BibliographicReference>();
         records.add( bibRef );
         Map<BibliographicReference, Collection<ExpressionExperiment>> map = this.bibliographicReferenceDao
                 .getRelatedExperiments( records );
         if ( map.containsKey( bibRef ) ) {
             return map.get( bibRef );
         }
-        return new ArrayList<>();
+        return new ArrayList<ExpressionExperiment>();
     }
 
     @Override
@@ -115,7 +115,7 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
             return null;
         }
 
-        thaw( existingBibRef );
+        existingBibRef = thaw( existingBibRef );
 
         String oldAccession = existingBibRef.getPubAccession().getAccession();
 
@@ -159,10 +159,11 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     public List<BibliographicReferenceValueObject> search( SearchSettingsValueObject settings ) {
         SearchSettings ss = SearchSettingsImpl.bibliographicReferenceSearch( settings.getQuery() );
 
-        @SuppressWarnings("unchecked") List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+        //noinspection unchecked
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
                 .search( ss, BibliographicReference.class );
 
-        List<BibliographicReferenceValueObject> results = new ArrayList<>();
+        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
 
         // only return associations with the selected entity types.
         for ( BibliographicReference entity : resultEntities ) {
@@ -194,9 +195,10 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     @Override
     @Transactional(readOnly = true)
     public List<BibliographicReferenceValueObject> search( String query ) {
-        @SuppressWarnings("unchecked") List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
+        //noinspection unchecked
+        List<BibliographicReference> resultEntities = ( List<BibliographicReference> ) searchService
                 .search( SearchSettingsImpl.bibliographicReferenceSearch( query ), BibliographicReference.class );
-        List<BibliographicReferenceValueObject> results = new ArrayList<>();
+        List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
         for ( BibliographicReference entity : resultEntities ) {
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( entity );
             this.populateBibliographicPhenotypes( vo );
@@ -243,6 +245,18 @@ public class BibliographicReferenceServiceImpl extends BibliographicReferenceSer
     protected Collection<ExpressionExperiment> handleGetRelatedExperiments(
             BibliographicReference bibliographicReference ) {
         return this.bibliographicReferenceDao.getRelatedExperiments( bibliographicReference );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
+        return this.bibliographicReferenceDao.thaw( bibliographicReference );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Collection<BibliographicReference> thaw( Collection<BibliographicReference> bibliographicReferences ) {
+        return this.bibliographicReferenceDao.thaw( bibliographicReferences );
     }
 
 }

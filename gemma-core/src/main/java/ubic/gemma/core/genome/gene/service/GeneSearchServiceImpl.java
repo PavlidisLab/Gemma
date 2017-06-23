@@ -67,9 +67,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
     private GeneOntologyService geneOntologyService;
     private GeneSetValueObjectHelper geneSetValueObjectHelper;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     public GeneSearchServiceImpl() {
     }
@@ -89,9 +87,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         this.geneSetValueObjectHelper = geneSetValueObjectHelper;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     // TODO REFACTOR method is much too long -Thea
     @Override
@@ -352,7 +348,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
 
             Collection<Gene> results = geneOntologyService.getGenes( goId, tax );
             if ( results != null ) {
-                geneService.thawLite( results );
+                results = geneService.thawLite( results );
                 return geneService.loadValueObjects( results );
             }
         }
@@ -449,9 +445,7 @@ public class GeneSearchServiceImpl implements GeneSearchService {
         return queryToGenes;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     private void setUserOwnedForGeneSets( Collection<SearchResultDisplayObject> geneSets,
             Map<Long, Boolean> isSetOwnedByUser ) {

@@ -89,7 +89,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     public static Collection<BioSequence> getSequences( ArrayDesign ad, Taxon taxon ) {
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        Collection<BioSequence> sequencesToBlat = new HashSet<>();
+        Collection<BioSequence> sequencesToBlat = new HashSet<BioSequence>();
         int numWithNoBioSequence = 0;
         int numWithNoSequenceData = 0;
         boolean warned = false;
@@ -163,28 +163,28 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         log.info( "Looking for old results to remove..." );
 
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
 
         arrayDesignService.deleteAlignmentData( ad );
         // Blat file processing can only be run on one taxon at a time
         taxon = validateTaxaForBlatFile( ad, taxon );
 
         Collection<BioSequence> sequencesToBlat = getSequences( ad );
-        bioSequenceService.thaw( sequencesToBlat );
+        sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
 
         // if the blat results were loaded from a file, we have to replace the
         // query sequences with the actual ones
         // attached to the array design. We have to do this by name because the
         // sequence name is what the files contain.
         // Note that if there is ambiguity there will be problems!
-        Map<String, BioSequence> seqMap = new HashMap<>();
+        Map<String, BioSequence> seqMap = new HashMap<String, BioSequence>();
         for ( BioSequence bioSequence : sequencesToBlat ) {
             seqMap.put( bioSequence.getName(), bioSequence );
         }
 
         ExternalDatabase searchedDatabase = ShellDelegatingBlat.getSearchedGenome( taxon );
 
-        Collection<BlatResult> toSkip = new HashSet<>();
+        Collection<BlatResult> toSkip = new HashSet<BlatResult>();
         for ( BlatResult result : rawBlatResults ) {
 
             /*
@@ -218,7 +218,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             rawBlatResults.removeAll( toSkip );
         }
 
-        Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<>();
+        Map<BioSequence, Collection<BlatResult>> goldenPathAlignments = new HashMap<BioSequence, Collection<BlatResult>>();
         getGoldenPathAlignments( sequencesToBlat, taxon, goldenPathAlignments );
         for ( BioSequence sequence : goldenPathAlignments.keySet() ) {
             rawBlatResults.addAll( goldenPathAlignments.get( sequence ) );
@@ -226,7 +226,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         Collection<BlatResult> results = persistBlatResults( rawBlatResults );
 
-        arrayDesignReportService.generateArrayDesignReport( ad );
+        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
 
         return results;
     }
@@ -273,8 +273,8 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     private Map<BioSequence, Collection<BlatResult>> getAlignments( Collection<BioSequence> sequencesToBlat,
             boolean sensitive, Taxon taxon, Blat blat ) {
 
-        Map<BioSequence, Collection<BlatResult>> results = new HashMap<>();
-        bioSequenceService.thaw( sequencesToBlat );
+        Map<BioSequence, Collection<BlatResult>> results = new HashMap<BioSequence, Collection<BlatResult>>();
+        sequencesToBlat = bioSequenceService.thaw( sequencesToBlat );
         try {
 
             Collection<BioSequence> needBlat = getGoldenPathAlignments( sequencesToBlat, taxon, results );
@@ -302,7 +302,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
         GoldenPathQuery gpq = new GoldenPathQuery( taxon );
 
-        Collection<BioSequence> needBlat = new HashSet<>();
+        Collection<BioSequence> needBlat = new HashSet<BioSequence>();
         int count = 0;
         int totalFound = 0;
         for ( BioSequence sequence : sequencesToBlat ) {
@@ -344,7 +344,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
     @SuppressWarnings("unchecked")
     private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
 
-        Collection<Integer> seen = new HashSet<>();
+        Collection<Integer> seen = new HashSet<Integer>();
         int duplicates = 0;
         for ( BlatResult br : brs ) {
 
@@ -394,7 +394,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
         if ( blat == null )
             blat = new ShellDelegatingBlat();
 
-        Collection<BlatResult> allResults = new HashSet<>();
+        Collection<BlatResult> allResults = new HashSet<BlatResult>();
 
         if ( sensitive )
             log.info( "Running in 'sensitive' mode if possible" );
@@ -409,7 +409,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
 
             log.info( "Got BLAT results for " + results.keySet().size() + " query sequences" );
 
-            Map<String, BioSequence> nameMap = new HashMap<>();
+            Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
             for ( BioSequence bs : results.keySet() ) {
                 if ( nameMap.containsKey( bs.getName() ) ) {
                     throw new IllegalStateException(
@@ -455,7 +455,7 @@ public class ArrayDesignSequenceAlignmentServiceImpl implements ArrayDesignSeque
             first = false;
         }
 
-        arrayDesignReportService.generateArrayDesignReport( ad );
+        arrayDesignReportService.generateArrayDesignReport( ad.getId() );
 
         return allResults;
 

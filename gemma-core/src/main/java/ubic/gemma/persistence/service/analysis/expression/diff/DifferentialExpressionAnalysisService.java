@@ -19,7 +19,6 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.springframework.security.access.annotation.Secured;
-import ubic.gemma.persistence.service.analysis.AnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
@@ -28,6 +27,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.analysis.AnalysisService;
 
 import java.util.Collection;
 import java.util.Map;
@@ -72,16 +72,10 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     Map<Long, Collection<DifferentialExpressionAnalysis>> findByInvestigationIds( Collection<Long> investigationIds );
 
-    /**
-     *
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     java.util.Collection<DifferentialExpressionAnalysis> findByParentTaxon( Taxon taxon );
 
-    /**
-     *
-     */
     @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     java.util.Collection<DifferentialExpressionAnalysis> findByTaxon( Taxon taxon );
@@ -108,7 +102,7 @@ public interface DifferentialExpressionAnalysisService extends AnalysisService<D
     void thaw( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    void thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
+    DifferentialExpressionAnalysis thawFully( DifferentialExpressionAnalysis differentialExpressionAnalysis );
 
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( DifferentialExpressionAnalysis o );

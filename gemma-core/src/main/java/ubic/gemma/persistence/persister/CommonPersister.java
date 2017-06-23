@@ -217,7 +217,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
-        this.getSession().setFlushMode( FlushMode.COMMIT );
         ExternalDatabase existingDatabase = externalDatabaseDao.find( database );
 
         // don't use findOrCreate to avoid flush.

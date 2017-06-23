@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
@@ -28,6 +29,8 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.persistence.service.AbstractDao;
 import ubic.gemma.persistence.util.BusinessKey;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -50,7 +53,7 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
             //noinspection unchecked
             return Collections.EMPTY_SET;
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select b from AnnotationAssociation b join b.geneProduct gp where gp in (:gps)" )
                 .setParameterList( "gps", gps ).list();
     }
@@ -58,7 +61,8 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Override
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
-        Criteria queryObject = this.getSession().createCriteria( AnnotationAssociation.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession()
+                .createCriteria( AnnotationAssociation.class );
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
 
         //noinspection unchecked
@@ -71,12 +75,13 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
             throw new IllegalArgumentException( "Gene has no products" );
         }
 
-        Collection<AnnotationAssociation> result = new HashSet<>();
+        Collection<AnnotationAssociation> result = new HashSet<AnnotationAssociation>();
 
         for ( GeneProduct geneProduct : gene.getProducts() ) {
 
             BusinessKey.checkValidKey( geneProduct );
-            Criteria queryObject = this.getSession().createCriteria( AnnotationAssociation.class );
+            Criteria queryObject = this.getSessionFactory().getCurrentSession()
+                    .createCriteria( AnnotationAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
 
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
@@ -96,28 +101,55 @@ public class AnnotationAssociationDaoImpl extends AbstractDao<AnnotationAssociat
     @Override
     public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
         if ( ids.size() == 0 ) {
-            return new HashSet<>();
+            return new HashSet<AnnotationAssociation>();
         }
         int BATCH_SIZE = 2000;
 
         final String queryString = "select a from AnnotationAssociation a where a.id in (:ids)";
-        Collection<Long> batch = new HashSet<>();
-        Collection<AnnotationAssociation> results = new HashSet<>();
+        Collection<Long> batch = new HashSet<Long>();
+        Collection<AnnotationAssociation> results = new HashSet<AnnotationAssociation>();
 
         for ( Long id : ids ) {
             batch.add( id );
             if ( batch.size() == BATCH_SIZE ) {
                 //noinspection unchecked
-                results.addAll( this.getSession().createQuery( queryString ).setParameterList( "ids", batch ).list() );
+                results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                        .setParameterList( "ids", batch ).list() );
                 batch.clear();
             }
         }
         if ( batch.size() > 0 ) {
             //noinspection unchecked
-            results.addAll( this.getSession().createQuery( queryString ).setParameterList( "ids", batch ).list() );
+            results.addAll( this.getSessionFactory().getCurrentSession().createQuery( queryString )
+                    .setParameterList( "ids", batch ).list() );
         }
 
         return results;
+    }
+
+    @Override
+    public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( AnnotationAssociation entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+        return entities;
+    }
+
+    @Override
+    public void update( final Collection<AnnotationAssociation> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( AnnotationAssociation entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
     }
 
     @Override

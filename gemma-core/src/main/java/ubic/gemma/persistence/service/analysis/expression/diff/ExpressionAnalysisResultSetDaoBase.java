@@ -19,8 +19,13 @@
 package ubic.gemma.persistence.service.analysis.expression.diff;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.jdbc.Work;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.persistence.service.AbstractDao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Collection;
 
 /**
  * <p>
@@ -31,18 +36,43 @@ import ubic.gemma.persistence.service.AbstractDao;
 public abstract class ExpressionAnalysisResultSetDaoBase extends AbstractDao<ExpressionAnalysisResultSet>
         implements ExpressionAnalysisResultSetDao {
 
-    public ExpressionAnalysisResultSetDaoBase(SessionFactory sessionFactory) {
+    public ExpressionAnalysisResultSetDaoBase( SessionFactory sessionFactory ) {
         super( ExpressionAnalysisResultSet.class, sessionFactory );
+    }
+
+    @Override
+    public Collection<ExpressionAnalysisResultSet> create( final Collection<ExpressionAnalysisResultSet> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( ExpressionAnalysisResultSet entity : entities ) {
+                    create( entity );
+                }
+            }
+        } );
+        return entities;
+    }
+
+    @Override
+    public void update( final Collection<ExpressionAnalysisResultSet> entities ) {
+        this.getSessionFactory().getCurrentSession().doWork( new Work() {
+            @Override
+            public void execute( Connection connection ) throws SQLException {
+                for ( ExpressionAnalysisResultSet entity : entities ) {
+                    update( entity );
+                }
+            }
+        } );
     }
 
     /**
      * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    public void thaw( final ExpressionAnalysisResultSet resultSet ) {
-        this.handleThaw( resultSet );
+    public ExpressionAnalysisResultSet thaw( final ExpressionAnalysisResultSet resultSet ) {
+        return this.handleThaw( resultSet );
     }
 
-    protected abstract void handleThaw( ExpressionAnalysisResultSet resultSet );
+    protected abstract ExpressionAnalysisResultSet handleThaw( ExpressionAnalysisResultSet resultSet );
 
 }

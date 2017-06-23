@@ -34,13 +34,10 @@ import ubic.gemma.core.util.AbstractCLIContextCLI;
  * Refreshes the information in all the bibliographic references in the system.
  * 
  * @author Paul
- * @version $Id$
  */
 public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
-    /**
-     * @param args
-     */
+
     public static void main( String[] args ) {
         BibRefUpdaterCli e = new BibRefUpdaterCli();
         Exception ex = e.doWork( args );
@@ -50,11 +47,6 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#getCommandName()
-     */
     @Override
     public String getCommandName() {
         return "updatePubMeds";
@@ -68,22 +60,14 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         return ( "Refresh stored information on publications" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#buildOptions()
-     */
+
     @Override
     protected void buildOptions() {
         super.addUserNameAndPasswordOptions( true );
         super.addOption( "pmids", "pmids", true, "Pubmed ids, comma-delimited; default is to do all in DB" );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.core.util.AbstractCLI#doWork(java.lang.String[])
-     */
+
     @Override
     protected Exception doWork( String[] args ) {
         Exception ex = super.processCommandLine( args );
@@ -91,7 +75,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
         BibliographicReferenceService bibliographicReferenceService = this
                 .getBean( BibliographicReferenceService.class );
 
-        Collection<Long> bibrefIds = new ArrayList<>();
+        Collection<Long> bibrefIds = new ArrayList<Long>();
         if ( this.hasOption( "pmids" ) ) {
             for ( String s : StringUtils.split( this.getOptionValue( "pmids" ), "," ) ) {
 
@@ -115,7 +99,7 @@ public class BibRefUpdaterCli extends AbstractCLIContextCLI {
                 log.info( "No reference with id=" + id );
                 continue;
             }
-            bibliographicReferenceService.thaw( bibref );
+            bibref = bibliographicReferenceService.thaw( bibref );
             try {
                 BibliographicReference updated = bibliographicReferenceService.refresh( bibref.getPubAccession()
                         .getAccession() );

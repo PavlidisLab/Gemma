@@ -40,16 +40,14 @@ public class Gene extends ChromosomeFeature {
     private String officialName;
     private Integer ncbiGeneId;
     private String ensemblId;
-    private Collection<GeneProduct> products = new HashSet<>();
-    private Collection<GeneAlias> aliases = new HashSet<>();
+    private Collection<GeneProduct> products = new HashSet<GeneProduct>();
+    private Collection<GeneAlias> aliases = new HashSet<GeneAlias>();
     private Taxon taxon;
-    private Collection<DatabaseEntry> accessions = new HashSet<>();
+    private Collection<DatabaseEntry> accessions = new HashSet<DatabaseEntry>();
     private Multifunctionality multifunctionality;
-    private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<>();
+    private Collection<PhenotypeAssociation> phenotypeAssociations = new HashSet<PhenotypeAssociation>();
 
-    /* ********************************
-     * Constructors
-     * ********************************/
+
 
     /**
      * No-arg constructor added to satisfy javabean contract
@@ -59,9 +57,7 @@ public class Gene extends ChromosomeFeature {
     public Gene() {
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public boolean equals( Object object ) {
@@ -135,9 +131,7 @@ public class Gene extends ChromosomeFeature {
                 " (NCBI " + this.getNcbiGeneId() + ")" );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     public Collection<DatabaseEntry> getAccessions() {
         return this.accessions;
@@ -256,9 +250,7 @@ public class Gene extends ChromosomeFeature {
         return hashCode;
     }
 
-    /* ********************************
-     * Private methods
-     * ********************************/
+
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.genome.Gene}.

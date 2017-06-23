@@ -106,7 +106,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
-        Map<Long, StringBuilder> probe2String = new HashMap<>();
+        Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
 
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
 
@@ -147,7 +147,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults ) {
 
         if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
-            sortedFirstColumnOfResults = new ArrayList<>( ears.getResults() );
+            sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>( ears.getResults() );
             Collections.sort( sortedFirstColumnOfResults,
                     DifferentialExpressionAnalysisResultComparator.Factory.newInstance() );
         }
@@ -248,7 +248,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         } else {
 
             Long baselineId = resultSet.getBaselineGroup().getId();
-            List<Long> factorValueIdOrder = new ArrayList<>();
+            List<Long> factorValueIdOrder = new ArrayList<Long>();
             for ( FactorValue factorValue : ef.getFactorValues() ) {
                 if ( Objects.equals( factorValue.getId(), baselineId ) ) {
                     continue;
@@ -268,7 +268,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
                 addGeneAnnotationsToLine( rowBuffer, dear, hasNCBIIDs, geneAnnotations );
 
-                Map<Long, String> factorValueIdToData = new HashMap<>();
+                Map<Long, String> factorValueIdToData = new HashMap<Long, String>();
                 // I don't think we can expect them in the same order.
                 for ( ContrastResult contrast : dear.getContrasts() ) {
                     Double foldChange = contrast.getLogFoldChange();
@@ -300,7 +300,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
 
     @Override
     public void deleteAllFiles( ExpressionExperiment ee ) throws IOException {
-        this.expressionExperimentService.thawLite( ee );
+        ee = this.expressionExperimentService.thawLite( ee );
 
         // data files.
         deleteAndLog( getOutputFile( ee, true ) );
@@ -338,11 +338,10 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             return f;
         }
 
-        this.differentialExpressionAnalysisService.thawFully( analysis );
+        analysis = this.differentialExpressionAnalysisService.thawFully( analysis );
         BioAssaySet experimentAnalyzed = analysis.getExperimentAnalyzed();
 
         try {
-            this.differentialExpressionAnalysisService.thawFully( analysis );
             writeDiffExArchiveFile( experimentAnalyzed, analysis, null );
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -433,6 +432,8 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             zipOut.write( analysisData.getBytes() );
             zipOut.closeEntry();
 
+            differentialExpressionAnalysisService.thaw( analysis );
+
             // Add a file for each result set with contrasts information.
             int i = 0;
             for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
@@ -460,7 +461,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public File writeOrLocateCoexpressionDataFile( ExpressionExperiment ee, boolean forceWrite ) {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         try {
             File f = getOutputFile( getCoexpressionDataFilename( ee ) );
@@ -524,7 +525,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public File writeOrLocateDesignFile( ExpressionExperiment ee, boolean forceWrite ) {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         String filename = getDesignFileName( ee, DATA_FILE_SUFFIX_COMPRESSED );
         try {
@@ -545,12 +546,12 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public Collection<File> writeOrLocateDiffExpressionDataFiles( ExpressionExperiment ee, boolean forceWrite ) {
 
-        this.expressionExperimentService.thawLite( ee );
+        ee = this.expressionExperimentService.thawLite( ee );
 
         Collection<DifferentialExpressionAnalysis> analyses = this.differentialExpressionAnalysisService
                 .getAnalyses( ee );
 
-        Collection<File> result = new HashSet<>();
+        Collection<File> result = new HashSet<File>();
         for ( DifferentialExpressionAnalysis analysis : analyses ) {
             assert analysis.getId() != null;
             result.add( this.getDiffExpressionAnalysisArchiveFile( analysis.getId(), forceWrite ) );
@@ -625,7 +626,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     @Override
     public File writeTemporaryDesignFile( ExpressionExperiment ee ) {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         // not compressed
         String filename = getDesignFileName( ee, DATA_FILE_SUFFIX );
@@ -673,7 +674,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      */
     private String convertDiffExpressionAnalysisData( DifferentialExpressionAnalysis analysis,
             Map<Long, String[]> geneAnnotations, DifferentialExpressionAnalysisConfig config ) {
-        differentialExpressionAnalysisService.thawFully( analysis );
+        analysis = differentialExpressionAnalysisService.thawFully( analysis );
         Collection<ExpressionAnalysisResultSet> results = analysis.getResultSets();
         if ( results == null || results.isEmpty() ) {
             log.warn( "No differential expression results found for " + analysis );
@@ -708,7 +709,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private Collection<ArrayDesign> getArrayDesigns( Collection<? extends DesignElementDataVector> vectors ) {
-        Collection<ArrayDesign> ads = new HashSet<>();
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         for ( DesignElementDataVector v : vectors ) {
             ads.add( v.getDesignElement().getArrayDesign() );
         }
@@ -732,7 +733,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
         FilterConfig filterConfig = new FilterConfig();
         filterConfig.setIgnoreMinimumSampleThreshold( true );
         filterConfig.setIgnoreMinimumRowsThreshold( true );
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         ExpressionDataDoubleMatrix matrix;
         if ( filtered ) {
             matrix = expressionDataMatrixService.getFilteredMatrix( ee, filterConfig );
@@ -786,9 +787,9 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
     }
 
     private Map<Long, Collection<Gene>> getGeneAnnotations( Collection<ArrayDesign> ads ) {
-        Map<Long, Collection<Gene>> annots = new HashMap<>();
+        Map<Long, Collection<Gene>> annots = new HashMap<Long, Collection<Gene>>();
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesignService.thaw( arrayDesign );
+            arrayDesign = arrayDesignService.thaw( arrayDesign );
             annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFile( arrayDesign ) );
         }
         return annots;
@@ -799,18 +800,18 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
      * id(s), ncbi id(s)].
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
-        Map<Long, String[]> annots = new HashMap<>();
+        Map<Long, String[]> annots = new HashMap<Long, String[]>();
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesignService.thaw( arrayDesign );
+            arrayDesign = arrayDesignService.thaw( arrayDesign );
             annots.putAll( ArrayDesignAnnotationServiceImpl.readAnnotationFileAsString( arrayDesign ) );
         }
         return annots;
     }
 
     private Map<CompositeSequence, String[]> getGeneAnnotationsAsStringsByProbe( Collection<ArrayDesign> ads ) {
-        Map<CompositeSequence, String[]> annots = new HashMap<>();
+        Map<CompositeSequence, String[]> annots = new HashMap<CompositeSequence, String[]>();
         for ( ArrayDesign arrayDesign : ads ) {
-            arrayDesignService.thaw( arrayDesign );
+            arrayDesign = arrayDesignService.thaw( arrayDesign );
 
             Map<Long, CompositeSequence> csidmap = EntityUtils.getIdMap( arrayDesign.getCompositeSequences() );
 
@@ -872,7 +873,7 @@ public class ExpressionDataFileServiceImpl implements ExpressionDataFileService 
             DifferentialExpressionAnalysisConfig config ) {
 
         if ( analysis.getId() != null ) // It might not be a persistent analysis: using -nodb
-            differentialExpressionAnalysisService.thaw( analysis ); // bug 4023
+            differentialExpressionAnalysisService.thaw( analysis );
 
         StringBuilder buf = new StringBuilder();
 

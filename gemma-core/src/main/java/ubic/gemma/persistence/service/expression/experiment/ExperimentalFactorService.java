@@ -46,21 +46,27 @@ public interface ExperimentalFactorService
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void delete( ExperimentalFactor experimentalFactor );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalFactor find( ExperimentalFactor experimentalFactor );
 
+    @Override
     @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     ExperimentalFactor findOrCreate( ExperimentalFactor experimentalFactor );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     ExperimentalFactor load( java.lang.Long id );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExperimentalFactor> load( Collection<Long> ids );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExperimentalFactor> loadAll();
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExperimentalFactor experimentalFactor );
 

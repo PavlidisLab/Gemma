@@ -92,7 +92,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         Collection<PhenotypeAssociation> toRemove = new HashSet<>();
         for ( Gene g : this.geneService.loadAll() ) {
 
-            geneService.thaw( g );
+            g = geneService.thaw( g );
             toRemove.addAll( g.getPhenotypeAssociations() );
             g.getPhenotypeAssociations().clear();
 

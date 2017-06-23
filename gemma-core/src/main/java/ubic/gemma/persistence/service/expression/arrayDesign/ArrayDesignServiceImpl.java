@@ -41,18 +41,10 @@ import java.util.Set;
 @Service
 public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     @Autowired
     public ArrayDesignServiceImpl( ArrayDesignDao arrayDesignDao, AuditEventDao auditEventDao ) {
         super( arrayDesignDao, auditEventDao );
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     @Override
     @Transactional
@@ -98,14 +90,20 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
 
     @Override
     @Transactional(readOnly = true)
-    public void thawLite( Collection<ArrayDesign> arrayDesigns ) {
-        this.arrayDesignDao.thawLite( arrayDesigns );
+    public ArrayDesign thaw( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.thaw( arrayDesign );
     }
 
     @Override
     @Transactional(readOnly = true)
-    public void thawLite( ArrayDesign arrayDesign ) {
-        this.arrayDesignDao.thawLite( arrayDesign );
+    public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
+        return this.arrayDesignDao.thawLite( arrayDesigns );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ArrayDesign thawLite( ArrayDesign arrayDesign ) {
+        return this.arrayDesignDao.thawLite( arrayDesign );
     }
 
     @Override
@@ -113,10 +111,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     public int numExperiments( ArrayDesign arrayDesign ) {
         return this.arrayDesignDao.numExperiments( arrayDesign );
     }
-
-    /* ********************************
-     * Protected methods
-     * ********************************/
 
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign ) {
@@ -176,7 +170,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     protected Map<Long, AuditEvent> handleGetLastAnnotationFile( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
 
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not AnnotationFile events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignAnnotationFileEvent.class;
@@ -187,7 +181,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected Map<Long, AuditEvent> handleGetLastGeneMapping( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignGeneMappingEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
@@ -197,7 +191,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected Map<Long, AuditEvent> handleGetLastRepeatAnalysis( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignRepeatAnalysisEvent.class;
@@ -208,7 +202,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceAnalysis( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceAnalysisEvent.class;
@@ -219,7 +213,7 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceUpdate( Collection<Long> ids ) {
         Map<Long, Collection<AuditEvent>> eventMap = this.arrayDesignDao.getAuditEvents( ids );
-        Map<Long, AuditEvent> lastEventMap = new HashMap<>();
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not Sequence update events
         Set<Long> aaIds = eventMap.keySet();
         Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceUpdateEvent.class;
@@ -354,10 +348,6 @@ public class ArrayDesignServiceImpl extends ArrayDesignServiceBase {
     protected Boolean handleUpdateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee ) {
         return this.arrayDesignDao.updateSubsumingStatus( candidateSubsumer, candidateSubsumee );
     }
-
-    /* ********************************
-     * Private methods
-     * ********************************/
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
             Class<? extends ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {

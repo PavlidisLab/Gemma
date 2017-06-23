@@ -66,16 +66,16 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         SearchSettings settings = SearchSettingsImpl.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
-        Collection<Gene> genes = new HashSet<>();
+        Collection<Gene> genes = new HashSet<Gene>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
             log.info( "No Genes for search: " + query + " taxon=" + taxonId );
-            return new HashSet<>();
+            return new HashSet<GeneValueObject>();
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
 
         for ( SearchResult sr : geneSearchResults ) {
             Gene g = ( Gene ) sr.getResultObject();
-            geneService.thaw( g );
+            g = geneService.thaw( g );
             genes.add( g );
             log.debug( "Gene search result: " + g.getOfficialSymbol() );
         }

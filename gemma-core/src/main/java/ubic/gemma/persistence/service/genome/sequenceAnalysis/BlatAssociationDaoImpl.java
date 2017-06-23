@@ -59,7 +59,7 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
         //noinspection unchecked
         return gps.isEmpty() ?
                 Collections.emptySet() :
-                this.getSession()
+                this.getSessionFactory().getCurrentSession()
                         .createQuery( "select b from BlatAssociation b join b.geneProduct gp where gp in (:gps)" )
                         .setParameter( "gps", gps ).list();
     }
@@ -67,7 +67,7 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
     @Override
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
-        Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
         BusinessKey.attachCriteria( queryObject, bioSequence, "bioSequence" );
         //noinspection unchecked
         return queryObject.list();
@@ -85,7 +85,8 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
         for ( GeneProduct geneProduct : gene.getProducts() ) {
 
             BusinessKey.checkValidKey( geneProduct );
-            Criteria queryObject = this.getSession().createCriteria( BlatAssociation.class );
+
+            Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
             if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
                 innerQuery.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
@@ -108,8 +109,8 @@ public class BlatAssociationDaoImpl extends AbstractDao<BlatAssociation> impleme
             return;
         if ( blatAssociation.getId() == null )
             return;
-        HibernateTemplate template = this.getHibernateTemplate();
-        template.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        HibernateTemplate templ = this.getHibernateTemplate();
+        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             @Override
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 thawBlatAssociation( session, blatAssociation );

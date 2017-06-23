@@ -183,7 +183,7 @@ public class BatchInfoPopulationServiceImpl implements BatchInfoPopulationServic
      */
     private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
-        expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         if ( ee.getAccession() == null ) {
             // in fact, currently it has to be from GEO.

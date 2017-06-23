@@ -160,7 +160,7 @@ public class GeneWebService {
         // Do the search
         Collection<Gene> genes = geneService.find( region );
 
-        geneService.thawLite( genes );
+        genes = geneService.thawLite( genes );
         // Convert to value objects
         return geneService.loadValueObjects( genes );
     }

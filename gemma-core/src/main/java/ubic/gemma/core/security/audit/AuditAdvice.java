@@ -25,7 +25,7 @@ import gemma.gsec.util.CrudUtilsImpl;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.classic.Session;
@@ -37,14 +37,14 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import ubic.gemma.core.security.authorization.acl.AclAdvice;
 import ubic.gemma.model.common.AbstractAuditable;
-import ubic.gemma.persistence.service.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.core.security.authorization.acl.AclAdvice;
+import ubic.gemma.persistence.service.common.auditAndSecurity.AuditHelper;
 import ubic.gemma.persistence.util.ReflectionUtil;
 import ubic.gemma.persistence.util.Settings;
 
@@ -114,7 +114,6 @@ public class AuditAdvice {
         }
     }
 
-
     private boolean canSkipAssociationCheck( Object object, String propertyName ) {
 
         /*
@@ -176,8 +175,8 @@ public class AuditAdvice {
 
     /**
      * Adds 'create' AuditEvent to audit trail of the passed AbstractAuditable.
-     
-     * @param note      Additional text to add to the automatically generated note.
+     *
+     * @param note Additional text to add to the automatically generated note.
      */
     private void addCreateAuditEvent( final AbstractAuditable auditable, User user, final String note ) {
 
@@ -212,7 +211,6 @@ public class AuditAdvice {
         }
     }
 
- 
     private void addDeleteAuditEvent( AbstractAuditable d, User user ) {
         assert d != null;
         // what else could we do? But need to keep this record in a good place. See log4j.properties.
@@ -225,7 +223,6 @@ public class AuditAdvice {
         }
     }
 
-  
     private void addUpdateAuditEvent( final AbstractAuditable auditable, User user ) {
         assert auditable != null;
 
@@ -250,7 +247,6 @@ public class AuditAdvice {
         }
     }
 
-
     private void ensureInSession( AuditTrail auditTrail ) {
         if ( auditTrail == null )
             return;
@@ -262,7 +258,6 @@ public class AuditAdvice {
             session.buildLockRequest( LockOptions.NONE ).lock( auditTrail );
         }
     }
-
 
     private Object getPersistentObject( Object retValue, String methodName, Object[] args ) {
         if ( retValue == null && ( CrudUtilsImpl.methodIsDelete( methodName ) || CrudUtilsImpl
@@ -278,7 +273,6 @@ public class AuditAdvice {
         return retValue;
     }
 
-
     private boolean isNullOrTransient( final AbstractAuditable auditable ) {
         return auditable == null || auditable.getId() == null;
     }
@@ -286,8 +280,6 @@ public class AuditAdvice {
     /**
      * Check if the associated object needs to be 'create audited'. Example: gene products are created by cascade when
      * calling update on a gene.
-     *
-
      */
     private void maybeAddCascadeCreateEvent( Object object, AbstractAuditable auditable, User user ) {
         if ( log.isDebugEnabled() )
@@ -304,7 +296,6 @@ public class AuditAdvice {
 
     /**
      * Process auditing on the object.
-     *
      */
     private void process( final String methodName, final AbstractAuditable auditable, User user ) {
 
@@ -344,7 +335,6 @@ public class AuditAdvice {
      * Thus if the update is on an expression experiment that has a new Characteristic, the Characteristic will have a
      * 'create' event, and the EEE will get an added update event (via the addUpdateAuditEvent call elsewhere, not here)
      *
-
      * @see AclAdvice for similar code for ACLs
      */
     private void processAssociations( String methodName, Object object, User user ) {
@@ -387,12 +377,12 @@ public class AuditAdvice {
                         maybeAddCascadeCreateEvent( object, auditable, user );
 
                         processAssociations( methodName, auditable, user );
-                    } catch ( HibernateException e ) {
+                    } catch ( LazyInitializationException e ) {
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
-                        hadErrors = true;
                         if ( log.isDebugEnabled() )
-                            log.debug( "Hibernate error while processing " + auditable + ": " + e.getMessage() );
+                            log.debug( "Caught lazy init error while processing " + auditable + ": " + e.getMessage()
+                                    + " - skipping creation of cascade event." );
                     }
 
                 } else if ( Collection.class.isAssignableFrom( propertyType ) ) {
@@ -408,34 +398,30 @@ public class AuditAdvice {
                                     Hibernate.initialize( auditable );
                                     maybeAddCascadeCreateEvent( object, auditable, user );
                                     processAssociations( methodName, collectionMember, user );
-                                } catch ( HibernateException e ) {
-                                    hadErrors = true;
+                                } catch ( LazyInitializationException e ) {
+
                                     if ( log.isDebugEnabled() )
-                                        log.debug( "Hibernate error while processing " + auditable + ": " + e
-                                                .getMessage() );
+                                        log.debug( "Caught lazy init error while processing " + auditable + ": " + e
+                                                .getMessage() + " - skipping creation of cascade event." );
                                     // If this happens, it means the object can't be 'new' so adding audit trail can't
                                     // be necessary. But keep checking.
                                 }
 
                             }
                         }
-                    } catch ( HibernateException e ) {
-                        hadErrors = true;
+                    } catch ( LazyInitializationException e ) {
+
                         // If this happens, it means the object can't be 'new' so adding audit trail can't
                         // be necessary.
                         if ( log.isDebugEnabled() )
-                            log.debug( "Hibernate error while processing " + object + ": " + e.getMessage() );
+                            log.debug( "Caught lazy init error while processing " + object + ": " + e.getMessage()
+                                    + " - skipping creation of cascade event." );
                     }
 
                 }
             }
         } catch ( IllegalAccessException | InvocationTargetException e ) {
             throw new RuntimeException( e );
-        }
-        
-        if ( hadErrors ) {
-            log.warn( "There were hibernate errors during association checking for " + object
-             + "; probably not critical." );
         }
     }
 

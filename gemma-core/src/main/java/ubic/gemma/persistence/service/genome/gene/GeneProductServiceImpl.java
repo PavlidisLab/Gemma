@@ -80,7 +80,7 @@ public class GeneProductServiceImpl extends GeneProductServiceBase {
 
         // remove associations to database entries that are still associated with sequences.
         for ( GeneProduct gp : toRemove ) {
-            this.thaw( gp );
+            gp = this.thaw( gp );
             Collection<DatabaseEntry> accessions = gp.getAccessions();
             Collection<DatabaseEntry> toRelease = new HashSet<DatabaseEntry>();
             for ( DatabaseEntry de : accessions ) {
@@ -93,6 +93,11 @@ public class GeneProductServiceImpl extends GeneProductServiceBase {
 
         }
 
+    }
+
+    @Transactional(readOnly = true)
+    public GeneProduct thaw( GeneProduct existing ) {
+        return this.geneProductDao.thaw( existing );
     }
 
     @Override

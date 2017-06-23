@@ -37,8 +37,4 @@ public class MeasurementDaoImpl extends MeasurementDaoBase {
     public MeasurementDaoImpl( SessionFactory sessionFactory ) {
         super( sessionFactory );
     }
-
-    @Override
-    public void thaw( Measurement entity ) {
-    }
 }

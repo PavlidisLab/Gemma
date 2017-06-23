@@ -45,7 +45,7 @@ public class ContactDaoImpl extends ContactDaoBase {
     @Override
     public Contact find( Contact contact ) {
         BusinessKey.checkKey( contact );
-        Criteria queryObject = this.getSession().createCriteria( Contact.class );
+        Criteria queryObject = this.getSessionFactory().getCurrentSession().createCriteria( Contact.class );
         BusinessKey.addRestrictions( queryObject, contact );
         List results = queryObject.list();
         Object result = null;
@@ -71,7 +71,7 @@ public class ContactDaoImpl extends ContactDaoBase {
     @Override
     public Collection<Investigation> getInvestigations( Contact contact ) {
         //noinspection unchecked
-        return this.getSession()
+        return this.getSessionFactory().getCurrentSession()
                 .createQuery( "select e from ExpressionExperiment e join e.investigators i where i=:c " )
                 .setParameter( "c", contact ).list();
     }

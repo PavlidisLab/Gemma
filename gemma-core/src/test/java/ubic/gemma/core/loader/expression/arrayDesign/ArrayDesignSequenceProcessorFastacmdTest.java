@@ -52,7 +52,7 @@ public class ArrayDesignSequenceProcessorFastacmdTest extends AbstractArrayDesig
             log.warn( "Array design configuration failed, skipping test" );
             return;
         }
-        arrayDesignService.thaw( ad );
+        ad = arrayDesignService.thaw( ad );
         try {
             // finally the real business. There are 243 sequences on the array.
             Collection<BioSequence> res = app.processArrayDesign( ad, new String[] { "testblastdb",

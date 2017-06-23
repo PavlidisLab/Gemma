@@ -19,64 +19,57 @@
 
 package ubic.gemma.web.services;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
 import ubic.gemma.core.analysis.expression.coexpression.CoexpressionValueObjectExt;
 import ubic.gemma.core.analysis.expression.coexpression.GeneCoexpressionSearchService;
 import ubic.gemma.core.genome.gene.service.GeneService;
-import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.service.genome.taxon.TaxonService;
 import ubic.gemma.persistence.util.EntityUtils;
+
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * Allows access to the gene co-expression analysis. Given 1) a collection of gene ids, 2) a taxon id, 3) a stringency,
  * 4) an expression experiment set id, and 5) a boolean for whether to return results that are within the query set
  * only. The Expression Experiment Set ID (4) can be found by using the ExpressionExperimentSetIDEndpoint, which will
  * return all the expression experiment set ids for all taxons and their corresponding description. The stringency is
- * the miniumum number of times we found a particular relationship. Returns a list consisting of 7 columns: 1) the query
+ * the minimum number of times we found a particular relationship. Returns a list consisting of 7 columns: 1) the query
  * Gene, 2) the query gene ID, 3) the found Gene, 4) the found gene ID, 5) the support ( the number of times that
- * coexpression was found ), 6) Sign(+/-; denotes whehter the correlation between the coexpression pair is positive or
+ * coexpression was found ), 6) Sign(+/-; denotes whether the correlation between the coexpression pair is positive or
  * negative), and 7)the experiment ids that this co-expression was found in (since there should be more than 1
- * experiment this list will be returned as a space delimted string of EE Ids.)
- * 
+ * experiment this list will be returned as a space delimited string of EE Ids.)
+ *
  * @author gavin, klc
- * @version$Id$
  */
 
 public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
-    private static Log log = LogFactory.getLog( GeneCoexpressionEndpoint.class );
-
-    private TaxonService taxonService;
-
-    private GeneService geneService;
-
-    private GeneCoexpressionSearchService geneCoexpressionSearchService;
-
     /**
      * The local name of the expected request/response.
      */
-    public static final String LOCAL_NAME = "geneCoexpression";
+    private static final String LOCAL_NAME = "geneCoexpression";
+    /**
+     * The maximum number of coexpression results to return per input gene; a value of zero will return all possible
+     * results (ie. max is infinity). We limit this to avoid results sets from blowing up ridiculously.
+     */
+    private static final int MAX_RESULTS = 100;
+    private static final Log log = LogFactory.getLog( GeneCoexpressionEndpoint.class );
+    private TaxonService taxonService;
+    private GeneService geneService;
+    private GeneCoexpressionSearchService geneCoexpressionSearchService;
 
     public void setGeneCoexpressionSearchService( GeneCoexpressionSearchService geneCoexpressionSearchService ) {
         this.geneCoexpressionSearchService = geneCoexpressionSearchService;
     }
 
-    /**
-     * The maximum number of coexpression results to return per input gene; a value of zero will return all possible
-     * results (ie. max is infinity). We limit this to avoid results sets from blowing up ridiculously.
-     */
-    public static final int MAX_RESULTS = 100;
-
-    public void setgeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
+    public void setGeneCoexpressionService( GeneCoexpressionSearchService geneCoexpressionService ) {
         this.geneCoexpressionSearchService = geneCoexpressionService;
     }
 
@@ -93,9 +86,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
     /**
      * Reads the given <code>requestElement</code>, and sends a the response back.
-     * 
+     *
      * @param requestElement the contents of the SOAP message as DOM elements
-     * @param document a DOM document to be used for constructing <code>Node</code>s
+     * @param document       a DOM document to be used for constructing <code>Node</code>s
      * @return the response element
      */
     @Override
@@ -135,7 +128,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 query = id;
             }
             boolean queryGenesOnly = false;
-            if ( query.endsWith( "1" ) ) queryGenesOnly = true;
+            if ( query.endsWith( "1" ) )
+                queryGenesOnly = true;
 
             log.debug( "XML input read: " + geneInput.size() + " gene ids,  & taxon id, " + taxonId + " & stringency, "
                     + string + " & queryGenesOnly=" + query );
@@ -146,8 +140,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 return buildBadResponse( document, msg );
             }
 
-            Collection<Gene> rawGeneCol = geneService.load( geneIDLong );
-            geneService.thaw( rawGeneCol );
+            Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
             if ( rawGeneCol.isEmpty() ) {
                 String msg = "None of the gene id's can be found.";
                 return buildBadResponse( document, msg );
@@ -161,8 +154,9 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             int stringency = Integer.parseInt( string );
 
             // get Gene2GeneCoexpression objects canned analysis
-            Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionSearchService.coexpressionSearchQuick(
-                    null, EntityUtils.getIds( geneCol ), stringency, MAX_RESULTS, queryGenesOnly ).getResults();
+            Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionSearchService
+                    .coexpressionSearchQuick( null, EntityUtils.getIds( geneCol ), stringency, MAX_RESULTS,
+                            queryGenesOnly ).getResults();
 
             if ( coexpressedGenes.isEmpty() ) {
                 String msg = "No coexpressed genes found.";
@@ -239,15 +233,11 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
     }
 
-    /**
-     * @param rawGeneCol
-     * @param taxon
-     * @return
-     */
     private Collection<Gene> retainGenesInCorrectTaxon( Collection<Gene> rawGeneCol, Taxon taxon ) {
         Collection<Gene> genesToUse = new HashSet<Gene>();
         for ( Gene gene : rawGeneCol ) {
-            if ( gene.getTaxon().getId().equals( taxon.getId() ) ) genesToUse.add( gene );
+            if ( gene.getTaxon().getId().equals( taxon.getId() ) )
+                genesToUse.add( gene );
         }
         return genesToUse;
     }

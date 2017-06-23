@@ -119,7 +119,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         log.info( "Persisting new platform " + arrayDesign.getName() );
 
         try {
-            this.getSession().setFlushMode( FlushMode.COMMIT );
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.COMMIT );
 
             if ( arrayDesign.getDesignProvider() != null )
                 arrayDesign.setDesignProvider( persistContact( arrayDesign.getDesignProvider() ) );
@@ -154,7 +154,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             arrayDesignDao.update( arrayDesign );
 
         } finally {
-            this.getSession().setFlushMode( FlushMode.AUTO );
+            this.getSessionFactory().getCurrentSession().setFlushMode( FlushMode.AUTO );
         }
         return arrayDesign;
     }

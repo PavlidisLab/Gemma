@@ -35,7 +35,7 @@ public class PersonDaoImpl extends PersonDaoBase {
 
     @Override
     public Person find( Person person ) {
-        Criteria queryObject = super.getSession().createCriteria( Person.class );
+        Criteria queryObject = super.getSessionFactory().getCurrentSession().createCriteria( Person.class );
         BusinessKey.addRestrictions( queryObject, person );
         return ( Person ) queryObject.uniqueResult();
     }

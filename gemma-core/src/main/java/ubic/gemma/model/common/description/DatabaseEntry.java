@@ -39,10 +39,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
     private Long id;
     private ExternalDatabase externalDatabase;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     /**
      * No-arg constructor added to satisfy javabean contract
      *
@@ -50,10 +46,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
      */
     public DatabaseEntry() {
     }
-
-    /* ********************************
-     * Object override methods
-     * ********************************/
 
     /**
      * Returns <code>true</code> if the argument is an DatabaseEntry instance and all identifiers for this entity equal
@@ -99,10 +91,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
                 this.getExternalDatabase().getName() ) + ( this.getId() == null ? "" : " (Id=" + this.getId() + ")" );
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
-
     /**
      * The id
      */
@@ -145,10 +133,6 @@ public class DatabaseEntry implements Identifiable, Serializable {
     public void setUri( String Uri ) {
         this.Uri = Uri;
     }
-
-    /* ********************************
-     * Public static classes
-     * ********************************/
 
     /**
      * Constructs new instances of {@link DatabaseEntry}.

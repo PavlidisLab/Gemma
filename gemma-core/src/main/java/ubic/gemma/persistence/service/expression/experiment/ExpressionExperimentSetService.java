@@ -37,12 +37,14 @@ public interface ExpressionExperimentSetService
 
     String AUTOMATICALLY_GENERATED_EXPERIMENT_GROUP_DESCRIPTION = "Automatically generated for %s EEs";
 
+    @Override
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSet create( ExpressionExperimentSet expressionExperimentSet );
 
     @Secured({ "GROUP_USER" })
     ExpressionExperimentSet createFromValueObject( ExpressionExperimentSetValueObject eesvo );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void remove( ExpressionExperimentSet expressionExperimentSet );
 
@@ -83,12 +85,15 @@ public interface ExpressionExperimentSetService
 
     boolean isAutomaticallyGenerated( String experimentSetDescription );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> load( Collection<Long> ids );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    ExpressionExperimentSet load( java.lang.Long id );
+    ExpressionExperimentSet load( Long id );
 
+    @Override
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     Collection<ExpressionExperimentSet> loadAll();
 
@@ -154,6 +159,7 @@ public interface ExpressionExperimentSetService
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_READ" })
     ExpressionExperimentSetValueObject loadValueObjectById( Long id, boolean loadEEIds );
 
+    @Override
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     void update( ExpressionExperimentSet expressionExperimentSet );
 
@@ -191,4 +197,6 @@ public interface ExpressionExperimentSetService
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_VALUE_OBJECT_COLLECTION_READ" })
     Collection<ExpressionExperimentSetValueObject> loadValueObjectsByIds( Collection<Long> eeSetIds );
+
+    void thaw( ExpressionExperimentSet set );
 }

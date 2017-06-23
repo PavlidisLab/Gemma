@@ -14,20 +14,12 @@
  */
 package ubic.gemma.core.analysis.expression.diff;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
-import java.util.Collection;
-import java.util.HashSet;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
 import ubic.basecode.util.FileTools;
 import ubic.gemma.core.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.core.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.core.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.core.loader.expression.geo.service.GeoService;
@@ -36,24 +28,30 @@ import ubic.gemma.core.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.persistence.service.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.persistence.service.expression.experiment.ExpressionExperimentService;
+
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * TODO Document Me
- * 
+ *
  * @author Paul
- * @version $Id$
  */
 public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
+
+    private ExpressionExperiment ee;
 
     @Autowired
     private AnalysisSelectionAndExecutionService analyzer;
 
     @Autowired
     private ExperimentalDesignImporter designImporter;
-
-    private ExpressionExperiment ee;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;
@@ -70,8 +68,8 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
     @Before
     public void setup() throws Exception {
 
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( FileTools
-                .resourceToPath( "/data/analysis/expression" ) ) );
+        geoService.setGeoDomainObjectGenerator(
+                new GeoDomainObjectGeneratorLocal( FileTools.resourceToPath( "/data/analysis/expression" ) ) );
 
         try {
             Collection<?> results = geoService.fetchAndLoad( "GSE50664", false, true, false, false );
@@ -81,9 +79,9 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
-        Collection<ExperimentalFactor> toremove = new HashSet<>();
+        Collection<ExperimentalFactor> toremove = new HashSet<ExperimentalFactor>();
         toremove.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
         for ( ExperimentalFactor ef : toremove ) {
             experimentalFactorService.delete( ef );
@@ -95,7 +93,7 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        expressionExperimentService.thaw( ee );
+        ee = expressionExperimentService.thaw( ee );
 
         designImporter.importDesign( ee,
                 this.getClass().getResourceAsStream( "/data/analysis/expression/8165_GSE50664_expdesign.data.txt" ) );
@@ -103,20 +101,19 @@ public class DiffExWithInvalidInteractionTest extends AbstractGeoServiceTest {
     }
 
     @After
-    public void teardown() throws Exception {
-        if ( ee != null ) expressionExperimentService.remove( ee );
+    public void tearDown() throws Exception {
+        if ( ee != null )
+            expressionExperimentService.remove( ee );
     }
 
     /**
      * This should automatically drop the interaction. If it fails on a 'no residual degrees of freedom' it means we're
      * not detecting thatS
-     * 
-     * @throws Exception
      */
     @Test
     public void test() throws Exception {
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
         assertEquals( 3, factors.size() ); // includes batch

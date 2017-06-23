@@ -37,7 +37,7 @@ public class TfGeneAssociationDaoImpl extends AbstractDao<TfGeneAssociation> imp
     @Override
     public Collection<TfGeneAssociation> findByTargetGene( Gene gene ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.secondGene = :g" )
                 .setParameter( "g", gene ).list();
     }
@@ -45,7 +45,7 @@ public class TfGeneAssociationDaoImpl extends AbstractDao<TfGeneAssociation> imp
     @Override
     public Collection<TfGeneAssociation> findByTf( Gene tf ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.firstGene = :g" )
                 .setParameter( "g", tf ).list();
     }
@@ -60,7 +60,7 @@ public class TfGeneAssociationDaoImpl extends AbstractDao<TfGeneAssociation> imp
     @Override
     public Collection<TfGeneAssociation> load( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getSession().createQuery(
+        return this.getSessionFactory().getCurrentSession().createQuery(
                 "from PazarAssociationImpl  p inner join fetch p.secondGene inner join fetch p.firstGene where p.id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
     }

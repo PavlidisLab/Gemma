@@ -78,4 +78,6 @@ public interface CompositeSequenceDao extends BaseVoEnabledDao<CompositeSequence
 
     void thaw( Collection<CompositeSequence> compositeSequences );
 
+    CompositeSequence thaw( CompositeSequence compositeSequence );
+
 }

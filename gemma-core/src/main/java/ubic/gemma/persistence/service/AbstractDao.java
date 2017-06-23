@@ -24,6 +24,7 @@ import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.transaction.annotation.Transactional;
 import ubic.gemma.model.common.Identifiable;
 import ubic.gemma.persistence.service.genome.taxon.TaxonServiceImpl;
 import ubic.gemma.persistence.util.EntityUtils;
@@ -37,24 +38,17 @@ import java.util.List;
  *
  * @author Anton, Nicolas
  */
+@Transactional
 public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSupport implements BaseDao<T> {
 
     protected static final Log log = LogFactory.getLog( TaxonServiceImpl.class );
 
     private Class<T> elementClass;
 
-    /* ********************************
-     * Constructors
-     * ********************************/
-
     protected AbstractDao( Class<T> elementClass, SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
         this.elementClass = elementClass;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     @Override
     public Collection<T> create( Collection<T> entities ) {
@@ -62,14 +56,14 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         for ( T t : entities ) {
             this.create( t );
             if ( ++i % 100 == 0 )
-                this.getSession().flush();
+                this.getSessionFactory().getCurrentSession().flush();
         }
         return entities;
     }
 
     @Override
     public T create( T entity ) {
-        Serializable id = this.getSession().save( entity );
+        Serializable id = this.getSessionFactory().getCurrentSession().save( entity );
         assert EntityUtils.getId( entity ) != null;
         assert id.equals( EntityUtils.getId( entity ) );
         return entity;
@@ -78,7 +72,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     @Override
     public Collection<T> load( Collection<Long> ids ) {
         //noinspection unchecked
-        return this.getSession().createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
+        return this.getSessionFactory().getCurrentSession()
+                .createQuery( "from " + elementClass.getSimpleName() + " e where e.id in (:ids)" )
                 .setParameterList( "ids", ids ).list();
     }
 
@@ -86,18 +81,19 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
     public T load( Long id ) {
         // Don't use 'load' because if the object doesn't exist you can get an invalid proxy.
         //noinspection unchecked
-        return id == null ? null : ( T ) this.getSession().get( elementClass, id );
+        return id == null ? null : ( T ) this.getSessionFactory().getCurrentSession().get( elementClass, id );
     }
 
     @Override
     public Collection<T> loadAll() {
         //noinspection unchecked
-        return this.getSession().createCriteria( elementClass ).list();
+        return this.getSessionFactory().getCurrentSession().createCriteria( elementClass ).list();
     }
 
     @Override
     public Integer countAll() {
-        return this.loadAll().size();
+        return ( Integer ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from " + elementClass.getSimpleName() ).uniqueResult();
     }
 
     @Override
@@ -114,7 +110,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void remove( T entity ) {
-        this.getSession().delete( entity );
+        this.getSessionFactory().getCurrentSession().delete( entity );
     }
 
     @Override
@@ -126,7 +122,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public void update( T entity ) {
-        this.getSession().update( entity );
+        this.getSessionFactory().getCurrentSession().update( entity );
     }
 
     @Override
@@ -135,16 +131,10 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
         return found == null ? create( entity ) : found;
     }
 
+    @Override
     public T find( T entity ) {
         return this.load( entity.getId() );
     }
-
-    public void thaw( T entity ) {
-    }
-
-    /* ********************************
-     * Protected methods
-     * ********************************/
 
     /**
      * Does a like-match case insensitive search on given property and its value.
@@ -154,7 +144,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return an entity whose property first like-matched the given value.
      */
     protected T findOneByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
         criteria.setMaxResults( 1 );
         //noinspection unchecked
@@ -169,7 +159,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return a list of entities whose properties like-matched the given value.
      */
     protected List<T> findByStringProperty( String propertyName, String propertyValue ) {
-        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.ilike( propertyName, propertyValue ) );
         //noinspection unchecked
         return criteria.list();
@@ -183,7 +173,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return a list of entities whose properties matched the given value.
      */
     protected T findOneByProperty( String propertyName, Object propertyValue ) {
-        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.eq( propertyName, propertyValue ) );
         criteria.setMaxResults( 1 );
         //noinspection unchecked
@@ -198,7 +188,7 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
      * @return an entity whose property first matched the given value.
      */
     protected List<T> findByProperty( String propertyName, Object propertyValue ) {
-        Criteria criteria = this.getSession().createCriteria( this.elementClass );
+        Criteria criteria = this.getSessionFactory().getCurrentSession().createCriteria( this.elementClass );
         criteria.add( Restrictions.eq( propertyName, propertyValue ) );
         //noinspection unchecked
         return criteria.list();

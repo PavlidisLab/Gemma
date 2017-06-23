@@ -50,9 +50,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
     public ExperimentalFactor() {
     }
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
+
 
     @Override
     public boolean equals( Object obj ) {
@@ -106,9 +104,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         return result;
     }
 
-    /* ********************************
-     * Public methods
-     * ********************************/
+
 
     @Override
     public Securable getSecurityOwner() {
@@ -169,9 +165,7 @@ public class ExperimentalFactor extends AbstractAuditable implements SecuredChil
         this.type = type;
     }
 
-    /* ********************************
-     * Static classes
-     * ********************************/
+
 
     /**
      * Constructs new instances of {@link ubic.gemma.model.expression.experiment.ExperimentalFactor}.

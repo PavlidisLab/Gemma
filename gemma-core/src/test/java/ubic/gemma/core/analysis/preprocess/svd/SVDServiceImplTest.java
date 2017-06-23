@@ -70,7 +70,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) ( ( Collection<?> ) e.getData() ).iterator().next();
         }
         assertNotNull( ee );
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         ee = eeService.findByShortName( "GSE674" );
@@ -111,7 +111,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
             }
         }
         assertNotNull( ee );
-        eeService.thaw( ee );
+        ee = eeService.thaw( ee );
         processedExpressionDataVectorService.createProcessedDataVectors( ee );
 
         ee = eeService.findByShortName( "GSE482" );

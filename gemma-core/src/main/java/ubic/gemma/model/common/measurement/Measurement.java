@@ -37,10 +37,6 @@ public abstract class Measurement implements Identifiable, Serializable {
     private Long id;
     private Unit unit;
 
-    /* ********************************
-     * Object override methods
-     * ********************************/
-
     /**
      * Returns <code>true</code> if the argument is an Measurement instance and all identifiers for this entity equal
      * the identifiers of the argument entity. Returns <code>false</code> otherwise.
@@ -67,10 +63,6 @@ public abstract class Measurement implements Identifiable, Serializable {
 
         return hashCode;
     }
-
-    /* ********************************
-     * Public methods
-     * ********************************/
 
     public Long getId() {
         return this.id;
@@ -127,10 +119,6 @@ public abstract class Measurement implements Identifiable, Serializable {
     public void setValue( String value ) {
         this.value = value;
     }
-
-    /* ********************************
-     * Static classes
-     * ********************************/
 
     /**
      * Constructs new instances of {@link Measurement}.

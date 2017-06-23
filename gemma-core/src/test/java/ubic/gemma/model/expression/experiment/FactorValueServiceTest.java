@@ -49,7 +49,7 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
 
         ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         FactorValue fv = ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues()
                 .iterator().next();
@@ -61,7 +61,7 @@ public class FactorValueServiceTest extends BaseSpringContextTest {
 
         }
 
-        expressionExperimentService.thawLite( ee );
+        ee = expressionExperimentService.thawLite( ee );
 
         // done with setup
 

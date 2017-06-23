@@ -55,12 +55,12 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Long ee, Map<Long, Collection<Long>> cs2gene,
             final String queryString ) {
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
-        Map<T, Collection<Long>> dedv2genes = new HashMap<>();
+        Map<T, Collection<Long>> dedv2genes = new HashMap<T, Collection<Long>>();
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -71,7 +71,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
          * See bug 1866.
          */
         int batchSize = 100;
-        for ( Collection<Long> batch : new BatchIterator<>( cs2gene.keySet(), batchSize ) ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( cs2gene.keySet(), batchSize ) ) {
             getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
         }
 
@@ -88,12 +88,12 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
     Map<T, Collection<Long>> getVectorsForProbesInExperiments( Map<Long, Collection<Long>> cs2gene,
             final String queryString ) {
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
         org.hibernate.Query queryObject = session.createQuery( queryString );
         queryObject.setReadOnly( true );
         queryObject.setFlushMode( FlushMode.MANUAL );
 
-        Map<T, Collection<Long>> dedv2genes = new HashMap<>();
+        Map<T, Collection<Long>> dedv2genes = new HashMap<T, Collection<Long>>();
         StopWatch timer = new StopWatch();
         timer.start();
 
@@ -102,7 +102,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
          * See bug 1866.
          */
         int batchSize = 100;
-        for ( Collection<Long> batch : new BatchIterator<>( cs2gene.keySet(), batchSize ) ) {
+        for ( Collection<Long> batch : new BatchIterator<Long>( cs2gene.keySet(), batchSize ) ) {
             getVectorsBatch( cs2gene, queryObject, dedv2genes, batch );
         }
 
@@ -122,15 +122,15 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         if ( designElementDataVectors == null )
             return;
 
-        Session session = this.getSession();
+        Session session = this.getSessionFactory().getCurrentSession();
 
         Hibernate.initialize( designElementDataVectors );
 
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<ExpressionExperiment> ees = new HashSet<>();
-        Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<>();
-        Collection<CompositeSequence> cs = new HashSet<>();
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        Map<BioAssayDimension, Collection<DesignElementDataVector>> dims = new HashMap<BioAssayDimension, Collection<DesignElementDataVector>>();
+        Collection<CompositeSequence> cs = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector vector : designElementDataVectors ) {
             session.buildLockRequest( LockOptions.NONE ).lock( vector );
             Hibernate.initialize( vector );
