@@ -1068,10 +1068,8 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
 
                 if ( eeCounts == null || !eeCounts.containsKey( v.getId() ) ) {
                     v.setExpressionExperimentCount( 0 );
-                    System.out.println("the count of EEs in this ad is 0 ");
                 } else {
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ) );
-                    System.out.println("the count of EEs in this ad is not null, but "+v.getExpressionExperimentCount());
                 }
 
                 //This was causing null results when being retrieved through the original query
