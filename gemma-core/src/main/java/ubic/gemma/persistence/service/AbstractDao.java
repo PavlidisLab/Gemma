@@ -92,8 +92,8 @@ public abstract class AbstractDao<T extends Identifiable> extends HibernateDaoSu
 
     @Override
     public Integer countAll() {
-        return ( Integer ) this.getSessionFactory().getCurrentSession()
-                .createQuery( "select count(*) from " + elementClass.getSimpleName() ).uniqueResult();
+        return (( Long ) this.getSessionFactory().getCurrentSession()
+                .createQuery( "select count(*) from " + elementClass.getSimpleName() ).uniqueResult()).intValue();
     }
 
     @Override

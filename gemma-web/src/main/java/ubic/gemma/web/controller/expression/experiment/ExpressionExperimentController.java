@@ -708,8 +708,13 @@ public class ExpressionExperimentController {
         // Most of DetailsVO values are set automatically through the constructor.
         // We only need to set the additional values:
 
-        finalResult.setArrayDesigns(
-                arrayDesignService.loadValueObjects( this.getADsSafely( ee ) ) );
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        Collection<Long> adids = new HashSet<>();
+        for ( ArrayDesign ad : arrayDesignsUsed ) {
+            adids.add( ad.getId() );
+        }
+        finalResult.setArrayDesigns( arrayDesignService.loadValueObjectsByIds( adids ) );
+
         finalResult.setQChtml( getQCTagHTML( ee ) );
         finalResult.setExpressionExperimentSets( this.getExpressionExperimentSets( ee, false ) );
 
