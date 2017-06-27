@@ -32,7 +32,6 @@ import java.util.regex.Pattern;
  * @author pavlidis
  * @author keshav
  * @author joseph
- * @version $Id$
  * @see BioAssayService
  */
 @Service
@@ -57,13 +56,6 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
 
     }
 
-
-    @Override
-    @Transactional
-    public BioAssay create( BioAssay bioAssay ) {
-        return this.bioAssayDao.create( bioAssay );
-    }
-
     /**
      * @see BioAssayService#findBioAssayDimensions(BioAssay)
      */
@@ -81,60 +73,12 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
     }
 
     /**
-     * @see BioAssayService#findOrCreate(BioAssay)
-     */
-    @Override
-    @Transactional
-    public BioAssay findOrCreate( final BioAssay bioAssay ) {
-        return this.handleFindOrCreate( bioAssay );
-
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    @Transactional(readOnly = true)
-    public Collection<BioAssay> load( Collection<Long> ids ) {
-        return this.bioAssayDao.load( ids );
-    }
-
-    /**
-     * @see BioAssayService#load(java.lang.Long)
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public BioAssay load( final java.lang.Long id ) {
-        return this.handleLoad( id );
-
-    }
-
-    /**
-     * @see BioAssayService#loadAll()
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public java.util.Collection<BioAssay> loadAll() {
-        return this.handleLoadAll();
-
-    }
-
-    /**
-     * @see BioAssayService#remove(BioAssay)
-     */
-    @Override
-    @Transactional
-    public void remove( final BioAssay bioAssay ) {
-        this.handleRemove( bioAssay );
-
-    }
-
-    /**
      * @see BioAssayService#removeBioMaterialAssociation(BioAssay, ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
     @Override
     @Transactional
     public void removeBioMaterialAssociation( final BioAssay bioAssay, final BioMaterial bioMaterial ) {
         this.handleRemoveBioMaterialAssociation( bioAssay, bioMaterial );
-
     }
 
     /**
@@ -143,37 +87,13 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
     @Override
     @Transactional(readOnly = true)
     public void thaw( final BioAssay bioAssay ) {
-        this.handleThaw( bioAssay );
-
+        this.bioAssayDao.thaw( bioAssay );
     }
 
     @Override
     @Transactional(readOnly = true)
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         return this.bioAssayDao.thaw( bioAssays );
-    }
-
-    /**
-     * @see BioAssayService#update(BioAssay)
-     */
-    @Override
-    @Transactional
-    public void update( final BioAssay bioAssay ) {
-        this.handleUpdate( bioAssay );
-    }
-
-    /**
-     * Gets the reference to <code>bioAssay</code>'s DAO.
-     */
-    protected BioAssayDao getBioAssayDao() {
-        return this.bioAssayDao;
-    }
-
-    /**
-     * Gets the reference to <code>bioMaterialDao</code>.
-     */
-    private BioMaterialDao getBioMaterialDao() {
-        return this.bioMaterialDao;
     }
 
     private void handleAddBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {
@@ -198,7 +118,7 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
         }
 
         this.update( bioAssay );
-        this.getBioMaterialDao().update( bioMaterial );
+        this.bioMaterialDao.update( bioMaterial );
     }
 
     private Collection<BioAssayDimension> handleFindBioAssayDimensions( BioAssay bioAssay ) {
@@ -207,27 +127,10 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
         return this.bioAssayDao.findBioAssayDimensions( bioAssay );
     }
 
-    protected BioAssay handleFindOrCreate( BioAssay bioAssay ) {
-        return this.bioAssayDao.findOrCreate( bioAssay );
-    }
-
-    private BioAssay handleLoad( Long id ) {
-        return this.bioAssayDao.load( id );
-    }
-
-    private Collection<BioAssay> handleLoadAll() {
-        return this.bioAssayDao.loadAll();
-    }
-
-    protected void handleRemove( BioAssay bioAssay ) {
-        this.bioAssayDao.remove( bioAssay );
-
-    }
-
     // TODO: Refactor so that it accepts ids and does security check later.
     private void handleRemoveBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) {
         BioAssay bioAssayTemp = this.bioAssayDao.load( bioAssay.getId() );
-        BioMaterial biomaterialToBeRemoved = this.getBioMaterialDao().load( bioMaterial.getId() );
+        BioMaterial biomaterialToBeRemoved = this.bioMaterialDao.load( bioMaterial.getId() );
 
         BioMaterial currentBioMaterials = bioAssayTemp.getSampleUsed();
         bioAssayTemp.setSampleUsed( currentBioMaterials );
@@ -237,27 +140,15 @@ public class BioAssayServiceImpl extends VoEnabledService<BioAssay, BioAssayValu
         currentBioAssays.remove( bioAssayTemp );
         biomaterialToBeRemoved.setBioAssaysUsedIn( currentBioAssays );
 
-        this.getBioMaterialDao().update( biomaterialToBeRemoved );
+        this.bioMaterialDao.update( biomaterialToBeRemoved );
         this.update( bioAssayTemp );
 
         // Check to see if the bioMaterial is now orphaned.
         // If it is, remove it; if not, update it.
         if ( currentBioAssays.size() == 0 ) {
-            this.getBioMaterialDao().remove( biomaterialToBeRemoved );
+            this.bioMaterialDao.remove( biomaterialToBeRemoved );
         }
 
-    }
-
-    protected void handleSaveBioAssay( BioAssay bioAssay ) {
-        this.bioAssayDao.create( bioAssay );
-    }
-
-    protected void handleThaw( BioAssay bioAssay ) {
-        this.bioAssayDao.thaw( bioAssay );
-    }
-
-    private void handleUpdate( BioAssay bioAssay ) {
-        this.bioAssayDao.update( bioAssay );
     }
 
 }
