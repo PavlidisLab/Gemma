@@ -547,12 +547,11 @@ public class ArrayDesignDaoImpl extends AbstractCuratableDao<ArrayDesign, ArrayD
     @Override
     @Deprecated
     public Collection<ArrayDesignValueObject> loadValueObjects( Collection<ArrayDesign> entities ) {
-        throw new RuntimeException("DO NOT USE THIS METHOD FOR ADs - use the -ByIds methods instead");
-//        Collection<ArrayDesignValueObject> vos = new LinkedHashSet<ArrayDesignValueObject>();
-//        for ( ArrayDesign ad : entities ) {
-//            vos.add( new ArrayDesignValueObject( ad ) );
-//        }
-//        return vos;
+        Collection<ArrayDesignValueObject> vos = new LinkedHashSet<ArrayDesignValueObject>();
+        for ( ArrayDesign ad : entities ) {
+            vos.add( new ArrayDesignValueObject( ad ) );
+        }
+        return vos;
     }
 
     /**

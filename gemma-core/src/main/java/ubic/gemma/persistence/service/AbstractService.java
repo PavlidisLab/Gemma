@@ -73,7 +73,7 @@ public abstract class AbstractService<O extends Identifiable> implements BaseSer
     @Override
     @Transactional
     public int countAll() {
-        return this.loadAll().size();
+        return this.mainDao.countAll();
     }
 
     @Override
